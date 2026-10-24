@@ -1,0 +1,1881 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, prefs.theme flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: only prefs.theme=\"10.7.0\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Goose",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "goose",
+        "targetIcon": null,
+        "targetName": "Goose",
+        "tip": "Switch to the Goose theme",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": "goose"
+        }
+      },
+      "name": "desktop: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "this theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "gone-theme",
+        "targetIcon": null,
+        "targetName": "this theme",
+        "tip": "Switch to the this theme theme",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": "gone-theme"
+        }
+      },
+      "name": "desktop: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": "Bad Theme"
+        }
+      },
+      "name": "desktop: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": 7
+        }
+      },
+      "name": "desktop: target — a number"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "goose",
+        "targetIcon": null,
+        "targetName": "Goose",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "context": {
+          "theme": "goose"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 2,
+        "menu": "app",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: menu app[2] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 2,
+        "menu": "app",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu app[2] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, prefs.theme flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "web: only prefs.theme=\"10.7.0\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Goose",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "goose",
+        "targetIcon": null,
+        "targetName": "Goose",
+        "tip": "Switch to the Goose theme",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": "goose"
+        }
+      },
+      "name": "web: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "this theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "gone-theme",
+        "targetIcon": null,
+        "targetName": "this theme",
+        "tip": "Switch to the this theme theme",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": "gone-theme"
+        }
+      },
+      "name": "web: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": "Bad Theme"
+        }
+      },
+      "name": "web: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "theme": 7
+        }
+      },
+      "name": "web: target — a number"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "goose",
+        "targetIcon": null,
+        "targetName": "Goose",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "context": {
+          "theme": "goose"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "web: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.theme.set",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "web: in a button island"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 2,
+        "menu": "app",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "prefs.theme": "10.7.0"
+          }
+        }
+      },
+      "name": "web: menu app[2] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "preferences-desktop-color",
+        "label": "Theme",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 2,
+        "menu": "app",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu app[2] desktop, all off"
+    }
+  ],
+  "kind": "evaluate"
+}

@@ -1,0 +1,1437 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "editable": true,
+        "items": [
+          {
+            "a": "call.mic.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-input-microphone-symbolic",
+            "known": true,
+            "label": "Mute",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "mic"
+              }
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Mute — Ctrl+Shift+M",
+            "why": "when"
+          },
+          {
+            "a": "call.camera.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "camera-video-symbolic",
+            "known": true,
+            "label": "Turn camera on",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Camera",
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "camera"
+              }
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          },
+          {
+            "a": "call.camera.flip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-refresh-symbolic",
+            "known": true,
+            "label": "Flip camera",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "app"
+          },
+          {
+            "a": "call.screenShare.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-display-brightness-symbolic",
+            "known": true,
+            "label": "Share your screen…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Share",
+            "split": {
+              "a": "call.share.panel",
+              "target": {}
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          },
+          {
+            "a": "call.deafen.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-volume-high-symbolic",
+            "known": true,
+            "label": "Deafen",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "speaker"
+              }
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+            "why": "when"
+          },
+          {
+            "a": "soundboard.open",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "emblem-music-symbolic",
+            "known": true,
+            "label": "Soundboard",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "watchParty.open",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-television-symbolic",
+            "known": true,
+            "label": "Media Party",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.leave",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "call-stop-symbolic",
+            "known": true,
+            "label": "Leave call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          }
+        ],
+        "look": "icon",
+        "row": "call.phoneBar",
+        "scale": "M",
+        "style": "call"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.phoneBar",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": false,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "call.mic.toggle"
+            },
+            {
+              "a": "call.camera.toggle"
+            },
+            {
+              "a": "call.camera.flip"
+            },
+            {
+              "a": "call.screenShare.toggle"
+            },
+            {
+              "a": "call.deafen.toggle"
+            },
+            {
+              "a": "soundboard.open"
+            },
+            {
+              "a": "watchParty.open"
+            },
+            {
+              "a": "call.leave"
+            }
+          ],
+          "look": "icon",
+          "scale": "M"
+        }
+      },
+      "name": "desktop phone phone"
+    },
+    {
+      "expect": {
+        "editable": true,
+        "items": [
+          {
+            "a": "call.mic.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-input-microphone-symbolic",
+            "known": true,
+            "label": "Mute",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "mic"
+              }
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Mute — Ctrl+Shift+M",
+            "why": null
+          },
+          {
+            "a": "call.camera.toggle",
+            "active": true,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "camera-video-symbolic",
+            "known": true,
+            "label": "Turn camera off",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Camera",
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "camera"
+              }
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.camera.flip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-refresh-symbolic",
+            "known": true,
+            "label": "Flip camera",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "app"
+          },
+          {
+            "a": "call.screenShare.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-display-brightness-symbolic",
+            "known": true,
+            "label": "Share your screen…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Share",
+            "split": {
+              "a": "call.share.panel",
+              "target": {}
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.deafen.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-volume-high-symbolic",
+            "known": true,
+            "label": "Deafen",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "speaker"
+              }
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+            "why": null
+          },
+          {
+            "a": "soundboard.open",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "emblem-music-symbolic",
+            "known": true,
+            "label": "Soundboard",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "watchParty.open",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-television-symbolic",
+            "known": true,
+            "label": "Media Party",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.leave",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "call-stop-symbolic",
+            "known": true,
+            "label": "Leave call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "call.phoneBar",
+        "scale": "M",
+        "style": "call"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.phoneBar",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "call.mic.toggle"
+            },
+            {
+              "a": "call.camera.toggle"
+            },
+            {
+              "a": "call.camera.flip"
+            },
+            {
+              "a": "call.screenShare.toggle"
+            },
+            {
+              "a": "call.deafen.toggle"
+            },
+            {
+              "a": "soundboard.open"
+            },
+            {
+              "a": "watchParty.open"
+            },
+            {
+              "a": "call.leave"
+            }
+          ],
+          "look": "icon",
+          "scale": "M"
+        }
+      },
+      "name": "desktop phone phoneCall"
+    },
+    {
+      "expect": {
+        "editable": true,
+        "items": [
+          {
+            "a": "call.mic.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-input-microphone-symbolic",
+            "known": true,
+            "label": "Mute",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "mic"
+              }
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Mute — Ctrl+Shift+M",
+            "why": "when"
+          },
+          {
+            "a": "call.camera.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "camera-video-symbolic",
+            "known": true,
+            "label": "Turn camera on",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Camera",
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "camera"
+              }
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          },
+          {
+            "a": "call.camera.flip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-refresh-symbolic",
+            "known": true,
+            "label": "Flip camera",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          },
+          {
+            "a": "call.screenShare.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-display-brightness-symbolic",
+            "known": true,
+            "label": "Share your screen…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Share",
+            "split": {
+              "a": "call.share.panel",
+              "target": {}
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          },
+          {
+            "a": "call.deafen.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-volume-high-symbolic",
+            "known": true,
+            "label": "Deafen",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "speaker"
+              }
+            },
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+            "why": "when"
+          },
+          {
+            "a": "soundboard.open",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "emblem-music-symbolic",
+            "known": true,
+            "label": "Soundboard",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "watchParty.open",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-television-symbolic",
+            "known": true,
+            "label": "Media Party",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.leave",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "call-stop-symbolic",
+            "known": true,
+            "label": "Leave call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          }
+        ],
+        "look": "icon",
+        "row": "call.phoneBar",
+        "scale": "M",
+        "style": "call"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.phoneBar",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": false,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "call.mic.toggle"
+            },
+            {
+              "a": "call.camera.toggle"
+            },
+            {
+              "a": "call.camera.flip"
+            },
+            {
+              "a": "call.screenShare.toggle"
+            },
+            {
+              "a": "call.deafen.toggle"
+            },
+            {
+              "a": "soundboard.open"
+            },
+            {
+              "a": "watchParty.open"
+            },
+            {
+              "a": "call.leave"
+            }
+          ],
+          "look": "icon",
+          "scale": "M"
+        }
+      },
+      "name": "web phone phone"
+    },
+    {
+      "expect": {
+        "editable": true,
+        "items": [
+          {
+            "a": "call.mic.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-input-microphone-symbolic",
+            "known": true,
+            "label": "Mute",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "mic"
+              }
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Mute — Ctrl+Shift+M",
+            "why": null
+          },
+          {
+            "a": "call.camera.toggle",
+            "active": true,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "camera-video-symbolic",
+            "known": true,
+            "label": "Turn camera off",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Camera",
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "camera"
+              }
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.camera.flip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-refresh-symbolic",
+            "known": true,
+            "label": "Flip camera",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.screenShare.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-display-brightness-symbolic",
+            "known": true,
+            "label": "Share your screen…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Share",
+            "split": {
+              "a": "call.share.panel",
+              "target": {}
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.deafen.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "audio-volume-high-symbolic",
+            "known": true,
+            "label": "Deafen",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": {
+              "a": "call.options.open",
+              "target": {
+                "value": "speaker"
+              }
+            },
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+            "why": null
+          },
+          {
+            "a": "soundboard.open",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "emblem-music-symbolic",
+            "known": true,
+            "label": "Soundboard",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "watchParty.open",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "video-television-symbolic",
+            "known": true,
+            "label": "Media Party",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "call.leave",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "call-stop-symbolic",
+            "known": true,
+            "label": "Leave call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "call.phoneBar",
+        "scale": "M",
+        "style": "call"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.phoneBar",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "call.mic.toggle"
+            },
+            {
+              "a": "call.camera.toggle"
+            },
+            {
+              "a": "call.camera.flip"
+            },
+            {
+              "a": "call.screenShare.toggle"
+            },
+            {
+              "a": "call.deafen.toggle"
+            },
+            {
+              "a": "soundboard.open"
+            },
+            {
+              "a": "watchParty.open"
+            },
+            {
+              "a": "call.leave"
+            }
+          ],
+          "look": "icon",
+          "scale": "M"
+        }
+      },
+      "name": "web phone phoneCall"
+    }
+  ],
+  "kind": "row"
+}

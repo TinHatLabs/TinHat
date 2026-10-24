@@ -1,0 +1,574 @@
+{
+  "cases": [
+    {
+      "event": {
+        "content": {
+          "body": "Tonight: bring potions",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "Tonight: bring potions"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "  line one\n\n  line\ttwo\r\n three  ",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "line one line two three"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "> <@ana:example.com> the original\n> second quoted line\n\nmy reply",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "my reply"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "> <@ana:example.com> only a quote",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": ">not a fallback\nreal text",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": ">not a fallback real text"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": ">\n\nafter a bare marker",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "after a bare marker"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "> <@a:x> q\n \t \nreply after a blank-ish line",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "reply after a blank-ish line"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "a notice",
+          "msgtype": "m.notice"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "a notice"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "waves",
+          "msgtype": "m.emote"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "waves"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word end",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word…"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮🎮…"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": " \n\t ",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "screenshot.png",
+          "msgtype": "m.image"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "image",
+        "text": "screenshot.png"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "caption text",
+          "filename": "IMG_0042.jpg",
+          "msgtype": "m.image"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "image",
+        "text": "IMG_0042.jpg"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "msgtype": "m.image"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "image",
+        "text": "Image"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "clip.mp4",
+          "msgtype": "m.video"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "video",
+        "text": "clip.mp4"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "",
+          "msgtype": "m.video"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "video",
+        "text": "Video"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "song.ogg",
+          "msgtype": "m.audio"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "audio",
+        "text": "song.ogg"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "Voice message.ogg",
+          "msgtype": "m.audio",
+          "org.matrix.msc3245.voice": {}
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "voice",
+        "text": "Voice message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "x.ogg",
+          "msgtype": "m.audio",
+          "org.matrix.msc3245.voice": null
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "voice",
+        "text": "Voice message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "notes.pdf",
+          "msgtype": "m.file"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "file",
+        "text": "notes.pdf"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "filename": "  spaced   name.txt  ",
+          "msgtype": "m.file"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "file",
+        "text": "spaced name.txt"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "geo:1,2",
+          "geo_uri": "geo:1,2",
+          "msgtype": "m.location"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "location",
+        "text": "Location"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "custom body",
+          "msgtype": "com.example.custom"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "custom body"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "numeric msgtype",
+          "msgtype": 5
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "numeric msgtype"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "no msgtype"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "no msgtype"
+      }
+    },
+    {
+      "event": {
+        "content": "not an object",
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": [
+          "array"
+        ],
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": null,
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "algorithm": "m.megolm.v1.aes-sha2",
+          "ciphertext": "…"
+        },
+        "type": "m.room.encrypted"
+      },
+      "expect": {
+        "kind": "encrypted",
+        "text": "Encrypted message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "a cat sticker",
+          "url": "mxc://x/y"
+        },
+        "type": "m.sticker"
+      },
+      "expect": {
+        "kind": "sticker",
+        "text": "a cat sticker"
+      }
+    },
+    {
+      "event": {
+        "content": {},
+        "type": "m.sticker"
+      },
+      "expect": {
+        "kind": "sticker",
+        "text": "Sticker"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "m.poll.start": {
+            "question": {
+              "body": "Which game?"
+            }
+          }
+        },
+        "type": "m.poll.start"
+      },
+      "expect": {
+        "kind": "poll",
+        "text": "Poll"
+      }
+    },
+    {
+      "event": {
+        "content": {},
+        "type": "org.matrix.msc3381.poll.start"
+      },
+      "expect": {
+        "kind": "poll",
+        "text": "Poll"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "Game night — Sat 7:30 PM"
+        },
+        "type": "dev.tinhat.calendar.card"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Game night — Sat 7:30 PM"
+      }
+    },
+    {
+      "event": {
+        "content": {},
+        "type": "dev.tinhat.other"
+      },
+      "expect": {
+        "kind": "other",
+        "text": "Message"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "no type"
+        }
+      },
+      "expect": {
+        "kind": "other",
+        "text": "no type"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "gone",
+          "msgtype": "m.text"
+        },
+        "redacted": true,
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "deleted",
+        "text": "Message deleted"
+      }
+    },
+    {
+      "event": {
+        "content": {},
+        "redacted": true,
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "deleted",
+        "text": "Message deleted"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "still here",
+          "msgtype": "m.text"
+        },
+        "redacted": "yes",
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "still here"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "a nbsp em-space stay",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "a nbsp em-space stay"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    },
+    {
+      "event": {
+        "content": {
+          "body": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+          "msgtype": "m.text"
+        },
+        "type": "m.room.message"
+      },
+      "expect": {
+        "kind": "text",
+        "text": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy…"
+      }
+    }
+  ]
+}

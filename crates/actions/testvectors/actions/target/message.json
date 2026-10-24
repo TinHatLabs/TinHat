@@ -1,0 +1,1066 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copyLink",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.copyLink: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copyLink",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.copyLink: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copyLink",
+        "target": "x"
+      },
+      "name": "message.copyLink: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.copyLink"
+      },
+      "name": "message.copyLink: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copySelection",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.copySelection: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copySelection",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.copySelection: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copySelection",
+        "target": "x"
+      },
+      "name": "message.copySelection: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.copySelection"
+      },
+      "name": "message.copySelection: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copyText",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.copyText: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copyText",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.copyText: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.copyText",
+        "target": "x"
+      },
+      "name": "message.copyText: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.copyText"
+      },
+      "name": "message.copyText: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.delete",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.delete: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.delete",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.delete: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.delete",
+        "target": "x"
+      },
+      "name": "message.delete: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.delete"
+      },
+      "name": "message.delete: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.discard",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.discard: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.discard",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.discard: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.discard",
+        "target": "x"
+      },
+      "name": "message.discard: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.discard"
+      },
+      "name": "message.discard: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.edit",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.edit: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.edit",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.edit: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.edit",
+        "target": "x"
+      },
+      "name": "message.edit: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.edit"
+      },
+      "name": "message.edit: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "play"
+        }
+      },
+      "input": {
+        "action": "message.embed.play",
+        "target": {
+          "op": "play"
+        }
+      },
+      "name": "message.embed.play: param op=play"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "dismiss"
+        }
+      },
+      "input": {
+        "action": "message.embed.play",
+        "target": {
+          "op": "dismiss"
+        }
+      },
+      "name": "message.embed.play: param op=dismiss"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "op",
+        "ok": false
+      },
+      "input": {
+        "action": "message.embed.play",
+        "target": {
+          "op": "zz"
+        }
+      },
+      "name": "message.embed.play: param op invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.embed.play",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.embed.play: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.embed.play",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.embed.play: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.embed.play",
+        "target": "x"
+      },
+      "name": "message.embed.play: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.embed.play"
+      },
+      "name": "message.embed.play: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.image.view",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.image.view: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.image.view",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.image.view: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.image.view",
+        "target": "x"
+      },
+      "name": "message.image.view: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.image.view"
+      },
+      "name": "message.image.view: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.jumpTo",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.jumpTo: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.jumpTo",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.jumpTo: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.jumpTo",
+        "target": "x"
+      },
+      "name": "message.jumpTo: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.jumpTo"
+      },
+      "name": "message.jumpTo: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.link.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.link.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.link.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.link.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.link.open",
+        "target": "x"
+      },
+      "name": "message.link.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.link.open"
+      },
+      "name": "message.link.open: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.media.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.media.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.media.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.media.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.media.open",
+        "target": "x"
+      },
+      "name": "message.media.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.media.open"
+      },
+      "name": "message.media.open: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.menu",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.menu: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.menu",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.menu: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.menu",
+        "target": "x"
+      },
+      "name": "message.menu: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.menu"
+      },
+      "name": "message.menu: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.pin.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.pin.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.pin.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.pin.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.pin.toggle",
+        "target": "x"
+      },
+      "name": "message.pin.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.pin.toggle"
+      },
+      "name": "message.pin.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "emoji",
+        "ok": false
+      },
+      "input": {
+        "action": "message.react",
+        "target": {
+          "emoji": "a b"
+        }
+      },
+      "name": "message.react: param emoji invalid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "emoji": "🦊"
+        }
+      },
+      "input": {
+        "action": "message.react",
+        "target": {
+          "emoji": "🦊"
+        }
+      },
+      "name": "message.react: param emoji emoji"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.react",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.react: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.react",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.react: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.react",
+        "target": "x"
+      },
+      "name": "message.react: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.react"
+      },
+      "name": "message.react: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.react.more",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.react.more: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.react.more",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.react.more: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.react.more",
+        "target": "x"
+      },
+      "name": "message.react.more: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.react.more"
+      },
+      "name": "message.react.more: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.reply",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.reply: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.reply",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.reply: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.reply",
+        "target": "x"
+      },
+      "name": "message.reply: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.reply"
+      },
+      "name": "message.reply: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.retry",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.retry: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.retry",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.retry: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.retry",
+        "target": "x"
+      },
+      "name": "message.retry: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.retry"
+      },
+      "name": "message.retry: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.saveAs",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.saveAs: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.saveAs",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.saveAs: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.saveAs",
+        "target": "x"
+      },
+      "name": "message.saveAs: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.saveAs"
+      },
+      "name": "message.saveAs: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "message.video.playInline",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "message.video.playInline: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "message.video.playInline",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "message.video.playInline: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "message.video.playInline",
+        "target": "x"
+      },
+      "name": "message.video.playInline: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "message.video.playInline"
+      },
+      "name": "message.video.playInline: no target"
+    }
+  ],
+  "kind": "target"
+}

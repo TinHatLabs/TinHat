@@ -1,0 +1,31 @@
+# WezTerm scheme with multi-line arrays
+[metadata]
+name = "Hand Made Wez (https://example.org/wez)"
+author = "Wez Fan <fan@example.org>"
+aliases = ["hmw"]
+origin_url = "https://example.org/wez"
+
+[colors]
+foreground = "#dcdccc"
+background = "#3f3f3f"
+cursor_bg = "#73635a"
+cursor_fg = "#000000"
+selection_fg = "#3f3f3f"
+selection_bg = "#dcdccc"
+ansi = [
+  "#4d4d4d", "#705050", "#60b48a", "#f0dfaf",   # first half
+  "#506070", "#dc8cc3", "#8cd0d3", "#dcdccc",
+]
+brights = [
+  "#709080",
+  "#dca3a3",
+  "#c3bf9f",
+  "#e0cf9f",
+  "#94bff3",
+  "#ec93d3",
+  "#93e0e3",
+  "#ffffff",
+]
+
+[colors.indexed]
+136 = "#af8700"

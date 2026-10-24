@@ -1,0 +1,124 @@
+{
+  "expect": {
+    "calls": [
+      {
+        "end": 1790003600000,
+        "members": [
+          {
+            "ms": 3540000,
+            "user": "@ana:example.com"
+          },
+          {
+            "ms": 3600000,
+            "user": "@me:example.com"
+          }
+        ],
+        "myMs": 3600000,
+        "ongoing": true,
+        "room": "!gaming:example.com",
+        "start": 1790000000000,
+        "startedBy": "@me:example.com"
+      }
+    ],
+    "last": {
+      "end": 1790003600000,
+      "myEnd": 1790003600000,
+      "myMs": 3600000,
+      "myStart": 1790000000000,
+      "ongoing": true,
+      "room": "!gaming:example.com",
+      "start": 1790000000000,
+      "startedBy": "@me:example.com",
+      "with": [
+        {
+          "ms": 3540000,
+          "user": "@ana:example.com"
+        }
+      ]
+    },
+    "week": {
+      "friends": [
+        {
+          "calls": 1,
+          "joined": 0,
+          "started": 1,
+          "togetherMs": 3540000,
+          "user": "@ana:example.com"
+        }
+      ],
+      "from": 1789398800000,
+      "myCalls": 1,
+      "myMs": 3600000,
+      "to": 1790003600000
+    }
+  },
+  "input": {
+    "me": "@me:example.com",
+    "now": 1790003600000,
+    "recorder": "@recorder:example.com",
+    "rooms": [
+      {
+        "events": [
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000000000,
+              "device_id": "D1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@me:example.com:D1",
+              "scope": "m.room"
+            },
+            "id": "$e1",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790000000000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000060000,
+              "device_id": "A1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@ana:example.com:A1",
+              "scope": "m.room"
+            },
+            "id": "$e2",
+            "key": "_@ana:example.com_A1_m.call",
+            "sender": "@ana:example.com",
+            "ts": 1790000060000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e3",
+            "key": "_@ana:example.com_A1_m.call",
+            "sender": "@ana:example.com",
+            "ts": 1790007200000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e4",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790010800000,
+            "type": "org.matrix.msc3401.call.member"
+          }
+        ],
+        "room": "!gaming:example.com"
+      }
+    ]
+  },
+  "note": "an event after now is ignored"
+}

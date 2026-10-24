@@ -1,0 +1,1639 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": false,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "desktop: all on, watchParty.canControl flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true
+          }
+        }
+      },
+      "name": "desktop: only watchParty.canControl=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": false
+          }
+        }
+      },
+      "name": "desktop: all on, watchParty.in flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "desktop: only watchParty.in=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": false
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": false,
+            "watchParty.in": false
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": false,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": false,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "web: all on, watchParty.canControl flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true
+          }
+        }
+      },
+      "name": "web: only watchParty.canControl=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": false
+          }
+        }
+      },
+      "name": "web: all on, watchParty.in flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "web: only watchParty.in=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": false,
+            "watchParty.in": false
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": false,
+            "watchParty.in": false
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start",
+        "label": "Play / pause for everyone",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com",
+          "video": "yt:dQw4w9WgXcQ"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "video": {
+              "yt:dQw4w9WgXcQ": {
+                "name": "Never Gonna Give You Up",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "watchParty.canControl": true,
+            "watchParty.in": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

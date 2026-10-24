@@ -1,0 +1,87 @@
+{
+  "expect": {
+    "groups": [
+      {
+        "id": "palette",
+        "rows": [
+          "bg"
+        ]
+      },
+      {
+        "id": "roles:0",
+        "rows": [
+          "surface.window"
+        ]
+      },
+      {
+        "id": "area:island",
+        "rows": [
+          "drawer.panel.bg",
+          "island.bg.nav"
+        ]
+      },
+      {
+        "id": "area:rail",
+        "rows": [
+          "rail.bg"
+        ]
+      },
+      {
+        "id": "area:composer",
+        "rows": [
+          "composer.bg"
+        ]
+      },
+      {
+        "id": "area:callbar",
+        "rows": [
+          "callbar.bg"
+        ]
+      },
+      {
+        "id": "area:alphaArea",
+        "rows": [
+          "alpha.new.bg"
+        ]
+      }
+    ]
+  },
+  "hasPalette": true,
+  "kind": "labels",
+  "query": "BACKGROUND",
+  "tokens": [
+    {
+      "area": "composer",
+      "id": "composer.bg"
+    },
+    {
+      "area": "composer",
+      "description": "Message text",
+      "id": "composer.fg"
+    },
+    {
+      "area": "rail",
+      "id": "rail.bg"
+    },
+    {
+      "area": "island",
+      "id": "drawer.panel.bg"
+    },
+    {
+      "area": "island",
+      "id": "island.bg.nav"
+    },
+    {
+      "area": "zeta",
+      "id": "zeta.new.fg"
+    },
+    {
+      "area": "alphaArea",
+      "id": "alpha.new.bg"
+    },
+    {
+      "area": "callbar",
+      "id": "callbar.bg"
+    }
+  ]
+}

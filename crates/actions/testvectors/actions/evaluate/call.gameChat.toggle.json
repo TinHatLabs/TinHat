@@ -1,0 +1,1387 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": false,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: all on, call.aside flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true
+          }
+        }
+      },
+      "name": "desktop: only call.aside=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: all on, call.gameChat flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.gameChat": true
+          }
+        }
+      },
+      "name": "desktop: only call.gameChat=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": false
+          }
+        }
+      },
+      "name": "desktop: all on, call.in flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: only call.in=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": false,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": false,
+            "call.in": false
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 1,
+        "menu": "callMore",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: menu callMore[1] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 1,
+        "menu": "callMore",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu callMore[1] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": false,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: all on, call.aside flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true
+          }
+        }
+      },
+      "name": "web: only call.aside=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: all on, call.gameChat flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.gameChat": true
+          }
+        }
+      },
+      "name": "web: only call.gameChat=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": false
+          }
+        }
+      },
+      "name": "web: all on, call.in flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: only call.in=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": false,
+            "call.gameChat": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Leave game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Leave game chat — everyone in the call hears your mic again",
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 1,
+        "menu": "callMore",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.aside": true,
+            "call.gameChat": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: menu callMore[1] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game chat",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 1,
+        "menu": "callMore",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu callMore[1] desktop, all off"
+    }
+  ],
+  "kind": "evaluate"
+}

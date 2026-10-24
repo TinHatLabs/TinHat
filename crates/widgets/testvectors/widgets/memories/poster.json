@@ -1,0 +1,353 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "file": "cam-a.mkv",
+        "t": 8
+      },
+      "session": {
+        "end_ms": 1789992800000,
+        "id": "s1",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789989200000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "a1.mka",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "audio",
+            "start_ms": 1789989200000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/a1.mka?exp=1&sig=x"
+          },
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789989202000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          },
+          {
+            "end_ms": null,
+            "file": "share-b.mkv",
+            "identity": "@bo:example.com:DEV2",
+            "kind": "share",
+            "start_ms": 1789989230000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/share-b.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "share-b.mkv",
+        "t": 8
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p2",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789996400000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          },
+          {
+            "end_ms": null,
+            "file": "share-b.mkv",
+            "identity": "@bo:example.com:DEV2",
+            "kind": "share",
+            "start_ms": 1789996400400,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/share-b.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "cam-a.mkv",
+        "t": 8
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p3",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789996400000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          },
+          {
+            "end_ms": null,
+            "file": "share-b.mkv",
+            "identity": "@bo:example.com:DEV2",
+            "kind": "share",
+            "start_ms": 1789996400600,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/share-b.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "cam-b.mkv",
+        "t": 8
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p4",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "cam-b.mkv",
+            "identity": "@bo:example.com:DEV2",
+            "kind": "cam",
+            "start_ms": 1789996400100,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-b.mkv?exp=1&sig=x"
+          },
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789996400700,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": null,
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p5",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "a.mka",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "audio",
+            "start_ms": 1789996400000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/a.mka?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": null,
+      "session": {
+        "end_ms": null,
+        "id": "p6",
+        "live": true,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789996400000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "cam-a.mkv",
+        "t": 1
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p7",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789999995000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789999995000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "cam-a.mkv",
+        "t": 0
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p8",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789999999500,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789999999600,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "cam-a.mkv",
+        "t": 1
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p9",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": 1789998200000,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "share-b.mkv",
+        "t": 8
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p10",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "end_ms": null,
+            "file": "share-c.mkv",
+            "identity": "@cy:example.com:DEV3",
+            "kind": "share",
+            "start_ms": 1789996400900,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/share-c.mkv?exp=1&sig=x"
+          },
+          {
+            "end_ms": null,
+            "file": "share-b.mkv",
+            "identity": "@bo:example.com:DEV2",
+            "kind": "share",
+            "start_ms": 1789996400900,
+            "url": "https://tinhat.example.com/api/vods/file/r/s/share-b.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "file": "cam-a.mkv",
+        "t": 8
+      },
+      "session": {
+        "end_ms": 1790000000000,
+        "id": "p11",
+        "live": false,
+        "ready": true,
+        "room": "!r:x",
+        "room_name": "Gaming Central",
+        "start_ms": 1789996400000,
+        "started_by": "@ana:x",
+        "tracks": [
+          {
+            "file": "",
+            "kind": "cam",
+            "start_ms": 1789996400000
+          },
+          {
+            "kind": "cam"
+          },
+          "junk",
+          {
+            "end_ms": null,
+            "file": "cam-a.mkv",
+            "identity": "@ana:example.com:DEV1",
+            "kind": "cam",
+            "start_ms": "x",
+            "url": "https://tinhat.example.com/api/vods/file/r/s/cam-a.mkv?exp=1&sig=x"
+          }
+        ]
+      }
+    },
+    {
+      "expect": null,
+      "session": null
+    },
+    {
+      "expect": null,
+      "session": {
+        "end_ms": 1790000000001,
+        "start_ms": 1790000000000,
+        "tracks": "no"
+      }
+    }
+  ]
+}

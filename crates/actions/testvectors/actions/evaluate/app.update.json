@@ -1,0 +1,1255 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "checking",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: all on, update.state flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop: only update.state=\"none\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "checking"
+          }
+        }
+      },
+      "name": "desktop: only update.state=\"checking\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Update to v…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "available"
+          }
+        }
+      },
+      "name": "desktop: only update.state=\"available\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Restart to update…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "ready"
+          }
+        }
+      },
+      "name": "desktop: only update.state=\"ready\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop: all on, update.version flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: only update.version=\"10.7.0\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Restart to update…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "ready"
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "checking"
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Update to v…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "available"
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "checking",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "web: all on, update.state flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web: only update.state=\"none\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "checking"
+          }
+        }
+      },
+      "name": "web: only update.state=\"checking\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Update to v…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "available"
+          }
+        }
+      },
+      "name": "web: only update.state=\"available\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Reload to update…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "ready"
+          }
+        }
+      },
+      "name": "web: only update.state=\"ready\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web: all on, update.version flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "web: only update.version=\"10.7.0\""
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Update to v…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "available"
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "update.state": "none",
+            "update.version": "10.7.0"
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

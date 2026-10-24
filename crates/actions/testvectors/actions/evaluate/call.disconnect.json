@@ -1,0 +1,2863 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": false
+          }
+        }
+      },
+      "name": "desktop: all on, call.canModerate flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: only call.canModerate=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: all on, person.me flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only person.me=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": false
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop this person from this call? They can rejoin right away.",
+          "title": "Disconnect this person?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "desktop: menu person[5] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu person[5] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": false
+          }
+        }
+      },
+      "name": "web: all on, call.canModerate flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: only call.canModerate=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: all on, person.me flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only person.me=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": false
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": false
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop this person from this call? They can rejoin right away.",
+          "title": "Disconnect this person?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.disconnect",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.canModerate": true
+          }
+        }
+      },
+      "name": "web: menu person[5] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Disconnect",
+          "kind": "destructive",
+          "text": "Drop Zane (laptop) from this call? They can rejoin right away.",
+          "title": "Disconnect Zane (laptop)?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-stop-symbolic",
+        "label": "Disconnect from the call…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu person[5] desktop, all off"
+    }
+  ],
+  "kind": "evaluate"
+}

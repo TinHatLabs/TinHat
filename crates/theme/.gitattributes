@@ -1,0 +1,5 @@
+# Contract data compared byte for byte with the web repo and the shared contract directory (tables, tokens, built-ins,
+# library, test vectors) and the reference data generated from the web reference: never convert line endings.
+*.json -text
+testvectors/** -text
+tests/data/** -text

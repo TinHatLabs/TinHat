@@ -1,0 +1,245 @@
+{
+  "cases": [
+    {
+      "expect": [],
+      "text": ""
+    },
+    {
+      "expect": [
+        {
+          "text": "no links here"
+        }
+      ],
+      "text": "no links here"
+    },
+    {
+      "expect": [
+        {
+          "text": "see "
+        },
+        {
+          "text": "https://example.com",
+          "url": "https://example.com"
+        }
+      ],
+      "text": "see https://example.com"
+    },
+    {
+      "expect": [
+        {
+          "text": "see "
+        },
+        {
+          "text": "https://example.com",
+          "url": "https://example.com"
+        },
+        {
+          "text": "."
+        }
+      ],
+      "text": "see https://example.com."
+    },
+    {
+      "expect": [
+        {
+          "text": "("
+        },
+        {
+          "text": "https://example.org/path?q=1",
+          "url": "https://example.org/path?q=1"
+        },
+        {
+          "text": ")"
+        }
+      ],
+      "text": "(https://example.org/path?q=1)"
+    },
+    {
+      "expect": [
+        {
+          "text": "https://en.wikipedia.org/wiki/Foo_(bar)",
+          "url": "https://en.wikipedia.org/wiki/Foo_(bar)"
+        },
+        {
+          "text": " is fine"
+        }
+      ],
+      "text": "https://en.wikipedia.org/wiki/Foo_(bar) is fine"
+    },
+    {
+      "expect": [
+        {
+          "text": "HTTP://UPPER.example",
+          "url": "HTTP://UPPER.example"
+        },
+        {
+          "text": " and "
+        },
+        {
+          "text": "hTtPs://mixed.example/x",
+          "url": "hTtPs://mixed.example/x"
+        }
+      ],
+      "text": "HTTP://UPPER.example and hTtPs://mixed.example/x"
+    },
+    {
+      "expect": [
+        {
+          "text": "xhttps://not.a.link but "
+        },
+        {
+          "text": "https://yes.one",
+          "url": "https://yes.one"
+        }
+      ],
+      "text": "xhttps://not.a.link but https://yes.one"
+    },
+    {
+      "expect": [
+        {
+          "text": "https:// alone and http://"
+        }
+      ],
+      "text": "https:// alone and http://"
+    },
+    {
+      "expect": [
+        {
+          "text": "two "
+        },
+        {
+          "text": "https://a.example,https://b.example",
+          "url": "https://a.example,https://b.example"
+        },
+        {
+          "text": "! done"
+        }
+      ],
+      "text": "two https://a.example,https://b.example! done"
+    },
+    {
+      "expect": [
+        {
+          "text": "quote \""
+        },
+        {
+          "text": "https://q.example",
+          "url": "https://q.example"
+        },
+        {
+          "text": "\" end"
+        }
+      ],
+      "text": "quote \"https://q.example\" end"
+    },
+    {
+      "expect": [
+        {
+          "text": "<"
+        },
+        {
+          "text": "https://angle.example",
+          "url": "https://angle.example"
+        },
+        {
+          "text": ">"
+        }
+      ],
+      "text": "<https://angle.example>"
+    },
+    {
+      "expect": [
+        {
+          "text": "line one\n"
+        },
+        {
+          "text": "https://line.two/x",
+          "url": "https://line.two/x"
+        },
+        {
+          "text": "\nline three"
+        }
+      ],
+      "text": "line one\nhttps://line.two/x\nline three"
+    },
+    {
+      "expect": [
+        {
+          "text": "emoji 🎮 "
+        },
+        {
+          "text": "https://game.example/🎮",
+          "url": "https://game.example/🎮"
+        },
+        {
+          "text": " after"
+        }
+      ],
+      "text": "emoji 🎮 https://game.example/🎮 after"
+    },
+    {
+      "expect": [
+        {
+          "text": "trailing "
+        },
+        {
+          "text": "https://t.example/a?b=c&d=e",
+          "url": "https://t.example/a?b=c&d=e"
+        },
+        {
+          "text": ";"
+        }
+      ],
+      "text": "trailing https://t.example/a?b=c&d=e;"
+    },
+    {
+      "expect": [
+        {
+          "text": "https://x.example/((a))",
+          "url": "https://x.example/((a))"
+        },
+        {
+          "text": " and "
+        },
+        {
+          "text": "https://y.example/a)b",
+          "url": "https://y.example/a)b"
+        },
+        {
+          "text": ")"
+        }
+      ],
+      "text": "https://x.example/((a)) and https://y.example/a)b)"
+    },
+    {
+      "expect": [
+        {
+          "text": "tab\t"
+        },
+        {
+          "text": "https://tab.example",
+          "url": "https://tab.example"
+        },
+        {
+          "text": "\tend"
+        }
+      ],
+      "text": "tab\thttps://tab.example\tend"
+    },
+    {
+      "expect": [
+        {
+          "text": "ctrl "
+        },
+        {
+          "text": "https://c.example/",
+          "url": "https://c.example/"
+        },
+        {
+          "text": "\u0001x"
+        }
+      ],
+      "text": "ctrl https://c.example/\u0001x"
+    }
+  ]
+}

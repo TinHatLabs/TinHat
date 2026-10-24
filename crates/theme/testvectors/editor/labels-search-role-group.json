@@ -1,0 +1,56 @@
+{
+  "expect": {
+    "groups": [
+      {
+        "id": "roles:6",
+        "rows": [
+          "presence.online",
+          "presence.away",
+          "presence.busy",
+          "presence.incall",
+          "presence.offline",
+          "call.speaking",
+          "call.muted"
+        ]
+      }
+    ]
+  },
+  "hasPalette": true,
+  "kind": "labels",
+  "query": "presence",
+  "tokens": [
+    {
+      "area": "composer",
+      "id": "composer.bg"
+    },
+    {
+      "area": "composer",
+      "description": "Message text",
+      "id": "composer.fg"
+    },
+    {
+      "area": "rail",
+      "id": "rail.bg"
+    },
+    {
+      "area": "island",
+      "id": "drawer.panel.bg"
+    },
+    {
+      "area": "island",
+      "id": "island.bg.nav"
+    },
+    {
+      "area": "zeta",
+      "id": "zeta.new.fg"
+    },
+    {
+      "area": "alphaArea",
+      "id": "alpha.new.bg"
+    },
+    {
+      "area": "callbar",
+      "id": "callbar.bg"
+    }
+  ]
+}

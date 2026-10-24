@@ -1,0 +1,6229 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop desktop idle"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop phone idle"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop desktop inCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop phone inCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop desktop inCallAside"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop phone inCallAside"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": false,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop desktop phone"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": false,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop phone phone"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop desktop phoneCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop phone phoneCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        }
+      },
+      "name": "desktop desktop busy"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        }
+      },
+      "name": "desktop phone busy"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web desktop idle"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web phone idle"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web desktop inCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web phone inCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web desktop inCallAside"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web phone inCallAside"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": false,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web desktop phone"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": false,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web phone phone"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web desktop phoneCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.phone": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web phone phoneCall"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        }
+      },
+      "name": "web desktop busy"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "person.profile.view",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "user-identity",
+            "known": true,
+            "label": "View profile",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "room.member.setRole",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "system-users-symbolic",
+            "known": true,
+            "label": "Change role…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.kick",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-kick-user-symbolic",
+            "known": true,
+            "label": "Kick…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.ban",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "im-ban-user-symbolic",
+            "known": true,
+            "label": "Ban…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "room.member.unban",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "checkmark-symbolic",
+            "known": true,
+            "label": "Unban",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          },
+          {
+            "a": "space.roles.manage",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "configure-symbolic",
+            "known": true,
+            "label": "Manage roles…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": "@zane:example.com",
+            "subjectKind": "person",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Zane",
+            "tip": null,
+            "why": "requires"
+          }
+        ],
+        "menu": "member"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "phone",
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        }
+      },
+      "name": "web phone busy"
+    }
+  ],
+  "kind": "menu"
+}

@@ -1,0 +1,265 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.corner.join",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.corner.join: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.corner.join",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.corner.join: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.corner.join",
+        "target": "x"
+      },
+      "name": "call.corner.join: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.corner.join"
+      },
+      "name": "call.corner.join: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.disconnect",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.disconnect: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.disconnect",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.disconnect: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.disconnect",
+        "target": "x"
+      },
+      "name": "call.disconnect: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.disconnect"
+      },
+      "name": "call.disconnect: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fix.peerAudio",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.fix.peerAudio: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fix.peerAudio",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.fix.peerAudio: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fix.peerAudio",
+        "target": "x"
+      },
+      "name": "call.fix.peerAudio: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.fix.peerAudio"
+      },
+      "name": "call.fix.peerAudio: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pullAside",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.pullAside: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pullAside",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.pullAside: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pullAside",
+        "target": "x"
+      },
+      "name": "call.pullAside: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.pullAside"
+      },
+      "name": "call.pullAside: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.serverMute.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.serverMute.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.serverMute.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.serverMute.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.serverMute.toggle",
+        "target": "x"
+      },
+      "name": "call.serverMute.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.serverMute.toggle"
+      },
+      "name": "call.serverMute.toggle: no target"
+    }
+  ],
+  "kind": "target"
+}

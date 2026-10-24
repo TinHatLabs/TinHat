@@ -1,0 +1,3579 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": false,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, room.canChangePower flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only room.canChangePower=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": false
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, room.inSpace flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only room.inSpace=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": false,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": false,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": false,
+                  "room.inSpace": false
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "desktop: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@gone:example.com",
+        "targetIcon": null,
+        "targetName": "this person",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "desktop: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "desktop: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "desktop: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu member[5] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu member[5] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 8,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu person[8] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 8,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu person[8] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": false,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, room.canChangePower flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only room.canChangePower=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": false
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, room.inSpace flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only room.inSpace=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": false,
+                  "room.inSpace": false
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": false
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "web: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@gone:example.com",
+        "targetIcon": null,
+        "targetName": "this person",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "web: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "web: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "web: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu member[5] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 5,
+        "menu": "member",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu member[5] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 8,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canChangePower": true,
+                  "room.inSpace": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu person[8] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "configure-symbolic",
+        "label": "Manage roles…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 8,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu person[8] desktop, all off"
+    }
+  ],
+  "kind": "evaluate"
+}

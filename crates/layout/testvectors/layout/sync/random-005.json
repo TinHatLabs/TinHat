@@ -1,0 +1,218 @@
+{
+  "devices": [
+    "a",
+    "b"
+  ],
+  "expect": {
+    "devices": {
+      "a": {
+        "chains": {
+          "main": {
+            "key": "a",
+            "last": 2
+          }
+        },
+        "counter": 2,
+        "known": {
+          "main": [
+            {
+              "by": "a",
+              "deleted": true,
+              "id": "main",
+              "rev": 2,
+              "savedAt": 5,
+              "vv": {
+                "a": 2
+              }
+            }
+          ]
+        },
+        "lost": {},
+        "maxV": 1,
+        "own": {
+          "main": {
+            "by": "a",
+            "deleted": true,
+            "id": "main",
+            "rev": 2,
+            "savedAt": 5,
+            "vv": {
+              "a": 2
+            }
+          }
+        },
+        "readOnly": false,
+        "wantPut": false
+      },
+      "b": {
+        "chains": {},
+        "counter": 0,
+        "known": {
+          "main": [
+            {
+              "by": "a",
+              "deleted": true,
+              "id": "main",
+              "rev": 2,
+              "savedAt": 5,
+              "vv": {
+                "a": 2
+              }
+            }
+          ]
+        },
+        "lost": {},
+        "maxV": 1,
+        "own": {},
+        "readOnly": false,
+        "wantPut": false
+      }
+    },
+    "log": [
+      "0 b put: idle",
+      "1 b put: idle",
+      "2 b deliver: ignored",
+      "3 a restore: none",
+      "4 a dismiss: none",
+      "5 b delete: noop",
+      "6 b begin: begun",
+      "7 a save: saved",
+      "8 a delete: saved",
+      "9 a put: put",
+      "10 b put: idle",
+      "11 a deliver: ok",
+      "12 b deliver: ok",
+      "13 a deliver: ok",
+      "14 a put: idle",
+      "15 b deliver: ok",
+      "16 b put: idle",
+      "17 a deliver: ok",
+      "18 b deliver: ok"
+    ],
+    "server": {
+      "format": "tinhat-layouts",
+      "layouts": [
+        {
+          "by": "a",
+          "deleted": true,
+          "id": "main",
+          "rev": 2,
+          "savedAt": 5,
+          "vv": {
+            "a": 2
+          }
+        }
+      ],
+      "v": 1
+    }
+  },
+  "kind": "sync",
+  "steps": [
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "restore",
+      "id": "side",
+      "now": 1
+    },
+    {
+      "device": "a",
+      "event": "dismiss",
+      "id": "main",
+      "now": 2
+    },
+    {
+      "device": "b",
+      "event": "delete",
+      "id": "side",
+      "now": 3
+    },
+    {
+      "device": "b",
+      "event": "begin",
+      "id": "main"
+    },
+    {
+      "device": "a",
+      "edit": {
+        "desktop": {
+          "root": {
+            "c": [],
+            "id": "body",
+            "t": "row"
+          },
+          "tag": "a4"
+        },
+        "name": "Main",
+        "phone": {
+          "list": [
+            "rooms"
+          ],
+          "rail": [
+            "nav"
+          ]
+        }
+      },
+      "event": "save",
+      "id": "main",
+      "now": 4
+    },
+    {
+      "device": "a",
+      "event": "delete",
+      "id": "main",
+      "now": 5
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    }
+  ]
+}

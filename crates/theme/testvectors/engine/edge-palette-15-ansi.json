@@ -1,0 +1,109 @@
+{
+  "expect": {
+    "error": "bad-palette: ansi must be 16 colours",
+    "ok": false
+  },
+  "theme": {
+    "format": "tinhat-theme",
+    "id": "palette-15-ansi",
+    "name": "Edge palette-15-ansi",
+    "palette": {
+      "ansi": [
+        "#000000",
+        "#cd0000",
+        "#00cd00",
+        "#cdcd00",
+        "#0000ee",
+        "#cd00cd",
+        "#00cdcd",
+        "#e5e5e5",
+        "#7f7f7f",
+        "#ff0000",
+        "#00ff00",
+        "#ffff00",
+        "#5c5cff",
+        "#ff00ff",
+        "#00ffff"
+      ],
+      "bg": "#000000",
+      "fg": "#ffffff"
+    },
+    "v": 1
+  },
+  "tokensSpec": {
+    "tokens": [
+      {
+        "default": "surface.raised",
+        "id": "composer.bg"
+      },
+      {
+        "default": "surface.hover",
+        "id": "rooms.item.bg.hover"
+      },
+      {
+        "default": "mixok(accent.base, surface.island, 0.6)",
+        "id": "bubble.own.bg"
+      },
+      {
+        "default": "text.onAccent",
+        "id": "bubble.own.fg"
+      },
+      {
+        "default": "alpha(#000000, 0.5)",
+        "id": "tile.overlay.bg"
+      },
+      {
+        "default": "call.speaking",
+        "id": "tile.ring.speaking"
+      },
+      {
+        "default": "alpha(accent.bright, 0.25)",
+        "id": "test.alpha"
+      },
+      {
+        "default": "mix(surface.window, text.primary, 0.2)",
+        "id": "test.mix"
+      },
+      {
+        "default": "lighter(surface.island, 1.18)",
+        "id": "test.lighter"
+      },
+      {
+        "default": "darker(accent.base, 1.2)",
+        "id": "test.darker"
+      },
+      {
+        "default": "over(accent.dim, surface.island)",
+        "id": "test.over"
+      },
+      {
+        "default": "mixok(surface.island, accent.bright, 0.35)",
+        "id": "test.mixok"
+      },
+      {
+        "default": "best(surface.raised, text.secondary, #ffffff, #000000)",
+        "id": "test.best"
+      },
+      {
+        "default": "guard(text.muted, surface.raised, 7)",
+        "id": "test.guard"
+      },
+      {
+        "default": "#1e6a76/0.5",
+        "id": "test.literal"
+      },
+      {
+        "default": "test.mix",
+        "id": "test.chain"
+      },
+      {
+        "default": "over(alpha(state.danger, 0.3), mix(surface.island, surface.raised, 0.5))",
+        "id": "test.nested"
+      },
+      {
+        "default": "darker(lighter(mention.bg, 1.5), 1.1)",
+        "id": "test.qt"
+      }
+    ]
+  }
+}

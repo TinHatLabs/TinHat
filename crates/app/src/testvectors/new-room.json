@@ -1,0 +1,165 @@
+{
+ "format": "tinhat-new-room-vectors",
+ "v": 2,
+ "note": "initial_state(space, private, parent): what New room puts in createRoom's initial_state; hint: the line New room shows (contract tools/new-room-vectors.py)",
+ "cases": [
+  {
+   "name": "a private room",
+   "input": {
+    "space": false,
+    "private": true,
+    "parent": null
+   },
+   "want": [
+    {
+     "type": "m.room.encryption",
+     "state_key": "",
+     "content": {
+      "algorithm": "m.megolm.v1.aes-sha2",
+      "rotation_period_ms": 604800000,
+      "rotation_period_msgs": 100
+     }
+    }
+   ],
+   "hint": "End-to-end encrypted: only the people in it can read the messages."
+  },
+  {
+   "name": "a public room",
+   "input": {
+    "space": false,
+    "private": false,
+    "parent": null
+   },
+   "want": [
+    {
+     "type": "m.room.encryption",
+     "state_key": "",
+     "content": {
+      "algorithm": "m.megolm.v1.aes-sha2",
+      "rotation_period_ms": 604800000,
+      "rotation_period_msgs": 100
+     }
+    }
+   ],
+   "hint": "End-to-end encrypted: people who join without an invite can't read earlier messages."
+  },
+  {
+   "name": "a public room in a space",
+   "input": {
+    "space": false,
+    "private": false,
+    "parent": "!space:example.org"
+   },
+   "want": [
+    {
+     "type": "m.room.join_rules",
+     "state_key": "",
+     "content": {
+      "join_rule": "restricted",
+      "allow": [
+       {
+        "type": "m.room_membership",
+        "room_id": "!space:example.org"
+       }
+      ]
+     }
+    }
+   ],
+   "hint": "Not end-to-end encrypted, so people who join later can read earlier messages, and so can the server."
+  },
+  {
+   "name": "a private room in a space",
+   "input": {
+    "space": false,
+    "private": true,
+    "parent": "!space:example.org"
+   },
+   "want": [
+    {
+     "type": "m.room.encryption",
+     "state_key": "",
+     "content": {
+      "algorithm": "m.megolm.v1.aes-sha2",
+      "rotation_period_ms": 604800000,
+      "rotation_period_msgs": 100
+     }
+    }
+   ],
+   "hint": "End-to-end encrypted: only the people in it can read the messages."
+  },
+  {
+   "name": "a public space",
+   "input": {
+    "space": true,
+    "private": false,
+    "parent": null
+   },
+   "want": [],
+   "hint": ""
+  },
+  {
+   "name": "a private space",
+   "input": {
+    "space": true,
+    "private": true,
+    "parent": null
+   },
+   "want": [],
+   "hint": ""
+  },
+  {
+   "name": "a space never takes a parent",
+   "input": {
+    "space": true,
+    "private": false,
+    "parent": "!space:example.org"
+   },
+   "want": [],
+   "hint": ""
+  },
+  {
+   "name": "a public room in a space on another server",
+   "input": {
+    "space": false,
+    "private": false,
+    "parent": "!abc123:other.example"
+   },
+   "want": [
+    {
+     "type": "m.room.join_rules",
+     "state_key": "",
+     "content": {
+      "join_rule": "restricted",
+      "allow": [
+       {
+        "type": "m.room_membership",
+        "room_id": "!abc123:other.example"
+       }
+      ]
+     }
+    }
+   ],
+   "hint": "Not end-to-end encrypted, so people who join later can read earlier messages, and so can the server."
+  },
+  {
+   "name": "an empty parent is no space",
+   "input": {
+    "space": false,
+    "private": false,
+    "parent": ""
+   },
+   "want": [
+    {
+     "type": "m.room.encryption",
+     "state_key": "",
+     "content": {
+      "algorithm": "m.megolm.v1.aes-sha2",
+      "rotation_period_ms": 604800000,
+      "rotation_period_msgs": 100
+     }
+    }
+   ],
+   "hint": "End-to-end encrypted: people who join without an invite can't read earlier messages."
+  }
+ ]
+}

@@ -1,0 +1,1131 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": false
+          }
+        }
+      },
+      "name": "desktop: all on, calendar.canInvite flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "desktop: only calendar.canInvite=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": false
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": false
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "desktop",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": false
+          }
+        }
+      },
+      "name": "web: all on, calendar.canInvite flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "web: only calendar.canInvite=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": false
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite them to the space",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "app": "web",
+        "context": {
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.canInvite": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

@@ -1,0 +1,937 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": false
+          }
+        }
+      },
+      "name": "desktop: all on, push.enabled flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: only push.enabled=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "app",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "desktop",
+        "context": {},
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": false
+          }
+        }
+      },
+      "name": "web: all on, push.enabled flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "web: only push.enabled=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": false
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": false
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": false
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "notifications",
+        "label": "Send a test notification",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "push.test",
+        "app": "web",
+        "context": {},
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "push.enabled": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

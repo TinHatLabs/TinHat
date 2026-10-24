@@ -1,0 +1,200 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "source",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "source": "app:spotify"
+        }
+      },
+      "name": "call.audioShare.source: a raw device value, stored"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "source": "app:spotify"
+        }
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "source": "app:spotify"
+        },
+        "transient": true
+      },
+      "name": "call.audioShare.source: a raw device value, transient"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "source",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "source": ""
+        },
+        "transient": true
+      },
+      "name": "call.audioShare.source: an empty device value, transient"
+    },
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "name": "call.camera.set: a raw device value, stored"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        },
+        "transient": true
+      },
+      "name": "call.camera.set: a raw device value, transient"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "device": ""
+        },
+        "transient": true
+      },
+      "name": "call.camera.set: an empty device value, transient"
+    },
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "name": "call.input.set: a raw device value, stored"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        },
+        "transient": true
+      },
+      "name": "call.input.set: a raw device value, transient"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "device": ""
+        },
+        "transient": true
+      },
+      "name": "call.input.set: an empty device value, transient"
+    },
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "name": "call.output.set: a raw device value, stored"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        },
+        "transient": true
+      },
+      "name": "call.output.set: a raw device value, transient"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "device": ""
+        },
+        "transient": true
+      },
+      "name": "call.output.set: an empty device value, transient"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "room": "nope"
+        },
+        "transient": true
+      },
+      "name": "transient on a portable kind changes nothing"
+    }
+  ],
+  "kind": "target"
+}

@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "expect": "2d20kh1",
+      "expr": "",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "1d20",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "1d20",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1+5",
+      "expr": "1d20+5",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1+5",
+      "expr": "1d20+5",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1+5-1",
+      "expr": "d20+5-1",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1+5-1",
+      "expr": "d20+5-1",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1+5",
+      "expr": "2d20kh1+5",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1+5",
+      "expr": "2d20kh1+5",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1+5",
+      "expr": "2d20kl1+5",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1+5",
+      "expr": "2d20kl1+5",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "2d20+5",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "2d20+5",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "1d20kh1+3",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "1d20kh1+3",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "3d20kh1",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "3d20kh1",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "-1d20+5",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "-1d20+5",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "1d20+1d20",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "1d20+1d20",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "2d6+3",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "2d6+3",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "4d6kh3",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "4d6kh3",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1+1d4+2",
+      "expr": "1d20+1d4+2",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1+1d4+2",
+      "expr": "1d20+1d4+2",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "nonsense",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "nonsense",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1",
+      "expr": "1d20+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1",
+      "expr": "1d20+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1",
+      "expr": "99d4+1d20",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1",
+      "expr": "99d4+1d20",
+      "kind": "dis"
+    },
+    {
+      "expect": "2d20kh1+98d4",
+      "expr": "1d20+98d4",
+      "kind": "adv"
+    },
+    {
+      "expect": "2d20kl1+98d4",
+      "expr": "1d20+98d4",
+      "kind": "dis"
+    }
+  ]
+}

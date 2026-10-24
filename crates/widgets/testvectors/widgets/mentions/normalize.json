@@ -1,0 +1,1058 @@
+{
+  "cases": [
+    {
+      "expect": [],
+      "value": null
+    },
+    {
+      "expect": [],
+      "value": "nope"
+    },
+    {
+      "expect": [],
+      "value": {}
+    },
+    {
+      "expect": [],
+      "value": []
+    },
+    {
+      "expect": [
+        {
+          "e": "$b",
+          "r": "!chill:example.com",
+          "s": "@bo:x",
+          "seen": true,
+          "t": 3000
+        },
+        {
+          "e": "$c",
+          "r": "!gaming:example.com",
+          "s": "@cy:x",
+          "t": 2000
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1000
+        }
+      ],
+      "value": [
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1000
+        },
+        {
+          "e": "$b",
+          "r": "!chill:example.com",
+          "s": "@bo:x",
+          "seen": true,
+          "t": 3000
+        },
+        {
+          "e": "$c",
+          "r": "!gaming:example.com",
+          "s": "@cy:x",
+          "seen": false,
+          "t": 2000
+        }
+      ]
+    },
+    {
+      "expect": [
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1000
+        }
+      ],
+      "value": [
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1000
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@bo:x",
+          "seen": true,
+          "t": 5000
+        }
+      ]
+    },
+    {
+      "expect": [],
+      "value": [
+        {
+          "e": "$a",
+          "r": "gaming",
+          "s": "@ana:x",
+          "t": 1
+        },
+        {
+          "e": "a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "ana",
+          "t": 1
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": -1
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": "5"
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": null
+        },
+        null,
+        7,
+        [
+          "x"
+        ]
+      ]
+    },
+    {
+      "expect": [
+        {
+          "e": "$x",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1500
+        },
+        {
+          "e": "$y",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1500
+        },
+        {
+          "e": "$z",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1500
+        }
+      ],
+      "value": [
+        {
+          "e": "$z",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1500.9
+        },
+        {
+          "e": "$y",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1500
+        },
+        {
+          "e": "$x",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": "yes",
+          "t": 1500
+        }
+      ]
+    },
+    {
+      "expect": [
+        {
+          "e": "$Z",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        },
+        {
+          "e": "$ｘ",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        },
+        {
+          "e": "$🎮",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        }
+      ],
+      "value": [
+        {
+          "e": "$🎮",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        },
+        {
+          "e": "$ｘ",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        },
+        {
+          "e": "$Z",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        },
+        {
+          "e": "$a",
+          "r": "!gaming:example.com",
+          "s": "@a:x",
+          "t": 10
+        }
+      ]
+    },
+    {
+      "expect": [
+        {
+          "e": "$e69",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1483
+        },
+        {
+          "e": "$e68",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1476
+        },
+        {
+          "e": "$e67",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1469
+        },
+        {
+          "e": "$e66",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1462
+        },
+        {
+          "e": "$e65",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1455
+        },
+        {
+          "e": "$e64",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1448
+        },
+        {
+          "e": "$e63",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1441
+        },
+        {
+          "e": "$e62",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1434
+        },
+        {
+          "e": "$e61",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1427
+        },
+        {
+          "e": "$e60",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1420
+        },
+        {
+          "e": "$e59",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1413
+        },
+        {
+          "e": "$e58",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1406
+        },
+        {
+          "e": "$e57",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1399
+        },
+        {
+          "e": "$e56",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1392
+        },
+        {
+          "e": "$e55",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1385
+        },
+        {
+          "e": "$e54",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1378
+        },
+        {
+          "e": "$e53",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1371
+        },
+        {
+          "e": "$e52",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1364
+        },
+        {
+          "e": "$e51",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1357
+        },
+        {
+          "e": "$e50",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1350
+        },
+        {
+          "e": "$e49",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1343
+        },
+        {
+          "e": "$e48",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1336
+        },
+        {
+          "e": "$e47",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1329
+        },
+        {
+          "e": "$e46",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1322
+        },
+        {
+          "e": "$e45",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1315
+        },
+        {
+          "e": "$e44",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1308
+        },
+        {
+          "e": "$e43",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1301
+        },
+        {
+          "e": "$e42",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1294
+        },
+        {
+          "e": "$e41",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1287
+        },
+        {
+          "e": "$e40",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1280
+        },
+        {
+          "e": "$e39",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1273
+        },
+        {
+          "e": "$e38",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1266
+        },
+        {
+          "e": "$e37",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1259
+        },
+        {
+          "e": "$e36",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1252
+        },
+        {
+          "e": "$e35",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1245
+        },
+        {
+          "e": "$e34",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1238
+        },
+        {
+          "e": "$e33",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1231
+        },
+        {
+          "e": "$e32",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1224
+        },
+        {
+          "e": "$e31",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1217
+        },
+        {
+          "e": "$e30",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1210
+        },
+        {
+          "e": "$e29",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1203
+        },
+        {
+          "e": "$e28",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1196
+        },
+        {
+          "e": "$e27",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1189
+        },
+        {
+          "e": "$e26",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1182
+        },
+        {
+          "e": "$e25",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1175
+        },
+        {
+          "e": "$e24",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1168
+        },
+        {
+          "e": "$e23",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1161
+        },
+        {
+          "e": "$e22",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "t": 1154
+        },
+        {
+          "e": "$e21",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 1147
+        },
+        {
+          "e": "$e20",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1140
+        }
+      ],
+      "value": [
+        {
+          "e": "$e0",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1000
+        },
+        {
+          "e": "$e1",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1007
+        },
+        {
+          "e": "$e2",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1014
+        },
+        {
+          "e": "$e3",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1021
+        },
+        {
+          "e": "$e4",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1028
+        },
+        {
+          "e": "$e5",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1035
+        },
+        {
+          "e": "$e6",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1042
+        },
+        {
+          "e": "$e7",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1049
+        },
+        {
+          "e": "$e8",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1056
+        },
+        {
+          "e": "$e9",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1063
+        },
+        {
+          "e": "$e10",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1070
+        },
+        {
+          "e": "$e11",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1077
+        },
+        {
+          "e": "$e12",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1084
+        },
+        {
+          "e": "$e13",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1091
+        },
+        {
+          "e": "$e14",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1098
+        },
+        {
+          "e": "$e15",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1105
+        },
+        {
+          "e": "$e16",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1112
+        },
+        {
+          "e": "$e17",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1119
+        },
+        {
+          "e": "$e18",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1126
+        },
+        {
+          "e": "$e19",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1133
+        },
+        {
+          "e": "$e20",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1140
+        },
+        {
+          "e": "$e21",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1147
+        },
+        {
+          "e": "$e22",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1154
+        },
+        {
+          "e": "$e23",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1161
+        },
+        {
+          "e": "$e24",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1168
+        },
+        {
+          "e": "$e25",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1175
+        },
+        {
+          "e": "$e26",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1182
+        },
+        {
+          "e": "$e27",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1189
+        },
+        {
+          "e": "$e28",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1196
+        },
+        {
+          "e": "$e29",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1203
+        },
+        {
+          "e": "$e30",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1210
+        },
+        {
+          "e": "$e31",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1217
+        },
+        {
+          "e": "$e32",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1224
+        },
+        {
+          "e": "$e33",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1231
+        },
+        {
+          "e": "$e34",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1238
+        },
+        {
+          "e": "$e35",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1245
+        },
+        {
+          "e": "$e36",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1252
+        },
+        {
+          "e": "$e37",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1259
+        },
+        {
+          "e": "$e38",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1266
+        },
+        {
+          "e": "$e39",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1273
+        },
+        {
+          "e": "$e40",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1280
+        },
+        {
+          "e": "$e41",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1287
+        },
+        {
+          "e": "$e42",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1294
+        },
+        {
+          "e": "$e43",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1301
+        },
+        {
+          "e": "$e44",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1308
+        },
+        {
+          "e": "$e45",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1315
+        },
+        {
+          "e": "$e46",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1322
+        },
+        {
+          "e": "$e47",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1329
+        },
+        {
+          "e": "$e48",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1336
+        },
+        {
+          "e": "$e49",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1343
+        },
+        {
+          "e": "$e50",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1350
+        },
+        {
+          "e": "$e51",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1357
+        },
+        {
+          "e": "$e52",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1364
+        },
+        {
+          "e": "$e53",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1371
+        },
+        {
+          "e": "$e54",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1378
+        },
+        {
+          "e": "$e55",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1385
+        },
+        {
+          "e": "$e56",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1392
+        },
+        {
+          "e": "$e57",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1399
+        },
+        {
+          "e": "$e58",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1406
+        },
+        {
+          "e": "$e59",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1413
+        },
+        {
+          "e": "$e60",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1420
+        },
+        {
+          "e": "$e61",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1427
+        },
+        {
+          "e": "$e62",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1434
+        },
+        {
+          "e": "$e63",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1441
+        },
+        {
+          "e": "$e64",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1448
+        },
+        {
+          "e": "$e65",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 1455
+        },
+        {
+          "e": "$e66",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1462
+        },
+        {
+          "e": "$e67",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1469
+        },
+        {
+          "e": "$e68",
+          "r": "!chill:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1476
+        },
+        {
+          "e": "$e69",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": false,
+          "t": 1483
+        }
+      ]
+    },
+    {
+      "expect": [
+        {
+          "e": "$k",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 9
+        }
+      ],
+      "value": [
+        {
+          "e": "$k",
+          "extra": 1,
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 9
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,487 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.callOff",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.event.callOff: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.callOff",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.event.callOff: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.callOff",
+        "target": "x"
+      },
+      "name": "calendar.event.callOff: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.event.callOff"
+      },
+      "name": "calendar.event.callOff: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.edit",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.event.edit: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.edit",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.event.edit: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.edit",
+        "target": "x"
+      },
+      "name": "calendar.event.edit: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.event.edit"
+      },
+      "name": "calendar.event.edit: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.event.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.event.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.open",
+        "target": "x"
+      },
+      "name": "calendar.event.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.event.open"
+      },
+      "name": "calendar.event.open: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.remove",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.event.remove: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.remove",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.event.remove: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.remove",
+        "target": "x"
+      },
+      "name": "calendar.event.remove: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.event.remove"
+      },
+      "name": "calendar.event.remove: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "answer": "yes"
+        }
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "target": {
+          "answer": "yes"
+        }
+      },
+      "name": "calendar.event.rsvp: param answer=yes"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "answer": "maybe"
+        }
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "target": {
+          "answer": "maybe"
+        }
+      },
+      "name": "calendar.event.rsvp: param answer=maybe"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "answer": "no"
+        }
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "target": {
+          "answer": "no"
+        }
+      },
+      "name": "calendar.event.rsvp: param answer=no"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "answer",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "target": {
+          "answer": "zz"
+        }
+      },
+      "name": "calendar.event.rsvp: param answer invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.event.rsvp: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.event.rsvp: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "target": "x"
+      },
+      "name": "calendar.event.rsvp: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.event.rsvp"
+      },
+      "name": "calendar.event.rsvp: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "vote"
+        }
+      },
+      "input": {
+        "action": "calendar.event.vote",
+        "target": {
+          "op": "vote"
+        }
+      },
+      "name": "calendar.event.vote: param op=vote"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "lockIn"
+        }
+      },
+      "input": {
+        "action": "calendar.event.vote",
+        "target": {
+          "op": "lockIn"
+        }
+      },
+      "name": "calendar.event.vote: param op=lockIn"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "unlock"
+        }
+      },
+      "input": {
+        "action": "calendar.event.vote",
+        "target": {
+          "op": "unlock"
+        }
+      },
+      "name": "calendar.event.vote: param op=unlock"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "op",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.vote",
+        "target": {
+          "op": "zz"
+        }
+      },
+      "name": "calendar.event.vote: param op invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.vote",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.event.vote: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.vote",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.event.vote: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.vote",
+        "target": "x"
+      },
+      "name": "calendar.event.vote: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.event.vote"
+      },
+      "name": "calendar.event.vote: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.pickForEvent",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "reel.pickForEvent: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.pickForEvent",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "reel.pickForEvent: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.pickForEvent",
+        "target": "x"
+      },
+      "name": "reel.pickForEvent: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "reel.pickForEvent"
+      },
+      "name": "reel.pickForEvent: no target"
+    }
+  ],
+  "kind": "target"
+}

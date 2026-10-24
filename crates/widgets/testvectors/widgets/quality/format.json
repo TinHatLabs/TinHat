@@ -1,0 +1,334 @@
+{
+  "codec": [
+    {
+      "expect": "Opus",
+      "mime": "audio/opus"
+    },
+    {
+      "expect": "AV1",
+      "mime": "video/AV1"
+    },
+    {
+      "expect": "H.264",
+      "mime": "video/H264"
+    },
+    {
+      "expect": "H.265",
+      "mime": "video/h265"
+    },
+    {
+      "expect": "H.265",
+      "mime": "video/HEVC"
+    },
+    {
+      "expect": "VP8",
+      "mime": "video/VP8"
+    },
+    {
+      "expect": "VP9",
+      "mime": "video/VP9"
+    },
+    {
+      "expect": "RED",
+      "mime": "audio/red"
+    },
+    {
+      "expect": "PCMU",
+      "mime": "audio/PCMU"
+    },
+    {
+      "expect": "RTX",
+      "mime": "video/rtx"
+    },
+    {
+      "expect": "X-SOME.C",
+      "mime": "video/x-some.codec+2 long"
+    },
+    {
+      "expect": "",
+      "mime": ""
+    },
+    {
+      "expect": "",
+      "mime": "/"
+    },
+    {
+      "expect": "Opus",
+      "mime": "opus"
+    },
+    {
+      "expect": "",
+      "mime": null
+    },
+    {
+      "expect": "CONSTRUC",
+      "mime": "video/constructor"
+    },
+    {
+      "expect": "PROTO",
+      "mime": "video/__proto__"
+    },
+    {
+      "expect": "TOSTRING",
+      "mime": "video/toString"
+    },
+    {
+      "expect": "Opus",
+      "mime": "audio/OPUS \t"
+    },
+    {
+      "expect": "OPUS",
+      "mime": "﻿opus"
+    },
+    {
+      "expect": "V1",
+      "mime": "video/ÆV1"
+    },
+    {
+      "expect": "",
+      "mime": "video/ß"
+    },
+    {
+      "expect": "VP8",
+      "mime": "video/ vp8"
+    },
+    {
+      "expect": "Z",
+      "mime": "application/x.y/z"
+    },
+    {
+      "expect": "BC",
+      "mime": "a/b c"
+    }
+  ],
+  "fill": [
+    {
+      "expect": 0,
+      "kbps": 0
+    },
+    {
+      "expect": 0,
+      "kbps": 8
+    },
+    {
+      "expect": 13,
+      "kbps": 9
+    },
+    {
+      "expect": 50,
+      "kbps": 12
+    },
+    {
+      "expect": 100,
+      "kbps": 16
+    },
+    {
+      "expect": 150,
+      "kbps": 24
+    },
+    {
+      "expect": 200,
+      "kbps": 32
+    },
+    {
+      "expect": 250,
+      "kbps": 48
+    },
+    {
+      "expect": 300,
+      "kbps": 64
+    },
+    {
+      "expect": 356,
+      "kbps": 100
+    },
+    {
+      "expect": 400,
+      "kbps": 128
+    },
+    {
+      "expect": 595,
+      "kbps": 500
+    },
+    {
+      "expect": 700,
+      "kbps": 1024
+    },
+    {
+      "expect": 742,
+      "kbps": 1450
+    },
+    {
+      "expect": 800,
+      "kbps": 2048
+    },
+    {
+      "expect": 846,
+      "kbps": 3000
+    },
+    {
+      "expect": 900,
+      "kbps": 4096
+    },
+    {
+      "expect": 949,
+      "kbps": 6100
+    },
+    {
+      "expect": 1000,
+      "kbps": 8191
+    },
+    {
+      "expect": 1000,
+      "kbps": 8192
+    },
+    {
+      "expect": 1000,
+      "kbps": 100000
+    }
+  ],
+  "loss": [
+    {
+      "expect": "0.0 %",
+      "pm": 0
+    },
+    {
+      "expect": "0.1 %",
+      "pm": 1
+    },
+    {
+      "expect": "0.9 %",
+      "pm": 9
+    },
+    {
+      "expect": "1.0 %",
+      "pm": 10
+    },
+    {
+      "expect": "2.4 %",
+      "pm": 24
+    },
+    {
+      "expect": "9.9 %",
+      "pm": 99
+    },
+    {
+      "expect": "10.0 %",
+      "pm": 100
+    },
+    {
+      "expect": "100.0 %",
+      "pm": 1000
+    }
+  ],
+  "rate": [
+    {
+      "expect": "0 kb/s",
+      "kbps": 0
+    },
+    {
+      "expect": "1 kb/s",
+      "kbps": 1
+    },
+    {
+      "expect": "48 kb/s",
+      "kbps": 48
+    },
+    {
+      "expect": "999 kb/s",
+      "kbps": 999
+    },
+    {
+      "expect": "999 kb/s",
+      "kbps": 999.4
+    },
+    {
+      "expect": "1.0 Mb/s",
+      "kbps": 999.5
+    },
+    {
+      "expect": "1.0 Mb/s",
+      "kbps": 1000
+    },
+    {
+      "expect": "1.0 Mb/s",
+      "kbps": 1049
+    },
+    {
+      "expect": "1.1 Mb/s",
+      "kbps": 1050
+    },
+    {
+      "expect": "1.5 Mb/s",
+      "kbps": 1450
+    },
+    {
+      "expect": "6.1 Mb/s",
+      "kbps": 6100
+    },
+    {
+      "expect": "99.9 Mb/s",
+      "kbps": 99949
+    },
+    {
+      "expect": "100.0 Mb/s",
+      "kbps": 99950
+    },
+    {
+      "expect": "100 Mb/s",
+      "kbps": 100000
+    },
+    {
+      "expect": "120 Mb/s",
+      "kbps": 120400
+    },
+    {
+      "expect": "1000 Mb/s",
+      "kbps": 1000000
+    }
+  ],
+  "res": [
+    {
+      "expect": "720p30",
+      "fps": 30,
+      "h": 720,
+      "w": 1280
+    },
+    {
+      "expect": "1080p60",
+      "fps": 60,
+      "h": 1080,
+      "w": 1920
+    },
+    {
+      "expect": "720p30",
+      "fps": 30,
+      "h": 1280,
+      "w": 720
+    },
+    {
+      "expect": "768p",
+      "fps": 0,
+      "h": 768,
+      "w": 1366
+    },
+    {
+      "expect": "480p",
+      "fps": null,
+      "h": 480,
+      "w": 640
+    },
+    {
+      "expect": "",
+      "fps": 30,
+      "h": 720,
+      "w": 0
+    },
+    {
+      "expect": "",
+      "fps": 30,
+      "h": null,
+      "w": null
+    }
+  ]
+}

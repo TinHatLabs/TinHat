@@ -1,0 +1,194 @@
+{
+  "bodies": [
+    {
+      "body": null,
+      "expect": {}
+    },
+    {
+      "body": "x",
+      "expect": {}
+    },
+    {
+      "body": {
+        "users": []
+      },
+      "expect": {}
+    },
+    {
+      "body": {
+        "users": {
+          "@a:x": {
+            "state": "online"
+          }
+        }
+      },
+      "expect": {}
+    },
+    {
+      "body": {
+        "users": {
+          "@a:x": {
+            "state": "online",
+            "tz": "America/New_York"
+          },
+          "@b:x": {
+            "tz": "Pacific/Tahiti"
+          },
+          "@c:x": {
+            "tz": "bad zone"
+          },
+          "@e": {
+            "tz": "UTC"
+          },
+          "@f:x": {
+            "tz": 5
+          },
+          "@g:x": null,
+          "@h:x": [
+            "UTC"
+          ],
+          "d:x": {
+            "tz": "UTC"
+          }
+        }
+      },
+      "expect": {
+        "@a:x": "America/New_York",
+        "@b:x": "Pacific/Tahiti"
+      }
+    }
+  ],
+  "choices": [
+    "Pacific/Honolulu",
+    "America/Anchorage",
+    "America/Los_Angeles",
+    "America/Vancouver",
+    "America/Tijuana",
+    "America/Denver",
+    "America/Edmonton",
+    "America/Phoenix",
+    "America/Chicago",
+    "America/Winnipeg",
+    "America/Mexico_City",
+    "America/New_York",
+    "America/Toronto",
+    "America/Detroit",
+    "America/Halifax",
+    "America/Sao_Paulo",
+    "Europe/London",
+    "Europe/Dublin",
+    "Europe/Lisbon",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Europe/Madrid",
+    "Europe/Rome",
+    "Europe/Amsterdam",
+    "Europe/Stockholm",
+    "Europe/Warsaw",
+    "Europe/Athens",
+    "Europe/Helsinki",
+    "Europe/Moscow",
+    "Asia/Dubai",
+    "Asia/Kolkata",
+    "Asia/Singapore",
+    "Asia/Manila",
+    "Asia/Shanghai",
+    "Asia/Tokyo",
+    "Asia/Seoul",
+    "Australia/Perth",
+    "Australia/Sydney",
+    "Australia/Melbourne",
+    "Pacific/Auckland",
+    "UTC"
+  ],
+  "valid": [
+    {
+      "expect": true,
+      "tz": "UTC"
+    },
+    {
+      "expect": true,
+      "tz": "Pacific/Tahiti"
+    },
+    {
+      "expect": true,
+      "tz": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "expect": true,
+      "tz": "Etc/GMT+10"
+    },
+    {
+      "expect": true,
+      "tz": "Europe/Isle_of_Man"
+    },
+    {
+      "expect": true,
+      "tz": "America/Port-au-Prince"
+    },
+    {
+      "expect": true,
+      "tz": "Etc/UTC"
+    },
+    {
+      "expect": false,
+      "tz": "utc"
+    },
+    {
+      "expect": false,
+      "tz": "Local"
+    },
+    {
+      "expect": false,
+      "tz": ""
+    },
+    {
+      "expect": false,
+      "tz": "/Tahiti"
+    },
+    {
+      "expect": false,
+      "tz": "Pacific/"
+    },
+    {
+      "expect": false,
+      "tz": "A/B/C/D"
+    },
+    {
+      "expect": false,
+      "tz": "Pacific/Tahiti "
+    },
+    {
+      "expect": false,
+      "tz": "Pacific/Tahi ti"
+    },
+    {
+      "expect": false,
+      "tz": "Pacific/Tähiti"
+    },
+    {
+      "expect": false,
+      "tz": "../etc/passwd"
+    },
+    {
+      "expect": true,
+      "tz": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/B"
+    },
+    {
+      "expect": false,
+      "tz": "A/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "expect": true,
+      "tz": "Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB/C"
+    },
+    {
+      "expect": false,
+      "tz": 5
+    },
+    {
+      "expect": false,
+      "tz": null
+    }
+  ]
+}

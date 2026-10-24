@@ -1,0 +1,109 @@
+{
+  "devices": [
+    "DESK"
+  ],
+  "expect": {
+    "devices": {
+      "DESK": {
+        "choice": {
+          "known": {
+            "by": "DESK",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "previous": {
+              "by": "DESK",
+              "icons": "duotone",
+              "rev": 1,
+              "savedAt": 1790400000010,
+              "sounds": "goose",
+              "theme": "nord"
+            },
+            "rev": 2,
+            "savedAt": 1790400000020,
+            "sounds": "default",
+            "theme": "nord",
+            "v": 1
+          },
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      }
+    },
+    "log": [
+      "0 DESK apply choice: noop",
+      "1 DESK put choice: idle",
+      "2 DESK apply choice: saved",
+      "3 DESK apply choice: saved",
+      "4 DESK put choice: put"
+    ],
+    "server": {
+      "choice": {
+        "by": "DESK",
+        "format": "tinhat-theme-choice",
+        "icons": "duotone",
+        "previous": {
+          "by": "DESK",
+          "icons": "duotone",
+          "rev": 1,
+          "savedAt": 1790400000010,
+          "sounds": "goose",
+          "theme": "nord"
+        },
+        "rev": 2,
+        "savedAt": 1790400000020,
+        "sounds": "default",
+        "theme": "nord",
+        "v": 1
+      },
+      "themes": null
+    }
+  },
+  "kind": "sync",
+  "legacy": {
+    "DESK": "goose"
+  },
+  "steps": [
+    {
+      "device": "DESK",
+      "event": "apply",
+      "now": 1790400000000,
+      "patch": {
+        "theme": "goose"
+      }
+    },
+    {
+      "device": "DESK",
+      "event": "put",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "apply",
+      "now": 1790400000010,
+      "patch": {
+        "theme": "nord"
+      }
+    },
+    {
+      "device": "DESK",
+      "event": "apply",
+      "now": 1790400000020,
+      "patch": {
+        "sounds": "default"
+      }
+    },
+    {
+      "device": "DESK",
+      "event": "put",
+      "key": "choice"
+    }
+  ]
+}

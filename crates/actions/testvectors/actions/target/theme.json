@@ -1,0 +1,115 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "theme": "goose"
+        }
+      },
+      "input": {
+        "action": "app.theme.set",
+        "target": {
+          "theme": "goose"
+        }
+      },
+      "name": "app.theme.set: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "theme": "gone-theme"
+        }
+      },
+      "input": {
+        "action": "app.theme.set",
+        "target": {
+          "theme": "gone-theme"
+        }
+      },
+      "name": "app.theme.set: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "theme",
+        "ok": false
+      },
+      "input": {
+        "action": "app.theme.set",
+        "target": {
+          "theme": "Bad Theme"
+        }
+      },
+      "name": "app.theme.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "theme",
+        "ok": false
+      },
+      "input": {
+        "action": "app.theme.set",
+        "target": {
+          "theme": 7
+        }
+      },
+      "name": "app.theme.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "app.theme.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "app.theme.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "app.theme.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "app.theme.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "app.theme.set",
+        "target": "x"
+      },
+      "name": "app.theme.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.theme.set"
+      },
+      "name": "app.theme.set: no target"
+    }
+  ],
+  "kind": "target"
+}

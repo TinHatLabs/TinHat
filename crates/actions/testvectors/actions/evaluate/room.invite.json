@@ -1,0 +1,2261 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, room.joined flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only room.joined=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!gone:example.com",
+        "targetIcon": null,
+        "targetName": "this room",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "desktop: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "desktop: target — another room"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "desktop: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "desktop: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "context": {
+          "room": "!other:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "snapshot": {
+          "current": {},
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: nothing current"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 3,
+        "menu": "room",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu room[3] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 3,
+        "menu": "room",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu room[3] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, room.joined flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only room.joined=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!gone:example.com",
+        "targetIcon": null,
+        "targetName": "this room",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "web: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "web: target — another room"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "web: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "web: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "context": {
+          "room": "!other:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "snapshot": {
+          "current": {},
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: nothing current"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.invite",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 3,
+        "menu": "room",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu room[3] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Invite people…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "form": "desktop",
+        "item": 3,
+        "menu": "room",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu room[3] desktop, all off"
+    }
+  ],
+  "kind": "evaluate"
+}

@@ -1,0 +1,249 @@
+{
+  "content": {
+    "account": {
+      "h": 46
+    },
+    "call": {
+      "collapsedH": 104,
+      "h": 700
+    },
+    "composer": {
+      "h": 48
+    },
+    "dms": {
+      "empty": true,
+      "h": 0
+    },
+    "header": {
+      "h": 58
+    },
+    "nav": {
+      "h": 68,
+      "w": 228
+    },
+    "rooms": {
+      "h": 300
+    },
+    "spaces": {
+      "h": 68
+    },
+    "widgets": {
+      "empty": true,
+      "h": 0
+    }
+  },
+  "expect": {
+    "collapsed": [
+      "side:drawer"
+    ],
+    "containers": {
+      "body": {
+        "h": 1268,
+        "w": 788,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      },
+      "convrow": {
+        "h": 424,
+        "w": 788,
+        "x": 6,
+        "y": 850,
+        "z": 0
+      },
+      "main": {
+        "h": 1194,
+        "w": 788,
+        "x": 6,
+        "y": 80,
+        "z": 0
+      },
+      "mainrow": {
+        "h": 1194,
+        "w": 788,
+        "x": 6,
+        "y": 80,
+        "z": 0
+      },
+      "roomcol": {
+        "h": 424,
+        "w": 788,
+        "x": 6,
+        "y": 850,
+        "z": 0
+      },
+      "side": {
+        "h": 664,
+        "w": 292,
+        "x": 14,
+        "y": 58,
+        "z": 20
+      },
+      "topbar": {
+        "h": 68,
+        "w": 788,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      }
+    },
+    "drawers": [
+      {
+        "handle": {
+          "h": 40,
+          "w": 40,
+          "x": 6,
+          "y": 6
+        },
+        "id": "side",
+        "open": true,
+        "panel": {
+          "h": 680,
+          "w": 308,
+          "x": 6,
+          "y": 50
+        },
+        "side": "l"
+      }
+    ],
+    "emergency": false,
+    "gaps": [
+      {
+        "a": "nav",
+        "axis": "x",
+        "b": "spaces",
+        "h": 68,
+        "id": "topbar/0",
+        "w": 6,
+        "x": 234,
+        "y": 6
+      },
+      {
+        "a": "topbar",
+        "axis": "y",
+        "b": "mainrow",
+        "h": 6,
+        "id": "body/0",
+        "w": 788,
+        "x": 6,
+        "y": 74
+      },
+      {
+        "a": "header",
+        "axis": "y",
+        "b": "call",
+        "h": 6,
+        "id": "main/0",
+        "w": 788,
+        "x": 6,
+        "y": 138
+      },
+      {
+        "a": "call",
+        "axis": "y",
+        "b": "convrow",
+        "h": 6,
+        "id": "main/1",
+        "w": 788,
+        "x": 6,
+        "y": 844
+      },
+      {
+        "a": "timeline",
+        "axis": "y",
+        "b": "composer",
+        "h": 6,
+        "id": "roomcol/0",
+        "w": 788,
+        "x": 6,
+        "y": 1220
+      }
+    ],
+    "islands": {
+      "account": {
+        "h": 46,
+        "vis": true,
+        "w": 292,
+        "x": 14,
+        "y": 676,
+        "z": 20
+      },
+      "call": {
+        "h": 700,
+        "vis": true,
+        "w": 788,
+        "x": 6,
+        "y": 144,
+        "z": 0
+      },
+      "composer": {
+        "h": 48,
+        "vis": true,
+        "w": 788,
+        "x": 6,
+        "y": 1226,
+        "z": 0
+      },
+      "header": {
+        "h": 58,
+        "vis": true,
+        "w": 788,
+        "x": 6,
+        "y": 80,
+        "z": 0
+      },
+      "nav": {
+        "h": 68,
+        "inset": {
+          "l": 42
+        },
+        "vis": true,
+        "w": 228,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      },
+      "rooms": {
+        "h": 612,
+        "vis": true,
+        "w": 292,
+        "x": 14,
+        "y": 58,
+        "z": 20
+      },
+      "spaces": {
+        "h": 68,
+        "vis": true,
+        "w": 554,
+        "x": 240,
+        "y": 6,
+        "z": 0
+      },
+      "timeline": {
+        "h": 370,
+        "vis": true,
+        "w": 788,
+        "x": 6,
+        "y": 850,
+        "z": 0
+      }
+    },
+    "overflow": [],
+    "squeezed": [],
+    "stacks": {}
+  },
+  "kind": "solve",
+  "preset": "sideMonitor",
+  "size": {
+    "h": 1280,
+    "w": 800
+  },
+  "unitPm": 1000,
+  "view": {
+    "callShown": true,
+    "drawer": {
+      "open": "side"
+    },
+    "roomOpen": true
+  }
+}

@@ -1,0 +1,4797 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": false,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: all on, presence.known flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true
+          }
+        }
+      },
+      "name": "desktop: only presence.known=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": false
+          }
+        }
+      },
+      "name": "desktop: all on, presence.sharing flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: only presence.sharing=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": false,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎯",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Looking for group",
+        "look": null,
+        "params": {
+          "status": "lfg"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Looking for group",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "lfg"
+        }
+      },
+      "name": "desktop: target — listed value lfg"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎮",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Down to play",
+        "look": null,
+        "params": {
+          "status": "down"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Down to play",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "down"
+        }
+      },
+      "name": "desktop: target — listed value down"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⏳",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "In queue",
+        "look": null,
+        "params": {
+          "status": "queue"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "In queue",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "queue"
+        }
+      },
+      "name": "desktop: target — listed value queue"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⚔️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Grinding",
+        "look": null,
+        "params": {
+          "status": "grind"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Grinding",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "grind"
+        }
+      },
+      "name": "desktop: target — listed value grind"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🔥",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Sweating ranked",
+        "look": null,
+        "params": {
+          "status": "ranked"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Sweating ranked",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "ranked"
+        }
+      },
+      "name": "desktop: target — listed value ranked"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🛋️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Just chilling",
+        "look": null,
+        "params": {
+          "status": "chill"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Just chilling",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "chill"
+        }
+      },
+      "name": "desktop: target — listed value chill"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🍕",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "BRB",
+        "look": null,
+        "params": {
+          "status": "brb"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "BRB",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "brb"
+        }
+      },
+      "name": "desktop: target — listed value brb"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "😤",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Tilted",
+        "look": null,
+        "params": {
+          "status": "tilted"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Tilted",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "tilted"
+        }
+      },
+      "name": "desktop: target — listed value tilted"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Custom…",
+        "look": null,
+        "params": {
+          "status": "custom"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Custom…",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "custom"
+        }
+      },
+      "name": "desktop: target — listed value custom"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "sleeping"
+        }
+      },
+      "name": "desktop: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": 7
+        }
+      },
+      "name": "desktop: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "colour": "#12345g"
+        }
+      },
+      "name": "desktop: target — param colour invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "colour": "#a1b2c3"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "colour": "#A1B2C3"
+        }
+      },
+      "name": "desktop: target — param colour colour in upper case"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "emoji": "a b"
+        }
+      },
+      "name": "desktop: target — param emoji invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "emoji": "🦊"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "emoji": "🦊"
+        }
+      },
+      "name": "desktop: target — param emoji emoji"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": ""
+        }
+      },
+      "name": "desktop: target — param text invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "text": "Valheim tonight 🎮"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "name": "desktop: target — param text text"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "name": "desktop: target — param text too long"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": "two\nlines"
+        }
+      },
+      "name": "desktop: target — param text with a newline"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "colour": "#00ff00"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "params": {
+          "colour": "#00FF00"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: invocation param colour"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "params": {
+          "zzz": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: invocation param not declared"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎯",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Looking for group",
+        "look": null,
+        "params": {
+          "status": "lfg"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Looking for group",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 1,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[1] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🎯",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Looking for group",
+        "look": null,
+        "params": {
+          "status": "lfg"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Looking for group",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 1,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[1] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎮",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Down to play",
+        "look": null,
+        "params": {
+          "status": "down"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Down to play",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 2,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[2] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🎮",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Down to play",
+        "look": null,
+        "params": {
+          "status": "down"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Down to play",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 2,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[2] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⏳",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "In queue",
+        "look": null,
+        "params": {
+          "status": "queue"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "In queue",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 3,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[3] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "⏳",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "In queue",
+        "look": null,
+        "params": {
+          "status": "queue"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "In queue",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 3,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[3] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⚔️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Grinding",
+        "look": null,
+        "params": {
+          "status": "grind"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Grinding",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 4,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[4] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "⚔️",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Grinding",
+        "look": null,
+        "params": {
+          "status": "grind"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Grinding",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 4,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[4] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🔥",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Sweating ranked",
+        "look": null,
+        "params": {
+          "status": "ranked"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Sweating ranked",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 5,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[5] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🔥",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Sweating ranked",
+        "look": null,
+        "params": {
+          "status": "ranked"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Sweating ranked",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 5,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[5] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🛋️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Just chilling",
+        "look": null,
+        "params": {
+          "status": "chill"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Just chilling",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 6,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[6] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🛋️",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Just chilling",
+        "look": null,
+        "params": {
+          "status": "chill"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Just chilling",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 6,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[6] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🍕",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "BRB",
+        "look": null,
+        "params": {
+          "status": "brb"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "BRB",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 7,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[7] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🍕",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "BRB",
+        "look": null,
+        "params": {
+          "status": "brb"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "BRB",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 7,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[7] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "😤",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Tilted",
+        "look": null,
+        "params": {
+          "status": "tilted"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Tilted",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 8,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[8] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "😤",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Tilted",
+        "look": null,
+        "params": {
+          "status": "tilted"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Tilted",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 8,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[8] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Custom…",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 9,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "desktop: menu status[9] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Custom…",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "item": 9,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: menu status[9] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": false,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: all on, presence.known flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true
+          }
+        }
+      },
+      "name": "web: only presence.known=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": false
+          }
+        }
+      },
+      "name": "web: all on, presence.sharing flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: only presence.sharing=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": false
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": false,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎯",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Looking for group",
+        "look": null,
+        "params": {
+          "status": "lfg"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Looking for group",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "lfg"
+        }
+      },
+      "name": "web: target — listed value lfg"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎮",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Down to play",
+        "look": null,
+        "params": {
+          "status": "down"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Down to play",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "down"
+        }
+      },
+      "name": "web: target — listed value down"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⏳",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "In queue",
+        "look": null,
+        "params": {
+          "status": "queue"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "In queue",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "queue"
+        }
+      },
+      "name": "web: target — listed value queue"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⚔️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Grinding",
+        "look": null,
+        "params": {
+          "status": "grind"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Grinding",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "grind"
+        }
+      },
+      "name": "web: target — listed value grind"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🔥",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Sweating ranked",
+        "look": null,
+        "params": {
+          "status": "ranked"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Sweating ranked",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "ranked"
+        }
+      },
+      "name": "web: target — listed value ranked"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🛋️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Just chilling",
+        "look": null,
+        "params": {
+          "status": "chill"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Just chilling",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "chill"
+        }
+      },
+      "name": "web: target — listed value chill"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🍕",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "BRB",
+        "look": null,
+        "params": {
+          "status": "brb"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "BRB",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "brb"
+        }
+      },
+      "name": "web: target — listed value brb"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "😤",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Tilted",
+        "look": null,
+        "params": {
+          "status": "tilted"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Tilted",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "tilted"
+        }
+      },
+      "name": "web: target — listed value tilted"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Custom…",
+        "look": null,
+        "params": {
+          "status": "custom"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Custom…",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "custom"
+        }
+      },
+      "name": "web: target — listed value custom"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": "sleeping"
+        }
+      },
+      "name": "web: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "status": 7
+        }
+      },
+      "name": "web: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "colour": "#12345g"
+        }
+      },
+      "name": "web: target — param colour invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "colour": "#a1b2c3"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "colour": "#A1B2C3"
+        }
+      },
+      "name": "web: target — param colour colour in upper case"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "emoji": "a b"
+        }
+      },
+      "name": "web: target — param emoji invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "emoji": "🦊"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "emoji": "🦊"
+        }
+      },
+      "name": "web: target — param emoji emoji"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": ""
+        }
+      },
+      "name": "web: target — param text invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "text": "Valheim tonight 🎮"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "name": "web: target — param text text"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "name": "web: target — param text too long"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "text": "two\nlines"
+        }
+      },
+      "name": "web: target — param text with a newline"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {
+          "colour": "#00ff00"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "params": {
+          "colour": "#00FF00"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: invocation param colour"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "params": {
+          "zzz": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: invocation param not declared"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Set a status",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "status.set",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎯",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Looking for group",
+        "look": null,
+        "params": {
+          "status": "lfg"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Looking for group",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 1,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[1] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🎯",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Looking for group",
+        "look": null,
+        "params": {
+          "status": "lfg"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Looking for group",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 1,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[1] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🎮",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Down to play",
+        "look": null,
+        "params": {
+          "status": "down"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Down to play",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 2,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[2] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🎮",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Down to play",
+        "look": null,
+        "params": {
+          "status": "down"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Down to play",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 2,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[2] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⏳",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "In queue",
+        "look": null,
+        "params": {
+          "status": "queue"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "In queue",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 3,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[3] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "⏳",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "In queue",
+        "look": null,
+        "params": {
+          "status": "queue"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "In queue",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 3,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[3] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "⚔️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Grinding",
+        "look": null,
+        "params": {
+          "status": "grind"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Grinding",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 4,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[4] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "⚔️",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Grinding",
+        "look": null,
+        "params": {
+          "status": "grind"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Grinding",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 4,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[4] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🔥",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Sweating ranked",
+        "look": null,
+        "params": {
+          "status": "ranked"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Sweating ranked",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 5,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[5] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🔥",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Sweating ranked",
+        "look": null,
+        "params": {
+          "status": "ranked"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Sweating ranked",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 5,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[5] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🛋️",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Just chilling",
+        "look": null,
+        "params": {
+          "status": "chill"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Just chilling",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 6,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[6] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🛋️",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Just chilling",
+        "look": null,
+        "params": {
+          "status": "chill"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Just chilling",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 6,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[6] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "🍕",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "BRB",
+        "look": null,
+        "params": {
+          "status": "brb"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "BRB",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 7,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[7] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "🍕",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "BRB",
+        "look": null,
+        "params": {
+          "status": "brb"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "BRB",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 7,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[7] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": "😤",
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Tilted",
+        "look": null,
+        "params": {
+          "status": "tilted"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Tilted",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 8,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[8] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": "😤",
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Tilted",
+        "look": null,
+        "params": {
+          "status": "tilted"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": "Tilted",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 8,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[8] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Custom…",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 9,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "presence.known": true,
+            "presence.sharing": true
+          }
+        }
+      },
+      "name": "web: menu status[9] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Turn on",
+          "kind": "consent",
+          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
+          "title": "Show your status to friends?"
+        },
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "tag-symbolic",
+        "label": "Custom…",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "form": "desktop",
+        "item": 9,
+        "menu": "status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: menu status[9] desktop, all off"
+    }
+  ],
+  "kind": "evaluate"
+}

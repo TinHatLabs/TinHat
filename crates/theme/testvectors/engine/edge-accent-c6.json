@@ -1,0 +1,192 @@
+{
+  "expect": {
+    "adjusted": [
+      "text.muted",
+      "text.secondary"
+    ],
+    "names": "palette",
+    "ok": true,
+    "roles": {
+      "accent.base": "#56b6c2",
+      "accent.bright": "#56b6c2",
+      "accent.dim": "#56b6c2/0.18",
+      "accent.glow": "#56b6c2/0.35",
+      "badge.bg": "#56b6c2",
+      "badge.mention": "#e06c75",
+      "border.focus": "#56b6c2",
+      "border.strong": "#444952",
+      "border.subtle": "#373c44",
+      "call.muted": "#e06c75",
+      "call.speaking": "#98c379",
+      "mention.bg": "#e5c07b/0.1",
+      "mention.edge": "#e5c07b",
+      "name.1": "#e06c75",
+      "name.10": "#61afef",
+      "name.11": "#c678dd",
+      "name.12": "#56b6c2",
+      "name.2": "#98c379",
+      "name.3": "#e5c07b",
+      "name.4": "#61afef",
+      "name.5": "#c678dd",
+      "name.6": "#56b6c2",
+      "name.7": "#e06c75",
+      "name.8": "#98c379",
+      "name.9": "#e5c07b",
+      "presence.away": "#e5c07b",
+      "presence.busy": "#e06c75",
+      "presence.incall": "#56b6c2",
+      "presence.offline": "#7c818b",
+      "presence.online": "#98c379",
+      "scrim": "#000000/0.5",
+      "shadow": "#000000",
+      "state.aside": "#e5c07b",
+      "state.danger": "#e06c75",
+      "state.dangerBright": "#e06c75",
+      "state.info": "#56b6c2",
+      "state.success": "#98c379",
+      "state.warning": "#e5c07b",
+      "surface.hover": "#343840",
+      "surface.island": "#282c34",
+      "surface.overlay": "#30343d",
+      "surface.pressed": "#383d45",
+      "surface.raised": "#30343d",
+      "surface.selected": "#3e4451",
+      "surface.sunken": "#20232a",
+      "surface.window": "#181a20",
+      "text.disabled": "#595e68",
+      "text.link": "#56b6c2",
+      "text.muted": "#7c818b",
+      "text.onAccent": "#282c34",
+      "text.primary": "#abb2bf",
+      "text.secondary": "#9ba1aa"
+    },
+    "tokens": {
+      "bubble.own.bg": "#3d5f69",
+      "bubble.own.fg": "#282c34",
+      "composer.bg": "#30343d",
+      "rooms.item.bg.hover": "#343840",
+      "test.alpha": "#56b6c2/0.25",
+      "test.best": "#9ba1aa",
+      "test.chain": "#353840",
+      "test.darker": "#4898a2",
+      "test.guard": "#c0c2c8",
+      "test.lighter": "#2f343d",
+      "test.literal": "#1e6a76/0.5",
+      "test.mix": "#353840",
+      "test.mixok": "#3b5962",
+      "test.nested": "#62424b",
+      "test.over": "#30454e",
+      "test.qt": "#e8dfcd/0.1",
+      "tile.overlay.bg": "#000000/0.5",
+      "tile.ring.speaking": "#98c379"
+    },
+    "variant": "dark"
+  },
+  "theme": {
+    "accent": "c6",
+    "format": "tinhat-theme",
+    "id": "accent-c6",
+    "name": "Edge accent-c6",
+    "palette": {
+      "ansi": [
+        "#282c34",
+        "#e06c75",
+        "#98c379",
+        "#e5c07b",
+        "#61afef",
+        "#c678dd",
+        "#56b6c2",
+        "#abb2bf",
+        "#5c6370",
+        "#e06c75",
+        "#98c379",
+        "#e5c07b",
+        "#61afef",
+        "#c678dd",
+        "#56b6c2",
+        "#ffffff"
+      ],
+      "bg": "#282c34",
+      "cursor": "#528bff",
+      "fg": "#abb2bf",
+      "selectionBg": "#3e4451"
+    },
+    "v": 1
+  },
+  "tokensSpec": {
+    "tokens": [
+      {
+        "default": "surface.raised",
+        "id": "composer.bg"
+      },
+      {
+        "default": "surface.hover",
+        "id": "rooms.item.bg.hover"
+      },
+      {
+        "default": "mixok(accent.base, surface.island, 0.6)",
+        "id": "bubble.own.bg"
+      },
+      {
+        "default": "text.onAccent",
+        "id": "bubble.own.fg"
+      },
+      {
+        "default": "alpha(#000000, 0.5)",
+        "id": "tile.overlay.bg"
+      },
+      {
+        "default": "call.speaking",
+        "id": "tile.ring.speaking"
+      },
+      {
+        "default": "alpha(accent.bright, 0.25)",
+        "id": "test.alpha"
+      },
+      {
+        "default": "mix(surface.window, text.primary, 0.2)",
+        "id": "test.mix"
+      },
+      {
+        "default": "lighter(surface.island, 1.18)",
+        "id": "test.lighter"
+      },
+      {
+        "default": "darker(accent.base, 1.2)",
+        "id": "test.darker"
+      },
+      {
+        "default": "over(accent.dim, surface.island)",
+        "id": "test.over"
+      },
+      {
+        "default": "mixok(surface.island, accent.bright, 0.35)",
+        "id": "test.mixok"
+      },
+      {
+        "default": "best(surface.raised, text.secondary, #ffffff, #000000)",
+        "id": "test.best"
+      },
+      {
+        "default": "guard(text.muted, surface.raised, 7)",
+        "id": "test.guard"
+      },
+      {
+        "default": "#1e6a76/0.5",
+        "id": "test.literal"
+      },
+      {
+        "default": "test.mix",
+        "id": "test.chain"
+      },
+      {
+        "default": "over(alpha(state.danger, 0.3), mix(surface.island, surface.raised, 0.5))",
+        "id": "test.nested"
+      },
+      {
+        "default": "darker(lighter(mention.bg, 1.5), 1.1)",
+        "id": "test.qt"
+      }
+    ]
+  }
+}

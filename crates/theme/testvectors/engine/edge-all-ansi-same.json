@@ -1,0 +1,188 @@
+{
+  "expect": {
+    "adjusted": [
+      "text.link"
+    ],
+    "names": "palette",
+    "ok": true,
+    "roles": {
+      "accent.base": "#ff0000",
+      "accent.bright": "#ff0000",
+      "accent.dim": "#ff0000/0.18",
+      "accent.glow": "#ff0000/0.35",
+      "badge.bg": "#ff0000",
+      "badge.mention": "#ff0000",
+      "border.focus": "#ff0000",
+      "border.strong": "#3d3d3d",
+      "border.subtle": "#272727",
+      "call.muted": "#ff0000",
+      "call.speaking": "#ff0000",
+      "mention.bg": "#ff0000/0.1",
+      "mention.edge": "#ff0000",
+      "name.1": "#ff0000",
+      "name.10": "#ff0000",
+      "name.11": "#ff0000",
+      "name.12": "#ff0000",
+      "name.2": "#ff0000",
+      "name.3": "#ff0000",
+      "name.4": "#ff0000",
+      "name.5": "#ff0000",
+      "name.6": "#ff0000",
+      "name.7": "#ff0000",
+      "name.8": "#ff0000",
+      "name.9": "#ff0000",
+      "presence.away": "#ff0000",
+      "presence.busy": "#ff0000",
+      "presence.incall": "#ff0000",
+      "presence.offline": "#818181",
+      "presence.online": "#ff0000",
+      "scrim": "#000000/0.5",
+      "shadow": "#000000",
+      "state.aside": "#ff0000",
+      "state.danger": "#ff0000",
+      "state.dangerBright": "#ff0000",
+      "state.info": "#ff0000",
+      "state.success": "#ff0000",
+      "state.warning": "#ff0000",
+      "surface.hover": "#222222",
+      "surface.island": "#101010",
+      "surface.overlay": "#1c1c1c",
+      "surface.pressed": "#292929",
+      "surface.raised": "#1c1c1c",
+      "surface.selected": "#451c17",
+      "surface.sunken": "#0b0b0b",
+      "surface.window": "#070707",
+      "text.disabled": "#5f5f5f",
+      "text.link": "#ff3d2e",
+      "text.muted": "#818181",
+      "text.onAccent": "#101010",
+      "text.primary": "#f0f0f0",
+      "text.secondary": "#a9a9a9"
+    },
+    "tokens": {
+      "bubble.own.bg": "#672119",
+      "bubble.own.fg": "#101010",
+      "composer.bg": "#1c1c1c",
+      "rooms.item.bg.hover": "#222222",
+      "test.alpha": "#ff0000/0.25",
+      "test.best": "#a9a9a9",
+      "test.chain": "#363636",
+      "test.darker": "#d40000",
+      "test.guard": "#a6a6a6",
+      "test.lighter": "#131313",
+      "test.literal": "#1e6a76/0.5",
+      "test.mix": "#363636",
+      "test.mixok": "#5c1f19",
+      "test.nested": "#5c0f0f",
+      "test.over": "#3b0d0d",
+      "test.qt": "#e87373/0.1",
+      "tile.overlay.bg": "#000000/0.5",
+      "tile.ring.speaking": "#ff0000"
+    },
+    "variant": "dark"
+  },
+  "theme": {
+    "format": "tinhat-theme",
+    "id": "all-ansi-same",
+    "name": "Edge all-ansi-same",
+    "palette": {
+      "ansi": [
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000",
+        "#ff0000"
+      ],
+      "bg": "#101010",
+      "fg": "#f0f0f0"
+    },
+    "v": 1
+  },
+  "tokensSpec": {
+    "tokens": [
+      {
+        "default": "surface.raised",
+        "id": "composer.bg"
+      },
+      {
+        "default": "surface.hover",
+        "id": "rooms.item.bg.hover"
+      },
+      {
+        "default": "mixok(accent.base, surface.island, 0.6)",
+        "id": "bubble.own.bg"
+      },
+      {
+        "default": "text.onAccent",
+        "id": "bubble.own.fg"
+      },
+      {
+        "default": "alpha(#000000, 0.5)",
+        "id": "tile.overlay.bg"
+      },
+      {
+        "default": "call.speaking",
+        "id": "tile.ring.speaking"
+      },
+      {
+        "default": "alpha(accent.bright, 0.25)",
+        "id": "test.alpha"
+      },
+      {
+        "default": "mix(surface.window, text.primary, 0.2)",
+        "id": "test.mix"
+      },
+      {
+        "default": "lighter(surface.island, 1.18)",
+        "id": "test.lighter"
+      },
+      {
+        "default": "darker(accent.base, 1.2)",
+        "id": "test.darker"
+      },
+      {
+        "default": "over(accent.dim, surface.island)",
+        "id": "test.over"
+      },
+      {
+        "default": "mixok(surface.island, accent.bright, 0.35)",
+        "id": "test.mixok"
+      },
+      {
+        "default": "best(surface.raised, text.secondary, #ffffff, #000000)",
+        "id": "test.best"
+      },
+      {
+        "default": "guard(text.muted, surface.raised, 7)",
+        "id": "test.guard"
+      },
+      {
+        "default": "#1e6a76/0.5",
+        "id": "test.literal"
+      },
+      {
+        "default": "test.mix",
+        "id": "test.chain"
+      },
+      {
+        "default": "over(alpha(state.danger, 0.3), mix(surface.island, surface.raised, 0.5))",
+        "id": "test.nested"
+      },
+      {
+        "default": "darker(lighter(mention.bg, 1.5), 1.1)",
+        "id": "test.qt"
+      }
+    ]
+  }
+}

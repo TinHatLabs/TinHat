@@ -1,0 +1,3541 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": false,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, room.isDm flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only room.isDm=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, room.joined flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only room.joined=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": false,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": false,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!gone:example.com",
+        "targetIcon": null,
+        "targetName": "this room",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "desktop: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "desktop: target — another room"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "desktop: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "desktop: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": ""
+        }
+      },
+      "name": "desktop: target — param text invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {
+          "text": "Valheim tonight 🎮"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "name": "desktop: target — param text text"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "name": "desktop: target — param text too long"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": "two\nlines"
+        }
+      },
+      "name": "desktop: target — param text with a newline"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "15 minutes",
+        "look": null,
+        "params": {
+          "ttl": "15"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "15"
+        }
+      },
+      "name": "desktop: target — param ttl=15"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "30 minutes",
+        "look": null,
+        "params": {
+          "ttl": "30"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "30"
+        }
+      },
+      "name": "desktop: target — param ttl=30"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "1 hour",
+        "look": null,
+        "params": {
+          "ttl": "60"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "60"
+        }
+      },
+      "name": "desktop: target — param ttl=60"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "3 hours",
+        "look": null,
+        "params": {
+          "ttl": "180"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "180"
+        }
+      },
+      "name": "desktop: target — param ttl=180"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Until I clear it",
+        "look": null,
+        "params": {
+          "ttl": "0"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "0"
+        }
+      },
+      "name": "desktop: target — param ttl=0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "zz"
+        }
+      },
+      "name": "desktop: target — param ttl invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "context": {
+          "room": "!other:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "snapshot": {
+          "current": {},
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: nothing current"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {
+          "text": "hello"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "params": {
+          "text": "hello"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: invocation param text"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "params": {
+          "zzz": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: invocation param not declared"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": false,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, room.isDm flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only room.isDm=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, room.joined flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only room.joined=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": false,
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": false,
+                  "room.joined": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!gone:example.com",
+        "targetIcon": null,
+        "targetName": "this room",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "web: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "web: target — another room"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "web: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "web: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": ""
+        }
+      },
+      "name": "web: target — param text invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {
+          "text": "Valheim tonight 🎮"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "name": "web: target — param text text"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "name": "web: target — param text too long"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "text": "two\nlines"
+        }
+      },
+      "name": "web: target — param text with a newline"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "15 minutes",
+        "look": null,
+        "params": {
+          "ttl": "15"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "15"
+        }
+      },
+      "name": "web: target — param ttl=15"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "30 minutes",
+        "look": null,
+        "params": {
+          "ttl": "30"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "30"
+        }
+      },
+      "name": "web: target — param ttl=30"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "1 hour",
+        "look": null,
+        "params": {
+          "ttl": "60"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "60"
+        }
+      },
+      "name": "web: target — param ttl=60"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "3 hours",
+        "look": null,
+        "params": {
+          "ttl": "180"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "180"
+        }
+      },
+      "name": "web: target — param ttl=180"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Until I clear it",
+        "look": null,
+        "params": {
+          "ttl": "0"
+        },
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "0"
+        }
+      },
+      "name": "web: target — param ttl=0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "ttl": "zz"
+        }
+      },
+      "name": "web: target — param ttl invalid"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!other:example.com",
+        "targetIcon": null,
+        "targetName": "Valheim",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "context": {
+          "room": "!other:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "snapshot": {
+          "current": {},
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: nothing current"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {
+          "text": "hello"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "params": {
+          "text": "hello"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: invocation param text"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "params": {
+          "zzz": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: invocation param not declared"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-message-symbolic",
+        "label": "Your status in this room",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.status.post",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

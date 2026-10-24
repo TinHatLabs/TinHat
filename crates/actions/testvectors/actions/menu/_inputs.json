@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-menu"
+      },
+      "input": {
+        "app": "desktop",
+        "form": "desktop",
+        "menu": "nowhere"
+      },
+      "name": "unknown menu"
+    },
+    {
+      "expect": {
+        "error": "bad-form"
+      },
+      "input": {
+        "app": "desktop",
+        "menu": "app"
+      },
+      "name": "no form"
+    },
+    {
+      "expect": {
+        "error": "bad-app"
+      },
+      "input": {
+        "app": "tv",
+        "form": "desktop",
+        "menu": "app"
+      },
+      "name": "bad app"
+    }
+  ],
+  "kind": "menu"
+}

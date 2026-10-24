@@ -1,0 +1,335 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "lfg"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "lfg"
+        }
+      },
+      "name": "status.set: listed value lfg"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "down"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "down"
+        }
+      },
+      "name": "status.set: listed value down"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "queue"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "queue"
+        }
+      },
+      "name": "status.set: listed value queue"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "grind"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "grind"
+        }
+      },
+      "name": "status.set: listed value grind"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "ranked"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "ranked"
+        }
+      },
+      "name": "status.set: listed value ranked"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "chill"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "chill"
+        }
+      },
+      "name": "status.set: listed value chill"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "brb"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "brb"
+        }
+      },
+      "name": "status.set: listed value brb"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "tilted"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "tilted"
+        }
+      },
+      "name": "status.set: listed value tilted"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "status": "custom"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "custom"
+        }
+      },
+      "name": "status.set: listed value custom"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "status",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": "sleeping"
+        }
+      },
+      "name": "status.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "status",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "status": 7
+        }
+      },
+      "name": "status.set: a number"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "colour",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "colour": "#12345g"
+        }
+      },
+      "name": "status.set: param colour invalid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "colour": "#a1b2c3"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "colour": "#A1B2C3"
+        }
+      },
+      "name": "status.set: param colour colour in upper case"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "emoji",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "emoji": "a b"
+        }
+      },
+      "name": "status.set: param emoji invalid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "emoji": "🦊"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "emoji": "🦊"
+        }
+      },
+      "name": "status.set: param emoji emoji"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "text",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "text": ""
+        }
+      },
+      "name": "status.set: param text invalid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "name": "status.set: param text text"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "text",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "name": "status.set: param text too long"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "text",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "text": "two\nlines"
+        }
+      },
+      "name": "status.set: param text with a newline"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "status.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "status.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "status.set",
+        "target": "x"
+      },
+      "name": "status.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "status.set"
+      },
+      "name": "status.set: no target"
+    }
+  ],
+  "kind": "target"
+}

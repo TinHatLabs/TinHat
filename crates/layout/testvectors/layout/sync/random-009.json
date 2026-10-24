@@ -1,0 +1,643 @@
+{
+  "devices": [
+    "a",
+    "b",
+    "c"
+  ],
+  "expect": {
+    "devices": {
+      "a": {
+        "chains": {
+          "side": {
+            "key": "a",
+            "last": 2
+          }
+        },
+        "counter": 2,
+        "known": {
+          "side": [
+            {
+              "by": "a",
+              "desktop": {
+                "root": {
+                  "c": [],
+                  "id": "body",
+                  "t": "row"
+                },
+                "tag": "a5"
+              },
+              "id": "side",
+              "name": "Main",
+              "phone": {
+                "list": [
+                  "rooms"
+                ],
+                "rail": [
+                  "nav"
+                ]
+              },
+              "previous": {
+                "by": "a",
+                "desktop": {
+                  "root": {
+                    "c": [],
+                    "id": "body",
+                    "t": "row"
+                  },
+                  "tag": "a2"
+                },
+                "id": "side",
+                "name": "Main",
+                "phone": {
+                  "list": [
+                    "rooms"
+                  ],
+                  "rail": [
+                    "nav"
+                  ]
+                },
+                "rev": 1,
+                "savedAt": 2,
+                "vv": {
+                  "a": 1
+                }
+              },
+              "rev": 2,
+              "savedAt": 5,
+              "vv": {
+                "a": 2
+              }
+            },
+            {
+              "by": "c",
+              "desktop": {
+                "root": {
+                  "c": [],
+                  "id": "body",
+                  "t": "row"
+                },
+                "tag": "c3"
+              },
+              "id": "side",
+              "name": "Main",
+              "phone": {
+                "list": [
+                  "rooms"
+                ],
+                "rail": [
+                  "nav"
+                ]
+              },
+              "rev": 1,
+              "savedAt": 3,
+              "vv": {
+                "c": 1
+              }
+            }
+          ]
+        },
+        "lost": {},
+        "maxV": 1,
+        "own": {
+          "side": {
+            "by": "a",
+            "desktop": {
+              "root": {
+                "c": [],
+                "id": "body",
+                "t": "row"
+              },
+              "tag": "a5"
+            },
+            "id": "side",
+            "name": "Main",
+            "phone": {
+              "list": [
+                "rooms"
+              ],
+              "rail": [
+                "nav"
+              ]
+            },
+            "previous": {
+              "by": "a",
+              "desktop": {
+                "root": {
+                  "c": [],
+                  "id": "body",
+                  "t": "row"
+                },
+                "tag": "a2"
+              },
+              "id": "side",
+              "name": "Main",
+              "phone": {
+                "list": [
+                  "rooms"
+                ],
+                "rail": [
+                  "nav"
+                ]
+              },
+              "rev": 1,
+              "savedAt": 2,
+              "vv": {
+                "a": 1
+              }
+            },
+            "rev": 2,
+            "savedAt": 5,
+            "vv": {
+              "a": 2
+            }
+          }
+        },
+        "readOnly": false,
+        "wantPut": false
+      },
+      "b": {
+        "chains": {},
+        "counter": 0,
+        "known": {
+          "side": [
+            {
+              "by": "a",
+              "desktop": {
+                "root": {
+                  "c": [],
+                  "id": "body",
+                  "t": "row"
+                },
+                "tag": "a5"
+              },
+              "id": "side",
+              "name": "Main",
+              "phone": {
+                "list": [
+                  "rooms"
+                ],
+                "rail": [
+                  "nav"
+                ]
+              },
+              "previous": {
+                "by": "a",
+                "desktop": {
+                  "root": {
+                    "c": [],
+                    "id": "body",
+                    "t": "row"
+                  },
+                  "tag": "a2"
+                },
+                "id": "side",
+                "name": "Main",
+                "phone": {
+                  "list": [
+                    "rooms"
+                  ],
+                  "rail": [
+                    "nav"
+                  ]
+                },
+                "rev": 1,
+                "savedAt": 2,
+                "vv": {
+                  "a": 1
+                }
+              },
+              "rev": 2,
+              "savedAt": 5,
+              "vv": {
+                "a": 2
+              }
+            },
+            {
+              "by": "c",
+              "desktop": {
+                "root": {
+                  "c": [],
+                  "id": "body",
+                  "t": "row"
+                },
+                "tag": "c3"
+              },
+              "id": "side",
+              "name": "Main",
+              "phone": {
+                "list": [
+                  "rooms"
+                ],
+                "rail": [
+                  "nav"
+                ]
+              },
+              "rev": 1,
+              "savedAt": 3,
+              "vv": {
+                "c": 1
+              }
+            }
+          ]
+        },
+        "lost": {},
+        "maxV": 1,
+        "own": {},
+        "readOnly": false,
+        "wantPut": false
+      },
+      "c": {
+        "chains": {
+          "side": {
+            "key": "c",
+            "last": 1
+          }
+        },
+        "counter": 1,
+        "known": {
+          "side": [
+            {
+              "by": "a",
+              "desktop": {
+                "root": {
+                  "c": [],
+                  "id": "body",
+                  "t": "row"
+                },
+                "tag": "a5"
+              },
+              "id": "side",
+              "name": "Main",
+              "phone": {
+                "list": [
+                  "rooms"
+                ],
+                "rail": [
+                  "nav"
+                ]
+              },
+              "previous": {
+                "by": "a",
+                "desktop": {
+                  "root": {
+                    "c": [],
+                    "id": "body",
+                    "t": "row"
+                  },
+                  "tag": "a2"
+                },
+                "id": "side",
+                "name": "Main",
+                "phone": {
+                  "list": [
+                    "rooms"
+                  ],
+                  "rail": [
+                    "nav"
+                  ]
+                },
+                "rev": 1,
+                "savedAt": 2,
+                "vv": {
+                  "a": 1
+                }
+              },
+              "rev": 2,
+              "savedAt": 5,
+              "vv": {
+                "a": 2
+              }
+            },
+            {
+              "by": "c",
+              "desktop": {
+                "root": {
+                  "c": [],
+                  "id": "body",
+                  "t": "row"
+                },
+                "tag": "c3"
+              },
+              "id": "side",
+              "name": "Main",
+              "phone": {
+                "list": [
+                  "rooms"
+                ],
+                "rail": [
+                  "nav"
+                ]
+              },
+              "rev": 1,
+              "savedAt": 3,
+              "vv": {
+                "c": 1
+              }
+            }
+          ]
+        },
+        "lost": {
+          "side": {
+            "by": "c",
+            "desktop": {
+              "root": {
+                "c": [],
+                "id": "body",
+                "t": "row"
+              },
+              "tag": "c3"
+            },
+            "id": "side",
+            "name": "Main",
+            "phone": {
+              "list": [
+                "rooms"
+              ],
+              "rail": [
+                "nav"
+              ]
+            },
+            "rev": 1,
+            "savedAt": 3,
+            "vv": {
+              "c": 1
+            }
+          }
+        },
+        "maxV": 1,
+        "own": {},
+        "readOnly": false,
+        "wantPut": false
+      }
+    },
+    "log": [
+      "0 a put: idle",
+      "1 b restore: none",
+      "2 a save: saved",
+      "3 c put: idle",
+      "4 c deliver: ignored",
+      "5 a put: put",
+      "6 a deliver: ok",
+      "7 c save: saved",
+      "8 c deliver: ok",
+      "9 c begin: begun",
+      "10 c deliver: ok",
+      "11 a restore: none",
+      "12 a save: saved",
+      "13 a deliver: ok",
+      "14 a put: put",
+      "15 b deliver: ok",
+      "16 b put: idle",
+      "17 c deliver: lost side",
+      "18 c put: put",
+      "19 a deliver: ok",
+      "20 b deliver: ok",
+      "21 c deliver: ok"
+    ],
+    "server": {
+      "conflicts": [
+        {
+          "by": "c",
+          "desktop": {
+            "root": {
+              "c": [],
+              "id": "body",
+              "t": "row"
+            },
+            "tag": "c3"
+          },
+          "id": "side",
+          "name": "Main",
+          "phone": {
+            "list": [
+              "rooms"
+            ],
+            "rail": [
+              "nav"
+            ]
+          },
+          "rev": 1,
+          "savedAt": 3,
+          "vv": {
+            "c": 1
+          }
+        }
+      ],
+      "format": "tinhat-layouts",
+      "layouts": [
+        {
+          "by": "a",
+          "desktop": {
+            "root": {
+              "c": [],
+              "id": "body",
+              "t": "row"
+            },
+            "tag": "a5"
+          },
+          "id": "side",
+          "name": "Main",
+          "phone": {
+            "list": [
+              "rooms"
+            ],
+            "rail": [
+              "nav"
+            ]
+          },
+          "previous": {
+            "by": "a",
+            "desktop": {
+              "root": {
+                "c": [],
+                "id": "body",
+                "t": "row"
+              },
+              "tag": "a2"
+            },
+            "id": "side",
+            "name": "Main",
+            "phone": {
+              "list": [
+                "rooms"
+              ],
+              "rail": [
+                "nav"
+              ]
+            },
+            "rev": 1,
+            "savedAt": 2,
+            "vv": {
+              "a": 1
+            }
+          },
+          "rev": 2,
+          "savedAt": 5,
+          "vv": {
+            "a": 2
+          }
+        }
+      ],
+      "v": 1
+    }
+  },
+  "kind": "sync",
+  "steps": [
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "restore",
+      "id": "side",
+      "now": 1
+    },
+    {
+      "device": "a",
+      "edit": {
+        "desktop": {
+          "root": {
+            "c": [],
+            "id": "body",
+            "t": "row"
+          },
+          "tag": "a2"
+        },
+        "name": "Main",
+        "phone": {
+          "list": [
+            "rooms"
+          ],
+          "rail": [
+            "nav"
+          ]
+        }
+      },
+      "event": "save",
+      "id": "side",
+      "now": 2
+    },
+    {
+      "device": "c",
+      "event": "put"
+    },
+    {
+      "device": "c",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "c",
+      "edit": {
+        "desktop": {
+          "root": {
+            "c": [],
+            "id": "body",
+            "t": "row"
+          },
+          "tag": "c3"
+        },
+        "name": "Main",
+        "phone": {
+          "list": [
+            "rooms"
+          ],
+          "rail": [
+            "nav"
+          ]
+        }
+      },
+      "event": "save",
+      "id": "side",
+      "now": 3
+    },
+    {
+      "device": "c",
+      "event": "deliver"
+    },
+    {
+      "device": "c",
+      "event": "begin",
+      "id": "main"
+    },
+    {
+      "device": "c",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "restore",
+      "id": "side",
+      "now": 4
+    },
+    {
+      "device": "a",
+      "edit": {
+        "desktop": {
+          "root": {
+            "c": [],
+            "id": "body",
+            "t": "row"
+          },
+          "tag": "a5"
+        },
+        "name": "Main",
+        "phone": {
+          "list": [
+            "rooms"
+          ],
+          "rail": [
+            "nav"
+          ]
+        }
+      },
+      "event": "save",
+      "id": "side",
+      "now": 5
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "c",
+      "event": "deliver"
+    },
+    {
+      "device": "c",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    },
+    {
+      "device": "c",
+      "event": "deliver"
+    }
+  ]
+}

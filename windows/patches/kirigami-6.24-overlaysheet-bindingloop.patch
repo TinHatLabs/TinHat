@@ -1,0 +1,44 @@
+diff --git a/src/templates/OverlaySheet.qml b/src/templates/OverlaySheet.qml
+index a715581..498271e 100644
+--- a/src/templates/OverlaySheet.qml
++++ b/src/templates/OverlaySheet.qml
+@@ -263,7 +263,14 @@ T.Popup {
+                     id: headerParent
+ 
+                     readonly property real leadingPadding: Kirigami.Units.largeSpacing
+-                    readonly property real trailingPadding: (root.showCloseButton ? closeIcon.width + closeIcon.anchors.rightMargin : 0) + Kirigami.Units.smallSpacing
++                    // TIN HAT LOCAL PATCH (windows-port): reserve a CONSTANT right margin
++                    // instead of reading closeIcon.anchors.rightMargin. The live read closes a
++                    // binding cycle (margins -> trailingPadding -> headerParent.implicitHeight ->
++                    // headerItem.implicitHeight -> shortHeaderMargins -> margins) that Qt 6.8.x
++                    // on Windows escalates from a warning into heap corruption + crash
++                    // (invalid read in QQmlBinding::update during finalize). Worst case a few
++                    // px of extra header padding in the short-header case.
++                    readonly property real trailingPadding: (root.showCloseButton ? closeIcon.width + Kirigami.Units.largeSpacing : 0) + Kirigami.Units.smallSpacing
+ 
+                     anchors.fill: parent
+                     verticalPadding: Kirigami.Units.largeSpacing
+@@ -280,12 +287,19 @@ T.Popup {
+                     // vertically center it in a short header
+                     readonly property bool tallHeader: parent.height > (Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.largeSpacing * 2)
+                     readonly property real tallHeaderMargins: Kirigami.Units.largeSpacing
+-                    readonly property real shortHeaderMargins: Math.round((headerItem.implicitHeight - implicitHeight) / 2)
+-
++                    // TIN HAT LOCAL PATCH (windows-port), part 2: the upstream
++                    // shortHeaderMargins math (headerItem.implicitHeight - implicitHeight)/2
++                    // written back into anchors.margins forms a binding cycle
++                    // (margins -> layout -> implicitHeights -> shortHeaderMargins). Qt warns
++                    // on Linux; Qt 6.8.x on Windows corrupts the heap and crashes. Same
++                    // visual intent, cycle-free: anchor-center in short headers instead of
++                    // hand-computing centering margins.
+                     anchors {
+-                        top: parent.top
++                        top: closeIcon.tallHeader ? parent.top : undefined
++                        verticalCenter: closeIcon.tallHeader ? undefined : parent.verticalCenter
+                         right: parent.right
+-                        margins: tallHeader ? tallHeaderMargins : shortHeaderMargins
++                        topMargin: closeIcon.tallHeaderMargins
++                        rightMargin: closeIcon.tallHeaderMargins
+                     }
+                     z: 3
+ 

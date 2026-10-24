@@ -1,0 +1,1232 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "K",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+K"
+      },
+      "input": {
+        "text": "Ctrl+K"
+      },
+      "name": "0: \"Ctrl+K\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "K",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+K"
+      },
+      "input": {
+        "text": "ctrl+k"
+      },
+      "name": "1: \"ctrl+k\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "M",
+        "meta": false,
+        "ok": true,
+        "shift": true,
+        "text": "Ctrl+Shift+M"
+      },
+      "input": {
+        "text": "CTRL+SHIFT+m"
+      },
+      "name": "2: \"CTRL+SHIFT+m\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "M",
+        "meta": false,
+        "ok": true,
+        "shift": true,
+        "text": "Ctrl+Shift+M"
+      },
+      "input": {
+        "text": "Shift+Ctrl+M"
+      },
+      "name": "3: \"Shift+Ctrl+M\""
+    },
+    {
+      "expect": {
+        "alt": true,
+        "bare": false,
+        "ctrl": true,
+        "key": "F24",
+        "meta": true,
+        "ok": true,
+        "shift": true,
+        "text": "Ctrl+Alt+Shift+Meta+F24"
+      },
+      "input": {
+        "text": "Meta+Alt+Shift+Ctrl+F24"
+      },
+      "name": "4: \"Meta+Alt+Shift+Ctrl+F24\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": ",",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+,"
+      },
+      "input": {
+        "text": "Ctrl+,"
+      },
+      "name": "5: \"Ctrl+,\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl++"
+      },
+      "input": {
+        "text": "Ctrl++"
+      },
+      "name": "6: \"Ctrl++\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "+"
+      },
+      "input": {
+        "text": "+"
+      },
+      "name": "7: \"+\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl++"
+      },
+      "input": {
+        "text": "Ctrl+Plus"
+      },
+      "name": "8: \"Ctrl+Plus\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl++"
+      },
+      "input": {
+        "text": "ctrl+plus"
+      },
+      "name": "9: \"ctrl+plus\""
+    },
+    {
+      "expect": {
+        "alt": true,
+        "bare": false,
+        "ctrl": false,
+        "key": "Up",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Alt+Up"
+      },
+      "input": {
+        "text": "Alt+Up"
+      },
+      "name": "10: \"Alt+Up\""
+    },
+    {
+      "expect": {
+        "alt": true,
+        "bare": false,
+        "ctrl": false,
+        "key": "Up",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Alt+Up"
+      },
+      "input": {
+        "text": "alt+arrowup"
+      },
+      "name": "11: \"alt+arrowup\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "F1",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "F1"
+      },
+      "input": {
+        "text": "F1"
+      },
+      "name": "12: \"F1\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "F12",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "F12"
+      },
+      "input": {
+        "text": "f12"
+      },
+      "name": "13: \"f12\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "F0"
+      },
+      "name": "14: \"F0\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "F25"
+      },
+      "name": "15: \"F25\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "F01"
+      },
+      "name": "16: \"F01\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "F9",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "F9"
+      },
+      "input": {
+        "text": "F9"
+      },
+      "name": "17: \"F9\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": true,
+        "ctrl": false,
+        "key": "Ctrl",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl"
+      },
+      "input": {
+        "text": "Ctrl"
+      },
+      "name": "18: \"Ctrl\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": true,
+        "ctrl": false,
+        "key": "Ctrl",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl"
+      },
+      "input": {
+        "text": "ctrl"
+      },
+      "name": "19: \"ctrl\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": true,
+        "ctrl": false,
+        "key": "Shift",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Shift"
+      },
+      "input": {
+        "text": "Shift"
+      },
+      "name": "20: \"Shift\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": true,
+        "ctrl": false,
+        "key": "Alt",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Alt"
+      },
+      "input": {
+        "text": "Alt"
+      },
+      "name": "21: \"Alt\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": true,
+        "ctrl": false,
+        "key": "Meta",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Meta"
+      },
+      "input": {
+        "text": "Meta"
+      },
+      "name": "22: \"Meta\""
+    },
+    {
+      "expect": {
+        "error": "no-key",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+Shift"
+      },
+      "name": "23: \"Ctrl+Shift\""
+    },
+    {
+      "expect": {
+        "error": "duplicate-modifier",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+Ctrl+K"
+      },
+      "name": "24: \"Ctrl+Ctrl+K\""
+    },
+    {
+      "expect": {
+        "error": "key-not-last",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+K+Alt"
+      },
+      "name": "25: \"Ctrl+K+Alt\""
+    },
+    {
+      "expect": {
+        "error": "two-keys",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+K+L"
+      },
+      "name": "26: \"Ctrl+K+L\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+Bogus"
+      },
+      "name": "27: \"Ctrl+Bogus\""
+    },
+    {
+      "expect": {
+        "error": "empty",
+        "ok": false
+      },
+      "input": {
+        "text": ""
+      },
+      "name": "28: \"\""
+    },
+    {
+      "expect": {
+        "error": "empty-token",
+        "ok": false
+      },
+      "input": {
+        "text": "   "
+      },
+      "name": "29: \"   \""
+    },
+    {
+      "expect": {
+        "error": "empty-token",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+"
+      },
+      "name": "30: \"Ctrl+\""
+    },
+    {
+      "expect": {
+        "error": "empty-token",
+        "ok": false
+      },
+      "input": {
+        "text": "+Ctrl"
+      },
+      "name": "31: \"+Ctrl\""
+    },
+    {
+      "expect": {
+        "error": "empty-token",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+ +K"
+      },
+      "name": "32: \"Ctrl+ +K\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "K",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+K"
+      },
+      "input": {
+        "text": " Ctrl + K "
+      },
+      "name": "33: \" Ctrl + K \""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Escape",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Escape"
+      },
+      "input": {
+        "text": "Esc"
+      },
+      "name": "34: \"Esc\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Escape",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Escape"
+      },
+      "input": {
+        "text": "escape"
+      },
+      "name": "35: \"escape\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Return",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Return"
+      },
+      "input": {
+        "text": "Enter"
+      },
+      "name": "36: \"Enter\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Return",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Return"
+      },
+      "input": {
+        "text": "Return"
+      },
+      "name": "37: \"Return\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Space",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Space"
+      },
+      "input": {
+        "text": "Space"
+      },
+      "name": "38: \"Space\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Space",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Space"
+      },
+      "input": {
+        "text": "spacebar"
+      },
+      "name": "39: \"spacebar\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "K",
+        "meta": true,
+        "ok": true,
+        "shift": false,
+        "text": "Meta+K"
+      },
+      "input": {
+        "text": "Cmd+K"
+      },
+      "name": "40: \"Cmd+K\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "S",
+        "meta": true,
+        "ok": true,
+        "shift": true,
+        "text": "Shift+Meta+S"
+      },
+      "input": {
+        "text": "Win+Shift+S"
+      },
+      "name": "41: \"Win+Shift+S\""
+    },
+    {
+      "expect": {
+        "alt": true,
+        "bare": false,
+        "ctrl": false,
+        "key": "Return",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Alt+Return"
+      },
+      "input": {
+        "text": "Option+Enter"
+      },
+      "name": "42: \"Option+Enter\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Tab",
+        "meta": true,
+        "ok": true,
+        "shift": false,
+        "text": "Meta+Tab"
+      },
+      "input": {
+        "text": "Super+Tab"
+      },
+      "name": "43: \"Super+Tab\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+é"
+      },
+      "name": "44: \"Ctrl+é\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+Ä"
+      },
+      "name": "45: \"Ctrl+Ä\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "A",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "A"
+      },
+      "input": {
+        "text": "a"
+      },
+      "name": "46: \"a\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "A",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "A"
+      },
+      "input": {
+        "text": "A"
+      },
+      "name": "47: \"A\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "1",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "1"
+      },
+      "input": {
+        "text": "1"
+      },
+      "name": "48: \"1\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "Delete",
+        "meta": false,
+        "ok": true,
+        "shift": true,
+        "text": "Ctrl+Shift+Delete"
+      },
+      "input": {
+        "text": "Ctrl+Shift+Delete"
+      },
+      "name": "49: \"Ctrl+Shift+Delete\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "PgDown",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+PgDown"
+      },
+      "input": {
+        "text": "Ctrl+PgDown"
+      },
+      "name": "50: \"Ctrl+PgDown\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "PgDown",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+PgDown"
+      },
+      "input": {
+        "text": "ctrl+pagedown"
+      },
+      "name": "51: \"ctrl+pagedown\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "PgDown",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "PgDown"
+      },
+      "input": {
+        "text": "pgdn"
+      },
+      "name": "52: \"pgdn\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "`",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+`"
+      },
+      "input": {
+        "text": "Ctrl+`"
+      },
+      "name": "53: \"Ctrl+`\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "`",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+`"
+      },
+      "input": {
+        "text": "Ctrl+backquote"
+      },
+      "name": "54: \"Ctrl+backquote\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "\\",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+\\"
+      },
+      "input": {
+        "text": "Ctrl+\\"
+      },
+      "name": "55: \"Ctrl+\\\\\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "[",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+["
+      },
+      "input": {
+        "text": "Ctrl+["
+      },
+      "name": "56: \"Ctrl+[\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": ";",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+;"
+      },
+      "input": {
+        "text": "Ctrl+;"
+      },
+      "name": "57: \"Ctrl+;\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "'",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+'"
+      },
+      "input": {
+        "text": "Ctrl+'"
+      },
+      "name": "58: \"Ctrl+'\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "/",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+/"
+      },
+      "input": {
+        "text": "Ctrl+/"
+      },
+      "name": "59: \"Ctrl+/\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "=",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+="
+      },
+      "input": {
+        "text": "Ctrl+="
+      },
+      "name": "60: \"Ctrl+=\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "-",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+-"
+      },
+      "input": {
+        "text": "Ctrl+-"
+      },
+      "name": "61: \"Ctrl+-\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "-",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+-"
+      },
+      "input": {
+        "text": "Ctrl+minus"
+      },
+      "name": "62: \"Ctrl+minus\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Tab",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Tab"
+      },
+      "input": {
+        "text": "Tab"
+      },
+      "name": "63: \"Tab\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Tab",
+        "meta": false,
+        "ok": true,
+        "shift": true,
+        "text": "Shift+Tab"
+      },
+      "input": {
+        "text": "Shift+Tab"
+      },
+      "name": "64: \"Shift+Tab\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Menu",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Menu"
+      },
+      "input": {
+        "text": "Menu"
+      },
+      "name": "65: \"Menu\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Print",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Print"
+      },
+      "input": {
+        "text": "Print"
+      },
+      "name": "66: \"Print\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Pause",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Pause"
+      },
+      "input": {
+        "text": "Pause"
+      },
+      "name": "67: \"Pause\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Insert",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Insert"
+      },
+      "input": {
+        "text": "Insert"
+      },
+      "name": "68: \"Insert\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "Home",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Home"
+      },
+      "input": {
+        "text": "Home"
+      },
+      "name": "69: \"Home\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "End",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "End"
+      },
+      "input": {
+        "text": "End"
+      },
+      "name": "70: \"End\""
+    },
+    {
+      "expect": {
+        "alt": true,
+        "bare": false,
+        "ctrl": true,
+        "key": "Delete",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl+Alt+Delete"
+      },
+      "input": {
+        "text": "Ctrl+Alt+Del"
+      },
+      "name": "71: \"Ctrl+Alt+Del\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": ",",
+        "meta": false,
+        "ok": true,
+        "shift": true,
+        "text": "Ctrl+Shift+,"
+      },
+      "input": {
+        "text": "control+shift+comma"
+      },
+      "name": "72: \"control+shift+comma\""
+    },
+    {
+      "expect": {
+        "error": "too-long",
+        "ok": false
+      },
+      "input": {
+        "text": "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK"
+      },
+      "name": "73: \"KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK\""
+    },
+    {
+      "expect": {
+        "error": "too-long",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
+      },
+      "name": "74: \"Ctrl+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "😀"
+      },
+      "name": "75: \"😀\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+😀"
+      },
+      "name": "76: \"Ctrl+😀\""
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+ "
+      },
+      "name": "77: \"Ctrl+ \""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl++"
+      },
+      "input": {
+        "text": "Ctrl++ "
+      },
+      "name": "78: \"Ctrl++ \""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": true,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "Ctrl++"
+      },
+      "input": {
+        "text": " Ctrl++"
+      },
+      "name": "79: \" Ctrl++\""
+    },
+    {
+      "expect": {
+        "alt": false,
+        "bare": false,
+        "ctrl": false,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": false,
+        "text": "+"
+      },
+      "input": {
+        "text": "  +  "
+      },
+      "name": "80: \"  +  \""
+    },
+    {
+      "expect": {
+        "error": "empty-token",
+        "ok": false
+      },
+      "input": {
+        "text": "Ctrl+ +"
+      },
+      "name": "81: \"Ctrl+ +\""
+    },
+    {
+      "expect": {
+        "alt": true,
+        "bare": false,
+        "ctrl": false,
+        "key": "+",
+        "meta": false,
+        "ok": true,
+        "shift": true,
+        "text": "Alt+Shift++"
+      },
+      "input": {
+        "text": " Alt + Shift ++"
+      },
+      "name": "82: \" Alt + Shift ++\""
+    },
+    {
+      "expect": {
+        "error": "not-string",
+        "ok": false
+      },
+      "input": {
+        "text": 3
+      },
+      "name": "not a string"
+    },
+    {
+      "expect": {
+        "error": "not-string",
+        "ok": false
+      },
+      "input": {},
+      "name": "no text"
+    },
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": "Ctrl+K",
+      "name": "not an object"
+    }
+  ],
+  "kind": "sequence"
+}

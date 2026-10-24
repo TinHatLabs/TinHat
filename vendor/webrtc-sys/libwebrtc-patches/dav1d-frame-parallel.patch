@@ -1,0 +1,306 @@
+diff --git a/modules/video_coding/codecs/av1/dav1d_decoder.cc b/modules/video_coding/codecs/av1/dav1d_decoder.cc
+index 7a52dfa1a3..dd16409d6f 100644
+--- a/modules/video_coding/codecs/av1/dav1d_decoder.cc
++++ b/modules/video_coding/codecs/av1/dav1d_decoder.cc
+@@ -10,10 +10,19 @@
+ 
+ #include "modules/video_coding/codecs/av1/dav1d_decoder.h"
+ 
++#include <errno.h>
++
+ #include <algorithm>
++#include <chrono>
+ #include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <deque>
+ #include <memory>
+ #include <optional>
++#include <thread>
++#include <utility>
+ 
+ #include "api/environment/environment.h"
+ #include "api/ref_counted_base.h"
+@@ -34,6 +43,16 @@
+ namespace webrtc {
+ namespace {
+ 
++// Tin Hat frame-parallel dav1d. Stock pins max_frame_delay=1,
++// which serialises decode of single-tile AV1 (NVENC's default bitstream) onto
++// one core regardless of n_threads — a 3936x1648 stream tops out ~19 fps on a
++// current laptop. Frame-parallel decode needs three departures from stock:
++// EAGAIN handled as flow control (not CODEC_ERROR), compressed data copied
++// into dav1d-owned buffers (dav1d reads it after Decode() returns), and
++// per-frame metadata carried through dav1d's data props instead of assuming
++// 1-in-1-out. TINHAT_DAV1D_FRAME_DELAY=1 restores stock behaviour exactly.
++constexpr char kTinHatDav1dVintage[] = "tinhat-dav1d-fp-v1";
++
+ class Dav1dDecoder : public VideoDecoder {
+  public:
+   Dav1dDecoder();
+@@ -53,10 +72,29 @@ class Dav1dDecoder : public VideoDecoder {
+   const char* ImplementationName() const override;
+ 
+  private:
++  struct FrameMeta {
++    uint32_t rtp_timestamp;
++    int64_t ntp_time_ms;
++  };
++
++  int32_t DeliverPicture(
++      scoped_refptr<class ScopedDav1dPicture> scoped_picture);
++  void ReportCounters();
++
+   Dav1dContext* context_ = nullptr;
+   DecodedImageCallback* decode_complete_callback_ = nullptr;
+ 
+   const bool crop_to_render_resolution_ = false;
++
++  // Input-order metadata for frames still inside the dav1d pipeline.
++  std::deque<FrameMeta> pending_meta_;
++
++  uint64_t fed_ = 0;
++  uint64_t out_ = 0;
++  uint64_t fed_at_report_ = 0;
++  uint64_t out_at_report_ = 0;
++  std::chrono::steady_clock::time_point last_report_ =
++      std::chrono::steady_clock::now();
+ };
+ 
+ class ScopedDav1dData {
+@@ -82,9 +120,6 @@ class ScopedDav1dPicture : public RefCountedNonVirtual<ScopedDav1dPicture> {
+ 
+ constexpr char kDav1dName[] = "dav1d";
+ 
+-// Calling `dav1d_data_wrap` requires a `free_callback` to be registered.
+-void NullFreeCallback(const uint8_t* /* buffer */, void* /* opaque */) {}
+-
+ Dav1dDecoder::Dav1dDecoder() = default;
+ 
+ Dav1dDecoder::Dav1dDecoder(const Environment& env)
+@@ -99,13 +134,33 @@ bool Dav1dDecoder::Configure(const Settings& settings) {
+   Dav1dSettings s;
+   dav1d_default_settings(&s);
+ 
+-  s.n_threads = std::clamp(settings.number_of_cores(), 1, DAV1D_MAX_THREADS);
+-  s.max_frame_delay = 1;  // For low latency decoding.
+-  s.all_layers = 0;       // Don't output a frame for every spatial layer.
++  // The SDK can report fewer cores than the machine has; take the larger.
++  int threads = std::max(settings.number_of_cores(),
++                         static_cast<int>(std::thread::hardware_concurrency()));
++  if (const char* env = getenv("TINHAT_DAV1D_THREADS")) {
++    int v = atoi(env);
++    if (v >= 1) threads = v;
++  }
++  s.n_threads = std::clamp(threads, 1, DAV1D_MAX_THREADS);
++
++  // Frames in flight. Latency cost is bounded by this many frame intervals
++  // and only materialises when decode is slower than the feed; the win is
++  // that many cores decoding concurrently. 1 = stock synchronous decode.
++  int delay = 3;
++  if (const char* env = getenv("TINHAT_DAV1D_FRAME_DELAY")) {
++    int v = atoi(env);
++    if (v >= 1 && v <= 8) delay = v;
++  }
++  s.max_frame_delay = delay;
++
++  s.all_layers = 0;  // Don't output a frame for every spatial layer.
+   // Limit max frame size to avoid OOM'ing fuzzers. crbug.com/325284120.
+   s.frame_size_limit = 16384 * 16384;
+   s.operating_point = 31;  // Decode all operating points.
+ 
++  fprintf(stderr, "[dav1d] %s n_threads=%d max_frame_delay=%d\n",
++          kTinHatDav1dVintage, s.n_threads, s.max_frame_delay);
++
+   return dav1d_open(&context_, &s) == 0;
+ }
+ 
+@@ -117,6 +172,7 @@ int32_t Dav1dDecoder::RegisterDecodeCompleteCallback(
+ 
+ int32_t Dav1dDecoder::Release() {
+   dav1d_close(&context_);
++  pending_meta_.clear();
+   if (context_ != nullptr) {
+     return WEBRTC_VIDEO_CODEC_MEMORY;
+   }
+@@ -134,35 +190,105 @@ const char* Dav1dDecoder::ImplementationName() const {
+   return kDav1dName;
+ }
+ 
++void Dav1dDecoder::ReportCounters() {
++  auto now = std::chrono::steady_clock::now();
++  auto elapsed =
++      std::chrono::duration_cast<std::chrono::seconds>(now - last_report_);
++  if (elapsed.count() < 5) {
++    return;
++  }
++  fprintf(stderr,
++          "[dav1d-rt] fed=%llu out=%llu depth=%llu over %llds\n",
++          static_cast<unsigned long long>(fed_ - fed_at_report_),
++          static_cast<unsigned long long>(out_ - out_at_report_),
++          static_cast<unsigned long long>(fed_ - out_),
++          static_cast<long long>(elapsed.count()));
++  fed_at_report_ = fed_;
++  out_at_report_ = out_;
++  last_report_ = now;
++}
++
+ int32_t Dav1dDecoder::Decode(const EncodedImage& encoded_image,
+                              int64_t /*render_time_ms*/) {
+   if (!context_ || decode_complete_callback_ == nullptr) {
+     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+   }
++  if (encoded_image.size() == 0) {
++    return WEBRTC_VIDEO_CODEC_ERROR;
++  }
+ 
++  // dav1d keeps reading the compressed buffer after this call returns when
++  // frames are in flight, so the bytes must live in a dav1d-owned
++  // allocation; wrapping the caller's buffer would be a use-after-free.
+   ScopedDav1dData scoped_dav1d_data;
+   Dav1dData& dav1d_data = scoped_dav1d_data.Data();
+-  dav1d_data_wrap(&dav1d_data, encoded_image.data(), encoded_image.size(),
+-                  /*free_callback=*/&NullFreeCallback,
+-                  /*user_data=*/nullptr);
+-
+-  if (int decode_res = dav1d_send_data(context_, &dav1d_data)) {
+-    RTC_LOG(LS_WARNING)
+-        << "Dav1dDecoder::Decode decoding failed with error code "
+-        << decode_res;
+-    return WEBRTC_VIDEO_CODEC_ERROR;
++  uint8_t* dav1d_owned = dav1d_data_create(&dav1d_data, encoded_image.size());
++  if (dav1d_owned == nullptr) {
++    return WEBRTC_VIDEO_CODEC_MEMORY;
++  }
++  memcpy(dav1d_owned, encoded_image.data(), encoded_image.size());
++  dav1d_data.m.timestamp =
++      static_cast<int64_t>(encoded_image.RtpTimestamp());
++
++  pending_meta_.push_back(
++      {encoded_image.RtpTimestamp(), encoded_image.ntp_time_ms_});
++  // Bounded on principle; the pipeline holds at most max_frame_delay frames.
++  if (pending_meta_.size() > 32) {
++    pending_meta_.pop_front();
+   }
+ 
+-  scoped_refptr<ScopedDav1dPicture> scoped_dav1d_picture(
+-      new ScopedDav1dPicture{});
+-  Dav1dPicture& dav1d_picture = scoped_dav1d_picture->Picture();
+-  if (int get_picture_res = dav1d_get_picture(context_, &dav1d_picture)) {
+-    RTC_LOG(LS_WARNING)
+-        << "Dav1dDecoder::Decode getting picture failed with error code "
+-        << get_picture_res;
++  fed_++;
++
++  // dav1d contract: send_data returns EAGAIN when the pipeline is full —
++  // drain pictures (get_picture blocks until the oldest in-flight frame
++  // completes), then retry the SAME data. get_picture EAGAIN means no frame
++  // has finished yet, which is normal while the pipeline fills; treating it
++  // as an error is exactly the mistake that caused 0.7.2's PLI loop.
++  int send_res = 0;
++  int guard = 0;
++  do {
++    send_res = dav1d_send_data(context_, &dav1d_data);
++    if (send_res < 0 && send_res != DAV1D_ERR(EAGAIN)) {
++      RTC_LOG(LS_WARNING)
++          << "Dav1dDecoder::Decode dav1d_send_data failed with error code "
++          << send_res;
++      return WEBRTC_VIDEO_CODEC_ERROR;
++    }
++
++    while (true) {
++      scoped_refptr<ScopedDav1dPicture> scoped_dav1d_picture(
++          new ScopedDav1dPicture{});
++      int get_res =
++          dav1d_get_picture(context_, &scoped_dav1d_picture->Picture());
++      if (get_res == DAV1D_ERR(EAGAIN)) {
++        break;
++      }
++      if (get_res < 0) {
++        RTC_LOG(LS_WARNING)
++            << "Dav1dDecoder::Decode dav1d_get_picture failed with error code "
++            << get_res;
++        return WEBRTC_VIDEO_CODEC_ERROR;
++      }
++      int32_t deliver_res = DeliverPicture(std::move(scoped_dav1d_picture));
++      if (deliver_res != WEBRTC_VIDEO_CODEC_OK) {
++        return deliver_res;
++      }
++    }
++  } while (send_res == DAV1D_ERR(EAGAIN) && ++guard < 100);
++
++  if (send_res == DAV1D_ERR(EAGAIN)) {
++    RTC_LOG(LS_ERROR) << "Dav1dDecoder::Decode pipeline wedged";
+     return WEBRTC_VIDEO_CODEC_ERROR;
+   }
+ 
++  ReportCounters();
++  return WEBRTC_VIDEO_CODEC_OK;
++}
++
++int32_t Dav1dDecoder::DeliverPicture(
++    scoped_refptr<ScopedDav1dPicture> scoped_dav1d_picture) {
++  Dav1dPicture& dav1d_picture = scoped_dav1d_picture->Picture();
++
+   if (dav1d_picture.p.bpc != 8) {
+     // Only accept 8 bit depth.
+     RTC_LOG(LS_ERROR) << "Dav1dDecoder::Decode unhandled bit depth: "
+@@ -215,6 +341,22 @@ int32_t Dav1dDecoder::Decode(const EncodedImage& encoded_image,
+     return WEBRTC_VIDEO_CODEC_ERROR;
+   }
+ 
++  // The picture that comes out is not the frame that just went in once the
++  // pipeline is deeper than one; recover this frame's identity from the
++  // timestamp dav1d carried through, and its ntp time from the input-order
++  // queue (entries for earlier frames are drained as we pass them).
++  const uint32_t rtp_timestamp =
++      static_cast<uint32_t>(dav1d_picture.m.timestamp);
++  int64_t ntp_time_ms = 0;
++  while (!pending_meta_.empty()) {
++    FrameMeta meta = pending_meta_.front();
++    pending_meta_.pop_front();
++    if (meta.rtp_timestamp == rtp_timestamp) {
++      ntp_time_ms = meta.ntp_time_ms;
++      break;
++    }
++  }
++
+   ColorSpace color_space(
+       ColorSpace::PrimaryID::kUnspecified, ColorSpace::TransferID::kUnspecified,
+       ColorSpace::MatrixID::kUnspecified,
+@@ -226,13 +368,12 @@ int32_t Dav1dDecoder::Decode(const EncodedImage& encoded_image,
+   color_space.set_transfer_from_uint8(dav1d_picture.seq_hdr->trc);
+   color_space.set_matrix_from_uint8(dav1d_picture.seq_hdr->mtrx);
+ 
+-  VideoFrame decoded_frame =
+-      VideoFrame::Builder()
+-          .set_video_frame_buffer(wrapped_buffer)
+-          .set_rtp_timestamp(encoded_image.RtpTimestamp())
+-          .set_ntp_time_ms(encoded_image.ntp_time_ms_)
+-          .set_color_space(color_space)
+-          .build();
++  VideoFrame decoded_frame = VideoFrame::Builder()
++                                 .set_video_frame_buffer(wrapped_buffer)
++                                 .set_rtp_timestamp(rtp_timestamp)
++                                 .set_ntp_time_ms(ntp_time_ms)
++                                 .set_color_space(color_space)
++                                 .build();
+ 
+   // Corresponds to QP_base in
+   // J. Han et al., "A Technical Overview of AV1," in Proceedings of the IEEE,
+@@ -244,6 +385,7 @@ int32_t Dav1dDecoder::Decode(const EncodedImage& encoded_image,
+   decode_complete_callback_->Decoded(decoded_frame,
+                                      /*decode_time_ms=*/std::nullopt, qp);
+ 
++  out_++;
+   return WEBRTC_VIDEO_CODEC_OK;
+ }
+ 
+@@ -257,4 +399,4 @@ std::unique_ptr<VideoDecoder> CreateDav1dDecoder(const Environment& env) {
+   return std::make_unique<Dav1dDecoder>(env);
+ }
+ 
+-}  // namespace webrtc
++}  // namespace webrtc
+\ No newline at end of file

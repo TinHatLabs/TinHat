@@ -1,0 +1,130 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "source",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "source": "app:spotify"
+        }
+      },
+      "name": "call.audioShare.source: a raw device value (not portable)"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l1"
+        }
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "local": "l1"
+        }
+      },
+      "name": "call.audioShare.source: a local id in this device's table"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l2"
+        }
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "local": "l2"
+        }
+      },
+      "name": "call.audioShare.source: a local id whose device is gone"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l9"
+        }
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "local": "l9"
+        }
+      },
+      "name": "call.audioShare.source: a local id not in this device's table"
+    },
+    {
+      "expect": {
+        "error": "bad-local",
+        "key": "local",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "local": "Bad Id!"
+        }
+      },
+      "name": "call.audioShare.source: a malformed local id"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.audioShare.source: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.audioShare.source: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.source",
+        "target": "x"
+      },
+      "name": "call.audioShare.source: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.audioShare.source"
+      },
+      "name": "call.audioShare.source: no target"
+    }
+  ],
+  "kind": "target"
+}

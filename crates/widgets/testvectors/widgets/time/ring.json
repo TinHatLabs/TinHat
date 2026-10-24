@@ -1,0 +1,158 @@
+{
+  "cases": [
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 0,
+        "minutesLeft": 4320,
+        "nextAt": 1789751660000,
+        "phase": "later"
+      },
+      "now": 1789751600000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 0,
+        "minutesLeft": 1441,
+        "nextAt": 1789924400000,
+        "phase": "later"
+      },
+      "now": 1789924399999,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 0,
+        "minutesLeft": 1440,
+        "nextAt": 1789924460000,
+        "phase": "today"
+      },
+      "now": 1789924400000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 0,
+        "minutesLeft": 1440,
+        "nextAt": 1789924460000,
+        "phase": "today"
+      },
+      "now": 1789924400001,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1309,
+        "minutesLeft": 131,
+        "nextAt": 1790003000000,
+        "phase": "today"
+      },
+      "now": 1790002999999,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1429,
+        "minutesLeft": 11,
+        "nextAt": 1790010200000,
+        "phase": "today"
+      },
+      "now": 1790010140000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1429,
+        "minutesLeft": 11,
+        "nextAt": 1790010200000,
+        "phase": "today"
+      },
+      "now": 1790010199999,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1430,
+        "minutesLeft": 10,
+        "nextAt": 1790010260000,
+        "phase": "soon"
+      },
+      "now": 1790010200000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1439,
+        "minutesLeft": 1,
+        "nextAt": 1790010800000,
+        "phase": "soon"
+      },
+      "now": 1790010799999,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1440,
+        "minutesLeft": 0,
+        "nextAt": 1790021600000,
+        "phase": "live"
+      },
+      "now": 1790010800000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1440,
+        "minutesLeft": 0,
+        "nextAt": 1790021600000,
+        "phase": "live"
+      },
+      "now": 1790014400000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1440,
+        "minutesLeft": 0,
+        "nextAt": null,
+        "phase": "over"
+      },
+      "now": 1790021600000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790021600000,
+      "expect": {
+        "fill": 1440,
+        "minutesLeft": 0,
+        "nextAt": null,
+        "phase": "over"
+      },
+      "now": 1790028800000,
+      "start": 1790010800000
+    },
+    {
+      "end": 1790010800000,
+      "expect": {
+        "fill": 1439,
+        "minutesLeft": 1,
+        "nextAt": 1790010800000,
+        "phase": "soon"
+      },
+      "now": 1790010740000,
+      "start": 1790010800000
+    }
+  ]
+}

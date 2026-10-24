@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = ["crates/streamer", "crates/app", "crates/dropcheck", "crates/theme", "crates/widgets", "crates/layout", "crates/actions"]
+
+[workspace.package]
+edition = "2021"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/TinHatLabs/TinHat"
+
+# Local vendored fork of the LiveKit CLIENT SDK (NOT the server). Patches unpublish_track to
+# call transceiver.stop() so libwebrtc actually disposes the per-track NVENC encoder + its
+# threads on unpublish — upstream leaks them for the call lifetime (~30 threads per re-publish:
+# camera toggle / BRB cam-off / screen-share quality change). Vendored from crates.io 0.7.46;
+# see vendor/livekit/src/room/participant/local_participant.rs (search "PATCH (Tin Hat").
+[patch.crates-io]
+livekit = { path = "vendor/livekit" }
+# Vendored fork of webrtc-sys 0.3.35 (was previously patched in-place in the cargo
+# registry cache — now durable in-repo). Carries: NVENC encoder pinning
+# (x-livekit-video-encoder-backend), H.264 packetization-mode decoder-match relaxation,
+# and the NVDEC-receive-decode opt-in (LK_NVDEC=1; software H.264 decode by default —
+# NvDecoder's reconfigure SEGVs on simulcast rung switches, see
+# vendor/webrtc-sys/src/video_decoder_factory.cpp "PATCH (Tin Hat").
+webrtc-sys = { path = "vendor/webrtc-sys" }
+# Vendored libwebrtc wrapper (was an IN-PLACE registry patch — which silently does not
+# travel to other build machines: the Windows VM compiled without nvenc_av1_available
+# and produced a chimera build: new Rust, old C++). Carries: nvenc_av1_available() passthrough.
+libwebrtc = { path = "vendor/libwebrtc" }

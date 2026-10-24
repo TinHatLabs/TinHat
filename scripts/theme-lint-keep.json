@@ -1,0 +1,50 @@
+{
+ "AppCore.qml": [
+  "return Qt.hsla(hue, 0.6, dark ? 0.7 : 0.42, 1)",
+  "var dark = Kirigami.Theme.backgroundColor.hslLightness < 0.5"
+ ],
+ "Avatar.qml": [
+  "GradientStop { position: 0.0; color: Qt.lighter(avatar.baseHue, 1.35) }",
+  "GradientStop { position: 1.0; color: Qt.darker(avatar.baseHue, 1.18) }",
+  "return Qt.hsla(hue, sat, light, 1.0)"
+ ],
+ "CalendarWindow.qml": [
+  "readonly property var colorChoices: [\"#7cc4ff\", \"#ffb347\", \"#8ee08e\", \"#ff7c9c\", \"#c39bff\", \"#ffd75e\", \"#5ee0d0\", \"#ff9e6b\"]"
+ ],
+ "PresenceLine.qml": [
+  "chipColor: line.hasChip && line.pres.chipColor ? line.pres.chipColor : \"#95A5A6\""
+ ],
+ "RightPanel.qml": [
+  "chipColor: (row.pres && row.pres.chipColor) ? row.pres.chipColor : \"#95A5A6\""
+ ],
+ "RoleBadge.qml": [
+  "color: Qt.rgba(tone.r, tone.g, tone.b, 0.18)"
+ ],
+ "StatusChip.qml": [
+  "color: Qt.rgba(chip.chipColor.r, chip.chipColor.g, chip.chipColor.b, 0.14)",
+  "property color chipColor: \"#95A5A6\""
+ ],
+ "TinHatLoader.qml": [
+  "fillColor: root.litColor(\"#8E9CA8\", 5, 0.6)",
+  "fillColor: root.litColor(\"#8F9CA9\", 4, 0.12)",
+  "fillColor: root.litColor(\"#8F9DAA\", 14, 0.61)",
+  "fillColor: root.litColor(\"#9BAAB7\", 9, 0.72)",
+  "fillColor: root.litColor(\"#A8B3BF\", 8, 0.2)",
+  "fillColor: root.litColor(\"#A9B3BE\", 15, 0.44)",
+  "fillColor: root.litColor(\"#ADBCC8\", 10, 0.79)",
+  "fillColor: root.litColor(\"#BAC3CC\", 9, 0.16)",
+  "fillColor: root.litColor(\"#BFC8D0\", 18, 0.52)",
+  "fillColor: root.litColor(\"#CAD3DC\", 15, 0.45)",
+  "fillColor: root.litColor(\"#CBD3DA\", 0, 0)",
+  "fillColor: root.litColor(\"#CDD6DE\", 11, 0.7)",
+  "fillColor: root.litColor(\"#D3DAE1\", 15, 0.17)",
+  "fillColor: root.litColor(\"#D7DFE5\", 11, 0.64)",
+  "fillColor: root.litColor(\"#E2E7EC\", 12, 0.1)",
+  "fillColor: root.litColor(\"#EEF2F5\", 11, 0.3)",
+  "fillColor: root.litColor(\"#F0F4F7\", 8, 0.37)",
+  "fillColor: root.litColor(\"#F1F6F6\", 6, 0.85)",
+  "fillColor: root.litColor(\"#F5F7F9\", 6, 0.07)",
+  "fillColor: root.litColor(\"#F8FAFC\", 5, 0.04)",
+  "return Qt.rgba(channel(1), channel(3), channel(5), 1);"
+ ]
+}

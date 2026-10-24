@@ -1,0 +1,1949 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": false
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: all on, sound.playing flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only sound.playing=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": false
+          }
+        }
+      },
+      "name": "desktop: all on, ui.roomOpen flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: only ui.roomOpen=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Bruh",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "mxc://example.com/bruh",
+        "targetIcon": null,
+        "targetName": "Bruh",
+        "tip": "Play Bruh",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "name": "desktop: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "this sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "mxc://example.com/gone",
+        "targetIcon": null,
+        "targetName": "this sound",
+        "tip": "Play this sound",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "name": "desktop: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": "ftp://example.com/x"
+        }
+      },
+      "name": "desktop: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": 7
+        }
+      },
+      "name": "desktop: target — a number"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "mxc://example.com/bruh",
+        "targetIcon": null,
+        "targetName": "Bruh",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "context": {
+          "sound": "mxc://example.com/bruh"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": false
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "web: all on, sound.playing flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only sound.playing=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": false
+          }
+        }
+      },
+      "name": "web: all on, ui.roomOpen flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "web: only ui.roomOpen=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": false
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": false
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Bruh",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "mxc://example.com/bruh",
+        "targetIcon": null,
+        "targetName": "Bruh",
+        "tip": "Play Bruh",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "name": "web: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "this sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "mxc://example.com/gone",
+        "targetIcon": null,
+        "targetName": "this sound",
+        "tip": "Play this sound",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "name": "web: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": "ftp://example.com/x"
+        }
+      },
+      "name": "web: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "sound": 7
+        }
+      },
+      "name": "web: target — a number"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "mxc://example.com/bruh",
+        "targetIcon": null,
+        "targetName": "Bruh",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "context": {
+          "sound": "mxc://example.com/bruh"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "web: the subject from a context"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "media-playback-start-symbolic",
+        "label": "Play a sound",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.play",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.playing": true
+                }
+              }
+            }
+          },
+          "values": {
+            "ui.roomOpen": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

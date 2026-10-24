@@ -1,0 +1,154 @@
+{
+  "expect": {
+    "form": {
+      "collapse": [
+        {
+          "below": 1000,
+          "ref": "panel",
+          "to": "overlay"
+        }
+      ],
+      "floats": [],
+      "hidden": [],
+      "margin": 64,
+      "opts": {
+        "dms": {
+          "orient": "h"
+        },
+        "nav": {
+          "orient": "h"
+        },
+        "spaces": {
+          "orient": "h"
+        }
+      },
+      "preset": "sideMonitor",
+      "root": {
+        "c": [
+          {
+            "c": [
+              {
+                "c": [
+                  {
+                    "i": "nav",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "dms",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "spaces",
+                    "size": {
+                      "share": 1
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "c": [
+                      {
+                        "i": "rooms",
+                        "size": {
+                          "share": 1
+                        },
+                        "t": "island"
+                      },
+                      {
+                        "i": "widgets",
+                        "t": "island"
+                      },
+                      {
+                        "i": "account",
+                        "t": "island"
+                      }
+                    ],
+                    "id": "n4",
+                    "t": "col"
+                  }
+                ],
+                "id": "topbar",
+                "size": {
+                  "auto": true
+                },
+                "t": "row"
+              },
+              {
+                "c": [
+                  {
+                    "i": "panel",
+                    "t": "island"
+                  }
+                ],
+                "t": "grid",
+                "x": 1.25
+              }
+            ],
+            "id": "body",
+            "size": {
+              "share": 1
+            },
+            "t": "col"
+          },
+          {
+            "c": [
+              {
+                "i": "header",
+                "t": "island"
+              },
+              {
+                "i": "call",
+                "t": "island"
+              },
+              {
+                "c": [
+                  {
+                    "i": "timeline",
+                    "size": {
+                      "share": 1
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "composer",
+                    "t": "island"
+                  }
+                ],
+                "id": "n2",
+                "size": {
+                  "share": 1
+                },
+                "t": "col"
+              }
+            ],
+            "id": "n3",
+            "t": "col"
+          }
+        ],
+        "id": "n1",
+        "t": "row"
+      }
+    },
+    "notes": [
+      "bad-field-fixed gap",
+      "bad-field-fixed margin",
+      "unknown-node-kept grid",
+      "restored-required timeline",
+      "restored-required composer",
+      "restored-required call",
+      "restored-missing rooms",
+      "restored-missing widgets",
+      "restored-missing account",
+      "restored-missing header",
+      "bad-collapse-dropped side"
+    ]
+  },
+  "kind": "repair",
+  "target": "desktop",
+  "text": "{\"preset\":\"sideMonitor\",\"root\":{\"t\":\"col\",\"id\":\"body\",\"c\":[{\"t\":\"row\",\"id\":\"topbar\",\"size\":{\"auto\":true},\"c\":[{\"t\":\"island\",\"i\":\"nav\",\"size\":{\"auto\":true}},{\"t\":\"island\",\"i\":\"dms\",\"size\":{\"auto\":true}},{\"t\":\"island\",\"i\":\"spaces\",\"size\":{\"share\":1}}]},{\"t\":\"grid\",\"c\":[{\"t\":\"island\",\"i\":\"panel\"}],\"x\":1.25}]},\"floats\":[],\"hidden\":[],\"collapse\":[{\"ref\":\"panel\",\"to\":\"overlay\",\"below\":1000},{\"ref\":\"side\",\"to\":\"drawer\",\"below\":1100}],\"opts\":{\"nav\":{\"orient\":\"h\"},\"dms\":{\"orient\":\"h\"},\"spaces\":{\"orient\":\"h\"}},\"gap\":1.5,\"margin\":999}"
+}

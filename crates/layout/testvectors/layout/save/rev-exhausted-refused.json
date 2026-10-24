@@ -1,0 +1,90 @@
+{
+  "expect": {
+    "error": "bad-save: exhausted"
+  },
+  "kind": "save",
+  "known": {},
+  "raw": {
+    "format": "tinhat-layouts",
+    "layouts": [
+      {
+        "by": "dev-b",
+        "desktop": {
+          "root": {
+            "c": [],
+            "id": "body",
+            "t": "row"
+          },
+          "tag": "dev-b2147483647"
+        },
+        "id": "main",
+        "name": "Main",
+        "phone": {
+          "list": [
+            "rooms"
+          ],
+          "rail": [
+            "nav"
+          ]
+        },
+        "rev": 2147483647,
+        "savedAt": 1000,
+        "vv": {
+          "dev-b": 3
+        }
+      }
+    ],
+    "v": 1
+  },
+  "save": {
+    "by": "dev-a",
+    "edit": {
+      "desktop": {
+        "root": {
+          "c": [],
+          "id": "body",
+          "t": "row"
+        },
+        "tag": "a1"
+      },
+      "name": "Main",
+      "phone": {
+        "list": [
+          "rooms"
+        ],
+        "rail": [
+          "nav"
+        ]
+      }
+    },
+    "id": "main",
+    "now": 999,
+    "seq": 7,
+    "start": {
+      "by": "dev-b",
+      "desktop": {
+        "root": {
+          "c": [],
+          "id": "body",
+          "t": "row"
+        },
+        "tag": "dev-b2147483647"
+      },
+      "id": "main",
+      "name": "Main",
+      "phone": {
+        "list": [
+          "rooms"
+        ],
+        "rail": [
+          "nav"
+        ]
+      },
+      "rev": 2147483647,
+      "savedAt": 1000,
+      "vv": {
+        "dev-b": 3
+      }
+    }
+  }
+}

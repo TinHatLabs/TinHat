@@ -1,0 +1,16 @@
+[package]
+name = "tinhat-actions"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Tin Hat actions engine (modular UI step 3, buttons): a line-for-line Rust port of Tin Hat Web's TypeScript reference (src/actions/{table,evaluate,palette,api}.ts, contract ACTIONS.md v1) — availability, targets and presentation of every action, button rows, menus, the edit-mode drawer and the Ctrl+K palette — proven byte-identical by the shared vectors. Pure: no Qt, no I/O (the table is embedded), no clock, no randomness."
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# The colour contract's JSON reader (json.rs parse_json: JSON.parse + nesting <= 128 + no lone surrogates) and its
+# ECMAScript number / JSON.stringify string printers + canonical JSON (canon.rs), exactly as the layout and widgets
+# crates reuse them.
+tinhat-theme = { path = "../theme" }
+serde_json = "1"

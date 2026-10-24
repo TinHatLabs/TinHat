@@ -1,0 +1,82 @@
+{
+  "expect": {
+    "calls": [],
+    "last": null,
+    "week": {
+      "friends": [],
+      "from": 1789398800000,
+      "myCalls": 0,
+      "myMs": 0,
+      "to": 1790003600000
+    }
+  },
+  "input": {
+    "me": "@me:example.com",
+    "now": 1790003600000,
+    "recorder": "@recorder:example.com",
+    "rooms": [
+      {
+        "events": [
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000000000,
+              "device_id": "D1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@me:example.com:D1",
+              "scope": "m.room"
+            },
+            "id": "$e1",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790000000000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e2",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790000000000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000060000,
+              "device_id": "A1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@ana:example.com:A1",
+              "scope": "m.room"
+            },
+            "id": "$e3",
+            "key": "_@ana:example.com_A1_m.call",
+            "sender": "@ana:example.com",
+            "ts": 1790000060000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e4",
+            "key": "_@ana:example.com_A1_m.call",
+            "sender": "@ana:example.com",
+            "ts": 1790000060000,
+            "type": "org.matrix.msc3401.call.member"
+          }
+        ],
+        "room": "!gaming:example.com"
+      }
+    ]
+  },
+  "note": "join and leave in the same ms leave no interval"
+}

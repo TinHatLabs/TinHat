@@ -1,0 +1,186 @@
+{
+  "content": {
+    "account": {
+      "h": 120
+    },
+    "buttons:a1": {
+      "h": 40,
+      "w": 120
+    },
+    "call": {
+      "collapsedH": 104,
+      "h": 1400
+    },
+    "composer": {
+      "h": 180
+    },
+    "dms": {
+      "h": 160
+    },
+    "header": {
+      "h": 110
+    },
+    "nav": {
+      "h": 228
+    },
+    "rooms": {
+      "h": 900
+    },
+    "widgets": {
+      "h": 400,
+      "minH": 108
+    }
+  },
+  "expect": {
+    "collapsed": [
+      "emergency"
+    ],
+    "containers": {
+      "rail": {
+        "h": 184,
+        "w": 292,
+        "x": 14,
+        "y": 58,
+        "z": 20
+      },
+      "sidecol": {
+        "h": 240,
+        "w": 292,
+        "x": 14,
+        "y": 248,
+        "z": 20
+      }
+    },
+    "drawers": [
+      {
+        "handle": {
+          "h": 40,
+          "w": 40,
+          "x": 6,
+          "y": 6
+        },
+        "id": "emergency",
+        "open": false,
+        "panel": {
+          "h": 64,
+          "w": 308,
+          "x": 6,
+          "y": 50
+        },
+        "scroll": 430,
+        "side": "l"
+      }
+    ],
+    "emergency": true,
+    "gaps": [],
+    "islands": {
+      "account": {
+        "h": 46,
+        "vis": false,
+        "w": 292,
+        "x": 14,
+        "y": 442,
+        "z": 20
+      },
+      "composer": {
+        "h": 108,
+        "inset": {
+          "l": 42
+        },
+        "vis": true,
+        "w": 1288,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      },
+      "dms": {
+        "h": 0,
+        "vis": false,
+        "w": 292,
+        "x": 14,
+        "y": 124,
+        "z": 20
+      },
+      "header": {
+        "h": 0,
+        "vis": false,
+        "w": 0,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      },
+      "nav": {
+        "h": 60,
+        "vis": false,
+        "w": 292,
+        "x": 14,
+        "y": 58,
+        "z": 20
+      },
+      "rooms": {
+        "h": 160,
+        "vis": false,
+        "w": 292,
+        "x": 14,
+        "y": 276,
+        "z": 20
+      },
+      "spaces": {
+        "h": 112,
+        "vis": false,
+        "w": 292,
+        "x": 14,
+        "y": 130,
+        "z": 20
+      },
+      "timeline": {
+        "h": 0,
+        "vis": false,
+        "w": 0,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      },
+      "widgets": {
+        "h": 160,
+        "vis": false,
+        "w": 292,
+        "x": 14,
+        "y": 276,
+        "z": 20
+      }
+    },
+    "overflow": [],
+    "squeezed": [],
+    "stacks": {
+      "sidetabs": {
+        "active": "rooms",
+        "h": 188,
+        "tab": 28,
+        "tabs": [
+          "rooms",
+          "widgets"
+        ],
+        "vis": false,
+        "w": 292,
+        "x": 14,
+        "y": 248,
+        "z": 20
+      }
+    },
+    "tooSmall": true
+  },
+  "kind": "solve",
+  "preset": "handheld",
+  "size": {
+    "h": 120,
+    "w": 1300
+  },
+  "unitPm": 1000,
+  "view": {
+    "forceCollapse": [
+      "sidecol"
+    ],
+    "roomOpen": true
+  }
+}

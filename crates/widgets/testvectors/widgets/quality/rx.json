@@ -1,0 +1,302 @@
+{
+  "cases": [
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 6000,
+        "codec": "audio/opus",
+        "jitter": 0.0123,
+        "k": "a",
+        "lost": 1,
+        "packets": 50,
+        "rtt": 0.041
+      },
+      "expect": {
+        "c": "Opus",
+        "jit": 12,
+        "k": "a",
+        "kbps": 48,
+        "loss": 20,
+        "rtt": 41
+      },
+      "prev": {
+        "at": 0,
+        "bytes": 0,
+        "k": "a",
+        "lost": 0,
+        "packets": 0
+      }
+    },
+    {
+      "cur": {
+        "at": 10000,
+        "bytes": 1906250,
+        "codec": "video/AV1",
+        "fps": 29.97,
+        "h": 720,
+        "jitter": 0.008,
+        "k": "v",
+        "lost": 13,
+        "packets": 1900,
+        "rtt": 0.0225,
+        "w": 1280
+      },
+      "expect": {
+        "c": "AV1",
+        "fps": 30,
+        "h": 720,
+        "jit": 8,
+        "k": "v",
+        "kbps": 1450,
+        "loss": 10,
+        "rtt": 23,
+        "w": 1280
+      },
+      "prev": {
+        "at": 5000,
+        "bytes": 1000000,
+        "k": "v",
+        "lost": 3,
+        "packets": 900
+      }
+    },
+    {
+      "cur": {
+        "at": 3000,
+        "bytes": 2287500,
+        "codec": "video/H264",
+        "fps": 60,
+        "h": 1080,
+        "k": "s",
+        "lost": 0,
+        "packets": 2000,
+        "w": 1920
+      },
+      "expect": {
+        "c": "H.264",
+        "fps": 60,
+        "h": 1080,
+        "k": "s",
+        "kbps": 6100,
+        "loss": 0,
+        "w": 1920
+      },
+      "prev": {
+        "at": 0,
+        "bytes": 0,
+        "k": "s",
+        "lost": 0,
+        "packets": 0
+      }
+    },
+    {
+      "cur": {
+        "at": 2000,
+        "bytes": 400,
+        "k": "a",
+        "lost": 2,
+        "packets": 12
+      },
+      "expect": null,
+      "prev": {
+        "at": 1000,
+        "bytes": 500,
+        "k": "a",
+        "lost": 5,
+        "packets": 10
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 900,
+        "k": "a",
+        "lost": 0,
+        "packets": 20
+      },
+      "expect": null,
+      "prev": {
+        "at": 1000,
+        "bytes": 500,
+        "k": "a",
+        "lost": 0,
+        "packets": 10
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 500,
+        "k": "a",
+        "lost": 0,
+        "packets": 10
+      },
+      "expect": null,
+      "prev": null
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 125,
+        "codec": "video/x-weird codec",
+        "fps": -1,
+        "h": 720,
+        "k": "v",
+        "lost": 0,
+        "packets": 1,
+        "w": 0
+      },
+      "expect": {
+        "c": "X-WEIRDC",
+        "fps": 0,
+        "k": "v",
+        "kbps": 1,
+        "loss": 0
+      },
+      "prev": {
+        "at": 0,
+        "bytes": 0,
+        "k": "v",
+        "lost": 0,
+        "packets": 0
+      }
+    },
+    {
+      "cur": {
+        "at": 7,
+        "bytes": 999999999,
+        "jitter": 1000000000,
+        "k": "a",
+        "lost": 0,
+        "packets": 0
+      },
+      "expect": {
+        "jit": 60000,
+        "k": "a",
+        "kbps": 1000000,
+        "loss": 0
+      },
+      "prev": {
+        "at": 0,
+        "bytes": 0,
+        "k": "a",
+        "lost": 0,
+        "packets": 0
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 1000,
+        "codec": "video/VP8",
+        "k": "v",
+        "lost": 0,
+        "packets": 100
+      },
+      "expect": {
+        "c": "VP8",
+        "k": "v",
+        "kbps": 8,
+        "loss": 0
+      },
+      "prev": {
+        "at": 0,
+        "bytes": 0,
+        "k": "v",
+        "lost": 0,
+        "packets": 100
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 10,
+        "k": "v",
+        "lost": 1,
+        "packets": 10
+      },
+      "expect": null,
+      "prev": {
+        "at": 0,
+        "bytes": 50000,
+        "k": "v",
+        "lost": 0,
+        "packets": 1000
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 60000,
+        "k": "v",
+        "lost": 0,
+        "packets": 900
+      },
+      "expect": null,
+      "prev": {
+        "at": 0,
+        "bytes": 50000,
+        "k": "v",
+        "lost": 0,
+        "packets": 1000
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 7000,
+        "codec": "audio/opus",
+        "k": "a",
+        "lost": 4,
+        "packets": 150
+      },
+      "expect": {
+        "c": "Opus",
+        "k": "a",
+        "kbps": 48,
+        "loss": 0
+      },
+      "prev": {
+        "at": 0,
+        "bytes": 1000,
+        "k": "a",
+        "lost": 10,
+        "packets": 100
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": null,
+        "k": "a",
+        "lost": 0,
+        "packets": 10
+      },
+      "expect": null,
+      "prev": {
+        "at": 0,
+        "bytes": 0,
+        "k": "a",
+        "lost": 0,
+        "packets": 0
+      }
+    },
+    {
+      "cur": {
+        "at": 1000,
+        "bytes": 100,
+        "k": "a",
+        "lost": 0,
+        "packets": 10
+      },
+      "expect": null,
+      "prev": {
+        "at": 0,
+        "bytes": 0,
+        "k": "a",
+        "lost": null,
+        "packets": 0
+      }
+    }
+  ]
+}

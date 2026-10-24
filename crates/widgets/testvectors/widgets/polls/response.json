@@ -1,0 +1,257 @@
+{
+  "cases": [
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": {
+        "answers": [
+          "a"
+        ],
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "m.selections": [
+          "a",
+          "b"
+        ]
+      },
+      "expect": {
+        "answers": [
+          "a",
+          "b"
+        ],
+        "start": "$p"
+      },
+      "type": "m.poll.response"
+    },
+    {
+      "content": {
+        "m.poll.response": {
+          "answers": [
+            "c"
+          ]
+        },
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        }
+      },
+      "expect": {
+        "answers": [
+          "c"
+        ],
+        "start": "$p"
+      },
+      "type": "m.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "org.matrix.msc3267.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": []
+        }
+      },
+      "expect": {
+        "answers": [],
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a",
+            3
+          ]
+        }
+      },
+      "expect": {
+        "answers": null,
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": "a"
+        }
+      },
+      "expect": {
+        "answers": null,
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {}
+      },
+      "expect": {
+        "answers": null,
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        }
+      },
+      "expect": {
+        "answers": null,
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "m.selections": null,
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": {
+        "answers": null,
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.poll.response": "x",
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": {
+        "answers": [
+          "a"
+        ],
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.annotation"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "p-no-dollar",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": null,
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.response"
+    }
+  ]
+}

@@ -1,0 +1,472 @@
+{
+  "content": {
+    "account": {
+      "h": 48
+    },
+    "buttons:a1": {
+      "h": 36,
+      "w": 244
+    },
+    "buttons:b3": {
+      "h": 90,
+      "w": 97
+    },
+    "call": {
+      "barH": 12,
+      "collapsedH": 380,
+      "h": 195
+    },
+    "composer": {
+      "h": 283
+    },
+    "dms": {
+      "h": 141
+    },
+    "header": {
+      "h": 12
+    },
+    "nav": {
+      "h": 233
+    },
+    "rooms": {
+      "h": 85
+    },
+    "timeline": {
+      "minH": 281
+    },
+    "widgets": {
+      "h": 539,
+      "minH": 73
+    }
+  },
+  "expect": {
+    "collapsed": [],
+    "containers": {
+      "body": {
+        "h": 941,
+        "w": 3842,
+        "x": 9,
+        "y": 9,
+        "z": 0
+      },
+      "convrow": {
+        "h": 872,
+        "w": 2993,
+        "x": 858,
+        "y": 78,
+        "z": 0
+      },
+      "main": {
+        "h": 941,
+        "w": 2993,
+        "x": 858,
+        "y": 9,
+        "z": 0
+      },
+      "n1": {
+        "h": 941,
+        "w": 393,
+        "x": 9,
+        "y": 9,
+        "z": 0
+      },
+      "n2": {
+        "h": 111,
+        "w": 84,
+        "x": 9,
+        "y": 557,
+        "z": 0
+      },
+      "n3": {
+        "h": 111,
+        "w": 393,
+        "x": 9,
+        "y": 557,
+        "z": 0
+      },
+      "navcol": {
+        "h": 941,
+        "w": 840,
+        "x": 9,
+        "y": 9,
+        "z": 0
+      },
+      "rail": {
+        "h": 393,
+        "w": 393,
+        "x": 9,
+        "y": 557,
+        "z": 0
+      },
+      "roomcol": {
+        "h": 872,
+        "w": 2993,
+        "x": 858,
+        "y": 78,
+        "z": 0
+      }
+    },
+    "drawers": [],
+    "emergency": false,
+    "gaps": [
+      {
+        "a": "widgets",
+        "axis": "y",
+        "b": "rail",
+        "h": 9,
+        "id": "n1/0",
+        "w": 393,
+        "x": 9,
+        "y": 548
+      },
+      {
+        "a": "nav",
+        "axis": "y",
+        "b": "dms",
+        "h": 9,
+        "id": "n2/0",
+        "w": 84,
+        "x": 9,
+        "y": 659
+      },
+      {
+        "a": "n2",
+        "axis": "x",
+        "b": "account",
+        "h": 111,
+        "id": "n3/0",
+        "w": 9,
+        "x": 93,
+        "y": 557
+      },
+      {
+        "a": "n3",
+        "axis": "y",
+        "b": "spaces",
+        "h": 9,
+        "id": "rail/0",
+        "w": 393,
+        "x": 9,
+        "y": 668
+      },
+      {
+        "a": "n1",
+        "axis": "x",
+        "b": "rooms",
+        "h": 941,
+        "id": "navcol/0",
+        "w": 9,
+        "x": 402,
+        "y": 9
+      },
+      {
+        "a": "navcol",
+        "axis": "x",
+        "b": "main",
+        "h": 941,
+        "id": "body/0",
+        "w": 9,
+        "x": 849,
+        "y": 9
+      },
+      {
+        "a": "header",
+        "axis": "y",
+        "b": "convrow",
+        "h": 9,
+        "id": "main/0",
+        "w": 2993,
+        "x": 858,
+        "y": 69
+      },
+      {
+        "a": "timeline",
+        "axis": "y",
+        "b": "composer",
+        "h": 9,
+        "id": "roomcol/0",
+        "w": 2993,
+        "x": 858,
+        "y": 658
+      }
+    ],
+    "islands": {
+      "account": {
+        "h": 111,
+        "vis": true,
+        "w": 300,
+        "x": 102,
+        "y": 557,
+        "z": 0
+      },
+      "composer": {
+        "h": 283,
+        "vis": true,
+        "w": 2993,
+        "x": 858,
+        "y": 667,
+        "z": 0
+      },
+      "dms": {
+        "h": 0,
+        "vis": false,
+        "w": 84,
+        "x": 9,
+        "y": 668,
+        "z": 0
+      },
+      "header": {
+        "h": 60,
+        "vis": true,
+        "w": 2993,
+        "x": 858,
+        "y": 9,
+        "z": 0
+      },
+      "nav": {
+        "h": 102,
+        "vis": true,
+        "w": 84,
+        "x": 9,
+        "y": 557,
+        "z": 0
+      },
+      "rooms": {
+        "h": 941,
+        "vis": true,
+        "w": 438,
+        "x": 411,
+        "y": 9,
+        "z": 0
+      },
+      "spaces": {
+        "h": 273,
+        "vis": true,
+        "w": 393,
+        "x": 9,
+        "y": 677,
+        "z": 0
+      },
+      "timeline": {
+        "h": 580,
+        "vis": true,
+        "w": 2993,
+        "x": 858,
+        "y": 78,
+        "z": 0
+      },
+      "widgets": {
+        "h": 539,
+        "vis": true,
+        "w": 393,
+        "x": 9,
+        "y": 9,
+        "z": 0
+      }
+    },
+    "overflow": [
+      "n3"
+    ],
+    "squeezed": [],
+    "stacks": {}
+  },
+  "form": {
+    "collapse": [
+      {
+        "below": 844,
+        "ref": "panel",
+        "to": "overlay"
+      },
+      {
+        "below": 720,
+        "ref": "navcol",
+        "to": "drawer"
+      }
+    ],
+    "floats": [],
+    "hidden": [],
+    "opts": {},
+    "preset": "classic",
+    "root": {
+      "c": [
+        {
+          "c": [
+            {
+              "c": [
+                {
+                  "i": "widgets",
+                  "size": {
+                    "auto": true
+                  },
+                  "t": "island"
+                },
+                {
+                  "c": [
+                    {
+                      "c": [
+                        {
+                          "c": [
+                            {
+                              "i": "nav",
+                              "size": {
+                                "fixed": 68
+                              },
+                              "t": "island"
+                            },
+                            {
+                              "i": "dms",
+                              "size": {
+                                "share": 1
+                              },
+                              "t": "island"
+                            }
+                          ],
+                          "id": "n2",
+                          "size": {
+                            "share": 1
+                          },
+                          "t": "col"
+                        },
+                        {
+                          "i": "account",
+                          "size": {
+                            "fixed": 292
+                          },
+                          "t": "island"
+                        }
+                      ],
+                      "id": "n3",
+                      "size": {
+                        "auto": true
+                      },
+                      "t": "row"
+                    },
+                    {
+                      "i": "spaces",
+                      "size": {
+                        "min": 112,
+                        "share": 1
+                      },
+                      "t": "island"
+                    }
+                  ],
+                  "id": "rail",
+                  "size": {
+                    "share": 1
+                  },
+                  "t": "col"
+                }
+              ],
+              "id": "n1",
+              "size": {
+                "fixed": 68
+              },
+              "t": "col"
+            },
+            {
+              "i": "rooms",
+              "size": {
+                "fixed": 292
+              },
+              "t": "island"
+            }
+          ],
+          "id": "navcol",
+          "size": {
+            "auto": true
+          },
+          "t": "row"
+        },
+        {
+          "c": [
+            {
+              "i": "header",
+              "size": {
+                "auto": true
+              },
+              "t": "island"
+            },
+            {
+              "i": "call",
+              "size": {
+                "auto": true,
+                "min": 252
+              },
+              "t": "island"
+            },
+            {
+              "c": [
+                {
+                  "c": [
+                    {
+                      "i": "timeline",
+                      "size": {
+                        "min": 120,
+                        "share": 1
+                      },
+                      "t": "island"
+                    },
+                    {
+                      "i": "composer",
+                      "size": {
+                        "auto": true
+                      },
+                      "t": "island"
+                    }
+                  ],
+                  "id": "roomcol",
+                  "size": {
+                    "min": 360,
+                    "share": 1
+                  },
+                  "t": "col"
+                },
+                {
+                  "i": "panel",
+                  "size": {
+                    "fixed": 324
+                  },
+                  "t": "island"
+                }
+              ],
+              "id": "convrow",
+              "size": {
+                "min": 160,
+                "minPm": 250,
+                "share": 1
+              },
+              "t": "row"
+            }
+          ],
+          "id": "main",
+          "size": {
+            "min": 360,
+            "share": 1
+          },
+          "t": "col"
+        }
+      ],
+      "id": "body",
+      "t": "row"
+    }
+  },
+  "kind": "solve",
+  "shape": {},
+  "size": {
+    "h": 959,
+    "w": 3860
+  },
+  "unitPm": 1500,
+  "view": {
+    "drawer": {
+      "open": "overflow-account",
+      "pinned": true
+    },
+    "roomOpen": true,
+    "sizes": {
+      "call": {
+        "pm": 423
+      }
+    }
+  }
+}

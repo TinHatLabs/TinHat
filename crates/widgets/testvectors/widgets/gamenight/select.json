@@ -1,0 +1,2180 @@
+{
+  "cases": [
+    {
+      "expect": [],
+      "items": [],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790018000000,
+          "id": "a",
+          "kind": "session",
+          "start": 1790007200000
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790018000000,
+          "id": "a",
+          "kind": "session",
+          "start": 1790007200000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790097200000,
+          "id": "b",
+          "kind": "session",
+          "start": 1790086400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790262800000,
+          "id": "c",
+          "kind": "session",
+          "start": 1790259200000
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790018000000,
+          "id": "a",
+          "kind": "session",
+          "start": 1790007200000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790097200000,
+          "id": "b",
+          "kind": "session",
+          "start": 1790086400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790262800000,
+          "id": "c",
+          "kind": "session",
+          "start": 1790259200000
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790018000000,
+          "id": "a",
+          "kind": "session",
+          "start": 1790007200000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790097200000,
+          "id": "b",
+          "kind": "session",
+          "start": 1790086400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790262800000,
+          "id": "c",
+          "kind": "session",
+          "start": 1790259200000
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "run",
+          "kind": "session",
+          "start": 1789996400000
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "run",
+          "kind": "session",
+          "start": 1789996400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1789996400000,
+          "id": "over",
+          "kind": "session",
+          "start": 1789989200000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790000000000,
+          "id": "edge",
+          "kind": "session",
+          "start": 1789996400000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "v",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "w",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "z",
+          "kind": "session",
+          "start": 1790003600000
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "x",
+          "kind": "focus",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "y",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "z",
+          "kind": "",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "w",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "v",
+          "kind": 7,
+          "start": 1790003600000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "canS",
+          "kind": "session",
+          "start": 1790003600000
+        }
+      ],
+      "items": [
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "can",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": "yes",
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "canS",
+          "kind": "session",
+          "start": 1790003600000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1791213200000,
+          "id": "near",
+          "kind": "session",
+          "start": 1791209599999
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1791213200000,
+          "id": "far",
+          "kind": "session",
+          "start": 1791209600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1791213200000,
+          "id": "near",
+          "kind": "session",
+          "start": 1791209599999
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!z:x",
+          "end": 1790007200000,
+          "id": "t0",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790010800000,
+          "id": "t0",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790010800000,
+          "id": "t1",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790010800000,
+          "id": "t2",
+          "kind": "session",
+          "start": 1790003600000
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790010800000,
+          "id": "t2",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790010800000,
+          "id": "t1",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!z:x",
+          "end": 1790007200000,
+          "id": "t0",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790010800000,
+          "id": "t0",
+          "kind": "session",
+          "start": 1790003600000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "ok",
+          "kind": "session",
+          "start": 1790003600000
+        }
+      ],
+      "items": [
+        null,
+        "junk",
+        [],
+        {
+          "end": 1790003600000,
+          "kind": "session",
+          "start": "1"
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "zero",
+          "kind": "session",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": "x",
+          "id": "nan",
+          "kind": "session",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790007200000,
+          "id": "ok",
+          "kind": "session",
+          "start": 1790003600000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [],
+      "items": "no",
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790441850555,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790430069930
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790603260464,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790594246795
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790603260464,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790594246795
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789717204529,
+          "id": "e1",
+          "kind": "focus",
+          "start": 1789716719421
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790441850555,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790430069930
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791070054483,
+          "id": "e0",
+          "kind": "session",
+          "start": 1791052911111
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791070054483,
+          "id": "e0",
+          "kind": "session",
+          "start": 1791052911111
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790130675424,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790118296964
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790240971433,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790239269380
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789813246041,
+          "id": "e1",
+          "kind": "session",
+          "start": 1789811466114
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790130675424,
+          "id": "e2",
+          "kind": "",
+          "start": 1790118296964
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790521477989,
+          "id": "e3",
+          "kind": "focus",
+          "start": 1790510496280
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1791011840313,
+          "id": "e4",
+          "kind": "focus",
+          "start": 1791006101005
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790277463653,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790261963486
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790668771074,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790660601069
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790710537233,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790693123956
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791130855850,
+          "id": "e5",
+          "kind": "session",
+          "start": 1791121970076
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789775762177,
+          "id": "e0",
+          "kind": "",
+          "start": 1789765802799
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790475235423,
+          "id": "e1",
+          "kind": "focus",
+          "start": 1790472988576
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790710537233,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790693123956
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790668771074,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790660601069
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790277463653,
+          "id": "e4",
+          "kind": "",
+          "start": 1790261963486
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791130855850,
+          "id": "e5",
+          "kind": "session",
+          "start": 1791121970076
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790131918461,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790121546991
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790147799551,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790143095205
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791099814654,
+          "id": "e4",
+          "kind": "session",
+          "start": 1791086225449
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791092872493,
+          "id": "e6",
+          "kind": "session",
+          "start": 1791091222207
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790147799551,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790143095205
+        },
+        {
+          "canceled": true,
+          "container": "!b:x",
+          "end": 1791192263200,
+          "id": "e1",
+          "kind": "focus",
+          "start": 1791191400682
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790131918461,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790121546991
+        },
+        {
+          "canceled": true,
+          "container": "!b:x",
+          "end": 1789949260502,
+          "id": "e3",
+          "kind": "session",
+          "start": 1789934476342
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791099814654,
+          "id": "e4",
+          "kind": "session",
+          "start": 1791086225449
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791137191907,
+          "id": "e5",
+          "kind": "freeplay",
+          "start": 1791124248183
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791092872493,
+          "id": "e6",
+          "kind": "session",
+          "start": 1791091222207
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790737235424,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790720370031
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790988878603,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790974535061
+        }
+      ],
+      "items": [
+        {
+          "canceled": true,
+          "container": "!b:x",
+          "end": 1790467311608,
+          "id": "e0",
+          "kind": "",
+          "start": 1790457175360
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790502839543,
+          "id": "e1",
+          "kind": "focus",
+          "start": 1790498814511
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790403683139,
+          "id": "e2",
+          "kind": "freeplay",
+          "start": 1790389166676
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790988878603,
+          "id": "e3",
+          "kind": "",
+          "start": 1790974535061
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790737235424,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790720370031
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790224927797,
+          "id": "e5",
+          "kind": "freeplay",
+          "start": 1790209852870
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790447277033,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790437851953
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790447277033,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790437851953
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790458304814,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790448338707
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790502763692,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790492648131
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790458304814,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790448338707
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790466878607,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790463623700
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789979002336,
+          "id": "e0",
+          "kind": "",
+          "start": 1789963452270
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790970958010,
+          "id": "e1",
+          "kind": "freeplay",
+          "start": 1790954093060
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789779159945,
+          "id": "e2",
+          "kind": "freeplay",
+          "start": 1789767006544
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790466878607,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790463623700
+        },
+        {
+          "canceled": true,
+          "container": "!b:x",
+          "end": 1789858199115,
+          "id": "e4",
+          "kind": "freeplay",
+          "start": 1789848900754
+        },
+        {
+          "canceled": true,
+          "container": "!b:x",
+          "end": 1790706191059,
+          "id": "e5",
+          "kind": "session",
+          "start": 1790691207481
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790092155468,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790077331491
+        }
+      ],
+      "items": [
+        {
+          "canceled": true,
+          "container": "!a:x",
+          "end": 1789954335129,
+          "id": "e0",
+          "kind": "",
+          "start": 1789940222165
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790092155468,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790077331491
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790915949312,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790912261290
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791160389797,
+          "id": "e0",
+          "kind": "session",
+          "start": 1791146924840
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791160389797,
+          "id": "e0",
+          "kind": "",
+          "start": 1791146924840
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790797120664,
+          "id": "e1",
+          "kind": "freeplay",
+          "start": 1790782045567
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790448696396,
+          "id": "e2",
+          "kind": "freeplay",
+          "start": 1790431069671
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789834229806,
+          "id": "e3",
+          "kind": "session",
+          "start": 1789829869233
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790915949312,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790912261290
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790108191058,
+          "id": "e6",
+          "kind": "session",
+          "start": 1790102042793
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791065228170,
+          "id": "e0",
+          "kind": "session",
+          "start": 1791055561779
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1791194519535,
+          "id": "e1",
+          "kind": "freeplay",
+          "start": 1791189867941
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789834568808,
+          "id": "e2",
+          "kind": "session",
+          "start": 1789816714227
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790932296374,
+          "id": "e3",
+          "kind": "focus",
+          "start": 1790926063970
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791076634619,
+          "id": "e4",
+          "kind": "freeplay",
+          "start": 1791068257208
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789934630907,
+          "id": "e5",
+          "kind": "session",
+          "start": 1789932706452
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790108191058,
+          "id": "e6",
+          "kind": "session",
+          "start": 1790102042793
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790335070510,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790322264548
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1791057134537,
+          "id": "e3",
+          "kind": "session",
+          "start": 1791052137513
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790335070510,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790322264548
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789750084434,
+          "id": "e1",
+          "kind": "session",
+          "start": 1789749132764
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790630060198,
+          "id": "e2",
+          "kind": "freeplay",
+          "start": 1790625123121
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1791057134537,
+          "id": "e3",
+          "kind": "session",
+          "start": 1791052137513
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790156224309,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790146784604
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790373709809,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790365317593
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790477892890,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790466368223
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790652661550,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790640521528
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790373709809,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790365317593
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790156224309,
+          "id": "e1",
+          "kind": "",
+          "start": 1790146784604
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790947341484,
+          "id": "e2",
+          "kind": "focus",
+          "start": 1790947247854
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790652661550,
+          "id": "e3",
+          "kind": "",
+          "start": 1790640521528
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790477892890,
+          "id": "e4",
+          "kind": "",
+          "start": 1790466368223
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790195975049,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790195799217
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790322246667,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790319574327
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790630236691,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790613417805
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789888182707,
+          "id": "e0",
+          "kind": "session",
+          "start": 1789887750325
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789765813657,
+          "id": "e1",
+          "kind": "session",
+          "start": 1789750769665
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790195975049,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790195799217
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790322246667,
+          "id": "e3",
+          "kind": "",
+          "start": 1790319574327
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790630236691,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790613417805
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790073386868,
+          "id": "e5",
+          "kind": "focus",
+          "start": 1790072212587
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790068583390,
+          "id": "e6",
+          "kind": "freeplay",
+          "start": 1790058455567
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790617776835,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790607203786
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790737261811,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790721696030
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790617776835,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790607203786
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789978004264,
+          "id": "e1",
+          "kind": "focus",
+          "start": 1789975019941
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790737261811,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790721696030
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790046397629,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790033154533
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790144852435,
+          "id": "e5",
+          "kind": "session",
+          "start": 1790135406294
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790172306995,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790171104086
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790504328429,
+          "id": "e0",
+          "kind": "focus",
+          "start": 1790487287585
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790046397629,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790033154533
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790283968260,
+          "id": "e2",
+          "kind": "focus",
+          "start": 1790275552839
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790990225019,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790973636435
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790172306995,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790171104086
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790144852435,
+          "id": "e5",
+          "kind": "session",
+          "start": 1790135406294
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790717174930,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790711704734
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790922671741,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790919720574
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789800774321,
+          "id": "e0",
+          "kind": "freeplay",
+          "start": 1789789526746
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790717174930,
+          "id": "e1",
+          "kind": "",
+          "start": 1790711704734
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790922671741,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790919720574
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790220359028,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790202558900
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790285941899,
+          "id": "e0",
+          "kind": "",
+          "start": 1790284533792
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790417013990,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790411945660
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790220359028,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790202558900
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1791107909264,
+          "id": "e3",
+          "kind": "focus",
+          "start": 1791102125938
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790286590271,
+          "id": "e4",
+          "kind": "",
+          "start": 1790274711537
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790558817498,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790552333160
+        }
+      ],
+      "items": [
+        {
+          "canceled": true,
+          "container": "!b:x",
+          "end": 1789731322228,
+          "id": "e0",
+          "kind": "session",
+          "start": 1789716021846
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789987158019,
+          "id": "e1",
+          "kind": "session",
+          "start": 1789974108006
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790935075511,
+          "id": "e2",
+          "kind": "freeplay",
+          "start": 1790927547301
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790493540425,
+          "id": "e3",
+          "kind": "freeplay",
+          "start": 1790491226806
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790558817498,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790552333160
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789985277215,
+          "id": "e5",
+          "kind": "",
+          "start": 1789981383396
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790271768781,
+          "id": "e6",
+          "kind": "focus",
+          "start": 1790255109660
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790760485069,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790746181942
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790760485069,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790746181942
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790020036203,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790016191659
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790310980609,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790294602921
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790486339991,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790480625837
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790900187441,
+          "id": "e6",
+          "kind": "session",
+          "start": 1790893411165
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790596697138,
+          "id": "e0",
+          "kind": "freeplay",
+          "start": 1790589654050
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790020036203,
+          "id": "e1",
+          "kind": "",
+          "start": 1790016191659
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790486339991,
+          "id": "e2",
+          "kind": "session",
+          "start": 1790480625837
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790182714225,
+          "id": "e3",
+          "kind": "focus",
+          "start": 1790170845752
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790310980609,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790294602921
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790141618625,
+          "id": "e5",
+          "kind": "freeplay",
+          "start": 1790126967157
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790900187441,
+          "id": "e6",
+          "kind": "session",
+          "start": 1790893411165
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [],
+      "items": [],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790519405090,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790514918186
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791015036942,
+          "id": "e4",
+          "kind": "session",
+          "start": 1791006522391
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791007156071,
+          "id": "e0",
+          "kind": "freeplay",
+          "start": 1790996632173
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790092951144,
+          "id": "e1",
+          "kind": "focus",
+          "start": 1790086424461
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789981034887,
+          "id": "e2",
+          "kind": "focus",
+          "start": 1789971459327
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790519405090,
+          "id": "e3",
+          "kind": "",
+          "start": 1790514918186
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791015036942,
+          "id": "e4",
+          "kind": "session",
+          "start": 1791006522391
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790907986485,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790890544553
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790907986485,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790890544553
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790465736932,
+          "id": "e1",
+          "kind": "focus",
+          "start": 1790460929376
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789917312758,
+          "id": "e0",
+          "kind": "",
+          "start": 1789913328303
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789697936309,
+          "id": "e1",
+          "kind": "freeplay",
+          "start": 1789689378602
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789737677238,
+          "id": "e2",
+          "kind": "focus",
+          "start": 1789735180613
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790355611784,
+          "id": "e3",
+          "kind": "freeplay",
+          "start": 1790341317825
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790674808699,
+          "id": "e4",
+          "kind": "freeplay",
+          "start": 1790661489856
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790006133339,
+          "id": "e1",
+          "kind": "session",
+          "start": 1789997853155
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790653001104,
+          "id": "e5",
+          "kind": "session",
+          "start": 1790647736488
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790669205244,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790662153787
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790669205244,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790662153787
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790006133339,
+          "id": "e1",
+          "kind": "session",
+          "start": 1789997853155
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1791207198732,
+          "id": "e2",
+          "kind": "focus",
+          "start": 1791205663693
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1789818229348,
+          "id": "e3",
+          "kind": "focus",
+          "start": 1789800528037
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790723074675,
+          "id": "e4",
+          "kind": "focus",
+          "start": 1790721186468
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790653001104,
+          "id": "e5",
+          "kind": "session",
+          "start": 1790647736488
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790452637868,
+          "id": "e6",
+          "kind": "focus",
+          "start": 1790447909676
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790100558505,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790093578553
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790619107158,
+          "id": "e5",
+          "kind": "session",
+          "start": 1790602561500
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790711903610,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790694410164
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789896588571,
+          "id": "e0",
+          "kind": "session",
+          "start": 1789878605755
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790018245882,
+          "id": "e1",
+          "kind": "freeplay",
+          "start": 1790013882438
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789707788341,
+          "id": "e2",
+          "kind": "freeplay",
+          "start": 1789697488022
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790100558505,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790093578553
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790711903610,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790694410164
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790619107158,
+          "id": "e5",
+          "kind": "session",
+          "start": 1790602561500
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790153583201,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790151776542
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790659126260,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790654327011
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790912906774,
+          "id": "e3",
+          "kind": "session",
+          "start": 1790902418591
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790916735045,
+          "id": "e0",
+          "kind": "freeplay",
+          "start": 1790906936808
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790153583201,
+          "id": "e1",
+          "kind": "",
+          "start": 1790151776542
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790655482016,
+          "id": "e2",
+          "kind": "freeplay",
+          "start": 1790640627461
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790912906774,
+          "id": "e3",
+          "kind": "",
+          "start": 1790902418591
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1790659126260,
+          "id": "e4",
+          "kind": "session",
+          "start": 1790654327011
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789855522899,
+          "id": "e5",
+          "kind": "freeplay",
+          "start": 1789848417490
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "expect": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790537256377,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790520745005
+        }
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790537256377,
+          "id": "e0",
+          "kind": "session",
+          "start": 1790520745005
+        },
+        {
+          "canceled": true,
+          "container": "!a:x",
+          "end": 1790463617533,
+          "id": "e1",
+          "kind": "session",
+          "start": 1790453972516
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1791239129114,
+          "id": "e2",
+          "kind": "focus",
+          "start": 1791238394247
+        },
+        {
+          "canceled": false,
+          "container": "!a:x",
+          "end": 1790798207518,
+          "id": "e3",
+          "kind": "freeplay",
+          "start": 1790795416080
+        },
+        {
+          "canceled": false,
+          "container": "!b:x",
+          "end": 1789847541176,
+          "id": "e4",
+          "kind": "freeplay",
+          "start": 1789836207822
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    }
+  ]
+}

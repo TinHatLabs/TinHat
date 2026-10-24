@@ -1,0 +1,116 @@
+[package]
+name = "tinhat-app"
+version = "12.0.0"
+edition.workspace = true
+license.workspace = true
+description = "Tin Hat native KDE/Kirigami app (Qt6/QML + Rust core via CXX-Qt)"
+
+[dependencies]
+cxx = "1"
+cxx-qt = "0.8"
+cxx-qt-lib = { version = "0.8", features = ["qt_gui", "qt_qml"] }
+# themes (modular UI): the colour engine (crates/theme, a byte-identical port of Tin Hat Web's) — resolves the
+# active theme into the Th QML singleton (docs/MIGRATING-THEME.md).
+tinhat-theme = { path = "../theme" }
+# widgets (modular UI step 2): the widgets' shared logic — call history, Up next's clock, the registry (crates/widgets)
+tinhat-widgets = { path = "../widgets" }
+# islands (modular UI, C1): the layout engine (crates/layout, a byte-identical port of Tin Hat Web's) — LayoutController
+# hands it to QML as JSON text in / JSON text out (src/layout_ctl.rs; no UI yet).
+tinhat-layout = { path = "../layout" }
+# buttons (11.0 step 3): the actions engine (crates/actions, a byte-identical port of Tin Hat Web's) — ActionsController
+# hands it to QML as JSON text in / JSON text out (src/actions_ctl.rs): rows, availability, the Ctrl+K palette.
+tinhat-actions = { path = "../actions" }
+# Matrix core. e2e-encryption + bundled-sqlite give a persistent on-disk session
+# (crypto + state store) so login sticks across restarts. TLS is hardwired in 0.18.
+# experimental-send-custom-to-device exposes Encryption::encrypt_and_send_raw_to_device,
+# used to announce our LiveKit media key to Element Call peers over ENCRYPTED to-device —
+# the transport EC's ToDeviceKeyTransport listens on (a room event is ignored, so without
+# this the phone can't decrypt our outgoing audio/video).
+matrix-sdk = { version = "0.18", default-features = false, features = ["e2e-encryption", "bundled-sqlite", "markdown", "experimental-send-custom-to-device"] }
+# matrix-sdk-base (already in the tree via matrix-sdk) — declared directly so the
+# desktop-notification preview can name `latest_event::LatestEventValue::Remote`
+# (the cached latest event matrix-sdk does NOT re-export at the top level).
+matrix-sdk-base = "0.18"
+tokio = { version = "1", features = ["rt-multi-thread", "time", "fs"] }
+# Bounded-concurrency inline-image resolves in the room loader (already in the
+# dependency tree via matrix-sdk).
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Media core: NVENC capture/encode + LiveKit publish, and the KDE screencast portal.
+tinhat-streamer = { path = "../streamer" }
+# Element Call media-key (E2EE) exchange: random 16-byte keys + base64url(no-pad).
+rand = "0.8"
+base64 = "0.22"
+# Compute a peer's hashed LiveKit identity for sticky/MSC4143 memberships:
+# encodeUnpaddedBase64(sha256(JSON([userId,deviceId,memberId]))) — matrix-js-sdk's
+# rtcBackendIdentity for RTC-kind peers (legacy peers use userId:deviceId).
+sha2 = "0.10"
+# Inline media-embed URL parsing: robust URL parse + URL
+# extraction from message bodies.
+url = "2"
+regex = "1"
+# Settings window search (settings_search.rs, contract SETTINGS-WINDOW.md §4): NFD + combining marks for normalize()
+# — already in the tree (via idna/url); declared directly.
+unicode-normalization = "0.1"
+# Attachment uploads: name the MIME type the SDK's send_attachment wants (the `mime`
+# crate is already in the tree via matrix-sdk; declare it so we can construct one).
+mime = "0.3"
+# Diagnostics: RUST_LOG-controlled logging (incl. matrix-sdk's `tracing` output).
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Bridge the `log` crate (used by livekit/libwebrtc) into tracing so RUST_LOG
+# surfaces ICE/PeerConnection logs.
+tracing-log = "0.2"
+# rustls is pulled by BOTH matrix-sdk (aws-lc-rs) and livekit (ring); with two
+# providers enabled rustls can't auto-select one and panics on TLS setup. We install
+# a process-default provider explicitly in main() to resolve the ambiguity.
+rustls = "0.23"
+# Pin: time 0.3.48/0.3.49 require time-macros 0.2.28/0.2.29 which aren't published
+# (index maxes at 0.2.27), so they're uninstallable. matrix-sdk-crypto allows ^0.3.47.
+time = "=0.3.47"
+# Unix-only syscalls (dup2 stderr->logfile, flock single-instance): the call
+# sites are cfg(unix)-gated, so the dep is too (windows/PLATFORM_AUDIT.md §12).
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+# Windows-only: the QVideoSink display-tail prototype (qvideo.rs / TINHAT_QVS_TEST)
+# drives a gst appsink directly from the app crate. Same versions as the streamer
+# crate — no new graph entries.
+# zip: the self-updater downloads the whole bundle as a zip and folder-swaps it
+# (windows/UPDATE_PATH.md §3 — a bare-exe swap next to stale Qt DLLs is an ABI break).
+[target.'cfg(windows)'.dependencies]
+gstreamer = "0.23"
+gstreamer-app = "0.23"
+gstreamer-video = "0.23"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+# WinRT toast transport for notify.rs (the Windows twin of the zbus/freedesktop
+# path below — PLATFORM_AUDIT.md §6).
+tauri-winrt-notification = "0.7"
+
+# Desktop notifications: talk straight to org.freedesktop.Notifications on the session
+# bus. zbus is ALREADY in the tree via ashpd (the screencast portal); declared directly
+# here, default-features off + `tokio` to match ashpd's build (reuses the same runtime).
+# Linux-only: no session bus elsewhere; the Windows transport is a WinRT toast (pending,
+# PLATFORM_AUDIT.md §6) behind the same notify() entry point.
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = { version = "5.16", default-features = false, features = ["tokio"] }
+
+[build-dependencies]
+# link_qt_object_files: required for a *binary* that registers a QML module,
+# so the Qt-generated object files (qmlcache + resources) get linked in.
+cxx-qt-build = { version = "0.8", features = ["link_qt_object_files"] }
+# Compile the C++ video bridge (qml6glsink ↔ QML GstGLQt6VideoItem) and discover
+# Qt6Quick + GStreamer include/link flags for it.
+cc = "1"
+pkg-config = "0.3"
+# themes (modular UI): build.rs generates qml/Th.qml from crates/theme/tokens.json + the built-in OLED.
+tinhat-theme = { path = "../theme" }
+serde_json = "1"
+
+# Windows exe icon + VERSIONINFO resource (polish §8.1) — shells the SDK's rc.exe.
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+[[bin]]
+name = "tinhat"
+path = "src/main.rs"

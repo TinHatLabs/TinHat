@@ -1,0 +1,159 @@
+{
+  "format": "tinhat-tokens",
+  "note": "gen-editor-vectors.mjs: a closed subset of tokens.json for the editor + share vectors",
+  "tokens": [
+    {
+      "default": "surface.raised",
+      "id": "account.bg"
+    },
+    {
+      "default": "state.danger",
+      "id": "button.danger.bg"
+    },
+    {
+      "default": "best(button.danger.bg, text.onAccent, #ffffff, #000000)",
+      "id": "button.danger.fg"
+    },
+    {
+      "default": "accent.bright",
+      "id": "calendar.day.today.bg"
+    },
+    {
+      "default": "best(calendar.day.today.bg, text.onAccent, #ffffff, #000000)",
+      "id": "calendar.day.today.fg"
+    },
+    {
+      "default": "surface.raised",
+      "id": "composer.bg"
+    },
+    {
+      "default": "text.primary",
+      "id": "composer.fg"
+    },
+    {
+      "default": "surface.island",
+      "id": "header.bottom.bg"
+    },
+    {
+      "default": "accent.bright",
+      "id": "icon.highlight"
+    },
+    {
+      "default": "account.bg",
+      "id": "island.bg.account"
+    },
+    {
+      "default": "surface.raised",
+      "id": "island.bg.buttons"
+    },
+    {
+      "default": "stage.bg",
+      "id": "island.bg.call"
+    },
+    {
+      "default": "composer.bg",
+      "id": "island.bg.composer"
+    },
+    {
+      "default": "rail.bg",
+      "id": "island.bg.dms"
+    },
+    {
+      "default": "header.bottom.bg",
+      "id": "island.bg.header"
+    },
+    {
+      "default": "rail.bg",
+      "id": "island.bg.nav"
+    },
+    {
+      "default": "panel.bg",
+      "id": "island.bg.panel"
+    },
+    {
+      "default": "rooms.bg",
+      "id": "island.bg.rooms"
+    },
+    {
+      "default": "rail.bg",
+      "id": "island.bg.spaces"
+    },
+    {
+      "default": "timeline.bg",
+      "id": "island.bg.timeline"
+    },
+    {
+      "default": "alpha(surface.window, 0)",
+      "id": "island.bg.widgets"
+    },
+    {
+      "default": "border.subtle",
+      "id": "island.border"
+    },
+    {
+      "default": "alpha(shadow, 0)",
+      "id": "island.shadow"
+    },
+    {
+      "default": "surface.island",
+      "id": "panel.bg"
+    },
+    {
+      "default": "surface.window",
+      "id": "rail.bg"
+    },
+    {
+      "default": "alpha(accent.base, 0.34)",
+      "id": "rail.nav.bg"
+    },
+    {
+      "default": "alpha(accent.base, 0.9)",
+      "id": "rail.nav.bg.active"
+    },
+    {
+      "default": "best(over(rail.nav.bg, rail.bg), text.onAccent, text.primary, #ffffff, #000000)",
+      "id": "rail.nav.icon"
+    },
+    {
+      "default": "best(over(rail.nav.bg.active, rail.bg), icon.highlight, rail.nav.icon)",
+      "id": "rail.nav.icon.lit"
+    },
+    {
+      "default": "guard(rail.nav.icon.lit, over(rail.nav.bg.active, rail.bg), 3)",
+      "id": "rail.nav.icon.lit.active"
+    },
+    {
+      "default": "surface.island",
+      "id": "rooms.bg"
+    },
+    {
+      "default": "surface.raised",
+      "id": "settings.inviteCode.row.bg"
+    },
+    {
+      "default": "surface.window",
+      "id": "stage.bg"
+    },
+    {
+      "default": "surface.window",
+      "id": "timeline.bg"
+    },
+    {
+      "default": "surface.window",
+      "id": "toast.bg"
+    },
+    {
+      "default": "text.primary",
+      "id": "toast.fg"
+    },
+    {
+      "default": "surface.raised",
+      "id": "tooltip.bg"
+    },
+    {
+      "default": "text.primary",
+      "id": "tooltip.fg"
+    }
+  ],
+  "v": 1
+}

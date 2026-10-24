@@ -1,0 +1,1198 @@
+{
+  "v": 1,
+  "about": "Same room (Tin Hat 11.3) — shared test vectors for the room-mic election and the raw-level tracker. Byte-identical in the desktop repo (crates/streamer/src/sameroom/vectors.json) and the web repo (src/features/calls/sameroom/vectors.json). Levels are SNR dB (signal above the mic's own noise floor). A step runs one election tick with the carried state; `expect` is checked after the tick. A challenger needs winTicks consecutive winning ticks (50 ms each); a peer level older than staleMs is silent; callers feed each peer's level as the MAX of its packets from the last holdMs (so one quiet packet in flight at a speech onset cannot flip the mic). Floor tracker: the floor starts at the first window's level (clamped to [floorMinDb, floorMaxDb]); each later window below the floor becomes the floor, otherwise the floor rises by floorRiseDbPerWin; SNR = round(window - floor) clamped to [0, snrMaxDb].",
+  "const": {
+    "speechDb": 6,
+    "marginDb": 3,
+    "winTicks": 4,
+    "staleMs": 400,
+    "holdMs": 150,
+    "floorRiseDbPerWin": 0.025,
+    "floorMinDb": -90,
+    "floorMaxDb": -20,
+    "snrMaxDb": 60
+  },
+  "elect": [
+    {
+      "name": "idle: nobody speaks → the lowest identity holds the mic",
+      "me": "@a:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 990
+            },
+            "@b:x": {
+              "s": 1,
+              "t": 990
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1050,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1040
+            },
+            "@b:x": {
+              "s": 1,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "b speaks: beats the idle holder by ≥ 3 dB for 4 consecutive ticks (200 ms) → b holds, a yields",
+      "me": "@a:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 990
+            },
+            "@b:x": {
+              "s": 0,
+              "t": 990
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1050,
+          "levels": {
+            "@a:x": {
+              "s": 4,
+              "t": 1040
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1100,
+          "levels": {
+            "@a:x": {
+              "s": 4,
+              "t": 1090
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1090
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1150,
+          "levels": {
+            "@a:x": {
+              "s": 4,
+              "t": 1140
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1140
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1200,
+          "levels": {
+            "@a:x": {
+              "s": 4,
+              "t": 1190
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1190
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1250,
+          "levels": {
+            "@a:x": {
+              "s": 4,
+              "t": 1240
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1240
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "hysteresis: 2 dB over the holder is never enough; one tick over then under resets the count; 4 over → b",
+      "me": "@a:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 990
+            },
+            "@b:x": {
+              "s": 17,
+              "t": 990
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1050,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 1040
+            },
+            "@b:x": {
+              "s": 17,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1100,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 1090
+            },
+            "@b:x": {
+              "s": 18,
+              "t": 1090
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1150,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 1140
+            },
+            "@b:x": {
+              "s": 16,
+              "t": 1140
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1200,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 1190
+            },
+            "@b:x": {
+              "s": 18,
+              "t": 1190
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1250,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 1240
+            },
+            "@b:x": {
+              "s": 18,
+              "t": 1240
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1300,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 1290
+            },
+            "@b:x": {
+              "s": 18,
+              "t": 1290
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1350,
+          "levels": {
+            "@a:x": {
+              "s": 15,
+              "t": 1340
+            },
+            "@b:x": {
+              "s": 18,
+              "t": 1340
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "the holder's own speakers: a's raw mic hears them loudest, so a keeps the mic (its canceller removes them)",
+      "me": "@b:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@a:x": {
+              "s": 30,
+              "t": 990
+            },
+            "@b:x": {
+              "s": 14,
+              "t": 990
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1050,
+          "levels": {
+            "@a:x": {
+              "s": 30,
+              "t": 1040
+            },
+            "@b:x": {
+              "s": 14,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1100,
+          "levels": {
+            "@a:x": {
+              "s": 30,
+              "t": 1090
+            },
+            "@b:x": {
+              "s": 14,
+              "t": 1090
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "stale holder (no packets for > 400 ms) counts as silent: a quiet-but-speaking challenger takes over after 4 ticks",
+      "me": "@a:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 2000,
+          "levels": {
+            "@a:x": {
+              "s": 8,
+              "t": 1990
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 2050,
+          "levels": {
+            "@a:x": {
+              "s": 8,
+              "t": 2040
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 2100,
+          "levels": {
+            "@a:x": {
+              "s": 8,
+              "t": 2090
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 2150,
+          "levels": {
+            "@a:x": {
+              "s": 8,
+              "t": 2140
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 2200,
+          "levels": {
+            "@a:x": {
+              "s": 8,
+              "t": 2190
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        }
+      ],
+      "state": {
+        "holder": "@b:x",
+        "wins": {
+          "who": "",
+          "n": 0
+        }
+      }
+    },
+    {
+      "name": "below the speech floor nobody challenges, however stale the holder is",
+      "me": "@a:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 3000,
+          "levels": {
+            "@a:x": {
+              "s": 5,
+              "t": 2990
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 3050,
+          "levels": {
+            "@a:x": {
+              "s": 5,
+              "t": 3040
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 3100,
+          "levels": {
+            "@a:x": {
+              "s": 5,
+              "t": 3090
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 3150,
+          "levels": {
+            "@a:x": {
+              "s": 5,
+              "t": 3140
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 3200,
+          "levels": {
+            "@a:x": {
+              "s": 5,
+              "t": 3190
+            },
+            "@b:x": {
+              "s": 25,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        }
+      ],
+      "state": {
+        "holder": "@b:x",
+        "wins": {
+          "who": "",
+          "n": 0
+        }
+      }
+    },
+    {
+      "name": "three members: the loudest challenger wins; an exact tie goes to the lower identity; then c beats b by 6 dB",
+      "me": "@c:x",
+      "members": [
+        "@a:x",
+        "@b:x",
+        "@c:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 990
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 990
+            },
+            "@c:x": {
+              "s": 20,
+              "t": 1000
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1050,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1040
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1040
+            },
+            "@c:x": {
+              "s": 20,
+              "t": 1050
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1100,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1090
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1090
+            },
+            "@c:x": {
+              "s": 20,
+              "t": 1100
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1150,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1140
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1140
+            },
+            "@c:x": {
+              "s": 20,
+              "t": 1150
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1200,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1190
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1190
+            },
+            "@c:x": {
+              "s": 26,
+              "t": 1200
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1250,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1240
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1240
+            },
+            "@c:x": {
+              "s": 26,
+              "t": 1250
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1300,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1290
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1290
+            },
+            "@c:x": {
+              "s": 26,
+              "t": 1300
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": false
+          }
+        },
+        {
+          "now": 1350,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1340
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1340
+            },
+            "@c:x": {
+              "s": 26,
+              "t": 1350
+            }
+          },
+          "expect": {
+            "holder": "@c:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1400,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1390
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1390
+            },
+            "@c:x": {
+              "s": 26,
+              "t": 1400
+            }
+          },
+          "expect": {
+            "holder": "@c:x",
+            "live": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "the holder leaves the group → the lowest remaining identity holds",
+      "me": "@b:x",
+      "members": [
+        "@b:x",
+        "@c:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@b:x": {
+              "s": 0,
+              "t": 1000
+            },
+            "@c:x": {
+              "s": 0,
+              "t": 990
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": true
+          }
+        }
+      ],
+      "state": {
+        "holder": "@a:x",
+        "wins": {
+          "who": "",
+          "n": 0
+        }
+      }
+    },
+    {
+      "name": "a challenger that keeps alternating above/below the margin never takes the mic",
+      "me": "@a:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@a:x": {
+              "s": 10,
+              "t": 990
+            },
+            "@b:x": {
+              "s": 14,
+              "t": 990
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1050,
+          "levels": {
+            "@a:x": {
+              "s": 10,
+              "t": 1040
+            },
+            "@b:x": {
+              "s": 12,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1100,
+          "levels": {
+            "@a:x": {
+              "s": 10,
+              "t": 1090
+            },
+            "@b:x": {
+              "s": 14,
+              "t": 1090
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1150,
+          "levels": {
+            "@a:x": {
+              "s": 10,
+              "t": 1140
+            },
+            "@b:x": {
+              "s": 12,
+              "t": 1140
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "my own level is always fresh, whatever its t",
+      "me": "@b:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 5000,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 4990
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 0
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 5050,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 5040
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 0
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 5100,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 5090
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 0
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": false
+          }
+        },
+        {
+          "now": 5150,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 5140
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 0
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": true
+          }
+        },
+        {
+          "now": 5200,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 5190
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 0
+            }
+          },
+          "expect": {
+            "holder": "@b:x",
+            "live": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "three winning ticks, a quiet one, three more: never four in a row → the holder keeps the mic",
+      "me": "@a:x",
+      "members": [
+        "@a:x",
+        "@b:x"
+      ],
+      "steps": [
+        {
+          "now": 1000,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 990
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 990
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1050,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1040
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1040
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1100,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1090
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1090
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1150,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1140
+            },
+            "@b:x": {
+              "s": 0,
+              "t": 1140
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1200,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1190
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1190
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1250,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1240
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1240
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        },
+        {
+          "now": 1300,
+          "levels": {
+            "@a:x": {
+              "s": 0,
+              "t": 1290
+            },
+            "@b:x": {
+              "s": 20,
+              "t": 1290
+            }
+          },
+          "expect": {
+            "holder": "@a:x",
+            "live": true
+          }
+        }
+      ]
+    }
+  ],
+  "floor": [
+    {
+      "name": "quiet start then speech: the floor sits at the quiet level and speech scores its distance above it",
+      "windowsDb": [
+        -58,
+        -59,
+        -60,
+        -61,
+        -60,
+        -60,
+        -30,
+        -28,
+        -30,
+        -60
+      ],
+      "expectSnr": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        31,
+        33,
+        31,
+        1
+      ]
+    },
+    {
+      "name": "a hot mic: the floor starts where the mic idles, so only speech scores",
+      "windowsDb": [
+        -40,
+        -41,
+        -42,
+        -42,
+        -12,
+        -10,
+        -42
+      ],
+      "expectSnr": [
+        0,
+        0,
+        0,
+        0,
+        30,
+        32,
+        0
+      ]
+    },
+    {
+      "name": "clamps: the floor never above -20 dB nor below -90 dB; SNR never below 0",
+      "windowsDb": [
+        -5,
+        -5,
+        -5,
+        -95,
+        -95
+      ],
+      "expectSnr": [
+        15,
+        15,
+        15,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "SNR caps at 60",
+      "windowsDb": [
+        -95,
+        0
+      ],
+      "expectSnr": [
+        0,
+        60
+      ]
+    }
+  ]
+}

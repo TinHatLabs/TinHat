@@ -1,0 +1,3743 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "item": {
+          "a": "app.about"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.about"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.about"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.bugReport"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.bugReport"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.bugReport"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.clock.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.clock.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.diagnostics.create"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.diagnostics.create"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.fontset.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.fontset.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.formFactor.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.formFactor.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.gifAutoplay.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.gifAutoplay.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.gifAutoplay.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.iconGallery"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.iconGallery"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.iconGallery"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.install"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.install"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.install"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.keyBackup.setup"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.keyBackup.setup"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.logship.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.logship.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.logship.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.menu.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.menu.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.menu.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.notificationPermission"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.notificationPermission"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.notifications.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.notifications.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.notifications.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.quit"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.quit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.recordOptOut.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.recordOptOut.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.recordOptOut.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.reduceMotion.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.reduceMotion.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.reduceMotion.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.rooms.refresh"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.rooms.refresh"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.rooms.refresh"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.safeMode.ok"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.safeMode.ok"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.session.takeOver"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.session.takeOver"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.settings.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.settings.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.settings.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.shortcuts.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.shortcuts.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.shortcuts.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.sidebar.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.sidebar.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.sidebar.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.signOut"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.signOut"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.signOut"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.theme.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.theme.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.theme.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.tour.start"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.tour.start"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.tour.start"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.update"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.update"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.update"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.update.whatsNew"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.update.whatsNew"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.verify"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.verify"
+        },
+        "row": "composer.end"
+      },
+      "name": "app.verify"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.container.pick"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.container.pick"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.callOff"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.event.callOff"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.edit"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.event.edit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "calendar.event.new"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.new"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.event.new"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.event.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.remove"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.event.remove"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.rsvp"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.event.rsvp"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.vote"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.event.vote"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.game.copyAddress"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.game.copyAddress"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.game.edit"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.game.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.inviteMissing"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.inviteMissing"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.month.step"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.month.step"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "calendar.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "calendar.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "calendar.reminders.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "calendar.reminders.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.reminders.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.tab"
+        },
+        "row": "composer.end"
+      },
+      "name": "calendar.tab"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.afk.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.afk.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.afk.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.agc.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.agc.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.agc.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.audioShare.source"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.audioShare.source"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.audioShare.source"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.audioShare.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.audioShare.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.audioShare.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.bar.pin.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.bar.pin.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.bar.pin.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.camera.flip"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.camera.flip"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.camera.flip"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.camera.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.camera.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.camera.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.camera.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.camera.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.camera.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.clip"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.clip"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.clip"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.collapse.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.collapse.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.collapse.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.corner.join"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.corner.join"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.corner.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.corner.leave"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.corner.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.deafen.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.deafen.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.deafen.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.devices.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.devices.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.devices.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.disconnect"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.disconnect"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.echoCancel.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.echoCancel.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.echoCancel.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.echoOutputs.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.echoOutputs.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.echoOutputs.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fill.exit"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.fill.exit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.fill.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.fill.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.fill.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.echo"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.fix.echo"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.peerAudio"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.fix.peerAudio"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.reconnectMic"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.fix.reconnectMic"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.systemLevel"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.fix.systemLevel"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.gameChat.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.gameChat.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.gameChat.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.health.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.health.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.health.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.hidden.show"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.hidden.show"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.hidden.show"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.hidden.showAll"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.hidden.showAll"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.hidden.showAll"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.incoming.dismiss"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.incoming.dismiss"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.input.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.input.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.input.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.join"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.join"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.join"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.layout.animate.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.layout.animate.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.layout.animate.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.layout.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.layout.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.layout.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.leave"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.mic.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.mic.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.mic.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.micCheck"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.micCheck"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.micCheck"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.minimize"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.minimize"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.moreMenu"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.moreMenu"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.music.file"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.music.file"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.music.file"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.music.url"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.music.url"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.music.url"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.mutedTalk.dismiss"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.mutedTalk.dismiss"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.noiseSuppression.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.noiseSuppression.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.noiseSuppression.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.noiseTest.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.noiseTest.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.noiseTest.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.options.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.options.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.options.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.output.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.output.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.output.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.overlay.preview"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.overlay.preview"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.overlay.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.overlay.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.overlay.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pin.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pin.clear"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.pin.clear"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.pullAside"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.pullAside"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pushToTalk.hold"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pushToTalk.hold"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.pushToTalk.hold"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pushToTalk.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pushToTalk.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.pushToTalk.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.recStream.leave"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.recStream.leave"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.recStream.tuneIn"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.recStream.tuneIn"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.receiveAv1.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.receiveAv1.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.resume"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.resume"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.screenShare.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.screenShare.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.screenShare.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.serverMute.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.serverMute.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.share.panel"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.share.panel"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.share.panel"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.share.pickSource"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.share.pickSource"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.share.recordingOnly.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.share.recordingOnly.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.share.recordingOnly.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.shareEncoder.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.shareEncoder.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.shareQuality.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.shareQuality.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.shareQuality.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.testConnection"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.testConnection"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.testConnection"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.unfocusedSaver.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.unfocusedSaver.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "call.unfocusedSaver.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.attach"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.attach"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.attach"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.cancelTarget"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.cancelTarget"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.cancelTarget"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.editLast"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.editLast"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.editLast"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.emoji"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.emoji"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.emoji"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.gif"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.gif"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.gif"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.pasteFiles"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.pasteFiles"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.pasteFiles"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.send"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.send"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.send"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "composer.unstage"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "composer.unstage"
+        },
+        "row": "composer.end"
+      },
+      "name": "composer.unstage"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "conversation.jumpToLatest"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "conversation.jumpToLatest"
+        },
+        "row": "composer.end"
+      },
+      "name": "conversation.jumpToLatest"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "conversation.jumpToOldest"
+        },
+        "row": "composer.end"
+      },
+      "name": "conversation.jumpToOldest"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "conversation.pageDown"
+        },
+        "row": "composer.end"
+      },
+      "name": "conversation.pageDown"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "conversation.pageUp"
+        },
+        "row": "composer.end"
+      },
+      "name": "conversation.pageUp"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "dm.new"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "dm.new"
+        },
+        "row": "composer.end"
+      },
+      "name": "dm.new"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invite.accept"
+        },
+        "row": "composer.end"
+      },
+      "name": "invite.accept"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invite.decline"
+        },
+        "row": "composer.end"
+      },
+      "name": "invite.decline"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invites.copy"
+        },
+        "row": "composer.end"
+      },
+      "name": "invites.copy"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invites.create"
+        },
+        "row": "composer.end"
+      },
+      "name": "invites.create"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invites.revoke"
+        },
+        "row": "composer.end"
+      },
+      "name": "invites.revoke"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.edit"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.edit"
+        },
+        "row": "composer.end"
+      },
+      "name": "layout.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.back10"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.back10"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.back60"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.back60"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.backToList"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.backToList"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.forward10"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.forward10"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.forward60"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.forward60"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.fullscreen"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.fullscreen"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.mute"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.mute"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "memories.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "memories.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.playPause"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.playPause"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.pov"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.pov"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.refresh"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.refresh"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.sync.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "memories.sync.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.copyLink"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.copyLink"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.copySelection"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.copySelection"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.copyText"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.copyText"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.delete"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.delete"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.discard"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.discard"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.edit"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.embed.play"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.embed.play"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.image.view"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.image.view"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.jumpTo"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.jumpTo"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.link.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.link.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.media.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.media.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.menu"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.menu"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.pin.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.pin.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.react"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.react"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.react.more"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.react.more"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.reply"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.reply"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.retry"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.retry"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.saveAs"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.saveAs"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.video.playInline"
+        },
+        "row": "composer.end"
+      },
+      "name": "message.video.playInline"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "nav.back"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.back"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "nav.cornerDock.pin"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.cornerDock.pin"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "nav.dm.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.dm.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.quickSwitcher.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.quickSwitcher.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.quickSwitcher.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.room.next"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.room.next"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.room.next"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.room.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.room.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.room.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.room.previous"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.room.previous"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.room.previous"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.roomList.filter"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.roomList.filter"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.roomList.filter"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.space.select"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.space.select"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.space.select"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.unread.next"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.unread.next"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.unread.next"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.unread.previous"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.unread.previous"
+        },
+        "row": "composer.end"
+      },
+      "name": "nav.unread.previous"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.joinSound.play"
+        },
+        "row": "composer.end"
+      },
+      "name": "person.joinSound.play"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "person.message"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "person.message"
+        },
+        "row": "composer.end"
+      },
+      "name": "person.message"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.profile.view"
+        },
+        "row": "composer.end"
+      },
+      "name": "person.profile.view"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.volume.mute"
+        },
+        "row": "composer.end"
+      },
+      "name": "person.volume.mute"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.volume.reset"
+        },
+        "row": "composer.end"
+      },
+      "name": "person.volume.reset"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.volume.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "person.volume.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "pip.close"
+        },
+        "row": "composer.end"
+      },
+      "name": "pip.close"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "presence.ask.answer"
+        },
+        "row": "composer.end"
+      },
+      "name": "presence.ask.answer"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "presence.sharing.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "presence.sharing.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "presence.sharing.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "push.enable"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "push.enable"
+        },
+        "row": "composer.end"
+      },
+      "name": "push.enable"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "push.quiet.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "push.quiet.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "push.test"
+        },
+        "row": "composer.end"
+      },
+      "name": "push.test"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.myGames"
+        },
+        "row": "composer.end"
+      },
+      "name": "reel.myGames"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "reel.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "reel.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "reel.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.pickForEvent"
+        },
+        "row": "composer.end"
+      },
+      "name": "reel.pickForEvent"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.resetSpins"
+        },
+        "row": "composer.end"
+      },
+      "name": "reel.resetSpins"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.spin"
+        },
+        "row": "composer.end"
+      },
+      "name": "reel.spin"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.tune"
+        },
+        "row": "composer.end"
+      },
+      "name": "reel.tune"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.veto"
+        },
+        "row": "composer.end"
+      },
+      "name": "reel.veto"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.activity.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.clear"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.activity.clear"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.copyCode"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.activity.copyCode"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.activity.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.activity.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.activity.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.activity.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.create"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.create"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.create"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.favourite.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.favourite.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.favourite.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.guestLink"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.guestLink"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.guestLink"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.guestLink.disable"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.guestLink.disable"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.guestLink.disable"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.info.edit"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.info.edit"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.info.edit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.info.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.info.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.info.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.invite"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.invite"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.invite"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.inviteLink.copy"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.inviteLink.copy"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.inviteLink.copy"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.join"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.join"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.leave"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.markRead"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.markRead"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.markRead"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.ban"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.member.ban"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.kick"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.member.kick"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.menu"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.member.menu"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.setRole"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.member.setRole"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.unban"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.member.unban"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.members.show"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.members.show"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.members.show"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.notifications.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.notifications.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.notifications.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.photo.change"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.photo.change"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.photo.change"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.photo.remove"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.photo.remove"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.photo.remove"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.pinned.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.pinned.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.pinned.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.popOut"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.popOut"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.popOut"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.recording.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.recording.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.recording.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.refresh"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.refresh"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.refresh"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.status.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.status.clear"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.status.clear"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.status.post"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.status.post"
+        },
+        "row": "composer.end"
+      },
+      "name": "room.status.post"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sessions.manage"
+        },
+        "row": "composer.end"
+      },
+      "name": "sessions.manage"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sessions.signOutOthers"
+        },
+        "row": "composer.end"
+      },
+      "name": "sessions.signOutOthers"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.copyLink"
+        },
+        "row": "composer.end"
+      },
+      "name": "sound.copyLink"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.favourite.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "sound.favourite.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "sound.play"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "sound.play"
+        },
+        "row": "composer.end"
+      },
+      "name": "sound.play"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.remove"
+        },
+        "row": "composer.end"
+      },
+      "name": "sound.remove"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.roomSound.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "sound.roomSound.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "sound.stop"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "sound.stop"
+        },
+        "row": "composer.end"
+      },
+      "name": "sound.stop"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.upload"
+        },
+        "row": "composer.end"
+      },
+      "name": "sound.upload"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "soundboard.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "soundboard.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "soundboard.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.ban"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.ban"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.create"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.create"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.create"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.invite"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.invite"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.invite"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.joinOrCreate"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.joinOrCreate"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.joinOrCreate"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.kick"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.kick"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.leave"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.link.copy"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.link.copy"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.link.copy"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.markAllRead"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.markAllRead"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.markAllRead"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.ban"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.member.ban"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.remove"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.member.remove"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.roles"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.member.roles"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.unban"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.member.unban"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.overview.edit"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.overview.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.reorder"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.reorder"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.roles.edit"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.roles.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.roles.manage"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.roles.manage"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.rooms.sync"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.rooms.sync"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.settings.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.settings.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.settings.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.settings.refresh"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.settings.refresh"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.settings.tab"
+        },
+        "row": "composer.end"
+      },
+      "name": "space.settings.tab"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "status.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "status.clear"
+        },
+        "row": "composer.end"
+      },
+      "name": "status.clear"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "status.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "status.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "status.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "status.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "status.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "status.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.hide"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.hide"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.listen.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.listen.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.more"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.more"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.pin.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.pin.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.popOut"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.popOut"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.quality.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.quality.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.selfView.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.selfView.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.streamMenu"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.streamMenu"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.view.reset"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.view.reset"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.view.set"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.view.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.zoom"
+        },
+        "row": "composer.end"
+      },
+      "name": "tile.zoom"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.host.toggle"
+        },
+        "row": "composer.end"
+      },
+      "name": "watchParty.host.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "watchParty.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.leave"
+        },
+        "row": "composer.end"
+      },
+      "name": "watchParty.leave"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.mute"
+        },
+        "row": "composer.end"
+      },
+      "name": "watchParty.mute"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.next"
+        },
+        "row": "composer.end"
+      },
+      "name": "watchParty.next"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "watchParty.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.open"
+        },
+        "row": "composer.end"
+      },
+      "name": "watchParty.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.playPause"
+        },
+        "row": "composer.end"
+      },
+      "name": "watchParty.playPause"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.queue"
+        },
+        "row": "composer.end"
+      },
+      "name": "watchParty.queue"
+    }
+  ],
+  "kind": "place"
+}

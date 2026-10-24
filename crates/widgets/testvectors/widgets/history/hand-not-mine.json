@@ -1,0 +1,101 @@
+{
+  "expect": {
+    "calls": [
+      {
+        "end": 1790001860000,
+        "members": [
+          {
+            "ms": 1860000,
+            "user": "@ana:example.com"
+          },
+          {
+            "ms": 1740000,
+            "user": "@bo:example.com"
+          }
+        ],
+        "myMs": 0,
+        "ongoing": false,
+        "room": "!gaming:example.com",
+        "start": 1790000000000,
+        "startedBy": "@ana:example.com"
+      }
+    ],
+    "last": null,
+    "week": {
+      "friends": [],
+      "from": 1789402400000,
+      "myCalls": 0,
+      "myMs": 0,
+      "to": 1790007200000
+    }
+  },
+  "input": {
+    "me": "@me:example.com",
+    "now": 1790007200000,
+    "recorder": "@recorder:example.com",
+    "rooms": [
+      {
+        "events": [
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000000000,
+              "device_id": "A1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@ana:example.com:A1",
+              "scope": "m.room"
+            },
+            "id": "$e1",
+            "key": "_@ana:example.com_A1_m.call",
+            "sender": "@ana:example.com",
+            "ts": 1790000000000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000060000,
+              "device_id": "B1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@bo:example.com:B1",
+              "scope": "m.room"
+            },
+            "id": "$e2",
+            "key": "_@bo:example.com_B1_m.call",
+            "sender": "@bo:example.com",
+            "ts": 1790000060000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e3",
+            "key": "_@bo:example.com_B1_m.call",
+            "sender": "@bo:example.com",
+            "ts": 1790001800000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e4",
+            "key": "_@ana:example.com_A1_m.call",
+            "sender": "@ana:example.com",
+            "ts": 1790001860000,
+            "type": "org.matrix.msc3401.call.member"
+          }
+        ],
+        "room": "!gaming:example.com"
+      }
+    ]
+  },
+  "note": "Ana and Bo called without me: the calls are there, my week and last call are empty"
+}

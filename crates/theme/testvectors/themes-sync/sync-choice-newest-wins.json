@@ -1,0 +1,136 @@
+{
+  "devices": [
+    "DESK",
+    "PHONE"
+  ],
+  "expect": {
+    "devices": {
+      "DESK": {
+        "choice": {
+          "known": {
+            "by": "PHONE",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400002000,
+            "sounds": "default",
+            "theme": "dracula",
+            "v": 1
+          },
+          "raw": {
+            "by": "PHONE",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400002000,
+            "sounds": "default",
+            "theme": "dracula",
+            "v": 1
+          },
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      },
+      "PHONE": {
+        "choice": {
+          "known": {
+            "by": "PHONE",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400002000,
+            "sounds": "default",
+            "theme": "dracula",
+            "v": 1
+          },
+          "raw": {
+            "by": "PHONE",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400002000,
+            "sounds": "default",
+            "theme": "dracula",
+            "v": 1
+          },
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      }
+    },
+    "log": [
+      "0 DESK apply choice: saved",
+      "1 PHONE apply choice: saved",
+      "2 DESK put choice: put",
+      "3 PHONE put choice: put",
+      "4 DESK deliver choice: changed",
+      "5 PHONE deliver choice: ok"
+    ],
+    "server": {
+      "choice": {
+        "by": "PHONE",
+        "format": "tinhat-theme-choice",
+        "icons": "duotone",
+        "rev": 1,
+        "savedAt": 1790400002000,
+        "sounds": "default",
+        "theme": "dracula",
+        "v": 1
+      },
+      "themes": null
+    }
+  },
+  "kind": "sync",
+  "steps": [
+    {
+      "device": "DESK",
+      "event": "apply",
+      "now": 1790400001000,
+      "patch": {
+        "theme": "nord"
+      }
+    },
+    {
+      "device": "PHONE",
+      "event": "apply",
+      "now": 1790400002000,
+      "patch": {
+        "theme": "dracula"
+      }
+    },
+    {
+      "device": "DESK",
+      "event": "put",
+      "key": "choice"
+    },
+    {
+      "device": "PHONE",
+      "event": "put",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "deliver",
+      "key": "choice"
+    },
+    {
+      "device": "PHONE",
+      "event": "deliver",
+      "key": "choice"
+    }
+  ]
+}

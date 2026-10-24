@@ -1,0 +1,26 @@
+{
+  "content": {
+    "body": "🎨 a theme",
+    "dev.tinhat.theme.share": {
+      "format": "tinhat-theme-share",
+      "theme": {
+        "format": "tinhat-theme",
+        "id": "nord",
+        "name": "Broken",
+        "palette": {
+          "bg": "#000000"
+        },
+        "source": "iterm2-color-schemes@595c7fe2d836",
+        "v": 1
+      },
+      "v": 1
+    },
+    "msgtype": "m.text"
+  },
+  "expect": {
+    "error": "bad-palette: fg must be an opaque colour",
+    "kind": "refused",
+    "name": "Broken"
+  },
+  "kind": "decode"
+}

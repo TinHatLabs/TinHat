@@ -1,0 +1,28 @@
+# a YAML collection used as a flow-mapping key or on a continuation line reads like String() of a plain object: null -> '', arrays joined with ',', mappings -> '[object Object]' (ENGINE.md §9, PORT-QUESTIONS Q1)
+junk: {[a, , b]: 1, {x: y}: 2, : 3, [{p: q}, r]: 4, [[c, [d]], ~]: 5}
+note: plain
+  [b, c]
+  {d: e}
+  [{f: g}, [h, ]]
+colors:
+  primary:
+    background: '#1d1f21'
+    foreground: '#c5c8c6'
+  normal:
+    black: '#282a2e'
+    red: '#a54242'
+    green: '#8c9440'
+    yellow: '#de935f'
+    blue: '#5f819d'
+    magenta: '#85678f'
+    cyan: '#5e8d87'
+    white: '#707880'
+  bright:
+    black: '#373b41'
+    red: '#cc6666'
+    green: '#b5bd68'
+    yellow: '#f0c674'
+    blue: '#81a2be'
+    magenta: '#b294bb'
+    cyan: '#8abeb7'
+    white: '#c5c8c6'

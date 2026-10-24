@@ -1,0 +1,3056 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [
+          "@gus:x"
+        ],
+        "callElsewhere": [
+          "@dee:x",
+          "@eli:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@cy:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@fay:x"
+        ],
+        "playing": [
+          {
+            "emoji": "⚔️",
+            "game": "Valheim",
+            "people": [
+              "@ana:x",
+              "@bo:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "summary": [
+          "@ana:x",
+          "@bo:x",
+          "@cy:x",
+          "@dee:x",
+          "@eli:x",
+          "@fay:x",
+          "@gus:x"
+        ],
+        "total": 7
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@me:example.com",
+            "name": "Me",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "Recorder",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@ana:x",
+            "name": "Ana",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@bo:x",
+            "name": "bo",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@cy:x",
+            "name": "Cy",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@dee:x",
+            "name": "Dee",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@eli:x",
+            "name": "Eli",
+            "state": "call"
+          },
+          {
+            "id": "@fay:x",
+            "name": "fay",
+            "state": "online"
+          },
+          {
+            "id": "@gus:x",
+            "name": "Gus",
+            "state": "away"
+          },
+          {
+            "id": "@hal:x",
+            "name": "Hal",
+            "state": "dnd"
+          },
+          {
+            "id": "@ana:x",
+            "name": "Ana again",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@b:x",
+              "@c:x"
+            ],
+            "room": "!chat:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@a:x"
+            ],
+            "room": "!aaa:example.com"
+          }
+        ],
+        "online": [
+          "@d:x",
+          "@e:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@b:x",
+          "@c:x",
+          "@a:x",
+          "@d:x",
+          "@e:x"
+        ],
+        "total": 5
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@a:x",
+            "name": "Zed",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "ana",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@c:x",
+            "name": "Bo",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "ｘylo",
+            "state": "online"
+          },
+          {
+            "id": "@e:x",
+            "name": "🎮 gamer",
+            "state": "online"
+          },
+          {
+            "id": "@f:x",
+            "name": "Élan",
+            "state": "away"
+          },
+          {
+            "id": "@g:x",
+            "name": "élan",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@a:x"
+            ],
+            "room": "!aaa:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@b:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@a:x",
+          "@b:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@a:x",
+            "name": "A",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "B",
+            "room": "!chat:example.com",
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@ana:x",
+              "@recorder:example.com"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@ana:x",
+          "@recorder:example.com"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@recorder:example.com",
+            "name": "Recorder",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@ana:x",
+            "name": "Ana",
+            "room": "!game:example.com",
+            "state": "call"
+          }
+        ],
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@b:x",
+          "@e:x"
+        ],
+        "inCall": [],
+        "online": [
+          "@g:x",
+          "@f:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@b:x",
+          "@e:x",
+          "@g:x",
+          "@f:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@e:x",
+            "name": "Cy",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "Zed",
+            "room": "!aaa:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@f:x",
+            "name": "BO",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@e:x",
+            "name": "ana",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@b:x",
+            "name": "4k",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "ana",
+            "room": "!chat:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@d:x",
+            "name": "",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "ana",
+            "room": "",
+            "state": "online"
+          },
+          {
+            "id": "@d:x",
+            "name": "ana",
+            "room": null,
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@e:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@d:x"
+            ],
+            "room": "!aaa:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@h:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@f:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@h:x",
+          "@e:x",
+          "@f:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@e:x",
+            "name": "Ana",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "ana",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@h:x",
+            "name": "Cy",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": "Ärger",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@h:x",
+            "name": "",
+            "room": "!chat:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@f:x",
+            "name": "Mötley",
+            "room": "!aaa:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@d:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@f:x",
+          "@d:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@d:x",
+            "name": "motley",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "ana",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "Cy",
+            "room": "!game:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@d:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@e:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@h:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@e:x",
+          "@d:x",
+          "@h:x"
+        ],
+        "total": 3
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@d:x",
+            "name": " ",
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "bo",
+            "state": "call"
+          },
+          {
+            "id": "@h:x",
+            "name": "Élan",
+            "room": "!game:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@h:x",
+            "name": "🎮 gamer",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": "ß",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": "🎮 gamer",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "ß",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "_under",
+            "room": null,
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@e:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@a:x"
+            ],
+            "room": "!aaa:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@g:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@a:x",
+          "@f:x",
+          "@e:x",
+          "@g:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@e:x",
+            "name": "",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "Bo",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@f:x",
+            "name": "Bo",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "bo",
+            "state": "call"
+          },
+          {
+            "id": "@a:x",
+            "name": "élan",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "BO",
+            "room": "!chat:example.com",
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@h:x"
+            ],
+            "room": "!aaa:example.com"
+          }
+        ],
+        "online": [
+          "@e:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@h:x",
+          "@e:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@recorder:example.com",
+            "name": "zed",
+            "state": "online"
+          },
+          {
+            "id": "@h:x",
+            "name": "ｘylo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "4k",
+            "room": "!aaa:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "Zed",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "BO",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": "4k",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@f:x",
+            "name": "Ärger",
+            "room": null,
+            "state": "idle"
+          },
+          {
+            "id": "@a:x",
+            "name": "ana",
+            "room": "!aaa:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@a:x",
+            "name": " ",
+            "room": "!game:example.com",
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@e:x"
+        ],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@e:x"
+        ],
+        "total": 1
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@f:x",
+            "name": "motley",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@e:x",
+            "name": "Bo",
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@me:example.com",
+            "name": "BO",
+            "room": "!aaa:example.com",
+            "state": "idle"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@d:x",
+          "@e:x"
+        ],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@e:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@e:x",
+            "name": "🎮 gamer",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "Ana",
+            "room": null,
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@a:x"
+        ],
+        "inCall": [],
+        "online": [
+          "@d:x",
+          "@f:x",
+          "@e:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@a:x",
+          "@d:x",
+          "@f:x",
+          "@e:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@me:example.com",
+            "name": "4k",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@f:x",
+            "name": "Élan",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@c:x",
+            "name": "_under",
+            "room": null,
+            "state": "idle"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "4k",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "Ana",
+            "room": null,
+            "state": "idle"
+          },
+          {
+            "id": "@a:x",
+            "name": "motley",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "4k",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "Cy",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@e:x",
+            "name": "élan",
+            "room": null,
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@recorder:example.com",
+            "name": "bo",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@f:x"
+        ],
+        "inCall": [],
+        "online": [
+          "@d:x",
+          "@g:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@f:x",
+          "@d:x",
+          "@g:x"
+        ],
+        "total": 3
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@g:x",
+            "name": "🎮 gamer",
+            "room": "!aaa:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@f:x",
+            "name": "Mötley",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "BO",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "ß",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "ana",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "BO",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "Élan",
+            "room": null,
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@d:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@e:x"
+            ],
+            "room": "!aaa:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@g:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@b:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@e:x",
+          "@g:x",
+          "@d:x",
+          "@b:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@g:x",
+            "name": "Ärger",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "ｘylo",
+            "state": "online"
+          },
+          {
+            "id": "@c:x",
+            "name": "Élan",
+            "state": "idle"
+          },
+          {
+            "id": "@e:x",
+            "name": "Bo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@h:x",
+            "name": "motley",
+            "room": "!aaa:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "ana",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "ß",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@d:x",
+            "name": "BO",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "bo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "Ana",
+            "room": "!aaa:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@b:x",
+            "name": "Bo",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@recorder:example.com",
+            "name": "zed",
+            "room": "!chat:example.com",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [
+          "@b:x",
+          "@a:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@b:x",
+          "@a:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@a:x",
+            "name": "Cy",
+            "room": "",
+            "state": "online"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "4k",
+            "room": "!aaa:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@a:x",
+            "name": "ana",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "Ana",
+            "room": "!game:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@b:x",
+            "name": "",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "🎮 gamer",
+            "room": "!chat:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "4k",
+            "room": null,
+            "state": "idle"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "bo",
+            "state": "idle"
+          },
+          {
+            "id": "@b:x",
+            "name": "Cy",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@d:x"
+            ],
+            "room": "!aaa:example.com"
+          }
+        ],
+        "online": [
+          "@b:x",
+          "@e:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@b:x",
+          "@e:x"
+        ],
+        "total": 3
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@c:x",
+            "name": "4k",
+            "room": "",
+            "state": "idle"
+          },
+          {
+            "id": "@b:x",
+            "name": "Élan",
+            "room": "!aaa:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@c:x",
+            "name": "zed",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "ß",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": "🎮 gamer",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@c:x",
+            "name": "4k",
+            "room": "!game:example.com",
+            "state": "idle"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [
+          "@h:x"
+        ],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [
+          "@d:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@h:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@d:x",
+            "name": "zed",
+            "state": "online"
+          },
+          {
+            "id": "@h:x",
+            "name": " ",
+            "room": "",
+            "state": "away"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "ｘylo",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@a:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@b:x",
+          "@h:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@a:x",
+          "@b:x",
+          "@h:x"
+        ],
+        "total": 3
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@h:x",
+            "name": "Ärger",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@e:x",
+            "name": "ｘylo",
+            "room": "!chat:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@e:x",
+            "name": "Bo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@a:x",
+            "name": " ",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "_under",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@a:x",
+            "name": "4k",
+            "room": "!aaa:example.com",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@h:x"
+        ],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@h:x"
+        ],
+        "total": 1
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@me:example.com",
+            "name": "motley",
+            "state": "away"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": " ",
+            "room": "!aaa:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@f:x",
+            "name": "🎮 gamer",
+            "room": "!game:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@h:x",
+            "name": "motley",
+            "room": null,
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@d:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@a:x"
+            ],
+            "room": "!aaa:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@h:x"
+            ],
+            "room": "!chat:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@a:x",
+          "@h:x",
+          "@f:x",
+          "@d:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@d:x",
+            "name": "🎮 gamer",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "bo",
+            "state": "online"
+          },
+          {
+            "id": "@g:x",
+            "name": "ß",
+            "room": null,
+            "state": "idle"
+          },
+          {
+            "id": "@g:x",
+            "name": "ß",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@d:x",
+            "name": "BO",
+            "room": "!aaa:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@h:x",
+            "name": "motley",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@a:x",
+            "name": "Bo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "Zed",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "4k",
+            "room": "!chat:example.com",
+            "state": "idle"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@c:x",
+          "@g:x"
+        ],
+        "inCall": [],
+        "online": [
+          "@a:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@c:x",
+          "@g:x",
+          "@a:x"
+        ],
+        "total": 3
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@g:x",
+            "name": "Ärger",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "Mötley",
+            "state": "call"
+          },
+          {
+            "id": "@c:x",
+            "name": "Cy",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "Ana",
+            "room": "!chat:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@a:x",
+            "name": "Élan",
+            "room": "!chat:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@d:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "online": [
+          "@h:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@h:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@h:x",
+            "name": "Bo",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "zed",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "Élan",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "Mötley",
+            "room": "!aaa:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [
+          {
+            "emoji": "⚔️",
+            "game": "Valheim",
+            "people": [
+              "@b:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "summary": [
+          "@b:x"
+        ],
+        "total": 1
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@b:x",
+            "name": "ana",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "Ana",
+            "room": "!aaa:example.com",
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@d:x",
+            "name": "motley",
+            "room": "",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [
+          "@f:x",
+          "@d:x"
+        ],
+        "callElsewhere": [
+          "@c:x",
+          "@b:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@e:x",
+              "@h:x"
+            ],
+            "room": "!aaa:example.com"
+          }
+        ],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@e:x",
+          "@h:x",
+          "@c:x",
+          "@b:x",
+          "@f:x",
+          "@d:x"
+        ],
+        "total": 6
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@h:x",
+            "name": "Ana",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@c:x",
+            "name": "Ana",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "Ärger",
+            "room": "!aaa:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@h:x",
+            "name": "Bo",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@b:x",
+            "name": "Bo",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": "_under",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@h:x",
+            "name": "Cy",
+            "room": "!chat:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@d:x",
+            "name": "🎮 gamer",
+            "room": "!chat:example.com",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [
+          "@d:x"
+        ],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@a:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@h:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@a:x",
+          "@h:x",
+          "@d:x"
+        ],
+        "total": 3
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@a:x",
+            "name": "Ärger",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "Ärger",
+            "room": "!aaa:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "Ana",
+            "state": "away"
+          },
+          {
+            "id": "@f:x",
+            "name": "_under",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "ß",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "zed",
+            "room": null,
+            "state": "away"
+          },
+          {
+            "id": "@h:x",
+            "name": "Élan",
+            "room": "!game:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@d:x"
+        ],
+        "inCall": [],
+        "online": [
+          "@c:x",
+          "@g:x",
+          "@b:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@c:x",
+          "@g:x",
+          "@b:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@g:x",
+            "name": "4k",
+            "state": "online"
+          },
+          {
+            "id": "@d:x",
+            "name": "4k",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "Ärger",
+            "state": "online"
+          },
+          {
+            "id": "@g:x",
+            "name": "",
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "motley",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@g:x",
+            "name": "Ärger",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@c:x",
+            "name": " ",
+            "room": "!chat:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@d:x"
+        ],
+        "inCall": [],
+        "online": [
+          "@b:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@b:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@d:x",
+            "name": "Cy",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "ｘylo",
+            "room": "!chat:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@b:x",
+            "name": " ",
+            "room": "!game:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@h:x",
+            "name": " ",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@d:x",
+            "name": "Ana",
+            "room": "",
+            "state": "online"
+          },
+          {
+            "id": "@d:x",
+            "name": "Ana",
+            "room": "",
+            "state": "idle"
+          },
+          {
+            "id": "@b:x",
+            "name": "ana",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@f:x",
+            "name": "Ana",
+            "room": "!aaa:example.com",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@c:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!aaa:example.com"
+          }
+        ],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@f:x",
+          "@c:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@me:example.com",
+            "name": "Mötley",
+            "room": null,
+            "state": "away"
+          },
+          {
+            "id": "@f:x",
+            "name": "bo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@c:x",
+            "name": "Mötley",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "ｘylo",
+            "room": "!aaa:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [
+          "@d:x"
+        ],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [
+          "@h:x",
+          "@a:x",
+          "@c:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@h:x",
+          "@a:x",
+          "@c:x",
+          "@d:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@me:example.com",
+            "name": "bo",
+            "room": null,
+            "state": "away"
+          },
+          {
+            "id": "@d:x",
+            "name": "4k",
+            "room": "!aaa:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "Cy",
+            "room": "!chat:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@c:x",
+            "name": "Bo",
+            "room": "",
+            "state": "online"
+          },
+          {
+            "id": "@a:x",
+            "name": "Bo",
+            "room": "",
+            "state": "online"
+          },
+          {
+            "id": "@d:x",
+            "name": "ß",
+            "room": "!game:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@c:x",
+            "name": "🎮 gamer",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "Ana",
+            "room": "",
+            "state": "call"
+          },
+          {
+            "id": "@h:x",
+            "name": "_under",
+            "room": "",
+            "state": "online"
+          },
+          {
+            "id": "@g:x",
+            "name": "Ana",
+            "room": "!aaa:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@a:x",
+            "name": "Bo",
+            "room": "!aaa:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [
+          "@e:x"
+        ],
+        "playing": [
+          {
+            "emoji": "⚔️",
+            "game": "Valheim",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "summary": [
+          "@f:x",
+          "@e:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@f:x",
+            "name": "4k",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": " ",
+            "room": "",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [
+          "@d:x"
+        ],
+        "callElsewhere": [
+          "@g:x"
+        ],
+        "inCall": [],
+        "online": [
+          "@a:x"
+        ],
+        "playing": [
+          {
+            "emoji": "⚔️",
+            "game": "Valheim",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "summary": [
+          "@f:x",
+          "@g:x",
+          "@a:x",
+          "@d:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@e:x",
+            "name": "Mötley",
+            "room": "",
+            "state": "idle"
+          },
+          {
+            "id": "@f:x",
+            "name": "4k",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "Ärger",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": "_under",
+            "room": "!game:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@f:x",
+            "name": "motley",
+            "state": "away"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "élan",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "motley",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "ana",
+            "room": null,
+            "state": "online"
+          },
+          {
+            "id": "@a:x",
+            "name": "Zed",
+            "room": null,
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@b:x",
+          "@g:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!aaa:example.com"
+          }
+        ],
+        "online": [
+          "@a:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@f:x",
+          "@b:x",
+          "@g:x",
+          "@a:x"
+        ],
+        "total": 4
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@f:x",
+            "name": "Bo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "ana",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "Ärger",
+            "room": "!chat:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@g:x",
+            "name": "Cy",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "BO",
+            "room": "",
+            "state": "idle"
+          },
+          {
+            "id": "@a:x",
+            "name": "motley",
+            "state": "online"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "ｘylo",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "ß",
+            "room": null,
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [
+          "@b:x",
+          "@g:x"
+        ],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@d:x"
+            ],
+            "room": "!aaa:example.com"
+          },
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@f:x"
+            ],
+            "room": "!chat:example.com"
+          }
+        ],
+        "online": [
+          "@e:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@d:x",
+          "@f:x",
+          "@b:x",
+          "@g:x",
+          "@e:x"
+        ],
+        "total": 5
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@me:example.com",
+            "name": "Cy",
+            "room": "!aaa:example.com",
+            "state": "away"
+          },
+          {
+            "id": "@d:x",
+            "name": "ｘylo",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@f:x",
+            "name": "Ana",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "_under",
+            "state": "call"
+          },
+          {
+            "id": "@c:x",
+            "name": "bo",
+            "room": null,
+            "state": "away"
+          },
+          {
+            "id": "@f:x",
+            "name": "Mötley",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@g:x",
+            "name": "Ärger",
+            "room": null,
+            "state": "call"
+          },
+          {
+            "id": "@b:x",
+            "name": "bo",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@e:x",
+            "name": "4k",
+            "state": "online"
+          },
+          {
+            "id": "@c:x",
+            "name": "ana",
+            "room": "!aaa:example.com",
+            "state": "away"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": false
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@e:x"
+            ],
+            "room": "!game:example.com"
+          }
+        ],
+        "online": [
+          "@d:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@e:x",
+          "@d:x"
+        ],
+        "total": 2
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@e:x",
+            "name": "Ana",
+            "room": "!game:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@d:x",
+            "name": " ",
+            "room": "!aaa:example.com",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [
+          "@g:x"
+        ],
+        "playing": [],
+        "summary": [
+          "@g:x"
+        ],
+        "total": 1
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@recorder:example.com",
+            "name": "BO",
+            "room": "",
+            "state": "away"
+          },
+          {
+            "id": "@a:x",
+            "name": "Bo",
+            "room": "!game:example.com",
+            "state": "idle"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "bo",
+            "state": "call"
+          },
+          {
+            "id": "@me:example.com",
+            "name": "bo",
+            "room": "!chat:example.com",
+            "state": "online"
+          },
+          {
+            "id": "@g:x",
+            "name": "BO",
+            "state": "online"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [
+          {
+            "emoji": "",
+            "game": "",
+            "people": [
+              "@d:x"
+            ],
+            "room": "!aaa:example.com"
+          }
+        ],
+        "online": [],
+        "playing": [],
+        "summary": [
+          "@d:x"
+        ],
+        "total": 1
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@d:x",
+            "name": "_under",
+            "room": "!aaa:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@h:x",
+            "name": "Ärger",
+            "room": "",
+            "state": "idle"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {},
+        "me": "@me:example.com",
+        "people": [
+          {
+            "id": "@recorder:example.com",
+            "name": "Ärger",
+            "room": "!chat:example.com",
+            "state": "call"
+          },
+          {
+            "id": "@recorder:example.com",
+            "name": "Mötley",
+            "room": "!chat:example.com",
+            "state": "call"
+          }
+        ],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    },
+    {
+      "expect": {
+        "away": [],
+        "callElsewhere": [],
+        "inCall": [],
+        "online": [],
+        "playing": [],
+        "summary": [],
+        "total": 0
+      },
+      "input": {
+        "activities": {
+          "!chat:example.com": {
+            "emoji": "🎮",
+            "game": " \n "
+          },
+          "!game:example.com": {
+            "emoji": " ⚔️ ",
+            "game": "  Valheim\t"
+          },
+          "!other:x": {
+            "emoji": null,
+            "game": 7
+          }
+        },
+        "me": "@me:example.com",
+        "people": [],
+        "recorder": "@recorder:example.com",
+        "showAway": true
+      }
+    }
+  ]
+}

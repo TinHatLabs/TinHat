@@ -1,0 +1,182 @@
+{
+  "expect": {
+    "form": {
+      "collapse": [
+        {
+          "below": 1300,
+          "ref": "panel",
+          "to": "overlay"
+        },
+        {
+          "below": 1180,
+          "ref": "navcol",
+          "to": "drawer"
+        }
+      ],
+      "floats": [],
+      "hidden": [],
+      "opts": {},
+      "preset": "callFirst",
+      "root": {
+        "c": [
+          {
+            "c": [
+              {
+                "c": [
+                  {
+                    "i": "nav",
+                    "size": {
+                      "max": 50,
+                      "min": 50
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "spaces",
+                    "size": {
+                      "min": 112,
+                      "share": 1
+                    },
+                    "t": "island"
+                  }
+                ],
+                "id": "rail",
+                "size": {
+                  "fixed": 68
+                },
+                "t": "col"
+              },
+              {
+                "c": [
+                  {
+                    "i": "rooms",
+                    "size": {
+                      "auto": true,
+                      "grow": 1,
+                      "min": 160
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "widgets",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "c": [
+                      {
+                        "i": "account",
+                        "size": {
+                          "share": 1
+                        },
+                        "t": "island"
+                      },
+                      {
+                        "i": "dms",
+                        "size": {
+                          "fixed": 68
+                        },
+                        "t": "island"
+                      }
+                    ],
+                    "id": "n1",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "row"
+                  }
+                ],
+                "id": "roomscol",
+                "size": {
+                  "fixed": 260
+                },
+                "t": "col"
+              }
+            ],
+            "id": "navcol",
+            "size": {
+              "auto": true
+            },
+            "t": "row"
+          },
+          {
+            "c": [
+              {
+                "i": "header",
+                "size": {
+                  "auto": true
+                },
+                "t": "island"
+              },
+              {
+                "c": [
+                  {
+                    "i": "call",
+                    "size": {
+                      "min": 480,
+                      "share": 2
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "c": [
+                      {
+                        "i": "timeline",
+                        "size": {
+                          "min": 120,
+                          "share": 1
+                        },
+                        "t": "island"
+                      },
+                      {
+                        "i": "composer",
+                        "size": {
+                          "auto": true
+                        },
+                        "t": "island"
+                      }
+                    ],
+                    "id": "roomcol",
+                    "size": {
+                      "min": 340,
+                      "share": 1
+                    },
+                    "t": "col"
+                  },
+                  {
+                    "i": "panel",
+                    "size": {
+                      "fixed": 324
+                    },
+                    "t": "island"
+                  }
+                ],
+                "id": "stage",
+                "size": {
+                  "share": 1
+                },
+                "t": "row"
+              }
+            ],
+            "id": "main",
+            "size": {
+              "min": 360,
+              "share": 1
+            },
+            "t": "col"
+          }
+        ],
+        "id": "body",
+        "t": "row"
+      }
+    },
+    "notes": [
+      "bad-size-fixed nav"
+    ]
+  },
+  "kind": "repair",
+  "target": "desktop",
+  "text": "{\"preset\":\"callFirst\",\"root\":{\"t\":\"row\",\"id\":\"body\",\"c\":[{\"t\":\"row\",\"id\":\"navcol\",\"size\":{\"auto\":true},\"c\":[{\"t\":\"col\",\"id\":\"rail\",\"size\":{\"fixed\":68},\"c\":[{\"t\":\"island\",\"i\":\"nav\",\"size\":{\"min\":50,\"max\":10}},{\"t\":\"island\",\"i\":\"spaces\",\"size\":{\"share\":1,\"min\":112}}]},{\"t\":\"col\",\"id\":\"roomscol\",\"size\":{\"fixed\":260},\"c\":[{\"t\":\"island\",\"i\":\"rooms\",\"size\":{\"auto\":true,\"grow\":1,\"min\":160}},{\"t\":\"island\",\"i\":\"widgets\",\"size\":{\"auto\":true}},{\"t\":\"row\",\"id\":\"n1\",\"size\":{\"auto\":true},\"c\":[{\"t\":\"island\",\"i\":\"account\",\"size\":{\"share\":1}},{\"t\":\"island\",\"i\":\"dms\",\"size\":{\"fixed\":68}}]}]}]},{\"t\":\"col\",\"id\":\"main\",\"size\":{\"share\":1,\"min\":360},\"c\":[{\"t\":\"island\",\"i\":\"header\",\"size\":{\"auto\":true}},{\"t\":\"row\",\"id\":\"stage\",\"size\":{\"share\":1},\"c\":[{\"t\":\"island\",\"i\":\"call\",\"size\":{\"share\":2,\"min\":480}},{\"t\":\"col\",\"id\":\"roomcol\",\"size\":{\"share\":1,\"min\":340},\"c\":[{\"t\":\"island\",\"i\":\"timeline\",\"size\":{\"share\":1,\"min\":120}},{\"t\":\"island\",\"i\":\"composer\",\"size\":{\"auto\":true}}]},{\"t\":\"island\",\"i\":\"panel\",\"size\":{\"fixed\":324}}]}]}]},\"floats\":[],\"hidden\":[],\"collapse\":[{\"ref\":\"panel\",\"to\":\"overlay\",\"below\":1300},{\"ref\":\"navcol\",\"to\":\"drawer\",\"below\":1180}],\"opts\":{}}"
+}

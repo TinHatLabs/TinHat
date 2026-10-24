@@ -1,0 +1,1307 @@
+{
+  "events": [
+    {
+      "day0": 1790000000000,
+      "expect": [
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "What are we playing tonight?\n1. Valheim\n2. Project Zomboid\n3. League of Legends\n4. The Finals",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "valheim",
+                    "org.matrix.msc1767.text": "Valheim"
+                  },
+                  {
+                    "id": "zomboid",
+                    "org.matrix.msc1767.text": "Project Zomboid"
+                  },
+                  {
+                    "id": "league",
+                    "org.matrix.msc1767.text": "League of Legends"
+                  },
+                  {
+                    "id": "finals",
+                    "org.matrix.msc1767.text": "The Finals"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "What are we playing tonight?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "What are we playing tonight?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-1",
+            "sender": "@Ana:sample.invalid",
+            "ts": 1790073800000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "valheim"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r0",
+            "sender": "@Ana:sample.invalid",
+            "ts": 1790073860000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "valheim"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r1",
+            "sender": "@Bo:sample.invalid",
+            "ts": 1790073920000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "zomboid"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r2",
+            "sender": "@Cy:sample.invalid",
+            "ts": 1790073980000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "valheim"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r3",
+            "sender": "@me:sample.invalid",
+            "ts": 1790074040000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Start time for raid night?\n1. 8 PM\n2. 9 PM\n3. 10 PM",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "8pm",
+                    "org.matrix.msc1767.text": "8 PM"
+                  },
+                  {
+                    "id": "9pm",
+                    "org.matrix.msc1767.text": "9 PM"
+                  },
+                  {
+                    "id": "10pm",
+                    "org.matrix.msc1767.text": "10 PM"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.undisclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Start time for raid night?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Start time for raid night?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-2",
+            "sender": "@me:sample.invalid",
+            "ts": 1790074160000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-2",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "9pm"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-2-r0",
+            "sender": "@Bo:sample.invalid",
+            "ts": 1790074220000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-2",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "8pm"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-2-r1",
+            "sender": "@Dee:sample.invalid",
+            "ts": 1790074280000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Best boss so far?\n1. The Elder\n2. Moder\n3. Yagluth",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "elder",
+                    "org.matrix.msc1767.text": "The Elder"
+                  },
+                  {
+                    "id": "moder",
+                    "org.matrix.msc1767.text": "Moder"
+                  },
+                  {
+                    "id": "yagluth",
+                    "org.matrix.msc1767.text": "Yagluth"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Best boss so far?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Best boss so far?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-3",
+            "sender": "@Bo:sample.invalid",
+            "ts": 1790074520000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "moder"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r0",
+            "sender": "@Ana:sample.invalid",
+            "ts": 1790074580000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "yagluth"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r1",
+            "sender": "@Bo:sample.invalid",
+            "ts": 1790074640000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "moder"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r2",
+            "sender": "@Cy:sample.invalid",
+            "ts": 1790074700000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "elder"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r3",
+            "sender": "@me:sample.invalid",
+            "ts": 1790074760000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "body": "The poll has ended. Top answer: Moder",
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "The poll has ended. Top answer: Moder",
+              "org.matrix.msc3381.poll.end": {}
+            },
+            "id": "$w3-sample-poll-3-end",
+            "sender": "@Bo:sample.invalid",
+            "ts": 1790074820000,
+            "type": "org.matrix.msc3381.poll.end"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Which biome for Friday?\n1. Meadows\n2. Swamp\n3. Mountains",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "meadows",
+                    "org.matrix.msc1767.text": "Meadows"
+                  },
+                  {
+                    "id": "swamp",
+                    "org.matrix.msc1767.text": "Swamp"
+                  },
+                  {
+                    "id": "mountains",
+                    "org.matrix.msc1767.text": "Mountains"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Which biome for Friday?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Which biome for Friday?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-4",
+            "sender": "@Cy:sample.invalid",
+            "ts": 1790071400000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-4",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "swamp"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-4-r0",
+            "sender": "@Cy:sample.invalid",
+            "ts": 1790071460000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-4",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "meadows"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-4-r1",
+            "sender": "@Dee:sample.invalid",
+            "ts": 1790071520000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Pizza or tacos for game night?\n1. Pizza\n2. Tacos",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "pizza",
+                    "org.matrix.msc1767.text": "Pizza"
+                  },
+                  {
+                    "id": "tacos",
+                    "org.matrix.msc1767.text": "Tacos"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Pizza or tacos for game night?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Pizza or tacos for game night?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-5",
+            "sender": "@Dee:sample.invalid",
+            "ts": 1790069600000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-5",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "tacos"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-5-r0",
+            "sender": "@me:sample.invalid",
+            "ts": 1790069660000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-5",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "pizza"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-5-r1",
+            "sender": "@Ana:sample.invalid",
+            "ts": 1790069720000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-5",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "tacos"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-5-r2",
+            "sender": "@Eli:sample.invalid",
+            "ts": 1790069780000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Should we restart the Valheim world after the next patch?\n1. Yes, a fresh start\n2. No, keep it",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "yes",
+                    "org.matrix.msc1767.text": "Yes, a fresh start"
+                  },
+                  {
+                    "id": "no",
+                    "org.matrix.msc1767.text": "No, keep it"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.undisclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Should we restart the Valheim world after the next patch?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Should we restart the Valheim world after the next patch?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-6",
+            "sender": "@Eli:sample.invalid",
+            "ts": 1790065100000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-6",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "no"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-6-r0",
+            "sender": "@Fay:sample.invalid",
+            "ts": 1790065160000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Keep the voice bitrate at 96 kbps?\n1. Keep it\n2. Raise it",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "keep",
+                    "org.matrix.msc1767.text": "Keep it"
+                  },
+                  {
+                    "id": "raise",
+                    "org.matrix.msc1767.text": "Raise it"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Keep the voice bitrate at 96 kbps?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Keep the voice bitrate at 96 kbps?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-7",
+            "sender": "@me:sample.invalid",
+            "ts": 1790063600000,
+            "type": "org.matrix.msc3381.poll.start"
+          }
+        ]
+      ],
+      "me": "@me:sample.invalid"
+    },
+    {
+      "day0": 0,
+      "expect": [
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "What are we playing tonight?\n1. Valheim\n2. Project Zomboid\n3. League of Legends\n4. The Finals",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "valheim",
+                    "org.matrix.msc1767.text": "Valheim"
+                  },
+                  {
+                    "id": "zomboid",
+                    "org.matrix.msc1767.text": "Project Zomboid"
+                  },
+                  {
+                    "id": "league",
+                    "org.matrix.msc1767.text": "League of Legends"
+                  },
+                  {
+                    "id": "finals",
+                    "org.matrix.msc1767.text": "The Finals"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "What are we playing tonight?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "What are we playing tonight?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-1",
+            "sender": "@Ana:sample.invalid",
+            "ts": 73800000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "valheim"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r0",
+            "sender": "@Ana:sample.invalid",
+            "ts": 73860000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "valheim"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r1",
+            "sender": "@Bo:sample.invalid",
+            "ts": 73920000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "zomboid"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r2",
+            "sender": "@Cy:sample.invalid",
+            "ts": 73980000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-1",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "valheim"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-1-r3",
+            "sender": "@tester3:example.com",
+            "ts": 74040000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Start time for raid night?\n1. 8 PM\n2. 9 PM\n3. 10 PM",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "8pm",
+                    "org.matrix.msc1767.text": "8 PM"
+                  },
+                  {
+                    "id": "9pm",
+                    "org.matrix.msc1767.text": "9 PM"
+                  },
+                  {
+                    "id": "10pm",
+                    "org.matrix.msc1767.text": "10 PM"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.undisclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Start time for raid night?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Start time for raid night?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-2",
+            "sender": "@tester3:example.com",
+            "ts": 74160000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-2",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "9pm"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-2-r0",
+            "sender": "@Bo:sample.invalid",
+            "ts": 74220000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-2",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "8pm"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-2-r1",
+            "sender": "@Dee:sample.invalid",
+            "ts": 74280000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Best boss so far?\n1. The Elder\n2. Moder\n3. Yagluth",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "elder",
+                    "org.matrix.msc1767.text": "The Elder"
+                  },
+                  {
+                    "id": "moder",
+                    "org.matrix.msc1767.text": "Moder"
+                  },
+                  {
+                    "id": "yagluth",
+                    "org.matrix.msc1767.text": "Yagluth"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Best boss so far?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Best boss so far?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-3",
+            "sender": "@Bo:sample.invalid",
+            "ts": 74520000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "moder"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r0",
+            "sender": "@Ana:sample.invalid",
+            "ts": 74580000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "yagluth"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r1",
+            "sender": "@Bo:sample.invalid",
+            "ts": 74640000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "moder"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r2",
+            "sender": "@Cy:sample.invalid",
+            "ts": 74700000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "elder"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-3-r3",
+            "sender": "@tester3:example.com",
+            "ts": 74760000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "body": "The poll has ended. Top answer: Moder",
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-3",
+                "rel_type": "m.reference"
+              },
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "The poll has ended. Top answer: Moder",
+              "org.matrix.msc3381.poll.end": {}
+            },
+            "id": "$w3-sample-poll-3-end",
+            "sender": "@Bo:sample.invalid",
+            "ts": 74820000,
+            "type": "org.matrix.msc3381.poll.end"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Which biome for Friday?\n1. Meadows\n2. Swamp\n3. Mountains",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "meadows",
+                    "org.matrix.msc1767.text": "Meadows"
+                  },
+                  {
+                    "id": "swamp",
+                    "org.matrix.msc1767.text": "Swamp"
+                  },
+                  {
+                    "id": "mountains",
+                    "org.matrix.msc1767.text": "Mountains"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Which biome for Friday?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Which biome for Friday?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-4",
+            "sender": "@Cy:sample.invalid",
+            "ts": 71400000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-4",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "swamp"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-4-r0",
+            "sender": "@Cy:sample.invalid",
+            "ts": 71460000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-4",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "meadows"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-4-r1",
+            "sender": "@Dee:sample.invalid",
+            "ts": 71520000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Pizza or tacos for game night?\n1. Pizza\n2. Tacos",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "pizza",
+                    "org.matrix.msc1767.text": "Pizza"
+                  },
+                  {
+                    "id": "tacos",
+                    "org.matrix.msc1767.text": "Tacos"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Pizza or tacos for game night?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Pizza or tacos for game night?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-5",
+            "sender": "@Dee:sample.invalid",
+            "ts": 69600000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-5",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "tacos"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-5-r0",
+            "sender": "@tester3:example.com",
+            "ts": 69660000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-5",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "pizza"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-5-r1",
+            "sender": "@Ana:sample.invalid",
+            "ts": 69720000,
+            "type": "org.matrix.msc3381.poll.response"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-5",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "tacos"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-5-r2",
+            "sender": "@Eli:sample.invalid",
+            "ts": 69780000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Should we restart the Valheim world after the next patch?\n1. Yes, a fresh start\n2. No, keep it",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "yes",
+                    "org.matrix.msc1767.text": "Yes, a fresh start"
+                  },
+                  {
+                    "id": "no",
+                    "org.matrix.msc1767.text": "No, keep it"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.undisclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Should we restart the Valheim world after the next patch?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Should we restart the Valheim world after the next patch?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-6",
+            "sender": "@Eli:sample.invalid",
+            "ts": 65100000,
+            "type": "org.matrix.msc3381.poll.start"
+          },
+          {
+            "content": {
+              "m.relates_to": {
+                "event_id": "$w3-sample-poll-6",
+                "rel_type": "m.reference"
+              },
+              "org.matrix.msc3381.poll.response": {
+                "answers": [
+                  "no"
+                ]
+              }
+            },
+            "id": "$w3-sample-poll-6-r0",
+            "sender": "@Fay:sample.invalid",
+            "ts": 65160000,
+            "type": "org.matrix.msc3381.poll.response"
+          }
+        ],
+        [
+          {
+            "content": {
+              "org.matrix.msc1767.text": "Keep the voice bitrate at 96 kbps?\n1. Keep it\n2. Raise it",
+              "org.matrix.msc3381.poll.start": {
+                "answers": [
+                  {
+                    "id": "keep",
+                    "org.matrix.msc1767.text": "Keep it"
+                  },
+                  {
+                    "id": "raise",
+                    "org.matrix.msc1767.text": "Raise it"
+                  }
+                ],
+                "kind": "org.matrix.msc3381.poll.disclosed",
+                "max_selections": 1,
+                "question": {
+                  "body": "Keep the voice bitrate at 96 kbps?",
+                  "msgtype": "m.text",
+                  "org.matrix.msc1767.text": "Keep the voice bitrate at 96 kbps?"
+                }
+              }
+            },
+            "id": "$w3-sample-poll-7",
+            "sender": "@tester3:example.com",
+            "ts": 63600000,
+            "type": "org.matrix.msc3381.poll.start"
+          }
+        ]
+      ],
+      "me": "@tester3:example.com"
+    }
+  ],
+  "samples": [
+    {
+      "answers": [
+        [
+          "valheim",
+          "Valheim"
+        ],
+        [
+          "zomboid",
+          "Project Zomboid"
+        ],
+        [
+          "league",
+          "League of Legends"
+        ],
+        [
+          "finals",
+          "The Finals"
+        ]
+      ],
+      "at": [
+        20,
+        30
+      ],
+      "ended": false,
+      "id": "$w3-sample-poll-1",
+      "kind": "disclosed",
+      "mine": false,
+      "question": "What are we playing tonight?",
+      "sender": "@Ana:sample.invalid",
+      "votes": [
+        [
+          "@Ana:sample.invalid",
+          "valheim"
+        ],
+        [
+          "@Bo:sample.invalid",
+          "valheim"
+        ],
+        [
+          "@Cy:sample.invalid",
+          "zomboid"
+        ],
+        [
+          "me",
+          "valheim"
+        ]
+      ]
+    },
+    {
+      "answers": [
+        [
+          "8pm",
+          "8 PM"
+        ],
+        [
+          "9pm",
+          "9 PM"
+        ],
+        [
+          "10pm",
+          "10 PM"
+        ]
+      ],
+      "at": [
+        20,
+        36
+      ],
+      "ended": false,
+      "id": "$w3-sample-poll-2",
+      "kind": "undisclosed",
+      "mine": true,
+      "question": "Start time for raid night?",
+      "sender": "",
+      "votes": [
+        [
+          "@Bo:sample.invalid",
+          "9pm"
+        ],
+        [
+          "@Dee:sample.invalid",
+          "8pm"
+        ]
+      ]
+    },
+    {
+      "answers": [
+        [
+          "elder",
+          "The Elder"
+        ],
+        [
+          "moder",
+          "Moder"
+        ],
+        [
+          "yagluth",
+          "Yagluth"
+        ]
+      ],
+      "at": [
+        20,
+        42
+      ],
+      "ended": true,
+      "id": "$w3-sample-poll-3",
+      "kind": "disclosed",
+      "mine": false,
+      "question": "Best boss so far?",
+      "sender": "@Bo:sample.invalid",
+      "votes": [
+        [
+          "@Ana:sample.invalid",
+          "moder"
+        ],
+        [
+          "@Bo:sample.invalid",
+          "yagluth"
+        ],
+        [
+          "@Cy:sample.invalid",
+          "moder"
+        ],
+        [
+          "me",
+          "elder"
+        ]
+      ]
+    }
+  ],
+  "widget": [
+    {
+      "answers": [
+        [
+          "meadows",
+          "Meadows"
+        ],
+        [
+          "swamp",
+          "Swamp"
+        ],
+        [
+          "mountains",
+          "Mountains"
+        ]
+      ],
+      "at": [
+        19,
+        50
+      ],
+      "ended": false,
+      "id": "$w3-sample-poll-4",
+      "kind": "disclosed",
+      "mine": false,
+      "question": "Which biome for Friday?",
+      "sender": "@Cy:sample.invalid",
+      "votes": [
+        [
+          "@Cy:sample.invalid",
+          "swamp"
+        ],
+        [
+          "@Dee:sample.invalid",
+          "meadows"
+        ]
+      ]
+    },
+    {
+      "answers": [
+        [
+          "pizza",
+          "Pizza"
+        ],
+        [
+          "tacos",
+          "Tacos"
+        ]
+      ],
+      "at": [
+        19,
+        20
+      ],
+      "ended": false,
+      "id": "$w3-sample-poll-5",
+      "kind": "disclosed",
+      "mine": false,
+      "question": "Pizza or tacos for game night?",
+      "sender": "@Dee:sample.invalid",
+      "votes": [
+        [
+          "me",
+          "tacos"
+        ],
+        [
+          "@Ana:sample.invalid",
+          "pizza"
+        ],
+        [
+          "@Eli:sample.invalid",
+          "tacos"
+        ]
+      ]
+    },
+    {
+      "answers": [
+        [
+          "yes",
+          "Yes, a fresh start"
+        ],
+        [
+          "no",
+          "No, keep it"
+        ]
+      ],
+      "at": [
+        18,
+        5
+      ],
+      "ended": false,
+      "id": "$w3-sample-poll-6",
+      "kind": "undisclosed",
+      "mine": false,
+      "question": "Should we restart the Valheim world after the next patch?",
+      "sender": "@Eli:sample.invalid",
+      "votes": [
+        [
+          "@Fay:sample.invalid",
+          "no"
+        ]
+      ]
+    },
+    {
+      "answers": [
+        [
+          "keep",
+          "Keep it"
+        ],
+        [
+          "raise",
+          "Raise it"
+        ]
+      ],
+      "at": [
+        17,
+        40
+      ],
+      "ended": false,
+      "id": "$w3-sample-poll-7",
+      "kind": "disclosed",
+      "mine": true,
+      "question": "Keep the voice bitrate at 96 kbps?",
+      "sender": "",
+      "votes": []
+    }
+  ]
+}

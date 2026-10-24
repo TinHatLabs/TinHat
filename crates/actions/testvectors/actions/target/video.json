@@ -1,0 +1,101 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "queue"
+        }
+      },
+      "input": {
+        "action": "watchParty.queue",
+        "target": {
+          "op": "queue"
+        }
+      },
+      "name": "watchParty.queue: param op=queue"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "playNow"
+        }
+      },
+      "input": {
+        "action": "watchParty.queue",
+        "target": {
+          "op": "playNow"
+        }
+      },
+      "name": "watchParty.queue: param op=playNow"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "op",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.queue",
+        "target": {
+          "op": "zz"
+        }
+      },
+      "name": "watchParty.queue: param op invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.queue",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "watchParty.queue: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.queue",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "watchParty.queue: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.queue",
+        "target": "x"
+      },
+      "name": "watchParty.queue: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "watchParty.queue"
+      },
+      "name": "watchParty.queue: no target"
+    }
+  ],
+  "kind": "target"
+}

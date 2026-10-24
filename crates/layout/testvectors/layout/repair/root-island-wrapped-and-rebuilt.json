@@ -1,0 +1,126 @@
+{
+  "expect": {
+    "form": {
+      "root": {
+        "c": [
+          {
+            "c": [
+              {
+                "i": "nav",
+                "size": {
+                  "share": 1
+                },
+                "t": "island"
+              },
+              {
+                "i": "dms",
+                "t": "island"
+              },
+              {
+                "c": [
+                  {
+                    "i": "spaces",
+                    "size": {
+                      "share": 1
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "c": [
+                      {
+                        "i": "rooms",
+                        "size": {
+                          "share": 1
+                        },
+                        "t": "island"
+                      },
+                      {
+                        "i": "widgets",
+                        "t": "island"
+                      },
+                      {
+                        "i": "account",
+                        "t": "island"
+                      }
+                    ],
+                    "id": "n5",
+                    "t": "col"
+                  }
+                ],
+                "id": "n4",
+                "t": "row"
+              }
+            ],
+            "id": "n3",
+            "t": "col"
+          },
+          {
+            "c": [
+              {
+                "i": "header",
+                "t": "island"
+              },
+              {
+                "i": "call",
+                "t": "island"
+              },
+              {
+                "c": [
+                  {
+                    "c": [
+                      {
+                        "i": "timeline",
+                        "size": {
+                          "share": 1
+                        },
+                        "t": "island"
+                      },
+                      {
+                        "i": "composer",
+                        "t": "island"
+                      }
+                    ],
+                    "id": "n1",
+                    "size": {
+                      "share": 1
+                    },
+                    "t": "col"
+                  },
+                  {
+                    "i": "panel",
+                    "t": "island"
+                  }
+                ],
+                "id": "n6",
+                "size": {
+                  "share": 1
+                },
+                "t": "row"
+              }
+            ],
+            "id": "n2",
+            "t": "col"
+          }
+        ],
+        "id": "body",
+        "t": "row"
+      }
+    },
+    "notes": [
+      "root-wrapped body",
+      "restored-required composer",
+      "restored-required call",
+      "restored-missing nav",
+      "restored-missing dms",
+      "restored-missing spaces",
+      "restored-missing rooms",
+      "restored-missing widgets",
+      "restored-missing account",
+      "restored-missing header",
+      "restored-missing panel"
+    ]
+  },
+  "kind": "repair",
+  "target": "desktop",
+  "text": "{\"root\":{\"t\":\"island\",\"i\":\"timeline\"}}"
+}

@@ -1,0 +1,546 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "name": "yt watch"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+      "name": "yt watch bare host"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&feature=share",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&feature=share",
+      "name": "yt mobile"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube",
+        "start": 90
+      },
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90",
+      "name": "yt watch t=90"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=1h2m3s",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube",
+        "start": 3723
+      },
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=1h2m3s",
+      "name": "yt watch t=1h2m3s"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/watch?start=30&v=dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube",
+        "start": 30
+      },
+      "input": "https://www.youtube.com/watch?start=30&v=dQw4w9WgXcQ",
+      "name": "yt watch start="
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+        "kind": "youtube",
+        "list": "PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+      "name": "yt watch with list"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://youtu.be/dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://youtu.be/dQw4w9WgXcQ",
+      "name": "youtu.be"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://youtu.be/dQw4w9WgXcQ?t=1m2s",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube",
+        "start": 62
+      },
+      "input": "https://youtu.be/dQw4w9WgXcQ?t=1m2s",
+      "name": "youtu.be t=1m2s"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      "name": "yt shorts"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/live/dQw4w9WgXcQ?feature=share",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/live/dQw4w9WgXcQ?feature=share",
+      "name": "yt live"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1",
+      "name": "yt embed"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://www.youtube.com/v/dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/v/dQw4w9WgXcQ",
+      "name": "yt v path"
+    },
+    {
+      "expect": {
+        "entity": "playlist",
+        "id": "PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+        "input": "https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+        "kind": "playlist",
+        "playUrl": "https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf",
+      "name": "yt playlist"
+    },
+    {
+      "expect": {
+        "handle": "@LinusTechTips",
+        "id": "@LinusTechTips",
+        "input": "https://www.youtube.com/@LinusTechTips",
+        "kind": "channel",
+        "playUrl": "https://www.youtube.com/@LinusTechTips",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/@LinusTechTips",
+      "name": "yt channel handle"
+    },
+    {
+      "expect": {
+        "id": "UCXuqSBlHAE6Xw-yeJA0Tunw",
+        "input": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw",
+        "kind": "channel",
+        "playUrl": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw",
+      "name": "yt channel id"
+    },
+    {
+      "expect": {
+        "id": "LinusTechTips",
+        "input": "https://www.youtube.com/c/LinusTechTips",
+        "kind": "channel",
+        "playUrl": "https://www.youtube.com/c/LinusTechTips",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/c/LinusTechTips",
+      "name": "yt channel c"
+    },
+    {
+      "expect": {
+        "id": "LinusTechTips",
+        "input": "https://www.youtube.com/user/LinusTechTips/videos",
+        "kind": "channel",
+        "playUrl": "https://www.youtube.com/user/LinusTechTips",
+        "service": "youtube"
+      },
+      "input": "https://www.youtube.com/user/LinusTechTips/videos",
+      "name": "yt user"
+    },
+    {
+      "expect": {
+        "input": "https://www.youtube.com/watch?v=abc",
+        "kind": "link",
+        "playUrl": "https://www.youtube.com/watch?v=abc"
+      },
+      "input": "https://www.youtube.com/watch?v=abc",
+      "name": "yt bad id"
+    },
+    {
+      "expect": {
+        "input": "https://www.youtube.com/",
+        "kind": "link",
+        "playUrl": "https://www.youtube.com/"
+      },
+      "input": "https://www.youtube.com/",
+      "name": "yt home"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://music.youtube.com/watch?v=dQw4w9WgXcQ&list=RDAMVMdQw4w9WgXcQ",
+        "kind": "ytmusic",
+        "list": "RDAMVMdQw4w9WgXcQ",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "ytmusic"
+      },
+      "input": "https://music.youtube.com/watch?v=dQw4w9WgXcQ&list=RDAMVMdQw4w9WgXcQ",
+      "name": "ytmusic watch"
+    },
+    {
+      "expect": {
+        "entity": "playlist",
+        "id": "OLAK5uy_kWx1YoGzHyK4xNq6b4Q8zkQ3rTl4iSdiE",
+        "input": "https://music.youtube.com/playlist?list=OLAK5uy_kWx1YoGzHyK4xNq6b4Q8zkQ3rTl4iSdiE",
+        "kind": "playlist",
+        "playUrl": "https://www.youtube.com/playlist?list=OLAK5uy_kWx1YoGzHyK4xNq6b4Q8zkQ3rTl4iSdiE",
+        "service": "ytmusic"
+      },
+      "input": "https://music.youtube.com/playlist?list=OLAK5uy_kWx1YoGzHyK4xNq6b4Q8zkQ3rTl4iSdiE",
+      "name": "ytmusic playlist"
+    },
+    {
+      "expect": {
+        "entity": "track",
+        "id": "4cOdK2wGLETKBW3PvgPWqT",
+        "input": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=abc123",
+        "kind": "spotify",
+        "playUrl": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+        "service": "spotify"
+      },
+      "input": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=abc123",
+      "name": "spotify track"
+    },
+    {
+      "expect": {
+        "entity": "track",
+        "id": "4cOdK2wGLETKBW3PvgPWqT",
+        "input": "https://open.spotify.com/intl-de/track/4cOdK2wGLETKBW3PvgPWqT",
+        "kind": "spotify",
+        "playUrl": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+        "service": "spotify"
+      },
+      "input": "https://open.spotify.com/intl-de/track/4cOdK2wGLETKBW3PvgPWqT",
+      "name": "spotify intl track"
+    },
+    {
+      "expect": {
+        "entity": "album",
+        "id": "6dVIqQ8qmQ5GBnJ9shOYGE",
+        "input": "https://open.spotify.com/album/6dVIqQ8qmQ5GBnJ9shOYGE",
+        "kind": "spotify",
+        "playUrl": "https://open.spotify.com/album/6dVIqQ8qmQ5GBnJ9shOYGE",
+        "service": "spotify"
+      },
+      "input": "https://open.spotify.com/album/6dVIqQ8qmQ5GBnJ9shOYGE",
+      "name": "spotify album"
+    },
+    {
+      "expect": {
+        "entity": "playlist",
+        "id": "37i9dQZF1DXcBWIGoYBM5M",
+        "input": "https://open.spotify.com/intl-pt/playlist/37i9dQZF1DXcBWIGoYBM5M",
+        "kind": "spotify",
+        "playUrl": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+        "service": "spotify"
+      },
+      "input": "https://open.spotify.com/intl-pt/playlist/37i9dQZF1DXcBWIGoYBM5M",
+      "name": "spotify playlist"
+    },
+    {
+      "expect": {
+        "entity": "track",
+        "id": "4cOdK2wGLETKBW3PvgPWqT",
+        "input": "spotify:track:4cOdK2wGLETKBW3PvgPWqT",
+        "kind": "spotify",
+        "playUrl": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+        "service": "spotify"
+      },
+      "input": "spotify:track:4cOdK2wGLETKBW3PvgPWqT",
+      "name": "spotify uri"
+    },
+    {
+      "expect": {
+        "input": "https://open.spotify.com/artist/0OdUWJ0sBjDrqHygGUXeCF",
+        "kind": "link",
+        "playUrl": "https://open.spotify.com/artist/0OdUWJ0sBjDrqHygGUXeCF"
+      },
+      "input": "https://open.spotify.com/artist/0OdUWJ0sBjDrqHygGUXeCF",
+      "name": "spotify artist (not a song)"
+    },
+    {
+      "expect": {
+        "entity": "track",
+        "id": "1440857901",
+        "input": "https://music.apple.com/us/album/never-gonna-give-you-up/1440857781?i=1440857901",
+        "kind": "apple",
+        "playUrl": "https://music.apple.com/us/album/never-gonna-give-you-up/1440857781?i=1440857901",
+        "service": "apple"
+      },
+      "input": "https://music.apple.com/us/album/never-gonna-give-you-up/1440857781?i=1440857901",
+      "name": "apple album track"
+    },
+    {
+      "expect": {
+        "entity": "album",
+        "id": "1440857781",
+        "input": "https://music.apple.com/gb/album/whenever-you-need-somebody/1440857781",
+        "kind": "apple",
+        "playUrl": "https://music.apple.com/gb/album/whenever-you-need-somebody/1440857781",
+        "service": "apple"
+      },
+      "input": "https://music.apple.com/gb/album/whenever-you-need-somebody/1440857781",
+      "name": "apple album"
+    },
+    {
+      "expect": {
+        "entity": "track",
+        "id": "1440857901",
+        "input": "https://music.apple.com/us/song/never-gonna-give-you-up/1440857901",
+        "kind": "apple",
+        "playUrl": "https://music.apple.com/us/song/never-gonna-give-you-up/1440857901",
+        "service": "apple"
+      },
+      "input": "https://music.apple.com/us/song/never-gonna-give-you-up/1440857901",
+      "name": "apple song"
+    },
+    {
+      "expect": {
+        "entity": "playlist",
+        "id": "pl.f4d106fed2bd41149aaacabb233eb5eb",
+        "input": "https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb",
+        "kind": "apple",
+        "playUrl": "https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb",
+        "service": "apple"
+      },
+      "input": "https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb",
+      "name": "apple playlist"
+    },
+    {
+      "expect": {
+        "entity": "track",
+        "id": "1440857901",
+        "input": "https://geo.music.apple.com/us/album/x/1440857781?i=1440857901&app=music",
+        "kind": "apple",
+        "playUrl": "https://geo.music.apple.com/us/album/x/1440857781?i=1440857901&app=music",
+        "service": "apple"
+      },
+      "input": "https://geo.music.apple.com/us/album/x/1440857781?i=1440857901&app=music",
+      "name": "apple geo"
+    },
+    {
+      "expect": {
+        "entity": "album",
+        "id": "1440857781",
+        "input": "https://music.apple.com/album/x/1440857781",
+        "kind": "apple",
+        "playUrl": "https://music.apple.com/album/x/1440857781",
+        "service": "apple"
+      },
+      "input": "https://music.apple.com/album/x/1440857781",
+      "name": "apple no country"
+    },
+    {
+      "expect": {
+        "input": "https://example.com/clips/game.mp4",
+        "kind": "file",
+        "playUrl": "https://example.com/clips/game.mp4"
+      },
+      "input": "https://example.com/clips/game.mp4",
+      "name": "file mp4"
+    },
+    {
+      "expect": {
+        "input": "https://cdn.example.com/live/stream.m3u8?token=abc",
+        "kind": "file",
+        "playUrl": "https://cdn.example.com/live/stream.m3u8?token=abc"
+      },
+      "input": "https://cdn.example.com/live/stream.m3u8?token=abc",
+      "name": "file m3u8 query"
+    },
+    {
+      "expect": {
+        "input": "https://example.com/A.MP3",
+        "kind": "file",
+        "playUrl": "https://example.com/A.MP3"
+      },
+      "input": "https://example.com/A.MP3",
+      "name": "file mp3 upper"
+    },
+    {
+      "expect": {
+        "input": "tinhat-memory://!room:example.com/session-1",
+        "kind": "text"
+      },
+      "input": "tinhat-memory://!room:example.com/session-1",
+      "name": "memory url"
+    },
+    {
+      "expect": {
+        "input": "https://example.com/some/page",
+        "kind": "link",
+        "playUrl": "https://example.com/some/page"
+      },
+      "input": "https://example.com/some/page",
+      "name": "plain link"
+    },
+    {
+      "expect": {
+        "input": "https://www.twitch.tv/videos/123456789",
+        "kind": "link",
+        "playUrl": "https://www.twitch.tv/videos/123456789"
+      },
+      "input": "https://www.twitch.tv/videos/123456789",
+      "name": "twitch link"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "http://youtu.be/dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "http://youtu.be/dQw4w9WgXcQ",
+      "name": "http scheme"
+    },
+    {
+      "expect": {
+        "input": "lofi hip hop radio",
+        "kind": "text"
+      },
+      "input": "lofi hip hop radio",
+      "name": "words"
+    },
+    {
+      "expect": {
+        "input": "check https://youtu.be/dQw4w9WgXcQ out",
+        "kind": "text"
+      },
+      "input": "check https://youtu.be/dQw4w9WgXcQ out",
+      "name": "words with url-ish"
+    },
+    {
+      "expect": {
+        "input": "",
+        "kind": "text"
+      },
+      "input": "",
+      "name": "empty"
+    },
+    {
+      "expect": {
+        "input": "",
+        "kind": "text"
+      },
+      "input": "   ",
+      "name": "spaces"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "https://youtu.be/dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "  https://youtu.be/dQw4w9WgXcQ  ",
+      "name": "padded url"
+    },
+    {
+      "expect": {
+        "art": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "entity": "track",
+        "id": "dQw4w9WgXcQ",
+        "input": "HTTPS://WWW.YOUTUBE.COM/watch?v=dQw4w9WgXcQ",
+        "kind": "youtube",
+        "playUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "service": "youtube"
+      },
+      "input": "HTTPS://WWW.YOUTUBE.COM/watch?v=dQw4w9WgXcQ",
+      "name": "uppercase host"
+    }
+  ],
+  "doc": "Media Party link parsing (links.ts / medialinks.rs): input → the parsed link.",
+  "kind": "parseMediaLink"
+}

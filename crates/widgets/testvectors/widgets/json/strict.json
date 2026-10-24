@@ -1,0 +1,401 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "value": {}
+      },
+      "maxDepth": 16,
+      "text": "{}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": []
+      },
+      "maxDepth": 16,
+      "text": "[]"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": {}
+      },
+      "maxDepth": 16,
+      "text": " \t\r\n{} "
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "﻿{}"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "{} "
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": "x"
+      },
+      "maxDepth": 16,
+      "text": "\"x\""
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": 1
+      },
+      "maxDepth": 16,
+      "text": "1"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": 0
+      },
+      "maxDepth": 16,
+      "text": "-0"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "1e400"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "-1e400"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": 1.7976931348623157e+308
+      },
+      "maxDepth": 16,
+      "text": "1.7976931348623157e308"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": 0
+      },
+      "maxDepth": 16,
+      "text": "0.1e-400"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "01"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "1."
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": ".5"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "+1"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "--1"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "1e"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": true
+      },
+      "maxDepth": 16,
+      "text": "true"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "tru"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": null
+      },
+      "maxDepth": 16,
+      "text": "null"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "nul"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "{\"a\":1,\"a\":1}"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "{\"a\":1,\"\\u0061\":2}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": {
+          "__proto__": 1,
+          "constructor": 2
+        }
+      },
+      "maxDepth": 16,
+      "text": "{\"__proto__\":1,\"constructor\":2}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": "🎮"
+      },
+      "maxDepth": 16,
+      "text": "\"\\ud83c\\udfae\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "\"\\ud83c\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "\"\\udfae\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "\"\\ud83cx\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "\"\\ud83c\\u0041\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "\"\ud800\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "\"a\u0001b\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "\"\\x41\""
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": "é/\b\f\n\r\t\"\\"
+      },
+      "maxDepth": 16,
+      "text": "\"\\u00e9\\/\\b\\f\\n\\r\\t\\\"\\\\\""
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": "é🎮"
+      },
+      "maxDepth": 16,
+      "text": "\"é🎮\""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 1,
+      "text": "[[1]]"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": [
+          [
+            1
+          ]
+        ]
+      },
+      "maxDepth": 2,
+      "text": "[[1]]"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": [
+          1
+        ]
+      },
+      "maxDepth": 1,
+      "text": "[1]"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": 1
+      },
+      "maxDepth": 0,
+      "text": "1"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 0,
+      "text": "[]"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 2,
+      "text": "{\"a\":{\"b\":[]}}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": {
+          "a": {
+            "b": []
+          }
+        }
+      },
+      "maxDepth": 3,
+      "text": "{\"a\":{\"b\":[]}}"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "[1,]"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "[,1]"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "{\"a\":1,}"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "{\"a\" 1}"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "[1 2]"
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": ""
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "  "
+    },
+    {
+      "expect": {
+        "ok": false
+      },
+      "maxDepth": 16,
+      "text": "{}{}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "value": {
+          "a": [
+            1,
+            {
+              "b": null
+            }
+          ],
+          "c": false
+        }
+      },
+      "maxDepth": 16,
+      "text": "{\"a\":[1,{\"b\":null}],\"c\":false}"
+    }
+  ]
+}

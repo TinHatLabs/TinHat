@@ -1,0 +1,2830 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [
+          null
+        ],
+        "order": [
+          "@a:x:DEV1"
+        ],
+        "summary": {
+          "kind": "measuring"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@a:x:DEV1",
+          "inBand": null,
+          "name": "Ana",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "good"
+        ],
+        "order": [
+          "@a:x:DEV1",
+          "@b:x:DEV2"
+        ],
+        "summary": {
+          "kind": "good"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@a:x:DEV1",
+          "inBand": "good",
+          "name": "Ana",
+          "outBand": "good"
+        },
+        {
+          "cq": "good",
+          "id": "@b:x:DEV2",
+          "inBand": "good",
+          "name": "bo",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "ok",
+          "good"
+        ],
+        "order": [
+          "@a:x:DEV1",
+          "@b:x:DEV2",
+          "@c:x:DEV3"
+        ],
+        "summary": {
+          "band": "ok",
+          "id": "@a:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@a:x:DEV1",
+          "inBand": "good",
+          "name": "Ana",
+          "outBand": "ok"
+        },
+        {
+          "cq": "poor",
+          "id": "@b:x:DEV2",
+          "inBand": "good",
+          "name": "Bo",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@c:x:DEV3",
+          "inBand": "good",
+          "name": "cy",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@b:x:DEV2",
+          "@c:x:DEV3",
+          "@a:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@b:x:DEV2",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@a:x:DEV1",
+          "inBand": null,
+          "name": "Zed",
+          "outBand": null
+        },
+        {
+          "cq": "excellent",
+          "id": "@b:x:DEV2",
+          "inBand": "poor",
+          "name": "ana",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@c:x:DEV3",
+          "inBand": "poor",
+          "name": "Bo",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "good",
+          "good",
+          "good"
+        ],
+        "order": [
+          "@c:x:C",
+          "@a:x:A",
+          "@b:x:B",
+          "@d:x:D"
+        ],
+        "summary": {
+          "kind": "good"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@b:x:B",
+          "inBand": "good",
+          "name": "bo",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@a:x:A",
+          "inBand": "good",
+          "name": "Bo",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@c:x:C",
+          "inBand": "good",
+          "name": "BO",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@d:x:D",
+          "inBand": "good",
+          "name": "bo",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ],
+        "order": [
+          "@g:x:G",
+          "@h:x:H",
+          "@f:x:F",
+          "@e:x:E"
+        ],
+        "summary": {
+          "band": "ok",
+          "id": "@g:x:G",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@e:x:E",
+          "inBand": null,
+          "name": "🎮 gamer",
+          "outBand": null
+        },
+        {
+          "cq": "poor",
+          "id": "@f:x:F",
+          "inBand": null,
+          "name": "ｘylo",
+          "outBand": null
+        },
+        {
+          "cq": "poor",
+          "id": "@g:x:G",
+          "inBand": null,
+          "name": "Élan",
+          "outBand": null
+        },
+        {
+          "cq": "poor",
+          "id": "@h:x:H",
+          "inBand": null,
+          "name": "élan",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          null,
+          null
+        ],
+        "order": [
+          "@v:x:V",
+          "@u:x:U"
+        ],
+        "summary": {
+          "kind": "measuring"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@u:x:U",
+          "inBand": "bad",
+          "name": "unknown",
+          "outBand": "worse"
+        },
+        {
+          "cq": "",
+          "id": "@v:x:V",
+          "inBand": null,
+          "name": "",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good",
+          "ok"
+        ],
+        "order": [
+          "@f:x:DEV1",
+          "@e:x:DEV2",
+          "@d:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@f:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@d:x:DEV0",
+          "inBand": "ok",
+          "name": "🎮 gamer",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@f:x:DEV1",
+          "inBand": null,
+          "name": "motley",
+          "outBand": "poor"
+        },
+        {
+          "cq": "excellent",
+          "id": "@e:x:DEV2",
+          "inBand": null,
+          "name": "élan",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "ok",
+          "good",
+          "ok"
+        ],
+        "order": [
+          "@a:x:DEV0",
+          "@c:x:DEV2",
+          "@g:x:DEV1",
+          "@d:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@a:x:DEV0",
+          "inBand": "ok",
+          "name": "_under",
+          "outBand": "poor"
+        },
+        {
+          "cq": "",
+          "id": "@g:x:DEV1",
+          "inBand": "good",
+          "name": "motley",
+          "outBand": "good"
+        },
+        {
+          "cq": "poor",
+          "id": "@c:x:DEV2",
+          "inBand": "bad",
+          "name": "_under",
+          "outBand": "good"
+        },
+        {
+          "cq": null,
+          "id": "@d:x:DEV3",
+          "inBand": null,
+          "name": "élan",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor"
+        ],
+        "order": [
+          "@e:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@e:x:DEV0",
+          "inBand": "poor",
+          "name": "ß",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "ok"
+        ],
+        "order": [
+          "@h:x:DEV1",
+          "@h:x:DEV0"
+        ],
+        "summary": {
+          "band": "ok",
+          "id": "@h:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@h:x:DEV0",
+          "inBand": null,
+          "name": "motley",
+          "outBand": "bad"
+        },
+        {
+          "cq": "good",
+          "id": "@h:x:DEV1",
+          "inBand": null,
+          "name": "_under",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "poor",
+          "poor",
+          "poor",
+          "poor",
+          "good"
+        ],
+        "order": [
+          "@b:x:DEV3",
+          "@a:x:DEV5",
+          "@d:x:DEV0",
+          "@g:x:DEV2",
+          "@g:x:DEV4",
+          "@f:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV5",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@d:x:DEV0",
+          "inBand": "poor",
+          "name": "bo",
+          "outBand": "ok"
+        },
+        {
+          "cq": null,
+          "id": "@f:x:DEV1",
+          "inBand": "bad",
+          "name": "ｘylo",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@g:x:DEV2",
+          "inBand": null,
+          "name": "Ärger",
+          "outBand": "poor"
+        },
+        {
+          "cq": "unknown",
+          "id": "@b:x:DEV3",
+          "inBand": "ok",
+          "name": "_under",
+          "outBand": "ok"
+        },
+        {
+          "cq": "excellent",
+          "id": "@g:x:DEV4",
+          "inBand": "poor",
+          "name": "Ärger",
+          "outBand": "bad"
+        },
+        {
+          "cq": null,
+          "id": "@a:x:DEV5",
+          "inBand": "poor",
+          "name": "Ana",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "ok",
+          null
+        ],
+        "order": [
+          "@b:x:DEV1",
+          "@d:x:DEV0",
+          "@e:x:DEV2"
+        ],
+        "summary": {
+          "band": "ok",
+          "id": "@b:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@d:x:DEV0",
+          "inBand": "ok",
+          "name": "élan",
+          "outBand": "good"
+        },
+        {
+          "cq": "unknown",
+          "id": "@b:x:DEV1",
+          "inBand": "ok",
+          "name": "4k",
+          "outBand": "ok"
+        },
+        {
+          "cq": "",
+          "id": "@e:x:DEV2",
+          "inBand": null,
+          "name": "élan",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "poor",
+          "ok",
+          "ok",
+          "good"
+        ],
+        "order": [
+          "@c:x:DEV2",
+          "@g:x:DEV4",
+          "@h:x:DEV1",
+          "@h:x:DEV0",
+          "@b:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@g:x:DEV4",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@h:x:DEV0",
+          "inBand": "bad",
+          "name": "motley",
+          "outBand": "ok"
+        },
+        {
+          "cq": "poor",
+          "id": "@h:x:DEV1",
+          "inBand": "good",
+          "name": "Cy",
+          "outBand": "ok"
+        },
+        {
+          "cq": "",
+          "id": "@c:x:DEV2",
+          "inBand": "bad",
+          "name": "",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@b:x:DEV3",
+          "inBand": "bad",
+          "name": "Élan",
+          "outBand": "good"
+        },
+        {
+          "cq": "poor",
+          "id": "@g:x:DEV4",
+          "inBand": "poor",
+          "name": "Bo",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good",
+          null,
+          "ok",
+          "poor"
+        ],
+        "order": [
+          "@d:x:DEV4",
+          "@g:x:DEV1",
+          "@h:x:DEV2",
+          "@f:x:DEV0",
+          "@d:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@d:x:DEV4",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@f:x:DEV0",
+          "inBand": "bad",
+          "name": "zed",
+          "outBand": "ok"
+        },
+        {
+          "cq": "excellent",
+          "id": "@g:x:DEV1",
+          "inBand": "bad",
+          "name": "",
+          "outBand": "good"
+        },
+        {
+          "cq": "",
+          "id": "@h:x:DEV2",
+          "inBand": null,
+          "name": "_under",
+          "outBand": "bad"
+        },
+        {
+          "cq": "lost",
+          "id": "@d:x:DEV3",
+          "inBand": "ok",
+          "name": "élan",
+          "outBand": null
+        },
+        {
+          "cq": "unknown",
+          "id": "@d:x:DEV4",
+          "inBand": "ok",
+          "name": "",
+          "outBand": "poor"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "poor",
+          "ok",
+          "poor"
+        ],
+        "order": [
+          "@d:x:DEV1",
+          "@a:x:DEV0",
+          "@g:x:DEV3",
+          "@b:x:DEV2"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@a:x:DEV0",
+          "inBand": "poor",
+          "name": "Cy",
+          "outBand": "ok"
+        },
+        {
+          "cq": "good",
+          "id": "@d:x:DEV1",
+          "inBand": null,
+          "name": "BO",
+          "outBand": "bad"
+        },
+        {
+          "cq": "",
+          "id": "@b:x:DEV2",
+          "inBand": "poor",
+          "name": "ｘylo",
+          "outBand": "poor"
+        },
+        {
+          "cq": "good",
+          "id": "@g:x:DEV3",
+          "inBand": "ok",
+          "name": "motley",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "ok",
+          "poor",
+          null,
+          "poor"
+        ],
+        "order": [
+          "@h:x:DEV1",
+          "@e:x:DEV2",
+          "@g:x:DEV0",
+          "@h:x:DEV3",
+          "@b:x:DEV4"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@h:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@g:x:DEV0",
+          "inBand": "ok",
+          "name": "Ärger",
+          "outBand": "poor"
+        },
+        {
+          "cq": "lost",
+          "id": "@h:x:DEV1",
+          "inBand": null,
+          "name": "_under",
+          "outBand": "poor"
+        },
+        {
+          "cq": "poor",
+          "id": "@e:x:DEV2",
+          "inBand": "bad",
+          "name": "bo",
+          "outBand": "bad"
+        },
+        {
+          "cq": "",
+          "id": "@h:x:DEV3",
+          "inBand": "bad",
+          "name": "Ärger",
+          "outBand": null
+        },
+        {
+          "cq": "good",
+          "id": "@b:x:DEV4",
+          "inBand": "poor",
+          "name": "Élan",
+          "outBand": "poor"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@a:x:DEV0",
+          "@e:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@a:x:DEV0",
+          "inBand": "ok",
+          "name": " ",
+          "outBand": "bad"
+        },
+        {
+          "cq": "good",
+          "id": "@e:x:DEV1",
+          "inBand": "poor",
+          "name": "Mötley",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          "good",
+          "ok",
+          "good"
+        ],
+        "order": [
+          "@a:x:DEV2",
+          "@a:x:DEV0",
+          "@d:x:DEV4",
+          "@h:x:DEV1",
+          "@d:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV2",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@a:x:DEV0",
+          "inBand": "bad",
+          "name": "BO",
+          "outBand": "poor"
+        },
+        {
+          "cq": "poor",
+          "id": "@h:x:DEV1",
+          "inBand": null,
+          "name": "ß",
+          "outBand": null
+        },
+        {
+          "cq": "excellent",
+          "id": "@a:x:DEV2",
+          "inBand": "poor",
+          "name": "4k",
+          "outBand": "bad"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@d:x:DEV3",
+          "inBand": "good",
+          "name": "élan",
+          "outBand": null
+        },
+        {
+          "cq": "good",
+          "id": "@d:x:DEV4",
+          "inBand": "bad",
+          "name": "BO",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "ok",
+          "poor",
+          "poor",
+          "good",
+          "ok"
+        ],
+        "order": [
+          "@c:x:DEV5",
+          "@c:x:DEV0",
+          "@f:x:DEV1",
+          "@e:x:DEV2",
+          "@h:x:DEV3",
+          "@d:x:DEV4"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@c:x:DEV5",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "EXCELLENT",
+          "id": "@c:x:DEV0",
+          "inBand": "good",
+          "name": "bo",
+          "outBand": "ok"
+        },
+        {
+          "cq": "lost",
+          "id": "@f:x:DEV1",
+          "inBand": "ok",
+          "name": "Ärger",
+          "outBand": "ok"
+        },
+        {
+          "cq": null,
+          "id": "@e:x:DEV2",
+          "inBand": "bad",
+          "name": "Élan",
+          "outBand": "poor"
+        },
+        {
+          "cq": "excellent",
+          "id": "@h:x:DEV3",
+          "inBand": null,
+          "name": "Élan",
+          "outBand": null
+        },
+        {
+          "cq": "good",
+          "id": "@d:x:DEV4",
+          "inBand": "ok",
+          "name": "ß",
+          "outBand": "ok"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@c:x:DEV5",
+          "inBand": null,
+          "name": " ",
+          "outBand": "poor"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "poor",
+          "poor",
+          null,
+          "ok"
+        ],
+        "order": [
+          "@d:x:DEV0",
+          "@a:x:DEV1",
+          "@a:x:DEV3",
+          "@e:x:DEV2",
+          "@h:x:DEV4"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@d:x:DEV0",
+          "inBand": null,
+          "name": "",
+          "outBand": null
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@a:x:DEV1",
+          "inBand": "poor",
+          "name": "Ana",
+          "outBand": null
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@e:x:DEV2",
+          "inBand": "bad",
+          "name": "Zed",
+          "outBand": "bad"
+        },
+        {
+          "cq": "lost",
+          "id": "@a:x:DEV3",
+          "inBand": "good",
+          "name": "Ana",
+          "outBand": "good"
+        },
+        {
+          "cq": "good",
+          "id": "@h:x:DEV4",
+          "inBand": null,
+          "name": "élan",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "poor",
+          "poor",
+          "ok",
+          "ok",
+          "poor"
+        ],
+        "order": [
+          "@g:x:DEV1",
+          "@b:x:DEV2",
+          "@a:x:DEV3",
+          "@e:x:DEV4",
+          "@c:x:DEV5",
+          "@c:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@b:x:DEV2",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@c:x:DEV0",
+          "inBand": "poor",
+          "name": "🎮 gamer",
+          "outBand": "good"
+        },
+        {
+          "cq": "unknown",
+          "id": "@g:x:DEV1",
+          "inBand": "good",
+          "name": "4k",
+          "outBand": "bad"
+        },
+        {
+          "cq": "lost",
+          "id": "@b:x:DEV2",
+          "inBand": "ok",
+          "name": "_under",
+          "outBand": "ok"
+        },
+        {
+          "cq": "good",
+          "id": "@a:x:DEV3",
+          "inBand": "poor",
+          "name": "BO",
+          "outBand": "ok"
+        },
+        {
+          "cq": "poor",
+          "id": "@e:x:DEV4",
+          "inBand": "bad",
+          "name": "Zed",
+          "outBand": null
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@c:x:DEV5",
+          "inBand": "bad",
+          "name": "ｘylo",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "good",
+          "poor",
+          null,
+          "ok",
+          "ok"
+        ],
+        "order": [
+          "@e:x:DEV1",
+          "@g:x:DEV0",
+          "@f:x:DEV5",
+          "@h:x:DEV2",
+          "@a:x:DEV4",
+          "@d:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@f:x:DEV5",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@g:x:DEV0",
+          "inBand": "good",
+          "name": " ",
+          "outBand": "good"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@e:x:DEV1",
+          "inBand": null,
+          "name": "",
+          "outBand": "ok"
+        },
+        {
+          "cq": null,
+          "id": "@h:x:DEV2",
+          "inBand": null,
+          "name": "ana",
+          "outBand": "bad"
+        },
+        {
+          "cq": null,
+          "id": "@d:x:DEV3",
+          "inBand": "ok",
+          "name": "Élan",
+          "outBand": "ok"
+        },
+        {
+          "cq": "excellent",
+          "id": "@a:x:DEV4",
+          "inBand": "ok",
+          "name": "Zed",
+          "outBand": "ok"
+        },
+        {
+          "cq": "lost",
+          "id": "@f:x:DEV5",
+          "inBand": "good",
+          "name": "ana",
+          "outBand": "poor"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good",
+          "ok",
+          "ok"
+        ],
+        "order": [
+          "@d:x:DEV2",
+          "@e:x:DEV0",
+          "@c:x:DEV1",
+          "@a:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@d:x:DEV2",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "EXCELLENT",
+          "id": "@e:x:DEV0",
+          "inBand": "bad",
+          "name": "Mötley",
+          "outBand": "good"
+        },
+        {
+          "cq": null,
+          "id": "@c:x:DEV1",
+          "inBand": "ok",
+          "name": "zed",
+          "outBand": null
+        },
+        {
+          "cq": null,
+          "id": "@d:x:DEV2",
+          "inBand": "poor",
+          "name": " ",
+          "outBand": "poor"
+        },
+        {
+          "cq": "poor",
+          "id": "@a:x:DEV3",
+          "inBand": "good",
+          "name": "ß",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@e:x:DEV1",
+          "@g:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@g:x:DEV0",
+          "inBand": "bad",
+          "name": "_under",
+          "outBand": "poor"
+        },
+        {
+          "cq": "poor",
+          "id": "@e:x:DEV1",
+          "inBand": "poor",
+          "name": "",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "good"
+        ],
+        "order": [
+          "@b:x:DEV0",
+          "@e:x:DEV1"
+        ],
+        "summary": {
+          "band": "ok",
+          "id": "@b:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@b:x:DEV0",
+          "inBand": "bad",
+          "name": "_under",
+          "outBand": "good"
+        },
+        {
+          "cq": "excellent",
+          "id": "@e:x:DEV1",
+          "inBand": "bad",
+          "name": "🎮 gamer",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          "good"
+        ],
+        "order": [
+          "@c:x:DEV1",
+          "@d:x:DEV2",
+          "@d:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@c:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "EXCELLENT",
+          "id": "@d:x:DEV0",
+          "inBand": null,
+          "name": "élan",
+          "outBand": "good"
+        },
+        {
+          "cq": "poor",
+          "id": "@c:x:DEV1",
+          "inBand": "bad",
+          "name": "motley",
+          "outBand": "poor"
+        },
+        {
+          "cq": "lost",
+          "id": "@d:x:DEV2",
+          "inBand": "poor",
+          "name": "zed",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good"
+        ],
+        "order": [
+          "@b:x:DEV0",
+          "@e:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@b:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@b:x:DEV0",
+          "inBand": "poor",
+          "name": "Bo",
+          "outBand": "ok"
+        },
+        {
+          "cq": "good",
+          "id": "@e:x:DEV1",
+          "inBand": "good",
+          "name": "zed",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "poor",
+          "poor",
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@b:x:DEV1",
+          "@a:x:DEV3",
+          "@a:x:DEV0",
+          "@c:x:DEV4",
+          "@d:x:DEV2"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV3",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@a:x:DEV0",
+          "inBand": "poor",
+          "name": "Cy",
+          "outBand": "ok"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@b:x:DEV1",
+          "inBand": null,
+          "name": "",
+          "outBand": "ok"
+        },
+        {
+          "cq": "good",
+          "id": "@d:x:DEV2",
+          "inBand": "poor",
+          "name": "élan",
+          "outBand": null
+        },
+        {
+          "cq": "lost",
+          "id": "@a:x:DEV3",
+          "inBand": "good",
+          "name": "_under",
+          "outBand": null
+        },
+        {
+          "cq": "lost",
+          "id": "@c:x:DEV4",
+          "inBand": null,
+          "name": "Élan",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@a:x:DEV0",
+          "@b:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@a:x:DEV0",
+          "inBand": "bad",
+          "name": "",
+          "outBand": "poor"
+        },
+        {
+          "cq": null,
+          "id": "@b:x:DEV1",
+          "inBand": "poor",
+          "name": "zed",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good"
+        ],
+        "order": [
+          "@h:x:DEV0"
+        ],
+        "summary": {
+          "kind": "good"
+        }
+      },
+      "people": [
+        {
+          "cq": "good",
+          "id": "@h:x:DEV0",
+          "inBand": null,
+          "name": "ß",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok"
+        ],
+        "order": [
+          "@d:x:DEV0"
+        ],
+        "summary": {
+          "band": "ok",
+          "id": "@d:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@d:x:DEV0",
+          "inBand": "ok",
+          "name": "zed",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor"
+        ],
+        "order": [
+          "@a:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@a:x:DEV0",
+          "inBand": "poor",
+          "name": "ß",
+          "outBand": "poor"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          null,
+          "poor",
+          "poor",
+          "poor",
+          "good"
+        ],
+        "order": [
+          "@b:x:DEV0",
+          "@a:x:DEV2",
+          "@g:x:DEV4",
+          "@c:x:DEV3",
+          "@e:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV2",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@b:x:DEV0",
+          "inBand": null,
+          "name": "",
+          "outBand": "bad"
+        },
+        {
+          "cq": "excellent",
+          "id": "@e:x:DEV1",
+          "inBand": null,
+          "name": "ß",
+          "outBand": null
+        },
+        {
+          "cq": "poor",
+          "id": "@a:x:DEV2",
+          "inBand": "poor",
+          "name": "4k",
+          "outBand": null
+        },
+        {
+          "cq": "unknown",
+          "id": "@c:x:DEV3",
+          "inBand": "poor",
+          "name": "Bo",
+          "outBand": "ok"
+        },
+        {
+          "cq": "",
+          "id": "@g:x:DEV4",
+          "inBand": "poor",
+          "name": "ana",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          null,
+          "poor",
+          "ok",
+          "ok"
+        ],
+        "order": [
+          "@b:x:DEV0",
+          "@c:x:DEV2",
+          "@h:x:DEV3",
+          "@g:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@c:x:DEV2",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@b:x:DEV0",
+          "inBand": null,
+          "name": " ",
+          "outBand": "bad"
+        },
+        {
+          "cq": "",
+          "id": "@g:x:DEV1",
+          "inBand": "ok",
+          "name": "Élan",
+          "outBand": "bad"
+        },
+        {
+          "cq": null,
+          "id": "@c:x:DEV2",
+          "inBand": "poor",
+          "name": "motley",
+          "outBand": null
+        },
+        {
+          "cq": "poor",
+          "id": "@h:x:DEV3",
+          "inBand": "good",
+          "name": "motley",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good",
+          "poor",
+          "good",
+          "ok",
+          "ok"
+        ],
+        "order": [
+          "@b:x:DEV5",
+          "@f:x:DEV2",
+          "@h:x:DEV4",
+          "@b:x:DEV0",
+          "@e:x:DEV1",
+          "@e:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@b:x:DEV5",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@b:x:DEV0",
+          "inBand": "bad",
+          "name": "bo",
+          "outBand": "good"
+        },
+        {
+          "cq": "good",
+          "id": "@e:x:DEV1",
+          "inBand": "ok",
+          "name": "Ärger",
+          "outBand": "ok"
+        },
+        {
+          "cq": "good",
+          "id": "@f:x:DEV2",
+          "inBand": null,
+          "name": "Bo",
+          "outBand": "bad"
+        },
+        {
+          "cq": "",
+          "id": "@e:x:DEV3",
+          "inBand": "ok",
+          "name": "Élan",
+          "outBand": "bad"
+        },
+        {
+          "cq": "lost",
+          "id": "@h:x:DEV4",
+          "inBand": "ok",
+          "name": "Bo",
+          "outBand": "ok"
+        },
+        {
+          "cq": "",
+          "id": "@b:x:DEV5",
+          "inBand": "poor",
+          "name": "4k",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "ok"
+        ],
+        "order": [
+          "@h:x:DEV1",
+          "@d:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@h:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@d:x:DEV0",
+          "inBand": null,
+          "name": "bo",
+          "outBand": "ok"
+        },
+        {
+          "cq": "lost",
+          "id": "@h:x:DEV1",
+          "inBand": null,
+          "name": "_under",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "good",
+          "ok",
+          "poor",
+          "poor",
+          null
+        ],
+        "order": [
+          "@b:x:DEV2",
+          "@f:x:DEV4",
+          "@d:x:DEV1",
+          "@h:x:DEV3",
+          "@e:x:DEV5",
+          "@h:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@h:x:DEV3",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@h:x:DEV0",
+          "inBand": null,
+          "name": "🎮 gamer",
+          "outBand": "bad"
+        },
+        {
+          "cq": "excellent",
+          "id": "@d:x:DEV1",
+          "inBand": "ok",
+          "name": "BO",
+          "outBand": "good"
+        },
+        {
+          "cq": "unknown",
+          "id": "@b:x:DEV2",
+          "inBand": "good",
+          "name": "",
+          "outBand": "bad"
+        },
+        {
+          "cq": "good",
+          "id": "@h:x:DEV3",
+          "inBand": "poor",
+          "name": "ß",
+          "outBand": "ok"
+        },
+        {
+          "cq": "good",
+          "id": "@f:x:DEV4",
+          "inBand": "good",
+          "name": "4k",
+          "outBand": "good"
+        },
+        {
+          "cq": null,
+          "id": "@e:x:DEV5",
+          "inBand": "poor",
+          "name": "ｘylo",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          "good"
+        ],
+        "order": [
+          "@h:x:DEV0",
+          "@a:x:DEV2",
+          "@e:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@h:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@h:x:DEV0",
+          "inBand": "poor",
+          "name": "BO",
+          "outBand": "poor"
+        },
+        {
+          "cq": "unknown",
+          "id": "@e:x:DEV1",
+          "inBand": "bad",
+          "name": "élan",
+          "outBand": "good"
+        },
+        {
+          "cq": "lost",
+          "id": "@a:x:DEV2",
+          "inBand": null,
+          "name": "Mötley",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "ok",
+          "poor",
+          "poor",
+          "ok"
+        ],
+        "order": [
+          "@b:x:DEV1",
+          "@b:x:DEV4",
+          "@b:x:DEV3",
+          "@f:x:DEV2",
+          "@f:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@b:x:DEV3",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@f:x:DEV0",
+          "inBand": "ok",
+          "name": "🎮 gamer",
+          "outBand": "bad"
+        },
+        {
+          "cq": "excellent",
+          "id": "@b:x:DEV1",
+          "inBand": null,
+          "name": " ",
+          "outBand": "ok"
+        },
+        {
+          "cq": "lost",
+          "id": "@f:x:DEV2",
+          "inBand": "poor",
+          "name": "Élan",
+          "outBand": "good"
+        },
+        {
+          "cq": "lost",
+          "id": "@b:x:DEV3",
+          "inBand": null,
+          "name": "Bo",
+          "outBand": "good"
+        },
+        {
+          "cq": "poor",
+          "id": "@b:x:DEV4",
+          "inBand": "good",
+          "name": "4k",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good",
+          null,
+          "good"
+        ],
+        "order": [
+          "@c:x:DEV2",
+          "@c:x:DEV0",
+          "@f:x:DEV3",
+          "@f:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@c:x:DEV2",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@c:x:DEV0",
+          "inBand": null,
+          "name": "ana",
+          "outBand": "bad"
+        },
+        {
+          "cq": "unknown",
+          "id": "@f:x:DEV1",
+          "inBand": "good",
+          "name": "ｘylo",
+          "outBand": "bad"
+        },
+        {
+          "cq": "lost",
+          "id": "@c:x:DEV2",
+          "inBand": "ok",
+          "name": "4k",
+          "outBand": "ok"
+        },
+        {
+          "cq": "",
+          "id": "@f:x:DEV3",
+          "inBand": "bad",
+          "name": "ß",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor"
+        ],
+        "order": [
+          "@e:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@e:x:DEV0",
+          "inBand": "bad",
+          "name": "Élan",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@e:x:DEV1",
+          "@f:x:DEV2",
+          "@h:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@h:x:DEV0",
+          "inBand": "poor",
+          "name": "zed",
+          "outBand": "ok"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@e:x:DEV1",
+          "inBand": "poor",
+          "name": "Ana",
+          "outBand": "good"
+        },
+        {
+          "cq": "lost",
+          "id": "@f:x:DEV2",
+          "inBand": "bad",
+          "name": "Ana",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good",
+          "poor",
+          "poor",
+          null,
+          "poor"
+        ],
+        "order": [
+          "@e:x:DEV4",
+          "@h:x:DEV2",
+          "@h:x:DEV5",
+          "@e:x:DEV3",
+          "@a:x:DEV0",
+          "@f:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV4",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@a:x:DEV0",
+          "inBand": "bad",
+          "name": "Cy",
+          "outBand": "bad"
+        },
+        {
+          "cq": "lost",
+          "id": "@f:x:DEV1",
+          "inBand": "good",
+          "name": "🎮 gamer",
+          "outBand": "poor"
+        },
+        {
+          "cq": "",
+          "id": "@h:x:DEV2",
+          "inBand": "good",
+          "name": "_under",
+          "outBand": "bad"
+        },
+        {
+          "cq": "poor",
+          "id": "@e:x:DEV3",
+          "inBand": "poor",
+          "name": "Bo",
+          "outBand": null
+        },
+        {
+          "cq": "lost",
+          "id": "@e:x:DEV4",
+          "inBand": "bad",
+          "name": "",
+          "outBand": "bad"
+        },
+        {
+          "cq": null,
+          "id": "@h:x:DEV5",
+          "inBand": "poor",
+          "name": "Ana",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [],
+        "order": [],
+        "summary": {
+          "kind": "alone"
+        }
+      },
+      "people": []
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          null,
+          "poor"
+        ],
+        "order": [
+          "@e:x:DEV0",
+          "@f:x:DEV1",
+          "@f:x:DEV2"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@e:x:DEV0",
+          "inBand": "bad",
+          "name": "ana",
+          "outBand": "poor"
+        },
+        {
+          "cq": "",
+          "id": "@f:x:DEV1",
+          "inBand": null,
+          "name": "Mötley",
+          "outBand": null
+        },
+        {
+          "cq": "lost",
+          "id": "@f:x:DEV2",
+          "inBand": "good",
+          "name": "élan",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          null
+        ],
+        "order": [
+          "@f:x:DEV1",
+          "@e:x:DEV2",
+          "@g:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@f:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@g:x:DEV0",
+          "inBand": null,
+          "name": "🎮 gamer",
+          "outBand": "bad"
+        },
+        {
+          "cq": "",
+          "id": "@f:x:DEV1",
+          "inBand": "good",
+          "name": "ana",
+          "outBand": "poor"
+        },
+        {
+          "cq": "lost",
+          "id": "@e:x:DEV2",
+          "inBand": "good",
+          "name": "ß",
+          "outBand": "poor"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "ok"
+        ],
+        "order": [
+          "@e:x:DEV1",
+          "@a:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "good",
+          "id": "@a:x:DEV0",
+          "inBand": "ok",
+          "name": "Bo",
+          "outBand": "bad"
+        },
+        {
+          "cq": "",
+          "id": "@e:x:DEV1",
+          "inBand": "poor",
+          "name": "BO",
+          "outBand": "good"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          null,
+          "poor"
+        ],
+        "order": [
+          "@f:x:DEV0",
+          "@g:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@g:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@f:x:DEV0",
+          "inBand": null,
+          "name": "Mötley",
+          "outBand": "bad"
+        },
+        {
+          "cq": "good",
+          "id": "@g:x:DEV1",
+          "inBand": "poor",
+          "name": "Mötley",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          "ok",
+          "poor",
+          "poor",
+          "ok"
+        ],
+        "order": [
+          "@c:x:DEV1",
+          "@c:x:DEV2",
+          "@f:x:DEV5",
+          "@a:x:DEV4",
+          "@c:x:DEV3",
+          "@g:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@c:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@g:x:DEV0",
+          "inBand": null,
+          "name": "zed",
+          "outBand": "ok"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@c:x:DEV1",
+          "inBand": "ok",
+          "name": "Ana",
+          "outBand": "poor"
+        },
+        {
+          "cq": "unknown",
+          "id": "@c:x:DEV2",
+          "inBand": "poor",
+          "name": "Ana",
+          "outBand": "ok"
+        },
+        {
+          "cq": "good",
+          "id": "@c:x:DEV3",
+          "inBand": "bad",
+          "name": "Mötley",
+          "outBand": "poor"
+        },
+        {
+          "cq": "",
+          "id": "@a:x:DEV4",
+          "inBand": null,
+          "name": "motley",
+          "outBand": "poor"
+        },
+        {
+          "cq": "poor",
+          "id": "@f:x:DEV5",
+          "inBand": "good",
+          "name": "bo",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "ok",
+          "poor",
+          "ok"
+        ],
+        "order": [
+          "@g:x:DEV2",
+          "@a:x:DEV1",
+          "@d:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@a:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@d:x:DEV0",
+          "inBand": "ok",
+          "name": "élan",
+          "outBand": "ok"
+        },
+        {
+          "cq": "excellent",
+          "id": "@a:x:DEV1",
+          "inBand": "good",
+          "name": "Élan",
+          "outBand": "poor"
+        },
+        {
+          "cq": "poor",
+          "id": "@g:x:DEV2",
+          "inBand": "bad",
+          "name": "ana",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "ok",
+          "poor"
+        ],
+        "order": [
+          "@g:x:DEV1",
+          "@g:x:DEV2",
+          "@e:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@e:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@e:x:DEV0",
+          "inBand": "poor",
+          "name": "Zed",
+          "outBand": "good"
+        },
+        {
+          "cq": "",
+          "id": "@g:x:DEV1",
+          "inBand": "bad",
+          "name": "BO",
+          "outBand": "good"
+        },
+        {
+          "cq": "unknown",
+          "id": "@g:x:DEV2",
+          "inBand": "ok",
+          "name": "Bo",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          null
+        ],
+        "order": [
+          "@c:x:DEV0"
+        ],
+        "summary": {
+          "kind": "measuring"
+        }
+      },
+      "people": [
+        {
+          "cq": null,
+          "id": "@c:x:DEV0",
+          "inBand": null,
+          "name": "BO",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@d:x:DEV0",
+          "@g:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@d:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "lost",
+          "id": "@d:x:DEV0",
+          "inBand": "ok",
+          "name": "motley",
+          "outBand": "ok"
+        },
+        {
+          "cq": "lost",
+          "id": "@g:x:DEV1",
+          "inBand": null,
+          "name": "Élan",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good"
+        ],
+        "order": [
+          "@c:x:DEV0",
+          "@f:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@c:x:DEV0",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@c:x:DEV0",
+          "inBand": "poor",
+          "name": "motley",
+          "outBand": null
+        },
+        {
+          "cq": "excellent",
+          "id": "@f:x:DEV1",
+          "inBand": "bad",
+          "name": "Élan",
+          "outBand": "bad"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "good",
+          "ok",
+          "ok",
+          "poor",
+          "poor",
+          "poor"
+        ],
+        "order": [
+          "@b:x:DEV3",
+          "@d:x:DEV1",
+          "@d:x:DEV4",
+          "@b:x:DEV5",
+          "@b:x:DEV2",
+          "@g:x:DEV0"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@b:x:DEV5",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@g:x:DEV0",
+          "inBand": null,
+          "name": "élan",
+          "outBand": "poor"
+        },
+        {
+          "cq": null,
+          "id": "@d:x:DEV1",
+          "inBand": "ok",
+          "name": "Bo",
+          "outBand": null
+        },
+        {
+          "cq": "good",
+          "id": "@b:x:DEV2",
+          "inBand": "ok",
+          "name": "Ärger",
+          "outBand": "poor"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@b:x:DEV3",
+          "inBand": "bad",
+          "name": "",
+          "outBand": "good"
+        },
+        {
+          "cq": null,
+          "id": "@d:x:DEV4",
+          "inBand": "ok",
+          "name": "bo",
+          "outBand": "ok"
+        },
+        {
+          "cq": "unknown",
+          "id": "@b:x:DEV5",
+          "inBand": null,
+          "name": "Mötley",
+          "outBand": "poor"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          null,
+          "poor",
+          "poor",
+          "poor",
+          "ok",
+          "poor"
+        ],
+        "order": [
+          "@e:x:DEV5",
+          "@g:x:DEV1",
+          "@d:x:DEV4",
+          "@b:x:DEV3",
+          "@g:x:DEV0",
+          "@e:x:DEV2"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@g:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "poor",
+          "id": "@g:x:DEV0",
+          "inBand": "ok",
+          "name": "Mötley",
+          "outBand": "ok"
+        },
+        {
+          "cq": "unknown",
+          "id": "@g:x:DEV1",
+          "inBand": "poor",
+          "name": "Bo",
+          "outBand": "bad"
+        },
+        {
+          "cq": "lost",
+          "id": "@e:x:DEV2",
+          "inBand": "poor",
+          "name": "ｘylo",
+          "outBand": "bad"
+        },
+        {
+          "cq": "unknown",
+          "id": "@b:x:DEV3",
+          "inBand": "poor",
+          "name": "Mötley",
+          "outBand": "bad"
+        },
+        {
+          "cq": "",
+          "id": "@d:x:DEV4",
+          "inBand": "poor",
+          "name": "bo",
+          "outBand": "good"
+        },
+        {
+          "cq": null,
+          "id": "@e:x:DEV5",
+          "inBand": "bad",
+          "name": "",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "ok",
+          "ok",
+          "poor",
+          null
+        ],
+        "order": [
+          "@b:x:DEV3",
+          "@c:x:DEV4",
+          "@d:x:DEV2",
+          "@d:x:DEV0",
+          "@e:x:DEV1"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@b:x:DEV3",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "",
+          "id": "@d:x:DEV0",
+          "inBand": "poor",
+          "name": "Zed",
+          "outBand": "poor"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@e:x:DEV1",
+          "inBand": null,
+          "name": "Élan",
+          "outBand": null
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@d:x:DEV2",
+          "inBand": "good",
+          "name": "Ana",
+          "outBand": "ok"
+        },
+        {
+          "cq": "unknown",
+          "id": "@b:x:DEV3",
+          "inBand": "poor",
+          "name": "",
+          "outBand": "good"
+        },
+        {
+          "cq": "",
+          "id": "@c:x:DEV4",
+          "inBand": "ok",
+          "name": "",
+          "outBand": "ok"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "good",
+          "ok"
+        ],
+        "order": [
+          "@f:x:DEV1",
+          "@d:x:DEV0",
+          "@h:x:DEV2"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@f:x:DEV1",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "unknown",
+          "id": "@d:x:DEV0",
+          "inBand": "good",
+          "name": "4k",
+          "outBand": "bad"
+        },
+        {
+          "cq": "EXCELLENT",
+          "id": "@f:x:DEV1",
+          "inBand": "ok",
+          "name": "",
+          "outBand": "poor"
+        },
+        {
+          "cq": "poor",
+          "id": "@h:x:DEV2",
+          "inBand": null,
+          "name": "_under",
+          "outBand": null
+        }
+      ]
+    },
+    {
+      "expect": {
+        "bands": [
+          "poor",
+          "poor",
+          "poor",
+          "ok",
+          "poor"
+        ],
+        "order": [
+          "@d:x:DEV4",
+          "@a:x:DEV0",
+          "@b:x:DEV2",
+          "@d:x:DEV1",
+          "@g:x:DEV3"
+        ],
+        "summary": {
+          "band": "poor",
+          "id": "@d:x:DEV4",
+          "kind": "worst"
+        }
+      },
+      "people": [
+        {
+          "cq": "excellent",
+          "id": "@a:x:DEV0",
+          "inBand": null,
+          "name": "_under",
+          "outBand": "poor"
+        },
+        {
+          "cq": "excellent",
+          "id": "@d:x:DEV1",
+          "inBand": "bad",
+          "name": "Élan",
+          "outBand": "ok"
+        },
+        {
+          "cq": "poor",
+          "id": "@b:x:DEV2",
+          "inBand": "good",
+          "name": "Zed",
+          "outBand": "poor"
+        },
+        {
+          "cq": "unknown",
+          "id": "@g:x:DEV3",
+          "inBand": "good",
+          "name": "Élan",
+          "outBand": "poor"
+        },
+        {
+          "cq": "good",
+          "id": "@d:x:DEV4",
+          "inBand": null,
+          "name": "4k",
+          "outBand": "poor"
+        }
+      ]
+    }
+  ]
+}

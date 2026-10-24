@@ -1,0 +1,186 @@
+{
+  "expect": {
+    "form": {
+      "collapse": [
+        {
+          "below": 820,
+          "ref": "panel",
+          "to": "overlay"
+        },
+        {
+          "below": 680,
+          "ref": "navcol",
+          "to": "drawer"
+        }
+      ],
+      "floats": [],
+      "gap": 4,
+      "hidden": [],
+      "margin": 4,
+      "opts": {
+        "rooms": {
+          "compact": true
+        }
+      },
+      "preset": "compact",
+      "root": {
+        "c": [
+          {
+            "c": [
+              {
+                "c": [
+                  {
+                    "i": "nav",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "dms",
+                    "t": "island"
+                  },
+                  {
+                    "i": "dms",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "grid"
+                  },
+                  {
+                    "i": "spaces",
+                    "size": {
+                      "min": 112,
+                      "share": 1
+                    },
+                    "t": "island"
+                  }
+                ],
+                "id": "rail",
+                "size": {
+                  "fixed": 64
+                },
+                "t": "col"
+              },
+              {
+                "c": [
+                  {
+                    "i": "rooms",
+                    "size": {
+                      "auto": true,
+                      "grow": 1,
+                      "min": 160
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "widgets",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "i": "account",
+                    "size": {
+                      "auto": true
+                    },
+                    "t": "island"
+                  }
+                ],
+                "id": "roomscol",
+                "size": {
+                  "fixed": 248
+                },
+                "t": "col"
+              }
+            ],
+            "id": "navcol",
+            "size": {
+              "auto": true
+            },
+            "t": "row"
+          },
+          {
+            "c": [
+              {
+                "i": "header",
+                "size": {
+                  "auto": true
+                },
+                "t": "island"
+              },
+              {
+                "i": "call",
+                "size": {
+                  "fixed": 252,
+                  "min": 252
+                },
+                "t": "island"
+              },
+              {
+                "c": [
+                  {
+                    "c": [
+                      {
+                        "i": "timeline",
+                        "size": {
+                          "min": 120,
+                          "share": 1
+                        },
+                        "t": "island"
+                      },
+                      {
+                        "i": "composer",
+                        "size": {
+                          "auto": true
+                        },
+                        "t": "island"
+                      }
+                    ],
+                    "id": "roomcol",
+                    "size": {
+                      "min": 360,
+                      "share": 1
+                    },
+                    "t": "col"
+                  },
+                  {
+                    "i": "panel",
+                    "size": {
+                      "fixed": 300
+                    },
+                    "t": "island"
+                  }
+                ],
+                "id": "convrow",
+                "size": {
+                  "min": 160,
+                  "minPm": 250,
+                  "share": 1
+                },
+                "t": "row"
+              }
+            ],
+            "id": "main",
+            "size": {
+              "min": 360,
+              "share": 1
+            },
+            "t": "col"
+          }
+        ],
+        "id": "body",
+        "t": "row"
+      }
+    },
+    "notes": [
+      "unknown-node-kept grid",
+      "dropped-duplicate nav",
+      "restored-missing dms"
+    ]
+  },
+  "kind": "repair",
+  "target": "desktop",
+  "text": "{\"preset\":\"compact\",\"gap\":4,\"margin\":4,\"root\":{\"t\":\"row\",\"id\":\"body\",\"c\":[{\"t\":\"row\",\"id\":\"navcol\",\"size\":{\"auto\":true},\"c\":[{\"t\":\"col\",\"id\":\"rail\",\"size\":{\"fixed\":64},\"c\":[{\"t\":\"island\",\"i\":\"nav\",\"size\":{\"auto\":true}},{\"t\":\"grid\",\"i\":\"dms\",\"size\":{\"auto\":true}},{\"t\":\"island\",\"i\":\"spaces\",\"size\":{\"share\":1,\"min\":112}}]},{\"t\":\"col\",\"id\":\"roomscol\",\"size\":{\"fixed\":248},\"c\":[{\"t\":\"island\",\"i\":\"rooms\",\"size\":{\"auto\":true,\"grow\":1,\"min\":160}},{\"t\":\"island\",\"i\":\"widgets\",\"size\":{\"auto\":true}},{\"t\":\"island\",\"i\":\"account\",\"size\":{\"auto\":true}}]}]},{\"t\":\"col\",\"id\":\"main\",\"size\":{\"share\":1,\"min\":360},\"c\":[{\"t\":\"island\",\"i\":\"header\",\"size\":{\"auto\":true}},{\"t\":\"island\",\"i\":\"call\",\"size\":{\"min\":252,\"fixed\":252}},{\"t\":\"row\",\"id\":\"convrow\",\"size\":{\"share\":1,\"min\":160,\"minPm\":250},\"c\":[{\"t\":\"col\",\"id\":\"roomcol\",\"size\":{\"share\":1,\"min\":360},\"c\":[{\"t\":\"island\",\"i\":\"timeline\",\"size\":{\"share\":1,\"min\":120}},{\"t\":\"island\",\"i\":\"composer\",\"size\":{\"auto\":true}}]},{\"t\":\"island\",\"i\":\"panel\",\"size\":{\"fixed\":300}}]}]}]},\"floats\":[],\"hidden\":[\"nav\"],\"collapse\":[{\"ref\":\"panel\",\"to\":\"overlay\",\"below\":820},{\"ref\":\"navcol\",\"to\":\"drawer\",\"below\":680}],\"opts\":{\"rooms\":{\"compact\":true}}}"
+}

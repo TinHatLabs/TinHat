@@ -1,0 +1,3559 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, person.me flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only person.me=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, space.canKick flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only space.canKick=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "desktop: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove this person from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@gone:example.com",
+        "targetIcon": null,
+        "targetName": "this person",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "desktop: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "desktop: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "desktop: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove this person from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 6,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu person[6] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 6,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: menu person[6] desktop, all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, person.me flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only person.me=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": false
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, space.canKick flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only space.canKick=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "web: target — the known subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove this person from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@gone:example.com",
+        "targetIcon": null,
+        "targetName": "this person",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-unknown"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "web: target — an unknown subject"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "web: target — an invalid value"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "web: target — a number"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove this person from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "space.kick",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 6,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.me": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu person[6] desktop, all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": true,
+          "confirmLabel": "Remove",
+          "kind": "destructive",
+          "text": "Remove Zane from the space and its rooms?",
+          "title": "Remove from space?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "im-kick-user-symbolic",
+        "label": "Kick from space…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com",
+        "targetIcon": null,
+        "targetName": "Zane",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "form": "desktop",
+        "item": 6,
+        "menu": "person",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: menu person[6] desktop, all off"
+    }
+  ],
+  "kind": "evaluate"
+}

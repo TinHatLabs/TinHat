@@ -1,0 +1,600 @@
+{
+  "end": [
+    {
+      "expect": {
+        "body": "The poll has ended. Top answer: Pizza",
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "msgtype": "m.text",
+        "org.matrix.msc1767.text": "The poll has ended. Top answer: Pizza",
+        "org.matrix.msc3381.poll.end": {}
+      },
+      "start": "$p",
+      "text": "The poll has ended. Top answer: Pizza"
+    },
+    {
+      "expect": {
+        "body": "The poll has ended. No votes were cast.",
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "msgtype": "m.text",
+        "org.matrix.msc1767.text": "The poll has ended. No votes were cast.",
+        "org.matrix.msc3381.poll.end": {}
+      },
+      "start": "$p",
+      "text": "The poll has ended. No votes were cast."
+    }
+  ],
+  "response": [
+    {
+      "answers": [
+        "a"
+      ],
+      "expect": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a"
+          ]
+        }
+      },
+      "start": "$p"
+    },
+    {
+      "answers": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": [
+            "a",
+            "b"
+          ]
+        }
+      },
+      "start": "$p"
+    },
+    {
+      "answers": [],
+      "expect": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "org.matrix.msc3381.poll.response": {
+          "answers": []
+        }
+      },
+      "start": "$p"
+    }
+  ],
+  "start": [
+    {
+      "answers": [
+        "Pizza",
+        "Poutine",
+        "Wings"
+      ],
+      "expect": {
+        "content": {
+          "org.matrix.msc1767.text": "What should we order?\n1. Pizza\n2. Poutine\n3. Wings",
+          "org.matrix.msc3381.poll.start": {
+            "answers": [
+              {
+                "id": "a",
+                "org.matrix.msc1767.text": "Pizza"
+              },
+              {
+                "id": "b",
+                "org.matrix.msc1767.text": "Poutine"
+              },
+              {
+                "id": "c",
+                "org.matrix.msc1767.text": "Wings"
+              }
+            ],
+            "kind": "org.matrix.msc3381.poll.disclosed",
+            "max_selections": 1,
+            "question": {
+              "body": "What should we order?",
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "What should we order?"
+            }
+          }
+        },
+        "ok": true
+      },
+      "ids": [
+        "a",
+        "b",
+        "c"
+      ],
+      "kind": "disclosed",
+      "question": "What should we order?"
+    },
+    {
+      "answers": [
+        "  one ",
+        "",
+        "two",
+        "   "
+      ],
+      "expect": {
+        "content": {
+          "org.matrix.msc1767.text": "Trim me\n1. one\n2. two",
+          "org.matrix.msc3381.poll.start": {
+            "answers": [
+              {
+                "id": "i1",
+                "org.matrix.msc1767.text": "one"
+              },
+              {
+                "id": "i2",
+                "org.matrix.msc1767.text": "two"
+              }
+            ],
+            "kind": "org.matrix.msc3381.poll.undisclosed",
+            "max_selections": 1,
+            "question": {
+              "body": "Trim me",
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "Trim me"
+            }
+          }
+        },
+        "ok": true
+      },
+      "ids": [
+        "i1",
+        "i2",
+        "i3",
+        "i4"
+      ],
+      "kind": "undisclosed",
+      "question": "  Trim me  "
+    },
+    {
+      "answers": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "code": "E_QUESTION",
+        "message": "Ask a question",
+        "ok": false
+      },
+      "ids": [
+        "1",
+        "2"
+      ],
+      "kind": "disclosed",
+      "question": ""
+    },
+    {
+      "answers": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "code": "E_QUESTION",
+        "message": "Ask a question",
+        "ok": false
+      },
+      "ids": [
+        "1",
+        "2"
+      ],
+      "kind": "disclosed",
+      "question": "   "
+    },
+    {
+      "answers": [
+        "only"
+      ],
+      "expect": {
+        "code": "E_ANSWERS",
+        "message": "Add at least 2 answers",
+        "ok": false
+      },
+      "ids": [
+        "1"
+      ],
+      "kind": "disclosed",
+      "question": "Q"
+    },
+    {
+      "answers": [
+        "a",
+        "",
+        " "
+      ],
+      "expect": {
+        "code": "E_ANSWERS",
+        "message": "Add at least 2 answers",
+        "ok": false
+      },
+      "ids": [
+        "1",
+        "2",
+        "3"
+      ],
+      "kind": "disclosed",
+      "question": "Q"
+    },
+    {
+      "answers": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "content": {
+          "org.matrix.msc1767.text": "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ\n1. a\n2. b",
+          "org.matrix.msc3381.poll.start": {
+            "answers": [
+              {
+                "id": "1",
+                "org.matrix.msc1767.text": "a"
+              },
+              {
+                "id": "2",
+                "org.matrix.msc1767.text": "b"
+              }
+            ],
+            "kind": "org.matrix.msc3381.poll.disclosed",
+            "max_selections": 1,
+            "question": {
+              "body": "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ",
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ"
+            }
+          }
+        },
+        "ok": true
+      },
+      "ids": [
+        "1",
+        "2"
+      ],
+      "kind": "disclosed",
+      "question": "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ"
+    },
+    {
+      "answers": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "code": "E_QUESTION",
+        "message": "The question is too long — 340 characters at most",
+        "ok": false
+      },
+      "ids": [
+        "1",
+        "2"
+      ],
+      "kind": "disclosed",
+      "question": "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ"
+    },
+    {
+      "answers": [
+        "a",
+        "b"
+      ],
+      "expect": {
+        "content": {
+          "org.matrix.msc1767.text": "🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲\n1. a\n2. b",
+          "org.matrix.msc3381.poll.start": {
+            "answers": [
+              {
+                "id": "1",
+                "org.matrix.msc1767.text": "a"
+              },
+              {
+                "id": "2",
+                "org.matrix.msc1767.text": "b"
+              }
+            ],
+            "kind": "org.matrix.msc3381.poll.disclosed",
+            "max_selections": 1,
+            "question": {
+              "body": "🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲",
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲"
+            }
+          }
+        },
+        "ok": true
+      },
+      "ids": [
+        "1",
+        "2"
+      ],
+      "kind": "disclosed",
+      "question": "🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲"
+    },
+    {
+      "answers": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "b"
+      ],
+      "expect": {
+        "code": "E_ANSWER_LONG",
+        "message": "An answer is too long — 340 characters at most",
+        "ok": false
+      },
+      "ids": [
+        "1",
+        "2"
+      ],
+      "kind": "disclosed",
+      "question": "Q"
+    },
+    {
+      "answers": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "A9",
+        "A10",
+        "A11",
+        "A12",
+        "A13",
+        "A14",
+        "A15",
+        "A16",
+        "A17",
+        "A18",
+        "A19"
+      ],
+      "expect": {
+        "content": {
+          "org.matrix.msc1767.text": "Q\n1. A0\n2. A1\n3. A2\n4. A3\n5. A4\n6. A5\n7. A6\n8. A7\n9. A8\n10. A9\n11. A10\n12. A11\n13. A12\n14. A13\n15. A14\n16. A15\n17. A16\n18. A17\n19. A18\n20. A19",
+          "org.matrix.msc3381.poll.start": {
+            "answers": [
+              {
+                "id": "i0",
+                "org.matrix.msc1767.text": "A0"
+              },
+              {
+                "id": "i1",
+                "org.matrix.msc1767.text": "A1"
+              },
+              {
+                "id": "i2",
+                "org.matrix.msc1767.text": "A2"
+              },
+              {
+                "id": "i3",
+                "org.matrix.msc1767.text": "A3"
+              },
+              {
+                "id": "i4",
+                "org.matrix.msc1767.text": "A4"
+              },
+              {
+                "id": "i5",
+                "org.matrix.msc1767.text": "A5"
+              },
+              {
+                "id": "i6",
+                "org.matrix.msc1767.text": "A6"
+              },
+              {
+                "id": "i7",
+                "org.matrix.msc1767.text": "A7"
+              },
+              {
+                "id": "i8",
+                "org.matrix.msc1767.text": "A8"
+              },
+              {
+                "id": "i9",
+                "org.matrix.msc1767.text": "A9"
+              },
+              {
+                "id": "i10",
+                "org.matrix.msc1767.text": "A10"
+              },
+              {
+                "id": "i11",
+                "org.matrix.msc1767.text": "A11"
+              },
+              {
+                "id": "i12",
+                "org.matrix.msc1767.text": "A12"
+              },
+              {
+                "id": "i13",
+                "org.matrix.msc1767.text": "A13"
+              },
+              {
+                "id": "i14",
+                "org.matrix.msc1767.text": "A14"
+              },
+              {
+                "id": "i15",
+                "org.matrix.msc1767.text": "A15"
+              },
+              {
+                "id": "i16",
+                "org.matrix.msc1767.text": "A16"
+              },
+              {
+                "id": "i17",
+                "org.matrix.msc1767.text": "A17"
+              },
+              {
+                "id": "i18",
+                "org.matrix.msc1767.text": "A18"
+              },
+              {
+                "id": "i19",
+                "org.matrix.msc1767.text": "A19"
+              }
+            ],
+            "kind": "org.matrix.msc3381.poll.disclosed",
+            "max_selections": 1,
+            "question": {
+              "body": "Q",
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "Q"
+            }
+          }
+        },
+        "ok": true
+      },
+      "ids": [
+        "i0",
+        "i1",
+        "i2",
+        "i3",
+        "i4",
+        "i5",
+        "i6",
+        "i7",
+        "i8",
+        "i9",
+        "i10",
+        "i11",
+        "i12",
+        "i13",
+        "i14",
+        "i15",
+        "i16",
+        "i17",
+        "i18",
+        "i19"
+      ],
+      "kind": "disclosed",
+      "question": "Q"
+    },
+    {
+      "answers": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "A9",
+        "A10",
+        "A11",
+        "A12",
+        "A13",
+        "A14",
+        "A15",
+        "A16",
+        "A17",
+        "A18",
+        "A19",
+        "A20"
+      ],
+      "expect": {
+        "code": "E_ANSWERS",
+        "message": "20 answers at most",
+        "ok": false
+      },
+      "ids": [
+        "i0",
+        "i1",
+        "i2",
+        "i3",
+        "i4",
+        "i5",
+        "i6",
+        "i7",
+        "i8",
+        "i9",
+        "i10",
+        "i11",
+        "i12",
+        "i13",
+        "i14",
+        "i15",
+        "i16",
+        "i17",
+        "i18",
+        "i19",
+        "i20"
+      ],
+      "kind": "disclosed",
+      "question": "Q"
+    },
+    {
+      "answers": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expect": {
+        "code": "E_ANSWERS",
+        "message": "Add at least 2 answers",
+        "ok": false
+      },
+      "ids": [
+        "1",
+        "2"
+      ],
+      "kind": "disclosed",
+      "question": "Q"
+    },
+    {
+      "answers": [
+        "Ünïcödé 🍕",
+        "tab\there"
+      ],
+      "expect": {
+        "content": {
+          "org.matrix.msc1767.text": "Multi\nline question\n1. Ünïcödé 🍕\n2. tab\there",
+          "org.matrix.msc3381.poll.start": {
+            "answers": [
+              {
+                "id": "u1",
+                "org.matrix.msc1767.text": "Ünïcödé 🍕"
+              },
+              {
+                "id": "u2",
+                "org.matrix.msc1767.text": "tab\there"
+              }
+            ],
+            "kind": "org.matrix.msc3381.poll.undisclosed",
+            "max_selections": 1,
+            "question": {
+              "body": "Multi\nline question",
+              "msgtype": "m.text",
+              "org.matrix.msc1767.text": "Multi\nline question"
+            }
+          }
+        },
+        "ok": true
+      },
+      "ids": [
+        "u1",
+        "u2"
+      ],
+      "kind": "undisclosed",
+      "question": "Multi\nline question"
+    }
+  ]
+}

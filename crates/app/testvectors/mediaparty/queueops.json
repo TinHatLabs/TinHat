@@ -1,0 +1,1252 @@
+{
+  "cases": [
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000006",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005"
+      ],
+      "input": {
+        "from": 5,
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000003",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now in the middle, move the last up next",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "from": 0,
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000003",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now in the middle, move a played one up next",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "from": 2,
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000003",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "move the now item = unchanged",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "from": 4,
+        "nowUrl": "",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "nothing playing → the top",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "from": 3,
+        "nowUrl": "https://www.youtube.com/watch?v=zzzzzzzzzzz",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now not in the queue → the top",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "from": 3,
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000003",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "already next = unchanged",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "from": 9,
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000003",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "out of range = unchanged",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006",
+        "https://www.youtube.com/watch?v=v0000000002"
+      ],
+      "input": {
+        "from": 1,
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000006",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now is the last",
+      "op": "moveToNext"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000003",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now third → drop the first two",
+      "op": "clearPlayed"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000001",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now first = unchanged",
+      "op": "clearPlayed"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "nowUrl": "",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "nothing playing = unchanged",
+      "op": "clearPlayed"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000006",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now last → only it",
+      "op": "clearPlayed"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000006",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000005"
+      ],
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000002",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ],
+        "seed": 1
+      },
+      "name": "seed 1, now second",
+      "op": "shuffleUpcoming"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004"
+      ],
+      "input": {
+        "nowUrl": "",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ],
+        "seed": 42
+      },
+      "name": "seed 42, nothing playing",
+      "op": "shuffleUpcoming"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000001",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ],
+        "seed": 3735928559
+      },
+      "name": "seed 3735928559, now first",
+      "op": "shuffleUpcoming"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000006"
+      ],
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000006",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ],
+        "seed": 7
+      },
+      "name": "seed 7, now last = unchanged",
+      "op": "shuffleUpcoming"
+    },
+    {
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004",
+        "https://www.youtube.com/watch?v=v0000000006",
+        "https://www.youtube.com/watch?v=v0000000005"
+      ],
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000004",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ],
+        "seed": 0
+      },
+      "name": "seed 0, now fourth",
+      "op": "shuffleUpcoming"
+    },
+    {
+      "expect": "16 min left",
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000002",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "all known, now second",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "24 min left",
+      "input": {
+        "nowUrl": "",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "nothing playing = all",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "",
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000006",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 210,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 220,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 230,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 250,
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 260,
+            "title": "T6",
+            "url": "https://www.youtube.com/watch?v=v0000000006"
+          }
+        ]
+      },
+      "name": "now last = nothing left",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "1 h 1 min+ left",
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000001",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 240,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 3600,
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 59,
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          }
+        ]
+      },
+      "name": "unknown durations → +",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "",
+      "input": {
+        "nowUrl": "",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ]
+      },
+      "name": "only unknown → empty",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "<1 min left",
+      "input": {
+        "nowUrl": "https://www.youtube.com/watch?v=v0000000001",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 10,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 20,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ]
+      },
+      "name": "under a minute",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "2 h left",
+      "input": {
+        "nowUrl": "",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 3600,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 3600,
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ]
+      },
+      "name": "exactly two hours",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "2 min left",
+      "input": {
+        "nowUrl": "",
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "durationSec": 90,
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          }
+        ]
+      },
+      "name": "rounds half up",
+      "op": "upcomingLabel"
+    },
+    {
+      "expect": "0:00",
+      "input": {
+        "secs": 0
+      },
+      "name": "fmtTime 0",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "0:05",
+      "input": {
+        "secs": 5.9
+      },
+      "name": "fmtTime 5.9",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "0:59",
+      "input": {
+        "secs": 59
+      },
+      "name": "fmtTime 59",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "1:00",
+      "input": {
+        "secs": 60
+      },
+      "name": "fmtTime 60",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "1:01",
+      "input": {
+        "secs": 61
+      },
+      "name": "fmtTime 61",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "9:59",
+      "input": {
+        "secs": 599
+      },
+      "name": "fmtTime 599",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "59:59",
+      "input": {
+        "secs": 3599
+      },
+      "name": "fmtTime 3599",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "1:00:00",
+      "input": {
+        "secs": 3600
+      },
+      "name": "fmtTime 3600",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "1:01:01",
+      "input": {
+        "secs": 3661
+      },
+      "name": "fmtTime 3661",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "10:00:00",
+      "input": {
+        "secs": 36000
+      },
+      "name": "fmtTime 36000",
+      "op": "fmtTime"
+    },
+    {
+      "expect": "0:00",
+      "input": {
+        "secs": -3
+      },
+      "name": "fmtTime -3",
+      "op": "fmtTime"
+    }
+  ],
+  "doc": "Media Party queue ops (11.3 QOL): moveToNext / clearPlayed / shuffleUpcoming (mulberry32 Fisher–Yates) / upcomingLabel / fmtTime — queue.ts + watchparty.rs; reference: share claude/tinhat-media-party/qol/queueops_ref.py. Queue ops expect the resulting urls.",
+  "kind": "queueOps"
+}

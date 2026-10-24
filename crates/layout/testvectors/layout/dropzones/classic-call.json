@@ -1,0 +1,377 @@
+{
+  "ctx": {
+    "content": {
+      "account": {
+        "h": 46
+      },
+      "composer": {
+        "h": 48
+      },
+      "dms": {
+        "empty": true,
+        "h": 0
+      },
+      "header": {
+        "h": 58
+      },
+      "nav": {
+        "h": 228
+      },
+      "rooms": {
+        "h": 300
+      },
+      "widgets": {
+        "h": 200,
+        "minH": 60
+      }
+    },
+    "size": {
+      "h": 960,
+      "w": 1560
+    },
+    "unitPm": 1000,
+    "view": {
+      "callShown": true,
+      "roomOpen": true
+    }
+  },
+  "dragged": "call",
+  "expect": {
+    "hit": [
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tr",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "bl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 906
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "br",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 906
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "left"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "right"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 1536,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "top"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "bottom"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 936
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "call",
+          "side": "bottom",
+          "target": "composer"
+        },
+        "rect": {
+          "h": 12,
+          "w": 1176,
+          "x": 378,
+          "y": 942
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "call",
+          "side": "bottom",
+          "target": "header"
+        },
+        "rect": {
+          "h": 14,
+          "w": 1176,
+          "x": 378,
+          "y": 50
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "call",
+          "side": "top",
+          "target": "timeline"
+        },
+        "rect": {
+          "h": 48,
+          "w": 1176,
+          "x": 378,
+          "y": 328
+        }
+      }
+    ],
+    "keys": [
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "left"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "top"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "right"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 1536,
+          "y": 0
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tr",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "call",
+          "side": "bottom",
+          "target": "header"
+        },
+        "rect": {
+          "h": 14,
+          "w": 1176,
+          "x": 378,
+          "y": 50
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "call",
+          "side": "top",
+          "target": "timeline"
+        },
+        "rect": {
+          "h": 48,
+          "w": 1176,
+          "x": 378,
+          "y": 328
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "bl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 906
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "br",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "call"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 906
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "call",
+          "side": "bottom"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 936
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "call",
+          "side": "bottom",
+          "target": "composer"
+        },
+        "rect": {
+          "h": 12,
+          "w": 1176,
+          "x": 378,
+          "y": 942
+        }
+      }
+    ]
+  },
+  "kind": "dropzones",
+  "preset": "classic"
+}

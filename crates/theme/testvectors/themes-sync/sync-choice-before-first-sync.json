@@ -1,0 +1,99 @@
+{
+  "devices": [
+    "NEWPHONE"
+  ],
+  "expect": {
+    "devices": {
+      "NEWPHONE": {
+        "choice": {
+          "known": {
+            "by": "NEWPHONE",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400009000,
+            "sounds": "default",
+            "theme": "dracula",
+            "v": 1
+          },
+          "raw": {
+            "by": "NEWPHONE",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400009000,
+            "sounds": "default",
+            "theme": "dracula",
+            "v": 1
+          },
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      }
+    },
+    "log": [
+      "0 NEWPHONE apply choice: saved",
+      "1 NEWPHONE deliver choice: reassert",
+      "2 NEWPHONE put choice: put",
+      "3 NEWPHONE deliver choice: ok"
+    ],
+    "server": {
+      "choice": {
+        "by": "NEWPHONE",
+        "format": "tinhat-theme-choice",
+        "icons": "duotone",
+        "rev": 1,
+        "savedAt": 1790400009000,
+        "sounds": "default",
+        "theme": "dracula",
+        "v": 1
+      },
+      "themes": null
+    }
+  },
+  "kind": "sync",
+  "server": {
+    "choice": {
+      "by": "DESK",
+      "format": "tinhat-theme-choice",
+      "icons": "duotone",
+      "rev": 7,
+      "savedAt": 1790400000000,
+      "sounds": "default",
+      "theme": "nord",
+      "v": 1
+    }
+  },
+  "steps": [
+    {
+      "device": "NEWPHONE",
+      "event": "apply",
+      "now": 1790400009000,
+      "patch": {
+        "theme": "dracula"
+      }
+    },
+    {
+      "device": "NEWPHONE",
+      "event": "deliver",
+      "key": "choice"
+    },
+    {
+      "device": "NEWPHONE",
+      "event": "put",
+      "key": "choice"
+    },
+    {
+      "device": "NEWPHONE",
+      "event": "deliver",
+      "key": "choice"
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "devices": [
+    "a",
+    "b"
+  ],
+  "expect": {
+    "devices": {
+      "a": {
+        "chains": {},
+        "counter": 0,
+        "known": {},
+        "lost": {},
+        "maxV": 1,
+        "own": {},
+        "readOnly": false,
+        "wantPut": false
+      },
+      "b": {
+        "chains": {},
+        "counter": 0,
+        "known": {},
+        "lost": {},
+        "maxV": 1,
+        "own": {},
+        "readOnly": false,
+        "wantPut": false
+      }
+    },
+    "log": [
+      "0 a deliver: ignored",
+      "1 a deliver: ignored",
+      "2 b begin: begun",
+      "3 b put: idle",
+      "4 a deliver: ignored",
+      "5 a deliver: ignored",
+      "6 b put: idle",
+      "7 a deliver: ignored",
+      "8 b deliver: ignored",
+      "9 a put: idle",
+      "10 b put: idle",
+      "11 a deliver: ignored",
+      "12 a put: idle",
+      "13 a deliver: ignored",
+      "14 a put: idle",
+      "15 b deliver: ignored",
+      "16 b put: idle",
+      "17 a deliver: ignored",
+      "18 b deliver: ignored"
+    ],
+    "server": null
+  },
+  "kind": "sync",
+  "steps": [
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "begin",
+      "id": "main"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "event": "deliver"
+    },
+    {
+      "device": "b",
+      "event": "deliver"
+    }
+  ]
+}

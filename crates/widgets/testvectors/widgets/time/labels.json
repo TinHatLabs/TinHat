@@ -1,0 +1,152 @@
+{
+  "ago": [
+    {
+      "expect": "just now",
+      "ms": -1
+    },
+    {
+      "expect": "just now",
+      "ms": 0
+    },
+    {
+      "expect": "just now",
+      "ms": 59999
+    },
+    {
+      "expect": "1 m ago",
+      "ms": 60000
+    },
+    {
+      "expect": "59 m ago",
+      "ms": 3599999
+    },
+    {
+      "expect": "1 h ago",
+      "ms": 3600000
+    },
+    {
+      "expect": "23 h ago",
+      "ms": 86340000
+    },
+    {
+      "expect": "1 d ago",
+      "ms": 86400000
+    },
+    {
+      "expect": "6 d ago",
+      "ms": 601200000
+    },
+    {
+      "expect": "1 w ago",
+      "ms": 604800000
+    },
+    {
+      "expect": "4 w ago",
+      "ms": 2592000000
+    }
+  ],
+  "dur": [
+    {
+      "expect": "< 1 m",
+      "ms": -5
+    },
+    {
+      "expect": "< 1 m",
+      "ms": 0
+    },
+    {
+      "expect": "< 1 m",
+      "ms": 59999
+    },
+    {
+      "expect": "1 m",
+      "ms": 60000
+    },
+    {
+      "expect": "45 m",
+      "ms": 2759999
+    },
+    {
+      "expect": "1 h",
+      "ms": 3600000
+    },
+    {
+      "expect": "2 h 10 m",
+      "ms": 7800000
+    },
+    {
+      "expect": "23 h 59 m",
+      "ms": 86340000
+    },
+    {
+      "expect": "1 d",
+      "ms": 86400000
+    },
+    {
+      "expect": "1 d 4 h",
+      "ms": 102600000
+    },
+    {
+      "expect": "9 d",
+      "ms": 777600000
+    }
+  ],
+  "until": [
+    {
+      "expect": "now",
+      "ms": -1
+    },
+    {
+      "expect": "now",
+      "ms": 0
+    },
+    {
+      "expect": "in 1 m",
+      "ms": 1
+    },
+    {
+      "expect": "in 1 m",
+      "ms": 59999
+    },
+    {
+      "expect": "in 1 m",
+      "ms": 60000
+    },
+    {
+      "expect": "in 2 m",
+      "ms": 60001
+    },
+    {
+      "expect": "in 59 m",
+      "ms": 3540000
+    },
+    {
+      "expect": "in 1 h",
+      "ms": 3540001
+    },
+    {
+      "expect": "in 1 h",
+      "ms": 3600000
+    },
+    {
+      "expect": "in 2 h 10 m",
+      "ms": 7740001
+    },
+    {
+      "expect": "in 1 d",
+      "ms": 86399999
+    },
+    {
+      "expect": "in 1 d",
+      "ms": 86400000
+    },
+    {
+      "expect": "in 1 d",
+      "ms": 86400001
+    },
+    {
+      "expect": "in 3 d",
+      "ms": 259200000
+    }
+  ]
+}

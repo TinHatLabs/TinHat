@@ -1,0 +1,2073 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": "when"
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": "when"
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop idle"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": null
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": null
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop inCall"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": null
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": null
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": null
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop inCallAside"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": "when"
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": "when"
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop busy"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": "when"
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": "when"
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop idle"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": null
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": null
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop inCall"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": null
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": null
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": null
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop inCallAside"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "room.recording.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "media-record-symbolic",
+            "known": true,
+            "label": "Rec",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Rec",
+            "split": null,
+            "state": "shown",
+            "subject": "!room:example.com",
+            "subjectKind": "room",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "Gaming Central",
+            "tip": "Record this room's calls — REC shows for everyone",
+            "why": null
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          },
+          {
+            "a": "call.layout.set",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-grid-symbolic",
+            "known": true,
+            "label": "Layout",
+            "look": "iconLabel",
+            "pick": true,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "How the call grid is arranged",
+            "why": "when"
+          },
+          {
+            "a": "call.collapse.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "go-up-symbolic",
+            "known": true,
+            "label": "Collapse the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Collapse the call — the chat gets the room (drag the seam below to resize)",
+            "why": "when"
+          },
+          {
+            "a": "call.fill.toggle",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "view-fullscreen-symbolic",
+            "known": true,
+            "label": "Fill the app with the call",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "when"
+          }
+        ],
+        "look": "icon",
+        "row": "call.status",
+        "scale": "S",
+        "style": "tool"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "call.status",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "room.recording.toggle"
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.layout.set"
+            },
+            {
+              "a": "call.collapse.toggle",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.fill.toggle"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop busy"
+    }
+  ],
+  "kind": "row"
+}

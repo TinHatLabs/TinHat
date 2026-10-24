@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "invite.accept",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "invite.accept: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "invite.accept",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "invite.accept: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "invite.accept",
+        "target": "x"
+      },
+      "name": "invite.accept: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "invite.accept"
+      },
+      "name": "invite.accept: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "invite.decline",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "invite.decline: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "invite.decline",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "invite.decline: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "invite.decline",
+        "target": "x"
+      },
+      "name": "invite.decline: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "invite.decline"
+      },
+      "name": "invite.decline: no target"
+    }
+  ],
+  "kind": "target"
+}

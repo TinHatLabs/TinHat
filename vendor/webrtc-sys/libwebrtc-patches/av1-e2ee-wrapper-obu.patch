@@ -1,0 +1,155 @@
+diff --git a/api/crypto/frame_crypto_transformer.cc b/api/crypto/frame_crypto_transformer.cc
+index dcbe760389..e0fe75758f 100644
+--- a/api/crypto/frame_crypto_transformer.cc
++++ b/api/crypto/frame_crypto_transformer.cc
+@@ -117,6 +117,95 @@ inline bool FrameIsH265(webrtc::TransformableFrameInterface* frame,
+   }
+ }
+ 
++inline bool FrameIsAv1(webrtc::TransformableFrameInterface* frame,
++                       webrtc::FrameCryptorTransformer::MediaType type) {
++  switch (type) {
++    case webrtc::FrameCryptorTransformer::MediaType::kVideoFrame: {
++      auto videoFrame =
++          static_cast<webrtc::TransformableVideoFrameInterface*>(frame);
++      return videoFrame->header().codec ==
++             webrtc::VideoCodecType::kVideoCodecAV1;
++    }
++    default:
++      return false;
++  }
++}
++
++// PATCH (Tin Hat) AV1 E2EE: the AV1 RTP packetizer parses and rewrites OBU
++// headers (drops temporal delimiters, strips obu_size fields), and the
++// depacketizer rewrites every OBU header with obu_has_size_field=1 plus a
++// fresh LEB128 size. Encrypted bytes therefore never round-trip, and a
++// fixed-count header carve-out cannot work. Instead, encryptFrame() encrypts
++// the ENTIRE original frame and wraps the ciphertext in ONE synthetic
++// OBU_FRAME header with obu_has_size_field=0 (OBU payloads are opaque to the
++// packetizer, and "no size field" means rest-of-payload), and decryptFrame()
++// parses and discards that wrapper. The plaintext handed to the decoder is
++// byte-identical to the encoder output. The wrapper is NOT part of the
++// ciphertext or the AAD; frame_header stays empty for AV1 on both sides.
++//
++// Keyframes additionally lead with an EMPTY synthetic sequence-header OBU:
++// the packetizer only sets the N ("new coded video sequence") aggregation bit
++// when the frame's FIRST OBU is a sequence header (rtp_packetizer_av1.cc),
++// and the depacketizer derives kVideoFrameKey purely from that bit. Without
++// it the receiver never sees a keyframe: frame assembly stalls forever behind
++// a PLI storm (measured: 20 PLIs, 0 frames). The RTP layer never parses
++// sequence-header CONTENT, so empty is safe, and decrypt discards it anyway.
++constexpr uint8_t kAv1WrapperObuHeader = 0x30;  // OBU_FRAME, no ext, no size
++constexpr uint8_t kAv1WrapperSeqHdrObu[2] = {0x0a, 0x00};  // OBU_SEQUENCE_HEADER, size=0
++// Grep-able vintage stamp (strings <binary> | grep tinhat-av1-e2ee): proves which
++// cryptor build a binary actually links — a stale cargo shadow archive once
++// made v1 masquerade as v2 through four diagnostic cycles.
++constexpr char kTinHatAv1E2eeStamp[] = "tinhat-av1-e2ee-v2";
++
++// Returns the byte offset where the ciphertext starts (after the synthetic
++// OBU prefix), or 0 if the prefix cannot be parsed. Handles both the sent
++// form ([0x0a 0x00] 0x30 ...) and the depacketizer-normalized received form
++// ([0x0a 0x00] 0x32 leb128 ...).
++inline size_t Av1WrapperCiphertextOffset(
++    webrtc::ArrayView<const uint8_t> data) {
++  size_t off = 0;
++  for (int obu_count = 0; obu_count < 4; ++obu_count) {
++    if (off + 1 >= data.size())
++      return 0;
++    const uint8_t header = data[off];
++    if (header & 0x80)
++      return 0;  // obu_forbidden_bit must be 0
++    const int obu_type = (header >> 3) & 0xF;
++    size_t pos = off + 1;
++    if (header & 0x04)  // obu_extension_flag
++      pos += 1;
++    uint64_t size = 0;
++    const bool has_size = (header & 0x02) != 0;
++    if (has_size) {  // LEB128 size field
++      size_t leb = 0;
++      while (true) {
++        if (pos >= data.size() || leb >= 8)
++          return 0;
++        const uint8_t b = data[pos++];
++        size |= static_cast<uint64_t>(b & 0x7F) << (7 * leb);
++        leb++;
++        if (!(b & 0x80))
++          break;
++      }
++    }
++    if (obu_type == 6) {
++      // The FRAME wrapper: ciphertext is everything after its prefix. Its
++      // size field (absent as sent; added by the depacketizer) is advisory —
++      // the IV/trailer are located from the buffer END regardless.
++      return pos < data.size() ? pos : 0;
++    }
++    if (obu_type == 1) {
++      // Synthetic keyframe sequence header: skip header + payload.
++      if (!has_size || pos + size >= data.size())
++        return 0;
++      off = pos + static_cast<size_t>(size);
++      continue;
++    }
++    return 0;  // not something we ever emit
++  }
++  return 0;
++}
++
+ #ifdef RTC_ENABLE_H265
+ inline bool IsH265SliceNalu(webrtc::H265::NaluType nalu_type) {
+   // VCL NALUs (Video Coding Layer) - slice segments
+@@ -536,6 +625,19 @@ void FrameCryptorTransformer::encryptFrame(
+       H265::WriteRbsp(data_without_header.data(), data_without_header.size(),
+                       &data_out);
+ #endif // RTC_ENABLE_H265
++    } else if (FrameIsAv1(frame.get(), type_)) {
++      // PATCH (Tin Hat) AV1 E2EE: synthetic wrapper OBUs, see above.
++      static const bool log_stamp_once = [] {
++        RTC_LOG(LS_INFO) << "AV1 E2EE wrapper active: " << kTinHatAv1E2eeStamp;
++        return true;
++      }();
++      (void)log_stamp_once;
++      auto av1Frame =
++          static_cast<webrtc::TransformableVideoFrameInterface*>(frame.get());
++      if (av1Frame->IsKeyFrame())
++        data_out.AppendData(kAv1WrapperSeqHdrObu, sizeof(kAv1WrapperSeqHdrObu));
++      data_out.AppendData(&kAv1WrapperObuHeader, 1);
++      data_out.AppendData(data_without_header);
+     } else {
+       data_out.AppendData(data_without_header);
+       RTC_CHECK_EQ(data_out.size(), frame_header.size() +
+@@ -676,9 +778,31 @@ void FrameCryptorTransformer::decryptFrame(
+     iv[i] = data_in[data_in.size() - 2 - ivLength + i];
+   }
+ 
+-  webrtc::Buffer encrypted_buffer(data_in.size() - unencrypted_bytes);
+-  for (size_t i = unencrypted_bytes; i < data_in.size(); i++) {
+-    encrypted_buffer[i - unencrypted_bytes] = data_in[i];
++  // PATCH (Tin Hat) AV1 E2EE: drop the synthetic wrapper OBU prefix. It
++  // is not part of the ciphertext or the AAD, it only existed to keep the RTP
++  // packetizer away from the encrypted bytes (and, on keyframes, to make the
++  // packetizer set the N bit).
++  size_t skip_bytes = unencrypted_bytes;
++  if (FrameIsAv1(frame.get(), type_)) {
++    const size_t offset = Av1WrapperCiphertextOffset(data_in);
++    // IV + 2-byte trailer + 16-byte GCM tag must fit after the wrapper;
++    // anything less is not one of our frames.
++    if (offset == 0 ||
++        data_in.size() < offset + static_cast<size_t>(ivLength) + 2 + 16) {
++      RTC_LOG(LS_WARNING)
++          << "FrameCryptorTransformer::decryptFrame() malformed AV1 wrapper";
++      if (last_dec_error_ != FrameCryptionState::kDecryptionFailed) {
++        last_dec_error_ = FrameCryptionState::kDecryptionFailed;
++        onFrameCryptionStateChanged(last_dec_error_);
++      }
++      return;
++    }
++    skip_bytes += offset;
++  }
++
++  webrtc::Buffer encrypted_buffer(data_in.size() - skip_bytes);
++  for (size_t i = skip_bytes; i < data_in.size(); i++) {
++    encrypted_buffer[i - skip_bytes] = data_in[i];
+   }
+ 
+   if (FrameIsH264(frame.get(), type_) &&

@@ -1,0 +1,43 @@
+[package]
+name = "tinhat-streamer"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "NVENC/VAAPI screen-share publisher into a LiveKit room (Tin Hat desktop)"
+
+[dependencies]
+gstreamer = "0.23"
+gstreamer-app = "0.23" # appsink: pull raw I420 frames to feed the LiveKit SDK
+gstreamer-video = "0.23" # VideoFrameRef: read I420 planes + strides
+anyhow = "1"
+serde_json = "1" # 10.0.6: pw-dump snapshot of our own PipeWire streams ([pw-snapshot])
+# widgets (modular UI step 2): the Call stats maths + the `tinhat.rxq` wire format, shared with Tin Hat Web (callstats.rs)
+tinhat-widgets = { path = "../widgets" }
+# LiveKit Rust SDK — the E2EE publish path: libwebrtc's NVENC factory encodes (built
+# via webrtc-sys + CUDA_HOME), and its FrameCryptor does per-participant GCM E2EE that
+# byte-matches Element Call. rustls TLS (default has none). Used for the real publish;
+# the gst livekitwebrtcsink path stays for the local NVENC smoke test.
+livekit = { version = "=0.7.46", features = ["rustls-tls-native-roots"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
+# Diagnostics for the tinhat-publish harness: RUST_LOG surfaces libwebrtc/livekit
+# internals (BWE probes, REMB, overuse) via the log->tracing bridge.
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-log = "0.2"
+# StreamExt::next() for draining LiveKit NativeAudioStream (remote audio playback).
+futures-util = "0.3"
+
+# KDE Wayland screen capture via xdg-desktop-portal (ScreenCast). `screencast` is
+# NOT a default feature; `default = ["tokio"]` gives the tokio backend, matching the
+# app crate's tokio rt-multi-thread. zbus is re-exported (no separate dep). The async
+# portal call runs on the app runtime. Linux-only: no portal/PipeWire on Windows —
+# capture.rs is cfg-split (see lib.rs; Windows stub in capture_windows.rs).
+[target.'cfg(target_os = "linux")'.dependencies]
+ashpd = { version = "0.13", features = ["screencast"] }
+
+[[bin]]
+name = "tinhat-publish"
+path = "src/bin/publish.rs"
+
+[[bin]]
+name = "captest"
+path = "src/bin/captest.rs"

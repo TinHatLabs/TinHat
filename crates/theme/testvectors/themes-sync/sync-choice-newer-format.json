@@ -1,0 +1,141 @@
+{
+  "devices": [
+    "DESK"
+  ],
+  "expect": {
+    "devices": {
+      "DESK": {
+        "choice": {
+          "known": {
+            "by": "DESK",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "previous": {
+              "by": "OTHER",
+              "icons": "duotone",
+              "rev": 3,
+              "savedAt": 1790400000005,
+              "sounds": "default",
+              "theme": "oled"
+            },
+            "rev": 4,
+            "savedAt": 1790400000010,
+            "sounds": "default",
+            "theme": "dracula",
+            "v": 1
+          },
+          "raw": {
+            "by": "OTHER",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 3,
+            "savedAt": 1790400000005,
+            "sounds": "default",
+            "theme": "oled",
+            "v": 1
+          },
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      }
+    },
+    "log": [
+      "0 DESK deliver choice: read-only",
+      "1 DESK apply choice: read-only",
+      "2 DESK put choice: idle",
+      "3 - serverPut choice: set",
+      "4 DESK deliver choice: new",
+      "5 DESK apply choice: saved",
+      "6 DESK put choice: put"
+    ],
+    "server": {
+      "choice": {
+        "by": "DESK",
+        "format": "tinhat-theme-choice",
+        "icons": "duotone",
+        "previous": {
+          "by": "OTHER",
+          "icons": "duotone",
+          "rev": 3,
+          "savedAt": 1790400000005,
+          "sounds": "default",
+          "theme": "oled"
+        },
+        "rev": 4,
+        "savedAt": 1790400000010,
+        "sounds": "default",
+        "theme": "dracula",
+        "v": 1
+      },
+      "themes": null
+    }
+  },
+  "kind": "sync",
+  "server": {
+    "choice": {
+      "format": "tinhat-theme-choice",
+      "look": {},
+      "theme": "nord",
+      "v": 2
+    }
+  },
+  "steps": [
+    {
+      "device": "DESK",
+      "event": "deliver",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "apply",
+      "now": 1790400000000,
+      "patch": {
+        "theme": "dracula"
+      }
+    },
+    {
+      "device": "DESK",
+      "event": "put",
+      "key": "choice"
+    },
+    {
+      "doc": {
+        "by": "OTHER",
+        "format": "tinhat-theme-choice",
+        "icons": "duotone",
+        "rev": 3,
+        "savedAt": 1790400000005,
+        "sounds": "default",
+        "theme": "oled",
+        "v": 1
+      },
+      "event": "serverPut",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "deliver",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "apply",
+      "now": 1790400000010,
+      "patch": {
+        "theme": "dracula"
+      }
+    },
+    {
+      "device": "DESK",
+      "event": "put",
+      "key": "choice"
+    }
+  ]
+}

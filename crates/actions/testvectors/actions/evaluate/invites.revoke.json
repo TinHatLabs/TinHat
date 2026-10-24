@@ -1,0 +1,1723 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": false
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "desktop: all on, inviteCode.live flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only inviteCode.live=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": false
+          }
+        }
+      },
+      "name": "desktop: all on, invites.operator flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "desktop: only invites.operator=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": false
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": false
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": false
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": false
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "web: all on, inviteCode.live flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only inviteCode.live=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": false
+          }
+        }
+      },
+      "name": "web: all on, invites.operator flipped"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "web: only invites.operator=true"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": false
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": false
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "requires",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": false
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Remove",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
+        "danger": true,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Revoke",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "TH-7Q2K",
+        "targetIcon": null,
+        "targetName": "TH-7Q2K",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "invites.revoke",
+        "app": "web",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": true
+                }
+              }
+            }
+          },
+          "values": {
+            "invites.operator": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

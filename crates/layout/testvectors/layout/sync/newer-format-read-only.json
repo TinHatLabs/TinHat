@@ -1,0 +1,102 @@
+{
+  "devices": [
+    "a"
+  ],
+  "expect": {
+    "devices": {
+      "a": {
+        "chains": {},
+        "counter": 0,
+        "known": {},
+        "lost": {},
+        "maxV": 2,
+        "own": {},
+        "readOnly": true,
+        "wantPut": false
+      }
+    },
+    "log": [
+      "0 a incoming: read-only",
+      "1 a save: read-only",
+      "2 a put: idle",
+      "3 a incoming: read-only",
+      "4 a save: read-only"
+    ],
+    "server": null
+  },
+  "kind": "sync",
+  "steps": [
+    {
+      "device": "a",
+      "doc": {
+        "format": "tinhat-layouts",
+        "layouts": [],
+        "v": 2
+      },
+      "event": "incoming"
+    },
+    {
+      "device": "a",
+      "edit": {
+        "desktop": {
+          "root": {
+            "c": [],
+            "id": "body",
+            "t": "row"
+          },
+          "tag": "a1"
+        },
+        "name": "Main",
+        "phone": {
+          "list": [
+            "rooms"
+          ],
+          "rail": [
+            "nav"
+          ]
+        }
+      },
+      "event": "save",
+      "id": "main",
+      "now": 1
+    },
+    {
+      "device": "a",
+      "event": "put"
+    },
+    {
+      "device": "a",
+      "doc": {
+        "format": "tinhat-layouts",
+        "layouts": [],
+        "v": 1
+      },
+      "event": "incoming"
+    },
+    {
+      "device": "a",
+      "edit": {
+        "desktop": {
+          "root": {
+            "c": [],
+            "id": "body",
+            "t": "row"
+          },
+          "tag": "a2"
+        },
+        "name": "Main",
+        "phone": {
+          "list": [
+            "rooms"
+          ],
+          "rail": [
+            "nav"
+          ]
+        }
+      },
+      "event": "save",
+      "id": "main",
+      "now": 2
+    }
+  ]
+}

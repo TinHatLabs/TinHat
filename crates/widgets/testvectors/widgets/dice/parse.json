@@ -1,0 +1,1339 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "2d6+3",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "all",
+            "kind": "dice",
+            "n": 2,
+            "sides": 6,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 3
+          }
+        ]
+      },
+      "input": "2d6+3"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d20",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "d20"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d20",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "D20"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d20",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "1d20"
+    },
+    {
+      "expect": {
+        "dice": 4,
+        "expr": "4d6kh3",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 4,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 3,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": " 4d6k3 "
+    },
+    {
+      "expect": {
+        "dice": 4,
+        "expr": "4d6kh3",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 4,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 3,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "4d6kh3"
+    },
+    {
+      "expect": {
+        "dice": 4,
+        "expr": "4d6kl1",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 4,
+            "keep": "kl",
+            "kind": "dice",
+            "n": 1,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "4d6KL1"
+    },
+    {
+      "expect": {
+        "dice": 4,
+        "expr": "4d6kh3",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 4,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 3,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "4d6Kh3"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "2d20kh1+5",
+        "label": "Advantage",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ]
+      },
+      "input": "2d20kh1+5"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "2d20kl1",
+        "label": "Disadvantage",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "kl",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "2d20kl1"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "2d20kh1",
+        "label": "Advantage",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "2d20kh1"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "2d20kh1-2",
+        "label": "Advantage",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": -1,
+            "value": 2
+          }
+        ]
+      },
+      "input": "2d20k1-2"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d100",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 100,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "d%"
+    },
+    {
+      "expect": {
+        "dice": 3,
+        "expr": "3d100kh2",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 3,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 2,
+            "sides": 100,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "3d%kh2"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "1d20-1d4+2",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 4,
+            "sign": -1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 2
+          }
+        ]
+      },
+      "input": "1d20-1d4+2"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "-1d4+10",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 4,
+            "sign": -1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 10
+          }
+        ]
+      },
+      "input": "-1d4+10"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d20",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "+d20"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "-1d4",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 4,
+            "sign": -1
+          }
+        ]
+      },
+      "input": "−1d4"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d20+5-1",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          },
+          {
+            "kind": "num",
+            "sign": -1,
+            "value": 1
+          }
+        ]
+      },
+      "input": "1d20 + 5 − 1"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d20+5",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ]
+      },
+      "input": "1d20\t+\t5"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d6",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": " \n d6 \r"
+    },
+    {
+      "expect": {
+        "dice": 7,
+        "expr": "7d6+3",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 7,
+            "keep": "all",
+            "kind": "dice",
+            "n": 7,
+            "sides": 6,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 3
+          }
+        ]
+      },
+      "input": "007d06+0003"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d20+0",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 0
+          }
+        ]
+      },
+      "input": "1d20+0"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "0+1d6",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 0
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "0+1d6"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d6+10000",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 6,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 10000
+          }
+        ]
+      },
+      "input": "1d6+10000"
+    },
+    {
+      "expect": {
+        "dice": 100,
+        "expr": "100d6",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 100,
+            "keep": "all",
+            "kind": "dice",
+            "n": 100,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "100d6"
+    },
+    {
+      "expect": {
+        "dice": 100,
+        "expr": "50d6+50d4",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 50,
+            "keep": "all",
+            "kind": "dice",
+            "n": 50,
+            "sides": 6,
+            "sign": 1
+          },
+          {
+            "count": 50,
+            "keep": "all",
+            "kind": "dice",
+            "n": 50,
+            "sides": 4,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "50d6+50d4"
+    },
+    {
+      "expect": {
+        "dice": 3,
+        "expr": "2d20+1d4+5",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "all",
+            "kind": "dice",
+            "n": 2,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 4,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ]
+      },
+      "input": "2d20+1d4+5"
+    },
+    {
+      "expect": {
+        "dice": 3,
+        "expr": "2d20kh1+1d4+5",
+        "label": "Advantage",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 4,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ]
+      },
+      "input": "2d20kh1+1d4+5"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "1d20+1d20",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "1d20+1d20"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "-2d20kh1",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": -1
+          }
+        ]
+      },
+      "input": "-2d20kh1"
+    },
+    {
+      "expect": {
+        "dice": 2,
+        "expr": "2d20kh2",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 2,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "2d20kh2"
+    },
+    {
+      "expect": {
+        "dice": 3,
+        "expr": "3d20kh1",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 3,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 1,
+            "sides": 20,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "3d20kh1"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d2",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 2,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "d2"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d1000",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 1000,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "d1000"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d1000kh1",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "kh",
+            "kind": "dice",
+            "n": 1,
+            "sides": 1000,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "1d1000kh1"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d6+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 6,
+            "sign": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 1
+          }
+        ]
+      },
+      "input": "1d6+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1"
+    },
+    {
+      "expect": {
+        "code": "E_TERMS",
+        "message": "That's too many parts — 20 at most",
+        "ok": false
+      },
+      "input": "1d6+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1"
+    },
+    {
+      "expect": {
+        "code": "E_EMPTY",
+        "message": "Type a roll, like 2d6+3",
+        "ok": false
+      },
+      "input": ""
+    },
+    {
+      "expect": {
+        "code": "E_EMPTY",
+        "message": "Type a roll, like 2d6+3",
+        "ok": false
+      },
+      "input": "   "
+    },
+    {
+      "expect": {
+        "code": "E_EMPTY",
+        "message": "Type a roll, like 2d6+3",
+        "ok": false
+      },
+      "input": "\t\n"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "2d6+"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "2d6++3"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "+"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "-"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "3d"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "d"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "dd6"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "2d6 3"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "2 d6"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "2d 6"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "2d6 kh1"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "4d6k"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "4d6kx3"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "4d6h3"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "1d6*2"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "1d6/2"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "(1d6)"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "1d6,1d8"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "abc"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "d20adv"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "1e3d6"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "1.5d6"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "１d6"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "2d6+3 # attack"
+    },
+    {
+      "expect": {
+        "code": "E_COUNT",
+        "message": "Roll at least 1 die",
+        "ok": false
+      },
+      "input": "0d6"
+    },
+    {
+      "expect": {
+        "code": "E_TOO_MANY",
+        "message": "That's too many dice — 100 at most",
+        "ok": false
+      },
+      "input": "101d6"
+    },
+    {
+      "expect": {
+        "code": "E_TOO_MANY",
+        "message": "That's too many dice — 100 at most",
+        "ok": false
+      },
+      "input": "99d6+2d6"
+    },
+    {
+      "expect": {
+        "code": "E_TOO_MANY",
+        "message": "That's too many dice — 100 at most",
+        "ok": false
+      },
+      "input": "60d6+41d4"
+    },
+    {
+      "expect": {
+        "code": "E_SIDES_FEW",
+        "message": "A die needs at least 2 sides",
+        "ok": false
+      },
+      "input": "2d0"
+    },
+    {
+      "expect": {
+        "code": "E_SIDES_FEW",
+        "message": "A die needs at least 2 sides",
+        "ok": false
+      },
+      "input": "2d1"
+    },
+    {
+      "expect": {
+        "code": "E_SIDES_MANY",
+        "message": "Dice go up to 1000 sides",
+        "ok": false
+      },
+      "input": "2d1001"
+    },
+    {
+      "expect": {
+        "code": "E_SIDES_MANY",
+        "message": "Dice go up to 1000 sides",
+        "ok": false
+      },
+      "input": "1d99999999999"
+    },
+    {
+      "expect": {
+        "code": "E_KEEP",
+        "message": "Keep between 1 and 4 dice",
+        "ok": false
+      },
+      "input": "4d6kh5"
+    },
+    {
+      "expect": {
+        "code": "E_KEEP",
+        "message": "Keep between 1 and 4 dice",
+        "ok": false
+      },
+      "input": "4d6kh0"
+    },
+    {
+      "expect": {
+        "code": "E_KEEP",
+        "message": "You can only keep 1 die",
+        "ok": false
+      },
+      "input": "1d6kh0"
+    },
+    {
+      "expect": {
+        "code": "E_KEEP",
+        "message": "You can only keep 1 die",
+        "ok": false
+      },
+      "input": "1d6kl2"
+    },
+    {
+      "expect": {
+        "code": "E_NUMBER",
+        "message": "Numbers go up to 10000",
+        "ok": false
+      },
+      "input": "10001+d6"
+    },
+    {
+      "expect": {
+        "code": "E_NUMBER",
+        "message": "Numbers go up to 10000",
+        "ok": false
+      },
+      "input": "1d6+99999"
+    },
+    {
+      "expect": {
+        "code": "E_NUMBER",
+        "message": "Numbers go up to 10000",
+        "ok": false
+      },
+      "input": "1d6+123456789012"
+    },
+    {
+      "expect": {
+        "code": "E_NO_DICE",
+        "message": "Add a die, like 1d20",
+        "ok": false
+      },
+      "input": "5+3"
+    },
+    {
+      "expect": {
+        "code": "E_NO_DICE",
+        "message": "Add a die, like 1d20",
+        "ok": false
+      },
+      "input": "5"
+    },
+    {
+      "expect": {
+        "code": "E_NO_DICE",
+        "message": "Add a die, like 1d20",
+        "ok": false
+      },
+      "input": "-5"
+    },
+    {
+      "expect": {
+        "code": "E_TERMS",
+        "message": "That's too many parts — 20 at most",
+        "ok": false
+      },
+      "input": "1d20+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1"
+    },
+    {
+      "expect": {
+        "code": "E_LONG",
+        "message": "That's too long — 100 characters at most",
+        "ok": false
+      },
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "expect": {
+        "dice": 1,
+        "expr": "1d6",
+        "label": "",
+        "ok": true,
+        "terms": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kind": "dice",
+            "n": 1,
+            "sides": 6,
+            "sign": 1
+          }
+        ]
+      },
+      "input": "d6                                                                                                  "
+    },
+    {
+      "expect": {
+        "code": "E_LONG",
+        "message": "That's too long — 100 characters at most",
+        "ok": false
+      },
+      "input": "d6                                                                                                   "
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "🎲 1d20"
+    },
+    {
+      "expect": {
+        "code": "E_SYNTAX",
+        "message": "Can't read that — try 2d6+3, 4d6kh3 or 2d20kh1",
+        "ok": false
+      },
+      "input": "1d20🎲"
+    }
+  ]
+}

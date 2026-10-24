@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-action"
+      },
+      "input": {
+        "action": "x.y"
+      },
+      "name": "unknown action"
+    },
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": 3,
+      "name": "not an object"
+    }
+  ],
+  "kind": "target"
+}

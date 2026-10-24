@@ -1,0 +1,137 @@
+{
+ "format": "tinhat-dm-target-vectors",
+ "v": 1,
+ "note": "dm_target(input, own_server): the New DM field (contract tools/dm-target-vectors.py); null = not a user",
+ "cases": [
+  {
+   "input": "blake",
+   "server": "example.com",
+   "want": "@blake:example.com"
+  },
+  {
+   "input": "@blake",
+   "server": "example.com",
+   "want": "@blake:example.com"
+  },
+  {
+   "input": " Blake ",
+   "server": "example.com",
+   "want": "@blake:example.com"
+  },
+  {
+   "input": "@blake:example.com",
+   "server": "example.com",
+   "want": "@blake:example.com"
+  },
+  {
+   "input": "blake:matrix.org",
+   "server": "example.com",
+   "want": "@blake:matrix.org"
+  },
+  {
+   "input": "@Someone:Matrix.ORG",
+   "server": "example.com",
+   "want": "@someone:matrix.org"
+  },
+  {
+   "input": "https://matrix.to/#/@blake:example.com",
+   "server": "example.com",
+   "want": "@blake:example.com"
+  },
+  {
+   "input": "https://matrix.to/#/@elena:example.com?via=example.com",
+   "server": "example.com",
+   "want": "@elena:example.com"
+  },
+  {
+   "input": "first.last_1-2=3/4+5",
+   "server": "example.com",
+   "want": "@first.last_1-2=3/4+5:example.com"
+  },
+  {
+   "input": "@dale:example.com:8448",
+   "server": "example.com",
+   "want": "@dale:example.com:8448"
+  },
+  {
+   "input": "blake",
+   "server": "Example.com",
+   "want": "@blake:example.com"
+  },
+  {
+   "input": "",
+   "server": "",
+   "want": null
+  },
+  {
+   "input": "",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "   ",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "two words",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "@",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "blake:",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "@:example.com",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "bl!ke",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "#room:example.com",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "!abc:example.com",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "@@blake",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "blake",
+   "server": "localhost",
+   "want": "@blake:localhost"
+  },
+  {
+   "input": "blake:nodot",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "blake:host:999999",
+   "server": "example.com",
+   "want": null
+  },
+  {
+   "input": "émile",
+   "server": "example.com",
+   "want": null
+  }
+ ]
+}

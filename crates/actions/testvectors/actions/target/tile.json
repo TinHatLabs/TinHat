@@ -1,0 +1,925 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.hidden.show",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.hidden.show: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.hidden.show",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.hidden.show: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.hidden.show",
+        "target": "x"
+      },
+      "name": "call.hidden.show: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.hidden.show"
+      },
+      "name": "call.hidden.show: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.recStream.leave",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.recStream.leave: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.recStream.leave",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.recStream.leave: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.recStream.leave",
+        "target": "x"
+      },
+      "name": "call.recStream.leave: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.recStream.leave"
+      },
+      "name": "call.recStream.leave: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.recStream.tuneIn",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.recStream.tuneIn: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.recStream.tuneIn",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.recStream.tuneIn: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.recStream.tuneIn",
+        "target": "x"
+      },
+      "name": "call.recStream.tuneIn: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.recStream.tuneIn"
+      },
+      "name": "call.recStream.tuneIn: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.hide",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.hide: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.hide",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.hide: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.hide",
+        "target": "x"
+      },
+      "name": "tile.hide: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.hide"
+      },
+      "name": "tile.hide: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.listen.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.listen.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.listen.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.listen.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.listen.toggle",
+        "target": "x"
+      },
+      "name": "tile.listen.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.listen.toggle"
+      },
+      "name": "tile.listen.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.more",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.more: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.more",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.more: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.more",
+        "target": "x"
+      },
+      "name": "tile.more: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.more"
+      },
+      "name": "tile.more: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.pin.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.pin.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.pin.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.pin.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.pin.toggle",
+        "target": "x"
+      },
+      "name": "tile.pin.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.pin.toggle"
+      },
+      "name": "tile.pin.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.popOut",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.popOut: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.popOut",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.popOut: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.popOut",
+        "target": "x"
+      },
+      "name": "tile.popOut: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.popOut"
+      },
+      "name": "tile.popOut: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "auto"
+        }
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "value": "auto"
+        }
+      },
+      "name": "tile.quality.set: param value=auto"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "1080"
+        }
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "value": "1080"
+        }
+      },
+      "name": "tile.quality.set: param value=1080"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "720"
+        }
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "value": "720"
+        }
+      },
+      "name": "tile.quality.set: param value=720"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "360"
+        }
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "value": "360"
+        }
+      },
+      "name": "tile.quality.set: param value=360"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "180"
+        }
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "value": "180"
+        }
+      },
+      "name": "tile.quality.set: param value=180"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "value": "zz"
+        }
+      },
+      "name": "tile.quality.set: param value invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.quality.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.quality.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "target": "x"
+      },
+      "name": "tile.quality.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.quality.set"
+      },
+      "name": "tile.quality.set: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.selfView.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.selfView.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "target": "x"
+      },
+      "name": "tile.selfView.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.selfView.toggle"
+      },
+      "name": "tile.selfView.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.streamMenu",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.streamMenu: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.streamMenu",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.streamMenu: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.streamMenu",
+        "target": "x"
+      },
+      "name": "tile.streamMenu: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.streamMenu"
+      },
+      "name": "tile.streamMenu: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.view.reset",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.view.reset: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.view.reset",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.view.reset: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.view.reset",
+        "target": "x"
+      },
+      "name": "tile.view.reset: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.view.reset"
+      },
+      "name": "tile.view.reset: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "auto"
+        }
+      },
+      "input": {
+        "action": "tile.view.set",
+        "target": {
+          "value": "auto"
+        }
+      },
+      "name": "tile.view.set: param value=auto"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "fill"
+        }
+      },
+      "input": {
+        "action": "tile.view.set",
+        "target": {
+          "value": "fill"
+        }
+      },
+      "name": "tile.view.set: param value=fill"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "fit"
+        }
+      },
+      "input": {
+        "action": "tile.view.set",
+        "target": {
+          "value": "fit"
+        }
+      },
+      "name": "tile.view.set: param value=fit"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.view.set",
+        "target": {
+          "value": "zz"
+        }
+      },
+      "name": "tile.view.set: param value invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.view.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.view.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.view.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.view.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.view.set",
+        "target": "x"
+      },
+      "name": "tile.view.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.view.set"
+      },
+      "name": "tile.view.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "dir": "in"
+        }
+      },
+      "input": {
+        "action": "tile.zoom",
+        "target": {
+          "dir": "in"
+        }
+      },
+      "name": "tile.zoom: param dir=in"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "dir": "out"
+        }
+      },
+      "input": {
+        "action": "tile.zoom",
+        "target": {
+          "dir": "out"
+        }
+      },
+      "name": "tile.zoom: param dir=out"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "dir",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.zoom",
+        "target": {
+          "dir": "zz"
+        }
+      },
+      "name": "tile.zoom: param dir invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.zoom",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "tile.zoom: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.zoom",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "tile.zoom: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "tile.zoom",
+        "target": "x"
+      },
+      "name": "tile.zoom: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "tile.zoom"
+      },
+      "name": "tile.zoom: no target"
+    }
+  ],
+  "kind": "target"
+}

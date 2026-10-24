@@ -1,0 +1,1615 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "expr": "2d6+3",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "all",
+            "kept": [
+              true,
+              true
+            ],
+            "kind": "dice",
+            "n": 2,
+            "rolls": [
+              4,
+              2
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 6
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 3
+          }
+        ],
+        "kept": [
+          true,
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          4,
+          2
+        ],
+        "total": 9
+      },
+      "expr": "2d6+3",
+      "raw": [
+        4,
+        2
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d20",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "nat20",
+        "rolls": [
+          20
+        ],
+        "total": 20
+      },
+      "expr": "1d20",
+      "raw": [
+        20
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d20",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              1
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 1
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "nat1",
+        "rolls": [
+          1
+        ],
+        "total": 1
+      },
+      "expr": "1d20",
+      "raw": [
+        1
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d20+5",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "nat20",
+        "rolls": [
+          20
+        ],
+        "total": 25
+      },
+      "expr": "1d20+5",
+      "raw": [
+        20
+      ]
+    },
+    {
+      "expect": {
+        "expr": "4d6kh3",
+        "groups": [
+          {
+            "count": 4,
+            "keep": "kh",
+            "kept": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 3,
+            "rolls": [
+              3,
+              6,
+              3,
+              2
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 12
+          }
+        ],
+        "kept": [
+          true,
+          true,
+          true,
+          false
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          3,
+          6,
+          3,
+          2
+        ],
+        "total": 12
+      },
+      "expr": "4d6kh3",
+      "raw": [
+        3,
+        6,
+        3,
+        2
+      ]
+    },
+    {
+      "expect": {
+        "expr": "4d6kh3",
+        "groups": [
+          {
+            "count": 4,
+            "keep": "kh",
+            "kept": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 3,
+            "rolls": [
+              5,
+              5,
+              5,
+              5
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 15
+          }
+        ],
+        "kept": [
+          true,
+          true,
+          true,
+          false
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          5,
+          5,
+          5,
+          5
+        ],
+        "total": 15
+      },
+      "expr": "4d6kh3",
+      "raw": [
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "expect": {
+        "expr": "4d6kl1",
+        "groups": [
+          {
+            "count": 4,
+            "keep": "kl",
+            "kept": [
+              false,
+              true,
+              false,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              3,
+              1,
+              1,
+              6
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 1
+          }
+        ],
+        "kept": [
+          false,
+          true,
+          false,
+          false
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          3,
+          1,
+          1,
+          6
+        ],
+        "total": 1
+      },
+      "expr": "4d6kl1",
+      "raw": [
+        3,
+        1,
+        1,
+        6
+      ]
+    },
+    {
+      "expect": {
+        "expr": "4d6kh1",
+        "groups": [
+          {
+            "count": 4,
+            "keep": "kh",
+            "kept": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              6,
+              2,
+              6,
+              1
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 6
+          }
+        ],
+        "kept": [
+          true,
+          false,
+          false,
+          false
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          6,
+          2,
+          6,
+          1
+        ],
+        "total": 6
+      },
+      "expr": "4d6kh1",
+      "raw": [
+        6,
+        2,
+        6,
+        1
+      ]
+    },
+    {
+      "expect": {
+        "expr": "2d20kh1+5",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kept": [
+              false,
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              7,
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ],
+        "kept": [
+          false,
+          true
+        ],
+        "label": "Advantage",
+        "natural": "nat20",
+        "rolls": [
+          7,
+          20
+        ],
+        "total": 25
+      },
+      "expr": "2d20kh1+5",
+      "raw": [
+        7,
+        20
+      ]
+    },
+    {
+      "expect": {
+        "expr": "2d20kh1+5",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kept": [
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20,
+              7
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ],
+        "kept": [
+          true,
+          false
+        ],
+        "label": "Advantage",
+        "natural": "nat20",
+        "rolls": [
+          20,
+          7
+        ],
+        "total": 25
+      },
+      "expr": "2d20kh1+5",
+      "raw": [
+        20,
+        7
+      ]
+    },
+    {
+      "expect": {
+        "expr": "2d20kl1",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kl",
+            "kept": [
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              1,
+              15
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 1
+          }
+        ],
+        "kept": [
+          true,
+          false
+        ],
+        "label": "Disadvantage",
+        "natural": "nat1",
+        "rolls": [
+          1,
+          15
+        ],
+        "total": 1
+      },
+      "expr": "2d20kl1",
+      "raw": [
+        1,
+        15
+      ]
+    },
+    {
+      "expect": {
+        "expr": "2d20kl1",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kl",
+            "kept": [
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              12,
+              12
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 12
+          }
+        ],
+        "kept": [
+          true,
+          false
+        ],
+        "label": "Disadvantage",
+        "natural": "",
+        "rolls": [
+          12,
+          12
+        ],
+        "total": 12
+      },
+      "expr": "2d20kl1",
+      "raw": [
+        12,
+        12
+      ]
+    },
+    {
+      "expect": {
+        "expr": "2d20kh1",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kept": [
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              1,
+              1
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 1
+          }
+        ],
+        "kept": [
+          true,
+          false
+        ],
+        "label": "Advantage",
+        "natural": "nat1",
+        "rolls": [
+          1,
+          1
+        ],
+        "total": 1
+      },
+      "expr": "2d20kh1",
+      "raw": [
+        1,
+        1
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d20-1d4+2",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              15
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 15
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              3
+            ],
+            "sides": 4,
+            "sign": -1,
+            "sum": 3
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 2
+          }
+        ],
+        "kept": [
+          true,
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          15,
+          3
+        ],
+        "total": 14
+      },
+      "expr": "1d20-1d4+2",
+      "raw": [
+        15,
+        3
+      ]
+    },
+    {
+      "expect": {
+        "expr": "-1d4+10",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              4
+            ],
+            "sides": 4,
+            "sign": -1,
+            "sum": 4
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 10
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          4
+        ],
+        "total": 6
+      },
+      "expr": "-1d4+10",
+      "raw": [
+        4
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d20+1d20",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          }
+        ],
+        "kept": [
+          true,
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          20,
+          20
+        ],
+        "total": 40
+      },
+      "expr": "1d20+1d20",
+      "raw": [
+        20,
+        20
+      ]
+    },
+    {
+      "expect": {
+        "expr": "2d20kh1+1d4+5",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kept": [
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20,
+              3
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          },
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              4
+            ],
+            "sides": 4,
+            "sign": 1,
+            "sum": 4
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ],
+        "kept": [
+          true,
+          false,
+          true
+        ],
+        "label": "Advantage",
+        "natural": "nat20",
+        "rolls": [
+          20,
+          3,
+          4
+        ],
+        "total": 29
+      },
+      "expr": "2d20kh1+1d4+5",
+      "raw": [
+        20,
+        3,
+        4
+      ]
+    },
+    {
+      "expect": {
+        "expr": "-2d20kh1",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kept": [
+              true,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20,
+              5
+            ],
+            "sides": 20,
+            "sign": -1,
+            "sum": 20
+          }
+        ],
+        "kept": [
+          true,
+          false
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          20,
+          5
+        ],
+        "total": -20
+      },
+      "expr": "-2d20kh1",
+      "raw": [
+        20,
+        5
+      ]
+    },
+    {
+      "expect": {
+        "expr": "3d20kh1",
+        "groups": [
+          {
+            "count": 3,
+            "keep": "kh",
+            "kept": [
+              true,
+              false,
+              false
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20,
+              1,
+              1
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          }
+        ],
+        "kept": [
+          true,
+          false,
+          false
+        ],
+        "label": "",
+        "natural": "nat20",
+        "rolls": [
+          20,
+          1,
+          1
+        ],
+        "total": 20
+      },
+      "expr": "3d20kh1",
+      "raw": [
+        20,
+        1,
+        1
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": [
+        0
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": [
+        7
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": [
+        2.5
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": [
+        "3"
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": [
+        null
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": [
+        3,
+        4
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "2d6",
+      "raw": [
+        3
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": []
+    },
+    {
+      "expect": {
+        "expr": "1d6",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              6
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 6
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          6
+        ],
+        "total": 6
+      },
+      "expr": "1d6",
+      "raw": [
+        6
+      ]
+    },
+    {
+      "expect": null,
+      "expr": "1d6",
+      "raw": [
+        -1
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d1000",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              1000
+            ],
+            "sides": 1000,
+            "sign": 1,
+            "sum": 1000
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          1000
+        ],
+        "total": 1000
+      },
+      "expr": "1d1000",
+      "raw": [
+        1000
+      ]
+    },
+    {
+      "expect": {
+        "expr": "100d2",
+        "groups": [
+          {
+            "count": 100,
+            "keep": "all",
+            "kept": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "kind": "dice",
+            "n": 100,
+            "rolls": [
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2,
+              1,
+              1,
+              2
+            ],
+            "sides": 2,
+            "sign": 1,
+            "sum": 134
+          }
+        ],
+        "kept": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2
+        ],
+        "total": 134
+      },
+      "expr": "100d2",
+      "raw": [
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d20+10000-5",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              1
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 1
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 10000
+          },
+          {
+            "kind": "num",
+            "sign": -1,
+            "value": 5
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "nat1",
+        "rolls": [
+          1
+        ],
+        "total": 9996
+      },
+      "expr": "1d20+10000-5",
+      "raw": [
+        1
+      ]
+    },
+    {
+      "expect": {
+        "expr": "1d4-10000",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              2
+            ],
+            "sides": 4,
+            "sign": 1,
+            "sum": 2
+          },
+          {
+            "kind": "num",
+            "sign": -1,
+            "value": 10000
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          2
+        ],
+        "total": -9998
+      },
+      "expr": "1d4-10000",
+      "raw": [
+        2
+      ]
+    }
+  ]
+}

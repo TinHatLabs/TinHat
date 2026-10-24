@@ -1,0 +1,50 @@
+{
+  "ctx": {
+    "content": {
+      "account": {
+        "h": 46
+      },
+      "composer": {
+        "h": 48
+      },
+      "dms": {
+        "empty": true,
+        "h": 0
+      },
+      "header": {
+        "h": 58
+      },
+      "nav": {
+        "h": 228
+      },
+      "rooms": {
+        "h": 300
+      },
+      "widgets": {
+        "h": 200,
+        "minH": 60
+      }
+    },
+    "size": {
+      "h": 960,
+      "w": 1560
+    },
+    "unitPm": 1000,
+    "view": {
+      "panelOpen": true,
+      "roomOpen": true
+    }
+  },
+  "expect": {
+    "error": "bad-op: bad request"
+  },
+  "kind": "op",
+  "op": {
+    "a": "navcol",
+    "b": "main",
+    "delta": 10,
+    "into": "yes",
+    "op": "resize"
+  },
+  "preset": "classic"
+}

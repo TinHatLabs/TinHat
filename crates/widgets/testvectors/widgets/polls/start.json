@@ -1,0 +1,1735 @@
+{
+  "cases": [
+    {
+      "content": {
+        "org.matrix.msc1767.text": "What should we order?\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "What should we order?",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "What should we order?"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "What should we order?"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Hidden?\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.undisclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Hidden?",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Hidden?"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "undisclosed",
+        "max": 1,
+        "question": "Hidden?"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "m.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Stable name, v1 block",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Stable name, v1 block"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "Stable name, v1 block"
+      },
+      "type": "m.poll.start"
+    },
+    {
+      "content": {
+        "m.poll": {
+          "answers": [
+            {
+              "m.id": "a",
+              "m.text": [
+                {
+                  "body": "Pizza 🍕"
+                }
+              ]
+            },
+            {
+              "m.id": "b",
+              "m.text": [
+                {
+                  "body": "Poutine"
+                }
+              ]
+            },
+            {
+              "m.id": "c",
+              "m.text": [
+                {
+                  "body": "Wings"
+                }
+              ]
+            }
+          ],
+          "kind": "m.disclosed",
+          "max_selections": 1,
+          "question": {
+            "m.text": [
+              {
+                "body": "Spec shape"
+              }
+            ]
+          }
+        },
+        "m.text": [
+          {
+            "body": "Spec shape"
+          }
+        ]
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "Spec shape"
+      },
+      "type": "m.poll.start"
+    },
+    {
+      "content": {
+        "m.poll": {
+          "answers": [
+            {
+              "m.id": "a",
+              "m.text": [
+                {
+                  "body": "Pizza 🍕"
+                }
+              ]
+            },
+            {
+              "m.id": "b",
+              "m.text": [
+                {
+                  "body": "Poutine"
+                }
+              ]
+            },
+            {
+              "m.id": "c",
+              "m.text": [
+                {
+                  "body": "Wings"
+                }
+              ]
+            }
+          ],
+          "kind": "m.undisclosed",
+          "max_selections": 1,
+          "question": {
+            "m.text": [
+              {
+                "body": "Spec undisclosed"
+              }
+            ]
+          }
+        },
+        "m.text": [
+          {
+            "body": "Spec undisclosed"
+          }
+        ]
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "undisclosed",
+        "max": 1,
+        "question": "Spec undisclosed"
+      },
+      "type": "m.poll.start"
+    },
+    {
+      "content": {
+        "m.poll": {
+          "answers": [
+            {
+              "m.id": "a",
+              "m.text": [
+                {
+                  "body": "Pizza 🍕"
+                }
+              ]
+            },
+            {
+              "m.id": "b",
+              "m.text": [
+                {
+                  "body": "Poutine"
+                }
+              ]
+            },
+            {
+              "m.id": "c",
+              "m.text": [
+                {
+                  "body": "Wings"
+                }
+              ]
+            }
+          ],
+          "kind": "m.disclosed",
+          "max_selections": 2,
+          "question": {
+            "m.text": [
+              {
+                "body": "Spec shape under the unstable type"
+              }
+            ]
+          }
+        },
+        "m.text": [
+          {
+            "body": "Spec shape under the unstable type"
+          }
+        ]
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 2,
+        "question": "Spec shape under the unstable type"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Wrong type\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Wrong type",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Wrong type"
+          }
+        }
+      },
+      "expect": null,
+      "type": "m.room.message"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Wrong type\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Wrong type",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Wrong type"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "  \n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "  ",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "  "
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "One answer\n1. Only one",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "only",
+              "org.matrix.msc1767.text": "Only one"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "One answer",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "One answer"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "only",
+            "text": "Only one"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "One answer"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "No answers\n",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "No answers",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "No answers"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Duplicate ids\n1. A\n2. B",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "B"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Duplicate ids",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Duplicate ids"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Blank answer\n1. A\n2.    ",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "   "
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Blank answer",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Blank answer"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Empty id\n1. A\n2. B",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Empty id",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Empty id"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Long id\n1. A\n2. B",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Long id",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Long id"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Id 100\n1. A\n2. B",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Id 100",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Id 100"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "text": "A"
+          },
+          {
+            "id": "b",
+            "text": "B"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "Id 100"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "25 answers\n1. Option 0\n2. Option 1\n3. Option 2\n4. Option 3\n5. Option 4\n6. Option 5\n7. Option 6\n8. Option 7\n9. Option 8\n10. Option 9\n11. Option 10\n12. Option 11\n13. Option 12\n14. Option 13\n15. Option 14\n16. Option 15\n17. Option 16\n18. Option 17\n19. Option 18\n20. Option 19\n21. Option 20\n22. Option 21\n23. Option 22\n24. Option 23\n25. Option 24",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "o0",
+              "org.matrix.msc1767.text": "Option 0"
+            },
+            {
+              "id": "o1",
+              "org.matrix.msc1767.text": "Option 1"
+            },
+            {
+              "id": "o2",
+              "org.matrix.msc1767.text": "Option 2"
+            },
+            {
+              "id": "o3",
+              "org.matrix.msc1767.text": "Option 3"
+            },
+            {
+              "id": "o4",
+              "org.matrix.msc1767.text": "Option 4"
+            },
+            {
+              "id": "o5",
+              "org.matrix.msc1767.text": "Option 5"
+            },
+            {
+              "id": "o6",
+              "org.matrix.msc1767.text": "Option 6"
+            },
+            {
+              "id": "o7",
+              "org.matrix.msc1767.text": "Option 7"
+            },
+            {
+              "id": "o8",
+              "org.matrix.msc1767.text": "Option 8"
+            },
+            {
+              "id": "o9",
+              "org.matrix.msc1767.text": "Option 9"
+            },
+            {
+              "id": "o10",
+              "org.matrix.msc1767.text": "Option 10"
+            },
+            {
+              "id": "o11",
+              "org.matrix.msc1767.text": "Option 11"
+            },
+            {
+              "id": "o12",
+              "org.matrix.msc1767.text": "Option 12"
+            },
+            {
+              "id": "o13",
+              "org.matrix.msc1767.text": "Option 13"
+            },
+            {
+              "id": "o14",
+              "org.matrix.msc1767.text": "Option 14"
+            },
+            {
+              "id": "o15",
+              "org.matrix.msc1767.text": "Option 15"
+            },
+            {
+              "id": "o16",
+              "org.matrix.msc1767.text": "Option 16"
+            },
+            {
+              "id": "o17",
+              "org.matrix.msc1767.text": "Option 17"
+            },
+            {
+              "id": "o18",
+              "org.matrix.msc1767.text": "Option 18"
+            },
+            {
+              "id": "o19",
+              "org.matrix.msc1767.text": "Option 19"
+            },
+            {
+              "id": "o20",
+              "org.matrix.msc1767.text": "Option 20"
+            },
+            {
+              "id": "o21",
+              "org.matrix.msc1767.text": "Option 21"
+            },
+            {
+              "id": "o22",
+              "org.matrix.msc1767.text": "Option 22"
+            },
+            {
+              "id": "o23",
+              "org.matrix.msc1767.text": "Option 23"
+            },
+            {
+              "id": "o24",
+              "org.matrix.msc1767.text": "Option 24"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "25 answers",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "25 answers"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "o0",
+            "text": "Option 0"
+          },
+          {
+            "id": "o1",
+            "text": "Option 1"
+          },
+          {
+            "id": "o2",
+            "text": "Option 2"
+          },
+          {
+            "id": "o3",
+            "text": "Option 3"
+          },
+          {
+            "id": "o4",
+            "text": "Option 4"
+          },
+          {
+            "id": "o5",
+            "text": "Option 5"
+          },
+          {
+            "id": "o6",
+            "text": "Option 6"
+          },
+          {
+            "id": "o7",
+            "text": "Option 7"
+          },
+          {
+            "id": "o8",
+            "text": "Option 8"
+          },
+          {
+            "id": "o9",
+            "text": "Option 9"
+          },
+          {
+            "id": "o10",
+            "text": "Option 10"
+          },
+          {
+            "id": "o11",
+            "text": "Option 11"
+          },
+          {
+            "id": "o12",
+            "text": "Option 12"
+          },
+          {
+            "id": "o13",
+            "text": "Option 13"
+          },
+          {
+            "id": "o14",
+            "text": "Option 14"
+          },
+          {
+            "id": "o15",
+            "text": "Option 15"
+          },
+          {
+            "id": "o16",
+            "text": "Option 16"
+          },
+          {
+            "id": "o17",
+            "text": "Option 17"
+          },
+          {
+            "id": "o18",
+            "text": "Option 18"
+          },
+          {
+            "id": "o19",
+            "text": "Option 19"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "25 answers"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "Bad 21st answer\n1. Option 0\n2. Option 1\n3. Option 2\n4. Option 3\n5. Option 4\n6. Option 5\n7. Option 6\n8. Option 7\n9. Option 8\n10. Option 9\n11. Option 10\n12. Option 11\n13. Option 12\n14. Option 13\n15. Option 14\n16. Option 15\n17. Option 16\n18. Option 17\n19. Option 18\n20. Option 19\n21. ",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "o0",
+              "org.matrix.msc1767.text": "Option 0"
+            },
+            {
+              "id": "o1",
+              "org.matrix.msc1767.text": "Option 1"
+            },
+            {
+              "id": "o2",
+              "org.matrix.msc1767.text": "Option 2"
+            },
+            {
+              "id": "o3",
+              "org.matrix.msc1767.text": "Option 3"
+            },
+            {
+              "id": "o4",
+              "org.matrix.msc1767.text": "Option 4"
+            },
+            {
+              "id": "o5",
+              "org.matrix.msc1767.text": "Option 5"
+            },
+            {
+              "id": "o6",
+              "org.matrix.msc1767.text": "Option 6"
+            },
+            {
+              "id": "o7",
+              "org.matrix.msc1767.text": "Option 7"
+            },
+            {
+              "id": "o8",
+              "org.matrix.msc1767.text": "Option 8"
+            },
+            {
+              "id": "o9",
+              "org.matrix.msc1767.text": "Option 9"
+            },
+            {
+              "id": "o10",
+              "org.matrix.msc1767.text": "Option 10"
+            },
+            {
+              "id": "o11",
+              "org.matrix.msc1767.text": "Option 11"
+            },
+            {
+              "id": "o12",
+              "org.matrix.msc1767.text": "Option 12"
+            },
+            {
+              "id": "o13",
+              "org.matrix.msc1767.text": "Option 13"
+            },
+            {
+              "id": "o14",
+              "org.matrix.msc1767.text": "Option 14"
+            },
+            {
+              "id": "o15",
+              "org.matrix.msc1767.text": "Option 15"
+            },
+            {
+              "id": "o16",
+              "org.matrix.msc1767.text": "Option 16"
+            },
+            {
+              "id": "o17",
+              "org.matrix.msc1767.text": "Option 17"
+            },
+            {
+              "id": "o18",
+              "org.matrix.msc1767.text": "Option 18"
+            },
+            {
+              "id": "o19",
+              "org.matrix.msc1767.text": "Option 19"
+            },
+            {
+              "id": "",
+              "org.matrix.msc1767.text": ""
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "Bad 21st answer",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Bad 21st answer"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "o0",
+            "text": "Option 0"
+          },
+          {
+            "id": "o1",
+            "text": "Option 1"
+          },
+          {
+            "id": "o2",
+            "text": "Option 2"
+          },
+          {
+            "id": "o3",
+            "text": "Option 3"
+          },
+          {
+            "id": "o4",
+            "text": "Option 4"
+          },
+          {
+            "id": "o5",
+            "text": "Option 5"
+          },
+          {
+            "id": "o6",
+            "text": "Option 6"
+          },
+          {
+            "id": "o7",
+            "text": "Option 7"
+          },
+          {
+            "id": "o8",
+            "text": "Option 8"
+          },
+          {
+            "id": "o9",
+            "text": "Option 9"
+          },
+          {
+            "id": "o10",
+            "text": "Option 10"
+          },
+          {
+            "id": "o11",
+            "text": "Option 11"
+          },
+          {
+            "id": "o12",
+            "text": "Option 12"
+          },
+          {
+            "id": "o13",
+            "text": "Option 13"
+          },
+          {
+            "id": "o14",
+            "text": "Option 14"
+          },
+          {
+            "id": "o15",
+            "text": "Option 15"
+          },
+          {
+            "id": "o16",
+            "text": "Option 16"
+          },
+          {
+            "id": "o17",
+            "text": "Option 17"
+          },
+          {
+            "id": "o18",
+            "text": "Option 18"
+          },
+          {
+            "id": "o19",
+            "text": "Option 19"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "Bad 21st answer"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "max 3\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 3,
+          "question": {
+            "body": "max 3",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "max 3"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 3,
+        "question": "max 3"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "max 99\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 99,
+          "question": {
+            "body": "max 99",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "max 99"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 3,
+        "question": "max 99"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "max 2.7\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 2.7,
+          "question": {
+            "body": "max 2.7",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "max 2.7"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 2,
+        "question": "max 2.7"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "max 0\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 0,
+          "question": {
+            "body": "max 0",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "max 0"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "max 0"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "max -2\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": -2,
+          "question": {
+            "body": "max -2",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "max -2"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "max -2"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "max string\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": "2",
+          "question": {
+            "body": "max string",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "max string"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "max string"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "kind m.poll.disclosed\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "m.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "kind m.poll.disclosed",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "kind m.poll.disclosed"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "kind m.poll.disclosed"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "kind unknown\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.example.kind",
+          "max_selections": 1,
+          "question": {
+            "body": "kind unknown",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "kind unknown"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "undisclosed",
+        "max": 1,
+        "question": "kind unknown"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "kind number\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": 7,
+          "max_selections": 1,
+          "question": {
+            "body": "kind number",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "kind number"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "undisclosed",
+        "max": 1,
+        "question": "kind number"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.start": {
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "question": {
+            "org.matrix.msc1767.text": "No answers key"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.start": {
+          "answers": {
+            "a": 1
+          },
+          "question": {
+            "org.matrix.msc1767.text": "Answers not array"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            "b"
+          ],
+          "question": {
+            "org.matrix.msc1767.text": "Answer not object"
+          }
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            }
+          ],
+          "question": "a string question"
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "m.poll": {
+          "answers": [
+            {
+              "m.id": "x",
+              "m.text": [
+                {
+                  "body": "X"
+                }
+              ]
+            }
+          ],
+          "question": {
+            "m.text": [
+              {
+                "body": "falls back to m.poll?"
+              }
+            ]
+          }
+        },
+        "org.matrix.msc3381.poll.start": "not an object"
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "x",
+            "text": "X"
+          }
+        ],
+        "kind": "undisclosed",
+        "max": 1,
+        "question": "falls back to m.poll?"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "m.poll": {
+          "answers": [
+            {
+              "m.id": "a",
+              "m.text": [
+                {
+                  "body": "Pizza 🍕"
+                }
+              ]
+            },
+            {
+              "m.id": "b",
+              "m.text": [
+                {
+                  "body": "Poutine"
+                }
+              ]
+            },
+            {
+              "m.id": "c",
+              "m.text": [
+                {
+                  "body": "Wings"
+                }
+              ]
+            }
+          ],
+          "kind": "m.disclosed",
+          "max_selections": 1,
+          "question": {
+            "m.text": [
+              {
+                "body": "m.poll wins"
+              }
+            ]
+          }
+        },
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "unstable loses",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "unstable loses"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "Pizza 🍕"
+          },
+          {
+            "id": "b",
+            "text": "Poutine"
+          },
+          {
+            "id": "c",
+            "text": "Wings"
+          }
+        ],
+        "kind": "disclosed",
+        "max": 1,
+        "question": "m.poll wins"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "i",
+              "m.id": "m",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "m.id": 5,
+              "org.matrix.msc1767.text": "B"
+            }
+          ],
+          "question": {
+            "org.matrix.msc1767.text": "m.id wins over id"
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "m",
+            "text": "A"
+          },
+          {
+            "id": "b",
+            "text": "B"
+          }
+        ],
+        "kind": "undisclosed",
+        "max": 1,
+        "question": "m.id wins over id"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "body": "body answer",
+              "id": "a"
+            }
+          ],
+          "question": {
+            "body": "  body question  "
+          }
+        }
+      },
+      "expect": {
+        "answers": [
+          {
+            "id": "a",
+            "text": "body answer"
+          }
+        ],
+        "kind": "undisclosed",
+        "max": 1,
+        "question": "body question"
+      },
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": null,
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": "text",
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.start"
+    },
+    {
+      "content": {
+        "org.matrix.msc1767.text": "type not a string\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "type not a string",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "type not a string"
+          }
+        }
+      },
+      "expect": null,
+      "type": 5
+    }
+  ]
+}

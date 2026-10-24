@@ -1,0 +1,1395 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "system"
+        }
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": {
+          "value": "system"
+        }
+      },
+      "name": "app.clock.set: listed value system"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "12"
+        }
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": {
+          "value": "12"
+        }
+      },
+      "name": "app.clock.set: listed value 12"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "24"
+        }
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": {
+          "value": "24"
+        }
+      },
+      "name": "app.clock.set: listed value 24"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "app.clock.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "app.clock.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "app.clock.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "app.clock.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "app.clock.set",
+        "target": "x"
+      },
+      "name": "app.clock.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.clock.set"
+      },
+      "name": "app.clock.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "auto"
+        }
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": {
+          "value": "auto"
+        }
+      },
+      "name": "app.fontset.set: listed value auto"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "plasma"
+        }
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": {
+          "value": "plasma"
+        }
+      },
+      "name": "app.fontset.set: listed value plasma"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "rig"
+        }
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": {
+          "value": "rig"
+        }
+      },
+      "name": "app.fontset.set: listed value rig"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "app.fontset.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "app.fontset.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "app.fontset.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "app.fontset.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "app.fontset.set",
+        "target": "x"
+      },
+      "name": "app.fontset.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.fontset.set"
+      },
+      "name": "app.fontset.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "auto"
+        }
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": {
+          "value": "auto"
+        }
+      },
+      "name": "app.formFactor.set: listed value auto"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "desktop"
+        }
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": {
+          "value": "desktop"
+        }
+      },
+      "name": "app.formFactor.set: listed value desktop"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "mobile"
+        }
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": {
+          "value": "mobile"
+        }
+      },
+      "name": "app.formFactor.set: listed value mobile"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "app.formFactor.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "app.formFactor.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "app.formFactor.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "app.formFactor.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "app.formFactor.set",
+        "target": "x"
+      },
+      "name": "app.formFactor.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.formFactor.set"
+      },
+      "name": "app.formFactor.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "month"
+        }
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": {
+          "value": "month"
+        }
+      },
+      "name": "calendar.tab: listed value month"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "upcoming"
+        }
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": {
+          "value": "upcoming"
+        }
+      },
+      "name": "calendar.tab: listed value upcoming"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "games"
+        }
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": {
+          "value": "games"
+        }
+      },
+      "name": "calendar.tab: listed value games"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "calendar.tab: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "calendar.tab: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.tab: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.tab: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.tab",
+        "target": "x"
+      },
+      "name": "calendar.tab: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.tab"
+      },
+      "name": "calendar.tab: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "auto"
+        }
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "value": "auto"
+        }
+      },
+      "name": "call.layout.set: listed value auto"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "gallery"
+        }
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "value": "gallery"
+        }
+      },
+      "name": "call.layout.set: listed value gallery"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "speaker"
+        }
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "value": "speaker"
+        }
+      },
+      "name": "call.layout.set: listed value speaker"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "sidebar"
+        }
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "value": "sidebar"
+        }
+      },
+      "name": "call.layout.set: listed value sidebar"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "call.layout.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "call.layout.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.layout.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.layout.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.layout.set",
+        "target": "x"
+      },
+      "name": "call.layout.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.layout.set"
+      },
+      "name": "call.layout.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "off"
+        }
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": {
+          "value": "off"
+        }
+      },
+      "name": "call.noiseSuppression.set: listed value off"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "standard"
+        }
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": {
+          "value": "standard"
+        }
+      },
+      "name": "call.noiseSuppression.set: listed value standard"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "strong"
+        }
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": {
+          "value": "strong"
+        }
+      },
+      "name": "call.noiseSuppression.set: listed value strong"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "call.noiseSuppression.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "call.noiseSuppression.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.noiseSuppression.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.noiseSuppression.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.noiseSuppression.set",
+        "target": "x"
+      },
+      "name": "call.noiseSuppression.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.noiseSuppression.set"
+      },
+      "name": "call.noiseSuppression.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "mic"
+        }
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": {
+          "value": "mic"
+        }
+      },
+      "name": "call.options.open: listed value mic"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "speaker"
+        }
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": {
+          "value": "speaker"
+        }
+      },
+      "name": "call.options.open: listed value speaker"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "camera"
+        }
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": {
+          "value": "camera"
+        }
+      },
+      "name": "call.options.open: listed value camera"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "call.options.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "call.options.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.options.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.options.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.options.open",
+        "target": "x"
+      },
+      "name": "call.options.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.options.open"
+      },
+      "name": "call.options.open: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "nvenc"
+        }
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": {
+          "value": "nvenc"
+        }
+      },
+      "name": "call.shareEncoder.set: listed value nvenc"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "vp9"
+        }
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": {
+          "value": "vp9"
+        }
+      },
+      "name": "call.shareEncoder.set: listed value vp9"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "h264"
+        }
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": {
+          "value": "h264"
+        }
+      },
+      "name": "call.shareEncoder.set: listed value h264"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "call.shareEncoder.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "call.shareEncoder.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.shareEncoder.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.shareEncoder.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareEncoder.set",
+        "target": "x"
+      },
+      "name": "call.shareEncoder.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.shareEncoder.set"
+      },
+      "name": "call.shareEncoder.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "smooth"
+        }
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": {
+          "value": "smooth"
+        }
+      },
+      "name": "call.shareQuality.set: listed value smooth"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "sharp"
+        }
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": {
+          "value": "sharp"
+        }
+      },
+      "name": "call.shareQuality.set: listed value sharp"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "max"
+        }
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": {
+          "value": "max"
+        }
+      },
+      "name": "call.shareQuality.set: listed value max"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "call.shareQuality.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "call.shareQuality.set: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.shareQuality.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.shareQuality.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.shareQuality.set",
+        "target": "x"
+      },
+      "name": "call.shareQuality.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.shareQuality.set"
+      },
+      "name": "call.shareQuality.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "no"
+        }
+      },
+      "input": {
+        "action": "presence.ask.answer",
+        "target": {
+          "value": "no"
+        }
+      },
+      "name": "presence.ask.answer: listed value no"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "yes"
+        }
+      },
+      "input": {
+        "action": "presence.ask.answer",
+        "target": {
+          "value": "yes"
+        }
+      },
+      "name": "presence.ask.answer: listed value yes"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "presence.ask.answer",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "presence.ask.answer: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "presence.ask.answer",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "presence.ask.answer: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "presence.ask.answer",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "presence.ask.answer: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "presence.ask.answer",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "presence.ask.answer: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "presence.ask.answer",
+        "target": "x"
+      },
+      "name": "presence.ask.answer: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "presence.ask.answer"
+      },
+      "name": "presence.ask.answer: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "overview"
+        }
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "value": "overview"
+        }
+      },
+      "name": "space.settings.tab: listed value overview"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "members"
+        }
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "value": "members"
+        }
+      },
+      "name": "space.settings.tab: listed value members"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "roles"
+        }
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "value": "roles"
+        }
+      },
+      "name": "space.settings.tab: listed value roles"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "rooms"
+        }
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "value": "rooms"
+        }
+      },
+      "name": "space.settings.tab: listed value rooms"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "value": "not-a-choice"
+        }
+      },
+      "name": "space.settings.tab: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "value": 7
+        }
+      },
+      "name": "space.settings.tab: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.settings.tab: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.settings.tab: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.tab",
+        "target": "x"
+      },
+      "name": "space.settings.tab: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.settings.tab"
+      },
+      "name": "space.settings.tab: no target"
+    }
+  ],
+  "kind": "target"
+}

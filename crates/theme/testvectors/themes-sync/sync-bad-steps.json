@@ -1,0 +1,53 @@
+{
+  "devices": [
+    "DESK"
+  ],
+  "expect": {
+    "devices": {
+      "DESK": {
+        "choice": {
+          "known": null,
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      }
+    },
+    "log": [
+      "0 NOBODY put choice: bad-step",
+      "1 DESK fly -: bad-step",
+      "2 DESK put -: bad-step",
+      "3 - serverPut -: bad-step"
+    ],
+    "server": {
+      "choice": null,
+      "themes": null
+    }
+  },
+  "kind": "sync",
+  "steps": [
+    {
+      "device": "NOBODY",
+      "event": "put",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "fly"
+    },
+    {
+      "device": "DESK",
+      "event": "put"
+    },
+    {
+      "event": "serverPut"
+    }
+  ]
+}

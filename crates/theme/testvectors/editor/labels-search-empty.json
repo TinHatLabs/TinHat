@@ -1,0 +1,200 @@
+{
+  "expect": {
+    "groups": [
+      {
+        "id": "palette",
+        "rows": [
+          "bg",
+          "fg",
+          "cursor",
+          "selectionBg",
+          "selectionFg",
+          "c0",
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7",
+          "c8",
+          "c9",
+          "c10",
+          "c11",
+          "c12",
+          "c13",
+          "c14",
+          "c15"
+        ]
+      },
+      {
+        "id": "roles:0",
+        "rows": [
+          "surface.window",
+          "surface.island",
+          "surface.raised",
+          "surface.hover",
+          "surface.pressed",
+          "surface.selected",
+          "surface.sunken",
+          "surface.overlay",
+          "scrim",
+          "shadow"
+        ]
+      },
+      {
+        "id": "roles:1",
+        "rows": [
+          "border.subtle",
+          "border.strong",
+          "border.focus"
+        ]
+      },
+      {
+        "id": "roles:2",
+        "rows": [
+          "text.primary",
+          "text.secondary",
+          "text.muted",
+          "text.disabled",
+          "text.link",
+          "text.onAccent"
+        ]
+      },
+      {
+        "id": "roles:3",
+        "rows": [
+          "accent.base",
+          "accent.bright",
+          "accent.dim",
+          "accent.glow"
+        ]
+      },
+      {
+        "id": "roles:4",
+        "rows": [
+          "state.danger",
+          "state.dangerBright",
+          "state.warning",
+          "state.success",
+          "state.info",
+          "state.aside"
+        ]
+      },
+      {
+        "id": "roles:5",
+        "rows": [
+          "mention.bg",
+          "mention.edge",
+          "badge.bg",
+          "badge.mention"
+        ]
+      },
+      {
+        "id": "roles:6",
+        "rows": [
+          "presence.online",
+          "presence.away",
+          "presence.busy",
+          "presence.incall",
+          "presence.offline",
+          "call.speaking",
+          "call.muted"
+        ]
+      },
+      {
+        "id": "roles:7",
+        "rows": [
+          "name.1",
+          "name.2",
+          "name.3",
+          "name.4",
+          "name.5",
+          "name.6",
+          "name.7",
+          "name.8",
+          "name.9",
+          "name.10",
+          "name.11",
+          "name.12"
+        ]
+      },
+      {
+        "id": "area:island",
+        "rows": [
+          "drawer.panel.bg",
+          "island.bg.nav"
+        ]
+      },
+      {
+        "id": "area:rail",
+        "rows": [
+          "rail.bg"
+        ]
+      },
+      {
+        "id": "area:composer",
+        "rows": [
+          "composer.bg",
+          "composer.fg"
+        ]
+      },
+      {
+        "id": "area:callbar",
+        "rows": [
+          "callbar.bg"
+        ]
+      },
+      {
+        "id": "area:alphaArea",
+        "rows": [
+          "alpha.new.bg"
+        ]
+      },
+      {
+        "id": "area:zeta",
+        "rows": [
+          "zeta.new.fg"
+        ]
+      }
+    ]
+  },
+  "hasPalette": true,
+  "kind": "labels",
+  "query": "  ",
+  "tokens": [
+    {
+      "area": "composer",
+      "id": "composer.bg"
+    },
+    {
+      "area": "composer",
+      "description": "Message text",
+      "id": "composer.fg"
+    },
+    {
+      "area": "rail",
+      "id": "rail.bg"
+    },
+    {
+      "area": "island",
+      "id": "drawer.panel.bg"
+    },
+    {
+      "area": "island",
+      "id": "island.bg.nav"
+    },
+    {
+      "area": "zeta",
+      "id": "zeta.new.fg"
+    },
+    {
+      "area": "alphaArea",
+      "id": "alpha.new.bg"
+    },
+    {
+      "area": "callbar",
+      "id": "callbar.bg"
+    }
+  ]
+}

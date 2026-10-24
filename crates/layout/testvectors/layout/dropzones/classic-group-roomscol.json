@@ -1,0 +1,737 @@
+{
+  "ctx": {
+    "content": {
+      "account": {
+        "h": 46
+      },
+      "composer": {
+        "h": 48
+      },
+      "dms": {
+        "empty": true,
+        "h": 0
+      },
+      "header": {
+        "h": 58
+      },
+      "nav": {
+        "h": 228
+      },
+      "rooms": {
+        "h": 300
+      },
+      "widgets": {
+        "h": 200,
+        "minH": 60
+      }
+    },
+    "size": {
+      "h": 960,
+      "w": 1560
+    },
+    "unitPm": 1000,
+    "view": {
+      "panelOpen": true,
+      "roomOpen": true
+    }
+  },
+  "dragged": "roomscol",
+  "expect": {
+    "hit": [
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tr",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "bl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 906
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "br",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 906
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "left"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "right"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 1536,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "top"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "bottom"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 936
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 186
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 906
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "left",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 17,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "right",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 17,
+          "x": 57,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "composer"
+        },
+        "rect": {
+          "h": 12,
+          "w": 846,
+          "x": 378,
+          "y": 942
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "left",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 714,
+          "w": 17,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "right",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 714,
+          "w": 17,
+          "x": 57,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 48,
+          "w": 324,
+          "x": 1230,
+          "y": 70
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 48,
+          "w": 324,
+          "x": 1230,
+          "y": 906
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "header"
+        },
+        "rect": {
+          "h": 14,
+          "w": 1176,
+          "x": 378,
+          "y": 50
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "timeline"
+        },
+        "rect": {
+          "h": 48,
+          "w": 846,
+          "x": 378,
+          "y": 70
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "left",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 884,
+          "w": 48,
+          "x": 1230,
+          "y": 70
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "right",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 884,
+          "w": 48,
+          "x": 1506,
+          "y": 70
+        }
+      }
+    ],
+    "keys": [
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "left"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "top"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "right"
+        },
+        "rect": {
+          "h": 960,
+          "w": 24,
+          "x": 1536,
+          "y": 0
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "left",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 17,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "right",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 17,
+          "x": 57,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tr",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "header"
+        },
+        "rect": {
+          "h": 14,
+          "w": 1176,
+          "x": 378,
+          "y": 50
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "timeline"
+        },
+        "rect": {
+          "h": 48,
+          "w": 846,
+          "x": 378,
+          "y": 70
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 48,
+          "w": 324,
+          "x": 1230,
+          "y": 70
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "left",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 884,
+          "w": 48,
+          "x": 1230,
+          "y": 70
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "right",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 884,
+          "w": 48,
+          "x": 1506,
+          "y": 70
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 186
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "top",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "left",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 714,
+          "w": 17,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "right",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 714,
+          "w": 17,
+          "x": 57,
+          "y": 240
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "bl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 906
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 68,
+          "x": 6,
+          "y": 906
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "panel"
+        },
+        "rect": {
+          "h": 48,
+          "w": 324,
+          "x": 1230,
+          "y": 906
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "br",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "roomscol"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1506,
+          "y": 906
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "roomscol",
+          "side": "bottom"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1560,
+          "x": 0,
+          "y": 936
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "roomscol",
+          "side": "bottom",
+          "target": "composer"
+        },
+        "rect": {
+          "h": 12,
+          "w": 846,
+          "x": 378,
+          "y": 942
+        }
+      }
+    ]
+  },
+  "kind": "dropzones",
+  "preset": "classic"
+}

@@ -1,0 +1,59 @@
+# KWin window-rule fragment for Feature #6 floating chat bubbles (Tin Hat).
+#
+# Wayland apps can't position their own top-level windows, so these rules let KWin place
+# the bubble windows sanely. Each bubble is a SINGLE morphing top-level window that flips
+# its title between two modes (it is never re-created):
+#   title  "<Room name> — Chat"   (full chat, ~380x520)
+#   title  "<Room name> — head"   (minimized 64px chat-head)
+# KWin matches by window class + title — NOT by objectName (a Qt objectName is not surfaced
+# to the compositor). The app's window class is "tinhat" on X11 (the binary's name) and its app id
+# dev.tinhat.TinHat on Wayland; the rules match on the title, so both work. Because it's one
+# window that morphs, the [tinhat-bubble] rule's state (above/skiptaskbar/skippager/skipswitcher)
+# already covers both modes; the [tinhat-bubblehead] rule below is kept only as a
+# title-scoped refinement (e.g. extra skipswitcher) for users who tweak it.
+#
+# How to use (merge, don't blind-overwrite — the user's kwinrulesrc may hold other rules):
+#   kreadconfig5 etc., or simply append these groups to ~/.config/kwinrulesrc and bump
+#   the [General] count, then: qdbus org.kde.KWin /KWin reconfigure
+# The cleanest path for the user is usually to set the first bubble where they like it and
+# tick "Remember" in KWin's window-rule UI; KWin will then reuse that geometry by title tag.
+#
+# These rules: keep bubbles above normal windows, skip the taskbar/pager/switcher (they're
+# chat-heads, not app windows), and float them on all desktops. Placement is left "smart"
+# so KWin cascades them rather than stacking on one spot.
+
+[tinhat-bubble]
+Description=Tin Hat floating chat bubble
+wmclass=tinhat
+wmclasscomplete=false
+titlematch=2
+title= — Chat$
+above=true
+aboverule=2
+skiptaskbar=true
+skiptaskbarrule=2
+skippager=true
+skippagerrule=2
+skipswitcher=true
+skipswitcherrule=2
+placement=4
+placementrule=2
+
+[tinhat-bubblehead]
+Description=Tin Hat chat-head (minimized bubble)
+wmclass=tinhat
+wmclasscomplete=false
+titlematch=2
+title= — head$
+above=true
+aboverule=2
+skiptaskbar=true
+skiptaskbarrule=2
+skippager=true
+skippagerrule=2
+skipswitcher=true
+skipswitcherrule=2
+noborder=true
+noborderrule=2
+placement=4
+placementrule=2

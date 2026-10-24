@@ -1,0 +1,2681 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": false,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: all on, call.cameraOn flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true
+          }
+        }
+      },
+      "name": "desktop: only call.cameraOn=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": false
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: all on, tile.self flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only tile.self=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": false
+          }
+        }
+      },
+      "name": "desktop: all on, ui.selfPip flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: only ui.selfPip=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": false,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": false,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: all on, call.cameraOn flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true
+          }
+        }
+      },
+      "name": "web: only call.cameraOn=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": false
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: all on, tile.self flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only tile.self=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": false
+          }
+        }
+      },
+      "name": "web: all on, ui.selfPip flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: only ui.selfPip=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": false
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": false,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-restore-symbolic",
+        "label": "Shrink my camera into a corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": false,
+            "ui.selfPip": false
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": false,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-fullscreen-symbolic",
+        "label": "Show my camera as a normal tile",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.selfView.toggle",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "ui.selfPip": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

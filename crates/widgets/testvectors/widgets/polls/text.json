@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "block": {
+        "m.text": "plain"
+      },
+      "expect": "plain"
+    },
+    {
+      "block": {
+        "org.matrix.msc1767.text": "unstable"
+      },
+      "expect": "unstable"
+    },
+    {
+      "block": {
+        "m.text": [
+          {
+            "body": "spec"
+          }
+        ]
+      },
+      "expect": "spec"
+    },
+    {
+      "block": {
+        "m.text": [
+          {
+            "body": "<b>x</b>",
+            "mimetype": "text/html"
+          },
+          {
+            "body": "plain second",
+            "mimetype": "text/plain"
+          }
+        ]
+      },
+      "expect": "plain second"
+    },
+    {
+      "block": {
+        "body": "fallback body",
+        "m.text": [
+          {
+            "body": "<b>x</b>",
+            "mimetype": "text/html"
+          }
+        ]
+      },
+      "expect": "fallback body"
+    },
+    {
+      "block": {
+        "m.message": [
+          {
+            "body": "mm"
+          }
+        ]
+      },
+      "expect": "mm"
+    },
+    {
+      "block": {
+        "org.matrix.msc1767.message": [
+          {
+            "body": "msc1767 message",
+            "mimetype": "text/plain"
+          }
+        ]
+      },
+      "expect": "msc1767 message"
+    },
+    {
+      "block": {
+        "body": "  body only \n"
+      },
+      "expect": "body only"
+    },
+    {
+      "block": {
+        "body": "x",
+        "m.text": ""
+      },
+      "expect": null
+    },
+    {
+      "block": {
+        "m.text": "   "
+      },
+      "expect": null
+    },
+    {
+      "block": {
+        "body": "five",
+        "m.text": 5
+      },
+      "expect": "five"
+    },
+    {
+      "block": {
+        "m.text": [],
+        "org.matrix.msc1767.text": "after empty array"
+      },
+      "expect": "after empty array"
+    },
+    {
+      "block": {
+        "m.text": [
+          {
+            "body": 3
+          },
+          {
+            "body": "second"
+          }
+        ]
+      },
+      "expect": "second"
+    },
+    {
+      "block": {},
+      "expect": null
+    },
+    {
+      "block": null,
+      "expect": null
+    },
+    {
+      "block": "string",
+      "expect": null
+    },
+    {
+      "block": [
+        1
+      ],
+      "expect": null
+    },
+    {
+      "block": {
+        "body": "\t tabs \t"
+      },
+      "expect": "tabs"
+    },
+    {
+      "block": {
+        "body": "Ünïcödé 🎲 "
+      },
+      "expect": "Ünïcödé 🎲"
+    }
+  ]
+}

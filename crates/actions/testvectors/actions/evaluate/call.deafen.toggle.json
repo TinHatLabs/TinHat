@@ -1,0 +1,1137 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: all on, call.deafened flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true
+          }
+        }
+      },
+      "name": "desktop: only call.deafened=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": false
+          }
+        }
+      },
+      "name": "desktop: all on, call.in flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: only call.in=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": false,
+            "call.in": false
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: all on, call.deafened flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true
+          }
+        }
+      },
+      "name": "web: only call.deafened=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": false
+          }
+        }
+      },
+      "name": "web: all on, call.in flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: only call.in=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": false
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-high-symbolic",
+        "label": "Deafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Deafen (mute all output) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": false,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": false
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-volume-muted-symbolic",
+        "label": "Undeafen",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "speaker"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Undeafen (restore audio) — Ctrl+Shift+D",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.deafened": true,
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

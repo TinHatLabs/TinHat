@@ -1,0 +1,323 @@
+{
+  "cases": [
+    {
+      "entry": null,
+      "expect": "No rolls yet",
+      "who": "Ana"
+    },
+    {
+      "entry": {
+        "id": "$x",
+        "private": false,
+        "result": {
+          "expr": "2d6+3",
+          "groups": [
+            {
+              "count": 2,
+              "keep": "all",
+              "kept": [
+                true,
+                true
+              ],
+              "kind": "dice",
+              "n": 2,
+              "rolls": [
+                4,
+                2
+              ],
+              "sides": 6,
+              "sign": 1,
+              "sum": 6
+            },
+            {
+              "kind": "num",
+              "sign": 1,
+              "value": 3
+            }
+          ],
+          "kept": [
+            true,
+            true
+          ],
+          "label": "",
+          "natural": "",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9
+        },
+        "sender": "@ana:x",
+        "ts": 1
+      },
+      "expect": "Ana · 2d6+3 → 9",
+      "who": "Ana"
+    },
+    {
+      "entry": {
+        "id": "$x",
+        "private": false,
+        "result": {
+          "expr": "2d6+3",
+          "groups": [
+            {
+              "count": 2,
+              "keep": "all",
+              "kept": [
+                true,
+                true
+              ],
+              "kind": "dice",
+              "n": 2,
+              "rolls": [
+                4,
+                2
+              ],
+              "sides": 6,
+              "sign": 1,
+              "sum": 6
+            },
+            {
+              "kind": "num",
+              "sign": 1,
+              "value": 3
+            }
+          ],
+          "kept": [
+            true,
+            true
+          ],
+          "label": "",
+          "natural": "",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9
+        },
+        "sender": "@ana:x",
+        "ts": 1
+      },
+      "expect": "You · 2d6+3 → 9",
+      "who": "You"
+    },
+    {
+      "entry": {
+        "id": "$x",
+        "private": true,
+        "result": {
+          "expr": "1d20",
+          "groups": [
+            {
+              "count": 1,
+              "keep": "all",
+              "kept": [
+                true
+              ],
+              "kind": "dice",
+              "n": 1,
+              "rolls": [
+                17
+              ],
+              "sides": 20,
+              "sign": 1,
+              "sum": 17
+            }
+          ],
+          "kept": [
+            true
+          ],
+          "label": "",
+          "natural": "",
+          "rolls": [
+            17
+          ],
+          "total": 17
+        },
+        "sender": "",
+        "ts": 1
+      },
+      "expect": "Private · 1d20 → 17",
+      "who": "You"
+    },
+    {
+      "entry": {
+        "id": "$x",
+        "private": false,
+        "result": {
+          "expr": "2d20kh1+5",
+          "groups": [
+            {
+              "count": 2,
+              "keep": "kh",
+              "kept": [
+                false,
+                true
+              ],
+              "kind": "dice",
+              "n": 1,
+              "rolls": [
+                7,
+                20
+              ],
+              "sides": 20,
+              "sign": 1,
+              "sum": 20
+            },
+            {
+              "kind": "num",
+              "sign": 1,
+              "value": 5
+            }
+          ],
+          "kept": [
+            false,
+            true
+          ],
+          "label": "Advantage",
+          "natural": "nat20",
+          "rolls": [
+            7,
+            20
+          ],
+          "total": 25
+        },
+        "sender": "@ana:x",
+        "ts": 1
+      },
+      "expect": "Bo · 2d20kh1+5 → 25 · nat 20",
+      "who": "Bo"
+    },
+    {
+      "entry": {
+        "id": "$x",
+        "private": false,
+        "result": {
+          "expr": "1d20-1",
+          "groups": [
+            {
+              "count": 1,
+              "keep": "all",
+              "kept": [
+                true
+              ],
+              "kind": "dice",
+              "n": 1,
+              "rolls": [
+                1
+              ],
+              "sides": 20,
+              "sign": 1,
+              "sum": 1
+            },
+            {
+              "kind": "num",
+              "sign": -1,
+              "value": 1
+            }
+          ],
+          "kept": [
+            true
+          ],
+          "label": "",
+          "natural": "nat1",
+          "rolls": [
+            1
+          ],
+          "total": 0
+        },
+        "sender": "@ana:x",
+        "ts": 1
+      },
+      "expect": "Cy · 1d20-1 → 0 · nat 1",
+      "who": "Cy"
+    },
+    {
+      "entry": {
+        "id": "$x",
+        "private": true,
+        "result": {
+          "expr": "2d20kl1",
+          "groups": [
+            {
+              "count": 2,
+              "keep": "kl",
+              "kept": [
+                true,
+                false
+              ],
+              "kind": "dice",
+              "n": 1,
+              "rolls": [
+                1,
+                3
+              ],
+              "sides": 20,
+              "sign": 1,
+              "sum": 1
+            }
+          ],
+          "kept": [
+            true,
+            false
+          ],
+          "label": "Disadvantage",
+          "natural": "nat1",
+          "rolls": [
+            1,
+            3
+          ],
+          "total": 1
+        },
+        "sender": "",
+        "ts": 1
+      },
+      "expect": "Private · 2d20kl1 → 1 · nat 1",
+      "who": ""
+    },
+    {
+      "entry": {
+        "id": "$x",
+        "private": false,
+        "result": {
+          "expr": "1d4-10",
+          "groups": [
+            {
+              "count": 1,
+              "keep": "all",
+              "kept": [
+                true
+              ],
+              "kind": "dice",
+              "n": 1,
+              "rolls": [
+                2
+              ],
+              "sides": 4,
+              "sign": 1,
+              "sum": 2
+            },
+            {
+              "kind": "num",
+              "sign": -1,
+              "value": 10
+            }
+          ],
+          "kept": [
+            true
+          ],
+          "label": "",
+          "natural": "",
+          "rolls": [
+            2
+          ],
+          "total": -8
+        },
+        "sender": "@ana:x",
+        "ts": 1
+      },
+      "expect": "Élan 🎲 · 1d4-10 → -8",
+      "who": "Élan 🎲"
+    }
+  ]
+}

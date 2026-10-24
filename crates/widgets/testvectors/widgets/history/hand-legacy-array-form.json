@@ -1,0 +1,152 @@
+{
+  "expect": {
+    "calls": [
+      {
+        "end": 1790002700000,
+        "members": [
+          {
+            "ms": 2400000,
+            "user": "@bo:example.com"
+          },
+          {
+            "ms": 2580000,
+            "user": "@me:example.com"
+          }
+        ],
+        "myMs": 2580000,
+        "ongoing": false,
+        "room": "!gaming:example.com",
+        "start": 1790000000000,
+        "startedBy": "@bo:example.com"
+      }
+    ],
+    "last": {
+      "end": 1790002700000,
+      "myEnd": 1790002700000,
+      "myMs": 2580000,
+      "myStart": 1790000120000,
+      "ongoing": false,
+      "room": "!gaming:example.com",
+      "start": 1790000000000,
+      "startedBy": "@bo:example.com",
+      "with": [
+        {
+          "ms": 2280000,
+          "user": "@bo:example.com"
+        }
+      ]
+    },
+    "week": {
+      "friends": [
+        {
+          "calls": 1,
+          "joined": 1,
+          "started": 0,
+          "togetherMs": 2280000,
+          "user": "@bo:example.com"
+        }
+      ],
+      "from": 1789413200000,
+      "myCalls": 1,
+      "myMs": 2580000,
+      "to": 1790018000000
+    }
+  },
+  "input": {
+    "me": "@me:example.com",
+    "now": 1790018000000,
+    "recorder": "@recorder:example.com",
+    "rooms": [
+      {
+        "events": [
+          {
+            "content": {
+              "memberships": [
+                {
+                  "application": "m.call",
+                  "call_id": "",
+                  "created_ts": 1790000000000,
+                  "device_id": "B1",
+                  "expires": 3600000,
+                  "scope": "m.room"
+                },
+                {
+                  "application": "m.call",
+                  "call_id": "",
+                  "created_ts": 1790000000000,
+                  "device_id": "B2",
+                  "expires": 3600000,
+                  "scope": "m.room"
+                }
+              ]
+            },
+            "id": "$e1",
+            "key": "@bo:example.com",
+            "sender": "@bo:example.com",
+            "ts": 1790000000000,
+            "type": "m.call.member"
+          },
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000120000,
+              "device_id": "D1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@me:example.com:D1",
+              "scope": "m.room"
+            },
+            "id": "$e2",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790000120000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {
+              "memberships": [
+                {
+                  "application": "m.call",
+                  "call_id": "",
+                  "created_ts": 1790000000000,
+                  "device_id": "B2",
+                  "expires": 3600000,
+                  "scope": "m.room"
+                }
+              ]
+            },
+            "id": "$e3",
+            "key": "@bo:example.com",
+            "sender": "@bo:example.com",
+            "ts": 1790001200000,
+            "type": "m.call.member"
+          },
+          {
+            "content": {
+              "memberships": []
+            },
+            "id": "$e4",
+            "key": "@bo:example.com",
+            "sender": "@bo:example.com",
+            "ts": 1790002400000,
+            "type": "m.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e5",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790002700000,
+            "type": "org.matrix.msc3401.call.member"
+          }
+        ],
+        "room": "!gaming:example.com"
+      }
+    ]
+  },
+  "note": "m.call.member memberships[] under the user's key: devices come and go per event"
+}

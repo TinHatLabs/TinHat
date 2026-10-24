@@ -1,0 +1,391 @@
+{
+  "cases": [
+    {
+      "expect": [],
+      "me": "@me:x",
+      "myOffsetMin": -600,
+      "myTz": "Pacific/Tahiti",
+      "now": 1790627400000,
+      "people": [],
+      "spread": "Tahiti"
+    },
+    {
+      "expect": [
+        {
+          "day": "",
+          "diff": "",
+          "id": "@me:x",
+          "label": "Tahiti",
+          "me": true,
+          "minutes": 630,
+          "night": false,
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        }
+      ],
+      "me": "@me:x",
+      "myOffsetMin": -600,
+      "myTz": "Pacific/Tahiti",
+      "now": 1790627400000,
+      "people": [
+        {
+          "id": "@me:x",
+          "name": "Me",
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        }
+      ],
+      "spread": "Tahiti"
+    },
+    {
+      "expect": [
+        {
+          "day": "",
+          "diff": "",
+          "id": "@me:x",
+          "label": "Tahiti",
+          "me": true,
+          "minutes": 630,
+          "night": false,
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        },
+        {
+          "day": "",
+          "diff": "+6 h",
+          "id": "@a:x",
+          "label": "ET",
+          "me": false,
+          "minutes": 990,
+          "night": false,
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "day": "",
+          "diff": "+6 h",
+          "id": "@b:x",
+          "label": "ET",
+          "me": false,
+          "minutes": 990,
+          "night": false,
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "day": "",
+          "diff": "+11 h",
+          "id": "@c:x",
+          "label": "UK",
+          "me": false,
+          "minutes": 1290,
+          "night": false,
+          "offsetMin": 60,
+          "tz": "Europe/London"
+        }
+      ],
+      "me": "@me:x",
+      "myOffsetMin": -600,
+      "myTz": "Pacific/Tahiti",
+      "now": 1790627400000,
+      "people": [
+        {
+          "id": "@b:x",
+          "name": "bo",
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "id": "@me:x",
+          "name": "Me",
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        },
+        {
+          "id": "@a:x",
+          "name": "Ana",
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "id": "@c:x",
+          "name": "Cy",
+          "offsetMin": 60,
+          "tz": "Europe/London"
+        },
+        {
+          "id": "@d:x",
+          "name": "Dee",
+          "offsetMin": null,
+          "tz": "Nowhere/Unknown"
+        },
+        {
+          "id": "@a:x",
+          "name": "Ana again",
+          "offsetMin": 0,
+          "tz": "UTC"
+        }
+      ],
+      "spread": "Tahiti · UK +11 h"
+    },
+    {
+      "expect": [
+        {
+          "day": "",
+          "diff": "±0 h",
+          "id": "@a:x",
+          "label": "Tahiti",
+          "me": false,
+          "minutes": 630,
+          "night": false,
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        },
+        {
+          "day": "",
+          "diff": "±0 h",
+          "id": "@b:x",
+          "label": "Tahiti",
+          "me": false,
+          "minutes": 630,
+          "night": false,
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        }
+      ],
+      "me": "@me:x",
+      "myOffsetMin": -600,
+      "myTz": "Pacific/Tahiti",
+      "now": 1790627400000,
+      "people": [
+        {
+          "id": "@a:x",
+          "name": "Ana",
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        },
+        {
+          "id": "@b:x",
+          "name": "Bo",
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        }
+      ],
+      "spread": "Tahiti · everyone here"
+    },
+    {
+      "expect": [
+        {
+          "day": "",
+          "diff": "",
+          "id": "@me:x",
+          "label": "Tahiti",
+          "me": true,
+          "minutes": 1350,
+          "night": true,
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        },
+        {
+          "day": "Tue",
+          "diff": "+11 h",
+          "id": "@l:x",
+          "label": "UK",
+          "me": false,
+          "minutes": 570,
+          "night": false,
+          "offsetMin": 60,
+          "tz": "Europe/London"
+        },
+        {
+          "day": "Tue",
+          "diff": "+23 h",
+          "id": "@n:x",
+          "label": "NZT",
+          "me": false,
+          "minutes": 1290,
+          "night": false,
+          "offsetMin": 780,
+          "tz": "Pacific/Auckland"
+        }
+      ],
+      "me": "@me:x",
+      "myOffsetMin": -600,
+      "myTz": "Pacific/Tahiti",
+      "now": 1790670600000,
+      "people": [
+        {
+          "id": "@me:x",
+          "name": "Me",
+          "offsetMin": -600,
+          "tz": "Pacific/Tahiti"
+        },
+        {
+          "id": "@n:x",
+          "name": "Nia",
+          "offsetMin": 780,
+          "tz": "Pacific/Auckland"
+        },
+        {
+          "id": "@l:x",
+          "name": "Lu",
+          "offsetMin": 60,
+          "tz": "Europe/London"
+        }
+      ],
+      "spread": "Tahiti · NZT +23 h"
+    },
+    {
+      "expect": [
+        {
+          "day": "",
+          "diff": "−1 h",
+          "id": "@w:x",
+          "label": "Pago Pago",
+          "me": false,
+          "minutes": 570,
+          "night": false,
+          "offsetMin": -660,
+          "tz": "Pacific/Pago_Pago"
+        },
+        {
+          "day": "Tue",
+          "diff": "+19 h",
+          "id": "@e:x",
+          "label": "JST",
+          "me": false,
+          "minutes": 330,
+          "night": true,
+          "offsetMin": 540,
+          "tz": "Asia/Tokyo"
+        }
+      ],
+      "me": "@me:x",
+      "myOffsetMin": -600,
+      "myTz": "Pacific/Tahiti",
+      "now": 1790627400000,
+      "people": [
+        {
+          "id": "@w:x",
+          "name": "West",
+          "offsetMin": -660,
+          "tz": "Pacific/Pago_Pago"
+        },
+        {
+          "id": "@e:x",
+          "name": "East",
+          "offsetMin": 540,
+          "tz": "Asia/Tokyo"
+        }
+      ],
+      "spread": "Tahiti · JST +19 h"
+    },
+    {
+      "expect": [
+        {
+          "day": "Mon",
+          "diff": "−9 h 30 m",
+          "id": "@c:x",
+          "label": "ET",
+          "me": false,
+          "minutes": 990,
+          "night": false,
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "day": "Mon",
+          "diff": "−9 h 30 m",
+          "id": "@b:x",
+          "label": "ET",
+          "me": false,
+          "minutes": 990,
+          "night": false,
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "day": "Mon",
+          "diff": "−9 h 30 m",
+          "id": "@a:x",
+          "label": "ET",
+          "me": false,
+          "minutes": 990,
+          "night": false,
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        }
+      ],
+      "me": "@me:x",
+      "myOffsetMin": 330,
+      "myTz": "Asia/Kolkata",
+      "now": 1790627400000,
+      "people": [
+        {
+          "id": "@a:x",
+          "name": "Zed",
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "id": "@b:x",
+          "name": "ana",
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        },
+        {
+          "id": "@c:x",
+          "name": "Ana",
+          "offsetMin": -240,
+          "tz": "America/New_York"
+        }
+      ],
+      "spread": "IST · ET −9 h 30 m"
+    },
+    {
+      "expect": [
+        {
+          "day": "",
+          "diff": "−2 h 30 m",
+          "id": "@y:x",
+          "label": "St Johns",
+          "me": false,
+          "minutes": 1080,
+          "night": false,
+          "offsetMin": -150,
+          "tz": "America/St_Johns"
+        },
+        {
+          "day": "Tue",
+          "diff": "+5 h 45 m",
+          "id": "@x:x",
+          "label": "Kathmandu",
+          "me": false,
+          "minutes": 135,
+          "night": true,
+          "offsetMin": 345,
+          "tz": "Asia/Kathmandu"
+        }
+      ],
+      "me": "@me:x",
+      "myOffsetMin": 0,
+      "myTz": "UTC",
+      "now": 1790627400000,
+      "people": [
+        {
+          "id": "@x:x",
+          "name": "X",
+          "offsetMin": 345,
+          "tz": "Asia/Kathmandu"
+        },
+        {
+          "id": "@y:x",
+          "name": "Y",
+          "offsetMin": -150,
+          "tz": "America/St_Johns"
+        }
+      ],
+      "spread": "UTC · Kathmandu +5 h 45 m"
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "band": [
+    {
+      "expect": null,
+      "n": {
+        "loss": null
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "jit": 40,
+        "loss": null
+      }
+    },
+    {
+      "expect": null,
+      "n": {
+        "rtt": "500"
+      }
+    },
+    {
+      "expect": null,
+      "n": {}
+    },
+    {
+      "expect": "good",
+      "n": {
+        "loss": 0
+      }
+    },
+    {
+      "expect": "good",
+      "n": {
+        "loss": 19
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "loss": 20
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "loss": 79
+      }
+    },
+    {
+      "expect": "poor",
+      "n": {
+        "loss": 80
+      }
+    },
+    {
+      "expect": "good",
+      "n": {
+        "jit": 29
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "jit": 30
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "jit": 79
+      }
+    },
+    {
+      "expect": "poor",
+      "n": {
+        "jit": 80
+      }
+    },
+    {
+      "expect": "good",
+      "n": {
+        "rtt": 149
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "rtt": 150
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "rtt": 399
+      }
+    },
+    {
+      "expect": "poor",
+      "n": {
+        "rtt": 400
+      }
+    },
+    {
+      "expect": "good",
+      "n": {
+        "jit": 10,
+        "loss": 5,
+        "rtt": 40
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "jit": 40,
+        "loss": 5,
+        "rtt": 40
+      }
+    },
+    {
+      "expect": "poor",
+      "n": {
+        "jit": 10,
+        "loss": 5,
+        "rtt": 500
+      }
+    },
+    {
+      "expect": "poor",
+      "n": {
+        "jit": 1,
+        "loss": 100,
+        "rtt": 1
+      }
+    },
+    {
+      "expect": "good",
+      "n": {
+        "jit": 29,
+        "loss": 19,
+        "rtt": 149
+      }
+    },
+    {
+      "expect": "ok",
+      "n": {
+        "jit": 29,
+        "loss": 20,
+        "rtt": 149
+      }
+    }
+  ],
+  "cq": [
+    {
+      "expect": "good",
+      "q": "excellent"
+    },
+    {
+      "expect": "good",
+      "q": "good"
+    },
+    {
+      "expect": "ok",
+      "q": "poor"
+    },
+    {
+      "expect": "poor",
+      "q": "lost"
+    },
+    {
+      "expect": null,
+      "q": "unknown"
+    },
+    {
+      "expect": null,
+      "q": ""
+    },
+    {
+      "expect": null,
+      "q": null
+    }
+  ],
+  "worst": [
+    {
+      "bands": [],
+      "expect": null
+    },
+    {
+      "bands": [
+        null
+      ],
+      "expect": null
+    },
+    {
+      "bands": [
+        "good"
+      ],
+      "expect": "good"
+    },
+    {
+      "bands": [
+        "good",
+        "ok"
+      ],
+      "expect": "ok"
+    },
+    {
+      "bands": [
+        "ok",
+        "poor",
+        "good"
+      ],
+      "expect": "poor"
+    },
+    {
+      "bands": [
+        null,
+        "good",
+        null
+      ],
+      "expect": "good"
+    },
+    {
+      "bands": [
+        "poor",
+        null
+      ],
+      "expect": "poor"
+    }
+  ]
+}

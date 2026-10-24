@@ -1,0 +1,175 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "rail": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": "!space:example.com"
+        }
+      },
+      "name": "nav.space.select: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "rail": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": "!gonespace:example.com"
+        }
+      },
+      "name": "nav.space.select: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "rail": "home"
+        }
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": "home"
+        }
+      },
+      "name": "nav.space.select: listed value home"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "rail": "favourites"
+        }
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": "favourites"
+        }
+      },
+      "name": "nav.space.select: listed value favourites"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "rail": "people"
+        }
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": "people"
+        }
+      },
+      "name": "nav.space.select: listed value people"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "rail": "orphans"
+        }
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": "orphans"
+        }
+      },
+      "name": "nav.space.select: listed value orphans"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "rail",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": "nowhere"
+        }
+      },
+      "name": "nav.space.select: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "rail",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "rail": 7
+        }
+      },
+      "name": "nav.space.select: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "nav.space.select: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "nav.space.select: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.space.select",
+        "target": "x"
+      },
+      "name": "nav.space.select: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.space.select"
+      },
+      "name": "nav.space.select: no target"
+    }
+  ],
+  "kind": "target"
+}

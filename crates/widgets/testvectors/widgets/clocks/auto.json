@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "deviceTz": "Pacific/Tahiti",
+      "expect": {
+        "auto": true,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      },
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": null
+    },
+    {
+      "deviceTz": "Pacific/Tahiti",
+      "expect": {
+        "auto": true,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      },
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": null
+    },
+    {
+      "deviceTz": "Pacific/Tahiti",
+      "expect": {
+        "auto": true,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      },
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {}
+    },
+    {
+      "deviceTz": "",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {}
+    },
+    {
+      "deviceTz": "Local Time",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {}
+    },
+    {
+      "deviceTz": "Pacific/Tahiti",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {
+        "auto": true,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": {
+        "auto": true,
+        "share": true,
+        "tz": "America/New_York",
+        "v": 1
+      },
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {
+        "auto": true,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": null,
+      "lastWriteAt": 1789999940000,
+      "now": 1790000000000,
+      "stored": {
+        "auto": true,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": {
+        "auto": true,
+        "share": true,
+        "tz": "America/New_York",
+        "v": 1
+      },
+      "lastWriteAt": 1789999400000,
+      "now": 1790000000000,
+      "stored": {
+        "auto": true,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {
+        "auto": false,
+        "share": true,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {
+        "auto": true,
+        "share": false,
+        "tz": "Pacific/Tahiti",
+        "v": 1
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {
+        "share": false
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {
+        "share": true,
+        "tz": ""
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": {
+        "auto": true,
+        "share": true,
+        "tz": "America/New_York",
+        "v": 1
+      },
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": {
+        "share": true,
+        "tz": "Europe/London"
+      }
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": "garbage"
+    },
+    {
+      "deviceTz": "America/New_York",
+      "expect": null,
+      "lastWriteAt": null,
+      "now": 1790000000000,
+      "stored": []
+    }
+  ]
+}

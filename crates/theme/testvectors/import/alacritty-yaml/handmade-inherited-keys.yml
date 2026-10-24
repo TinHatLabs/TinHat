@@ -1,0 +1,28 @@
+# Object.prototype names are ordinary keys (ENGINE.md §9, PORT-QUESTIONS Q1): nothing named like one may leak into the theme
+__proto__:
+  colors:
+    primary:
+      background: '#ff0000'
+constructor: {colors: x}
+colors:
+  __proto__:
+    cursor:
+      cursor: '#ff0000'
+  primary:
+    background: '#1d1f21'
+    foreground: '#c5c8c6'
+    toString: '#ff0000'
+  normal: {black: '#282a2e', red: '#a54242', green: '#8c9440', yellow: '#de935f', blue: '#5f819d', magenta: '#85678f', cyan: '#5e8d87', white: '#707880', __proto__: '#ff0000'}
+  bright:
+    black: '#373b41'
+    red: '#cc6666'
+    green: '#b5bd68'
+    yellow: '#f0c674'
+    blue: '#81a2be'
+    magenta: '#b294bb'
+    cyan: '#8abeb7'
+    white: '#c5c8c6'
+    hasOwnProperty: '#ff0000'
+  cursor:
+    cursor: '#c5c8c6'
+    __proto__: '#ff0000'

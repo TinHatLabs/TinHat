@@ -1,0 +1,2220 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "person.joinSound.play",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "person.joinSound.play: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "person.joinSound.play",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "person.joinSound.play: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.joinSound.play",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "person.joinSound.play: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.joinSound.play",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "person.joinSound.play: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "person.joinSound.play",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "person.joinSound.play: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "person.joinSound.play",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "person.joinSound.play: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "person.joinSound.play",
+        "target": "x"
+      },
+      "name": "person.joinSound.play: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "person.joinSound.play"
+      },
+      "name": "person.joinSound.play: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "person.message",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "person.message: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "person.message",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "person.message: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.message",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "person.message: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.message",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "person.message: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "person.message",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "person.message: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "person.message",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "person.message: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "person.message",
+        "target": "x"
+      },
+      "name": "person.message: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "person.message"
+      },
+      "name": "person.message: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "person.profile.view",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "person.profile.view: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "person.profile.view",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "person.profile.view: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.profile.view",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "person.profile.view: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.profile.view",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "person.profile.view: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "person.profile.view",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "person.profile.view: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "person.profile.view",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "person.profile.view: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "person.profile.view",
+        "target": "x"
+      },
+      "name": "person.profile.view: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "person.profile.view"
+      },
+      "name": "person.profile.view: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "person.volume.mute: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "person.volume.mute: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "person.volume.mute: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "person.volume.mute: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "category": "mic"
+        }
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "category": "mic"
+        }
+      },
+      "name": "person.volume.mute: param category=mic"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "category": "screenshare"
+        }
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "category": "screenshare"
+        }
+      },
+      "name": "person.volume.mute: param category=screenshare"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "category": "music"
+        }
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "category": "music"
+        }
+      },
+      "name": "person.volume.mute: param category=music"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "category",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "category": "zz"
+        }
+      },
+      "name": "person.volume.mute: param category invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "person.volume.mute: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "person.volume.mute: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.mute",
+        "target": "x"
+      },
+      "name": "person.volume.mute: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "person.volume.mute"
+      },
+      "name": "person.volume.mute: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "person.volume.reset",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "person.volume.reset: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "person.volume.reset",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "person.volume.reset: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.reset",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "person.volume.reset: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.reset",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "person.volume.reset: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.reset",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "person.volume.reset: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.reset",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "person.volume.reset: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.reset",
+        "target": "x"
+      },
+      "name": "person.volume.reset: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "person.volume.reset"
+      },
+      "name": "person.volume.reset: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "person.volume.set: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "person.volume.set: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "person.volume.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "person.volume.set: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "category": "mic"
+        }
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "category": "mic"
+        }
+      },
+      "name": "person.volume.set: param category=mic"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "category": "screenshare"
+        }
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "category": "screenshare"
+        }
+      },
+      "name": "person.volume.set: param category=screenshare"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "category": "music"
+        }
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "category": "music"
+        }
+      },
+      "name": "person.volume.set: param category=music"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "category",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "category": "zz"
+        }
+      },
+      "name": "person.volume.set: param category invalid"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "level",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "level": 1.5
+        }
+      },
+      "name": "person.volume.set: param level invalid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "level": 200
+        }
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "level": 200
+        }
+      },
+      "name": "person.volume.set: param level in range"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "level",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "level": 201
+        }
+      },
+      "name": "person.volume.set: param level above max"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "level": 0
+        }
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "level": 0
+        }
+      },
+      "name": "person.volume.set: param level minus zero"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "person.volume.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "person.volume.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "person.volume.set",
+        "target": "x"
+      },
+      "name": "person.volume.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "person.volume.set"
+      },
+      "name": "person.volume.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.ban",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "room.member.ban: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.ban",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "room.member.ban: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.ban",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "room.member.ban: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.ban",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "room.member.ban: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.ban",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.member.ban: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.ban",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.member.ban: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.ban",
+        "target": "x"
+      },
+      "name": "room.member.ban: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.member.ban"
+      },
+      "name": "room.member.ban: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.kick",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "room.member.kick: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.kick",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "room.member.kick: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.kick",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "room.member.kick: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.kick",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "room.member.kick: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.kick",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.member.kick: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.kick",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.member.kick: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.kick",
+        "target": "x"
+      },
+      "name": "room.member.kick: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.member.kick"
+      },
+      "name": "room.member.kick: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.menu",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "room.member.menu: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.menu",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "room.member.menu: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.menu",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "room.member.menu: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.menu",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "room.member.menu: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.menu",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.member.menu: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.menu",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.member.menu: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.menu",
+        "target": "x"
+      },
+      "name": "room.member.menu: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.member.menu"
+      },
+      "name": "room.member.menu: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "room.member.setRole: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "room.member.setRole: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "room.member.setRole: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "room.member.setRole: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "role": "admin"
+        }
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "role": "admin"
+        }
+      },
+      "name": "room.member.setRole: param role=admin"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "role": "moderator"
+        }
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "role": "moderator"
+        }
+      },
+      "name": "room.member.setRole: param role=moderator"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "role": "member"
+        }
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "role": "member"
+        }
+      },
+      "name": "room.member.setRole: param role=member"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "role",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "role": "zz"
+        }
+      },
+      "name": "room.member.setRole: param role invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.member.setRole: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.member.setRole: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.setRole",
+        "target": "x"
+      },
+      "name": "room.member.setRole: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.member.setRole"
+      },
+      "name": "room.member.setRole: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.unban",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "room.member.unban: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.member.unban",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "room.member.unban: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.unban",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "room.member.unban: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.unban",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "room.member.unban: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.unban",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.member.unban: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.unban",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.member.unban: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.member.unban",
+        "target": "x"
+      },
+      "name": "room.member.unban: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.member.unban"
+      },
+      "name": "room.member.unban: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "space.ban",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "space.ban: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "space.ban",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "space.ban: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.ban",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "space.ban: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.ban",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "space.ban: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.ban",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.ban: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.ban",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.ban: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.ban",
+        "target": "x"
+      },
+      "name": "space.ban: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.ban"
+      },
+      "name": "space.ban: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "space.kick",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "space.kick: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "space.kick",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "space.kick: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.kick",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "space.kick: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.kick",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "space.kick: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.kick",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.kick: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.kick",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.kick: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.kick",
+        "target": "x"
+      },
+      "name": "space.kick: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.kick"
+      },
+      "name": "space.kick: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.ban",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "space.member.ban: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.ban",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "space.member.ban: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.ban",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "space.member.ban: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.ban",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "space.member.ban: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.ban",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.member.ban: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.ban",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.member.ban: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.ban",
+        "target": "x"
+      },
+      "name": "space.member.ban: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.member.ban"
+      },
+      "name": "space.member.ban: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.remove",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "space.member.remove: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.remove",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "space.member.remove: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.remove",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "space.member.remove: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.remove",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "space.member.remove: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.remove",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.member.remove: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.remove",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.member.remove: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.remove",
+        "target": "x"
+      },
+      "name": "space.member.remove: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.member.remove"
+      },
+      "name": "space.member.remove: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.roles",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "space.member.roles: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.roles",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "space.member.roles: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.roles",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "space.member.roles: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.roles",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "space.member.roles: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.roles",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.member.roles: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.roles",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.member.roles: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.roles",
+        "target": "x"
+      },
+      "name": "space.member.roles: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.member.roles"
+      },
+      "name": "space.member.roles: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.unban",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "space.member.unban: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "space.member.unban",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "space.member.unban: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.unban",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "space.member.unban: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.unban",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "space.member.unban: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.unban",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.member.unban: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.unban",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.member.unban: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.member.unban",
+        "target": "x"
+      },
+      "name": "space.member.unban: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.member.unban"
+      },
+      "name": "space.member.unban: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "target": {
+          "person": "@zane:example.com"
+        }
+      },
+      "name": "space.roles.manage: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "target": {
+          "person": "@gone:example.com"
+        }
+      },
+      "name": "space.roles.manage: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "target": {
+          "person": "@nocolon"
+        }
+      },
+      "name": "space.roles.manage: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "person",
+        "ok": false
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "target": {
+          "person": 7
+        }
+      },
+      "name": "space.roles.manage: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.roles.manage: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.roles.manage: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.roles.manage",
+        "target": "x"
+      },
+      "name": "space.roles.manage: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.roles.manage"
+      },
+      "name": "space.roles.manage: no target"
+    }
+  ],
+  "kind": "target"
+}

@@ -1,0 +1,3725 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "item": {
+          "a": "app.about"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.about"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.about"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.bugReport"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.bugReport"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.bugReport"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.clock.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.clock.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.diagnostics.create"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.diagnostics.create"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.fontset.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.fontset.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.formFactor.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.formFactor.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.gifAutoplay.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.gifAutoplay.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.gifAutoplay.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.iconGallery"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.iconGallery"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.iconGallery"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.install"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.install"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.install"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.keyBackup.setup"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.keyBackup.setup"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.logship.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.logship.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.logship.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.menu.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.menu.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.menu.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.notificationPermission"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.notificationPermission"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.notifications.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.notifications.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.notifications.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.quit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.quit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.recordOptOut.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.recordOptOut.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.recordOptOut.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.reduceMotion.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.reduceMotion.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.reduceMotion.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.rooms.refresh"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.rooms.refresh"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.rooms.refresh"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.safeMode.ok"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.safeMode.ok"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.session.takeOver"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.session.takeOver"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.settings.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.settings.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.settings.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.shortcuts.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.shortcuts.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.shortcuts.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.sidebar.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.sidebar.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.sidebar.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.signOut"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.signOut"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.signOut"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.theme.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.theme.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.theme.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.tour.start"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.tour.start"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.tour.start"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.update"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.update"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.update"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.update.whatsNew"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.update.whatsNew"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.verify"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.verify"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.verify"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.container.pick"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.container.pick"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.callOff"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.event.callOff"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.edit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.event.edit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "calendar.event.new"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.new"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.event.new"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.event.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.remove"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.event.remove"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.rsvp"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.event.rsvp"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.event.vote"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.event.vote"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.game.copyAddress"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.game.copyAddress"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.game.edit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.game.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.inviteMissing"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.inviteMissing"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.month.step"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.month.step"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "calendar.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "calendar.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "calendar.reminders.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "calendar.reminders.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.reminders.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "calendar.tab"
+        },
+        "row": "rooms.header"
+      },
+      "name": "calendar.tab"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.afk.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.afk.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.afk.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.agc.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.agc.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.agc.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.audioShare.source"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.audioShare.source"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.audioShare.source"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.audioShare.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.audioShare.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.audioShare.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.bar.pin.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.bar.pin.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.bar.pin.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.camera.flip"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.camera.flip"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.camera.flip"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.camera.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.camera.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.camera.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.camera.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.camera.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.camera.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.clip"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.clip"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.clip"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.collapse.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.collapse.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.collapse.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.corner.join"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.corner.join"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.corner.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.corner.leave"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.corner.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.deafen.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.deafen.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.deafen.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.devices.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.devices.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.devices.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.disconnect"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.disconnect"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.echoCancel.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.echoCancel.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.echoCancel.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.echoOutputs.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.echoOutputs.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.echoOutputs.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fill.exit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.fill.exit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.fill.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.fill.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.fill.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.echo"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.fix.echo"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.peerAudio"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.fix.peerAudio"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.reconnectMic"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.fix.reconnectMic"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.fix.systemLevel"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.fix.systemLevel"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.gameChat.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.gameChat.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.gameChat.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.health.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.health.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.health.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.hidden.show"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.hidden.show"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.hidden.show"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.hidden.showAll"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.hidden.showAll"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.hidden.showAll"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.incoming.dismiss"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.incoming.dismiss"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.input.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.input.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.input.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.join"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.join"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.join"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.layout.animate.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.layout.animate.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.layout.animate.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.layout.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.layout.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.layout.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.leave"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.mic.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.mic.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.mic.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.micCheck"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.micCheck"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.micCheck"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.minimize"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.minimize"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.moreMenu"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.moreMenu"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.music.file"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.music.file"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.music.file"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.music.url"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.music.url"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.music.url"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.mutedTalk.dismiss"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.mutedTalk.dismiss"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.noiseSuppression.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.noiseSuppression.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.noiseSuppression.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.noiseTest.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.noiseTest.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.noiseTest.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.options.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.options.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.options.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.output.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.output.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.output.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.overlay.preview"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.overlay.preview"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.overlay.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.overlay.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.overlay.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pin.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pin.clear"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.pin.clear"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.pullAside"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.pullAside"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pushToTalk.hold"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pushToTalk.hold"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.pushToTalk.hold"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pushToTalk.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pushToTalk.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.pushToTalk.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.recStream.leave"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.recStream.leave"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.recStream.tuneIn"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.recStream.tuneIn"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.receiveAv1.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.receiveAv1.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.resume"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.resume"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.screenShare.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.screenShare.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.screenShare.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.serverMute.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.serverMute.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.share.panel"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.share.panel"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.share.panel"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.share.pickSource"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.share.pickSource"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.share.recordingOnly.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.share.recordingOnly.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.share.recordingOnly.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.shareEncoder.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.shareEncoder.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.shareQuality.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.shareQuality.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.shareQuality.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.testConnection"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.testConnection"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.testConnection"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.unfocusedSaver.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.unfocusedSaver.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "call.unfocusedSaver.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.attach"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.attach"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.cancelTarget"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.cancelTarget"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.editLast"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.editLast"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.emoji"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.emoji"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.gif"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.gif"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.pasteFiles"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.pasteFiles"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.send"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.send"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "composer.unstage"
+        },
+        "row": "rooms.header"
+      },
+      "name": "composer.unstage"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "conversation.jumpToLatest"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "conversation.jumpToLatest"
+        },
+        "row": "rooms.header"
+      },
+      "name": "conversation.jumpToLatest"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "conversation.jumpToOldest"
+        },
+        "row": "rooms.header"
+      },
+      "name": "conversation.jumpToOldest"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "conversation.pageDown"
+        },
+        "row": "rooms.header"
+      },
+      "name": "conversation.pageDown"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "conversation.pageUp"
+        },
+        "row": "rooms.header"
+      },
+      "name": "conversation.pageUp"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "dm.new"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "dm.new"
+        },
+        "row": "rooms.header"
+      },
+      "name": "dm.new"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invite.accept"
+        },
+        "row": "rooms.header"
+      },
+      "name": "invite.accept"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invite.decline"
+        },
+        "row": "rooms.header"
+      },
+      "name": "invite.decline"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invites.copy"
+        },
+        "row": "rooms.header"
+      },
+      "name": "invites.copy"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invites.create"
+        },
+        "row": "rooms.header"
+      },
+      "name": "invites.create"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "invites.revoke"
+        },
+        "row": "rooms.header"
+      },
+      "name": "invites.revoke"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.edit"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.edit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "layout.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.back10"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.back10"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.back60"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.back60"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.backToList"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.backToList"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.forward10"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.forward10"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.forward60"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.forward60"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.fullscreen"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.fullscreen"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.mute"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.mute"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "memories.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "memories.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.playPause"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.playPause"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.pov"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.pov"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.refresh"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.refresh"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "memories.sync.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "memories.sync.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.copyLink"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.copyLink"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.copySelection"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.copySelection"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.copyText"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.copyText"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.delete"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.delete"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.discard"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.discard"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.edit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.embed.play"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.embed.play"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.image.view"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.image.view"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.jumpTo"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.jumpTo"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.link.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.link.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.media.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.media.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.menu"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.menu"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.pin.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.pin.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.react"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.react"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.react.more"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.react.more"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.reply"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.reply"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.retry"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.retry"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.saveAs"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.saveAs"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "message.video.playInline"
+        },
+        "row": "rooms.header"
+      },
+      "name": "message.video.playInline"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "nav.back"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.back"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "nav.cornerDock.pin"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.cornerDock.pin"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "nav.dm.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.dm.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.quickSwitcher.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.quickSwitcher.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.quickSwitcher.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.room.next"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.room.next"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.room.next"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.room.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.room.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.room.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.room.previous"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.room.previous"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.room.previous"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.roomList.filter"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.roomList.filter"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.roomList.filter"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.space.select"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.space.select"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.space.select"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.unread.next"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.unread.next"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.unread.next"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "nav.unread.previous"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "nav.unread.previous"
+        },
+        "row": "rooms.header"
+      },
+      "name": "nav.unread.previous"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.joinSound.play"
+        },
+        "row": "rooms.header"
+      },
+      "name": "person.joinSound.play"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "person.message"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "person.message"
+        },
+        "row": "rooms.header"
+      },
+      "name": "person.message"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.profile.view"
+        },
+        "row": "rooms.header"
+      },
+      "name": "person.profile.view"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.volume.mute"
+        },
+        "row": "rooms.header"
+      },
+      "name": "person.volume.mute"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.volume.reset"
+        },
+        "row": "rooms.header"
+      },
+      "name": "person.volume.reset"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "person.volume.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "person.volume.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "pip.close"
+        },
+        "row": "rooms.header"
+      },
+      "name": "pip.close"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "presence.ask.answer"
+        },
+        "row": "rooms.header"
+      },
+      "name": "presence.ask.answer"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "presence.sharing.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "presence.sharing.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "presence.sharing.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "push.enable"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "push.enable"
+        },
+        "row": "rooms.header"
+      },
+      "name": "push.enable"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "push.quiet.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "push.quiet.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "push.test"
+        },
+        "row": "rooms.header"
+      },
+      "name": "push.test"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.myGames"
+        },
+        "row": "rooms.header"
+      },
+      "name": "reel.myGames"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "reel.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "reel.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "reel.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.pickForEvent"
+        },
+        "row": "rooms.header"
+      },
+      "name": "reel.pickForEvent"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.resetSpins"
+        },
+        "row": "rooms.header"
+      },
+      "name": "reel.resetSpins"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.spin"
+        },
+        "row": "rooms.header"
+      },
+      "name": "reel.spin"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.tune"
+        },
+        "row": "rooms.header"
+      },
+      "name": "reel.tune"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "reel.veto"
+        },
+        "row": "rooms.header"
+      },
+      "name": "reel.veto"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.activity.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.clear"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.activity.clear"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.copyCode"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.activity.copyCode"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.activity.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.activity.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.activity.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.activity.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.activity.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.create"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.create"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.create"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.favourite.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.favourite.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.favourite.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.guestLink"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.guestLink"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.guestLink"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.guestLink.disable"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.guestLink.disable"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.guestLink.disable"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.info.edit"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.info.edit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.info.edit"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.info.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.info.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.info.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.invite"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.invite"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.invite"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.inviteLink.copy"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.inviteLink.copy"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.inviteLink.copy"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.join"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.join"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.leave"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.markRead"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.markRead"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.markRead"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.ban"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.member.ban"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.kick"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.member.kick"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.menu"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.member.menu"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.setRole"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.member.setRole"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.member.unban"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.member.unban"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.members.show"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.members.show"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.members.show"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.notifications.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.notifications.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.notifications.set"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.photo.change"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.photo.change"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.photo.change"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.photo.remove"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.photo.remove"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.photo.remove"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "room.pinned.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.pinned.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.popOut"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.popOut"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.popOut"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.recording.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.recording.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.recording.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.refresh"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.refresh"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.refresh"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.status.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.status.clear"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.status.clear"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "room.status.post"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "room.status.post"
+        },
+        "row": "rooms.header"
+      },
+      "name": "room.status.post"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sessions.manage"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sessions.manage"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sessions.signOutOthers"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sessions.signOutOthers"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.copyLink"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sound.copyLink"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.favourite.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sound.favourite.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "sound.play"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "sound.play"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sound.play"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.remove"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sound.remove"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.roomSound.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sound.roomSound.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "sound.stop"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "sound.stop"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sound.stop"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "sound.upload"
+        },
+        "row": "rooms.header"
+      },
+      "name": "sound.upload"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "soundboard.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "soundboard.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "soundboard.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.ban"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.ban"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.create"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.create"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.create"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.invite"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.invite"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.invite"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.joinOrCreate"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.joinOrCreate"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.joinOrCreate"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.kick"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.kick"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.leave"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.leave"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.link.copy"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.link.copy"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.link.copy"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.markAllRead"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.markAllRead"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.markAllRead"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.ban"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.member.ban"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.remove"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.member.remove"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.roles"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.member.roles"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.member.unban"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.member.unban"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.overview.edit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.overview.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.reorder"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.reorder"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.roles.edit"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.roles.edit"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.roles.manage"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.roles.manage"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.rooms.sync"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.rooms.sync"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "space.settings.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "space.settings.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.settings.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.settings.refresh"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.settings.refresh"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "space.settings.tab"
+        },
+        "row": "rooms.header"
+      },
+      "name": "space.settings.tab"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "status.clear"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "status.clear"
+        },
+        "row": "rooms.header"
+      },
+      "name": "status.clear"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "status.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "status.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "status.open"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "status.set"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "status.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "status.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.hide"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.hide"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.listen.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.listen.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.more"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.more"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.pin.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.pin.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.popOut"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.popOut"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.quality.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.quality.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.selfView.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.selfView.toggle"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.streamMenu"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.streamMenu"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.view.reset"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.view.reset"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.view.set"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.view.set"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "tile.zoom"
+        },
+        "row": "rooms.header"
+      },
+      "name": "tile.zoom"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.host.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "watchParty.host.toggle"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "watchParty.leave"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.leave"
+        },
+        "row": "rooms.header"
+      },
+      "name": "watchParty.leave"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.mute"
+        },
+        "row": "rooms.header"
+      },
+      "name": "watchParty.mute"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.next"
+        },
+        "row": "rooms.header"
+      },
+      "name": "watchParty.next"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "watchParty.open"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.open"
+        },
+        "row": "rooms.header"
+      },
+      "name": "watchParty.open"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.playPause"
+        },
+        "row": "rooms.header"
+      },
+      "name": "watchParty.playPause"
+    },
+    {
+      "expect": {
+        "error": "context",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "watchParty.queue"
+        },
+        "row": "rooms.header"
+      },
+      "name": "watchParty.queue"
+    }
+  ],
+  "kind": "place"
+}

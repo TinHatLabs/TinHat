@@ -1,0 +1,243 @@
+{
+  "content": {
+    "account": {
+      "h": 46
+    },
+    "call": {
+      "barH": 48,
+      "collapsedH": 104,
+      "h": 600
+    },
+    "composer": {
+      "h": 48
+    },
+    "dms": {
+      "empty": true,
+      "h": 0
+    },
+    "header": {
+      "h": 58
+    },
+    "nav": {
+      "h": 228
+    },
+    "rooms": {
+      "h": 300
+    },
+    "widgets": {
+      "empty": true,
+      "h": 0
+    }
+  },
+  "expect": {
+    "collapsed": [],
+    "containers": {
+      "body": {
+        "h": 708,
+        "w": 1216,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      },
+      "convrow": {
+        "h": 200,
+        "w": 918,
+        "x": 304,
+        "y": 514,
+        "z": 0
+      },
+      "main": {
+        "h": 504,
+        "w": 918,
+        "x": 304,
+        "y": 210,
+        "z": 0
+      },
+      "mainrow": {
+        "h": 504,
+        "w": 1216,
+        "x": 6,
+        "y": 210,
+        "z": 0
+      },
+      "roomcol": {
+        "h": 200,
+        "w": 918,
+        "x": 304,
+        "y": 514,
+        "z": 0
+      },
+      "side": {
+        "h": 504,
+        "w": 292,
+        "x": 6,
+        "y": 210,
+        "z": 0
+      },
+      "topbar": {
+        "h": 198,
+        "w": 1216,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      }
+    },
+    "drawers": [],
+    "emergency": false,
+    "gaps": [
+      {
+        "a": "nav",
+        "axis": "x",
+        "b": "spaces",
+        "h": 198,
+        "id": "topbar/0",
+        "w": 6,
+        "x": 66,
+        "y": 6
+      },
+      {
+        "a": "topbar",
+        "axis": "y",
+        "b": "mainrow",
+        "h": 6,
+        "id": "body/0",
+        "w": 1216,
+        "x": 6,
+        "y": 204
+      },
+      {
+        "a": "rooms",
+        "axis": "y",
+        "b": "account",
+        "h": 6,
+        "id": "side/0",
+        "w": 292,
+        "x": 6,
+        "y": 662
+      },
+      {
+        "a": "side",
+        "axis": "x",
+        "b": "main",
+        "h": 504,
+        "id": "mainrow/0",
+        "w": 6,
+        "x": 298,
+        "y": 210
+      },
+      {
+        "a": "header",
+        "axis": "y",
+        "b": "call",
+        "h": 6,
+        "id": "main/0",
+        "w": 918,
+        "x": 304,
+        "y": 250
+      },
+      {
+        "a": "call",
+        "axis": "y",
+        "b": "convrow",
+        "h": 6,
+        "id": "main/1",
+        "w": 918,
+        "x": 304,
+        "y": 508
+      },
+      {
+        "a": "timeline",
+        "axis": "y",
+        "b": "composer",
+        "h": 6,
+        "id": "roomcol/0",
+        "w": 918,
+        "x": 304,
+        "y": 660
+      }
+    ],
+    "islands": {
+      "account": {
+        "h": 46,
+        "vis": true,
+        "w": 292,
+        "x": 6,
+        "y": 668,
+        "z": 0
+      },
+      "call": {
+        "h": 252,
+        "vis": true,
+        "w": 918,
+        "x": 304,
+        "y": 256,
+        "z": 0
+      },
+      "composer": {
+        "h": 48,
+        "vis": true,
+        "w": 918,
+        "x": 304,
+        "y": 666,
+        "z": 0
+      },
+      "header": {
+        "h": 40,
+        "vis": true,
+        "w": 918,
+        "x": 304,
+        "y": 210,
+        "z": 0
+      },
+      "nav": {
+        "h": 198,
+        "vis": true,
+        "w": 60,
+        "x": 6,
+        "y": 6,
+        "z": 0
+      },
+      "rooms": {
+        "h": 452,
+        "vis": true,
+        "w": 292,
+        "x": 6,
+        "y": 210,
+        "z": 0
+      },
+      "spaces": {
+        "h": 198,
+        "vis": true,
+        "w": 1150,
+        "x": 72,
+        "y": 6,
+        "z": 0
+      },
+      "timeline": {
+        "h": 146,
+        "vis": true,
+        "w": 918,
+        "x": 304,
+        "y": 514,
+        "z": 0
+      }
+    },
+    "overflow": [
+      "body",
+      "main"
+    ],
+    "squeezed": [],
+    "stacks": {}
+  },
+  "kind": "solve",
+  "preset": "sideMonitor",
+  "size": {
+    "h": 720,
+    "w": 1228
+  },
+  "unitPm": 1000,
+  "view": {
+    "callShown": true,
+    "roomOpen": true
+  }
+}

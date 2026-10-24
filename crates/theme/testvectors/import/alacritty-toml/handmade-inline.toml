@@ -1,0 +1,23 @@
+# Alacritty, inline tables and 0x colours
+[colors]
+primary = { background = "0x1d1f21", foreground = "0xc5c8c6" }
+cursor = { text = "CellBackground", cursor = "CellForeground" }
+normal = { black = "0x1d1f21", red = "0xcc6666", green = "0xb5bd68", yellow = "0xf0c674", blue = "0x81a2be", magenta = "0xb294bb", cyan = "0x8abeb7", white = "0xc5c8c6" }
+
+[colors.bright]
+black   = '0x666666'   # literal strings
+red     = "0xd54e53"
+green   = "0xb9ca4a"
+yellow  = "0xe7c547"
+blue    = "0x7aa6da"
+magenta = "0xc397d8"
+cyan    = "0x70c0b1"
+white   = "0xeaeaea"
+
+[[colors.indexed_colors]]
+index = 16
+color = "0xde935f"
+
+[window]
+opacity = 0.95
+padding = { x = 4, y = 4 }

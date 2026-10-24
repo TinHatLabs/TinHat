@@ -1,0 +1,108 @@
+{
+  "expect": {
+    "calls": [
+      {
+        "end": 1790086460000,
+        "members": [
+          {
+            "ms": 86400000,
+            "user": "@ana:example.com"
+          },
+          {
+            "ms": 86400000,
+            "user": "@me:example.com"
+          }
+        ],
+        "myMs": 86400000,
+        "ongoing": false,
+        "room": "!gaming:example.com",
+        "start": 1790000000000,
+        "startedBy": "@me:example.com"
+      }
+    ],
+    "last": {
+      "end": 1790086460000,
+      "myEnd": 1790086400000,
+      "myMs": 86400000,
+      "myStart": 1790000000000,
+      "ongoing": false,
+      "room": "!gaming:example.com",
+      "start": 1790000000000,
+      "startedBy": "@me:example.com",
+      "with": [
+        {
+          "ms": 86340000,
+          "user": "@ana:example.com"
+        }
+      ]
+    },
+    "week": {
+      "friends": [
+        {
+          "calls": 1,
+          "joined": 0,
+          "started": 1,
+          "togetherMs": 86340000,
+          "user": "@ana:example.com"
+        }
+      ],
+      "from": 1789654400000,
+      "myCalls": 1,
+      "myMs": 86400000,
+      "to": 1790259200000
+    }
+  },
+  "input": {
+    "me": "@me:example.com",
+    "now": 1790259200000,
+    "recorder": "@recorder:example.com",
+    "rooms": [
+      {
+        "events": [
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000000000,
+              "device_id": "D1",
+              "expires": 864000000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@me:example.com:D1",
+              "scope": "m.room"
+            },
+            "id": "$e1",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790000000000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000060000,
+              "device_id": "A1",
+              "expires": 864000000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@ana:example.com:A1",
+              "scope": "m.room"
+            },
+            "id": "$e2",
+            "key": "_@ana:example.com_A1_m.call",
+            "sender": "@ana:example.com",
+            "ts": 1790000060000,
+            "type": "org.matrix.msc3401.call.member"
+          }
+        ],
+        "room": "!gaming:example.com"
+      }
+    ]
+  },
+  "note": "expires of 10 days is capped at 24 h after the event"
+}

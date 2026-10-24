@@ -1,0 +1,114 @@
+{
+  "credit": [
+    {
+      "credit": 2,
+      "expect": "Your credit: +2",
+      "mode": "earn"
+    },
+    {
+      "credit": 0,
+      "expect": "Your credit: 0",
+      "mode": "earn"
+    },
+    {
+      "credit": 1.7,
+      "expect": "Your credit: +1",
+      "mode": "earn"
+    },
+    {
+      "credit": -1,
+      "expect": "Your credit: 0",
+      "mode": "earn"
+    },
+    {
+      "credit": null,
+      "expect": "",
+      "mode": "earn"
+    },
+    {
+      "credit": 3,
+      "expect": "Credits are off tonight",
+      "mode": "free"
+    },
+    {
+      "credit": null,
+      "expect": "Credits are off tonight",
+      "mode": "free"
+    },
+    {
+      "credit": 5,
+      "expect": "Your credit: +5",
+      "mode": ""
+    }
+  ],
+  "summary": [
+    {
+      "expect": "Valheim · in 2 h",
+      "game": "Valheim",
+      "has": true,
+      "when": "in 2 h"
+    },
+    {
+      "expect": "Game TBD · Sat 7:30 PM",
+      "game": "",
+      "has": true,
+      "when": "Sat 7:30 PM"
+    },
+    {
+      "expect": "Project Zomboid · now",
+      "game": "  Project Zomboid \t",
+      "has": true,
+      "when": "now"
+    },
+    {
+      "expect": "No game night planned",
+      "game": "Valheim",
+      "has": false,
+      "when": "in 2 h"
+    }
+  ],
+  "when": [
+    {
+      "dayTime": "Sat 7:30 PM",
+      "end": 1790018000000,
+      "expect": "in 2 h 10 m",
+      "now": 1790000000000,
+      "start": 1790007800000
+    },
+    {
+      "dayTime": "Sat 7:30 PM",
+      "end": 1790090000000,
+      "expect": "in 1 d",
+      "now": 1790000000000,
+      "start": 1790086399999
+    },
+    {
+      "dayTime": "Sat 7:30 PM",
+      "end": 1790090000000,
+      "expect": "Sat 7:30 PM",
+      "now": 1790000000000,
+      "start": 1790086400000
+    },
+    {
+      "dayTime": "Sat 7:30 PM",
+      "end": 1790003600000,
+      "expect": "now",
+      "now": 1790000000000,
+      "start": 1789996400000
+    },
+    {
+      "dayTime": "x",
+      "end": 1790003600000,
+      "expect": "now",
+      "now": 1790000000000,
+      "start": 1790000000000
+    },
+    {
+      "dayTime": "x",
+      "end": 1790003600000,
+      "expect": "in 1 m",
+      "now": 1790000000000,
+      "start": 1790000030000
+    }
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": "x",
+      "name": "not an object"
+    },
+    {
+      "expect": {
+        "error": "bad-app"
+      },
+      "input": {
+        "action": "call.join"
+      },
+      "name": "no app"
+    },
+    {
+      "expect": {
+        "error": "bad-app"
+      },
+      "input": {
+        "action": "call.join",
+        "app": "phone"
+      },
+      "name": "unknown app"
+    },
+    {
+      "expect": {
+        "error": "bad-action"
+      },
+      "input": {
+        "action": 7,
+        "app": "desktop"
+      },
+      "name": "action not a string"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": false,
+        "hold": false,
+        "icon": null,
+        "label": "call.teleport",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "unknown",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.teleport",
+        "app": "desktop",
+        "snapshot": {}
+      },
+      "name": "an unknown action"
+    },
+    {
+      "expect": {
+        "error": "unknown-row"
+      },
+      "input": {
+        "action": "call.join",
+        "app": "desktop",
+        "row": "call.nowhere"
+      },
+      "name": "an unknown row"
+    },
+    {
+      "expect": {
+        "error": "unknown-menu"
+      },
+      "input": {
+        "app": "desktop",
+        "item": 0,
+        "menu": "nowhere"
+      },
+      "name": "an unknown menu"
+    },
+    {
+      "expect": {
+        "error": "bad-item"
+      },
+      "input": {
+        "app": "desktop",
+        "item": 99,
+        "menu": "app"
+      },
+      "name": "menu item out of range"
+    },
+    {
+      "expect": {
+        "error": "bad-item"
+      },
+      "input": {
+        "app": "desktop",
+        "item": 1.5,
+        "menu": "app"
+      },
+      "name": "menu item not an integer"
+    },
+    {
+      "expect": {
+        "error": "not-an-action"
+      },
+      "input": {
+        "app": "desktop",
+        "item": 0,
+        "menu": "message"
+      },
+      "name": "a submenu entry"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "call-start-symbolic",
+        "label": "Start a call",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "call.join",
+        "app": "web",
+        "snapshot": []
+      },
+      "name": "snapshot not an object"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "values": []
+        }
+      },
+      "name": "values not an object"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "values": {
+            "call.in": "true"
+          }
+        }
+      },
+      "name": "a string where a bool is read"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "system-software-update",
+        "label": "Check for updates",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "app.update",
+        "app": "web",
+        "snapshot": {
+          "values": {
+            "update.state": 1
+          }
+        }
+      },
+      "name": "an eq on a non-string"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-reply-sender-symbolic",
+        "label": "Reply",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "message.reply",
+        "app": "web",
+        "context": "x",
+        "snapshot": {}
+      },
+      "name": "context not an object"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "mail-reply-sender-symbolic",
+        "label": "Reply",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "message.reply",
+        "app": "web",
+        "context": {
+          "message": 1
+        },
+        "snapshot": {}
+      },
+      "name": "a context id that is not a string"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "call-start-symbolic",
+        "label": "Join P",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": "P",
+        "split": null,
+        "subject": "!__proto__:x",
+        "targetIcon": null,
+        "targetName": "P",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.join",
+        "app": "web",
+        "snapshot": {
+          "subjects": {
+            "room": {
+              "!__proto__:x": {
+                "name": "P",
+                "values": {}
+              }
+            }
+          }
+        },
+        "target": {
+          "room": "!__proto__:x"
+        }
+      },
+      "name": "__proto__ as an id"
+    }
+  ],
+  "kind": "evaluate"
+}

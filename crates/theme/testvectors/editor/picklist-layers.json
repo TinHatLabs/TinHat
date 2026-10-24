@@ -1,0 +1,71 @@
+{
+  "expect": {
+    "all": [
+      {
+        "id": "composer.fg",
+        "kind": "text"
+      },
+      {
+        "id": "composer.bg",
+        "kind": "fill"
+      },
+      {
+        "id": "island.bg.composer",
+        "kind": "fill"
+      },
+      {
+        "id": "island.border",
+        "kind": "border"
+      }
+    ],
+    "list": [
+      {
+        "id": "composer.fg",
+        "kind": "text"
+      },
+      {
+        "id": "composer.bg",
+        "kind": "fill"
+      }
+    ]
+  },
+  "kind": "picklist",
+  "layers": [
+    {
+      "element": "span",
+      "hits": [
+        {
+          "id": "composer.fg",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "element": "div",
+      "hits": [
+        {
+          "id": "composer.bg",
+          "kind": "fill"
+        },
+        {
+          "id": "composer.fg",
+          "kind": "border"
+        }
+      ]
+    },
+    {
+      "element": "div",
+      "hits": [
+        {
+          "id": "island.bg.composer",
+          "kind": "fill"
+        },
+        {
+          "id": "island.border",
+          "kind": "border"
+        }
+      ]
+    }
+  ],
+  "max": 2
+}

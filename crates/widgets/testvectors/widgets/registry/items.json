@@ -1,0 +1,382 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "items": null,
+        "settings": null,
+        "sizes": null
+      },
+      "value": null
+    },
+    {
+      "expect": {
+        "items": null,
+        "settings": null,
+        "sizes": null
+      },
+      "value": "not a list"
+    },
+    {
+      "expect": {
+        "items": [],
+        "settings": [],
+        "sizes": []
+      },
+      "value": []
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "w": "upNext"
+          },
+          {
+            "size": "L",
+            "w": "callStats"
+          },
+          {
+            "collapsed": true,
+            "size": "S",
+            "w": "whosAround"
+          }
+        ],
+        "settings": [
+          {
+            "days": 7
+          },
+          {},
+          {
+            "away": true
+          }
+        ],
+        "sizes": [
+          "M",
+          "L",
+          "S"
+        ]
+      },
+      "value": [
+        {
+          "w": "upNext"
+        },
+        {
+          "size": "L",
+          "w": "callStats"
+        },
+        {
+          "collapsed": true,
+          "size": "S",
+          "w": "whosAround"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "settings": {
+              "days": 30
+            },
+            "w": "upNext"
+          },
+          {
+            "settings": {
+              "away": "no"
+            },
+            "w": "whosAround"
+          }
+        ],
+        "settings": [
+          {
+            "days": 14
+          },
+          {
+            "away": true
+          }
+        ],
+        "sizes": [
+          "M",
+          "M"
+        ]
+      },
+      "value": [
+        {
+          "settings": {
+            "days": 30
+          },
+          "size": "XL",
+          "w": "upNext"
+        },
+        {
+          "size": "S",
+          "w": "upNext"
+        },
+        {
+          "settings": {
+            "away": "no"
+          },
+          "w": "whosAround"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "settings": {
+              "days": 3.7
+            },
+            "w": "upNext"
+          },
+          {
+            "w": "callStats"
+          },
+          {
+            "settings": {
+              "away": false
+            },
+            "w": "whosAround"
+          }
+        ],
+        "settings": [
+          {
+            "days": 3
+          },
+          {},
+          {
+            "away": false
+          }
+        ],
+        "sizes": [
+          "M",
+          "M",
+          "M"
+        ]
+      },
+      "value": [
+        {
+          "settings": {
+            "days": 3.7
+          },
+          "w": "upNext"
+        },
+        {
+          "settings": [
+            1
+          ],
+          "w": "callStats"
+        },
+        {
+          "collapsed": "yes",
+          "settings": {
+            "away": false
+          },
+          "w": "whosAround"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "future": 1,
+            "size": "L",
+            "w": "weather"
+          },
+          {
+            "settings": {
+              "days": -4
+            },
+            "w": "upNext"
+          }
+        ],
+        "settings": [
+          {},
+          {
+            "days": 1
+          }
+        ],
+        "sizes": [
+          "M",
+          "M"
+        ]
+      },
+      "value": [
+        {
+          "future": 1,
+          "size": "L",
+          "w": "weather"
+        },
+        {
+          "w": "9bad"
+        },
+        "upNext",
+        null,
+        {
+          "size": "M"
+        },
+        {
+          "settings": {
+            "days": -4
+          },
+          "w": "upNext"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "w": "w0"
+          },
+          {
+            "w": "w1"
+          },
+          {
+            "w": "w2"
+          },
+          {
+            "w": "w3"
+          },
+          {
+            "w": "w4"
+          },
+          {
+            "w": "w5"
+          },
+          {
+            "w": "w6"
+          },
+          {
+            "w": "w7"
+          },
+          {
+            "w": "w8"
+          },
+          {
+            "w": "w9"
+          },
+          {
+            "w": "w10"
+          },
+          {
+            "w": "w11"
+          }
+        ],
+        "settings": [
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {}
+        ],
+        "sizes": [
+          "M",
+          "M",
+          "M",
+          "M",
+          "M",
+          "M",
+          "M",
+          "M",
+          "M",
+          "M",
+          "M",
+          "M"
+        ]
+      },
+      "value": [
+        {
+          "w": "w0"
+        },
+        {
+          "w": "w1"
+        },
+        {
+          "w": "w2"
+        },
+        {
+          "w": "w3"
+        },
+        {
+          "w": "w4"
+        },
+        {
+          "w": "w5"
+        },
+        {
+          "w": "w6"
+        },
+        {
+          "w": "w7"
+        },
+        {
+          "w": "w8"
+        },
+        {
+          "w": "w9"
+        },
+        {
+          "w": "w10"
+        },
+        {
+          "w": "w11"
+        },
+        {
+          "w": "w12"
+        },
+        {
+          "w": "w13"
+        }
+      ]
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "w": "upNext"
+          }
+        ],
+        "settings": [
+          {
+            "days": 7
+          }
+        ],
+        "sizes": [
+          "M"
+        ]
+      },
+      "value": [
+        {
+          "settings": {
+            "k0": 0,
+            "k1": 1,
+            "k10": 10,
+            "k11": 11,
+            "k12": 12,
+            "k13": 13,
+            "k14": 14,
+            "k15": 15,
+            "k16": 16,
+            "k2": 2,
+            "k3": 3,
+            "k4": 4,
+            "k5": 5,
+            "k6": 6,
+            "k7": 7,
+            "k8": 8,
+            "k9": 9
+          },
+          "w": "upNext"
+        }
+      ]
+    }
+  ]
+}

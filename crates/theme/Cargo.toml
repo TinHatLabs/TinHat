@@ -1,0 +1,14 @@
+[package]
+name = "tinhat-theme"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Tin Hat theme engine: Rust port of the web's TypeScript reference (ENGINE.md v1) — colours, deterministic OKLab maths, the expression language, role derivation + readability guards, tokens, and the terminal-theme importers. Pure: no Qt, no I/O."
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# Only the Value type (theme documents in, import results out). Parsing that must match JSON.parse, and the
+# canonical/ECMAScript printing, are hand-written (src/json.rs, src/canon.rs).
+serde_json = "1"

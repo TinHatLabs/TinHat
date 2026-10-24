@@ -1,0 +1,25 @@
+# CUDA toolkit headers for webrtc-sys's NVENC shim (livekit SDK). Arch puts CUDA
+# at /opt/cuda; webrtc-sys/build.rs defaults to /usr/local/cuda, so point it here.
+# Without this, NVENC is silently NOT compiled in (falls back to software OpenH264).
+[env]
+CUDA_HOME = "/opt/cuda"
+
+# Windows: the prebuilt LiveKit libwebrtc blob is compiled with the STATIC MSVC CRT
+# (/MT — Chromium's is_component_build=false default; see vendor/webrtc-sys/libwebrtc/
+# build_windows.cmd). Linking it into a default /MD Rust binary fails with LNK2038
+# RuntimeLibrary mismatches, so the whole binary goes crt-static — same approach as
+# upstream livekit rust-sdks. Qt/GStreamer stay dynamic DLLs with their own /MD CRT
+# (allocation ownership stays inside those DLLs via their exported APIs). The `cc`
+# crate picks this flag up automatically and compiles our C++ shims /MT to match.
+# Windows-only section: no effect on the Linux build.
+# /DELAYLOAD for the NVIDIA driver DLLs (webrtc-sys NVENC/NVDEC windows arm):
+# cuda.lib/nvcuvid.lib are import libs for DRIVER DLLs that don't exist on
+# non-NVIDIA machines — delay-loading keeps the exe launchable there (the
+# factories probe LoadLibrary before any cu*/cuvid* call, so the delay-load
+# helper never fires unresolved). Harmless LNK4199 when NVENC isn't compiled.
+[target.x86_64-pc-windows-msvc]
+rustflags = [
+    "-C", "target-feature=+crt-static",
+    "-C", "link-arg=/DELAYLOAD:nvcuda.dll",
+    "-C", "link-arg=/DELAYLOAD:nvcuvid.dll",
+]

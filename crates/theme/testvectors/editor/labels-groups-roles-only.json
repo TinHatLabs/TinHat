@@ -1,0 +1,368 @@
+{
+  "expect": {
+    "groups": [
+      {
+        "id": "roles:0",
+        "label": "Surfaces",
+        "rows": [
+          {
+            "id": "surface.window",
+            "kind": "role",
+            "label": "Window background"
+          },
+          {
+            "id": "surface.island",
+            "kind": "role",
+            "label": "Islands"
+          },
+          {
+            "id": "surface.raised",
+            "kind": "role",
+            "label": "Raised surfaces"
+          },
+          {
+            "id": "surface.hover",
+            "kind": "role",
+            "label": "Hover"
+          },
+          {
+            "id": "surface.pressed",
+            "kind": "role",
+            "label": "Pressed"
+          },
+          {
+            "id": "surface.selected",
+            "kind": "role",
+            "label": "Selected"
+          },
+          {
+            "id": "surface.sunken",
+            "kind": "role",
+            "label": "Sunken surfaces"
+          },
+          {
+            "id": "surface.overlay",
+            "kind": "role",
+            "label": "Menus and popups"
+          },
+          {
+            "id": "scrim",
+            "kind": "role",
+            "label": "Veil behind dialogs"
+          },
+          {
+            "id": "shadow",
+            "kind": "role",
+            "label": "Shadows"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "roles:1",
+        "label": "Borders",
+        "rows": [
+          {
+            "id": "border.subtle",
+            "kind": "role",
+            "label": "Subtle borders"
+          },
+          {
+            "id": "border.strong",
+            "kind": "role",
+            "label": "Strong borders"
+          },
+          {
+            "id": "border.focus",
+            "kind": "role",
+            "label": "Focus ring"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "roles:2",
+        "label": "Text",
+        "rows": [
+          {
+            "id": "text.primary",
+            "kind": "role",
+            "label": "Text"
+          },
+          {
+            "id": "text.secondary",
+            "kind": "role",
+            "label": "Secondary text"
+          },
+          {
+            "id": "text.muted",
+            "kind": "role",
+            "label": "Muted text"
+          },
+          {
+            "id": "text.disabled",
+            "kind": "role",
+            "label": "Disabled text"
+          },
+          {
+            "id": "text.link",
+            "kind": "role",
+            "label": "Links"
+          },
+          {
+            "id": "text.onAccent",
+            "kind": "role",
+            "label": "Text on accent"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "roles:3",
+        "label": "Accent",
+        "rows": [
+          {
+            "id": "accent.base",
+            "kind": "role",
+            "label": "Accent"
+          },
+          {
+            "id": "accent.bright",
+            "kind": "role",
+            "label": "Bright accent"
+          },
+          {
+            "id": "accent.dim",
+            "kind": "role",
+            "label": "Accent wash"
+          },
+          {
+            "id": "accent.glow",
+            "kind": "role",
+            "label": "Accent glow"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "roles:4",
+        "label": "Status",
+        "rows": [
+          {
+            "id": "state.danger",
+            "kind": "role",
+            "label": "Danger"
+          },
+          {
+            "id": "state.dangerBright",
+            "kind": "role",
+            "label": "Bright danger"
+          },
+          {
+            "id": "state.warning",
+            "kind": "role",
+            "label": "Warning"
+          },
+          {
+            "id": "state.success",
+            "kind": "role",
+            "label": "Success"
+          },
+          {
+            "id": "state.info",
+            "kind": "role",
+            "label": "Information"
+          },
+          {
+            "id": "state.aside",
+            "kind": "role",
+            "label": "Aside"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "roles:5",
+        "label": "Mentions and badges",
+        "rows": [
+          {
+            "id": "mention.bg",
+            "kind": "role",
+            "label": "Mention highlight"
+          },
+          {
+            "id": "mention.edge",
+            "kind": "role",
+            "label": "Mention edge"
+          },
+          {
+            "id": "badge.bg",
+            "kind": "role",
+            "label": "Badges"
+          },
+          {
+            "id": "badge.mention",
+            "kind": "role",
+            "label": "Mention badges"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "roles:6",
+        "label": "Presence and calls",
+        "rows": [
+          {
+            "id": "presence.online",
+            "kind": "role",
+            "label": "Online"
+          },
+          {
+            "id": "presence.away",
+            "kind": "role",
+            "label": "Away"
+          },
+          {
+            "id": "presence.busy",
+            "kind": "role",
+            "label": "Busy"
+          },
+          {
+            "id": "presence.incall",
+            "kind": "role",
+            "label": "In a call"
+          },
+          {
+            "id": "presence.offline",
+            "kind": "role",
+            "label": "Offline"
+          },
+          {
+            "id": "call.speaking",
+            "kind": "role",
+            "label": "Speaking"
+          },
+          {
+            "id": "call.muted",
+            "kind": "role",
+            "label": "Muted"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "roles:7",
+        "label": "Name colours",
+        "rows": [
+          {
+            "id": "name.1",
+            "kind": "role",
+            "label": "Name colour 1"
+          },
+          {
+            "id": "name.2",
+            "kind": "role",
+            "label": "Name colour 2"
+          },
+          {
+            "id": "name.3",
+            "kind": "role",
+            "label": "Name colour 3"
+          },
+          {
+            "id": "name.4",
+            "kind": "role",
+            "label": "Name colour 4"
+          },
+          {
+            "id": "name.5",
+            "kind": "role",
+            "label": "Name colour 5"
+          },
+          {
+            "id": "name.6",
+            "kind": "role",
+            "label": "Name colour 6"
+          },
+          {
+            "id": "name.7",
+            "kind": "role",
+            "label": "Name colour 7"
+          },
+          {
+            "id": "name.8",
+            "kind": "role",
+            "label": "Name colour 8"
+          },
+          {
+            "id": "name.9",
+            "kind": "role",
+            "label": "Name colour 9"
+          },
+          {
+            "id": "name.10",
+            "kind": "role",
+            "label": "Name colour 10"
+          },
+          {
+            "id": "name.11",
+            "kind": "role",
+            "label": "Name colour 11"
+          },
+          {
+            "id": "name.12",
+            "kind": "role",
+            "label": "Name colour 12"
+          }
+        ],
+        "section": "Roles"
+      },
+      {
+        "id": "area:rail",
+        "label": "Rail",
+        "rows": [
+          {
+            "id": "rail.bg",
+            "kind": "token",
+            "label": "Background"
+          }
+        ],
+        "section": "Navigation"
+      },
+      {
+        "id": "area:composer",
+        "label": "Composer",
+        "rows": [
+          {
+            "id": "composer.bg",
+            "kind": "token",
+            "label": "Background"
+          },
+          {
+            "id": "composer.fg",
+            "kind": "token",
+            "label": "Text"
+          }
+        ],
+        "section": "Chat"
+      }
+    ]
+  },
+  "hasPalette": false,
+  "kind": "labels",
+  "tokens": [
+    {
+      "area": "composer",
+      "id": "composer.bg"
+    },
+    {
+      "area": "composer",
+      "description": "Message text",
+      "id": "composer.fg"
+    },
+    {
+      "area": "rail",
+      "id": "rail.bg"
+    }
+  ]
+}

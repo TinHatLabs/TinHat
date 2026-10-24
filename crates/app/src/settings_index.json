@@ -1,0 +1,549 @@
+{
+ "format": "tinhat-settings-index",
+ "v": 1,
+ "note": "SETTINGS-WINDOW.md §4-5: the searchable rows of the Settings window, in display order. Byte copy in both repos.",
+ "panes": [
+  {
+   "key": "profile",
+   "title": "Profile"
+  },
+  {
+   "key": "privacy",
+   "title": "Privacy"
+  },
+  {
+   "key": "security",
+   "title": "Devices & security"
+  },
+  {
+   "key": "invites",
+   "title": "Invites"
+  },
+  {
+   "key": "guests",
+   "title": "Guests"
+  },
+  {
+   "key": "audio",
+   "title": "Audio"
+  },
+  {
+   "key": "calls",
+   "title": "Calls & video"
+  },
+  {
+   "key": "appearance",
+   "title": "Appearance"
+  },
+  {
+   "key": "notifications",
+   "title": "Notifications"
+  },
+  {
+   "key": "shortcuts",
+   "title": "Shortcuts"
+  },
+  {
+   "key": "overlay",
+   "title": "Overlay"
+  },
+  {
+   "key": "about",
+   "title": "About & help"
+  }
+ ],
+ "entries": [
+  {
+   "id": "profile.photo",
+   "pane": "profile",
+   "section": "Profile",
+   "label": "Photo",
+   "keywords": "avatar picture image profile picture"
+  },
+  {
+   "id": "profile.display-name",
+   "pane": "profile",
+   "section": "Profile",
+   "label": "Display name",
+   "keywords": "name nickname username"
+  },
+  {
+   "id": "profile.about-me",
+   "pane": "profile",
+   "section": "Profile",
+   "label": "About me",
+   "keywords": "bio description"
+  },
+  {
+   "id": "profile.colour",
+   "pane": "profile",
+   "section": "Profile",
+   "label": "Your colour",
+   "keywords": "color accent name colour"
+  },
+  {
+   "id": "profile.join-sound",
+   "pane": "profile",
+   "section": "Join sound",
+   "label": "Join sound",
+   "keywords": "entrance intro call join sound"
+  },
+  {
+   "id": "profile.email",
+   "pane": "profile",
+   "section": "Email address",
+   "label": "Email address",
+   "keywords": "email mail password reset recovery"
+  },
+  {
+   "id": "privacy.share-status",
+   "pane": "privacy",
+   "section": "Your status",
+   "label": "Share my status",
+   "keywords": "presence online away in a call status visible"
+  },
+  {
+   "id": "privacy.share-time-zone",
+   "pane": "privacy",
+   "section": "Time zone",
+   "label": "Share my time zone",
+   "keywords": "timezone clock time friends clocks"
+  },
+  {
+   "id": "privacy.time-zone",
+   "pane": "privacy",
+   "section": "Time zone",
+   "label": "Your time zone",
+   "keywords": "timezone clock utc"
+  },
+  {
+   "id": "privacy.never-record",
+   "pane": "privacy",
+   "section": "Call recordings",
+   "label": "Never record me",
+   "keywords": "recording record rec memories"
+  },
+  {
+   "id": "privacy.diagnostics",
+   "pane": "privacy",
+   "section": "Diagnostics",
+   "label": "Diagnostic reports",
+   "keywords": "diagnostics report debug"
+  },
+  {
+   "id": "privacy.log-sharing",
+   "pane": "privacy",
+   "section": "Automatic log sharing",
+   "label": "Send my debug logs automatically",
+   "keywords": "logs log sharing debug upload crash"
+  },
+  {
+   "id": "security.verification",
+   "pane": "security",
+   "section": "This device",
+   "label": "Verification",
+   "keywords": "verify verified cross signing encryption e2ee trust"
+  },
+  {
+   "id": "security.key-backup",
+   "pane": "security",
+   "section": "This device",
+   "label": "Key backup",
+   "keywords": "backup recovery security key encryption history"
+  },
+  {
+   "id": "security.devices",
+   "pane": "security",
+   "section": "Where you're signed in",
+   "label": "Signed-in devices",
+   "keywords": "sessions devices sign out log out remove"
+  },
+  {
+   "id": "security.password",
+   "pane": "security",
+   "section": "Your account",
+   "label": "Password",
+   "keywords": "change password forgot reset new account"
+  },
+  {
+   "id": "invites.create-invite",
+   "pane": "invites",
+   "section": "Invite someone",
+   "label": "Create invite",
+   "keywords": "invite code registration token friend account",
+   "operator": true
+  },
+  {
+   "id": "invites.codes",
+   "pane": "invites",
+   "section": "Codes",
+   "label": "Invite codes",
+   "keywords": "invite codes revoke copy",
+   "operator": true
+  },
+  {
+   "id": "guests.state",
+   "pane": "guests",
+   "section": "Guest room",
+   "label": "Guest room",
+   "keywords": "guests visitors let in door waiting turn on off"
+  },
+  {
+   "id": "guests.link",
+   "pane": "guests",
+   "section": "Guest room",
+   "label": "Guest link",
+   "keywords": "guests visitors copy new link door"
+  },
+  {
+   "id": "audio.input-device",
+   "pane": "audio",
+   "section": "Microphone",
+   "label": "Input device",
+   "keywords": "mic microphone input headset"
+  },
+  {
+   "id": "audio.input-level",
+   "pane": "audio",
+   "section": "Microphone",
+   "label": "Input level",
+   "keywords": "mic level meter volume test"
+  },
+  {
+   "id": "audio.echo-cancellation",
+   "pane": "audio",
+   "section": "Microphone",
+   "label": "Echo cancellation",
+   "keywords": "echo aec feedback"
+  },
+  {
+   "id": "audio.echo-outputs",
+   "pane": "audio",
+   "section": "Microphone",
+   "label": "Speaker outputs to cancel",
+   "keywords": "echo outputs speakers"
+  },
+  {
+   "id": "audio.auto-gain",
+   "pane": "audio",
+   "section": "Microphone",
+   "label": "Auto gain control",
+   "keywords": "agc gain volume loudness quiet loud"
+  },
+  {
+   "id": "audio.noise-suppression",
+   "pane": "audio",
+   "section": "Microphone",
+   "label": "Noise suppression",
+   "keywords": "noise rnnoise background suppression robotic"
+  },
+  {
+   "id": "audio.noise-test",
+   "pane": "audio",
+   "section": "Microphone",
+   "label": "Test noise cancellation",
+   "keywords": "test noise before after"
+  },
+  {
+   "id": "audio.output-device",
+   "pane": "audio",
+   "section": "Speaker",
+   "label": "Output device",
+   "keywords": "speaker speakers headphones output sound"
+  },
+  {
+   "id": "audio.output-level",
+   "pane": "audio",
+   "section": "Speaker",
+   "label": "Output level",
+   "keywords": "speaker level meter"
+  },
+  {
+   "id": "audio.share-audio",
+   "pane": "audio",
+   "section": "Share audio",
+   "label": "Share audio source",
+   "keywords": "music app sound share audio stream"
+  },
+  {
+   "id": "audio.same-room-auto",
+   "pane": "audio",
+   "section": "Same room",
+   "label": "Link up automatically",
+   "keywords": "same room link linked pair nearby laptops double twice"
+  },
+  {
+   "id": "audio.same-room-pairs",
+   "pane": "audio",
+   "section": "Same room",
+   "label": "People you've linked with",
+   "keywords": "same room linked remembered pairs remove forget"
+  },
+  {
+   "id": "calls.push-to-talk",
+   "pane": "calls",
+   "section": "Talking",
+   "label": "Push to talk",
+   "keywords": "ptt push talk key hold"
+  },
+  {
+   "id": "calls.muted-sound",
+   "pane": "calls",
+   "section": "Talking",
+   "label": "Sound when I talk while muted",
+   "keywords": "muted reminder mute"
+  },
+  {
+   "id": "calls.keep-buttons",
+   "pane": "calls",
+   "section": "Talking",
+   "label": "Keep call buttons visible",
+   "keywords": "buttons controls hide"
+  },
+  {
+   "id": "calls.camera",
+   "pane": "calls",
+   "section": "Camera",
+   "label": "Camera",
+   "keywords": "webcam camera video"
+  },
+  {
+   "id": "calls.camera-quality",
+   "pane": "calls",
+   "section": "Camera",
+   "label": "Camera quality",
+   "keywords": "resolution 720p 1080p quality webcam"
+  },
+  {
+   "id": "calls.adaptive-layers",
+   "pane": "calls",
+   "section": "Camera",
+   "label": "Adaptive layers",
+   "keywords": "simulcast layers nvenc"
+  },
+  {
+   "id": "calls.share-resolution",
+   "pane": "calls",
+   "section": "Screen share",
+   "label": "Screen share resolution",
+   "keywords": "screen share stream resolution 1080p 1440p 4k"
+  },
+  {
+   "id": "calls.share-fps",
+   "pane": "calls",
+   "section": "Screen share",
+   "label": "Frame rate",
+   "keywords": "fps framerate smooth"
+  },
+  {
+   "id": "calls.share-bandwidth",
+   "pane": "calls",
+   "section": "Screen share",
+   "label": "Bandwidth",
+   "keywords": "bitrate bandwidth quality"
+  },
+  {
+   "id": "calls.share-encoder",
+   "pane": "calls",
+   "section": "Screen share",
+   "label": "Encoder",
+   "keywords": "codec av1 vp9 h264 encoder nvenc"
+  },
+  {
+   "id": "calls.incoming-quality",
+   "pane": "calls",
+   "section": "Incoming video",
+   "label": "Incoming video quality",
+   "keywords": "receive quality data bandwidth"
+  },
+  {
+   "id": "calls.speed-test",
+   "pane": "calls",
+   "section": "Connection",
+   "label": "Test connection speed",
+   "keywords": "speed test network bandwidth internet"
+  },
+  {
+   "id": "appearance.theme",
+   "pane": "appearance",
+   "section": "Theme",
+   "label": "Theme",
+   "keywords": "theme dark light colours colors oled"
+  },
+  {
+   "id": "appearance.customize-theme",
+   "pane": "appearance",
+   "section": "Theme",
+   "label": "Customize theme",
+   "keywords": "theme editor customize edit colours"
+  },
+  {
+   "id": "appearance.sound-pack",
+   "pane": "appearance",
+   "section": "Sounds and icons",
+   "label": "Sound pack",
+   "keywords": "sounds chimes pack"
+  },
+  {
+   "id": "appearance.icon-pack",
+   "pane": "appearance",
+   "section": "Sounds and icons",
+   "label": "Icon pack",
+   "keywords": "icons"
+  },
+  {
+   "id": "appearance.navigation",
+   "pane": "appearance",
+   "section": "Navigation",
+   "label": "Navigation",
+   "keywords": "nav sidebar corner dock oled room list"
+  },
+  {
+   "id": "appearance.reduce-motion",
+   "pane": "appearance",
+   "section": "Motion",
+   "label": "Reduce motion",
+   "keywords": "animation motion animations"
+  },
+  {
+   "id": "appearance.clock",
+   "pane": "appearance",
+   "section": "Clock",
+   "label": "Clock",
+   "keywords": "12 24 hour time format"
+  },
+  {
+   "id": "notifications.notify-mentions",
+   "pane": "notifications",
+   "section": "Desktop notifications",
+   "label": "Mentions and DMs",
+   "keywords": "notifications desktop alerts mentions dm popups"
+  },
+  {
+   "id": "notifications.notify-calls",
+   "pane": "notifications",
+   "section": "Desktop notifications",
+   "label": "When someone starts a call",
+   "keywords": "call alert ring"
+  },
+  {
+   "id": "notifications.sound-open-room",
+   "pane": "notifications",
+   "section": "Sounds",
+   "label": "Sound for messages in the open room",
+   "keywords": "message sound"
+  },
+  {
+   "id": "notifications.sound-send",
+   "pane": "notifications",
+   "section": "Sounds",
+   "label": "Sound when you send",
+   "keywords": "send message sound"
+  },
+  {
+   "id": "notifications.sound-join-leave",
+   "pane": "notifications",
+   "section": "Sounds",
+   "label": "Join and leave chime",
+   "keywords": "chime join leave call"
+  },
+  {
+   "id": "notifications.notification-sound",
+   "pane": "notifications",
+   "section": "Sounds",
+   "label": "Notification sound",
+   "keywords": "sound ping"
+  },
+  {
+   "id": "notifications.ringtone",
+   "pane": "notifications",
+   "section": "Sounds",
+   "label": "Ring for incoming calls",
+   "keywords": "ringtone ring call"
+  },
+  {
+   "id": "notifications.sound-volume",
+   "pane": "notifications",
+   "section": "Sounds",
+   "label": "Sound volume",
+   "keywords": "volume loud quiet"
+  },
+  {
+   "id": "shortcuts.shortcuts",
+   "pane": "shortcuts",
+   "section": "Shortcuts",
+   "label": "Keyboard shortcuts",
+   "keywords": "keys hotkeys bindings keyboard"
+  },
+  {
+   "id": "overlay.overlay",
+   "pane": "overlay",
+   "section": "Voice overlay",
+   "label": "Voice overlay",
+   "keywords": "overlay who's talking games fullscreen"
+  },
+  {
+   "id": "overlay.overlay-show",
+   "pane": "overlay",
+   "section": "Voice overlay",
+   "label": "Show",
+   "keywords": "overlay always talking"
+  },
+  {
+   "id": "overlay.overlay-corner",
+   "pane": "overlay",
+   "section": "Voice overlay",
+   "label": "Corner",
+   "keywords": "overlay position"
+  },
+  {
+   "id": "overlay.overlay-hide-sharing",
+   "pane": "overlay",
+   "section": "Voice overlay",
+   "label": "Hide while screen sharing",
+   "keywords": "overlay screen share"
+  },
+  {
+   "id": "about.updates",
+   "pane": "about",
+   "section": "Tin Hat",
+   "label": "Check for updates",
+   "keywords": "update version upgrade"
+  },
+  {
+   "id": "about.whats-new",
+   "pane": "about",
+   "section": "Tin Hat",
+   "label": "What's new",
+   "keywords": "changelog release notes"
+  },
+  {
+   "id": "about.tour",
+   "pane": "about",
+   "section": "Help",
+   "label": "Take the tour",
+   "keywords": "tour help onboarding guide"
+  },
+  {
+   "id": "about.shortcut-list",
+   "pane": "about",
+   "section": "Help",
+   "label": "Keyboard shortcuts",
+   "keywords": "shortcuts keys"
+  },
+  {
+   "id": "about.report",
+   "pane": "about",
+   "section": "Help",
+   "label": "Report a problem",
+   "keywords": "bug report feedback issue"
+  },
+  {
+   "id": "about.sign-out",
+   "pane": "about",
+   "section": "Account",
+   "label": "Sign out",
+   "keywords": "logout log out sign out"
+  }
+ ]
+}

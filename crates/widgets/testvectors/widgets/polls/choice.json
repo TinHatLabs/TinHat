@@ -1,0 +1,401 @@
+{
+  "cases": [
+    {
+      "clicked": "a",
+      "content": {
+        "org.matrix.msc1767.text": "What should we order?\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "What should we order?",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "What should we order?"
+          }
+        }
+      },
+      "expect": [
+        "a"
+      ],
+      "mine": []
+    },
+    {
+      "clicked": "a",
+      "content": {
+        "org.matrix.msc1767.text": "What should we order?\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "What should we order?",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "What should we order?"
+          }
+        }
+      },
+      "expect": null,
+      "mine": [
+        "a"
+      ]
+    },
+    {
+      "clicked": "b",
+      "content": {
+        "org.matrix.msc1767.text": "What should we order?\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "What should we order?",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "What should we order?"
+          }
+        }
+      },
+      "expect": [
+        "b"
+      ],
+      "mine": [
+        "a"
+      ]
+    },
+    {
+      "clicked": "zzz",
+      "content": {
+        "org.matrix.msc1767.text": "What should we order?\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "What should we order?",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "What should we order?"
+          }
+        }
+      },
+      "expect": null,
+      "mine": []
+    },
+    {
+      "clicked": "c",
+      "content": {
+        "org.matrix.msc1767.text": "What should we order?\n1. Pizza 🍕\n2. Poutine\n3. Wings",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "Pizza 🍕"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "Poutine"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "Wings"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 1,
+          "question": {
+            "body": "What should we order?",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "What should we order?"
+          }
+        }
+      },
+      "expect": [
+        "c"
+      ],
+      "mine": [
+        "b"
+      ]
+    },
+    {
+      "clicked": "b",
+      "content": {
+        "org.matrix.msc1767.text": "Pick two\n1. A\n2. B\n3. C\n4. D",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "C"
+            },
+            {
+              "id": "d",
+              "org.matrix.msc1767.text": "D"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 2,
+          "question": {
+            "body": "Pick two",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Pick two"
+          }
+        }
+      },
+      "expect": [
+        "b"
+      ],
+      "mine": []
+    },
+    {
+      "clicked": "a",
+      "content": {
+        "org.matrix.msc1767.text": "Pick two\n1. A\n2. B\n3. C\n4. D",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "C"
+            },
+            {
+              "id": "d",
+              "org.matrix.msc1767.text": "D"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 2,
+          "question": {
+            "body": "Pick two",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Pick two"
+          }
+        }
+      },
+      "expect": [
+        "a",
+        "b"
+      ],
+      "mine": [
+        "b"
+      ]
+    },
+    {
+      "clicked": "c",
+      "content": {
+        "org.matrix.msc1767.text": "Pick two\n1. A\n2. B\n3. C\n4. D",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "C"
+            },
+            {
+              "id": "d",
+              "org.matrix.msc1767.text": "D"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 2,
+          "question": {
+            "body": "Pick two",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Pick two"
+          }
+        }
+      },
+      "expect": null,
+      "mine": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "clicked": "a",
+      "content": {
+        "org.matrix.msc1767.text": "Pick two\n1. A\n2. B\n3. C\n4. D",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "C"
+            },
+            {
+              "id": "d",
+              "org.matrix.msc1767.text": "D"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 2,
+          "question": {
+            "body": "Pick two",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Pick two"
+          }
+        }
+      },
+      "expect": [
+        "b"
+      ],
+      "mine": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "clicked": "c",
+      "content": {
+        "org.matrix.msc1767.text": "Pick two\n1. A\n2. B\n3. C\n4. D",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "C"
+            },
+            {
+              "id": "d",
+              "org.matrix.msc1767.text": "D"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 2,
+          "question": {
+            "body": "Pick two",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Pick two"
+          }
+        }
+      },
+      "expect": null,
+      "mine": [
+        "c"
+      ]
+    },
+    {
+      "clicked": "b",
+      "content": {
+        "org.matrix.msc1767.text": "Pick two\n1. A\n2. B\n3. C\n4. D",
+        "org.matrix.msc3381.poll.start": {
+          "answers": [
+            {
+              "id": "a",
+              "org.matrix.msc1767.text": "A"
+            },
+            {
+              "id": "b",
+              "org.matrix.msc1767.text": "B"
+            },
+            {
+              "id": "c",
+              "org.matrix.msc1767.text": "C"
+            },
+            {
+              "id": "d",
+              "org.matrix.msc1767.text": "D"
+            }
+          ],
+          "kind": "org.matrix.msc3381.poll.disclosed",
+          "max_selections": 2,
+          "question": {
+            "body": "Pick two",
+            "msgtype": "m.text",
+            "org.matrix.msc1767.text": "Pick two"
+          }
+        }
+      },
+      "expect": null,
+      "mine": [
+        "d",
+        "a"
+      ]
+    }
+  ]
+}

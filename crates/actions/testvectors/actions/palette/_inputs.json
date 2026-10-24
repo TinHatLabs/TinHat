@@ -1,0 +1,83 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": 7,
+      "name": "not an object"
+    },
+    {
+      "expect": {
+        "error": "bad-app"
+      },
+      "input": {
+        "app": "tv"
+      },
+      "name": "bad app"
+    },
+    {
+      "expect": {
+        "error": "bad-query"
+      },
+      "input": {
+        "app": "web",
+        "query": 3
+      },
+      "name": "query not a string"
+    },
+    {
+      "expect": {
+        "error": "bad-stage"
+      },
+      "input": {
+        "app": "web",
+        "stage": 3
+      },
+      "name": "stage not a string"
+    },
+    {
+      "expect": {
+        "items": [],
+        "mode": "all",
+        "query": "",
+        "stage": null,
+        "total": 0
+      },
+      "input": {
+        "app": "desktop"
+      },
+      "name": "no snapshot, no query"
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "call.mic.toggle",
+            "active": false,
+            "emoji": null,
+            "enabled": false,
+            "hint": "Ctrl+Shift+M",
+            "icon": "audio-input-microphone-symbolic",
+            "id": "call.mic.toggle",
+            "kind": "action",
+            "label": "Mute",
+            "pick": false,
+            "score": 100,
+            "target": null
+          }
+        ],
+        "mode": "all",
+        "query": "mute",
+        "stage": null,
+        "total": 1
+      },
+      "input": {
+        "app": "desktop",
+        "query": "mute"
+      },
+      "name": "no snapshot, a query"
+    }
+  ],
+  "kind": "palette"
+}

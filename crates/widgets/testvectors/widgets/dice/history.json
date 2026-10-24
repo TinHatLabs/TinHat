@@ -1,0 +1,2410 @@
+{
+  "cases": [
+    {
+      "events": [],
+      "expect": [],
+      "limit": 5,
+      "private": []
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "2d6+3",
+              "kept": [
+                true,
+                true
+              ],
+              "rolls": [
+                4,
+                2
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$a",
+          "sender": "@ana:x",
+          "ts": 1000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 20 — natural 20!",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                20
+              ],
+              "total": 20,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>20</strong> — <strong>natural 20!</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$b",
+          "sender": "@bo:x",
+          "ts": 3000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 4d6kh3 → 12 (3 + 6 + 3, dropped 2)",
+            "dev.tinhat.dice": {
+              "expr": "4d6kh3",
+              "kept": [
+                true,
+                true,
+                true,
+                false
+              ],
+              "rolls": [
+                3,
+                6,
+                3,
+                2
+              ],
+              "total": 12,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>4d6kh3</code> → <strong>12</strong> (3 + 6 + 3, dropped <del>2</del>)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$c",
+          "sender": "@me:x",
+          "ts": 2000
+        }
+      ],
+      "expect": [
+        {
+          "id": "$b",
+          "private": false,
+          "result": {
+            "expr": "1d20",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  20
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 20
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "nat20",
+            "rolls": [
+              20
+            ],
+            "total": 20
+          },
+          "sender": "@bo:x",
+          "ts": 3000
+        },
+        {
+          "id": "p1",
+          "private": true,
+          "result": {
+            "expr": "1d20",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  1
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 1
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "nat1",
+            "rolls": [
+              1
+            ],
+            "total": 1
+          },
+          "sender": "",
+          "ts": 2500
+        },
+        {
+          "id": "$c",
+          "private": false,
+          "result": {
+            "expr": "4d6kh3",
+            "groups": [
+              {
+                "count": 4,
+                "keep": "kh",
+                "kept": [
+                  true,
+                  true,
+                  true,
+                  false
+                ],
+                "kind": "dice",
+                "n": 3,
+                "rolls": [
+                  3,
+                  6,
+                  3,
+                  2
+                ],
+                "sides": 6,
+                "sign": 1,
+                "sum": 12
+              }
+            ],
+            "kept": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              3,
+              6,
+              3,
+              2
+            ],
+            "total": 12
+          },
+          "sender": "@me:x",
+          "ts": 2000
+        },
+        {
+          "id": "$a",
+          "private": false,
+          "result": {
+            "expr": "2d6+3",
+            "groups": [
+              {
+                "count": 2,
+                "keep": "all",
+                "kept": [
+                  true,
+                  true
+                ],
+                "kind": "dice",
+                "n": 2,
+                "rolls": [
+                  4,
+                  2
+                ],
+                "sides": 6,
+                "sign": 1,
+                "sum": 6
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true,
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              4,
+              2
+            ],
+            "total": 9
+          },
+          "sender": "@ana:x",
+          "ts": 1000
+        }
+      ],
+      "limit": 5,
+      "private": [
+        {
+          "expr": "1d20",
+          "id": "p1",
+          "rolls": [
+            1
+          ],
+          "total": 1,
+          "ts": 2500
+        }
+      ]
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "2d6+3",
+              "kept": [
+                true,
+                true
+              ],
+              "rolls": [
+                4,
+                2
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$a",
+          "sender": "@ana:x",
+          "ts": 1000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 20 — natural 20!",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                20
+              ],
+              "total": 20,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>20</strong> — <strong>natural 20!</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$b",
+          "sender": "@bo:x",
+          "ts": 1000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 2",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                2
+              ],
+              "total": 2,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>2</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$A",
+          "sender": "@bo:x",
+          "ts": 1000
+        }
+      ],
+      "expect": [
+        {
+          "id": "$A",
+          "private": false,
+          "result": {
+            "expr": "1d20",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  2
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 2
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              2
+            ],
+            "total": 2
+          },
+          "sender": "@bo:x",
+          "ts": 1000
+        },
+        {
+          "id": "$a",
+          "private": false,
+          "result": {
+            "expr": "2d6+3",
+            "groups": [
+              {
+                "count": 2,
+                "keep": "all",
+                "kept": [
+                  true,
+                  true
+                ],
+                "kind": "dice",
+                "n": 2,
+                "rolls": [
+                  4,
+                  2
+                ],
+                "sides": 6,
+                "sign": 1,
+                "sum": 6
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true,
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              4,
+              2
+            ],
+            "total": 9
+          },
+          "sender": "@ana:x",
+          "ts": 1000
+        },
+        {
+          "id": "$b",
+          "private": false,
+          "result": {
+            "expr": "1d20",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  20
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 20
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "nat20",
+            "rolls": [
+              20
+            ],
+            "total": 20
+          },
+          "sender": "@bo:x",
+          "ts": 1000
+        },
+        {
+          "id": "p",
+          "private": true,
+          "result": {
+            "expr": "1d4",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  2
+                ],
+                "sides": 4,
+                "sign": 1,
+                "sum": 2
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              2
+            ],
+            "total": 2
+          },
+          "sender": "",
+          "ts": 1000
+        }
+      ],
+      "limit": 10,
+      "private": [
+        {
+          "expr": "1d4",
+          "id": "$a",
+          "rolls": [
+            1
+          ],
+          "total": 1,
+          "ts": 1000
+        },
+        {
+          "expr": "1d4",
+          "id": "p",
+          "rolls": [
+            2
+          ],
+          "total": 2,
+          "ts": 1000
+        }
+      ]
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "hi",
+            "msgtype": "m.text"
+          },
+          "id": "$a",
+          "sender": "@ana:x",
+          "ts": 1000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 5",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                5
+              ],
+              "total": 5,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>5</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$b",
+          "sender": "@bo:x",
+          "ts": 2000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 6",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                6
+              ],
+              "total": 6,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>6</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$b",
+          "sender": "@bo:x",
+          "ts": 2500
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 7",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                7
+              ],
+              "total": 7,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>7</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "",
+          "sender": "@x:x",
+          "ts": 1
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 7",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                7
+              ],
+              "total": 7,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>7</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$c",
+          "sender": 5,
+          "ts": 1
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20 → 7",
+            "dev.tinhat.dice": {
+              "expr": "1d20",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                7
+              ],
+              "total": 7,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20</code> → <strong>7</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$d",
+          "sender": "@d:x",
+          "ts": "1"
+        },
+        {
+          "content": null,
+          "id": "$e",
+          "sender": "@e:x",
+          "ts": 10
+        },
+        null,
+        3
+      ],
+      "expect": [
+        {
+          "id": "$b",
+          "private": false,
+          "result": {
+            "expr": "1d20",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  5
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 5
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              5
+            ],
+            "total": 5
+          },
+          "sender": "@bo:x",
+          "ts": 2000
+        }
+      ],
+      "limit": 5,
+      "private": "nope"
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 4 (1 + 3) — natural 1",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                1
+              ],
+              "total": 4,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>4</strong> (1 + 3) — <strong>natural 1</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e0",
+          "sender": "@bo:x",
+          "ts": 1000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 5 (2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                2
+              ],
+              "total": 5,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>5</strong> (2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e1",
+          "sender": "@ana:x",
+          "ts": 61000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 6 (3 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                3
+              ],
+              "total": 6,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>6</strong> (3 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e2",
+          "sender": "@bo:x",
+          "ts": 121000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 7 (4 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                4
+              ],
+              "total": 7,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>7</strong> (4 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e3",
+          "sender": "@ana:x",
+          "ts": 181000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 8 (5 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                5
+              ],
+              "total": 8,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>8</strong> (5 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e4",
+          "sender": "@bo:x",
+          "ts": 241000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 9 (6 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                6
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>9</strong> (6 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e5",
+          "sender": "@ana:x",
+          "ts": 301000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 10 (7 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                7
+              ],
+              "total": 10,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>10</strong> (7 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e6",
+          "sender": "@bo:x",
+          "ts": 361000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 11 (8 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                8
+              ],
+              "total": 11,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>11</strong> (8 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e7",
+          "sender": "@ana:x",
+          "ts": 421000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 12 (9 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                9
+              ],
+              "total": 12,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>12</strong> (9 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e8",
+          "sender": "@bo:x",
+          "ts": 481000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 13 (10 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                10
+              ],
+              "total": 13,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>13</strong> (10 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e9",
+          "sender": "@ana:x",
+          "ts": 541000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 14 (11 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                11
+              ],
+              "total": 14,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>14</strong> (11 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e10",
+          "sender": "@bo:x",
+          "ts": 601000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 15 (12 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                12
+              ],
+              "total": 15,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>15</strong> (12 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e11",
+          "sender": "@ana:x",
+          "ts": 661000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 16 (13 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                13
+              ],
+              "total": 16,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>16</strong> (13 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e12",
+          "sender": "@bo:x",
+          "ts": 721000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 17 (14 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                14
+              ],
+              "total": 17,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>17</strong> (14 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e13",
+          "sender": "@ana:x",
+          "ts": 781000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 18 (15 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                15
+              ],
+              "total": 18,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>18</strong> (15 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e14",
+          "sender": "@bo:x",
+          "ts": 841000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 19 (16 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                16
+              ],
+              "total": 19,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>19</strong> (16 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e15",
+          "sender": "@ana:x",
+          "ts": 901000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 20 (17 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                17
+              ],
+              "total": 20,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>20</strong> (17 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e16",
+          "sender": "@bo:x",
+          "ts": 961000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 21 (18 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                18
+              ],
+              "total": 21,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>21</strong> (18 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e17",
+          "sender": "@ana:x",
+          "ts": 1021000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 22 (19 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                19
+              ],
+              "total": 22,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>22</strong> (19 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e18",
+          "sender": "@bo:x",
+          "ts": 1081000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 23 (20 + 3) — natural 20!",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                20
+              ],
+              "total": 23,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>23</strong> (20 + 3) — <strong>natural 20!</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e19",
+          "sender": "@ana:x",
+          "ts": 1141000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 4 (1 + 3) — natural 1",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                1
+              ],
+              "total": 4,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>4</strong> (1 + 3) — <strong>natural 1</strong>",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e20",
+          "sender": "@bo:x",
+          "ts": 1201000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 5 (2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                2
+              ],
+              "total": 5,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>5</strong> (2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e21",
+          "sender": "@ana:x",
+          "ts": 1261000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 6 (3 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                3
+              ],
+              "total": 6,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>6</strong> (3 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e22",
+          "sender": "@bo:x",
+          "ts": 1321000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 7 (4 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                4
+              ],
+              "total": 7,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>7</strong> (4 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e23",
+          "sender": "@ana:x",
+          "ts": 1381000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 8 (5 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                5
+              ],
+              "total": 8,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>8</strong> (5 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e24",
+          "sender": "@bo:x",
+          "ts": 1441000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 9 (6 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                6
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>9</strong> (6 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e25",
+          "sender": "@ana:x",
+          "ts": 1501000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 10 (7 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                7
+              ],
+              "total": 10,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>10</strong> (7 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e26",
+          "sender": "@bo:x",
+          "ts": 1561000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 11 (8 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                8
+              ],
+              "total": 11,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>11</strong> (8 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e27",
+          "sender": "@ana:x",
+          "ts": 1621000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 12 (9 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                9
+              ],
+              "total": 12,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>12</strong> (9 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e28",
+          "sender": "@bo:x",
+          "ts": 1681000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 1d20+3 → 13 (10 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "1d20+3",
+              "kept": [
+                true
+              ],
+              "rolls": [
+                10
+              ],
+              "total": 13,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>1d20+3</code> → <strong>13</strong> (10 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$e29",
+          "sender": "@ana:x",
+          "ts": 1741000
+        }
+      ],
+      "expect": [
+        {
+          "id": "$e29",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  10
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 10
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              10
+            ],
+            "total": 13
+          },
+          "sender": "@ana:x",
+          "ts": 1741000
+        },
+        {
+          "id": "$e28",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  9
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 9
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              9
+            ],
+            "total": 12
+          },
+          "sender": "@bo:x",
+          "ts": 1681000
+        },
+        {
+          "id": "$e27",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  8
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 8
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              8
+            ],
+            "total": 11
+          },
+          "sender": "@ana:x",
+          "ts": 1621000
+        },
+        {
+          "id": "$e26",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  7
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 7
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              7
+            ],
+            "total": 10
+          },
+          "sender": "@bo:x",
+          "ts": 1561000
+        },
+        {
+          "id": "$e25",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  6
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 6
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              6
+            ],
+            "total": 9
+          },
+          "sender": "@ana:x",
+          "ts": 1501000
+        },
+        {
+          "id": "$e24",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  5
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 5
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              5
+            ],
+            "total": 8
+          },
+          "sender": "@bo:x",
+          "ts": 1441000
+        },
+        {
+          "id": "$e23",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  4
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 4
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              4
+            ],
+            "total": 7
+          },
+          "sender": "@ana:x",
+          "ts": 1381000
+        },
+        {
+          "id": "$e22",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  3
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 3
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              3
+            ],
+            "total": 6
+          },
+          "sender": "@bo:x",
+          "ts": 1321000
+        },
+        {
+          "id": "$e21",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  2
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 2
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              2
+            ],
+            "total": 5
+          },
+          "sender": "@ana:x",
+          "ts": 1261000
+        },
+        {
+          "id": "$e20",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  1
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 1
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "nat1",
+            "rolls": [
+              1
+            ],
+            "total": 4
+          },
+          "sender": "@bo:x",
+          "ts": 1201000
+        },
+        {
+          "id": "$e19",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  20
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 20
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "nat20",
+            "rolls": [
+              20
+            ],
+            "total": 23
+          },
+          "sender": "@ana:x",
+          "ts": 1141000
+        },
+        {
+          "id": "$e18",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  19
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 19
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              19
+            ],
+            "total": 22
+          },
+          "sender": "@bo:x",
+          "ts": 1081000
+        },
+        {
+          "id": "$e17",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  18
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 18
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              18
+            ],
+            "total": 21
+          },
+          "sender": "@ana:x",
+          "ts": 1021000
+        },
+        {
+          "id": "$e16",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  17
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 17
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              17
+            ],
+            "total": 20
+          },
+          "sender": "@bo:x",
+          "ts": 961000
+        },
+        {
+          "id": "$e15",
+          "private": false,
+          "result": {
+            "expr": "1d20+3",
+            "groups": [
+              {
+                "count": 1,
+                "keep": "all",
+                "kept": [
+                  true
+                ],
+                "kind": "dice",
+                "n": 1,
+                "rolls": [
+                  16
+                ],
+                "sides": 20,
+                "sign": 1,
+                "sum": 16
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              16
+            ],
+            "total": 19
+          },
+          "sender": "@ana:x",
+          "ts": 901000
+        }
+      ],
+      "limit": 15,
+      "private": [
+        {
+          "expr": "1d6",
+          "id": "p0",
+          "rolls": [
+            1
+          ],
+          "total": 1,
+          "ts": 31000
+        },
+        {
+          "expr": "1d6",
+          "id": "p1",
+          "rolls": [
+            2
+          ],
+          "total": 2,
+          "ts": 121000
+        },
+        {
+          "expr": "1d6",
+          "id": "p2",
+          "rolls": [
+            3
+          ],
+          "total": 3,
+          "ts": 211000
+        },
+        {
+          "expr": "1d6",
+          "id": "p3",
+          "rolls": [
+            4
+          ],
+          "total": 4,
+          "ts": 301000
+        },
+        {
+          "expr": "1d6",
+          "id": "p4",
+          "rolls": [
+            5
+          ],
+          "total": 5,
+          "ts": 391000
+        },
+        {
+          "expr": "1d6",
+          "id": "p5",
+          "rolls": [
+            6
+          ],
+          "total": 6,
+          "ts": 481000
+        },
+        {
+          "expr": "1d6",
+          "id": "p6",
+          "rolls": [
+            1
+          ],
+          "total": 1,
+          "ts": 571000
+        },
+        {
+          "expr": "1d6",
+          "id": "p7",
+          "rolls": [
+            2
+          ],
+          "total": 2,
+          "ts": 661000
+        },
+        {
+          "expr": "1d6",
+          "id": "p8",
+          "rolls": [
+            3
+          ],
+          "total": 3,
+          "ts": 751000
+        },
+        {
+          "expr": "1d6",
+          "id": "p9",
+          "rolls": [
+            4
+          ],
+          "total": 4,
+          "ts": 841000
+        }
+      ]
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "2d6+3",
+              "kept": [
+                true,
+                true
+              ],
+              "rolls": [
+                4,
+                2
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$a",
+          "sender": "@ana:x",
+          "ts": 1000
+        }
+      ],
+      "expect": [
+        {
+          "id": "$a",
+          "private": false,
+          "result": {
+            "expr": "2d6+3",
+            "groups": [
+              {
+                "count": 2,
+                "keep": "all",
+                "kept": [
+                  true,
+                  true
+                ],
+                "kind": "dice",
+                "n": 2,
+                "rolls": [
+                  4,
+                  2
+                ],
+                "sides": 6,
+                "sign": 1,
+                "sum": 6
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true,
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              4,
+              2
+            ],
+            "total": 9
+          },
+          "sender": "@ana:x",
+          "ts": 1000
+        }
+      ],
+      "limit": 0,
+      "private": []
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "2d6+3",
+              "kept": [
+                true,
+                true
+              ],
+              "rolls": [
+                4,
+                2
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$a",
+          "sender": "@ana:x",
+          "ts": 1000
+        },
+        {
+          "content": {
+            "body": "🎲 rolled 2d6+3 → 5 (1 + 1 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "2d6+3",
+              "kept": [
+                true,
+                true
+              ],
+              "rolls": [
+                1,
+                1
+              ],
+              "total": 5,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>5</strong> (1 + 1 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$b",
+          "sender": "@ana:x",
+          "ts": 2000
+        }
+      ],
+      "expect": [
+        {
+          "id": "$b",
+          "private": false,
+          "result": {
+            "expr": "2d6+3",
+            "groups": [
+              {
+                "count": 2,
+                "keep": "all",
+                "kept": [
+                  true,
+                  true
+                ],
+                "kind": "dice",
+                "n": 2,
+                "rolls": [
+                  1,
+                  1
+                ],
+                "sides": 6,
+                "sign": 1,
+                "sum": 2
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true,
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              1,
+              1
+            ],
+            "total": 5
+          },
+          "sender": "@ana:x",
+          "ts": 2000
+        }
+      ],
+      "limit": 1.9,
+      "private": []
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "2d6+3",
+              "kept": [
+                true,
+                true
+              ],
+              "rolls": [
+                4,
+                2
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$a",
+          "sender": "@ana:x",
+          "ts": 1000
+        }
+      ],
+      "expect": [
+        {
+          "id": "$a",
+          "private": false,
+          "result": {
+            "expr": "2d6+3",
+            "groups": [
+              {
+                "count": 2,
+                "keep": "all",
+                "kept": [
+                  true,
+                  true
+                ],
+                "kind": "dice",
+                "n": 2,
+                "rolls": [
+                  4,
+                  2
+                ],
+                "sides": 6,
+                "sign": 1,
+                "sum": 6
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true,
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              4,
+              2
+            ],
+            "total": 9
+          },
+          "sender": "@ana:x",
+          "ts": 1000
+        }
+      ],
+      "limit": 99,
+      "private": []
+    },
+    {
+      "events": [
+        {
+          "content": {
+            "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+            "dev.tinhat.dice": {
+              "expr": "2d6+3",
+              "kept": [
+                true,
+                true
+              ],
+              "rolls": [
+                4,
+                2
+              ],
+              "total": 9,
+              "v": 1
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+            "m.mentions": {},
+            "msgtype": "m.notice"
+          },
+          "id": "$a",
+          "sender": "@ana:x",
+          "ts": 1000
+        }
+      ],
+      "expect": [
+        {
+          "id": "$a",
+          "private": false,
+          "result": {
+            "expr": "2d6+3",
+            "groups": [
+              {
+                "count": 2,
+                "keep": "all",
+                "kept": [
+                  true,
+                  true
+                ],
+                "kind": "dice",
+                "n": 2,
+                "rolls": [
+                  4,
+                  2
+                ],
+                "sides": 6,
+                "sign": 1,
+                "sum": 6
+              },
+              {
+                "kind": "num",
+                "sign": 1,
+                "value": 3
+              }
+            ],
+            "kept": [
+              true,
+              true
+            ],
+            "label": "",
+            "natural": "",
+            "rolls": [
+              4,
+              2
+            ],
+            "total": 9
+          },
+          "sender": "@ana:x",
+          "ts": 1000
+        }
+      ],
+      "limit": "5",
+      "private": []
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "expect": {
+    "form": {
+      "hidden": [],
+      "list": [
+        "rooms",
+        "widgets",
+        "account"
+      ],
+      "opts": {
+        "rooms": {}
+      },
+      "rail": [
+        "nav",
+        "dms",
+        "spaces"
+      ]
+    },
+    "notes": [
+      "bad-phone-fixed rail",
+      "bad-phone-fixed list",
+      "bad-phone-fixed hidden",
+      "restored-missing nav",
+      "restored-missing dms",
+      "restored-missing spaces",
+      "restored-missing rooms",
+      "restored-missing widgets",
+      "restored-missing account",
+      "bad-opts-fixed rooms"
+    ]
+  },
+  "kind": "repair",
+  "target": "phone",
+  "text": "{\"rail\":\"nav\",\"list\":{\"a\":1},\"hidden\":null,\"opts\":{\"rooms\":{\"compact\":2}}}"
+}

@@ -1,0 +1,1137 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": false,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "desktop: all on, call.in flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true
+          }
+        }
+      },
+      "name": "desktop: only call.in=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": false
+          }
+        }
+      },
+      "name": "desktop: all on, call.micMuted flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "desktop: only call.micMuted=true"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": false,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": false
+          }
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "desktop: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "desktop: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": false,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "web: all on, call.in flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true
+          }
+        }
+      },
+      "name": "web: only call.in=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": false
+          }
+        }
+      },
+      "name": "web: all on, call.micMuted flipped"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "web: only call.micMuted=true"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-input-microphone-symbolic",
+        "label": "Mute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Mute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": false
+          }
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": false,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "web: target — target on a targetless action"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "params": {
+          "n": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "web: invocation params on an action without params"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "microphone-sensitivity-muted-symbolic",
+        "label": "Unmute",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": {
+          "a": "call.options.open",
+          "target": {
+            "value": "mic"
+          }
+        },
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": "Unmute — Ctrl+Shift+M",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.in": true,
+            "call.micMuted": true
+          }
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

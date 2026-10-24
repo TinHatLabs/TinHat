@@ -1,0 +1,456 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "q": "good",
+        "t": [
+          {
+            "jit": 12,
+            "k": "a",
+            "kbps": 48,
+            "loss": 2,
+            "rtt": 40
+          },
+          {
+            "c": "AV1",
+            "fps": 30,
+            "h": 720,
+            "jit": 8,
+            "k": "v",
+            "kbps": 1450,
+            "loss": 0,
+            "w": 1280
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{\"k\":\"a\",\"kbps\":48,\"loss\":2,\"jit\":12,\"rtt\":40},{\"k\":\"v\",\"kbps\":1450,\"loss\":0,\"jit\":8,\"w\":1280,\"h\":720,\"fps\":30,\"c\":\"AV1\"}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "poor",
+        "t": []
+      },
+      "text": "{\"v\":1,\"q\":\"poor\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "ok",
+        "t": [
+          {
+            "k": "a",
+            "kbps": 10
+          }
+        ]
+      },
+      "text": "{\"v\":2,\"q\":\"ok\",\"t\":[{\"k\":\"a\",\"kbps\":10,\"future\":{\"x\":1}}],\"extra\":true}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "poor",
+        "t": [
+          {
+            "k": "a",
+            "loss": 90
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"loss\":90}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "ok",
+        "t": [
+          {
+            "k": "a",
+            "loss": 25
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"q\":\"great\",\"t\":[{\"k\":\"a\",\"loss\":25}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "good",
+        "t": [
+          {
+            "c": "Opus",
+            "jit": 13,
+            "k": "a",
+            "loss": 0,
+            "rtt": 60000
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{\"k\":\"a\",\"kbps\":\"48\",\"loss\":-5,\"jit\":12.5,\"rtt\":1e9,\"c\":\"Opus\"}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "good",
+        "t": [
+          {
+            "k": "v",
+            "kbps": 2
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{\"k\":\"z\",\"kbps\":1},{\"k\":\"v\",\"kbps\":2},{\"k\":\"v\",\"kbps\":3},7,null,{\"kbps\":4}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "good",
+        "t": [
+          {
+            "k": "a"
+          },
+          {
+            "c": "H.264",
+            "k": "v"
+          },
+          {
+            "k": "s"
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{\"k\":\"a\",\"c\":\"<script>\"},{\"k\":\"v\",\"c\":\"H.264\"},{\"k\":\"s\",\"c\":\"ABCDEFGHI\"}]}"
+    },
+    {
+      "expect": {
+        "error": "bad-v",
+        "ok": false
+      },
+      "text": "{\"v\":0,\"q\":\"good\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "error": "bad-v",
+        "ok": false
+      },
+      "text": "{\"v\":1.5,\"q\":\"good\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "error": "bad-v",
+        "ok": false
+      },
+      "text": "{\"v\":\"1\",\"q\":\"good\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "error": "bad-v",
+        "ok": false
+      },
+      "text": "{\"q\":\"good\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "error": "bad-t",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":{}}"
+    },
+    {
+      "expect": {
+        "error": "bad-t",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\"}"
+    },
+    {
+      "expect": {
+        "error": "too-many",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{},{},{},{},{},{},{},{},{}]}"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "text": "[1,2,3]"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "text": "\"just a string\""
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "text": "null"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "not json"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[]"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{\"k\":\"a\",\"kbps\":1e400}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{\"k\":\"a\",\"c\":\"\\ud800\"}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "good",
+        "t": []
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[],\"pad\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}"
+    },
+    {
+      "expect": {
+        "error": "too-large",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[],\"pad\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "ok",
+        "t": [
+          {
+            "fps": 60,
+            "h": 1080,
+            "k": "s",
+            "w": 1920
+          }
+        ]
+      },
+      "text": "  {\"v\":1,\"q\":\"ok\",\"t\":[{\"k\":\"s\",\"w\":1920,\"h\":1080,\"fps\":60}]}  "
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"q\":\"poor\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "﻿{\"v\":1,\"q\":\"good\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "good",
+        "t": [
+          {
+            "h": 480,
+            "k": "a",
+            "w": 640
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"t\":[{\"k\":\"a\",\"w\":640,\"h\":480}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[],\"x\":1e400,\"x\":0}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"q\":\"good\",\"q\":\"poor\",\"t\":[]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"k\":\"v\"}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"c\":\"\\udc00\"}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"c\":\"\\ud800x\"}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "ok",
+        "t": [
+          {
+            "k": "a"
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"c\":\"\\ud83c\\udfae\"}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"c\":\"\ud800\"}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[]} "
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": " {\"v\":1,\"t\":[]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "ok",
+        "t": []
+      },
+      "text": "{\"v\":1,\"t\":[],\"deep\":[[[[[[[[[[[[[[[1]]]]]]]]]]]]]]]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[],\"deep\":[[[[[[[[[[[[[[[[1]]]]]]]]]]]]]]]]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "good",
+        "t": [
+          {
+            "jit": 25,
+            "k": "a",
+            "kbps": 1,
+            "loss": 0
+          }
+        ]
+      },
+      "text": "{\"v\":1.0,\"t\":[{\"k\":\"a\",\"kbps\":1.0000000000000001,\"loss\":-0,\"jit\":2.5e1}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "ok",
+        "t": []
+      },
+      "text": "{\"v\":1e100,\"t\":[]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"kbps\":01}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"kbps\":1.}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"kbps\":-}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"c\":\"tab\there\"}]}"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "q": "ok",
+        "t": [
+          {
+            "c": "Opus",
+            "k": "a"
+          }
+        ]
+      },
+      "text": "{\"v\":1,\"t\":[{\"k\":\"a\",\"c\":\"Opus\",\"__proto__\":{\"kbps\":5},\"constructor\":1}]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[],}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[1,]}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": "{\"v\":1,\"t\":[]}{}"
+    },
+    {
+      "expect": {
+        "error": "not-json",
+        "ok": false
+      },
+      "text": ""
+    }
+  ]
+}

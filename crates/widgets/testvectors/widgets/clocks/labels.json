@@ -1,0 +1,136 @@
+{
+  "choices": [
+    {
+      "expect": "Tahiti · Pacific/Tahiti",
+      "tz": "Pacific/Tahiti"
+    },
+    {
+      "expect": "UTC",
+      "tz": "UTC"
+    },
+    {
+      "expect": "Buenos Aires · America/Argentina/Buenos_Aires",
+      "tz": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "expect": "UTC−10 · Etc/GMT+10",
+      "tz": "Etc/GMT+10"
+    },
+    {
+      "expect": "Nowhere",
+      "tz": "Nowhere"
+    }
+  ],
+  "offsets": [
+    {
+      "diff": 0,
+      "expect": "±0 h"
+    },
+    {
+      "diff": 1,
+      "expect": "+1 m"
+    },
+    {
+      "diff": 45,
+      "expect": "+45 m"
+    },
+    {
+      "diff": 60,
+      "expect": "+1 h"
+    },
+    {
+      "diff": 360,
+      "expect": "+6 h"
+    },
+    {
+      "diff": 330,
+      "expect": "+5 h 30 m"
+    },
+    {
+      "diff": -600,
+      "expect": "−10 h"
+    },
+    {
+      "diff": -570,
+      "expect": "−9 h 30 m"
+    },
+    {
+      "diff": 780,
+      "expect": "+13 h"
+    },
+    {
+      "diff": -1,
+      "expect": "−1 m"
+    },
+    {
+      "diff": 90.7,
+      "expect": "+1 h 30 m"
+    },
+    {
+      "diff": -90.7,
+      "expect": "−1 h 30 m"
+    }
+  ],
+  "zones": [
+    {
+      "expect": "Tahiti",
+      "tz": "Pacific/Tahiti"
+    },
+    {
+      "expect": "ET",
+      "tz": "America/New_York"
+    },
+    {
+      "expect": "PT",
+      "tz": "America/Los_Angeles"
+    },
+    {
+      "expect": "UK",
+      "tz": "Europe/London"
+    },
+    {
+      "expect": "UTC",
+      "tz": "UTC"
+    },
+    {
+      "expect": "Buenos Aires",
+      "tz": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "expect": "Ho Chi Minh",
+      "tz": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "expect": "UTC−10",
+      "tz": "Etc/GMT+10"
+    },
+    {
+      "expect": "UTC+14",
+      "tz": "Etc/GMT-14"
+    },
+    {
+      "expect": "UTC",
+      "tz": "Etc/GMT+0"
+    },
+    {
+      "expect": "UTC+5",
+      "tz": "Etc/GMT-05"
+    },
+    {
+      "expect": "Nowhere",
+      "tz": "Nowhere"
+    },
+    {
+      "expect": "",
+      "tz": ""
+    },
+    {
+      "expect": "toString",
+      "tz": "toString"
+    },
+    {
+      "expect": "proto",
+      "tz": "__proto__"
+    }
+  ]
+}

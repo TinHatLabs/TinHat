@@ -1,0 +1,280 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "addedBy": "@a:example.com",
+        "title": "Never Gonna Give You Up",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "@a:example.com",
+        "title": "Never Gonna Give You Up",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "old 3-field item"
+    },
+    {
+      "expect": {
+        "addedBy": "@a:example.com",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "@a:example.com",
+        "title": "x",
+        "url": "  https://www.youtube.com/watch?v=dQw4w9WgXcQ  "
+      },
+      "name": "old item, url padded"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "title": "",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "old item, missing title/addedBy"
+    },
+    {
+      "expect": null,
+      "input": {
+        "title": "x",
+        "url": "   "
+      },
+      "name": "empty url dropped"
+    },
+    {
+      "expect": null,
+      "input": "https://x",
+      "name": "not an object"
+    },
+    {
+      "expect": null,
+      "input": [
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      ],
+      "name": "array dropped"
+    },
+    {
+      "expect": {
+        "addedBy": "@a:example.com",
+        "art": "https://i.scdn.co/image/x",
+        "artist": "Rick Astley",
+        "durationSec": 214,
+        "kind": "song",
+        "preview": "https://p.scdn.co/mp3-preview/x",
+        "source": {
+          "id": "4cOdK2wGLETKBW3PvgPWqT",
+          "service": "spotify",
+          "url": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
+        },
+        "title": "Never Gonna Give You Up",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "@a:example.com",
+        "art": "https://i.scdn.co/image/x",
+        "artist": "Rick Astley",
+        "durationSec": 214,
+        "kind": "song",
+        "preview": "https://p.scdn.co/mp3-preview/x",
+        "source": {
+          "id": "4cOdK2wGLETKBW3PvgPWqT",
+          "service": "spotify",
+          "url": "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
+        },
+        "title": "Never Gonna Give You Up",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "song item (spotify)"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "durationSec": 77,
+        "kind": "song",
+        "source": {
+          "id": "1",
+          "service": "apple",
+          "url": "https://music.apple.com/us/song/x/1"
+        },
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "durationSec": "77",
+        "kind": "song",
+        "source": {
+          "id": "1",
+          "service": "apple",
+          "url": "https://music.apple.com/us/song/x/1"
+        },
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "song item (apple) durationSec as string"
+    },
+    {
+      "expect": {
+        "addedBy": "@a:example.com",
+        "kind": "file",
+        "title": "a.mp4",
+        "url": "https://example.com/a.mp4"
+      },
+      "input": {
+        "addedBy": "@a:example.com",
+        "kind": "file",
+        "title": "a.mp4",
+        "url": "https://example.com/a.mp4"
+      },
+      "name": "file item"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "kind": "podcast",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "unknown kind dropped"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "source": {
+          "id": "1",
+          "service": "tidal",
+          "url": "https://x"
+        },
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "unknown source service dropped"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "source": "spotify",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "source not an object dropped"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "art": "",
+        "artist": "  ",
+        "durationSec": 0,
+        "preview": "",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "empty strings dropped"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "durationSec": -5,
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "negative duration dropped"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "clip": {
+          "end": 20,
+          "start": 10
+        },
+        "kind": "video",
+        "mood": "chill",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "clip": {
+          "end": 20,
+          "start": 10
+        },
+        "kind": "video",
+        "mood": "chill",
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "unknown fields kept"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "title": "",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": null,
+        "title": 5,
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "wrong-typed title/addedBy"
+    },
+    {
+      "expect": {
+        "addedBy": "",
+        "art": "https://a/b.jpg",
+        "artist": "A",
+        "source": {
+          "id": "i",
+          "service": "youtube",
+          "url": "u"
+        },
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "input": {
+        "addedBy": "",
+        "art": " https://a/b.jpg ",
+        "artist": " A ",
+        "source": {
+          "id": " i ",
+          "service": " youtube ",
+          "url": " u "
+        },
+        "title": "x",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "name": "trimmed fields"
+    }
+  ],
+  "doc": "Queue item normalisation (queue.ts normQueueItem / watchparty.rs norm_queue_item): input → the item (null = dropped).",
+  "kind": "normQueueItem"
+}

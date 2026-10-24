@@ -1,0 +1,34 @@
+{
+  "expect": {
+    "form": {
+      "hidden": [
+        "widgets"
+      ],
+      "list": [
+        "account",
+        "buttons:a1",
+        "rooms"
+      ],
+      "rail": [
+        "nav",
+        "futureX",
+        "spaces",
+        "dms"
+      ]
+    },
+    "notes": [
+      "bad-phone-fixed rooms",
+      "dropped-duplicate nav",
+      "unknown-island-kept futureX",
+      "bad-phone-fixed timeline",
+      "bad-phone-fixed rail",
+      "bad-phone-fixed spaces",
+      "bad-phone-fixed header",
+      "dropped-duplicate rooms",
+      "restored-missing dms"
+    ]
+  },
+  "kind": "repair",
+  "target": "phone",
+  "text": "{\"rail\":[\"rooms\",\"nav\",\"nav\",\"futureX\",\"timeline\",5],\"list\":[\"spaces\",\"account\",\"buttons:a1\"],\"hidden\":[\"widgets\",\"header\",\"rooms\"]}"
+}

@@ -1,0 +1,374 @@
+{
+  "bar": [
+    {
+      "band": "good",
+      "expect": 250,
+      "ms": 0
+    },
+    {
+      "band": "good",
+      "expect": 250,
+      "ms": 49
+    },
+    {
+      "band": "good",
+      "expect": 450,
+      "ms": 49.5
+    },
+    {
+      "band": "good",
+      "expect": 450,
+      "ms": 50
+    },
+    {
+      "band": "good",
+      "expect": 450,
+      "ms": 149
+    },
+    {
+      "band": "good",
+      "expect": 650,
+      "ms": 150
+    },
+    {
+      "band": "ok",
+      "expect": 650,
+      "ms": 399
+    },
+    {
+      "band": "ok",
+      "expect": 850,
+      "ms": 400
+    },
+    {
+      "band": "ok",
+      "expect": 850,
+      "ms": 999
+    },
+    {
+      "band": "ok",
+      "expect": 1000,
+      "ms": 1000
+    },
+    {
+      "band": "poor",
+      "expect": 1000,
+      "ms": 10
+    },
+    {
+      "band": "good",
+      "expect": 1000,
+      "ms": null
+    },
+    {
+      "band": "ok",
+      "expect": 1000,
+      "ms": null
+    }
+  ],
+  "ms": [
+    {
+      "expect": "0 ms",
+      "ms": 0
+    },
+    {
+      "expect": "0 ms",
+      "ms": -5
+    },
+    {
+      "expect": "0 ms",
+      "ms": 0.4
+    },
+    {
+      "expect": "1 ms",
+      "ms": 0.5
+    },
+    {
+      "expect": "1 ms",
+      "ms": 1
+    },
+    {
+      "expect": "42 ms",
+      "ms": 42
+    },
+    {
+      "expect": "43 ms",
+      "ms": 42.5
+    },
+    {
+      "expect": "999 ms",
+      "ms": 999
+    },
+    {
+      "expect": "999 ms",
+      "ms": 999.4
+    },
+    {
+      "expect": "1.0 s",
+      "ms": 999.5
+    },
+    {
+      "expect": "1.0 s",
+      "ms": 1000
+    },
+    {
+      "expect": "1.0 s",
+      "ms": 1049
+    },
+    {
+      "expect": "1.1 s",
+      "ms": 1050
+    },
+    {
+      "expect": "1.2 s",
+      "ms": 1234
+    },
+    {
+      "expect": "9.9 s",
+      "ms": 9949
+    },
+    {
+      "expect": "10 s",
+      "ms": 9950
+    },
+    {
+      "expect": "10 s",
+      "ms": 9999
+    },
+    {
+      "expect": "10 s",
+      "ms": 10000
+    },
+    {
+      "expect": "12 s",
+      "ms": 12345
+    },
+    {
+      "expect": "60 s",
+      "ms": 60000
+    },
+    {
+      "expect": "1000000 s",
+      "ms": 1000000000
+    }
+  ],
+  "names": [
+    {
+      "expect": "Calls",
+      "ids": [
+        "calls"
+      ]
+    },
+    {
+      "expect": "Chat",
+      "ids": [
+        "chat"
+      ]
+    },
+    {
+      "expect": "The extras",
+      "ids": [
+        "tinhat"
+      ]
+    },
+    {
+      "expect": "Calls and media",
+      "ids": [
+        "calls",
+        "media"
+      ]
+    },
+    {
+      "expect": "Chat, calls and media",
+      "ids": [
+        "chat",
+        "calls",
+        "media"
+      ]
+    },
+    {
+      "expect": "Chat, calls, media and the extras",
+      "ids": [
+        "chat",
+        "calls",
+        "media",
+        "tinhat"
+      ]
+    },
+    {
+      "expect": "Calls and the extras",
+      "ids": [
+        "calls",
+        "tinhat"
+      ]
+    },
+    {
+      "expect": "",
+      "ids": []
+    }
+  ],
+  "ping": [
+    {
+      "expect": null,
+      "pings": []
+    },
+    {
+      "expect": 42,
+      "pings": [
+        {
+          "ms": 40,
+          "status": 200
+        },
+        {
+          "ms": 42,
+          "status": 200
+        },
+        {
+          "ms": 45,
+          "status": 200
+        }
+      ]
+    },
+    {
+      "expect": 42,
+      "pings": [
+        {
+          "ms": 45,
+          "status": 200
+        },
+        {
+          "ms": 40,
+          "status": 200
+        },
+        {
+          "ms": 42,
+          "status": 200
+        }
+      ]
+    },
+    {
+      "expect": 60,
+      "pings": [
+        {
+          "ms": 40,
+          "status": 200
+        },
+        {
+          "ms": null,
+          "status": null
+        },
+        {
+          "ms": 60,
+          "status": 200
+        }
+      ]
+    },
+    {
+      "expect": null,
+      "pings": [
+        {
+          "ms": 40,
+          "status": 200
+        },
+        {
+          "ms": null,
+          "status": null
+        },
+        {
+          "ms": null,
+          "status": null
+        }
+      ]
+    },
+    {
+      "expect": null,
+      "pings": [
+        {
+          "ms": null,
+          "status": null
+        },
+        {
+          "ms": null,
+          "status": null
+        },
+        {
+          "ms": null,
+          "status": null
+        }
+      ]
+    },
+    {
+      "expect": 20,
+      "pings": [
+        {
+          "ms": 10,
+          "status": 502
+        },
+        {
+          "ms": 30,
+          "status": 200
+        },
+        {
+          "ms": 20,
+          "status": 200
+        }
+      ]
+    },
+    {
+      "expect": 10,
+      "pings": [
+        {
+          "ms": 10,
+          "status": 200
+        }
+      ]
+    },
+    {
+      "expect": 20,
+      "pings": [
+        {
+          "ms": 10,
+          "status": 200
+        },
+        {
+          "ms": 20,
+          "status": 200
+        }
+      ]
+    },
+    {
+      "expect": 11,
+      "pings": [
+        {
+          "ms": 10.5,
+          "status": 200
+        },
+        {
+          "ms": 10.4,
+          "status": 200
+        },
+        {
+          "ms": 10.6,
+          "status": 200
+        }
+      ]
+    },
+    {
+      "expect": 6,
+      "pings": [
+        {
+          "ms": -1,
+          "status": 200
+        },
+        {
+          "ms": 5,
+          "status": 200
+        },
+        {
+          "ms": 6,
+          "status": 200
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "expect": {
+    "adjusted": [],
+    "names": "palette",
+    "ok": true,
+    "roles": {
+      "accent.base": "#284060",
+      "accent.bright": "#2b4060",
+      "accent.dim": "#2e4060",
+      "accent.glow": "#314060",
+      "badge.bg": "#344060",
+      "badge.mention": "#374060",
+      "border.focus": "#3a4060",
+      "border.strong": "#3d4060",
+      "border.subtle": "#404060",
+      "call.muted": "#434060",
+      "call.speaking": "#464060",
+      "mention.bg": "#494060",
+      "mention.edge": "#4c4060",
+      "name.1": "#4f4060",
+      "name.10": "#524060",
+      "name.11": "#554060",
+      "name.12": "#584060",
+      "name.2": "#5b4060",
+      "name.3": "#5e4060",
+      "name.4": "#614060",
+      "name.5": "#644060",
+      "name.6": "#674060",
+      "name.7": "#6a4060",
+      "name.8": "#6d4060",
+      "name.9": "#704060",
+      "presence.away": "#734060",
+      "presence.busy": "#764060",
+      "presence.incall": "#794060",
+      "presence.offline": "#7c4060",
+      "presence.online": "#7f4060",
+      "scrim": "#824060",
+      "shadow": "#854060",
+      "state.aside": "#884060",
+      "state.danger": "#8b4060",
+      "state.dangerBright": "#8e4060",
+      "state.info": "#914060",
+      "state.success": "#944060",
+      "state.warning": "#974060",
+      "surface.hover": "#9a4060",
+      "surface.island": "#202020",
+      "surface.overlay": "#a04060",
+      "surface.pressed": "#a34060",
+      "surface.raised": "#a64060",
+      "surface.selected": "#a94060",
+      "surface.sunken": "#ac4060",
+      "surface.window": "#af4060",
+      "text.disabled": "#b24060",
+      "text.link": "#b54060",
+      "text.muted": "#b84060",
+      "text.onAccent": "#bb4060",
+      "text.primary": "#2a2a2a",
+      "text.secondary": "#c14060"
+    },
+    "tokens": {
+      "bubble.own.bg": "#242d39",
+      "bubble.own.fg": "#bb4060",
+      "composer.bg": "#a64060",
+      "rooms.item.bg.hover": "#9a4060",
+      "test.alpha": "#2b4060/0.25",
+      "test.best": "#ffffff",
+      "test.chain": "#943c55",
+      "test.darker": "#213550",
+      "test.guard": "#ffffff",
+      "test.lighter": "#262626",
+      "test.literal": "#1e6a76/0.5",
+      "test.mix": "#943c55",
+      "test.mixok": "#242b36",
+      "test.nested": "#6f354a",
+      "test.over": "#2e4060",
+      "test.qt": "#645783",
+      "tile.overlay.bg": "#000000/0.5",
+      "tile.ring.speaking": "#464060"
+    },
+    "variant": "dark"
+  },
+  "theme": {
+    "format": "tinhat-theme",
+    "id": "roles-only-literals",
+    "name": "Roles only (literals)",
+    "roles": {
+      "accent.base": "#284060",
+      "accent.bright": "#2b4060",
+      "accent.dim": "#2e4060",
+      "accent.glow": "#314060",
+      "badge.bg": "#344060",
+      "badge.mention": "#374060",
+      "border.focus": "#3a4060",
+      "border.strong": "#3d4060",
+      "border.subtle": "#404060",
+      "call.muted": "#434060",
+      "call.speaking": "#464060",
+      "mention.bg": "#494060",
+      "mention.edge": "#4c4060",
+      "name.1": "#4f4060",
+      "name.10": "#524060",
+      "name.11": "#554060",
+      "name.12": "#584060",
+      "name.2": "#5b4060",
+      "name.3": "#5e4060",
+      "name.4": "#614060",
+      "name.5": "#644060",
+      "name.6": "#674060",
+      "name.7": "#6a4060",
+      "name.8": "#6d4060",
+      "name.9": "#704060",
+      "presence.away": "#734060",
+      "presence.busy": "#764060",
+      "presence.incall": "#794060",
+      "presence.offline": "#7c4060",
+      "presence.online": "#7f4060",
+      "scrim": "#824060",
+      "shadow": "#854060",
+      "state.aside": "#884060",
+      "state.danger": "#8b4060",
+      "state.dangerBright": "#8e4060",
+      "state.info": "#914060",
+      "state.success": "#944060",
+      "state.warning": "#974060",
+      "surface.hover": "#9a4060",
+      "surface.island": "#202020",
+      "surface.overlay": "#a04060",
+      "surface.pressed": "#a34060",
+      "surface.raised": "#a64060",
+      "surface.selected": "#a94060",
+      "surface.sunken": "#ac4060",
+      "surface.window": "#af4060",
+      "text.disabled": "#b24060",
+      "text.link": "#b54060",
+      "text.muted": "#b84060",
+      "text.onAccent": "#bb4060",
+      "text.primary": "#2a2a2a",
+      "text.secondary": "#c14060"
+    },
+    "v": 1
+  },
+  "tokensSpec": {
+    "tokens": [
+      {
+        "default": "surface.raised",
+        "id": "composer.bg"
+      },
+      {
+        "default": "surface.hover",
+        "id": "rooms.item.bg.hover"
+      },
+      {
+        "default": "mixok(accent.base, surface.island, 0.6)",
+        "id": "bubble.own.bg"
+      },
+      {
+        "default": "text.onAccent",
+        "id": "bubble.own.fg"
+      },
+      {
+        "default": "alpha(#000000, 0.5)",
+        "id": "tile.overlay.bg"
+      },
+      {
+        "default": "call.speaking",
+        "id": "tile.ring.speaking"
+      },
+      {
+        "default": "alpha(accent.bright, 0.25)",
+        "id": "test.alpha"
+      },
+      {
+        "default": "mix(surface.window, text.primary, 0.2)",
+        "id": "test.mix"
+      },
+      {
+        "default": "lighter(surface.island, 1.18)",
+        "id": "test.lighter"
+      },
+      {
+        "default": "darker(accent.base, 1.2)",
+        "id": "test.darker"
+      },
+      {
+        "default": "over(accent.dim, surface.island)",
+        "id": "test.over"
+      },
+      {
+        "default": "mixok(surface.island, accent.bright, 0.35)",
+        "id": "test.mixok"
+      },
+      {
+        "default": "best(surface.raised, text.secondary, #ffffff, #000000)",
+        "id": "test.best"
+      },
+      {
+        "default": "guard(text.muted, surface.raised, 7)",
+        "id": "test.guard"
+      },
+      {
+        "default": "#1e6a76/0.5",
+        "id": "test.literal"
+      },
+      {
+        "default": "test.mix",
+        "id": "test.chain"
+      },
+      {
+        "default": "over(alpha(state.danger, 0.3), mix(surface.island, surface.raised, 0.5))",
+        "id": "test.nested"
+      },
+      {
+        "default": "darker(lighter(mention.bg, 1.5), 1.1)",
+        "id": "test.qt"
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+diff --git a/src/mpvrenderer.cpp b/src/mpvrenderer.cpp
+index 50f4e5f..ac10273 100644
+--- a/src/mpvrenderer.cpp
++++ b/src/mpvrenderer.cpp
+@@ -16,7 +16,10 @@
+ #include "mpvabstractitem_p.h"
+ #include "mpvcontroller.h"
+ 
+-Q_STATIC_LOGGING_CATEGORY(MpvQt_MpvRenderer, "MpvQt.MpvRenderer")
++// TIN HAT LOCAL PATCH (windows-port): Q_STATIC_LOGGING_CATEGORY is Qt 6.9+;
++// this stack pins Qt 6.8.3 (upstream claims 6.5 support - upstream bug). Same
++// category, plain linkage.
++Q_LOGGING_CATEGORY(MpvQt_MpvRenderer, "MpvQt.MpvRenderer")
+ 
+ static void *get_proc_address_mpv(void *ctx, const char *name)
+ {

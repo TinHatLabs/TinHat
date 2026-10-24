@@ -1,0 +1,3703 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.incoming.dismiss: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "call.incoming.dismiss: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "call.incoming.dismiss: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "call.incoming.dismiss: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "call.incoming.dismiss: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.incoming.dismiss: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.incoming.dismiss: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.incoming.dismiss",
+        "target": "x"
+      },
+      "name": "call.incoming.dismiss: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.incoming.dismiss"
+      },
+      "name": "call.incoming.dismiss: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.join: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "call.join: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "call.join: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "call.join: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "call.join: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.join: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.join",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.join: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.join",
+        "target": "x"
+      },
+      "name": "call.join: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.join"
+      },
+      "name": "call.join: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "memories.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.open: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "memories.open",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "memories.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "memories.open",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "memories.open: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.open",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "memories.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.open",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "memories.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "memories.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "memories.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.open",
+        "target": "x"
+      },
+      "name": "memories.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.open"
+      },
+      "name": "memories.open: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.pov: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "memories.pov: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "memories.pov: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "memories.pov: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "memories.pov: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "0"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "0"
+        }
+      },
+      "name": "memories.pov: param n=0"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "1"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "1"
+        }
+      },
+      "name": "memories.pov: param n=1"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "2"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "2"
+        }
+      },
+      "name": "memories.pov: param n=2"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "3"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "3"
+        }
+      },
+      "name": "memories.pov: param n=3"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "4"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "4"
+        }
+      },
+      "name": "memories.pov: param n=4"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "5"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "5"
+        }
+      },
+      "name": "memories.pov: param n=5"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "6"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "6"
+        }
+      },
+      "name": "memories.pov: param n=6"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "7"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "7"
+        }
+      },
+      "name": "memories.pov: param n=7"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "8"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "8"
+        }
+      },
+      "name": "memories.pov: param n=8"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "n": "9"
+        }
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "9"
+        }
+      },
+      "name": "memories.pov: param n=9"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "n",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "n": "zz"
+        }
+      },
+      "name": "memories.pov: param n invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "memories.pov: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "memories.pov: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.pov",
+        "target": "x"
+      },
+      "name": "memories.pov: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.pov"
+      },
+      "name": "memories.pov: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.dm.open: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "nav.dm.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "nav.dm.open: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "nav.dm.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "nav.dm.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "nav.dm.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "nav.dm.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.dm.open",
+        "target": "x"
+      },
+      "name": "nav.dm.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.dm.open"
+      },
+      "name": "nav.dm.open: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.room.open: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "nav.room.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "nav.room.open: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "nav.room.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "nav.room.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "nav.room.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "nav.room.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.room.open",
+        "target": "x"
+      },
+      "name": "nav.room.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.room.open"
+      },
+      "name": "nav.room.open: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.activity.clear: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.activity.clear: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.activity.clear: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.activity.clear: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.activity.clear: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.activity.clear: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.activity.clear: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.clear",
+        "target": "x"
+      },
+      "name": "room.activity.clear: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.activity.clear"
+      },
+      "name": "room.activity.clear: no target"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.activity.open: the known subject"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.activity.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.activity.open: another room"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.activity.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.activity.open: a number"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.activity.open: a stored target on a non-pickable action"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.activity.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.activity.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.open",
+        "target": "x"
+      },
+      "name": "room.activity.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.activity.open"
+      },
+      "name": "room.activity.open: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.activity.set: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.activity.set: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.activity.set: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.activity.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.activity.set: a number"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "game",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "game": ""
+        }
+      },
+      "name": "room.activity.set: param game invalid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "game": "Valheim tonight 🎮"
+        }
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "game": "Valheim tonight 🎮"
+        }
+      },
+      "name": "room.activity.set: param game text"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "game",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "game": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "name": "room.activity.set: param game too long"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "game",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "game": "two\nlines"
+        }
+      },
+      "name": "room.activity.set: param game with a newline"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.activity.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.activity.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.set",
+        "target": "x"
+      },
+      "name": "room.activity.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.activity.set"
+      },
+      "name": "room.activity.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.favourite.toggle: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.favourite.toggle: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.favourite.toggle: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.favourite.toggle: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.favourite.toggle: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.favourite.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.favourite.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "target": "x"
+      },
+      "name": "room.favourite.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.favourite.toggle"
+      },
+      "name": "room.favourite.toggle: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.guestLink: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.guestLink: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.guestLink: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.guestLink: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.guestLink: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.guestLink: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.guestLink: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink",
+        "target": "x"
+      },
+      "name": "room.guestLink: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.guestLink"
+      },
+      "name": "room.guestLink: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.guestLink.disable: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.guestLink.disable: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.guestLink.disable: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.guestLink.disable: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.guestLink.disable: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.guestLink.disable: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.guestLink.disable: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.guestLink.disable",
+        "target": "x"
+      },
+      "name": "room.guestLink.disable: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.guestLink.disable"
+      },
+      "name": "room.guestLink.disable: no target"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.info.edit: the known subject"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.info.edit: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.info.edit: another room"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.info.edit: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.info.edit: a number"
+    },
+    {
+      "expect": {
+        "error": "not-pickable",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.info.edit: a stored target on a non-pickable action"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.info.edit: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.info.edit: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.edit",
+        "target": "x"
+      },
+      "name": "room.info.edit: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.info.edit"
+      },
+      "name": "room.info.edit: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.invite",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.invite: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.invite",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.invite: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.invite",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.invite: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.invite",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.invite: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.invite",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.invite: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.invite",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.invite: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.invite",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.invite: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.invite",
+        "target": "x"
+      },
+      "name": "room.invite: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.invite"
+      },
+      "name": "room.invite: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.inviteLink.copy: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.inviteLink.copy: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.inviteLink.copy: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.inviteLink.copy: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.inviteLink.copy: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.inviteLink.copy: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.inviteLink.copy: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.inviteLink.copy",
+        "target": "x"
+      },
+      "name": "room.inviteLink.copy: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.inviteLink.copy"
+      },
+      "name": "room.inviteLink.copy: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.join",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.join: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.join",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.join: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.join",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.join: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.join",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.join: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.join",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.join: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.join",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.join: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.join",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.join: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.join",
+        "target": "x"
+      },
+      "name": "room.join: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.join"
+      },
+      "name": "room.join: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.leave",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.leave: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.leave",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.leave: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.leave",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.leave: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.leave",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.leave: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.leave",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.leave: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.leave",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.leave: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.leave",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.leave: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.leave",
+        "target": "x"
+      },
+      "name": "room.leave: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.leave"
+      },
+      "name": "room.leave: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.markRead: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.markRead: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.markRead: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.markRead: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.markRead: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.markRead: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.markRead: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.markRead",
+        "target": "x"
+      },
+      "name": "room.markRead: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.markRead"
+      },
+      "name": "room.markRead: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.notifications.set: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.notifications.set: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.notifications.set: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.notifications.set: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.notifications.set: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "all"
+        }
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "value": "all"
+        }
+      },
+      "name": "room.notifications.set: param value=all"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "mentions"
+        }
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "value": "mentions"
+        }
+      },
+      "name": "room.notifications.set: param value=mentions"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "value": "mute"
+        }
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "value": "mute"
+        }
+      },
+      "name": "room.notifications.set: param value=mute"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "value",
+        "ok": false
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "value": "zz"
+        }
+      },
+      "name": "room.notifications.set: param value invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.notifications.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.notifications.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.notifications.set",
+        "target": "x"
+      },
+      "name": "room.notifications.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.notifications.set"
+      },
+      "name": "room.notifications.set: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.photo.change: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.photo.change: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.photo.change: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.photo.change: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.photo.change: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.photo.change: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.photo.change: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.change",
+        "target": "x"
+      },
+      "name": "room.photo.change: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.photo.change"
+      },
+      "name": "room.photo.change: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.photo.remove: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.photo.remove: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.photo.remove: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.photo.remove: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.photo.remove: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.photo.remove: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.photo.remove: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.photo.remove",
+        "target": "x"
+      },
+      "name": "room.photo.remove: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.photo.remove"
+      },
+      "name": "room.photo.remove: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.popOut: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.popOut: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.popOut: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.popOut: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.popOut: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.popOut: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.popOut: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.popOut",
+        "target": "x"
+      },
+      "name": "room.popOut: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.popOut"
+      },
+      "name": "room.popOut: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.recording.toggle: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.recording.toggle: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.recording.toggle: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.recording.toggle: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.recording.toggle: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.recording.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.recording.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.recording.toggle",
+        "target": "x"
+      },
+      "name": "room.recording.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.recording.toggle"
+      },
+      "name": "room.recording.toggle: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.status.clear: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.status.clear: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.status.clear: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.status.clear: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.status.clear: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.status.clear: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.status.clear: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.clear",
+        "target": "x"
+      },
+      "name": "room.status.clear: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.status.clear"
+      },
+      "name": "room.status.clear: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.status.post: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "room.status.post: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "room.status.post: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "room.status.post: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "room.status.post: a number"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "text",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "text": ""
+        }
+      },
+      "name": "room.status.post: param text invalid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "text": "Valheim tonight 🎮"
+        }
+      },
+      "name": "room.status.post: param text text"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "text",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "name": "room.status.post: param text too long"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "text",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "text": "two\nlines"
+        }
+      },
+      "name": "room.status.post: param text with a newline"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "ttl": "15"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "ttl": "15"
+        }
+      },
+      "name": "room.status.post: param ttl=15"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "ttl": "30"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "ttl": "30"
+        }
+      },
+      "name": "room.status.post: param ttl=30"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "ttl": "60"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "ttl": "60"
+        }
+      },
+      "name": "room.status.post: param ttl=60"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "ttl": "180"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "ttl": "180"
+        }
+      },
+      "name": "room.status.post: param ttl=180"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "ttl": "0"
+        }
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "ttl": "0"
+        }
+      },
+      "name": "room.status.post: param ttl=0"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "ttl",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "ttl": "zz"
+        }
+      },
+      "name": "room.status.post: param ttl invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "room.status.post: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "room.status.post: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "room.status.post",
+        "target": "x"
+      },
+      "name": "room.status.post: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.status.post"
+      },
+      "name": "room.status.post: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "watchParty.open: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "watchParty.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "watchParty.open: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "watchParty.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "watchParty.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "watchParty.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "watchParty.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.open",
+        "target": "x"
+      },
+      "name": "watchParty.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "watchParty.open"
+      },
+      "name": "watchParty.open: no target"
+    }
+  ],
+  "kind": "target"
+}

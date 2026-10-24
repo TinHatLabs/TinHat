@@ -1,0 +1,3202 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.about",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.about: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.about"
+      },
+      "name": "app.about: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.bugReport",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.bugReport: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.bugReport"
+      },
+      "name": "app.bugReport: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.diagnostics.create",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.diagnostics.create: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.diagnostics.create"
+      },
+      "name": "app.diagnostics.create: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.gifAutoplay.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.gifAutoplay.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.gifAutoplay.toggle"
+      },
+      "name": "app.gifAutoplay.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.iconGallery",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.iconGallery: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.iconGallery"
+      },
+      "name": "app.iconGallery: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.install",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.install: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.install"
+      },
+      "name": "app.install: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.keyBackup.setup",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.keyBackup.setup: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.keyBackup.setup"
+      },
+      "name": "app.keyBackup.setup: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.logship.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.logship.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.logship.toggle"
+      },
+      "name": "app.logship.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.menu.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.menu.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.menu.open"
+      },
+      "name": "app.menu.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.notificationPermission",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.notificationPermission: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.notificationPermission"
+      },
+      "name": "app.notificationPermission: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.notifications.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.notifications.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.notifications.toggle"
+      },
+      "name": "app.notifications.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.quit",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.quit: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.quit"
+      },
+      "name": "app.quit: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.recordOptOut.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.recordOptOut.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.recordOptOut.toggle"
+      },
+      "name": "app.recordOptOut.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.reduceMotion.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.reduceMotion.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.reduceMotion.toggle"
+      },
+      "name": "app.reduceMotion.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.rooms.refresh",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.rooms.refresh: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.rooms.refresh"
+      },
+      "name": "app.rooms.refresh: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.safeMode.ok",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.safeMode.ok: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.safeMode.ok"
+      },
+      "name": "app.safeMode.ok: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.session.takeOver",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.session.takeOver: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.session.takeOver"
+      },
+      "name": "app.session.takeOver: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.shortcuts.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.shortcuts.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.shortcuts.open"
+      },
+      "name": "app.shortcuts.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.sidebar.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.sidebar.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.sidebar.toggle"
+      },
+      "name": "app.sidebar.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.signOut",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.signOut: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.signOut"
+      },
+      "name": "app.signOut: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.tour.start",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.tour.start: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.tour.start"
+      },
+      "name": "app.tour.start: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.update",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.update: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.update"
+      },
+      "name": "app.update: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.update.whatsNew",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.update.whatsNew: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.update.whatsNew"
+      },
+      "name": "app.update.whatsNew: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.verify",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.verify: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.verify"
+      },
+      "name": "app.verify: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.event.new",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "calendar.event.new: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.event.new"
+      },
+      "name": "calendar.event.new: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.game.copyAddress",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "calendar.game.copyAddress: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.game.copyAddress"
+      },
+      "name": "calendar.game.copyAddress: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.inviteMissing",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "calendar.inviteMissing: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.inviteMissing"
+      },
+      "name": "calendar.inviteMissing: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.reminders.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "calendar.reminders.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.reminders.toggle"
+      },
+      "name": "calendar.reminders.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.afk.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.afk.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.afk.toggle"
+      },
+      "name": "call.afk.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.agc.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.agc.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.agc.toggle"
+      },
+      "name": "call.agc.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.audioShare.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.audioShare.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.audioShare.toggle"
+      },
+      "name": "call.audioShare.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.bar.pin.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.bar.pin.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.bar.pin.toggle"
+      },
+      "name": "call.bar.pin.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.flip",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.camera.flip: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.camera.flip"
+      },
+      "name": "call.camera.flip: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.camera.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.camera.toggle"
+      },
+      "name": "call.camera.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.clip",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.clip: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.clip"
+      },
+      "name": "call.clip: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.collapse.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.collapse.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.collapse.toggle"
+      },
+      "name": "call.collapse.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.corner.leave",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.corner.leave: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.corner.leave"
+      },
+      "name": "call.corner.leave: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.deafen.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.deafen.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.deafen.toggle"
+      },
+      "name": "call.deafen.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.devices.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.devices.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.devices.open"
+      },
+      "name": "call.devices.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.echoCancel.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.echoCancel.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.echoCancel.toggle"
+      },
+      "name": "call.echoCancel.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.echoOutputs.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.echoOutputs.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.echoOutputs.open"
+      },
+      "name": "call.echoOutputs.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fill.exit",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.fill.exit: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.fill.exit"
+      },
+      "name": "call.fill.exit: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fill.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.fill.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.fill.toggle"
+      },
+      "name": "call.fill.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fix.echo",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.fix.echo: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.fix.echo"
+      },
+      "name": "call.fix.echo: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fix.reconnectMic",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.fix.reconnectMic: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.fix.reconnectMic"
+      },
+      "name": "call.fix.reconnectMic: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.fix.systemLevel",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.fix.systemLevel: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.fix.systemLevel"
+      },
+      "name": "call.fix.systemLevel: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.gameChat.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.gameChat.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.gameChat.toggle"
+      },
+      "name": "call.gameChat.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.health.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.health.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.health.open"
+      },
+      "name": "call.health.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.hidden.showAll",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.hidden.showAll: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.hidden.showAll"
+      },
+      "name": "call.hidden.showAll: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.layout.animate.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.layout.animate.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.layout.animate.toggle"
+      },
+      "name": "call.layout.animate.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.leave",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.leave: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.leave"
+      },
+      "name": "call.leave: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.mic.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.mic.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.mic.toggle"
+      },
+      "name": "call.mic.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.micCheck",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.micCheck: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.micCheck"
+      },
+      "name": "call.micCheck: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.minimize",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.minimize: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.minimize"
+      },
+      "name": "call.minimize: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.moreMenu",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.moreMenu: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.moreMenu"
+      },
+      "name": "call.moreMenu: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.music.file",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.music.file: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.music.file"
+      },
+      "name": "call.music.file: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.music.url",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.music.url: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.music.url"
+      },
+      "name": "call.music.url: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.mutedTalk.dismiss",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.mutedTalk.dismiss: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.mutedTalk.dismiss"
+      },
+      "name": "call.mutedTalk.dismiss: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.noiseTest.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.noiseTest.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.noiseTest.open"
+      },
+      "name": "call.noiseTest.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.overlay.preview",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.overlay.preview: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.overlay.preview"
+      },
+      "name": "call.overlay.preview: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.overlay.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.overlay.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.overlay.toggle"
+      },
+      "name": "call.overlay.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pin.clear",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.pin.clear: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.pin.clear"
+      },
+      "name": "call.pin.clear: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pushToTalk.hold",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.pushToTalk.hold: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.pushToTalk.hold"
+      },
+      "name": "call.pushToTalk.hold: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pushToTalk.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.pushToTalk.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.pushToTalk.toggle"
+      },
+      "name": "call.pushToTalk.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.receiveAv1.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.receiveAv1.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.receiveAv1.toggle"
+      },
+      "name": "call.receiveAv1.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.resume",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.resume: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.resume"
+      },
+      "name": "call.resume: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.screenShare.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.screenShare.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.screenShare.toggle"
+      },
+      "name": "call.screenShare.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.share.panel",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.share.panel: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.share.panel"
+      },
+      "name": "call.share.panel: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.share.pickSource",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.share.pickSource: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.share.pickSource"
+      },
+      "name": "call.share.pickSource: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.share.recordingOnly.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.share.recordingOnly.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.share.recordingOnly.toggle"
+      },
+      "name": "call.share.recordingOnly.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.testConnection",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.testConnection: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.testConnection"
+      },
+      "name": "call.testConnection: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "call.unfocusedSaver.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.unfocusedSaver.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.unfocusedSaver.toggle"
+      },
+      "name": "call.unfocusedSaver.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.attach",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.attach: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.attach"
+      },
+      "name": "composer.attach: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.cancelTarget",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.cancelTarget: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.cancelTarget"
+      },
+      "name": "composer.cancelTarget: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.editLast",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.editLast: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.editLast"
+      },
+      "name": "composer.editLast: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.emoji",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.emoji: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.emoji"
+      },
+      "name": "composer.emoji: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.gif",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.gif: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.gif"
+      },
+      "name": "composer.gif: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.pasteFiles",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.pasteFiles: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.pasteFiles"
+      },
+      "name": "composer.pasteFiles: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.send",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.send: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.send"
+      },
+      "name": "composer.send: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "composer.unstage",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "composer.unstage: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "composer.unstage"
+      },
+      "name": "composer.unstage: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "conversation.jumpToLatest",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "conversation.jumpToLatest: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "conversation.jumpToLatest"
+      },
+      "name": "conversation.jumpToLatest: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "conversation.jumpToOldest",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "conversation.jumpToOldest: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "conversation.jumpToOldest"
+      },
+      "name": "conversation.jumpToOldest: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "conversation.pageDown",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "conversation.pageDown: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "conversation.pageDown"
+      },
+      "name": "conversation.pageDown: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "conversation.pageUp",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "conversation.pageUp: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "conversation.pageUp"
+      },
+      "name": "conversation.pageUp: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "dm.new",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "dm.new: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "dm.new"
+      },
+      "name": "dm.new: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.create",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "invites.create: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "invites.create"
+      },
+      "name": "invites.create: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.edit",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "layout.edit: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "layout.edit"
+      },
+      "name": "layout.edit: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.back10",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.back10: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.back10"
+      },
+      "name": "memories.back10: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.back60",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.back60: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.back60"
+      },
+      "name": "memories.back60: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.backToList",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.backToList: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.backToList"
+      },
+      "name": "memories.backToList: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.forward10",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.forward10: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.forward10"
+      },
+      "name": "memories.forward10: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.forward60",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.forward60: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.forward60"
+      },
+      "name": "memories.forward60: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.fullscreen",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.fullscreen: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.fullscreen"
+      },
+      "name": "memories.fullscreen: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.mute",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.mute: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.mute"
+      },
+      "name": "memories.mute: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.playPause",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.playPause: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.playPause"
+      },
+      "name": "memories.playPause: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.refresh",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.refresh: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.refresh"
+      },
+      "name": "memories.refresh: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "memories.sync.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "memories.sync.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "memories.sync.toggle"
+      },
+      "name": "memories.sync.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.back",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.back: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.back"
+      },
+      "name": "nav.back: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.cornerDock.pin",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.cornerDock.pin: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.cornerDock.pin"
+      },
+      "name": "nav.cornerDock.pin: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.quickSwitcher.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.quickSwitcher.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.quickSwitcher.open"
+      },
+      "name": "nav.quickSwitcher.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.room.next",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.room.next: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.room.next"
+      },
+      "name": "nav.room.next: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.room.previous",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.room.previous: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.room.previous"
+      },
+      "name": "nav.room.previous: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.roomList.filter",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.roomList.filter: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.roomList.filter"
+      },
+      "name": "nav.roomList.filter: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.unread.next",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.unread.next: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.unread.next"
+      },
+      "name": "nav.unread.next: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "nav.unread.previous",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "nav.unread.previous: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "nav.unread.previous"
+      },
+      "name": "nav.unread.previous: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "pip.close",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "pip.close: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "pip.close"
+      },
+      "name": "pip.close: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "presence.sharing.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "presence.sharing.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "presence.sharing.toggle"
+      },
+      "name": "presence.sharing.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "push.enable",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "push.enable: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "push.enable"
+      },
+      "name": "push.enable: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "push.quiet.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "push.quiet.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "push.quiet.toggle"
+      },
+      "name": "push.quiet.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "push.test",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "push.test: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "push.test"
+      },
+      "name": "push.test: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.myGames",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "reel.myGames: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "reel.myGames"
+      },
+      "name": "reel.myGames: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "reel.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "reel.open"
+      },
+      "name": "reel.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.resetSpins",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "reel.resetSpins: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "reel.resetSpins"
+      },
+      "name": "reel.resetSpins: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.spin",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "reel.spin: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "reel.spin"
+      },
+      "name": "reel.spin: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.tune",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "reel.tune: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "reel.tune"
+      },
+      "name": "reel.tune: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "reel.veto",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "reel.veto: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "reel.veto"
+      },
+      "name": "reel.veto: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "room.activity.copyCode",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.activity.copyCode: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.activity.copyCode"
+      },
+      "name": "room.activity.copyCode: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "room.create",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.create: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.create"
+      },
+      "name": "room.create: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "room.info.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.info.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.info.toggle"
+      },
+      "name": "room.info.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "room.members.show",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.members.show: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.members.show"
+      },
+      "name": "room.members.show: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "room.pinned.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.pinned.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.pinned.open"
+      },
+      "name": "room.pinned.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "room.refresh",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "room.refresh: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "room.refresh"
+      },
+      "name": "room.refresh: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "sessions.signOutOthers",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "sessions.signOutOthers: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sessions.signOutOthers"
+      },
+      "name": "sessions.signOutOthers: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.stop",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "sound.stop: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sound.stop"
+      },
+      "name": "sound.stop: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.upload",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "sound.upload: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sound.upload"
+      },
+      "name": "sound.upload: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "soundboard.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "soundboard.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "soundboard.open"
+      },
+      "name": "soundboard.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "space.create",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "space.create: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.create"
+      },
+      "name": "space.create: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "space.joinOrCreate",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "space.joinOrCreate: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.joinOrCreate"
+      },
+      "name": "space.joinOrCreate: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "space.reorder",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "space.reorder: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.reorder"
+      },
+      "name": "space.reorder: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "space.roles.edit",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "space.roles.edit: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.roles.edit"
+      },
+      "name": "space.roles.edit: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "space.rooms.sync",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "space.rooms.sync: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.rooms.sync"
+      },
+      "name": "space.rooms.sync: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.refresh",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "space.settings.refresh: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.settings.refresh"
+      },
+      "name": "space.settings.refresh: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "status.clear",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "status.clear: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "status.clear"
+      },
+      "name": "status.clear: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "status.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "status.open: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "status.open"
+      },
+      "name": "status.open: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.host.toggle",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "watchParty.host.toggle: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "watchParty.host.toggle"
+      },
+      "name": "watchParty.host.toggle: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.leave",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "watchParty.leave: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "watchParty.leave"
+      },
+      "name": "watchParty.leave: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.mute",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "watchParty.mute: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "watchParty.mute"
+      },
+      "name": "watchParty.mute: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.next",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "watchParty.next: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "watchParty.next"
+      },
+      "name": "watchParty.next: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "watchParty.playPause",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "watchParty.playPause: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "watchParty.playPause"
+      },
+      "name": "watchParty.playPause: no target"
+    }
+  ],
+  "kind": "target"
+}

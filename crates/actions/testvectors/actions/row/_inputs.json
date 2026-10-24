@@ -1,0 +1,418 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "unknown-row"
+      },
+      "input": {
+        "app": "desktop",
+        "row": "x.y",
+        "value": {
+          "items": []
+        }
+      },
+      "name": "unknown row"
+    },
+    {
+      "expect": {
+        "editable": true,
+        "items": [],
+        "look": "iconLabel",
+        "row": "buttons.main",
+        "scale": "M",
+        "style": "tool"
+      },
+      "input": {
+        "app": "desktop",
+        "row": "buttons.main",
+        "value": 3
+      },
+      "name": "value not an object"
+    },
+    {
+      "expect": {
+        "editable": true,
+        "items": [],
+        "look": "iconLabel",
+        "row": "buttons.main",
+        "scale": "M",
+        "style": "tool"
+      },
+      "input": {
+        "app": "desktop",
+        "row": "buttons.main",
+        "value": {
+          "items": {}
+        }
+      },
+      "name": "items not a list"
+    },
+    {
+      "expect": {
+        "editable": true,
+        "items": [
+          {
+            "a": "",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": null,
+            "known": false,
+            "label": "",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "bad"
+          },
+          {
+            "a": "",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": null,
+            "known": false,
+            "label": "",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "bad"
+          },
+          {
+            "a": "",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": null,
+            "known": false,
+            "label": "",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "bad"
+          },
+          {
+            "a": "call.teleport",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "system-software-update",
+            "known": false,
+            "label": "Needs a newer Tin Hat",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "This button comes from a newer Tin Hat. Update Tin Hat to use it.",
+            "why": "unknown"
+          },
+          {
+            "a": "call.leave",
+            "active": null,
+            "danger": true,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "call-stop-symbolic",
+            "known": true,
+            "label": "Leave call",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": true,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "context"
+          },
+          {
+            "a": "call.join",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "call-start-symbolic",
+            "known": true,
+            "label": "Start a call",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": null,
+            "why": "target"
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip — bookmark this moment",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "hidden",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          },
+          {
+            "a": "call.clip",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "bookmark-new-symbolic",
+            "known": true,
+            "label": "Clip — bookmark this moment",
+            "look": "iconLabel",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": "Clip",
+            "split": null,
+            "state": "dimmed",
+            "subject": null,
+            "subjectKind": null,
+            "target": null,
+            "targetIcon": null,
+            "targetName": null,
+            "tip": "Bookmark this moment on the recording's timeline",
+            "why": "when"
+          }
+        ],
+        "look": "iconLabel",
+        "row": "buttons.main",
+        "scale": "M",
+        "style": "tool"
+      },
+      "input": {
+        "app": "web",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            3,
+            {},
+            {
+              "a": 5
+            },
+            {
+              "a": "call.teleport"
+            },
+            {
+              "a": "call.leave",
+              "sepBefore": true
+            },
+            {
+              "a": "message.reply"
+            },
+            {
+              "a": "call.join",
+              "target": {
+                "room": "nope"
+              }
+            },
+            {
+              "a": "call.clip",
+              "hideWhenOff": true
+            },
+            {
+              "a": "call.clip"
+            }
+          ]
+        }
+      },
+      "name": "odd items"
+    }
+  ],
+  "kind": "row"
+}

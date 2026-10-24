@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "content": {
+        "body": "The poll has ended. Top answer: Pizza",
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        },
+        "msgtype": "m.text",
+        "org.matrix.msc1767.text": "The poll has ended. Top answer: Pizza",
+        "org.matrix.msc3381.poll.end": {}
+      },
+      "expect": {
+        "start": "$p"
+      },
+      "type": "org.matrix.msc3381.poll.end"
+    },
+    {
+      "content": {
+        "m.poll.end": {},
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        }
+      },
+      "expect": {
+        "start": "$p"
+      },
+      "type": "m.poll.end"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "org.matrix.msc3267.reference"
+        }
+      },
+      "expect": {
+        "start": "$p"
+      },
+      "type": "m.poll.end"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.thread"
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.end"
+    },
+    {
+      "content": {
+        "org.matrix.msc3381.poll.end": {}
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.end"
+    },
+    {
+      "content": {
+        "m.relates_to": {
+          "event_id": "$p",
+          "rel_type": "m.reference"
+        }
+      },
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.response"
+    },
+    {
+      "content": [],
+      "expect": null,
+      "type": "org.matrix.msc3381.poll.end"
+    }
+  ]
+}

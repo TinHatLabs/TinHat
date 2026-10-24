@@ -1,0 +1,113 @@
+{
+  "cases": [
+    {
+      "expect": "No mentions",
+      "list": [],
+      "rooms": {
+        "!chill:example.com": "",
+        "!gaming:example.com": "Gaming Central"
+      }
+    },
+    {
+      "expect": "No new mentions",
+      "list": [
+        {
+          "e": "$1",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "seen": true,
+          "t": 100
+        }
+      ],
+      "rooms": {
+        "!chill:example.com": "",
+        "!gaming:example.com": "Gaming Central"
+      }
+    },
+    {
+      "expect": "1 new mention · Gaming Central",
+      "list": [
+        {
+          "e": "$1",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 100
+        }
+      ],
+      "rooms": {
+        "!chill:example.com": "",
+        "!gaming:example.com": "Gaming Central"
+      }
+    },
+    {
+      "expect": "2 new mentions",
+      "list": [
+        {
+          "e": "$1",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 100
+        },
+        {
+          "e": "$2",
+          "r": "!chill:example.com",
+          "s": "@bo:x",
+          "t": 300
+        }
+      ],
+      "rooms": {
+        "!chill:example.com": "",
+        "!gaming:example.com": "Gaming Central"
+      }
+    },
+    {
+      "expect": "2 new mentions · Gaming Central",
+      "list": [
+        {
+          "e": "$1",
+          "r": "!gaming:example.com",
+          "s": "@ana:x",
+          "t": 100
+        },
+        {
+          "e": "$2",
+          "r": "!chill:example.com",
+          "s": "@bo:x",
+          "seen": true,
+          "t": 300
+        },
+        {
+          "e": "$3",
+          "r": "!gaming:example.com",
+          "s": "@cy:x",
+          "t": 250
+        }
+      ],
+      "rooms": {
+        "!chill:example.com": "",
+        "!gaming:example.com": "Gaming Central"
+      }
+    },
+    {
+      "expect": "2 new mentions",
+      "list": [
+        {
+          "e": "$1",
+          "r": "!unknown:x",
+          "s": "@ana:x",
+          "t": 100
+        },
+        {
+          "e": "$2",
+          "r": "!gaming:example.com",
+          "s": "@bo:x",
+          "t": 50
+        }
+      ],
+      "rooms": {
+        "!chill:example.com": "",
+        "!gaming:example.com": "Gaming Central"
+      }
+    }
+  ]
+}

@@ -1,0 +1,2681 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop idle"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop inCall"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop inCallAside"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "desktop",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "desktop desktop busy"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop idle"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop inCall"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.aside": true,
+            "call.cameraOn": true,
+            "call.hiddenTiles": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "call.recActive": true,
+            "call.soundPlaying": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop inCallAside"
+    },
+    {
+      "expect": {
+        "editable": false,
+        "items": [
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "👍"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "❤️"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react",
+            "active": false,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": null,
+            "known": true,
+            "label": "React",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": {
+              "emoji": "😂"
+            },
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.react.more",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "face-smile-symbolic",
+            "known": true,
+            "label": "More reactions…",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.reply",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "mail-reply-sender-symbolic",
+            "known": true,
+            "label": "Reply",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.edit",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": true,
+            "hold": false,
+            "icon": "document-edit-symbolic",
+            "known": true,
+            "label": "Edit",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          },
+          {
+            "a": "message.menu",
+            "active": null,
+            "danger": false,
+            "emoji": null,
+            "hideWhenOff": false,
+            "hold": false,
+            "icon": "overflow-menu-symbolic",
+            "known": true,
+            "label": "More",
+            "look": "icon",
+            "pick": false,
+            "primary": false,
+            "sepBefore": false,
+            "shortLabel": null,
+            "split": null,
+            "state": "shown",
+            "subject": "$message1",
+            "subjectKind": "message",
+            "target": null,
+            "targetIcon": null,
+            "targetName": "a message",
+            "tip": null,
+            "why": null
+          }
+        ],
+        "look": "icon",
+        "row": "timeline.hover",
+        "scale": "S",
+        "style": "hover"
+      },
+      "input": {
+        "app": "web",
+        "context": {
+          "message": "$message1",
+          "room": "!room:example.com"
+        },
+        "row": "timeline.hover",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.canInvite": true,
+                  "room.canPin": true,
+                  "room.current": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.unverified": true,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "presence.known": true,
+            "session.busy": true,
+            "ui.roomOpen": true,
+            "update.state": "checking"
+          }
+        },
+        "value": {
+          "items": [
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "👍"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "❤️"
+              }
+            },
+            {
+              "a": "message.react",
+              "hideWhenOff": true,
+              "target": {
+                "emoji": "😂"
+              }
+            },
+            {
+              "a": "message.react.more",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.reply",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.edit",
+              "hideWhenOff": true
+            },
+            {
+              "a": "message.menu"
+            }
+          ],
+          "look": "icon",
+          "scale": "S"
+        }
+      },
+      "name": "web desktop busy"
+    }
+  ],
+  "kind": "row"
+}

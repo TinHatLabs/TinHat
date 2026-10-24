@@ -1,0 +1,36 @@
+---
+# Alacritty legacy YAML with the usual quirks
+window:
+  opacity: 0.9
+colors:
+  primary:
+    background: '0x2e3440'   # nord0
+    foreground: "0xd8dee9"
+  cursor:
+    text: CellBackground
+    cursor: '#88c0d0'
+  selection:
+    text: CellForeground
+    background: "#4c566a"
+  normal:
+    black:   '#3b4252'
+    red:     '#bf616a'
+    green:   '#a3be8c'
+    yellow:  '#ebcb8b'
+    blue:    '#81a1c1'
+    magenta: '#b48ead'
+    cyan:    '#88c0d0'
+    white:   '#e5e9f0'
+  bright:
+    black:   '#4c566a'
+    red:     '#bf616a'
+    green:   '#a3be8c'
+    yellow:  '#ebcb8b'
+    blue:    '#81a1c1'
+    magenta: '#b48ead'
+    cyan:    '#8fbcbb'
+    white:   '#eceff4'
+  indexed_colors:
+    - { index: 16, color: '0xd08770' }
+    - index: 17
+      color: '#5e81ac'

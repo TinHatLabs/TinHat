@@ -1,0 +1,477 @@
+{
+  "cases": [
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "samples": []
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "good",
+          "h": 250
+        }
+      ],
+      "samples": [
+        {
+          "at": 1790000000000,
+          "band": "good",
+          "ms": 40
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "poor",
+          "h": 1000
+        },
+        {
+          "band": "ok",
+          "h": 650
+        },
+        {
+          "band": "good",
+          "h": 250
+        }
+      ],
+      "samples": [
+        {
+          "at": 1790000000000,
+          "band": "good",
+          "ms": 40
+        },
+        {
+          "at": 1789999940000,
+          "band": "ok",
+          "ms": 300
+        },
+        {
+          "at": 1789999880000,
+          "band": "poor",
+          "ms": null
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "ok",
+          "h": 650
+        },
+        {
+          "band": "good",
+          "h": 250
+        }
+      ],
+      "samples": [
+        {
+          "at": 1789999940001,
+          "band": "good",
+          "ms": 40
+        },
+        {
+          "at": 1789999940000,
+          "band": "ok",
+          "ms": 300
+        },
+        {
+          "at": 1789999939999,
+          "band": "good",
+          "ms": 20
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        {
+          "band": "good",
+          "h": 250
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "samples": [
+        {
+          "at": 1789999400001,
+          "band": "good",
+          "ms": 10
+        },
+        {
+          "at": 1789999400000,
+          "band": "poor",
+          "ms": null
+        },
+        {
+          "at": 1790000000001,
+          "band": "good",
+          "ms": 10
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "good",
+          "h": 250
+        }
+      ],
+      "samples": [
+        {
+          "at": 1789999990000,
+          "band": "good",
+          "ms": 10
+        },
+        {
+          "at": 1789999980000,
+          "band": "poor",
+          "ms": null
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "good",
+          "h": 250
+        }
+      ],
+      "samples": [
+        {
+          "at": 1789999980000,
+          "band": "poor",
+          "ms": null
+        },
+        {
+          "at": 1789999990000,
+          "band": "good",
+          "ms": 10
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "ok",
+          "h": 850
+        }
+      ],
+      "samples": [
+        {
+          "at": 1789999990000,
+          "band": "good",
+          "ms": 10
+        },
+        {
+          "at": 1789999990000,
+          "band": "ok",
+          "ms": 500
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        {
+          "band": "good",
+          "h": 1000
+        },
+        {
+          "band": "poor",
+          "h": 1000
+        },
+        {
+          "band": "ok",
+          "h": 850
+        },
+        {
+          "band": "good",
+          "h": 850
+        },
+        {
+          "band": "poor",
+          "h": 1000
+        },
+        {
+          "band": "ok",
+          "h": 850
+        },
+        {
+          "band": "good",
+          "h": 650
+        },
+        {
+          "band": "poor",
+          "h": 1000
+        },
+        {
+          "band": "ok",
+          "h": 450
+        },
+        {
+          "band": "good",
+          "h": 250
+        }
+      ],
+      "samples": [
+        {
+          "at": 1790000000000,
+          "band": "good",
+          "ms": 0
+        },
+        {
+          "at": 1789999940000,
+          "band": "ok",
+          "ms": 120
+        },
+        {
+          "at": 1789999880000,
+          "band": "poor",
+          "ms": 240
+        },
+        {
+          "at": 1789999820000,
+          "band": "good",
+          "ms": 360
+        },
+        {
+          "at": 1789999760000,
+          "band": "ok",
+          "ms": 480
+        },
+        {
+          "at": 1789999700000,
+          "band": "poor",
+          "ms": 600
+        },
+        {
+          "at": 1789999640000,
+          "band": "good",
+          "ms": 720
+        },
+        {
+          "at": 1789999580000,
+          "band": "ok",
+          "ms": 840
+        },
+        {
+          "at": 1789999520000,
+          "band": "poor",
+          "ms": 960
+        },
+        {
+          "at": 1789999460000,
+          "band": "good",
+          "ms": 1080
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "good",
+          "h": 250
+        },
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "good",
+          "h": 250
+        }
+      ],
+      "samples": [
+        {
+          "at": 1790000000000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789999700000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789999400000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789999100000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789998800000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789998500000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789998200000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789997900000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789997600000,
+          "band": "good",
+          "ms": 30
+        },
+        {
+          "at": 1789997300000,
+          "band": "good",
+          "ms": 30
+        }
+      ]
+    },
+    {
+      "at": 1790000000000,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "band": "good",
+          "h": 1000
+        }
+      ],
+      "samples": [
+        {
+          "at": 1790000000000,
+          "band": "bad",
+          "ms": 10
+        },
+        {
+          "at": "x",
+          "band": "good",
+          "ms": 1
+        },
+        null,
+        {
+          "at": 1789999995000,
+          "band": "good",
+          "ms": 1000
+        }
+      ]
+    },
+    {
+      "at": null,
+      "expect": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "samples": [
+        {
+          "at": 1790000000000,
+          "band": "good",
+          "ms": 10
+        }
+      ]
+    }
+  ]
+}

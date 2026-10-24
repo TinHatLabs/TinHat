@@ -1,0 +1,821 @@
+{
+  "ctx": {
+    "content": {
+      "account": {
+        "h": 46
+      },
+      "composer": {
+        "h": 48
+      },
+      "dms": {
+        "empty": true,
+        "h": 0
+      },
+      "header": {
+        "h": 58
+      },
+      "nav": {
+        "h": 228
+      },
+      "rooms": {
+        "h": 300
+      },
+      "widgets": {
+        "h": 200,
+        "minH": 60
+      }
+    },
+    "size": {
+      "h": 800,
+      "w": 1280
+    },
+    "unitPm": 1000,
+    "view": {
+      "panelOpen": true,
+      "roomOpen": true
+    }
+  },
+  "dragged": "account",
+  "expect": {
+    "hit": [
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tr",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1226,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "bl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 746
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "br",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1226,
+          "y": 746
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "left"
+        },
+        "rect": {
+          "h": 800,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "right"
+        },
+        "rect": {
+          "h": 800,
+          "w": 24,
+          "x": 1256,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "top"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "bottom"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1280,
+          "x": 0,
+          "y": 776
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 186
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 746
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "left",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 19,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "right",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 19,
+          "x": 63,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "composer"
+        },
+        "rect": {
+          "h": 12,
+          "w": 860,
+          "x": 414,
+          "y": 782
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "left",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 554,
+          "w": 19,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "right",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 554,
+          "w": 19,
+          "x": 63,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "header"
+        },
+        "rect": {
+          "h": 14,
+          "w": 860,
+          "x": 414,
+          "y": 50
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 48,
+          "w": 320,
+          "x": 88,
+          "y": 34
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 48,
+          "w": 320,
+          "x": 88,
+          "y": 694
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "left",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 708,
+          "w": 48,
+          "x": 88,
+          "y": 34
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "right",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 708,
+          "w": 48,
+          "x": 360,
+          "y": 34
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "timeline"
+        },
+        "rect": {
+          "h": 48,
+          "w": 860,
+          "x": 414,
+          "y": 70
+        }
+      },
+      {
+        "kind": "centre",
+        "op": {
+          "op": "stackAsTab",
+          "ref": "account",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 132,
+          "w": 38,
+          "x": 25,
+          "y": 54
+        }
+      },
+      {
+        "kind": "centre",
+        "op": {
+          "op": "stackAsTab",
+          "ref": "account",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 458,
+          "w": 38,
+          "x": 25,
+          "y": 288
+        }
+      },
+      {
+        "kind": "centre",
+        "op": {
+          "op": "stackAsTab",
+          "ref": "account",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 612,
+          "w": 224,
+          "x": 136,
+          "y": 82
+        }
+      }
+    ],
+    "keys": [
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "left"
+        },
+        "rect": {
+          "h": 800,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "top"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "right"
+        },
+        "rect": {
+          "h": 800,
+          "w": 24,
+          "x": 1256,
+          "y": 0
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "left",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 19,
+          "x": 6,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "right",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 228,
+          "w": 19,
+          "x": 63,
+          "y": 6
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "tr",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1226,
+          "y": 6
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 48,
+          "w": 320,
+          "x": 88,
+          "y": 34
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "left",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 708,
+          "w": 48,
+          "x": 88,
+          "y": 34
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "right",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 708,
+          "w": 48,
+          "x": 360,
+          "y": 34
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "header"
+        },
+        "rect": {
+          "h": 14,
+          "w": 860,
+          "x": 414,
+          "y": 50
+        }
+      },
+      {
+        "kind": "centre",
+        "op": {
+          "op": "stackAsTab",
+          "ref": "account",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 132,
+          "w": 38,
+          "x": 25,
+          "y": 54
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "timeline"
+        },
+        "rect": {
+          "h": 48,
+          "w": 860,
+          "x": 414,
+          "y": 70
+        }
+      },
+      {
+        "kind": "centre",
+        "op": {
+          "op": "stackAsTab",
+          "ref": "account",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 612,
+          "w": 224,
+          "x": 136,
+          "y": 82
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "nav"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 186
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "top",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "left",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 554,
+          "w": 19,
+          "x": 6,
+          "y": 240
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "right",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 554,
+          "w": 19,
+          "x": 63,
+          "y": 240
+        }
+      },
+      {
+        "kind": "centre",
+        "op": {
+          "op": "stackAsTab",
+          "ref": "account",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 458,
+          "w": 38,
+          "x": 25,
+          "y": 288
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "rooms"
+        },
+        "rect": {
+          "h": 48,
+          "w": 320,
+          "x": 88,
+          "y": 694
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "bl",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 6,
+          "y": 746
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "spaces"
+        },
+        "rect": {
+          "h": 48,
+          "w": 76,
+          "x": 6,
+          "y": 746
+        }
+      },
+      {
+        "kind": "corner",
+        "op": {
+          "anchor": "br",
+          "dx": 8,
+          "dy": 8,
+          "op": "float",
+          "ref": "account"
+        },
+        "rect": {
+          "h": 48,
+          "w": 48,
+          "x": 1226,
+          "y": 746
+        }
+      },
+      {
+        "kind": "window",
+        "op": {
+          "op": "edge",
+          "ref": "account",
+          "side": "bottom"
+        },
+        "rect": {
+          "h": 24,
+          "w": 1280,
+          "x": 0,
+          "y": 776
+        }
+      },
+      {
+        "kind": "edge",
+        "op": {
+          "op": "dockBeside",
+          "ref": "account",
+          "side": "bottom",
+          "target": "composer"
+        },
+        "rect": {
+          "h": 12,
+          "w": 860,
+          "x": 414,
+          "y": 782
+        }
+      }
+    ]
+  },
+  "kind": "dropzones",
+  "preset": "handheld"
+}

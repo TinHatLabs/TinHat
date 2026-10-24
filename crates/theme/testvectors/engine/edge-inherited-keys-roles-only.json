@@ -1,0 +1,224 @@
+{
+  "expect": {
+    "adjusted": [],
+    "names": "palette",
+    "ok": true,
+    "roles": {
+      "accent.base": "#808080",
+      "accent.bright": "#808080",
+      "accent.dim": "#808080",
+      "accent.glow": "#808080",
+      "badge.bg": "#808080",
+      "badge.mention": "#808080",
+      "border.focus": "#808080",
+      "border.strong": "#808080",
+      "border.subtle": "#808080",
+      "call.muted": "#808080",
+      "call.speaking": "#808080",
+      "mention.bg": "#808080",
+      "mention.edge": "#808080",
+      "name.1": "#808080",
+      "name.10": "#808080",
+      "name.11": "#808080",
+      "name.12": "#808080",
+      "name.2": "#808080",
+      "name.3": "#808080",
+      "name.4": "#808080",
+      "name.5": "#808080",
+      "name.6": "#808080",
+      "name.7": "#808080",
+      "name.8": "#808080",
+      "name.9": "#808080",
+      "presence.away": "#808080",
+      "presence.busy": "#808080",
+      "presence.incall": "#808080",
+      "presence.offline": "#808080",
+      "presence.online": "#808080",
+      "scrim": "#808080",
+      "shadow": "#808080",
+      "state.aside": "#808080",
+      "state.danger": "#808080",
+      "state.dangerBright": "#808080",
+      "state.info": "#808080",
+      "state.success": "#808080",
+      "state.warning": "#808080",
+      "surface.hover": "#808080",
+      "surface.island": "#808080",
+      "surface.overlay": "#808080",
+      "surface.pressed": "#808080",
+      "surface.raised": "#808080",
+      "surface.selected": "#808080",
+      "surface.sunken": "#808080",
+      "surface.window": "#808080",
+      "text.disabled": "#808080",
+      "text.link": "#808080",
+      "text.muted": "#808080",
+      "text.onAccent": "#808080",
+      "text.primary": "#808080",
+      "text.secondary": "#808080"
+    },
+    "tokens": {
+      "bubble.own.bg": "#808080",
+      "bubble.own.fg": "#808080",
+      "composer.bg": "#808080",
+      "rooms.item.bg.hover": "#808080",
+      "test.alpha": "#808080/0.25",
+      "test.best": "#000000",
+      "test.chain": "#808080",
+      "test.darker": "#6b6b6b",
+      "test.guard": "#000000",
+      "test.lighter": "#979797",
+      "test.literal": "#1e6a76/0.5",
+      "test.mix": "#808080",
+      "test.mixok": "#808080",
+      "test.nested": "#808080",
+      "test.over": "#808080",
+      "test.qt": "#afafaf",
+      "tile.overlay.bg": "#000000/0.5",
+      "tile.ring.speaking": "#808080"
+    },
+    "variant": "light"
+  },
+  "theme": {
+    "__proto__": {
+      "roles": {}
+    },
+    "constructor": {
+      "variant": "light"
+    },
+    "format": "tinhat-theme",
+    "id": "inherited-keys-roles-only",
+    "name": "Roles only + inherited names",
+    "roles": {
+      "accent.base": "#808080",
+      "accent.bright": "#808080",
+      "accent.dim": "#808080",
+      "accent.glow": "#808080",
+      "badge.bg": "#808080",
+      "badge.mention": "#808080",
+      "border.focus": "#808080",
+      "border.strong": "#808080",
+      "border.subtle": "#808080",
+      "call.muted": "#808080",
+      "call.speaking": "#808080",
+      "mention.bg": "#808080",
+      "mention.edge": "#808080",
+      "name.1": "#808080",
+      "name.10": "#808080",
+      "name.11": "#808080",
+      "name.12": "#808080",
+      "name.2": "#808080",
+      "name.3": "#808080",
+      "name.4": "#808080",
+      "name.5": "#808080",
+      "name.6": "#808080",
+      "name.7": "#808080",
+      "name.8": "#808080",
+      "name.9": "#808080",
+      "presence.away": "#808080",
+      "presence.busy": "#808080",
+      "presence.incall": "#808080",
+      "presence.offline": "#808080",
+      "presence.online": "#808080",
+      "scrim": "#808080",
+      "shadow": "#808080",
+      "state.aside": "#808080",
+      "state.danger": "#808080",
+      "state.dangerBright": "#808080",
+      "state.info": "#808080",
+      "state.success": "#808080",
+      "state.warning": "#808080",
+      "surface.hover": "#808080",
+      "surface.island": "#808080",
+      "surface.overlay": "#808080",
+      "surface.pressed": "#808080",
+      "surface.raised": "#808080",
+      "surface.selected": "#808080",
+      "surface.sunken": "#808080",
+      "surface.window": "#808080",
+      "text.disabled": "#808080",
+      "text.link": "#808080",
+      "text.muted": "#808080",
+      "text.onAccent": "#808080",
+      "text.primary": "#808080",
+      "text.secondary": "#808080"
+    },
+    "v": 1
+  },
+  "tokensSpec": {
+    "tokens": [
+      {
+        "default": "surface.raised",
+        "id": "composer.bg"
+      },
+      {
+        "default": "surface.hover",
+        "id": "rooms.item.bg.hover"
+      },
+      {
+        "default": "mixok(accent.base, surface.island, 0.6)",
+        "id": "bubble.own.bg"
+      },
+      {
+        "default": "text.onAccent",
+        "id": "bubble.own.fg"
+      },
+      {
+        "default": "alpha(#000000, 0.5)",
+        "id": "tile.overlay.bg"
+      },
+      {
+        "default": "call.speaking",
+        "id": "tile.ring.speaking"
+      },
+      {
+        "default": "alpha(accent.bright, 0.25)",
+        "id": "test.alpha"
+      },
+      {
+        "default": "mix(surface.window, text.primary, 0.2)",
+        "id": "test.mix"
+      },
+      {
+        "default": "lighter(surface.island, 1.18)",
+        "id": "test.lighter"
+      },
+      {
+        "default": "darker(accent.base, 1.2)",
+        "id": "test.darker"
+      },
+      {
+        "default": "over(accent.dim, surface.island)",
+        "id": "test.over"
+      },
+      {
+        "default": "mixok(surface.island, accent.bright, 0.35)",
+        "id": "test.mixok"
+      },
+      {
+        "default": "best(surface.raised, text.secondary, #ffffff, #000000)",
+        "id": "test.best"
+      },
+      {
+        "default": "guard(text.muted, surface.raised, 7)",
+        "id": "test.guard"
+      },
+      {
+        "default": "#1e6a76/0.5",
+        "id": "test.literal"
+      },
+      {
+        "default": "test.mix",
+        "id": "test.chain"
+      },
+      {
+        "default": "over(alpha(state.danger, 0.3), mix(surface.island, surface.raised, 0.5))",
+        "id": "test.nested"
+      },
+      {
+        "default": "darker(lighter(mention.bg, 1.5), 1.1)",
+        "id": "test.qt"
+      }
+    ]
+  }
+}

@@ -1,0 +1,791 @@
+{
+  "cases": [
+    {
+      "expect": [
+        {
+          "chip": {
+            "text": "Online · 3 on",
+            "tone": "online"
+          },
+          "cpuPm": 59,
+          "cpuText": "6 %",
+          "id": "8e6c2f05",
+          "memPm": 248,
+          "memText": "2.0 / 8 GB",
+          "players": "Darrow, Sable, Wren",
+          "size": "8 GB",
+          "up": true,
+          "uptime": "up 2 d 21 h",
+          "who": "Darrow, Sable, Wren"
+        },
+        {
+          "chip": {
+            "text": "Online · nobody on",
+            "tone": "online"
+          },
+          "cpuPm": 11,
+          "cpuText": "1 %",
+          "id": "6c3f9a02",
+          "memPm": 141,
+          "memText": "2.0 / 14 GB",
+          "players": "Nobody on",
+          "size": "14 GB",
+          "up": true,
+          "uptime": "up 2 d 21 h",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Online",
+            "tone": "online"
+          },
+          "cpuPm": 11,
+          "cpuText": "1 %",
+          "id": "7d4a1b93",
+          "memPm": 124,
+          "memText": "2.0 / 16 GB",
+          "players": "—",
+          "size": "16 GB",
+          "up": true,
+          "uptime": "up 2 d 21 h",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Starting…",
+            "tone": "busy"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "5b2d7e40",
+          "memPm": 0,
+          "memText": "0.0 / 8 GB",
+          "players": "—",
+          "size": "8 GB",
+          "up": true,
+          "uptime": "up < 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Stopping…",
+            "tone": "busy"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "a1c0de77",
+          "memPm": 0,
+          "memText": "0.0 / 6 GB",
+          "players": "—",
+          "size": "6 GB",
+          "up": true,
+          "uptime": "up < 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Offline · installing",
+            "tone": "offline"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "e2b4c6d8",
+          "memPm": 0,
+          "memText": "0.0 / 10 GB",
+          "players": "—",
+          "size": "10 GB",
+          "up": false,
+          "uptime": "up < 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Queued",
+            "tone": "busy"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "3a5e0c11",
+          "memPm": 0,
+          "memText": "0.0 / 8 GB",
+          "players": "—",
+          "size": "8 GB",
+          "up": true,
+          "uptime": "up < 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Restarting…",
+            "tone": "busy"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "ec0ffee1",
+          "memPm": 0,
+          "memText": "0.0 / 12 GB",
+          "players": "—",
+          "size": "12 GB",
+          "up": true,
+          "uptime": "up < 1 m",
+          "who": ""
+        }
+      ],
+      "status": {
+        "announceRoom": "!g:example.org",
+        "at": 1790625667304,
+        "canManage": true,
+        "cap": 2,
+        "job": null,
+        "memoryBudgetMB": 30720,
+        "memoryUsedMB": 0,
+        "running": 0,
+        "servers": [
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 300,
+              "used": 17.6
+            },
+            "emoji": "🎮",
+            "game": "Valheim",
+            "id": "8e6c2f05",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:2456",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 8192,
+              "usedMB": 2028
+            },
+            "name": "Valheim Vanilla",
+            "next": null,
+            "outside": true,
+            "pending": null,
+            "players": {
+              "count": 3,
+              "names": [
+                "Darrow",
+                "Sable",
+                "Wren"
+              ]
+            },
+            "state": "running",
+            "steamAppId": 892970,
+            "unavailable": null,
+            "uptimeMs": 248491769
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 1600,
+              "used": 17.6
+            },
+            "emoji": "🎮",
+            "game": "Project Zomboid",
+            "id": "6c3f9a02",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:16261",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 14336,
+              "usedMB": 2028
+            },
+            "name": "Project Zomboid B42 Vanilla",
+            "next": null,
+            "outside": true,
+            "pending": null,
+            "players": {
+              "count": 0,
+              "names": []
+            },
+            "state": "running",
+            "steamAppId": 108600,
+            "unavailable": null,
+            "uptimeMs": 248491769
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 1600,
+              "used": 17.6
+            },
+            "emoji": "🎮",
+            "game": "Palworld",
+            "id": "7d4a1b93",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:8211",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 16384,
+              "usedMB": 2028
+            },
+            "name": "Palworld",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": null,
+            "state": "running",
+            "steamAppId": 1623730,
+            "unavailable": null,
+            "uptimeMs": 248491769
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 1600,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Satisfactory",
+            "id": "5b2d7e40",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:7777",
+              "password": null
+            },
+            "memory": {
+              "limitMB": 8192,
+              "usedMB": 0
+            },
+            "name": "Satisfactory",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": null,
+            "state": "starting",
+            "steamAppId": 526870,
+            "unavailable": null,
+            "uptimeMs": 0
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 400,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Abiotic Factor",
+            "id": "a1c0de77",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:7779",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 6144,
+              "usedMB": 0
+            },
+            "name": "Abiotic Factor",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": null,
+            "state": "stopping",
+            "steamAppId": 427410,
+            "unavailable": null,
+            "uptimeMs": 0
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 600,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Minecraft",
+            "id": "e2b4c6d8",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:25565",
+              "password": null
+            },
+            "memory": {
+              "limitMB": 10240,
+              "usedMB": 0
+            },
+            "name": "FTB Skies 2",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": null,
+            "state": "offline",
+            "steamAppId": null,
+            "unavailable": "installing",
+            "uptimeMs": 0
+          },
+          {
+            "calendar": false,
+            "cpu": {
+              "limit": 300,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Valheim",
+            "id": "3a5e0c11",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:2466",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 8192,
+              "usedMB": 0
+            },
+            "name": "Valheim (old modded world)",
+            "next": null,
+            "outside": false,
+            "pending": {
+              "action": "start",
+              "by": "@a:b",
+              "queued": true,
+              "since": 1
+            },
+            "players": null,
+            "state": "offline",
+            "steamAppId": 892970,
+            "unavailable": null,
+            "uptimeMs": 0
+          },
+          {
+            "calendar": false,
+            "cpu": {
+              "limit": 600,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Project Zomboid",
+            "id": "ec0ffee1",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:16271",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 12288,
+              "usedMB": 0
+            },
+            "name": "Project Zomboid (old modded 42.18)",
+            "next": null,
+            "outside": false,
+            "pending": {
+              "action": "restart",
+              "by": "@a:b",
+              "queued": false,
+              "since": 1
+            },
+            "players": null,
+            "state": "offline",
+            "steamAppId": 108600,
+            "unavailable": null,
+            "uptimeMs": 0
+          }
+        ],
+        "space": "!s:example.org",
+        "stale": false,
+        "v": 1
+      }
+    },
+    {
+      "expect": [
+        {
+          "chip": {
+            "text": "Online · 5 on",
+            "tone": "online"
+          },
+          "cpuPm": 59,
+          "cpuText": "6 %",
+          "id": "8e6c2f05",
+          "memPm": 248,
+          "memText": "2.0 / 8 GB",
+          "players": "A, B +3",
+          "size": "8 GB",
+          "up": true,
+          "uptime": "up 2 d 21 h",
+          "who": "A, B +3"
+        },
+        {
+          "chip": {
+            "text": "Online · 2 on",
+            "tone": "online"
+          },
+          "cpuPm": 11,
+          "cpuText": "1 %",
+          "id": "6c3f9a02",
+          "memPm": 141,
+          "memText": "2.0 / 14 GB",
+          "players": "2 on",
+          "size": "14 GB",
+          "up": true,
+          "uptime": "up 2 d 21 h",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Online · 1 on",
+            "tone": "online"
+          },
+          "cpuPm": 1000,
+          "cpuText": "100 %",
+          "id": "7d4a1b93",
+          "memPm": 1000,
+          "memText": "19.5 / 16 GB",
+          "players": "Darrow",
+          "size": "16 GB",
+          "up": true,
+          "uptime": "up 2 d 21 h",
+          "who": "Darrow"
+        },
+        {
+          "chip": {
+            "text": "Stopping…",
+            "tone": "busy"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "5b2d7e40",
+          "memPm": 0,
+          "memText": "0.0 / 8 GB",
+          "players": "—",
+          "size": "8 GB",
+          "up": true,
+          "uptime": "up < 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Offline",
+            "tone": "offline"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "a1c0de77",
+          "memPm": 0,
+          "memText": "2.9 GB",
+          "players": "—",
+          "size": "0 GB",
+          "up": false,
+          "uptime": "up < 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Offline",
+            "tone": "offline"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "e2b4c6d8",
+          "memPm": 0,
+          "memText": "0.0 / 10 GB",
+          "players": "—",
+          "size": "10 GB",
+          "up": false,
+          "uptime": "up < 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Online · nobody on",
+            "tone": "online"
+          },
+          "cpuPm": 0,
+          "cpuText": "0 %",
+          "id": "3a5e0c11",
+          "memPm": 4,
+          "memText": "0.0 / 12.5 GB",
+          "players": "Nobody on",
+          "size": "12.5 GB",
+          "up": true,
+          "uptime": "up 1 m",
+          "who": ""
+        },
+        {
+          "chip": {
+            "text": "Online · nobody on",
+            "tone": "online"
+          },
+          "cpuPm": 500,
+          "cpuText": "50 %",
+          "id": "ec0ffee1",
+          "memPm": 1000,
+          "memText": "1.0 / 1 GB",
+          "players": "Nobody on",
+          "size": "1 GB",
+          "up": true,
+          "uptime": "up 1 d 1 h",
+          "who": ""
+        }
+      ],
+      "status": {
+        "announceRoom": "!g:example.org",
+        "at": 1790625667304,
+        "canManage": true,
+        "cap": 2,
+        "job": null,
+        "memoryBudgetMB": 30720,
+        "memoryUsedMB": 0,
+        "running": 0,
+        "servers": [
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 300,
+              "used": 17.6
+            },
+            "emoji": "🎮",
+            "game": "Valheim",
+            "id": "8e6c2f05",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:2456",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 8192,
+              "usedMB": 2028
+            },
+            "name": "Valheim Vanilla",
+            "next": null,
+            "outside": true,
+            "pending": null,
+            "players": {
+              "count": 5,
+              "names": [
+                "A",
+                "B"
+              ]
+            },
+            "state": "running",
+            "steamAppId": 892970,
+            "unavailable": null,
+            "uptimeMs": 248491769
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 1600,
+              "used": 17.6
+            },
+            "emoji": "🎮",
+            "game": "Project Zomboid",
+            "id": "6c3f9a02",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:16261",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 14336,
+              "usedMB": 2028
+            },
+            "name": "Project Zomboid B42 Vanilla",
+            "next": null,
+            "outside": true,
+            "pending": null,
+            "players": {
+              "count": 2,
+              "names": []
+            },
+            "state": "running",
+            "steamAppId": 108600,
+            "unavailable": null,
+            "uptimeMs": 248491769
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 1600,
+              "used": 1601
+            },
+            "emoji": "🎮",
+            "game": "Palworld",
+            "id": "7d4a1b93",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:8211",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 16384,
+              "usedMB": 20000
+            },
+            "name": "Palworld",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": {
+              "count": 1,
+              "names": [
+                "Darrow"
+              ]
+            },
+            "state": "running",
+            "steamAppId": 1623730,
+            "unavailable": null,
+            "uptimeMs": 248491769
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 1600,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Satisfactory",
+            "id": "5b2d7e40",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:7777",
+              "password": null
+            },
+            "memory": {
+              "limitMB": 8192,
+              "usedMB": 0
+            },
+            "name": "Satisfactory",
+            "next": null,
+            "outside": false,
+            "pending": {
+              "action": "stop",
+              "by": "",
+              "queued": false,
+              "since": 0
+            },
+            "players": null,
+            "state": "running",
+            "steamAppId": 526870,
+            "unavailable": null,
+            "uptimeMs": 0
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 400,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Abiotic Factor",
+            "id": "a1c0de77",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:7779",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 0,
+              "usedMB": 3000
+            },
+            "name": "Abiotic Factor",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": null,
+            "state": "offline",
+            "steamAppId": 427410,
+            "unavailable": null,
+            "uptimeMs": 0
+          },
+          {
+            "calendar": true,
+            "cpu": {
+              "limit": 600,
+              "used": 0
+            },
+            "emoji": "🎮",
+            "game": "Minecraft",
+            "id": "e2b4c6d8",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:25565",
+              "password": null
+            },
+            "memory": {
+              "limitMB": 10240,
+              "usedMB": 0
+            },
+            "name": "FTB Skies 2",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": null,
+            "state": "offline",
+            "steamAppId": null,
+            "unavailable": null,
+            "uptimeMs": 59999
+          },
+          {
+            "calendar": false,
+            "cpu": {
+              "limit": 300,
+              "used": 0.05
+            },
+            "emoji": "🎮",
+            "game": "Valheim",
+            "id": "3a5e0c11",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:2466",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 12800,
+              "usedMB": 51
+            },
+            "name": "Valheim (old modded world)",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": {
+              "count": 0,
+              "names": []
+            },
+            "state": "running",
+            "steamAppId": 892970,
+            "unavailable": null,
+            "uptimeMs": 60000
+          },
+          {
+            "calendar": false,
+            "cpu": {
+              "limit": 300,
+              "used": 149.95
+            },
+            "emoji": "🎮",
+            "game": "Project Zomboid",
+            "id": "ec0ffee1",
+            "info": "",
+            "join": {
+              "address": "mine.example.org:16271",
+              "password": "pw"
+            },
+            "memory": {
+              "limitMB": 1024,
+              "usedMB": 1075
+            },
+            "name": "Project Zomboid (old modded 42.18)",
+            "next": null,
+            "outside": false,
+            "pending": null,
+            "players": {
+              "count": 0,
+              "names": []
+            },
+            "state": "running",
+            "steamAppId": 108600,
+            "unavailable": null,
+            "uptimeMs": 90061000
+          }
+        ],
+        "space": "!s:example.org",
+        "stale": false,
+        "v": 1
+      }
+    }
+  ]
+}

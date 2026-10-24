@@ -1,0 +1,124 @@
+{
+  "expect": {
+    "form": {
+      "collapse": [],
+      "floats": [],
+      "hidden": [
+        {
+          "from": {
+            "index": 15,
+            "parent": "main"
+          },
+          "i": "panel",
+          "t": "island"
+        }
+      ],
+      "opts": {},
+      "preset": "custom",
+      "root": {
+        "c": [
+          {
+            "c": [
+              {
+                "i": "nav",
+                "size": {
+                  "share": 1
+                },
+                "t": "island"
+              },
+              {
+                "i": "dms",
+                "t": "island"
+              },
+              {
+                "c": [
+                  {
+                    "i": "spaces",
+                    "size": {
+                      "share": 1
+                    },
+                    "t": "island"
+                  },
+                  {
+                    "c": [
+                      {
+                        "i": "rooms",
+                        "size": {
+                          "share": 1
+                        },
+                        "t": "island"
+                      },
+                      {
+                        "i": "widgets",
+                        "t": "island"
+                      },
+                      {
+                        "i": "account",
+                        "t": "island"
+                      }
+                    ],
+                    "id": "n6",
+                    "t": "col"
+                  }
+                ],
+                "id": "n5",
+                "t": "row"
+              }
+            ],
+            "id": "n4",
+            "t": "col"
+          },
+          {
+            "i": "call",
+            "size": {
+              "share": 1
+            },
+            "t": "island"
+          },
+          {
+            "c": [
+              {
+                "i": "header",
+                "t": "island"
+              },
+              {
+                "i": "timeline",
+                "size": {
+                  "share": 1
+                },
+                "t": "island"
+              },
+              {
+                "i": "composer",
+                "t": "island"
+              }
+            ],
+            "id": "n3",
+            "t": "col"
+          }
+        ],
+        "id": "n2",
+        "t": "row"
+      }
+    },
+    "notes": [
+      "dropped-invalid n1",
+      "bad-field-fixed panel",
+      "restored-required timeline",
+      "restored-required composer",
+      "restored-missing nav",
+      "restored-missing dms",
+      "restored-missing spaces",
+      "restored-missing rooms",
+      "restored-missing widgets",
+      "restored-missing account",
+      "restored-missing header",
+      "bad-collapse-dropped panel",
+      "bad-collapse-dropped navcol",
+      "single-child-unwrapped n1"
+    ]
+  },
+  "kind": "repair",
+  "target": "desktop",
+  "text": "{\"preset\":\"custom\",\"root\":{\"t\":\"col\",\"id\":\"n1\",\"c\":[{\"t\":\"island\",\"i\":\"call\",\"size\":{\"auto\":true,\"min\":252}},{\"t\":7,\"id\":\"body\",\"c\":[{\"t\":\"row\",\"id\":\"navcol\",\"size\":{\"auto\":true},\"c\":[{\"t\":\"col\",\"id\":\"rail\",\"size\":{\"fixed\":68},\"c\":[{\"t\":\"island\",\"i\":\"nav\",\"size\":{\"auto\":true}},{\"t\":\"island\",\"i\":\"dms\",\"size\":{\"auto\":true}}]},{\"t\":\"col\",\"id\":\"roomscol\",\"size\":{\"fixed\":260},\"c\":[{\"t\":\"island\",\"i\":\"rooms\",\"size\":{\"auto\":true,\"grow\":1,\"min\":160}},{\"t\":\"island\",\"i\":\"widgets\",\"size\":{\"auto\":true}},{\"t\":\"island\",\"i\":\"account\",\"size\":{\"auto\":true}}]}]},{\"t\":\"col\",\"id\":\"main\",\"size\":{\"share\":2,\"grow\":1},\"c\":[{\"t\":\"island\",\"i\":\"header\",\"size\":{\"auto\":true}},{\"t\":\"row\",\"id\":\"stage\",\"size\":{\"share\":1},\"c\":[{\"t\":\"col\",\"id\":\"roomcol\",\"size\":{\"share\":1,\"min\":340},\"c\":[{\"t\":\"island\",\"i\":\"timeline\",\"size\":{\"share\":1,\"min\":120}},{\"t\":\"Island\",\"i\":\"composer\",\"size\":{\"auto\":true}}]},{\"t\":\"island\",\"i\":\"spaces\",\"size\":{\"fixed\":68}},{\"t\":\"island\",\"i\":\"panel\",\"size\":{\"fixed\":324}}]}]}],\"size\":{\"share\":1}}]},\"floats\":[],\"hidden\":[{\"t\":\"island\",\"i\":\"panel\",\"from\":{\"parent\":\"main\",\"index\":99}}],\"collapse\":[{\"ref\":\"panel\",\"to\":\"overlay\",\"below\":1300},{\"ref\":\"navcol\",\"to\":\"drawer\",\"below\":1180}],\"opts\":{}}"
+}

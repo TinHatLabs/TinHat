@@ -1,0 +1,2209 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "yes"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: all on, event.myRsvp flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only event.myRsvp=\"none\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "yes"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only event.myRsvp=\"yes\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "maybe"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only event.myRsvp=\"maybe\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "no"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: only event.myRsvp=\"no\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "maybe"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: random 2"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Going",
+        "look": null,
+        "params": {
+          "answer": "yes"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "yes"
+        }
+      },
+      "name": "desktop: target — param answer=yes"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Maybe",
+        "look": null,
+        "params": {
+          "answer": "maybe"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "maybe"
+        }
+      },
+      "name": "desktop: target — param answer=maybe"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Can't",
+        "look": null,
+        "params": {
+          "answer": "no"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "no"
+        }
+      },
+      "name": "desktop: target — param answer=no"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "zz"
+        }
+      },
+      "name": "desktop: target — param answer invalid"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "desktop: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "desktop: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "desktop: target — not an object"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: no context"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Can't",
+        "look": null,
+        "params": {
+          "answer": "no"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "params": {
+          "answer": "no"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: invocation param answer"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "params": {
+          "zzz": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: invocation param not declared"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "desktop",
+        "context": {
+          "event": "$event1"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "desktop: in a button island"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all off"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "yes"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: all on, event.myRsvp flipped"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only event.myRsvp=\"none\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "yes"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only event.myRsvp=\"yes\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "maybe"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only event.myRsvp=\"maybe\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "no"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: only event.myRsvp=\"no\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "yes"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 0"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {}
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 1"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: random 2"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Going",
+        "look": null,
+        "params": {
+          "answer": "yes"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "yes"
+        }
+      },
+      "name": "web: target — param answer=yes"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Maybe",
+        "look": null,
+        "params": {
+          "answer": "maybe"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "maybe"
+        }
+      },
+      "name": "web: target — param answer=maybe"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Can't",
+        "look": null,
+        "params": {
+          "answer": "no"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "no"
+        }
+      },
+      "name": "web: target — param answer=no"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-value"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "answer": "zz"
+        }
+      },
+      "name": "web: target — param answer invalid"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "web: target — an unknown key"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:too-many-keys"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "web: target — too many keys"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-object"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        },
+        "target": "x"
+      },
+      "name": "web: target — not an object"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: no context"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Can't",
+        "look": null,
+        "params": {
+          "answer": "no"
+        },
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "params": {
+          "answer": "no"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: invocation param answer"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:bad-param"
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "params": {
+          "zzz": "1"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: invocation param not declared"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "RSVP",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "$event1",
+        "targetIcon": null,
+        "targetName": "Game night",
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.rsvp",
+        "app": "web",
+        "context": {
+          "event": "$event1"
+        },
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.myRsvp": "none"
+                }
+              }
+            }
+          },
+          "values": {}
+        }
+      },
+      "name": "web: in a button island"
+    }
+  ],
+  "kind": "evaluate"
+}

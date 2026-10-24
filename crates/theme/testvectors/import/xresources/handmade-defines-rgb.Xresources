@@ -1,0 +1,29 @@
+! Hand-made Xresources: #define chains, X11 rgb: colours, mixed prefixes
+#define S_base03 #002b36
+#define S_base0  #839496
+#define S_bg     S_base03
+#define S_red    rgb:dc/32/2f
+#define S_orange rgb:cb4b/4b4b/1616
+
+URxvt*background:     S_bg
+XTerm.vt100.foreground: S_base0
+*cursorColor:         rgb:9/3/a
+*.highlightColor:     #073642
+*.highlightTextColor: #93a1a1
+
+*color0:  #073642
+*color1:  S_red
+*color2:  #859900
+*color3:  #b58900
+*color4:  #268bd2
+*color5:  #d33682
+*color6:  #2aa198
+*color7:  #eee8d5
+*color8:  #002b36
+*color9:  S_orange
+*color10: #586e75
+*color11: #657b83
+*color12: #839496
+*color13: #6c71c4
+*color14: #93a1a1
+*color15: #fdf6e3

@@ -1,0 +1,213 @@
+{
+  "expect": {
+    "adjusted": [
+      "accent.base",
+      "accent.bright",
+      "name.1",
+      "name.10",
+      "name.11",
+      "name.12",
+      "name.2",
+      "name.3",
+      "name.4",
+      "name.5",
+      "name.6",
+      "name.7",
+      "name.8",
+      "name.9",
+      "presence.away",
+      "presence.busy",
+      "presence.online",
+      "state.aside",
+      "state.danger",
+      "state.dangerBright",
+      "state.info",
+      "state.success",
+      "state.warning",
+      "text.muted",
+      "text.primary",
+      "text.secondary"
+    ],
+    "names": "palette",
+    "ok": true,
+    "roles": {
+      "accent.base": "#ffffff",
+      "accent.bright": "#ffffff",
+      "accent.dim": "#ffffff/0.18",
+      "accent.glow": "#ffffff/0.35",
+      "badge.bg": "#ffffff",
+      "badge.mention": "#ffffff",
+      "border.focus": "#ffffff",
+      "border.strong": "#336699",
+      "border.subtle": "#336699",
+      "call.muted": "#ffffff",
+      "call.speaking": "#ffffff",
+      "mention.bg": "#ffffff/0.1",
+      "mention.edge": "#ffffff",
+      "name.1": "#ffffff",
+      "name.10": "#ffffff",
+      "name.11": "#ffffff",
+      "name.12": "#ffffff",
+      "name.2": "#ffffff",
+      "name.3": "#ffffff",
+      "name.4": "#ffffff",
+      "name.5": "#ffffff",
+      "name.6": "#ffffff",
+      "name.7": "#ffffff",
+      "name.8": "#ffffff",
+      "name.9": "#ffffff",
+      "presence.away": "#ffffff",
+      "presence.busy": "#ffffff",
+      "presence.incall": "#ffffff",
+      "presence.offline": "#ffffff",
+      "presence.online": "#ffffff",
+      "scrim": "#000000/0.3",
+      "shadow": "#000000",
+      "state.aside": "#ffffff",
+      "state.danger": "#ffffff",
+      "state.dangerBright": "#ffffff",
+      "state.info": "#ffffff",
+      "state.success": "#ffffff",
+      "state.warning": "#ffffff",
+      "surface.hover": "#336699",
+      "surface.island": "#336699",
+      "surface.overlay": "#abc0d7",
+      "surface.pressed": "#336699",
+      "surface.raised": "#abc0d7",
+      "surface.selected": "#658bb3",
+      "surface.sunken": "#336699",
+      "surface.window": "#336699",
+      "text.disabled": "#336699",
+      "text.link": "#ffffff",
+      "text.muted": "#ffffff",
+      "text.onAccent": "#336699",
+      "text.primary": "#ffffff",
+      "text.secondary": "#ffffff"
+    },
+    "tokens": {
+      "bubble.own.bg": "#83a2c2",
+      "bubble.own.fg": "#336699",
+      "composer.bg": "#abc0d7",
+      "rooms.item.bg.hover": "#336699",
+      "test.alpha": "#ffffff/0.25",
+      "test.best": "#000000",
+      "test.chain": "#5c85ad",
+      "test.darker": "#d4d4d4",
+      "test.guard": "#313030",
+      "test.lighter": "#3c78b5",
+      "test.literal": "#1e6a76/0.5",
+      "test.mix": "#5c85ad",
+      "test.mixok": "#799abd",
+      "test.nested": "#9ab3cd",
+      "test.over": "#5882ab",
+      "test.qt": "#e8e8e8/0.1",
+      "tile.overlay.bg": "#000000/0.5",
+      "tile.ring.speaking": "#ffffff"
+    },
+    "variant": "light"
+  },
+  "theme": {
+    "format": "tinhat-theme",
+    "id": "bg-equals-fg",
+    "name": "Edge bg-equals-fg",
+    "palette": {
+      "ansi": [
+        "#282c34",
+        "#e06c75",
+        "#98c379",
+        "#e5c07b",
+        "#61afef",
+        "#c678dd",
+        "#56b6c2",
+        "#abb2bf",
+        "#5c6370",
+        "#e06c75",
+        "#98c379",
+        "#e5c07b",
+        "#61afef",
+        "#c678dd",
+        "#56b6c2",
+        "#ffffff"
+      ],
+      "bg": "#336699",
+      "fg": "#336699"
+    },
+    "v": 1
+  },
+  "tokensSpec": {
+    "tokens": [
+      {
+        "default": "surface.raised",
+        "id": "composer.bg"
+      },
+      {
+        "default": "surface.hover",
+        "id": "rooms.item.bg.hover"
+      },
+      {
+        "default": "mixok(accent.base, surface.island, 0.6)",
+        "id": "bubble.own.bg"
+      },
+      {
+        "default": "text.onAccent",
+        "id": "bubble.own.fg"
+      },
+      {
+        "default": "alpha(#000000, 0.5)",
+        "id": "tile.overlay.bg"
+      },
+      {
+        "default": "call.speaking",
+        "id": "tile.ring.speaking"
+      },
+      {
+        "default": "alpha(accent.bright, 0.25)",
+        "id": "test.alpha"
+      },
+      {
+        "default": "mix(surface.window, text.primary, 0.2)",
+        "id": "test.mix"
+      },
+      {
+        "default": "lighter(surface.island, 1.18)",
+        "id": "test.lighter"
+      },
+      {
+        "default": "darker(accent.base, 1.2)",
+        "id": "test.darker"
+      },
+      {
+        "default": "over(accent.dim, surface.island)",
+        "id": "test.over"
+      },
+      {
+        "default": "mixok(surface.island, accent.bright, 0.35)",
+        "id": "test.mixok"
+      },
+      {
+        "default": "best(surface.raised, text.secondary, #ffffff, #000000)",
+        "id": "test.best"
+      },
+      {
+        "default": "guard(text.muted, surface.raised, 7)",
+        "id": "test.guard"
+      },
+      {
+        "default": "#1e6a76/0.5",
+        "id": "test.literal"
+      },
+      {
+        "default": "test.mix",
+        "id": "test.chain"
+      },
+      {
+        "default": "over(alpha(state.danger, 0.3), mix(surface.island, surface.raised, 0.5))",
+        "id": "test.nested"
+      },
+      {
+        "default": "darker(lighter(mention.bg, 1.5), 1.1)",
+        "id": "test.qt"
+      }
+    ]
+  }
+}

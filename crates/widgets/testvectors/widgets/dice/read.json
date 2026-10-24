@@ -1,0 +1,650 @@
+{
+  "cases": [
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "kept": [
+            true,
+            true
+          ],
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": {
+        "expr": "2d6+3",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "all",
+            "kept": [
+              true,
+              true
+            ],
+            "kind": "dice",
+            "n": 2,
+            "rolls": [
+              4,
+              2
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 6
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 3
+          }
+        ],
+        "kept": [
+          true,
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          4,
+          2
+        ],
+        "total": 9
+      }
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": {
+        "expr": "2d6+3",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "all",
+            "kept": [
+              true,
+              true
+            ],
+            "kind": "dice",
+            "n": 2,
+            "rolls": [
+              4,
+              2
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 6
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 3
+          }
+        ],
+        "kept": [
+          true,
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          4,
+          2
+        ],
+        "total": 9
+      }
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6 + 3",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": {
+        "expr": "2d6+3",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "all",
+            "kept": [
+              true,
+              true
+            ],
+            "kind": "dice",
+            "n": 2,
+            "rolls": [
+              4,
+              2
+            ],
+            "sides": 6,
+            "sign": 1,
+            "sum": 6
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 3
+          }
+        ],
+        "kept": [
+          true,
+          true
+        ],
+        "label": "",
+        "natural": "",
+        "rolls": [
+          4,
+          2
+        ],
+        "total": 9
+      }
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d20kh1+5",
+          "kept": [
+            false,
+            true
+          ],
+          "rolls": [
+            7,
+            20
+          ],
+          "total": 25,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": {
+        "expr": "2d20kh1+5",
+        "groups": [
+          {
+            "count": 2,
+            "keep": "kh",
+            "kept": [
+              false,
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              7,
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          },
+          {
+            "kind": "num",
+            "sign": 1,
+            "value": 5
+          }
+        ],
+        "kept": [
+          false,
+          true
+        ],
+        "label": "Advantage",
+        "natural": "nat20",
+        "rolls": [
+          7,
+          20
+        ],
+        "total": 25
+      }
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d20kh1+5",
+          "kept": [
+            true,
+            false
+          ],
+          "rolls": [
+            7,
+            20
+          ],
+          "total": 25,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d20kh1+5",
+          "kept": [
+            false,
+            true
+          ],
+          "rolls": [
+            7,
+            20
+          ],
+          "total": 12,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": "9",
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            2
+          ],
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            7
+          ],
+          "total": 14,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4
+          ],
+          "total": 7,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            2.5
+          ],
+          "total": 9.5,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": "4,2",
+          "total": 9,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "kept": [
+            1,
+            1
+          ],
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "kept": null,
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "kept": [
+            true
+          ],
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": 2
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9,
+          "v": "1"
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+3",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 9
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "2d6+",
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 6,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": 7,
+          "rolls": [
+            4,
+            2
+          ],
+          "total": 6,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "101d6",
+          "rolls": [],
+          "total": 0,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "1d20",
+          "extra": "ignored",
+          "label": "lies",
+          "rolls": [
+            20
+          ],
+          "total": 20,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": {
+        "expr": "1d20",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "nat20",
+        "rolls": [
+          20
+        ],
+        "total": 20
+      }
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": {
+          "expr": "1d20",
+          "rolls": [
+            20
+          ],
+          "total": 20,
+          "v": 1
+        },
+        "msgtype": "m.notice"
+      },
+      "expect": {
+        "expr": "1d20",
+        "groups": [
+          {
+            "count": 1,
+            "keep": "all",
+            "kept": [
+              true
+            ],
+            "kind": "dice",
+            "n": 1,
+            "rolls": [
+              20
+            ],
+            "sides": 20,
+            "sign": 1,
+            "sum": 20
+          }
+        ],
+        "kept": [
+          true
+        ],
+        "label": "",
+        "natural": "nat20",
+        "rolls": [
+          20
+        ],
+        "total": 20
+      }
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": [
+          1,
+          2
+        ],
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": null,
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲",
+        "dev.tinhat.dice": "2d6",
+        "msgtype": "m.notice"
+      },
+      "expect": null
+    },
+    {
+      "content": {
+        "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+        "msgtype": "m.text"
+      },
+      "expect": null
+    },
+    {
+      "content": null,
+      "expect": null
+    },
+    {
+      "content": "text",
+      "expect": null
+    },
+    {
+      "content": [
+        {
+          "body": "🎲",
+          "dev.tinhat.dice": {
+            "expr": "1d6",
+            "rolls": [
+              1
+            ],
+            "total": 1,
+            "v": 1
+          },
+          "msgtype": "m.notice"
+        }
+      ],
+      "expect": null
+    }
+  ]
+}

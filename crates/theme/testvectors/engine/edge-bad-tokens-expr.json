@@ -1,0 +1,44 @@
+{
+  "expect": {
+    "error": "bad-tokens: composer.bg: unexpected end",
+    "ok": false
+  },
+  "theme": {
+    "format": "tinhat-theme",
+    "id": "bad-tokens-expr",
+    "name": "Edge bad-tokens-expr",
+    "palette": {
+      "ansi": [
+        "#282c34",
+        "#e06c75",
+        "#98c379",
+        "#e5c07b",
+        "#61afef",
+        "#c678dd",
+        "#56b6c2",
+        "#abb2bf",
+        "#5c6370",
+        "#e06c75",
+        "#98c379",
+        "#e5c07b",
+        "#61afef",
+        "#c678dd",
+        "#56b6c2",
+        "#ffffff"
+      ],
+      "bg": "#282c34",
+      "cursor": "#528bff",
+      "fg": "#abb2bf",
+      "selectionBg": "#3e4451"
+    },
+    "v": 1
+  },
+  "tokensSpec": {
+    "tokens": [
+      {
+        "default": "mix(",
+        "id": "composer.bg"
+      }
+    ]
+  }
+}

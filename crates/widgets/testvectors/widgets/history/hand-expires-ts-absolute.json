@@ -1,0 +1,116 @@
+{
+  "expect": {
+    "calls": [
+      {
+        "end": 1790003600000,
+        "members": [
+          {
+            "ms": 1440000,
+            "user": "@bo:example.com"
+          },
+          {
+            "ms": 3600000,
+            "user": "@me:example.com"
+          }
+        ],
+        "myMs": 3600000,
+        "ongoing": false,
+        "room": "!gaming:example.com",
+        "start": 1790000000000,
+        "startedBy": "@me:example.com"
+      }
+    ],
+    "last": {
+      "end": 1790003600000,
+      "myEnd": 1790003600000,
+      "myMs": 3600000,
+      "myStart": 1790000000000,
+      "ongoing": false,
+      "room": "!gaming:example.com",
+      "start": 1790000000000,
+      "startedBy": "@me:example.com",
+      "with": [
+        {
+          "ms": 1440000,
+          "user": "@bo:example.com"
+        }
+      ]
+    },
+    "week": {
+      "friends": [
+        {
+          "calls": 1,
+          "joined": 0,
+          "started": 1,
+          "togetherMs": 1440000,
+          "user": "@bo:example.com"
+        }
+      ],
+      "from": 1789413200000,
+      "myCalls": 1,
+      "myMs": 3600000,
+      "to": 1790018000000
+    }
+  },
+  "input": {
+    "me": "@me:example.com",
+    "now": 1790018000000,
+    "recorder": "@recorder:example.com",
+    "rooms": [
+      {
+        "events": [
+          {
+            "content": {
+              "application": "m.call",
+              "call_id": "",
+              "created_ts": 1790000000000,
+              "device_id": "D1",
+              "expires": 14400000,
+              "focus_active": {
+                "focus_selection": "oldest_membership",
+                "type": "livekit"
+              },
+              "membershipID": "@me:example.com:D1",
+              "scope": "m.room"
+            },
+            "id": "$e1",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790000000000,
+            "type": "org.matrix.msc3401.call.member"
+          },
+          {
+            "content": {
+              "memberships": [
+                {
+                  "application": "m.call",
+                  "call_id": "",
+                  "created_ts": 1790000060000,
+                  "device_id": "B1",
+                  "expires": 3600000,
+                  "expires_ts": 1790001500000,
+                  "scope": "m.room"
+                }
+              ]
+            },
+            "id": "$e2",
+            "key": "@bo:example.com",
+            "sender": "@bo:example.com",
+            "ts": 1790000060000,
+            "type": "m.call.member"
+          },
+          {
+            "content": {},
+            "id": "$e3",
+            "key": "_@me:example.com_D1_m.call",
+            "sender": "@me:example.com",
+            "ts": 1790003600000,
+            "type": "org.matrix.msc3401.call.member"
+          }
+        ],
+        "room": "!gaming:example.com"
+      }
+    ]
+  },
+  "note": "a legacy entry with expires_ts: that absolute time ends it"
+}

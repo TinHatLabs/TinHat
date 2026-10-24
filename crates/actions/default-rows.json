@@ -1,0 +1,2557 @@
+{
+  "doc": "The default button rows of the layout presets, staged for layout.schema.json x-tinhat.presets.<preset>.<form>.opts (ACTIONS.md §9.3). Same shape as the layout's opts.<island>.rows (LAYOUT.md §3.9). Moved into the presets at A2, together with the layout owner's vector regeneration.",
+  "format": "tinhat-default-rows",
+  "presets": {
+    "callFirst": {
+      "desktop": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "bar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.gameChat.toggle"
+                  },
+                  {
+                    "a": "call.corner.leave"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.audioShare.toggle"
+                  },
+                  {
+                    "a": "call.health.open"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "sound.stop",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "room.activity.open"
+                  },
+                  {
+                    "a": "call.afk.toggle"
+                  },
+                  {
+                    "a": "call.devices.open"
+                  },
+                  {
+                    "a": "call.leave",
+                    "sepBefore": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "status": {
+                "items": [
+                  {
+                    "a": "room.recording.toggle"
+                  },
+                  {
+                    "a": "call.clip",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.layout.set"
+                  },
+                  {
+                    "a": "call.collapse.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.fill.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.gif",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "room.pinned.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "start": {
+                "items": [
+                  {
+                    "a": "composer.attach"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "timeline": {
+            "rows": {
+              "hover": {
+                "items": [
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "👍"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "❤️"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "😂"
+                    }
+                  },
+                  {
+                    "a": "message.react.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.reply",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.edit",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.menu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      },
+      "phone": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "phoneBar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.camera.flip"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "call.leave"
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "phoneTop": {
+                "items": [
+                  {
+                    "a": "call.minimize"
+                  },
+                  {
+                    "a": "call.hidden.show",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.moreMenu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "phoneEnd": {
+                "items": [
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "phoneStart": {
+                "items": [
+                  {
+                    "a": "nav.back"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "nav.quickSwitcher.open"
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      }
+    },
+    "classic": {
+      "desktop": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "bar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.gameChat.toggle"
+                  },
+                  {
+                    "a": "call.corner.leave"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.audioShare.toggle"
+                  },
+                  {
+                    "a": "call.health.open"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "sound.stop",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "room.activity.open"
+                  },
+                  {
+                    "a": "call.afk.toggle"
+                  },
+                  {
+                    "a": "call.devices.open"
+                  },
+                  {
+                    "a": "call.leave",
+                    "sepBefore": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "status": {
+                "items": [
+                  {
+                    "a": "room.recording.toggle"
+                  },
+                  {
+                    "a": "call.clip",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.layout.set"
+                  },
+                  {
+                    "a": "call.collapse.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.fill.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.gif",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "room.pinned.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "start": {
+                "items": [
+                  {
+                    "a": "composer.attach"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "timeline": {
+            "rows": {
+              "hover": {
+                "items": [
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "👍"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "❤️"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "😂"
+                    }
+                  },
+                  {
+                    "a": "message.react.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.reply",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.edit",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.menu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      },
+      "phone": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "phoneBar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.camera.flip"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "call.leave"
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "phoneTop": {
+                "items": [
+                  {
+                    "a": "call.minimize"
+                  },
+                  {
+                    "a": "call.hidden.show",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.moreMenu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "phoneEnd": {
+                "items": [
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "phoneStart": {
+                "items": [
+                  {
+                    "a": "nav.back"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "nav.quickSwitcher.open"
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      }
+    },
+    "compact": {
+      "desktop": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "bar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.gameChat.toggle"
+                  },
+                  {
+                    "a": "call.corner.leave"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.audioShare.toggle"
+                  },
+                  {
+                    "a": "call.health.open"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "sound.stop",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "room.activity.open"
+                  },
+                  {
+                    "a": "call.afk.toggle"
+                  },
+                  {
+                    "a": "call.devices.open"
+                  },
+                  {
+                    "a": "call.leave",
+                    "sepBefore": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "status": {
+                "items": [
+                  {
+                    "a": "room.recording.toggle"
+                  },
+                  {
+                    "a": "call.clip",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.layout.set"
+                  },
+                  {
+                    "a": "call.collapse.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.fill.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.gif",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "room.pinned.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "start": {
+                "items": [
+                  {
+                    "a": "composer.attach"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "timeline": {
+            "rows": {
+              "hover": {
+                "items": [
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "👍"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "❤️"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "😂"
+                    }
+                  },
+                  {
+                    "a": "message.react.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.reply",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.edit",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.menu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      },
+      "phone": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "phoneBar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.camera.flip"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "call.leave"
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "phoneTop": {
+                "items": [
+                  {
+                    "a": "call.minimize"
+                  },
+                  {
+                    "a": "call.hidden.show",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.moreMenu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "phoneEnd": {
+                "items": [
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "phoneStart": {
+                "items": [
+                  {
+                    "a": "nav.back"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "nav.quickSwitcher.open"
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      }
+    },
+    "handheld": {
+      "desktop": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "bar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.gameChat.toggle"
+                  },
+                  {
+                    "a": "call.corner.leave"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.audioShare.toggle"
+                  },
+                  {
+                    "a": "call.health.open"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "sound.stop",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "room.activity.open"
+                  },
+                  {
+                    "a": "call.afk.toggle"
+                  },
+                  {
+                    "a": "call.devices.open"
+                  },
+                  {
+                    "a": "call.leave",
+                    "sepBefore": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "status": {
+                "items": [
+                  {
+                    "a": "room.recording.toggle"
+                  },
+                  {
+                    "a": "call.clip",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.layout.set"
+                  },
+                  {
+                    "a": "call.collapse.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.fill.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.gif",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "room.pinned.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "start": {
+                "items": [
+                  {
+                    "a": "composer.attach"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "timeline": {
+            "rows": {
+              "hover": {
+                "items": [
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "👍"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "❤️"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "😂"
+                    }
+                  },
+                  {
+                    "a": "message.react.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.reply",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.edit",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.menu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      },
+      "phone": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "phoneBar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.camera.flip"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "call.leave"
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "phoneTop": {
+                "items": [
+                  {
+                    "a": "call.minimize"
+                  },
+                  {
+                    "a": "call.hidden.show",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.moreMenu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "phoneEnd": {
+                "items": [
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "phoneStart": {
+                "items": [
+                  {
+                    "a": "nav.back"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "nav.quickSwitcher.open"
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      }
+    },
+    "sideMonitor": {
+      "desktop": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "bar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.gameChat.toggle"
+                  },
+                  {
+                    "a": "call.corner.leave"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.audioShare.toggle"
+                  },
+                  {
+                    "a": "call.health.open"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "sound.stop",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "room.activity.open"
+                  },
+                  {
+                    "a": "call.afk.toggle"
+                  },
+                  {
+                    "a": "call.devices.open"
+                  },
+                  {
+                    "a": "call.leave",
+                    "sepBefore": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "status": {
+                "items": [
+                  {
+                    "a": "room.recording.toggle"
+                  },
+                  {
+                    "a": "call.clip",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.layout.set"
+                  },
+                  {
+                    "a": "call.collapse.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.fill.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.gif",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "room.pinned.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "start": {
+                "items": [
+                  {
+                    "a": "composer.attach"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "timeline": {
+            "rows": {
+              "hover": {
+                "items": [
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "👍"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "❤️"
+                    }
+                  },
+                  {
+                    "a": "message.react",
+                    "hideWhenOff": true,
+                    "target": {
+                      "emoji": "😂"
+                    }
+                  },
+                  {
+                    "a": "message.react.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.reply",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.edit",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "message.menu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      },
+      "phone": {
+        "opts": {
+          "account": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "app.bugReport"
+                  },
+                  {
+                    "a": "app.sidebar.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "call": {
+            "rows": {
+              "phoneBar": {
+                "items": [
+                  {
+                    "a": "call.mic.toggle"
+                  },
+                  {
+                    "a": "call.camera.toggle"
+                  },
+                  {
+                    "a": "call.camera.flip"
+                  },
+                  {
+                    "a": "call.screenShare.toggle"
+                  },
+                  {
+                    "a": "call.deafen.toggle"
+                  },
+                  {
+                    "a": "soundboard.open"
+                  },
+                  {
+                    "a": "watchParty.open"
+                  },
+                  {
+                    "a": "call.leave"
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              },
+              "phoneTop": {
+                "items": [
+                  {
+                    "a": "call.minimize"
+                  },
+                  {
+                    "a": "call.hidden.show",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "call.moreMenu"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "tile": {
+                "items": [
+                  {
+                    "a": "tile.more",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.listen.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.pin.toggle",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.streamMenu",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.hide",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.popOut",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "tile.selfView.toggle",
+                    "hideWhenOff": true
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "composer": {
+            "rows": {
+              "end": {
+                "items": [
+                  {
+                    "a": "composer.emoji"
+                  },
+                  {
+                    "a": "composer.send"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "header": {
+            "rows": {
+              "phoneEnd": {
+                "items": [
+                  {
+                    "a": "call.join"
+                  },
+                  {
+                    "a": "reel.open"
+                  },
+                  {
+                    "a": "calendar.open"
+                  },
+                  {
+                    "a": "memories.open"
+                  },
+                  {
+                    "a": "room.info.toggle"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              },
+              "phoneStart": {
+                "items": [
+                  {
+                    "a": "nav.back"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          },
+          "nav": {
+            "rows": {
+              "main": {
+                "items": [
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "home"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "favourites"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "people"
+                    }
+                  },
+                  {
+                    "a": "nav.space.select",
+                    "target": {
+                      "rail": "orphans"
+                    }
+                  }
+                ],
+                "look": "icon",
+                "scale": "M"
+              }
+            }
+          },
+          "rooms": {
+            "rows": {
+              "header": {
+                "items": [
+                  {
+                    "a": "space.settings.open",
+                    "hideWhenOff": true
+                  },
+                  {
+                    "a": "nav.quickSwitcher.open"
+                  },
+                  {
+                    "a": "app.menu.open"
+                  }
+                ],
+                "look": "icon",
+                "scale": "S"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "version": 1
+}

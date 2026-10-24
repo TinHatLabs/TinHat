@@ -1,0 +1,420 @@
+{
+  "areas": {
+    "account": "Account card",
+    "action": "Actions",
+    "avatar": "Avatars",
+    "badge": "Badges",
+    "banner": "Banners",
+    "bubble": "Message bubbles",
+    "bugReport": "Bug report",
+    "button": "Buttons",
+    "calendar": "Calendar",
+    "call": "Call",
+    "callbar": "Call bar",
+    "chatHead": "Chat heads",
+    "combo": "Drop-downs",
+    "composer": "Composer",
+    "dialog": "Dialogs",
+    "dm": "Direct messages",
+    "dock": "Corner dock",
+    "drop": "Dropping files",
+    "editmode": "Edit mode",
+    "embed": "Embeds",
+    "emoji": "Emoji",
+    "empty": "Empty states",
+    "gif": "GIFs",
+    "header": "Room header",
+    "health": "Stream health",
+    "hear": "Can they hear me",
+    "icon": "Icons",
+    "iconGallery": "Icon gallery",
+    "input": "Text fields",
+    "invite": "Invites",
+    "island": "Islands",
+    "label": "Labels",
+    "lightbox": "Image viewer",
+    "linkPreview": "Link previews",
+    "loader": "Loading",
+    "login": "Sign-in",
+    "members": "Members",
+    "memories": "Memories",
+    "menu": "Menus",
+    "overlay": "Call overlay",
+    "panel": "Room panel",
+    "pip": "Picture in picture",
+    "popover": "Popovers",
+    "presence": "Presence",
+    "profile": "Profiles",
+    "rail": "Rail",
+    "recovery": "Recovery",
+    "reel": "Game Reel",
+    "reply": "Replies",
+    "roles": "Roles",
+    "rooms": "Room list",
+    "scrollbar": "Scroll bars",
+    "separator": "Separators",
+    "settings": "Settings",
+    "sheet": "Sheets",
+    "slider": "Sliders",
+    "soundboard": "Soundboard",
+    "space": "Spaces",
+    "spaceSettings": "Space settings",
+    "stage": "Stage",
+    "startup": "Startup",
+    "status": "Status",
+    "switcher": "Quick switcher",
+    "tile": "Call tiles",
+    "timeline": "Timeline",
+    "toast": "Notifications",
+    "toggle": "Switches and check boxes",
+    "tooltip": "Tooltips",
+    "tour": "Welcome tour",
+    "typing": "Typing",
+    "verify": "Verification",
+    "watchparty": "Media Party",
+    "widget": "Widgets",
+    "window": "Window"
+  },
+  "format": "tinhat-editor-labels",
+  "palette": {
+    "bg": "Background",
+    "c0": "Black",
+    "c1": "Red",
+    "c10": "Bright green",
+    "c11": "Bright yellow",
+    "c12": "Bright blue",
+    "c13": "Bright magenta",
+    "c14": "Bright cyan",
+    "c15": "Bright white",
+    "c2": "Green",
+    "c3": "Yellow",
+    "c4": "Blue",
+    "c5": "Magenta",
+    "c6": "Cyan",
+    "c7": "White",
+    "c8": "Bright black",
+    "c9": "Bright red",
+    "cursor": "Cursor",
+    "fg": "Text",
+    "selectionBg": "Selection",
+    "selectionFg": "Selected text"
+  },
+  "properties": [
+    "bg",
+    "fg",
+    "icon",
+    "border",
+    "divider",
+    "shadow",
+    "ring",
+    "fill",
+    "track",
+    "thumb",
+    "glow",
+    "overlay",
+    "highlight",
+    "placeholder",
+    "caret",
+    "selection",
+    "stripe",
+    "dot",
+    "edge"
+  ],
+  "roleGroups": [
+    {
+      "ids": [
+        "surface.window",
+        "surface.island",
+        "surface.raised",
+        "surface.hover",
+        "surface.pressed",
+        "surface.selected",
+        "surface.sunken",
+        "surface.overlay",
+        "scrim",
+        "shadow"
+      ],
+      "label": "Surfaces"
+    },
+    {
+      "ids": [
+        "border.subtle",
+        "border.strong",
+        "border.focus"
+      ],
+      "label": "Borders"
+    },
+    {
+      "ids": [
+        "text.primary",
+        "text.secondary",
+        "text.muted",
+        "text.disabled",
+        "text.link",
+        "text.onAccent"
+      ],
+      "label": "Text"
+    },
+    {
+      "ids": [
+        "accent.base",
+        "accent.bright",
+        "accent.dim",
+        "accent.glow"
+      ],
+      "label": "Accent"
+    },
+    {
+      "ids": [
+        "state.danger",
+        "state.dangerBright",
+        "state.warning",
+        "state.success",
+        "state.info",
+        "state.aside"
+      ],
+      "label": "Status"
+    },
+    {
+      "ids": [
+        "mention.bg",
+        "mention.edge",
+        "badge.bg",
+        "badge.mention"
+      ],
+      "label": "Mentions and badges"
+    },
+    {
+      "ids": [
+        "presence.online",
+        "presence.away",
+        "presence.busy",
+        "presence.incall",
+        "presence.offline",
+        "call.speaking",
+        "call.muted"
+      ],
+      "label": "Presence and calls"
+    },
+    {
+      "ids": [
+        "name.1",
+        "name.2",
+        "name.3",
+        "name.4",
+        "name.5",
+        "name.6",
+        "name.7",
+        "name.8",
+        "name.9",
+        "name.10",
+        "name.11",
+        "name.12"
+      ],
+      "label": "Name colours"
+    }
+  ],
+  "roles": {
+    "accent.base": "Accent",
+    "accent.bright": "Bright accent",
+    "accent.dim": "Accent wash",
+    "accent.glow": "Accent glow",
+    "badge.bg": "Badges",
+    "badge.mention": "Mention badges",
+    "border.focus": "Focus ring",
+    "border.strong": "Strong borders",
+    "border.subtle": "Subtle borders",
+    "call.muted": "Muted",
+    "call.speaking": "Speaking",
+    "mention.bg": "Mention highlight",
+    "mention.edge": "Mention edge",
+    "name.1": "Name colour 1",
+    "name.10": "Name colour 10",
+    "name.11": "Name colour 11",
+    "name.12": "Name colour 12",
+    "name.2": "Name colour 2",
+    "name.3": "Name colour 3",
+    "name.4": "Name colour 4",
+    "name.5": "Name colour 5",
+    "name.6": "Name colour 6",
+    "name.7": "Name colour 7",
+    "name.8": "Name colour 8",
+    "name.9": "Name colour 9",
+    "presence.away": "Away",
+    "presence.busy": "Busy",
+    "presence.incall": "In a call",
+    "presence.offline": "Offline",
+    "presence.online": "Online",
+    "scrim": "Veil behind dialogs",
+    "shadow": "Shadows",
+    "state.aside": "Aside",
+    "state.danger": "Danger",
+    "state.dangerBright": "Bright danger",
+    "state.info": "Information",
+    "state.success": "Success",
+    "state.warning": "Warning",
+    "surface.hover": "Hover",
+    "surface.island": "Islands",
+    "surface.overlay": "Menus and popups",
+    "surface.pressed": "Pressed",
+    "surface.raised": "Raised surfaces",
+    "surface.selected": "Selected",
+    "surface.sunken": "Sunken surfaces",
+    "surface.window": "Window background",
+    "text.disabled": "Disabled text",
+    "text.link": "Links",
+    "text.muted": "Muted text",
+    "text.onAccent": "Text on accent",
+    "text.primary": "Text",
+    "text.secondary": "Secondary text"
+  },
+  "sections": [
+    {
+      "areas": [
+        "window",
+        "island",
+        "startup",
+        "loader",
+        "tour",
+        "empty",
+        "separator",
+        "scrollbar",
+        "editmode"
+      ],
+      "label": "Window"
+    },
+    {
+      "areas": [
+        "rail",
+        "space",
+        "dm",
+        "dock",
+        "rooms",
+        "switcher",
+        "account",
+        "status",
+        "presence"
+      ],
+      "label": "Navigation"
+    },
+    {
+      "areas": [
+        "header",
+        "timeline",
+        "bubble",
+        "composer",
+        "reply",
+        "typing",
+        "emoji",
+        "gif",
+        "linkPreview",
+        "embed",
+        "lightbox",
+        "drop",
+        "chatHead"
+      ],
+      "label": "Chat"
+    },
+    {
+      "areas": [
+        "call",
+        "tile",
+        "callbar",
+        "stage",
+        "pip",
+        "overlay",
+        "hear",
+        "health"
+      ],
+      "label": "Calls"
+    },
+    {
+      "areas": [
+        "panel",
+        "members",
+        "profile",
+        "roles",
+        "spaceSettings",
+        "invite"
+      ],
+      "label": "Panels"
+    },
+    {
+      "areas": [
+        "widget",
+        "calendar",
+        "reel",
+        "memories",
+        "soundboard",
+        "watchparty"
+      ],
+      "label": "Widgets and apps"
+    },
+    {
+      "areas": [
+        "settings",
+        "sheet",
+        "dialog",
+        "menu",
+        "popover",
+        "tooltip",
+        "toast",
+        "banner",
+        "verify",
+        "recovery",
+        "bugReport",
+        "login",
+        "iconGallery"
+      ],
+      "label": "Settings and dialogs"
+    },
+    {
+      "areas": [
+        "button",
+        "action",
+        "input",
+        "toggle",
+        "slider",
+        "combo",
+        "label",
+        "icon",
+        "avatar",
+        "badge"
+      ],
+      "label": "Controls"
+    }
+  ],
+  "states": [
+    "hover",
+    "pressed",
+    "selected",
+    "active",
+    "checked",
+    "disabled",
+    "focus",
+    "unread",
+    "mention",
+    "speaking",
+    "muted",
+    "error",
+    "own",
+    "live",
+    "dragging",
+    "off"
+  ],
+  "v": 1,
+  "words": {
+    "afk": "AFK",
+    "bg": "background",
+    "dm": "DM",
+    "dms": "DMs",
+    "fg": "text",
+    "gif": "GIF",
+    "gifs": "GIFs",
+    "id": "ID",
+    "osd": "OSD",
+    "pip": "PiP",
+    "rsvp": "RSVP",
+    "ui": "UI"
+  }
+}

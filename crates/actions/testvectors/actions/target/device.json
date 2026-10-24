@@ -1,0 +1,380 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "name": "call.camera.set: a raw device value (not portable)"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l1"
+        }
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "local": "l1"
+        }
+      },
+      "name": "call.camera.set: a local id in this device's table"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l2"
+        }
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "local": "l2"
+        }
+      },
+      "name": "call.camera.set: a local id whose device is gone"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l9"
+        }
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "local": "l9"
+        }
+      },
+      "name": "call.camera.set: a local id not in this device's table"
+    },
+    {
+      "expect": {
+        "error": "bad-local",
+        "key": "local",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "local": "Bad Id!"
+        }
+      },
+      "name": "call.camera.set: a malformed local id"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.camera.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.camera.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.camera.set",
+        "target": "x"
+      },
+      "name": "call.camera.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.camera.set"
+      },
+      "name": "call.camera.set: no target"
+    },
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "name": "call.input.set: a raw device value (not portable)"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l1"
+        }
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "local": "l1"
+        }
+      },
+      "name": "call.input.set: a local id in this device's table"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l2"
+        }
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "local": "l2"
+        }
+      },
+      "name": "call.input.set: a local id whose device is gone"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l9"
+        }
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "local": "l9"
+        }
+      },
+      "name": "call.input.set: a local id not in this device's table"
+    },
+    {
+      "expect": {
+        "error": "bad-local",
+        "key": "local",
+        "ok": false
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "local": "Bad Id!"
+        }
+      },
+      "name": "call.input.set: a malformed local id"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.input.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.input.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.input.set",
+        "target": "x"
+      },
+      "name": "call.input.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.input.set"
+      },
+      "name": "call.input.set: no target"
+    },
+    {
+      "expect": {
+        "error": "not-portable",
+        "key": "device",
+        "ok": false
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "device": "alsa_input.usb-headset"
+        }
+      },
+      "name": "call.output.set: a raw device value (not portable)"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l1"
+        }
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "local": "l1"
+        }
+      },
+      "name": "call.output.set: a local id in this device's table"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l2"
+        }
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "local": "l2"
+        }
+      },
+      "name": "call.output.set: a local id whose device is gone"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "local": "l9"
+        }
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "local": "l9"
+        }
+      },
+      "name": "call.output.set: a local id not in this device's table"
+    },
+    {
+      "expect": {
+        "error": "bad-local",
+        "key": "local",
+        "ok": false
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "local": "Bad Id!"
+        }
+      },
+      "name": "call.output.set: a malformed local id"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.output.set: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.output.set: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.output.set",
+        "target": "x"
+      },
+      "name": "call.output.set: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.output.set"
+      },
+      "name": "call.output.set: no target"
+    }
+  ],
+  "kind": "target"
+}

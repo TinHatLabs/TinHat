@@ -1,0 +1,895 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+        "content": {
+          "body": "🎲 rolled 2d6+3 → 9 (4 + 2 + 3)",
+          "dev.tinhat.dice": {
+            "expr": "2d6+3",
+            "kept": [
+              true,
+              true
+            ],
+            "rolls": [
+              4,
+              2
+            ],
+            "total": 9,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 4
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          }
+        ],
+        "html": "🎲 rolled <code>2d6+3</code> → <strong>9</strong> (4 + 2 + 3)",
+        "modifier": "+3"
+      },
+      "expr": "2d6+3",
+      "raw": [
+        4,
+        2
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 1d20 → 17",
+        "content": {
+          "body": "🎲 rolled 1d20 → 17",
+          "dev.tinhat.dice": {
+            "expr": "1d20",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              17
+            ],
+            "total": 17,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>1d20</code> → <strong>17</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 17
+          }
+        ],
+        "html": "🎲 rolled <code>1d20</code> → <strong>17</strong>",
+        "modifier": ""
+      },
+      "expr": "1d20",
+      "raw": [
+        17
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 1d20 → 20 — natural 20!",
+        "content": {
+          "body": "🎲 rolled 1d20 → 20 — natural 20!",
+          "dev.tinhat.dice": {
+            "expr": "1d20",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              20
+            ],
+            "total": 20,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>1d20</code> → <strong>20</strong> — <strong>natural 20!</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 20
+          }
+        ],
+        "html": "🎲 rolled <code>1d20</code> → <strong>20</strong> — <strong>natural 20!</strong>",
+        "modifier": ""
+      },
+      "expr": "1d20",
+      "raw": [
+        20
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 1d20+5 → 6 (1 + 5) — natural 1",
+        "content": {
+          "body": "🎲 rolled 1d20+5 → 6 (1 + 5) — natural 1",
+          "dev.tinhat.dice": {
+            "expr": "1d20+5",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              1
+            ],
+            "total": 6,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>1d20+5</code> → <strong>6</strong> (1 + 5) — <strong>natural 1</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 1
+          }
+        ],
+        "html": "🎲 rolled <code>1d20+5</code> → <strong>6</strong> (1 + 5) — <strong>natural 1</strong>",
+        "modifier": "+5"
+      },
+      "expr": "1d20+5",
+      "raw": [
+        1
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 2d20kh1+5 (advantage) → 25 (20 + 5, dropped 7) — natural 20!",
+        "content": {
+          "body": "🎲 rolled 2d20kh1+5 (advantage) → 25 (20 + 5, dropped 7) — natural 20!",
+          "dev.tinhat.dice": {
+            "expr": "2d20kh1+5",
+            "kept": [
+              false,
+              true
+            ],
+            "rolls": [
+              7,
+              20
+            ],
+            "total": 25,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>2d20kh1+5</code> (advantage) → <strong>25</strong> (20 + 5, dropped <del>7</del>) — <strong>natural 20!</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": false,
+            "sides": 20,
+            "sign": 1,
+            "v": 7
+          },
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 20
+          }
+        ],
+        "html": "🎲 rolled <code>2d20kh1+5</code> (advantage) → <strong>25</strong> (20 + 5, dropped <del>7</del>) — <strong>natural 20!</strong>",
+        "modifier": "+5"
+      },
+      "expr": "2d20kh1+5",
+      "raw": [
+        7,
+        20
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 2d20kl1 (disadvantage) → 1 (1, dropped 15) — natural 1",
+        "content": {
+          "body": "🎲 rolled 2d20kl1 (disadvantage) → 1 (1, dropped 15) — natural 1",
+          "dev.tinhat.dice": {
+            "expr": "2d20kl1",
+            "kept": [
+              true,
+              false
+            ],
+            "rolls": [
+              1,
+              15
+            ],
+            "total": 1,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>2d20kl1</code> (disadvantage) → <strong>1</strong> (1, dropped <del>15</del>) — <strong>natural 1</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 1
+          },
+          {
+            "kept": false,
+            "sides": 20,
+            "sign": 1,
+            "v": 15
+          }
+        ],
+        "html": "🎲 rolled <code>2d20kl1</code> (disadvantage) → <strong>1</strong> (1, dropped <del>15</del>) — <strong>natural 1</strong>",
+        "modifier": ""
+      },
+      "expr": "2d20kl1",
+      "raw": [
+        1,
+        15
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 2d20kl1-1 (disadvantage) → 2 (3 - 1, dropped 9)",
+        "content": {
+          "body": "🎲 rolled 2d20kl1-1 (disadvantage) → 2 (3 - 1, dropped 9)",
+          "dev.tinhat.dice": {
+            "expr": "2d20kl1-1",
+            "kept": [
+              true,
+              false
+            ],
+            "rolls": [
+              3,
+              9
+            ],
+            "total": 2,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>2d20kl1-1</code> (disadvantage) → <strong>2</strong> (3 - 1, dropped <del>9</del>)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 3
+          },
+          {
+            "kept": false,
+            "sides": 20,
+            "sign": 1,
+            "v": 9
+          }
+        ],
+        "html": "🎲 rolled <code>2d20kl1-1</code> (disadvantage) → <strong>2</strong> (3 - 1, dropped <del>9</del>)",
+        "modifier": "-1"
+      },
+      "expr": "2d20kl1-1",
+      "raw": [
+        3,
+        9
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 4d6kh3 → 12 (3 + 6 + 3, dropped 2)",
+        "content": {
+          "body": "🎲 rolled 4d6kh3 → 12 (3 + 6 + 3, dropped 2)",
+          "dev.tinhat.dice": {
+            "expr": "4d6kh3",
+            "kept": [
+              true,
+              true,
+              true,
+              false
+            ],
+            "rolls": [
+              3,
+              6,
+              3,
+              2
+            ],
+            "total": 12,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>4d6kh3</code> → <strong>12</strong> (3 + 6 + 3, dropped <del>2</del>)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 3
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 6
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 3
+          },
+          {
+            "kept": false,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          }
+        ],
+        "html": "🎲 rolled <code>4d6kh3</code> → <strong>12</strong> (3 + 6 + 3, dropped <del>2</del>)",
+        "modifier": ""
+      },
+      "expr": "4d6kh3",
+      "raw": [
+        3,
+        6,
+        3,
+        2
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 4d6kl2+1d8 → 11 (1 + 2 + 8, dropped 6, 5)",
+        "content": {
+          "body": "🎲 rolled 4d6kl2+1d8 → 11 (1 + 2 + 8, dropped 6, 5)",
+          "dev.tinhat.dice": {
+            "expr": "4d6kl2+1d8",
+            "kept": [
+              false,
+              true,
+              true,
+              false,
+              true
+            ],
+            "rolls": [
+              6,
+              1,
+              2,
+              5,
+              8
+            ],
+            "total": 11,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>4d6kl2+1d8</code> → <strong>11</strong> (1 + 2 + 8, dropped <del>6</del>, <del>5</del>)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": false,
+            "sides": 6,
+            "sign": 1,
+            "v": 6
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 1
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          },
+          {
+            "kept": false,
+            "sides": 6,
+            "sign": 1,
+            "v": 5
+          },
+          {
+            "kept": true,
+            "sides": 8,
+            "sign": 1,
+            "v": 8
+          }
+        ],
+        "html": "🎲 rolled <code>4d6kl2+1d8</code> → <strong>11</strong> (1 + 2 + 8, dropped <del>6</del>, <del>5</del>)",
+        "modifier": ""
+      },
+      "expr": "4d6kl2+1d8",
+      "raw": [
+        6,
+        1,
+        2,
+        5,
+        8
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 1d20-1d4+2 → 14 (15 - 3 + 2)",
+        "content": {
+          "body": "🎲 rolled 1d20-1d4+2 → 14 (15 - 3 + 2)",
+          "dev.tinhat.dice": {
+            "expr": "1d20-1d4+2",
+            "kept": [
+              true,
+              true
+            ],
+            "rolls": [
+              15,
+              3
+            ],
+            "total": 14,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>1d20-1d4+2</code> → <strong>14</strong> (15 - 3 + 2)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 15
+          },
+          {
+            "kept": true,
+            "sides": 4,
+            "sign": -1,
+            "v": 3
+          }
+        ],
+        "html": "🎲 rolled <code>1d20-1d4+2</code> → <strong>14</strong> (15 - 3 + 2)",
+        "modifier": "+2"
+      },
+      "expr": "1d20-1d4+2",
+      "raw": [
+        15,
+        3
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled -1d4+10 → 6 (-4 + 10)",
+        "content": {
+          "body": "🎲 rolled -1d4+10 → 6 (-4 + 10)",
+          "dev.tinhat.dice": {
+            "expr": "-1d4+10",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              4
+            ],
+            "total": 6,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>-1d4+10</code> → <strong>6</strong> (-4 + 10)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 4,
+            "sign": -1,
+            "v": 4
+          }
+        ],
+        "html": "🎲 rolled <code>-1d4+10</code> → <strong>6</strong> (-4 + 10)",
+        "modifier": "+10"
+      },
+      "expr": "-1d4+10",
+      "raw": [
+        4
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled -1d4 → -4",
+        "content": {
+          "body": "🎲 rolled -1d4 → -4",
+          "dev.tinhat.dice": {
+            "expr": "-1d4",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              4
+            ],
+            "total": -4,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>-1d4</code> → <strong>-4</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 4,
+            "sign": -1,
+            "v": 4
+          }
+        ],
+        "html": "🎲 rolled <code>-1d4</code> → <strong>-4</strong>",
+        "modifier": ""
+      },
+      "expr": "-1d4",
+      "raw": [
+        4
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 1d4-10 → -8 (2 - 10)",
+        "content": {
+          "body": "🎲 rolled 1d4-10 → -8 (2 - 10)",
+          "dev.tinhat.dice": {
+            "expr": "1d4-10",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              2
+            ],
+            "total": -8,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>1d4-10</code> → <strong>-8</strong> (2 - 10)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 4,
+            "sign": 1,
+            "v": 2
+          }
+        ],
+        "html": "🎲 rolled <code>1d4-10</code> → <strong>-8</strong> (2 - 10)",
+        "modifier": "-10"
+      },
+      "expr": "1d4-10",
+      "raw": [
+        2
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 2d20kh1+1d4+5 (advantage) → 29 (20 + 4 + 5, dropped 3) — natural 20!",
+        "content": {
+          "body": "🎲 rolled 2d20kh1+1d4+5 (advantage) → 29 (20 + 4 + 5, dropped 3) — natural 20!",
+          "dev.tinhat.dice": {
+            "expr": "2d20kh1+1d4+5",
+            "kept": [
+              true,
+              false,
+              true
+            ],
+            "rolls": [
+              20,
+              3,
+              4
+            ],
+            "total": 29,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>2d20kh1+1d4+5</code> (advantage) → <strong>29</strong> (20 + 4 + 5, dropped <del>3</del>) — <strong>natural 20!</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 20,
+            "sign": 1,
+            "v": 20
+          },
+          {
+            "kept": false,
+            "sides": 20,
+            "sign": 1,
+            "v": 3
+          },
+          {
+            "kept": true,
+            "sides": 4,
+            "sign": 1,
+            "v": 4
+          }
+        ],
+        "html": "🎲 rolled <code>2d20kh1+1d4+5</code> (advantage) → <strong>29</strong> (20 + 4 + 5, dropped <del>3</del>) — <strong>natural 20!</strong>",
+        "modifier": "+5"
+      },
+      "expr": "2d20kh1+1d4+5",
+      "raw": [
+        20,
+        3,
+        4
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 1d100 → 100",
+        "content": {
+          "body": "🎲 rolled 1d100 → 100",
+          "dev.tinhat.dice": {
+            "expr": "1d100",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              100
+            ],
+            "total": 100,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>1d100</code> → <strong>100</strong>",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 100,
+            "sign": 1,
+            "v": 100
+          }
+        ],
+        "html": "🎲 rolled <code>1d100</code> → <strong>100</strong>",
+        "modifier": ""
+      },
+      "expr": "1d100",
+      "raw": [
+        100
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 10d6 → 31 (1 + 2 + 3 + 4 + 5 + 6 + 1 + 2 + 3 + 4)",
+        "content": {
+          "body": "🎲 rolled 10d6 → 31 (1 + 2 + 3 + 4 + 5 + 6 + 1 + 2 + 3 + 4)",
+          "dev.tinhat.dice": {
+            "expr": "10d6",
+            "kept": [
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "rolls": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              1,
+              2,
+              3,
+              4
+            ],
+            "total": 31,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>10d6</code> → <strong>31</strong> (1 + 2 + 3 + 4 + 5 + 6 + 1 + 2 + 3 + 4)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 1
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 3
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 4
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 5
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 6
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 1
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 3
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 4
+          }
+        ],
+        "html": "🎲 rolled <code>10d6</code> → <strong>31</strong> (1 + 2 + 3 + 4 + 5 + 6 + 1 + 2 + 3 + 4)",
+        "modifier": ""
+      },
+      "expr": "10d6",
+      "raw": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 3d6+0 → 6 (2 + 2 + 2 + 0)",
+        "content": {
+          "body": "🎲 rolled 3d6+0 → 6 (2 + 2 + 2 + 0)",
+          "dev.tinhat.dice": {
+            "expr": "3d6+0",
+            "kept": [
+              true,
+              true,
+              true
+            ],
+            "rolls": [
+              2,
+              2,
+              2
+            ],
+            "total": 6,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>3d6+0</code> → <strong>6</strong> (2 + 2 + 2 + 0)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          },
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 2
+          }
+        ],
+        "html": "🎲 rolled <code>3d6+0</code> → <strong>6</strong> (2 + 2 + 2 + 0)",
+        "modifier": ""
+      },
+      "expr": "3d6+0",
+      "raw": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "expect": {
+        "body": "🎲 rolled 1d6+2-2 → 4 (4 + 2 - 2)",
+        "content": {
+          "body": "🎲 rolled 1d6+2-2 → 4 (4 + 2 - 2)",
+          "dev.tinhat.dice": {
+            "expr": "1d6+2-2",
+            "kept": [
+              true
+            ],
+            "rolls": [
+              4
+            ],
+            "total": 4,
+            "v": 1
+          },
+          "format": "org.matrix.custom.html",
+          "formatted_body": "🎲 rolled <code>1d6+2-2</code> → <strong>4</strong> (4 + 2 - 2)",
+          "m.mentions": {},
+          "msgtype": "m.notice"
+        },
+        "faces": [
+          {
+            "kept": true,
+            "sides": 6,
+            "sign": 1,
+            "v": 4
+          }
+        ],
+        "html": "🎲 rolled <code>1d6+2-2</code> → <strong>4</strong> (4 + 2 - 2)",
+        "modifier": ""
+      },
+      "expr": "1d6+2-2",
+      "raw": [
+        4
+      ]
+    }
+  ]
+}

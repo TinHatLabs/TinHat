@@ -1,0 +1,17 @@
+# Object.prototype names are ordinary keys (ENGINE.md §9, PORT-QUESTIONS Q1): nothing named like one may leak into the theme
+__proto__ = { colors = { background = "#ff0000" } }
+
+[colors]
+foreground = "#c5c8c6"
+background = "#1d1f21"
+cursor_bg = "#c5c8c6"
+selection_bg = "#373b41"
+ansi = ["#282a2e", "#a54242", "#8c9440", "#de935f", "#5f819d", "#85678f", "#5e8d87", "#707880"]
+brights = ["#373b41", "#cc6666", "#b5bd68", "#f0c674", "#81a2be", "#b294bb", "#8abeb7", "#c5c8c6"]
+constructor = "#ff0000"
+__proto__ = { selection_fg = "#ff0000" }
+
+[metadata]
+name = "Inherited Keys (WezTerm)"
+__proto__ = { author = "Evil" }
+toString = "x"

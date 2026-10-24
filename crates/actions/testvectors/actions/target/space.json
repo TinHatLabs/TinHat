@@ -1,0 +1,1341 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.container.pick",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "calendar.container.pick: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.container.pick",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "calendar.container.pick: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.container.pick",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "calendar.container.pick: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.container.pick",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "calendar.container.pick: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.container.pick",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.container.pick: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.container.pick",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.container.pick: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.container.pick",
+        "target": "x"
+      },
+      "name": "calendar.container.pick: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.container.pick"
+      },
+      "name": "calendar.container.pick: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "calendar.game.edit: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "calendar.game.edit: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "calendar.game.edit: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "calendar.game.edit: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "add"
+        }
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "op": "add"
+        }
+      },
+      "name": "calendar.game.edit: param op=add"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "edit"
+        }
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "op": "edit"
+        }
+      },
+      "name": "calendar.game.edit: param op=edit"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "remove"
+        }
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "op": "remove"
+        }
+      },
+      "name": "calendar.game.edit: param op=remove"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "op",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "op": "zz"
+        }
+      },
+      "name": "calendar.game.edit: param op invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.game.edit: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.game.edit: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.game.edit",
+        "target": "x"
+      },
+      "name": "calendar.game.edit: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.game.edit"
+      },
+      "name": "calendar.game.edit: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "calendar.month.step: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "calendar.month.step: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "calendar.month.step: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "calendar.month.step: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "step": "previous"
+        }
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "step": "previous"
+        }
+      },
+      "name": "calendar.month.step: param step=previous"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "step": "next"
+        }
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "step": "next"
+        }
+      },
+      "name": "calendar.month.step: param step=next"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "step": "today"
+        }
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "step": "today"
+        }
+      },
+      "name": "calendar.month.step: param step=today"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "step",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "step": "zz"
+        }
+      },
+      "name": "calendar.month.step: param step invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.month.step: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.month.step: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.month.step",
+        "target": "x"
+      },
+      "name": "calendar.month.step: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.month.step"
+      },
+      "name": "calendar.month.step: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.open",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "calendar.open: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "calendar.open",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "calendar.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.open",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "calendar.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.open",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "calendar.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "calendar.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "calendar.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "calendar.open",
+        "target": "x"
+      },
+      "name": "calendar.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "calendar.open"
+      },
+      "name": "calendar.open: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "space.invite",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "space.invite: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "space.invite",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "space.invite: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.invite",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "space.invite: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.invite",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "space.invite: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.invite",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.invite: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.invite",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.invite: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.invite",
+        "target": "x"
+      },
+      "name": "space.invite: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.invite"
+      },
+      "name": "space.invite: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "space.leave",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "space.leave: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "space.leave",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "space.leave: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.leave",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "space.leave: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.leave",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "space.leave: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.leave",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.leave: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.leave",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.leave: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.leave",
+        "target": "x"
+      },
+      "name": "space.leave: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.leave"
+      },
+      "name": "space.leave: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "space.link.copy",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "space.link.copy: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "space.link.copy",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "space.link.copy: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.link.copy",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "space.link.copy: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.link.copy",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "space.link.copy: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.link.copy",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.link.copy: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.link.copy",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.link.copy: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.link.copy",
+        "target": "x"
+      },
+      "name": "space.link.copy: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.link.copy"
+      },
+      "name": "space.link.copy: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "space.markAllRead",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "space.markAllRead: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "space.markAllRead",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "space.markAllRead: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.markAllRead",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "space.markAllRead: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.markAllRead",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "space.markAllRead: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.markAllRead",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.markAllRead: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.markAllRead",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.markAllRead: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.markAllRead",
+        "target": "x"
+      },
+      "name": "space.markAllRead: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.markAllRead"
+      },
+      "name": "space.markAllRead: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "space.overview.edit: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "space.overview.edit: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "space.overview.edit: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "space.overview.edit: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "joinRule": "invite"
+        }
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "joinRule": "invite"
+        }
+      },
+      "name": "space.overview.edit: param joinRule=invite"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "joinRule": "public"
+        }
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "joinRule": "public"
+        }
+      },
+      "name": "space.overview.edit: param joinRule=public"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "joinRule",
+        "ok": false
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "joinRule": "zz"
+        }
+      },
+      "name": "space.overview.edit: param joinRule invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.overview.edit: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.overview.edit: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.overview.edit",
+        "target": "x"
+      },
+      "name": "space.overview.edit: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.overview.edit"
+      },
+      "name": "space.overview.edit: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "space": "!space:example.com"
+        }
+      },
+      "name": "space.settings.open: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "space": "!gonespace:example.com"
+        }
+      },
+      "name": "space.settings.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "space": "room-without-bang"
+        }
+      },
+      "name": "space.settings.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "space",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "space": 7
+        }
+      },
+      "name": "space.settings.open: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "tab": "overview"
+        }
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "tab": "overview"
+        }
+      },
+      "name": "space.settings.open: param tab=overview"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "tab": "members"
+        }
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "tab": "members"
+        }
+      },
+      "name": "space.settings.open: param tab=members"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "tab": "roles"
+        }
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "tab": "roles"
+        }
+      },
+      "name": "space.settings.open: param tab=roles"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "tab": "rooms"
+        }
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "tab": "rooms"
+        }
+      },
+      "name": "space.settings.open: param tab=rooms"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "tab",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "tab": "zz"
+        }
+      },
+      "name": "space.settings.open: param tab invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "space.settings.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "space.settings.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "space.settings.open",
+        "target": "x"
+      },
+      "name": "space.settings.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "space.settings.open"
+      },
+      "name": "space.settings.open: no target"
+    }
+  ],
+  "kind": "target"
+}

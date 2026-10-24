@@ -1,0 +1,116 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "rename"
+        }
+      },
+      "input": {
+        "action": "sessions.manage",
+        "target": {
+          "op": "rename"
+        }
+      },
+      "name": "sessions.manage: param op=rename"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "verify"
+        }
+      },
+      "input": {
+        "action": "sessions.manage",
+        "target": {
+          "op": "verify"
+        }
+      },
+      "name": "sessions.manage: param op=verify"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "op": "signOut"
+        }
+      },
+      "input": {
+        "action": "sessions.manage",
+        "target": {
+          "op": "signOut"
+        }
+      },
+      "name": "sessions.manage: param op=signOut"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "op",
+        "ok": false
+      },
+      "input": {
+        "action": "sessions.manage",
+        "target": {
+          "op": "zz"
+        }
+      },
+      "name": "sessions.manage: param op invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "sessions.manage",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "sessions.manage: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "sessions.manage",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "sessions.manage: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "sessions.manage",
+        "target": "x"
+      },
+      "name": "sessions.manage: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sessions.manage"
+      },
+      "name": "sessions.manage: no target"
+    }
+  ],
+  "kind": "target"
+}

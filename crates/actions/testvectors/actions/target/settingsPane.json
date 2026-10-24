@@ -1,0 +1,250 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "profile"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "profile"
+        }
+      },
+      "name": "app.settings.open: listed value profile"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "appearance"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "appearance"
+        }
+      },
+      "name": "app.settings.open: listed value appearance"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "audio"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "audio"
+        }
+      },
+      "name": "app.settings.open: listed value audio"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "calls"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "calls"
+        }
+      },
+      "name": "app.settings.open: listed value calls"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "notifications"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "notifications"
+        }
+      },
+      "name": "app.settings.open: listed value notifications"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "sessions"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "sessions"
+        }
+      },
+      "name": "app.settings.open: listed value sessions"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "security"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "security"
+        }
+      },
+      "name": "app.settings.open: listed value security"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "privacy"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "privacy"
+        }
+      },
+      "name": "app.settings.open: listed value privacy"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "overlay"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "overlay"
+        }
+      },
+      "name": "app.settings.open: listed value overlay"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "shortcuts"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "shortcuts"
+        }
+      },
+      "name": "app.settings.open: listed value shortcuts"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "pane": "invites"
+        }
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "invites"
+        }
+      },
+      "name": "app.settings.open: listed value invites"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "pane",
+        "ok": false
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": "nowhere"
+        }
+      },
+      "name": "app.settings.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "pane",
+        "ok": false
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "pane": 7
+        }
+      },
+      "name": "app.settings.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "app.settings.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "app.settings.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "app.settings.open",
+        "target": "x"
+      },
+      "name": "app.settings.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.settings.open"
+      },
+      "name": "app.settings.open: no target"
+    }
+  ],
+  "kind": "target"
+}

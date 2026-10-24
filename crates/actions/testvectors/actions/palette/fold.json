@@ -1,0 +1,302 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "folded": "gaming central"
+      },
+      "input": {
+        "text": "Gaming Central"
+      },
+      "name": "\"Gaming Central\""
+    },
+    {
+      "expect": {
+        "folded": "gaming central"
+      },
+      "input": {
+        "text": "  Gaming   Central  "
+      },
+      "name": "\"  Gaming   Central  \""
+    },
+    {
+      "expect": {
+        "folded": "general"
+      },
+      "input": {
+        "text": "#general"
+      },
+      "name": "\"#general\""
+    },
+    {
+      "expect": {
+        "folded": "valheim mods"
+      },
+      "input": {
+        "text": "valheim-mods"
+      },
+      "name": "\"valheim-mods\""
+    },
+    {
+      "expect": {
+        "folded": "ftb skies"
+      },
+      "input": {
+        "text": "FTB Skies"
+      },
+      "name": "\"FTB Skies\""
+    },
+    {
+      "expect": {
+        "folded": "café crème"
+      },
+      "input": {
+        "text": "Café Crème"
+      },
+      "name": "\"Café Crème\""
+    },
+    {
+      "expect": {
+        "folded": "café"
+      },
+      "input": {
+        "text": "CAFÉ"
+      },
+      "name": "\"CAFÉ\""
+    },
+    {
+      "expect": {
+        "folded": "σοφια"
+      },
+      "input": {
+        "text": "ΣΟΦΙΑ"
+      },
+      "name": "\"ΣΟΦΙΑ\""
+    },
+    {
+      "expect": {
+        "folded": "σας σας"
+      },
+      "input": {
+        "text": "ΣΑΣ ΣΑΣ"
+      },
+      "name": "\"ΣΑΣ ΣΑΣ\""
+    },
+    {
+      "expect": {
+        "folded": "i̇stanbul"
+      },
+      "input": {
+        "text": "İstanbul"
+      },
+      "name": "\"İstanbul\""
+    },
+    {
+      "expect": {
+        "folded": "game night 🎮"
+      },
+      "input": {
+        "text": "Game night 🎮"
+      },
+      "name": "\"Game night 🎮\""
+    },
+    {
+      "expect": {
+        "folded": "straße"
+      },
+      "input": {
+        "text": "Straße"
+      },
+      "name": "\"Straße\""
+    },
+    {
+      "expect": {
+        "folded": "a b c d e"
+      },
+      "input": {
+        "text": "a_b.c:d/e"
+      },
+      "name": "\"a_b.c:d/e\""
+    },
+    {
+      "expect": {
+        "folded": ""
+      },
+      "input": {
+        "text": "…"
+      },
+      "name": "\"…\""
+    },
+    {
+      "expect": {
+        "folded": "quoted dash"
+      },
+      "input": {
+        "text": "“quoted” — dash"
+      },
+      "name": "\"“quoted” — dash\""
+    },
+    {
+      "expect": {
+        "folded": "tab here"
+      },
+      "input": {
+        "text": "tab\there"
+      },
+      "name": "\"tab\\there\""
+    },
+    {
+      "expect": {
+        "folded": ""
+      },
+      "input": {
+        "text": ""
+      },
+      "name": "\"\""
+    },
+    {
+      "expect": {
+        "folded": ""
+      },
+      "input": {
+        "text": "   "
+      },
+      "name": "\"   \""
+    },
+    {
+      "expect": {
+        "folded": "zane example com"
+      },
+      "input": {
+        "text": "@zane:example.com"
+      },
+      "name": "\"@zane:example.com\""
+    },
+    {
+      "expect": {
+        "folded": "room example com"
+      },
+      "input": {
+        "text": "!room:example.com"
+      },
+      "name": "\"!room:example.com\""
+    },
+    {
+      "expect": {
+        "folded": "mix and match words"
+      },
+      "input": {
+        "text": "Mix-and_Match.Words"
+      },
+      "name": "\"Mix-and_Match.Words\""
+    },
+    {
+      "expect": {
+        "folded": "日本語 チャット"
+      },
+      "input": {
+        "text": "日本語 チャット"
+      },
+      "name": "\"日本語 チャット\""
+    },
+    {
+      "expect": {
+        "folded": "emoji🦊fox"
+      },
+      "input": {
+        "text": "emoji🦊fox"
+      },
+      "name": "\"emoji🦊fox\""
+    },
+    {
+      "expect": {
+        "folded": "ﬁ ligature"
+      },
+      "input": {
+        "text": "ﬁ ligature"
+      },
+      "name": "\"ﬁ ligature\""
+    },
+    {
+      "expect": {
+        "folded": "ǆungla"
+      },
+      "input": {
+        "text": "Ǆungla"
+      },
+      "name": "\"Ǆungla\""
+    },
+    {
+      "expect": {
+        "folded": "x y"
+      },
+      "input": {
+        "text": "x y"
+      },
+      "name": "\"x y\""
+    },
+    {
+      "expect": {
+        "folded": "x y"
+      },
+      "input": {
+        "text": "x y"
+      },
+      "name": "\"x y\""
+    },
+    {
+      "expect": {
+        "folded": "x y"
+      },
+      "input": {
+        "text": "x　y"
+      },
+      "name": "\"x　y\""
+    },
+    {
+      "expect": {
+        "folded": "ⅻ"
+      },
+      "input": {
+        "text": "Ⅻ"
+      },
+      "name": "\"Ⅻ\""
+    },
+    {
+      "expect": {
+        "folded": "ǆ"
+      },
+      "input": {
+        "text": "ǅ"
+      },
+      "name": "\"ǅ\""
+    },
+    {
+      "expect": {
+        "folded": "a1b2"
+      },
+      "input": {
+        "text": "A1B2"
+      },
+      "name": "\"A1B2\""
+    },
+    {
+      "expect": {
+        "folded": "12 30 tonight"
+      },
+      "input": {
+        "text": "12:30 · tonight"
+      },
+      "name": "\"12:30 · tonight\""
+    },
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": {
+        "text": 3
+      },
+      "name": "not a string"
+    }
+  ],
+  "kind": "fold"
+}

@@ -1,0 +1,367 @@
+{
+ "format": "tinhat-settings-search-vectors",
+ "v": 1,
+ "note": "SETTINGS-WINDOW.md §4 matcher over settings-index.json v1; operator=false hides operator entries",
+ "cases": [
+  {
+   "q": "mic",
+   "operator": true,
+   "want": [
+    "audio.input-device",
+    "audio.input-level",
+    "audio.echo-cancellation",
+    "audio.echo-outputs",
+    "audio.auto-gain",
+    "audio.noise-suppression",
+    "audio.noise-test"
+   ]
+  },
+  {
+   "q": "mic",
+   "operator": false,
+   "want": [
+    "audio.input-device",
+    "audio.input-level",
+    "audio.echo-cancellation",
+    "audio.echo-outputs",
+    "audio.auto-gain",
+    "audio.noise-suppression",
+    "audio.noise-test"
+   ]
+  },
+  {
+   "q": "echo",
+   "operator": true,
+   "want": [
+    "audio.echo-cancellation",
+    "audio.echo-outputs"
+   ]
+  },
+  {
+   "q": "echo",
+   "operator": false,
+   "want": [
+    "audio.echo-cancellation",
+    "audio.echo-outputs"
+   ]
+  },
+  {
+   "q": "  Écho ",
+   "operator": true,
+   "want": [
+    "audio.echo-cancellation",
+    "audio.echo-outputs"
+   ]
+  },
+  {
+   "q": "  Écho ",
+   "operator": false,
+   "want": [
+    "audio.echo-cancellation",
+    "audio.echo-outputs"
+   ]
+  },
+  {
+   "q": "sign out",
+   "operator": true,
+   "want": [
+    "about.sign-out",
+    "security.devices"
+   ]
+  },
+  {
+   "q": "sign out",
+   "operator": false,
+   "want": [
+    "about.sign-out",
+    "security.devices"
+   ]
+  },
+  {
+   "q": "dark",
+   "operator": true,
+   "want": [
+    "appearance.theme"
+   ]
+  },
+  {
+   "q": "dark",
+   "operator": false,
+   "want": [
+    "appearance.theme"
+   ]
+  },
+  {
+   "q": "xyz",
+   "operator": true,
+   "want": []
+  },
+  {
+   "q": "xyz",
+   "operator": false,
+   "want": []
+  },
+  {
+   "q": "",
+   "operator": true,
+   "want": []
+  },
+  {
+   "q": "",
+   "operator": false,
+   "want": []
+  },
+  {
+   "q": "   ",
+   "operator": true,
+   "want": []
+  },
+  {
+   "q": "   ",
+   "operator": false,
+   "want": []
+  },
+  {
+   "q": "invite",
+   "operator": true,
+   "want": [
+    "invites.codes",
+    "invites.create-invite"
+   ]
+  },
+  {
+   "q": "invite",
+   "operator": false,
+   "want": []
+  },
+  {
+   "q": "SCREEN share",
+   "operator": true,
+   "want": [
+    "calls.share-resolution",
+    "calls.share-fps",
+    "calls.share-bandwidth",
+    "calls.share-encoder",
+    "overlay.overlay-hide-sharing"
+   ]
+  },
+  {
+   "q": "SCREEN share",
+   "operator": false,
+   "want": [
+    "calls.share-resolution",
+    "calls.share-fps",
+    "calls.share-bandwidth",
+    "calls.share-encoder",
+    "overlay.overlay-hide-sharing"
+   ]
+  },
+  {
+   "q": "noise",
+   "operator": true,
+   "want": [
+    "audio.noise-suppression",
+    "audio.noise-test"
+   ]
+  },
+  {
+   "q": "noise",
+   "operator": false,
+   "want": [
+    "audio.noise-suppression",
+    "audio.noise-test"
+   ]
+  },
+  {
+   "q": "time",
+   "operator": true,
+   "want": [
+    "privacy.share-time-zone",
+    "privacy.time-zone",
+    "appearance.clock"
+   ]
+  },
+  {
+   "q": "time",
+   "operator": false,
+   "want": [
+    "privacy.share-time-zone",
+    "privacy.time-zone",
+    "appearance.clock"
+   ]
+  },
+  {
+   "q": "key",
+   "operator": true,
+   "want": [
+    "security.key-backup",
+    "shortcuts.shortcuts",
+    "about.shortcut-list",
+    "calls.push-to-talk"
+   ]
+  },
+  {
+   "q": "key",
+   "operator": false,
+   "want": [
+    "security.key-backup",
+    "shortcuts.shortcuts",
+    "about.shortcut-list",
+    "calls.push-to-talk"
+   ]
+  },
+  {
+   "q": "sound",
+   "operator": true,
+   "want": [
+    "calls.muted-sound",
+    "appearance.sound-pack",
+    "notifications.sound-open-room",
+    "notifications.sound-send",
+    "notifications.sound-volume",
+    "profile.join-sound",
+    "notifications.notification-sound",
+    "audio.output-device",
+    "audio.share-audio",
+    "appearance.icon-pack",
+    "notifications.sound-join-leave",
+    "notifications.ringtone"
+   ]
+  },
+  {
+   "q": "sound",
+   "operator": false,
+   "want": [
+    "calls.muted-sound",
+    "appearance.sound-pack",
+    "notifications.sound-open-room",
+    "notifications.sound-send",
+    "notifications.sound-volume",
+    "profile.join-sound",
+    "notifications.notification-sound",
+    "audio.output-device",
+    "audio.share-audio",
+    "appearance.icon-pack",
+    "notifications.sound-join-leave",
+    "notifications.ringtone"
+   ]
+  },
+  {
+   "q": "ptt",
+   "operator": true,
+   "want": [
+    "calls.push-to-talk"
+   ]
+  },
+  {
+   "q": "ptt",
+   "operator": false,
+   "want": [
+    "calls.push-to-talk"
+   ]
+  },
+  {
+   "q": "camera qual",
+   "operator": true,
+   "want": [
+    "calls.camera-quality"
+   ]
+  },
+  {
+   "q": "camera qual",
+   "operator": false,
+   "want": [
+    "calls.camera-quality"
+   ]
+  },
+  {
+   "q": "who's talking",
+   "operator": true,
+   "want": [
+    "overlay.overlay"
+   ]
+  },
+  {
+   "q": "who's talking",
+   "operator": false,
+   "want": [
+    "overlay.overlay"
+   ]
+  },
+  {
+   "q": "2fa",
+   "operator": true,
+   "want": []
+  },
+  {
+   "q": "2fa",
+   "operator": false,
+   "want": []
+  },
+  {
+   "q": "backup",
+   "operator": true,
+   "want": [
+    "security.key-backup"
+   ]
+  },
+  {
+   "q": "backup",
+   "operator": false,
+   "want": [
+    "security.key-backup"
+   ]
+  },
+  {
+   "q": "notif",
+   "operator": true,
+   "want": [
+    "notifications.notification-sound",
+    "notifications.notify-mentions",
+    "notifications.notify-calls",
+    "notifications.sound-open-room",
+    "notifications.sound-send",
+    "notifications.sound-join-leave",
+    "notifications.ringtone",
+    "notifications.sound-volume"
+   ]
+  },
+  {
+   "q": "notif",
+   "operator": false,
+   "want": [
+    "notifications.notification-sound",
+    "notifications.notify-mentions",
+    "notifications.notify-calls",
+    "notifications.sound-open-room",
+    "notifications.sound-send",
+    "notifications.sound-join-leave",
+    "notifications.ringtone",
+    "notifications.sound-volume"
+   ]
+  },
+  {
+   "q": "guest",
+   "operator": true,
+   "want": [
+    "guests.state",
+    "guests.link"
+   ]
+  },
+  {
+   "q": "guest",
+   "operator": false,
+   "want": [
+    "guests.state",
+    "guests.link"
+   ]
+  },
+  {
+   "q": "visitor link",
+   "operator": false,
+   "want": [
+    "guests.link"
+   ]
+  }
+ ]
+}

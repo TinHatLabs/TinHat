@@ -1,0 +1,248 @@
+{
+  "content": {
+    "header": "x",
+    "rooms": {
+      "h": 1.5,
+      "minH": -9
+    }
+  },
+  "expect": {
+    "collapsed": [],
+    "containers": {
+      "body": {
+        "h": 960,
+        "w": 1560,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "convrow": {
+        "h": 914,
+        "w": 1188,
+        "x": 372,
+        "y": 46,
+        "z": 0
+      },
+      "main": {
+        "h": 960,
+        "w": 1188,
+        "x": 372,
+        "y": 0,
+        "z": 0
+      },
+      "navcol": {
+        "h": 960,
+        "w": 366,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rail": {
+        "h": 960,
+        "w": 68,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "roomcol": {
+        "h": 914,
+        "w": 1188,
+        "x": 372,
+        "y": 46,
+        "z": 0
+      },
+      "roomscol": {
+        "h": 960,
+        "w": 292,
+        "x": 74,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "drawers": [],
+    "emergency": false,
+    "gaps": [
+      {
+        "a": "nav",
+        "axis": "y",
+        "b": "dms",
+        "h": 6,
+        "id": "rail/0",
+        "w": 68,
+        "x": 0,
+        "y": 60
+      },
+      {
+        "a": "dms",
+        "axis": "y",
+        "b": "spaces",
+        "h": 6,
+        "id": "rail/1",
+        "w": 68,
+        "x": 0,
+        "y": 66
+      },
+      {
+        "a": "rail",
+        "axis": "x",
+        "b": "roomscol",
+        "h": 960,
+        "id": "navcol/0",
+        "w": 6,
+        "x": 68,
+        "y": 0
+      },
+      {
+        "a": "rooms",
+        "axis": "y",
+        "b": "widgets",
+        "h": 6,
+        "id": "roomscol/0",
+        "w": 292,
+        "x": 74,
+        "y": 866
+      },
+      {
+        "a": "widgets",
+        "axis": "y",
+        "b": "account",
+        "h": 6,
+        "id": "roomscol/1",
+        "w": 292,
+        "x": 74,
+        "y": 908
+      },
+      {
+        "a": "navcol",
+        "axis": "x",
+        "b": "main",
+        "h": 960,
+        "id": "body/0",
+        "w": 6,
+        "x": 366,
+        "y": 0
+      },
+      {
+        "a": "header",
+        "axis": "y",
+        "b": "convrow",
+        "h": 6,
+        "id": "main/0",
+        "w": 1188,
+        "x": 372,
+        "y": 40
+      },
+      {
+        "a": "timeline",
+        "axis": "y",
+        "b": "composer",
+        "h": 6,
+        "id": "roomcol/0",
+        "w": 1188,
+        "x": 372,
+        "y": 906
+      }
+    ],
+    "islands": {
+      "account": {
+        "h": 46,
+        "vis": true,
+        "w": 292,
+        "x": 74,
+        "y": 914,
+        "z": 0
+      },
+      "composer": {
+        "h": 48,
+        "vis": true,
+        "w": 1188,
+        "x": 372,
+        "y": 912,
+        "z": 0
+      },
+      "dms": {
+        "h": 0,
+        "vis": false,
+        "w": 68,
+        "x": 0,
+        "y": 66,
+        "z": 0
+      },
+      "header": {
+        "h": 40,
+        "vis": true,
+        "w": 1188,
+        "x": 372,
+        "y": 0,
+        "z": 0
+      },
+      "nav": {
+        "h": 60,
+        "vis": true,
+        "w": 68,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rooms": {
+        "h": 866,
+        "vis": true,
+        "w": 292,
+        "x": 74,
+        "y": 0,
+        "z": 0
+      },
+      "spaces": {
+        "h": 888,
+        "vis": true,
+        "w": 68,
+        "x": 0,
+        "y": 72,
+        "z": 0
+      },
+      "timeline": {
+        "h": 860,
+        "vis": true,
+        "w": 1188,
+        "x": 372,
+        "y": 46,
+        "z": 0
+      },
+      "widgets": {
+        "h": 36,
+        "vis": true,
+        "w": 292,
+        "x": 74,
+        "y": 872,
+        "z": 0
+      }
+    },
+    "overflow": [],
+    "squeezed": [],
+    "stacks": {}
+  },
+  "kind": "solve",
+  "preset": "classic",
+  "shape": {
+    "gap": "x",
+    "margin": -1
+  },
+  "size": {
+    "h": 960,
+    "w": 1560
+  },
+  "unitPm": 1.5,
+  "view": {
+    "callShown": "yes",
+    "drawer": {
+      "open": 5
+    },
+    "roomOpen": 1,
+    "sizes": {
+      "call": {
+        "fixed": 3,
+        "pm": 5000
+      }
+    }
+  }
+}

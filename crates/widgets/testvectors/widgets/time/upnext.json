@@ -1,0 +1,845 @@
+{
+  "cases": [
+    {
+      "days": 7,
+      "expect": [
+        "!space:x/ev-6",
+        "!space:x/ev-4",
+        "!room:x/ev-9"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 3,
+      "now": 1790000000000
+    },
+    {
+      "days": 7,
+      "expect": [
+        "!space:x/ev-6"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 1,
+      "now": 1790000000000
+    },
+    {
+      "days": 7,
+      "expect": [
+        "!space:x/ev-6",
+        "!space:x/ev-4",
+        "!room:x/ev-9",
+        "!other:x/ev-1",
+        "!space:x/ev-1",
+        "!space:x/ev-3"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "days": 14,
+      "expect": [
+        "!space:x/ev-6",
+        "!space:x/ev-4",
+        "!room:x/ev-9",
+        "!other:x/ev-1",
+        "!space:x/ev-1",
+        "!space:x/ev-3",
+        "!space:x/ev-5"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "days": 1,
+      "expect": [
+        "!space:x/ev-6",
+        "!space:x/ev-4",
+        "!room:x/ev-9",
+        "!other:x/ev-1",
+        "!space:x/ev-1"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "days": 0,
+      "expect": [
+        "!space:x/ev-6",
+        "!space:x/ev-4",
+        "!room:x/ev-9",
+        "!other:x/ev-1",
+        "!space:x/ev-1"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "days": 99,
+      "expect": [
+        "!space:x/ev-6",
+        "!space:x/ev-4",
+        "!room:x/ev-9",
+        "!other:x/ev-1",
+        "!space:x/ev-1",
+        "!space:x/ev-3",
+        "!space:x/ev-5"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 0,
+      "now": 1790000000000
+    },
+    {
+      "days": 7,
+      "expect": [
+        "!other:x/ev-1",
+        "!space:x/ev-1",
+        "!space:x/ev-3"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 0,
+      "now": 1790018000000
+    },
+    {
+      "days": 7,
+      "expect": [
+        "!other:x/ev-1",
+        "!space:x/ev-1",
+        "!space:x/ev-3"
+      ],
+      "items": [
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1792602800000,
+          "id": "ev-2",
+          "kind": "focus",
+          "start": 1789924400000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790108000000,
+          "id": "ev-3",
+          "kind": "proposal",
+          "start": 1790097200000
+        },
+        {
+          "canceled": false,
+          "container": "!other:x",
+          "end": 1790021600000,
+          "id": "ev-1",
+          "kind": "session",
+          "start": 1790010800000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790014400000,
+          "id": "ev-4",
+          "kind": "milestone",
+          "start": 1790003600000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790705600000,
+          "id": "ev-5",
+          "kind": "session",
+          "start": 1790702000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 1790003600000,
+          "id": "ev-6",
+          "kind": "session",
+          "start": 1789992800000
+        },
+        {
+          "canceled": true,
+          "container": "!space:x",
+          "end": 1790028800000,
+          "id": "ev-7",
+          "kind": "freeplay",
+          "start": 1790018000000
+        },
+        {
+          "canceled": false,
+          "container": "!space:x",
+          "end": 0,
+          "id": "ev-8",
+          "kind": "cooloff",
+          "start": 0
+        },
+        {
+          "canceled": false,
+          "container": "!room:x",
+          "end": 1790018000000,
+          "id": "ev-9",
+          "kind": "session",
+          "start": 1790010800000
+        }
+      ],
+      "max": 3,
+      "now": 1790019800000
+    }
+  ]
+}

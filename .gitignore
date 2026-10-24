@@ -1,0 +1,26 @@
+
+/build
+# build artifacts
+Cargo.lock.bak
+# generated, machine-specific (absolute buildDir path)
+# makepkg build artifacts
+packaging/*-native/
+packaging/pkg/
+packaging/*.pkg.tar.zst
+packaging/*.pkg.tar.zst.sig
+packaging/*.bin
+packaging/src/
+**/.qmlls.ini
+**/*.rs.bk
+/target
+
+# Windows dev-run runtime droppings (pre-XDG-shim cwd-relative cache/config)
+/.cache/
+/.config/
+
+# windows/package.ps1's local publish target (TINHAT_PUBLISH_*), never committed
+windows/publish.local.ps1
+scripts/__pycache__/
+
+# scripts/release-paths.sh / windows/release-paths.ps1 output: this machine's paths, never committed
+/.cargo/release-paths.toml

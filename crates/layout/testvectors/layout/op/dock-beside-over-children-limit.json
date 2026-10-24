@@ -1,0 +1,203 @@
+{
+  "expect": {
+    "error": "bad-layout: over a limit"
+  },
+  "form": {
+    "collapse": [
+      {
+        "below": 844,
+        "ref": "panel",
+        "to": "overlay"
+      }
+    ],
+    "floats": [],
+    "hidden": [],
+    "opts": {},
+    "preset": "classic",
+    "root": {
+      "c": [
+        {
+          "i": "nav",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "dms",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "spaces",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "rooms",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "widgets",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "account",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b0",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b1",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b2",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b3",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b4",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b5",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b6",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "i": "buttons:b7",
+          "size": {
+            "fixed": 40
+          },
+          "t": "island"
+        },
+        {
+          "c": [
+            {
+              "i": "header",
+              "size": {
+                "auto": true
+              },
+              "t": "island"
+            },
+            {
+              "i": "call",
+              "size": {
+                "auto": true,
+                "min": 252
+              },
+              "t": "island"
+            },
+            {
+              "c": [
+                {
+                  "c": [
+                    {
+                      "i": "timeline",
+                      "size": {
+                        "min": 120,
+                        "share": 1
+                      },
+                      "t": "island"
+                    },
+                    {
+                      "i": "composer",
+                      "size": {
+                        "auto": true
+                      },
+                      "t": "island"
+                    }
+                  ],
+                  "id": "roomcol",
+                  "size": {
+                    "min": 360,
+                    "share": 1
+                  },
+                  "t": "col"
+                },
+                {
+                  "i": "panel",
+                  "size": {
+                    "fixed": 324
+                  },
+                  "t": "island"
+                }
+              ],
+              "id": "convrow",
+              "size": {
+                "min": 160,
+                "minPm": 250,
+                "share": 1
+              },
+              "t": "row"
+            }
+          ],
+          "id": "main",
+          "size": {
+            "min": 360,
+            "share": 1
+          },
+          "t": "col"
+        },
+        {
+          "c": [],
+          "future": 1,
+          "id": "e1",
+          "t": "col"
+        }
+      ],
+      "id": "body",
+      "t": "row"
+    }
+  },
+  "kind": "op",
+  "op": {
+    "op": "dockBeside",
+    "ref": "panel",
+    "side": "left",
+    "target": "nav"
+  }
+}

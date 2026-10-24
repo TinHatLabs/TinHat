@@ -1,0 +1,555 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "input": {
+        "action": "sound.copyLink",
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "name": "sound.copyLink: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "input": {
+        "action": "sound.copyLink",
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "name": "sound.copyLink: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.copyLink",
+        "target": {
+          "sound": "ftp://example.com/x"
+        }
+      },
+      "name": "sound.copyLink: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.copyLink",
+        "target": {
+          "sound": 7
+        }
+      },
+      "name": "sound.copyLink: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.copyLink",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "sound.copyLink: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.copyLink",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "sound.copyLink: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.copyLink",
+        "target": "x"
+      },
+      "name": "sound.copyLink: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sound.copyLink"
+      },
+      "name": "sound.copyLink: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "name": "sound.favourite.toggle: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "name": "sound.favourite.toggle: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "target": {
+          "sound": "ftp://example.com/x"
+        }
+      },
+      "name": "sound.favourite.toggle: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "target": {
+          "sound": 7
+        }
+      },
+      "name": "sound.favourite.toggle: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "sound.favourite.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "sound.favourite.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "target": "x"
+      },
+      "name": "sound.favourite.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sound.favourite.toggle"
+      },
+      "name": "sound.favourite.toggle: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "input": {
+        "action": "sound.play",
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "name": "sound.play: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "input": {
+        "action": "sound.play",
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "name": "sound.play: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.play",
+        "target": {
+          "sound": "ftp://example.com/x"
+        }
+      },
+      "name": "sound.play: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.play",
+        "target": {
+          "sound": 7
+        }
+      },
+      "name": "sound.play: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.play",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "sound.play: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.play",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "sound.play: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.play",
+        "target": "x"
+      },
+      "name": "sound.play: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sound.play"
+      },
+      "name": "sound.play: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "input": {
+        "action": "sound.remove",
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "name": "sound.remove: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "input": {
+        "action": "sound.remove",
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "name": "sound.remove: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.remove",
+        "target": {
+          "sound": "ftp://example.com/x"
+        }
+      },
+      "name": "sound.remove: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.remove",
+        "target": {
+          "sound": 7
+        }
+      },
+      "name": "sound.remove: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.remove",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "sound.remove: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.remove",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "sound.remove: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.remove",
+        "target": "x"
+      },
+      "name": "sound.remove: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sound.remove"
+      },
+      "name": "sound.remove: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "input": {
+        "action": "sound.roomSound.toggle",
+        "target": {
+          "sound": "mxc://example.com/bruh"
+        }
+      },
+      "name": "sound.roomSound.toggle: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "input": {
+        "action": "sound.roomSound.toggle",
+        "target": {
+          "sound": "mxc://example.com/gone"
+        }
+      },
+      "name": "sound.roomSound.toggle: an unknown subject"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.roomSound.toggle",
+        "target": {
+          "sound": "ftp://example.com/x"
+        }
+      },
+      "name": "sound.roomSound.toggle: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "sound",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.roomSound.toggle",
+        "target": {
+          "sound": 7
+        }
+      },
+      "name": "sound.roomSound.toggle: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.roomSound.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "sound.roomSound.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.roomSound.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "sound.roomSound.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "sound.roomSound.toggle",
+        "target": "x"
+      },
+      "name": "sound.roomSound.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "sound.roomSound.toggle"
+      },
+      "name": "sound.roomSound.toggle: no target"
+    }
+  ],
+  "kind": "target"
+}

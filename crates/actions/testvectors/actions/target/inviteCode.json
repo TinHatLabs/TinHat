@@ -1,0 +1,153 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "what": "code"
+        }
+      },
+      "input": {
+        "action": "invites.copy",
+        "target": {
+          "what": "code"
+        }
+      },
+      "name": "invites.copy: param what=code"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "what": "message"
+        }
+      },
+      "input": {
+        "action": "invites.copy",
+        "target": {
+          "what": "message"
+        }
+      },
+      "name": "invites.copy: param what=message"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "what",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.copy",
+        "target": {
+          "what": "zz"
+        }
+      },
+      "name": "invites.copy: param what invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.copy",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "invites.copy: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.copy",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "invites.copy: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.copy",
+        "target": "x"
+      },
+      "name": "invites.copy: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "invites.copy"
+      },
+      "name": "invites.copy: no target"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.revoke",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "invites.revoke: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.revoke",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "invites.revoke: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "invites.revoke",
+        "target": "x"
+      },
+      "name": "invites.revoke: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "invites.revoke"
+      },
+      "name": "invites.revoke: no target"
+    }
+  ],
+  "kind": "target"
+}

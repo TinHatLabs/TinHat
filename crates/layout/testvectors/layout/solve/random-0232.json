@@ -1,0 +1,331 @@
+{
+  "content": {
+    "account": {
+      "h": 170
+    },
+    "buttons:b2": {
+      "h": 65,
+      "w": 398
+    },
+    "call": {
+      "barH": 7,
+      "collapsedH": 239,
+      "h": 377
+    },
+    "composer": {
+      "h": 51
+    },
+    "dms": {
+      "empty": true
+    },
+    "header": {
+      "h": 62
+    },
+    "nav": {
+      "h": 206,
+      "w": 93
+    },
+    "rooms": {
+      "h": 769
+    },
+    "widgets": {
+      "h": 89,
+      "minH": 135
+    }
+  },
+  "expect": {
+    "collapsed": [
+      "emergency"
+    ],
+    "containers": {
+      "navcol": {
+        "h": 640,
+        "w": 1326,
+        "x": 41,
+        "y": 205,
+        "z": 20
+      },
+      "rail": {
+        "h": 640,
+        "w": 272,
+        "x": 41,
+        "y": 205,
+        "z": 20
+      }
+    },
+    "drawers": [
+      {
+        "handle": {
+          "h": 160,
+          "w": 160,
+          "x": 24,
+          "y": 24
+        },
+        "id": "emergency",
+        "open": false,
+        "panel": {
+          "h": 71,
+          "w": 1360,
+          "x": 24,
+          "y": 188
+        },
+        "scroll": 1280,
+        "side": "l"
+      }
+    ],
+    "emergency": true,
+    "gaps": [],
+    "islands": {
+      "call": {
+        "h": 235,
+        "inset": {
+          "l": 162
+        },
+        "vis": true,
+        "w": 1881,
+        "x": 24,
+        "y": 24,
+        "z": 0
+      },
+      "nav": {
+        "h": 240,
+        "vis": false,
+        "w": 272,
+        "x": 41,
+        "y": 205,
+        "z": 20
+      },
+      "rooms": {
+        "h": 640,
+        "vis": false,
+        "w": 1030,
+        "x": 337,
+        "y": 205,
+        "z": 20
+      },
+      "spaces": {
+        "h": 448,
+        "vis": false,
+        "w": 1326,
+        "x": 41,
+        "y": 869,
+        "z": 20
+      },
+      "timeline": {
+        "h": 0,
+        "vis": false,
+        "w": 0,
+        "x": 24,
+        "y": 24,
+        "z": 0
+      },
+      "widgets": {
+        "h": 144,
+        "vis": false,
+        "w": 1326,
+        "x": 41,
+        "y": 1341,
+        "z": 20
+      }
+    },
+    "overflow": [],
+    "squeezed": [],
+    "stacks": {}
+  },
+  "form": {
+    "collapse": [
+      {
+        "below": 1300,
+        "ref": "panel",
+        "to": "overlay"
+      },
+      {
+        "below": 1180,
+        "ref": "navcol",
+        "to": "drawer"
+      }
+    ],
+    "floats": [
+      {
+        "anchor": "r",
+        "dx": 116,
+        "dy": 120,
+        "h": {
+          "auto": true,
+          "maxPm": 700
+        },
+        "id": "f1",
+        "node": {
+          "i": "widgets",
+          "size": {
+            "auto": true
+          },
+          "t": "island"
+        },
+        "reveal": "always",
+        "w": {
+          "fixed": 292
+        }
+      }
+    ],
+    "hidden": [
+      {
+        "from": {
+          "index": 2,
+          "parent": "roomscol"
+        },
+        "i": "account",
+        "size": {
+          "auto": true
+        },
+        "t": "island"
+      }
+    ],
+    "opts": {},
+    "preset": "callFirst",
+    "root": {
+      "c": [
+        {
+          "c": [
+            {
+              "c": [
+                {
+                  "i": "nav",
+                  "size": {
+                    "auto": true
+                  },
+                  "t": "island"
+                },
+                {
+                  "i": "dms",
+                  "size": {
+                    "auto": true
+                  },
+                  "t": "island"
+                }
+              ],
+              "id": "rail",
+              "size": {
+                "fixed": 68
+              },
+              "t": "col"
+            },
+            {
+              "i": "rooms",
+              "size": {
+                "fixed": 260
+              },
+              "t": "island"
+            }
+          ],
+          "id": "navcol",
+          "size": {
+            "auto": true
+          },
+          "t": "row"
+        },
+        {
+          "c": [
+            {
+              "c": [
+                {
+                  "i": "header",
+                  "size": {
+                    "auto": true
+                  },
+                  "t": "island"
+                },
+                {
+                  "c": [
+                    {
+                      "i": "call",
+                      "size": {
+                        "min": 480,
+                        "share": 2
+                      },
+                      "t": "island"
+                    },
+                    {
+                      "c": [
+                        {
+                          "i": "timeline",
+                          "size": {
+                            "min": 120,
+                            "share": 1
+                          },
+                          "t": "island"
+                        },
+                        {
+                          "i": "composer",
+                          "size": {
+                            "auto": true
+                          },
+                          "t": "island"
+                        }
+                      ],
+                      "id": "roomcol",
+                      "size": {
+                        "min": 340,
+                        "share": 1
+                      },
+                      "t": "col"
+                    },
+                    {
+                      "i": "panel",
+                      "size": {
+                        "fixed": 324
+                      },
+                      "t": "island"
+                    }
+                  ],
+                  "id": "stage",
+                  "size": {
+                    "share": 1
+                  },
+                  "t": "row"
+                }
+              ],
+              "id": "main",
+              "size": {
+                "share": 1
+              },
+              "t": "col"
+            },
+            {
+              "i": "spaces",
+              "size": {
+                "min": 112,
+                "share": 1
+              },
+              "t": "island"
+            }
+          ],
+          "id": "n1",
+          "size": {
+            "min": 360,
+            "share": 1
+          },
+          "t": "col"
+        }
+      ],
+      "id": "body",
+      "t": "row"
+    }
+  },
+  "kind": "solve",
+  "shape": {},
+  "size": {
+    "h": 283,
+    "w": 1929
+  },
+  "unitPm": 4000,
+  "view": {
+    "callShown": true,
+    "roomOpen": false,
+    "sizes": {
+      "call": {
+        "pm": 417
+      }
+    }
+  }
+}

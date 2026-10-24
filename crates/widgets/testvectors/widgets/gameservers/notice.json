@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "action": "start",
+      "actor": "Sam",
+      "expect": "Sam started Abiotic Factor",
+      "first": null,
+      "name": "Abiotic Factor"
+    },
+    {
+      "action": "stop",
+      "actor": "Sam",
+      "expect": "Sam stopped Valheim Vanilla",
+      "first": null,
+      "name": "Valheim Vanilla"
+    },
+    {
+      "action": "restart",
+      "actor": "Sam",
+      "expect": "Sam restarted Valheim Vanilla",
+      "first": null,
+      "name": "Valheim Vanilla"
+    },
+    {
+      "action": "start",
+      "actor": "Sam",
+      "expect": "Sam stopped Valheim Vanilla and started Palworld",
+      "first": "Valheim Vanilla",
+      "name": "Palworld"
+    },
+    {
+      "action": "stop",
+      "actor": "🎮 Alex",
+      "expect": "🎮 Alex stopped FTB Skies 2",
+      "first": "ignored",
+      "name": "FTB Skies 2"
+    }
+  ]
+}

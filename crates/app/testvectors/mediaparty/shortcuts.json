@@ -1,0 +1,156 @@
+{
+  "cases": [
+    {
+      "action": "watchParty.playPause",
+      "key": "Space",
+      "label": "Play / pause for everyone",
+      "op": "playPause"
+    },
+    {
+      "action": "watchParty.playPause",
+      "key": "K",
+      "label": "Play / pause for everyone",
+      "op": "playPause"
+    },
+    {
+      "key": "Left",
+      "label": "Back 5 s",
+      "op": "seek",
+      "secs": -5
+    },
+    {
+      "key": "Right",
+      "label": "Forward 5 s",
+      "op": "seek",
+      "secs": 5
+    },
+    {
+      "key": "J",
+      "label": "Back 10 s",
+      "op": "seek",
+      "secs": -10
+    },
+    {
+      "key": "L",
+      "label": "Forward 10 s",
+      "op": "seek",
+      "secs": 10
+    },
+    {
+      "key": "0",
+      "label": "Jump to 0 %",
+      "op": "jump",
+      "pct": 0
+    },
+    {
+      "key": "1",
+      "label": "Jump to 10 %",
+      "op": "jump",
+      "pct": 10
+    },
+    {
+      "key": "2",
+      "label": "Jump to 20 %",
+      "op": "jump",
+      "pct": 20
+    },
+    {
+      "key": "3",
+      "label": "Jump to 30 %",
+      "op": "jump",
+      "pct": 30
+    },
+    {
+      "key": "4",
+      "label": "Jump to 40 %",
+      "op": "jump",
+      "pct": 40
+    },
+    {
+      "key": "5",
+      "label": "Jump to 50 %",
+      "op": "jump",
+      "pct": 50
+    },
+    {
+      "key": "6",
+      "label": "Jump to 60 %",
+      "op": "jump",
+      "pct": 60
+    },
+    {
+      "key": "7",
+      "label": "Jump to 70 %",
+      "op": "jump",
+      "pct": 70
+    },
+    {
+      "key": "8",
+      "label": "Jump to 80 %",
+      "op": "jump",
+      "pct": 80
+    },
+    {
+      "key": "9",
+      "label": "Jump to 90 %",
+      "op": "jump",
+      "pct": 90
+    },
+    {
+      "key": "Up",
+      "label": "Volume up (only for you)",
+      "op": "volume",
+      "step": 5
+    },
+    {
+      "key": "Down",
+      "label": "Volume down (only for you)",
+      "op": "volume",
+      "step": -5
+    },
+    {
+      "action": "watchParty.mute",
+      "key": "M",
+      "label": "Mute (only for you)",
+      "op": "mute"
+    },
+    {
+      "action": "watchParty.next",
+      "key": "N",
+      "label": "Play next in queue",
+      "op": "next"
+    },
+    {
+      "key": "F",
+      "label": "Fullscreen",
+      "op": "fullscreen"
+    },
+    {
+      "key": "T",
+      "label": "Theater (the video fills the window)",
+      "op": "theater"
+    },
+    {
+      "key": "I",
+      "label": "Mini player",
+      "op": "mini"
+    },
+    {
+      "key": "/",
+      "label": "Search or paste a link",
+      "op": "search"
+    },
+    {
+      "key": "?",
+      "label": "Show the keys",
+      "op": "help"
+    },
+    {
+      "key": "Escape",
+      "label": "Leave fullscreen or the mini player, else close",
+      "op": "escape"
+    }
+  ],
+  "doc": "The Media Party window's keys (shortcuts.ts / watchparty.rs MP_SHORTCUTS / WatchPartyWindow.qml Shortcut items).",
+  "kind": "MP_SHORTCUTS"
+}

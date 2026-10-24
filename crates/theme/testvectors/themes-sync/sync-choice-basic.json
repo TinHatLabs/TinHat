@@ -1,0 +1,127 @@
+{
+  "devices": [
+    "DESK",
+    "PHONE"
+  ],
+  "expect": {
+    "devices": {
+      "DESK": {
+        "choice": {
+          "known": {
+            "by": "DESK",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400000000,
+            "sounds": "default",
+            "theme": "nord",
+            "v": 1
+          },
+          "raw": {
+            "by": "DESK",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400000000,
+            "sounds": "default",
+            "theme": "nord",
+            "v": 1
+          },
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      },
+      "PHONE": {
+        "choice": {
+          "known": {
+            "by": "DESK",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400000000,
+            "sounds": "default",
+            "theme": "nord",
+            "v": 1
+          },
+          "raw": {
+            "by": "DESK",
+            "format": "tinhat-theme-choice",
+            "icons": "duotone",
+            "rev": 1,
+            "savedAt": 1790400000000,
+            "sounds": "default",
+            "theme": "nord",
+            "v": 1
+          },
+          "readOnly": false,
+          "wantPut": false
+        },
+        "themes": {
+          "justSaved": null,
+          "known": {},
+          "raw": null,
+          "readOnly": false,
+          "wantPut": false
+        }
+      }
+    },
+    "log": [
+      "0 DESK apply choice: saved",
+      "1 DESK put choice: put",
+      "2 PHONE deliver choice: new",
+      "3 DESK deliver choice: ok",
+      "4 DESK put choice: idle"
+    ],
+    "server": {
+      "choice": {
+        "by": "DESK",
+        "format": "tinhat-theme-choice",
+        "icons": "duotone",
+        "rev": 1,
+        "savedAt": 1790400000000,
+        "sounds": "default",
+        "theme": "nord",
+        "v": 1
+      },
+      "themes": null
+    }
+  },
+  "kind": "sync",
+  "steps": [
+    {
+      "device": "DESK",
+      "event": "apply",
+      "now": 1790400000000,
+      "patch": {
+        "theme": "nord"
+      }
+    },
+    {
+      "device": "DESK",
+      "event": "put",
+      "key": "choice"
+    },
+    {
+      "device": "PHONE",
+      "event": "deliver",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "deliver",
+      "key": "choice"
+    },
+    {
+      "device": "DESK",
+      "event": "put",
+      "key": "choice"
+    }
+  ]
+}

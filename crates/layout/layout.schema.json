@@ -1,0 +1,1280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tinhat.dev/schemas/tinhat/layout.schema.json",
+  "title": "Tin Hat layouts: account data dev.tinhat.layouts, format v1 (v1.1 FINAL, islands C0 after Astra's third pass, 2026-09-26)",
+  "description": "Named layouts that follow the user across devices. Each layout has a desktop form (a docking tree plus floating islands) and a phone form (section order of the stack layout's home page). Semantics (normalization, repair-on-load, validation, solve, operations, drop zones, view state, save / merge / sync, the preservation contract, the vector kinds) are normative in LAYOUT.md (contract), distilled from ISLANDS-ARCH.md section 6; the 'x-tinhat' block below carries the island registry, bounds, limits, error codes, repair notes and presets, and is data, not validation. It describes the NORMALIZED OUTPUT (what repair, the operations and merge produce and what validate() accepts); stored input can be any JSON and is handled by repair (LAYOUT.md 5) and readDoc (LAYOUT.md 9.2). This schema is the syntactic check only: the registry rules (stackable, floatable, hideable, required), the room group R1-R3, collapse safety, one occurrence per island ref, max >= min, the minPm sum, reserved ids and the other semantic rules are checked by validate() (LAYOUT.md section 5, 'validate' vectors). Byte-identical in the contract and both repos. Unknown keys are allowed everywhere and are preserved as LAYOUT.md section 9.6 says (the raw document is kept apart from the repaired projection).",
+  "type": "object",
+  "required": ["format", "v", "layouts"],
+  "properties": {
+    "format": {"const": "tinhat-layouts"},
+    "v": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "description": "Format major. A reader that knows v=1 renders a document with v>1 best-effort and never writes it."
+    },
+    "layouts": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 1024,
+      "items": {"$ref": "#/$defs/layout"},
+      "description": "The current entry of every layout id: live layouts (at most 12, semantic check) and tombstones (no count limit: bounded by the 64 KB write limit and the 1024-entry read budget; a tombstone is only ever replaced by a newer entry of its id). Layout ids are unique (semantic check). An empty or all-tombstone document renders built-in Classic."
+    },
+    "conflicts": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {"$ref": "#/$defs/layout"},
+      "description": "Concurrent losers (LAYOUT.md 9.3): per layout id, the entries that the current entry does not include and that no other kept entry strictly includes, without their `previous`. Kept until a save incorporates them (Restore or Dismiss); never dropped by merge. Absent when empty."
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$",
+      "description": "Layout, container, stack and float ids."
+    },
+    "nodeId": {
+      "allOf": [
+        {"$ref": "#/$defs/id"},
+        {
+          "not": {
+            "enum": [
+              "nav",
+              "dms",
+              "spaces",
+              "rooms",
+              "widgets",
+              "account",
+              "header",
+              "timeline",
+              "composer",
+              "panel",
+              "call",
+              "buttons",
+              "emergency"
+            ]
+          }
+        },
+        {"not": {"pattern": "^overflow-"}}
+      ],
+      "description": "Container, stack and float ids: an id that is not a registry island id, not 'emergency' and not 'overflow-*' (one namespace with island refs and drawer ids; repair renames a collision, note renamed-reserved-id)."
+    },
+    "islandRef": {
+      "type": "string",
+      "pattern": "^[a-z][a-zA-Z0-9]{0,23}(:[a-z0-9]{1,12})?$",
+      "description": "An island registry id (nav, dms, spaces, rooms, widgets, account, header, timeline, composer, panel, call) or an instance of a multi-instance kind ('buttons:a1'). Refs not in the reader's registry are unknown islands: never rendered, always preserved. Ids starting with '_' are compat islands of the migration and never stored."
+    },
+    "px": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8192,
+      "description": "Length in layout units (= logical px at Kirigami gridUnit 18; the desktop scales by unitPm = round(gridUnit * 1000 / 18), the web uses 1000)."
+    },
+    "permille": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "layout": {
+      "type": "object",
+      "required": ["id", "rev", "savedAt", "by"],
+      "description": "One entry: a live layout or a tombstone (deleted: true). Entries are ordered by the tuple (rev, savedAt, by) and merged per id by the higher tuple (section 6.1). A document from an older draft without savedAt/by/vv is repaired with savedAt 0, by '' and an empty vv (note defaults-filled).",
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1, "maxLength": 40},
+        "rev": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647,
+          "description": "Base rev + 1 on every save of this id (saturates at the maximum; savedAt and by still order it)."
+        },
+        "savedAt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "ms since epoch, the saving device's clock; second part of the tuple."
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Device id of the saver (at most 64 code points; the schema's maxLength); last part of the tuple."
+        },
+        "vv": {
+          "type": "object",
+          "maxProperties": 16,
+          "propertyNames": {"type": "string", "maxLength": 64},
+          "additionalProperties": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+          "description": "Version vector: per device (id of at most 64 code points), how many of its saves this entry's forms incorporate (from the entry the edit session started from, and a Restore's / Dismiss's conflict, +1 for the saver). At most 16 counters: readers cap larger vectors (the entry's `by` first, then the largest counters). B includes A iff B.vv >= A.vv component-wise (LAYOUT.md 9.1)."
+        },
+        "deleted": {"const": true, "description": "Tombstone: the layout was deleted; no forms."},
+        "desktop": {"$ref": "#/$defs/desktopForm"},
+        "phone": {"$ref": "#/$defs/phoneForm"},
+        "previous": {"$ref": "#/$defs/snapshot"},
+        "quarantine": {
+          "type": "object",
+          "description": "Originals this version could not read (a form repair replaced by built-in Classic), kept verbatim across saves until a save with edit.discardQuarantine (LAYOUT.md 9.5). Never dropped by the size rule.",
+          "additionalProperties": true
+        }
+      },
+      "if": {"required": ["deleted"]},
+      "then": {
+        "not": {
+          "anyOf": [
+            {"required": ["desktop"]},
+            {"required": ["phone"]},
+            {"required": ["previous"]},
+            {"required": ["quarantine"]}
+          ]
+        }
+      },
+      "else": {"required": ["name", "desktop", "phone"]},
+      "additionalProperties": true
+    },
+    "snapshot": {
+      "type": "object",
+      "description": "The entry a save, preset pick or reset replaced (one level; a snapshot never carries its own 'previous').",
+      "required": ["desktop", "phone"],
+      "properties": {
+        "rev": {"type": "integer", "minimum": 0},
+        "savedAt": {"type": "integer", "minimum": 0},
+        "by": {"type": "string", "maxLength": 64},
+        "desktop": {"$ref": "#/$defs/desktopForm"},
+        "phone": {"$ref": "#/$defs/phoneForm"}
+      },
+      "not": {"anyOf": [{"required": ["previous"]}, {"required": ["quarantine"]}]},
+      "additionalProperties": true
+    },
+    "desktopForm": {
+      "type": "object",
+      "required": ["root"],
+      "properties": {
+        "preset": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "The preset this form started from (informational)."
+        },
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32,
+          "description": "Override of the theme's shape.gap for this layout (Compact). Absent = theme."
+        },
+        "margin": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64,
+          "description": "Override of the theme's shape.margin (window edge). Absent = theme."
+        },
+        "density": {
+          "enum": ["compact", "normal", "touch"],
+          "description": "Override of the theme's density (Handheld = touch). Absent = theme."
+        },
+        "root": {
+          "allOf": [{"$ref": "#/$defs/node"}, {"properties": {"t": {"enum": ["row", "col"]}}}],
+          "description": "Always a row or a col (repair N5 wraps anything else)."
+        },
+        "floats": {"type": "array", "maxItems": 8, "items": {"$ref": "#/$defs/float"}},
+        "hidden": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {"$ref": "#/$defs/hiddenLeaf"},
+          "description": "Hidden islands as whole leaves (size and unknown keys travel with them), in the order the Add-island drawer lists them. One entry per island ref (semantic check). A plain ref string from an older draft is upgraded by repair (note hidden-upgraded)."
+        },
+        "collapse": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {"$ref": "#/$defs/collapseStep"},
+          "description": "Collapse order for small windows: forced steps first, then these in order, then one release pass in reverse order (section 6.6.4)."
+        },
+        "opts": {
+          "type": "object",
+          "maxProperties": 32,
+          "propertyNames": {"$ref": "#/$defs/islandRef"},
+          "additionalProperties": {"$ref": "#/$defs/islandOpts"}
+        }
+      },
+      "additionalProperties": true
+    },
+    "node": {
+      "type": "object",
+      "required": ["t"],
+      "properties": {"t": {"type": "string", "pattern": "^[a-z]{1,16}$"}},
+      "description": "A docking-tree node. Known types: row, col, stack, island. An unknown type is preserved verbatim (with every key) and is opaque: if it has an array 'c', those children are repaired and traversed like any children (islands inside count as placed); otherwise it is a leaf. It is rendered as a col of its present known descendants, is never removed or unwrapped by normalization, and it and everything inside it are read-only in edit mode ('bad-op: read-only layout').",
+      "allOf": [
+        {
+          "if": {"properties": {"t": {"enum": ["row", "col"]}}, "required": ["t"]},
+          "then": {"$ref": "#/$defs/container"}
+        },
+        {"if": {"properties": {"t": {"const": "stack"}}, "required": ["t"]}, "then": {"$ref": "#/$defs/stack"}},
+        {"if": {"properties": {"t": {"const": "island"}}, "required": ["t"]}, "then": {"$ref": "#/$defs/islandLeaf"}}
+      ]
+    },
+    "container": {
+      "type": "object",
+      "required": ["t", "id", "c"],
+      "properties": {
+        "t": {"enum": ["row", "col"]},
+        "id": {"$ref": "#/$defs/nodeId"},
+        "size": {"$ref": "#/$defs/size", "description": "Along the PARENT's axis. Absent = {share: 1}."},
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32,
+          "description": "Gap between this container's children (overrides the form/theme gap; used by the migration preset)."
+        },
+        "c": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {"$ref": "#/$defs/node"},
+          "description": "Empty only when the container carries keys this version does not know (N1 keeps it; semantic check)."
+        }
+      },
+      "additionalProperties": true
+    },
+    "stack": {
+      "type": "object",
+      "required": ["t", "id", "c"],
+      "description": "A tab stack: islands sharing one spot (OBS-style). Children are islands only.",
+      "properties": {
+        "t": {"const": "stack"},
+        "id": {"$ref": "#/$defs/nodeId"},
+        "size": {"$ref": "#/$defs/size"},
+        "active": {
+          "$ref": "#/$defs/islandRef",
+          "description": "Default tab; the device-local view state may override it."
+        },
+        "c": {"type": "array", "minItems": 0, "maxItems": 8, "items": {"$ref": "#/$defs/islandLeaf"}}
+      },
+      "additionalProperties": true
+    },
+    "islandLeaf": {
+      "type": "object",
+      "required": ["t", "i"],
+      "properties": {
+        "t": {"const": "island"},
+        "i": {"$ref": "#/$defs/islandRef"},
+        "size": {
+          "description": "Along the PARENT's axis. For a known island (registry ref) a size object (the `size` schema, via allOf below); an unknown island's size is opaque data, preserved as is (LAYOUT.md 2.3)."
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "i": {
+                "pattern": "^(nav|dms|spaces|rooms|widgets|account|header|timeline|composer|panel|call|buttons:[a-z0-9]{1,12})$"
+              }
+            },
+            "required": ["i"]
+          },
+          "then": {"properties": {"size": {"$ref": "#/$defs/size"}}}
+        }
+      ]
+    },
+    "hiddenLeaf": {
+      "type": "object",
+      "required": ["t", "i"],
+      "description": "A hidden island: the leaf exactly as it was when hidden (size and unknown keys kept), plus where it came from so 'restore' can put it back there.",
+      "properties": {
+        "t": {"const": "island"},
+        "i": {"$ref": "#/$defs/islandRef"},
+        "size": {
+          "description": "Along the PARENT's axis. For a known island (registry ref) a size object (the `size` schema, via allOf below); an unknown island's size is opaque data, preserved as is (LAYOUT.md 2.3)."
+        },
+        "from": {
+          "type": "object",
+          "description": "Restore hint: the container, stack or float id it left and its index there. Used when that node still exists and accepts it; otherwise the registry 'home' rules apply.",
+          "required": ["parent", "index"],
+          "properties": {"parent": {"$ref": "#/$defs/id"}, "index": {"type": "integer", "minimum": 0, "maximum": 15}},
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "i": {
+                "pattern": "^(nav|dms|spaces|rooms|widgets|account|header|timeline|composer|panel|call|buttons:[a-z0-9]{1,12})$"
+              }
+            },
+            "required": ["i"]
+          },
+          "then": {"properties": {"size": {"$ref": "#/$defs/size"}}}
+        }
+      ]
+    },
+    "size": {
+      "type": "object",
+      "description": "At most one basis (fixed | share | auto | pm); absent basis = share 1. 'grow' gives a NON-share basis a leftover weight. Constraints min/max (layout units) and minPm/maxPm (per mille of the parent's inner length) apply along the PARENT's axis only; across it, only registry mins, content mins and children count. max >= min and the siblings' sum of minPm <= 1000 are semantic checks (repair N6).",
+      "not": {
+        "anyOf": [
+          {"required": ["fixed", "share"]},
+          {"required": ["fixed", "auto"]},
+          {"required": ["fixed", "pm"]},
+          {"required": ["share", "auto"]},
+          {"required": ["share", "pm"]},
+          {"required": ["auto", "pm"]},
+          {"required": ["share", "grow"]}
+        ]
+      },
+      "if": {"required": ["grow"]},
+      "then": {"anyOf": [{"required": ["fixed"]}, {"required": ["auto"]}, {"required": ["pm"]}]},
+      "properties": {
+        "fixed": {"$ref": "#/$defs/px"},
+        "share": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "auto": {"const": true, "description": "Content size along the axis (the app measures it; vectors supply it)."},
+        "pm": {"$ref": "#/$defs/permille", "description": "Per mille of the parent's inner length (gaps excluded)."},
+        "min": {"$ref": "#/$defs/px"},
+        "max": {"$ref": "#/$defs/px"},
+        "minPm": {"$ref": "#/$defs/permille"},
+        "maxPm": {"$ref": "#/$defs/permille"},
+        "grow": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Leftover weight for a non-share basis: the child starts at its fixed/auto/pm length and also takes this share of what is left (the room list: natural height first, then the empty space)."
+        }
+      },
+      "additionalProperties": true
+    },
+    "floatSize": {
+      "type": "object",
+      "description": "A float's width or height: at most one of fixed | auto | pm (of the host), plus constraints; no basis = auto; the whole object absent = the registry float size. No share.",
+      "not": {
+        "anyOf": [
+          {"required": ["share"]},
+          {"required": ["fixed", "auto"]},
+          {"required": ["fixed", "pm"]},
+          {"required": ["auto", "pm"]}
+        ]
+      },
+      "properties": {
+        "fixed": {"$ref": "#/$defs/px"},
+        "auto": {"const": true},
+        "pm": {"$ref": "#/$defs/permille"},
+        "min": {"$ref": "#/$defs/px"},
+        "max": {"$ref": "#/$defs/px"},
+        "minPm": {"$ref": "#/$defs/permille"},
+        "maxPm": {"$ref": "#/$defs/permille"}
+      },
+      "additionalProperties": true
+    },
+    "float": {
+      "type": "object",
+      "required": ["id", "anchor", "node"],
+      "properties": {
+        "id": {"$ref": "#/$defs/nodeId"},
+        "anchor": {
+          "enum": ["tl", "t", "tr", "r", "br", "b", "bl", "l"],
+          "description": "Window corner or edge (edge = centred along it)."
+        },
+        "dx": {
+          "type": "integer",
+          "minimum": -4096,
+          "maximum": 4096,
+          "description": "Offset from the anchor, inward positive."
+        },
+        "dy": {"type": "integer", "minimum": -4096, "maximum": 4096},
+        "w": {"$ref": "#/$defs/floatSize"},
+        "h": {"$ref": "#/$defs/floatSize"},
+        "reveal": {
+          "enum": ["always", "hover"],
+          "description": "hover = a drawer: a handle at the anchor, the panel opens on hover / tap / pin; it is open while view.drawer.open names the float's id. A float holding a required island (the call) is always 'always' (repair note reveal-fixed)."
+        },
+        "node": {
+          "$ref": "#/$defs/node",
+          "description": "An island or a small row/col group (the corner drawer holds the whole nav column)."
+        }
+      },
+      "additionalProperties": true
+    },
+    "collapseStep": {
+      "type": "object",
+      "required": ["ref", "to"],
+      "description": "One step of the small-window collapse order. Semantic rules (section 6.5 step 7): the step's subtree may not contain the room group (header, timeline, composer) or the call; 'fold' only for islands whose registry allows it; containers and stacks allow hide, overlay and drawer. Violating steps are dropped (bad-collapse-dropped / collapse-unsafe-dropped).",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9-]{0,31}(:[a-z0-9]{1,12})?$",
+          "description": "A container/stack id or an island ref."
+        },
+        "to": {"enum": ["fold", "hide", "overlay", "drawer"]},
+        "below": {
+          "$ref": "#/$defs/px",
+          "description": "Apply when the node's parent container is shorter than this along the parent's axis (the host length for a root child). Absent = apply only when the docked tree overflows."
+        },
+        "w": {
+          "$ref": "#/$defs/px",
+          "description": "drawer only: panel width. Default: the node's natural width + 2 x shape.drawerPad, at most shape.drawerW (shape.drawerW when the natural width is unknown); always clamped to the window."
+        }
+      },
+      "additionalProperties": true
+    },
+    "islandOpts": {
+      "type": "object",
+      "maxProperties": 32,
+      "description": "Per-island options. Known keys below; the widget list (step 2, WIDGETS.md) and button rows (step 3, actions.json) live here too. Unknown keys preserved.",
+      "properties": {
+        "compact": {"type": "boolean", "description": "rooms: compact rows."},
+        "orient": {
+          "enum": ["v", "h"],
+          "description": "nav / dms / spaces: vertical (default) or horizontal (Side monitor). Needs the horizontal rail work, section 7."
+        },
+        "composerTop": {
+          "type": "boolean",
+          "description": "opts.composer.composerTop: the composer sits above the timeline (the room group's order, rule R1)."
+        },
+        "headerBottom": {
+          "type": "boolean",
+          "description": "opts.header.headerBottom: the header is the last child of its column instead of the first (rule R2)."
+        },
+        "widgets": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": ["w"],
+            "properties": {
+              "w": {"type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9]{0,31}$"},
+              "size": {"enum": ["S", "M", "L"]},
+              "settings": {"type": "object", "maxProperties": 16}
+            },
+            "additionalProperties": true
+          }
+        },
+        "rows": {
+          "type": "object",
+          "maxProperties": 8,
+          "description": "Button rows of this island, row id -> action refs (actions.json, step 3).",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "look": {"enum": ["icon", "iconLabel", "label"]},
+              "scale": {"enum": ["S", "M"]},
+              "items": {
+                "type": "array",
+                "maxItems": 24,
+                "items": {
+                  "type": "object",
+                  "required": ["a"],
+                  "properties": {
+                    "a": {"type": "string", "pattern": "^[a-z][a-zA-Z0-9.]{0,63}$"},
+                    "target": {"type": "object", "maxProperties": 4},
+                    "hideWhenOff": {"type": "boolean"}
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "phoneForm": {
+      "type": "object",
+      "description": "Phones keep the stack layout: home page = rail column (left) + list column (right), then the room page. Edit mode on a phone reorders or hides sections within each column and picks widgets and buttons. Repair keeps every known section; when a column overflows, its unknown refs (then button sections) move to hidden (LAYOUT.md 5.6).",
+      "properties": {
+        "rail": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"$ref": "#/$defs/islandRef"}},
+        "list": {"type": "array", "maxItems": 16, "uniqueItems": true, "items": {"$ref": "#/$defs/islandRef"}},
+        "hidden": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"$ref": "#/$defs/islandRef"}},
+        "opts": {
+          "type": "object",
+          "maxProperties": 32,
+          "propertyNames": {"$ref": "#/$defs/islandRef"},
+          "additionalProperties": {"$ref": "#/$defs/islandOpts"}
+        }
+      },
+      "additionalProperties": true
+    },
+    "viewState": {
+      "type": "object",
+      "description": "DEVICE-LOCAL, never synced (LAYOUT.md section 6). Listed here because the solver and the vectors take it as input. Solve reads it leniently (section 7.1): roomOpen defaults to true, every other switch to off; values of the wrong type are ignored.",
+      "properties": {
+        "roomOpen": {"type": "boolean"},
+        "callShown": {"type": "boolean"},
+        "panelOpen": {"type": "boolean"},
+        "maximized": {
+          "enum": [null, "call"],
+          "description": "The maximised island: honoured only for an island whose registry is `maximizable` (the call), present and placed; it then gets the host rect."
+        },
+        "forceCollapse": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "User-tucked nodes (today's nav_mode=corner -> [\"navcol\"]). Refs that are absent or unsafe (they hold the room group or the call) are ignored."
+        },
+        "sizes": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/size"},
+          "description": "Live overrides outside edit mode (today: the call/chat seam -> {\"call\": {\"pm\": 420}}, pm clamped 200-850). MERGED into the stored size: the override's basis replaces the stored basis, the stored min/max/minPm/maxPm stay unless the override sets them. Applied only while the node is present; ignored by the emergency arrangement; Done in edit mode drops the entries of nodes whose stored size the session changed."
+        },
+        "active": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/islandRef"},
+          "description": "Active tab per stack id. Absent or not present in the stack -> the stack's 'active' -> its first present tab."
+        },
+        "drawer": {
+          "type": "object",
+          "properties": {
+            "open": {
+              "type": ["string", "null"],
+              "maxLength": 64,
+              "description": "The one open drawer: a collapse drawer by its ref (a merged drawer by any of its ids), a hover float by its float id, 'emergency', or 'overflow-<container id>'."
+            },
+            "pinned": {
+              "type": "boolean",
+              "description": "Keeps the open drawer open when the pointer leaves it (today's corner-dock pin)."
+            }
+          },
+          "additionalProperties": true,
+          "description": "Exactly one drawer can be open, so two panels never overlap (section 6.6.8)."
+        },
+        "popouts": {
+          "type": "object",
+          "propertyNames": {"$ref": "#/$defs/islandRef"},
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "x": {"type": "integer"},
+              "y": {"type": "integer"},
+              "w": {"type": "integer", "minimum": 0},
+              "h": {"type": "integer", "minimum": 0},
+              "screen": {"type": "string", "maxLength": 128}
+            },
+            "additionalProperties": true
+          },
+          "description": "Desktop: popped-out islands and their window geometry, restored at start; a geometry off every current screen moves onto the primary one. Solve honours only islands whose registry `popout` is true (rooms, widgets, buttons, panel); such an island is absent from the main window's solve."
+        },
+        "legacyCallPaneFm": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 850,
+          "description": "10.6's call-pane-frac in per mille, kept until the first solve with the call shown converts it exactly (section 6.8)."
+        },
+        "layoutId": {"$ref": "#/$defs/id"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "x-tinhat": {
+    "limits": {
+      "docBytes": 65536,
+      "layouts": 12,
+      "tombstones": 64,
+      "formBytes": 8192,
+      "nodes": 64,
+      "depth": 8,
+      "children": 16,
+      "stackTabs": 8,
+      "floats": 8,
+      "buttonsIslands": 8,
+      "hidden": 32,
+      "collapse": 16,
+      "vv": 16,
+      "note": "Bytes = the canonical serialization of the colour contract (web src/theme/canon.ts canonJson, desktop crates/theme canon.rs canon_json): object keys sorted by CODE POINT (= UTF-8 byte order = Rust str Ord, NOT UTF-16 code units), no whitespace, numbers printed as ECMAScript Number::toString (canon.rs js_number), UTF-8. Text is read with the JSON.parse-compatible reader of the colour contract (ENGINE.md section 9: own keys only, nesting <= 128, no lone surrogate from a \\u escape; duplicate keys: the last wins; a number overflowing a double reads as null, as JSON.parse + JSON.stringify give). Over a limit: repair replaces the form by built-in Classic (note replaced-by-classic <limit>), an operation is refused (bad-layout: too large | too deep | too many nodes | over a limit). The phone form's arrays: rail 16, list 16, hidden 32 (truncated by repair)."
+    },
+    "bounds": {
+      "note": "Solver inputs are clamped to these ranges before anything else, so products of inputs stay below 2^31; an unbounded maximum is the constant 2^40 (LAYOUT.md section 7), so Rust uses i64 for every intermediate (TS: Number with Math.floor on quotients, exact below 2^53). Division is floor division with a positive divisor everywhere (Rust div_euclid, never '/' on signed values). shapeMin: the theme's shape values are raised to these minimums (usable chrome: a tab strip, a drawer handle and a drawer panel never vanish). View maps are read up to 256 keys (code-point order), forceCollapse up to 64 distinct refs, content up to 256 refs (LAYOUT.md 7.1).",
+      "hostPx": [0, 16384],
+      "unitPm": [500, 4000],
+      "contentPx": [0, 16384],
+      "layoutUnits": [0, 8192],
+      "offsetUnits": [-4096, 4096],
+      "weight": [1, 10000],
+      "permille": [0, 1000],
+      "shapeMin": {"gap": 0, "margin": 0, "tab": 16, "handle": 24, "drawerW": 160, "drawerPad": 0}
+    },
+    "content": {
+      "note": "Per-island measurements the host passes to solve (px, integers after quantization q(v) = ceil(round(64 v) / 64), section 2.1). Absent keys = unknown (the registry pref or minimum is used).",
+      "keys": {
+        "w": "natural width",
+        "h": "natural height",
+        "minW": "content minimum width",
+        "minH": "content minimum height (widgets: the folded height)",
+        "empty": "presence 'content': true = absent (dms without unread, widgets without widgets)",
+        "collapsedH": "call only: the height with the tiles tucked away (status bar + banners + control bar), used by the emergency arrangement",
+        "barH": "call only: the control bar alone (mute, deafen, camera, leave) — the call's usable minimum in the emergency arrangement; default sc(48)"
+      }
+    },
+    "emergency": {
+      "note": "LAYOUT.md section 7.12. Used when, after every collapse step, a present docked required island (timeline, composer, call) is still below its floor, a container breached, or a floating call is below its floor. Deterministic and independent of the stored layout except for the order options.",
+      "column": ["header", "call", "timeline", "composer"],
+      "orderOptions": ["opts.header.headerBottom", "opts.composer.composerTop"],
+      "levels": [
+        "1: header, call (clamped between collapsedH and its natural height), timeline (>= its floor), composer",
+        "2: without the header",
+        "3: without the header and the timeline",
+        "4: the call's bar only (between barH and collapsedH) + the composer",
+        "5: the call alone (>= barH); without a call, the composer alone",
+        "6: too small: the remaining control (the call, else the composer, else the timeline) gets the host, output tooSmall: true"
+      ],
+      "floats": "none placed: a floating call joins the column and a floating panel overlays the timeline; the other floated islands go into the drawer",
+      "drawerId": "emergency (its column, when several subtrees go in, is a synthetic col keyed 'emergency')",
+      "panel": "overlay over the timeline only (never the composer), width min(sc(324), host width), z 2; not shown without a timeline"
+    },
+    "shapeDefaults": {
+      "note": "Theme values (ENGINE.md: step 1b adds a 'shape' block to the theme). Listed so the solver vectors have defaults. Layout units.",
+      "gap": 6,
+      "margin": 6,
+      "radius": 12,
+      "border": 1,
+      "tab": 28,
+      "handle": 40,
+      "drawerW": 340,
+      "drawerPad": 8
+    },
+    "errors": [
+      "bad-layout: not JSON data",
+      "bad-layout: unknown format",
+      "bad-layout: too large",
+      "bad-layout: too deep",
+      "bad-layout: too many nodes",
+      "bad-layout: over a limit",
+      "bad-op: bad request",
+      "bad-op: unknown island",
+      "bad-op: island not placed",
+      "bad-op: island not hidden",
+      "bad-op: target not found",
+      "bad-op: not hideable",
+      "bad-op: not stackable",
+      "bad-op: not floatable",
+      "bad-op: locked group",
+      "bad-op: same island",
+      "bad-op: bad gap",
+      "bad-op: read-only layout",
+      "bad-op: no room",
+      "bad-op: target inside moved group",
+      "bad-op: required island",
+      "bad-save: newer format",
+      "bad-save: too many layouts",
+      "bad-save: exhausted"
+    ],
+    "repairNotes": [
+      "replaced-by-classic",
+      "root-wrapped",
+      "dropped-invalid",
+      "dropped-duplicate",
+      "unknown-island-kept",
+      "unknown-node-kept",
+      "id-reassigned",
+      "renamed-reserved-id",
+      "bad-field-fixed",
+      "bad-size-fixed",
+      "bad-opts-fixed",
+      "hidden-upgraded",
+      "unstacked",
+      "regrouped-room",
+      "unhid-required",
+      "restored-required",
+      "restored-missing",
+      "bad-float-fixed",
+      "reveal-fixed",
+      "bad-collapse-dropped",
+      "collapse-unsafe-dropped",
+      "empty-container-removed",
+      "single-child-unwrapped",
+      "minpm-capped",
+      "opts-fixed",
+      "bad-phone-fixed"
+    ],
+    "groups": {
+      "room": {
+        "members": ["header", "timeline", "composer"],
+        "rules": [
+          "R1: timeline and composer are adjacent children of one col (either order; opts.composerTop records the order).",
+          "R2: header, when placed, is the first or last child of that col or of an ancestor col of it (opts.headerBottom = last).",
+          "R3: none of the three is in a stack or a float; only header may be hidden."
+        ]
+      }
+    },
+    "regionOrder": {
+      "note": "The fixed logical region order (ISLANDS-ARCH.md section 2.7): the web host's DOM order, the desktop host's child (focus-chain) order, F6 and the screen-reader order, independent of the layout. buttons:* instances follow in instance order. Not the key order of 'islands' below (canonical JSON sorts keys).",
+      "order": [
+        "nav",
+        "dms",
+        "spaces",
+        "rooms",
+        "widgets",
+        "account",
+        "header",
+        "call",
+        "timeline",
+        "composer",
+        "panel",
+        "buttons"
+      ]
+    },
+    "islandsNote": "Registry fields: presence, hideable, required, stackable, floatable, popout, maximizable (only the call: view.maximized honours it), multi, pref/min (vertical orientation), orientH (sizes when opts.<ref>.orient = 'h', the Side monitor rail), float (size when floated), collapse (allowed 'to' values), home (restore/repair placement, first applicable wins), group, and free-text notes (whenHidden, note). The call's 'bar' is the usable minimum of an active call (its control bar, layout units): the emergency arrangement never gives it less while the host has room (LAYOUT.md 7.12).",
+    "islands": {
+      "nav": {
+        "presence": "always",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": false,
+        "phone": "rail",
+        "multi": false,
+        "pref": {"w": {"fixed": 68}, "h": {"auto": true}},
+        "min": {"w": 56, "h": 60},
+        "orientH": {"pref": {"w": {"auto": true}, "h": {"fixed": 68}}, "min": {"w": 60, "h": 56}},
+        "float": {"w": {"fixed": 68}, "h": {"auto": true}},
+        "collapse": ["hide"],
+        "home": [{"beside": "dms", "side": "top"}, {"beside": "spaces", "side": "top"}, {"edge": "left"}]
+      },
+      "dms": {
+        "presence": "content",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": false,
+        "phone": "rail",
+        "multi": false,
+        "pref": {"w": {"fixed": 68}, "h": {"auto": true}},
+        "min": {"w": 56, "h": 0},
+        "orientH": {"pref": {"w": {"auto": true}, "h": {"fixed": 68}}, "min": {"w": 0, "h": 56}},
+        "float": {"w": {"fixed": 68}, "h": {"auto": true}},
+        "collapse": ["hide"],
+        "home": [{"beside": "nav", "side": "bottom"}, {"beside": "spaces", "side": "top"}, {"edge": "left"}]
+      },
+      "spaces": {
+        "presence": "always",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": false,
+        "phone": "rail",
+        "multi": false,
+        "pref": {"w": {"fixed": 68}, "h": {"share": 1, "min": 112}},
+        "min": {"w": 56, "h": 112},
+        "orientH": {"pref": {"w": {"share": 1, "min": 112}, "h": {"fixed": 68}}, "min": {"w": 112, "h": 56}},
+        "float": {"w": {"fixed": 68}, "h": {"fixed": 480}},
+        "collapse": ["hide"],
+        "home": [{"beside": "dms", "side": "bottom"}, {"beside": "nav", "side": "bottom"}, {"edge": "left"}]
+      },
+      "rooms": {
+        "presence": "always",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": true,
+        "phone": "list",
+        "multi": false,
+        "pref": {"w": {"fixed": 292}, "h": {"share": 1, "min": 160}},
+        "min": {"w": 200, "h": 160},
+        "float": {"w": {"fixed": 292}, "h": {"fixed": 560}},
+        "collapse": ["hide", "drawer"],
+        "home": [
+          {"beside": "spaces", "side": "right"},
+          {"beside": "timeline", "side": "left", "container": true},
+          {"edge": "left"}
+        ]
+      },
+      "widgets": {
+        "presence": "content",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": true,
+        "phone": "list",
+        "multi": false,
+        "pref": {"w": {"fixed": 292}, "h": {"auto": true}},
+        "min": {"w": 200, "h": 36},
+        "float": {"w": {"fixed": 292}, "h": {"auto": true, "maxPm": 700}},
+        "collapse": ["fold", "hide"],
+        "home": [{"beside": "rooms", "side": "bottom"}, {"beside": "account", "side": "top"}, {"edge": "left"}]
+      },
+      "account": {
+        "presence": "always",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": false,
+        "phone": "list",
+        "multi": false,
+        "pref": {"w": {"fixed": 292}, "h": {"auto": true}},
+        "min": {"w": 200, "h": 46},
+        "float": {"w": {"fixed": 292}, "h": {"auto": true}},
+        "collapse": ["hide"],
+        "home": [{"beside": "widgets", "side": "bottom"}, {"beside": "rooms", "side": "bottom"}, {"edge": "left"}]
+      },
+      "header": {
+        "presence": "room",
+        "hideable": true,
+        "stackable": false,
+        "floatable": false,
+        "popout": false,
+        "multi": false,
+        "group": "room",
+        "pref": {"w": {"share": 1}, "h": {"auto": true}},
+        "min": {"w": 280, "h": 40},
+        "collapse": [],
+        "home": [{"groupEdge": "top"}]
+      },
+      "timeline": {
+        "presence": "always",
+        "hideable": false,
+        "required": true,
+        "stackable": false,
+        "floatable": false,
+        "popout": false,
+        "multi": false,
+        "group": "room",
+        "pref": {"w": {"share": 1}, "h": {"share": 1, "min": 120}},
+        "min": {"w": 320, "h": 120},
+        "collapse": [],
+        "home": [{"edge": "right"}]
+      },
+      "composer": {
+        "presence": "room",
+        "hideable": false,
+        "required": true,
+        "stackable": false,
+        "floatable": false,
+        "popout": false,
+        "multi": false,
+        "group": "room",
+        "pref": {"w": {"share": 1}, "h": {"auto": true}},
+        "min": {"w": 320, "h": 48},
+        "collapse": [],
+        "home": [{"beside": "timeline", "side": "bottom"}]
+      },
+      "panel": {
+        "presence": "open",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": true,
+        "multi": false,
+        "pref": {"w": {"fixed": 324}, "h": {"share": 1}},
+        "min": {"w": 280, "h": 200},
+        "float": {"w": {"fixed": 324}, "h": {"pm": 800}},
+        "whenHidden": "room info and members open as an overlay sheet (decision 7), so they are never unreachable",
+        "collapse": ["overlay", "hide"],
+        "home": [{"beside": "timeline", "side": "right", "container": true}, {"edge": "right"}]
+      },
+      "call": {
+        "presence": "call",
+        "hideable": false,
+        "required": true,
+        "stackable": false,
+        "floatable": true,
+        "popout": false,
+        "maximizable": true,
+        "multi": false,
+        "pref": {"w": {"share": 1}, "h": {"auto": true, "min": 252}},
+        "min": {"w": 320, "h": 252},
+        "bar": 48,
+        "float": {"w": {"fixed": 480}, "h": {"fixed": 320}},
+        "note": "No pop-out (decision 5: the tile video is bound to the main window's GL context; the call keeps today's PiP window). It may float inside the window, never in a hover float, never in a stack (decision 8), never collapsed.",
+        "collapse": [],
+        "home": [
+          {"beside": "header", "side": "bottom"},
+          {"beside": "timeline", "side": "top", "container": true},
+          {"edge": "top"}
+        ]
+      },
+      "buttons": {
+        "presence": "always",
+        "hideable": true,
+        "stackable": true,
+        "floatable": true,
+        "popout": true,
+        "phone": "list",
+        "multi": true,
+        "pref": {"w": {"auto": true}, "h": {"auto": true}},
+        "min": {"w": 40, "h": 40},
+        "float": {"w": {"auto": true}, "h": {"auto": true}},
+        "collapse": ["hide"],
+        "home": [{"edge": "bottom"}]
+      }
+    },
+    "presets": {
+      "classic": {
+        "desktop": {
+          "preset": "classic",
+          "root": {
+            "t": "row",
+            "id": "body",
+            "c": [
+              {
+                "t": "row",
+                "id": "navcol",
+                "size": {"auto": true},
+                "c": [
+                  {
+                    "t": "col",
+                    "id": "rail",
+                    "size": {"fixed": 68},
+                    "c": [
+                      {"t": "island", "i": "nav", "size": {"auto": true}},
+                      {"t": "island", "i": "dms", "size": {"auto": true}},
+                      {"t": "island", "i": "spaces", "size": {"share": 1, "min": 112}}
+                    ]
+                  },
+                  {
+                    "t": "col",
+                    "id": "roomscol",
+                    "size": {"fixed": 292},
+                    "c": [
+                      {"t": "island", "i": "rooms", "size": {"auto": true, "grow": 1, "min": 160}},
+                      {"t": "island", "i": "widgets", "size": {"auto": true}},
+                      {"t": "island", "i": "account", "size": {"auto": true}}
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "col",
+                "id": "main",
+                "size": {"share": 1, "min": 360},
+                "c": [
+                  {"t": "island", "i": "header", "size": {"auto": true}},
+                  {"t": "island", "i": "call", "size": {"auto": true, "min": 252}},
+                  {
+                    "t": "row",
+                    "id": "convrow",
+                    "size": {"share": 1, "min": 160, "minPm": 250},
+                    "c": [
+                      {
+                        "t": "col",
+                        "id": "roomcol",
+                        "size": {"share": 1, "min": 360},
+                        "c": [
+                          {"t": "island", "i": "timeline", "size": {"share": 1, "min": 120}},
+                          {"t": "island", "i": "composer", "size": {"auto": true}}
+                        ]
+                      },
+                      {"t": "island", "i": "panel", "size": {"fixed": 324}}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "floats": [],
+          "hidden": [],
+          "collapse": [{"ref": "panel", "to": "overlay", "below": 844}, {"ref": "navcol", "to": "drawer", "below": 720}],
+          "opts": {}
+        },
+        "phone": {"rail": ["nav", "dms", "spaces"], "list": ["rooms", "widgets", "account"], "hidden": [], "opts": {}}
+      },
+      "compact": {
+        "status": "draft (step 4)",
+        "desktop": {
+          "preset": "compact",
+          "gap": 4,
+          "margin": 4,
+          "root": {
+            "t": "row",
+            "id": "body",
+            "c": [
+              {
+                "t": "row",
+                "id": "navcol",
+                "size": {"auto": true},
+                "c": [
+                  {
+                    "t": "col",
+                    "id": "rail",
+                    "size": {"fixed": 64},
+                    "c": [
+                      {"t": "island", "i": "nav", "size": {"auto": true}},
+                      {"t": "island", "i": "dms", "size": {"auto": true}},
+                      {"t": "island", "i": "spaces", "size": {"share": 1, "min": 112}}
+                    ]
+                  },
+                  {
+                    "t": "col",
+                    "id": "roomscol",
+                    "size": {"fixed": 248},
+                    "c": [
+                      {"t": "island", "i": "rooms", "size": {"auto": true, "grow": 1, "min": 160}},
+                      {"t": "island", "i": "widgets", "size": {"auto": true}},
+                      {"t": "island", "i": "account", "size": {"auto": true}}
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "col",
+                "id": "main",
+                "size": {"share": 1, "min": 360},
+                "c": [
+                  {"t": "island", "i": "header", "size": {"auto": true}},
+                  {"t": "island", "i": "call", "size": {"auto": true, "min": 252}},
+                  {
+                    "t": "row",
+                    "id": "convrow",
+                    "size": {"share": 1, "min": 160, "minPm": 250},
+                    "c": [
+                      {
+                        "t": "col",
+                        "id": "roomcol",
+                        "size": {"share": 1, "min": 360},
+                        "c": [
+                          {"t": "island", "i": "timeline", "size": {"share": 1, "min": 120}},
+                          {"t": "island", "i": "composer", "size": {"auto": true}}
+                        ]
+                      },
+                      {"t": "island", "i": "panel", "size": {"fixed": 300}}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "floats": [],
+          "hidden": [],
+          "collapse": [{"ref": "panel", "to": "overlay", "below": 820}, {"ref": "navcol", "to": "drawer", "below": 680}],
+          "opts": {"rooms": {"compact": true}}
+        },
+        "phone": {
+          "rail": ["nav", "dms", "spaces"],
+          "list": ["rooms", "widgets", "account"],
+          "hidden": [],
+          "opts": {"rooms": {"compact": true}}
+        }
+      },
+      "callFirst": {
+        "status": "draft (step 4); its minimums (call 480 + chat 340) do not fit below ~900 px, where the emergency arrangement takes over (section 6.6.10); the panel threshold (1300) overlays the panel at 1560 px and is to be tuned in step 4",
+        "desktop": {
+          "preset": "callFirst",
+          "root": {
+            "t": "row",
+            "id": "body",
+            "c": [
+              {
+                "t": "row",
+                "id": "navcol",
+                "size": {"auto": true},
+                "c": [
+                  {
+                    "t": "col",
+                    "id": "rail",
+                    "size": {"fixed": 68},
+                    "c": [
+                      {"t": "island", "i": "nav", "size": {"auto": true}},
+                      {"t": "island", "i": "dms", "size": {"auto": true}},
+                      {"t": "island", "i": "spaces", "size": {"share": 1, "min": 112}}
+                    ]
+                  },
+                  {
+                    "t": "col",
+                    "id": "roomscol",
+                    "size": {"fixed": 260},
+                    "c": [
+                      {"t": "island", "i": "rooms", "size": {"auto": true, "grow": 1, "min": 160}},
+                      {"t": "island", "i": "widgets", "size": {"auto": true}},
+                      {"t": "island", "i": "account", "size": {"auto": true}}
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "col",
+                "id": "main",
+                "size": {"share": 1, "min": 360},
+                "c": [
+                  {"t": "island", "i": "header", "size": {"auto": true}},
+                  {
+                    "t": "row",
+                    "id": "stage",
+                    "size": {"share": 1},
+                    "c": [
+                      {"t": "island", "i": "call", "size": {"share": 2, "min": 480}},
+                      {
+                        "t": "col",
+                        "id": "roomcol",
+                        "size": {"share": 1, "min": 340},
+                        "c": [
+                          {"t": "island", "i": "timeline", "size": {"share": 1, "min": 120}},
+                          {"t": "island", "i": "composer", "size": {"auto": true}}
+                        ]
+                      },
+                      {"t": "island", "i": "panel", "size": {"fixed": 324}}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "floats": [],
+          "hidden": [],
+          "collapse": [
+            {"ref": "panel", "to": "overlay", "below": 1300},
+            {"ref": "navcol", "to": "drawer", "below": 1180}
+          ],
+          "opts": {}
+        },
+        "phone": {"rail": ["nav", "dms", "spaces"], "list": ["rooms", "widgets", "account"], "hidden": [], "opts": {}}
+      },
+      "sideMonitor": {
+        "status": "step 4 preset; the horizontal rail (opts.orient = h on nav/dms/spaces, registry orientH) is in scope for 11.0 (decision 6); thresholds to be tuned with screenshots in step 4",
+        "desktop": {
+          "preset": "sideMonitor",
+          "root": {
+            "t": "col",
+            "id": "body",
+            "c": [
+              {
+                "t": "row",
+                "id": "topbar",
+                "size": {"auto": true},
+                "c": [
+                  {"t": "island", "i": "nav", "size": {"auto": true}},
+                  {"t": "island", "i": "dms", "size": {"auto": true}},
+                  {"t": "island", "i": "spaces", "size": {"share": 1}}
+                ]
+              },
+              {
+                "t": "row",
+                "id": "mainrow",
+                "size": {"share": 1},
+                "c": [
+                  {
+                    "t": "col",
+                    "id": "side",
+                    "size": {"fixed": 292},
+                    "c": [
+                      {"t": "island", "i": "rooms", "size": {"auto": true, "grow": 1, "min": 160}},
+                      {"t": "island", "i": "widgets", "size": {"auto": true}},
+                      {"t": "island", "i": "account", "size": {"auto": true}}
+                    ]
+                  },
+                  {
+                    "t": "col",
+                    "id": "main",
+                    "size": {"share": 1, "min": 360},
+                    "c": [
+                      {"t": "island", "i": "header", "size": {"auto": true}},
+                      {"t": "island", "i": "call", "size": {"auto": true, "min": 252}},
+                      {
+                        "t": "row",
+                        "id": "convrow",
+                        "size": {"share": 1, "min": 200},
+                        "c": [
+                          {
+                            "t": "col",
+                            "id": "roomcol",
+                            "size": {"share": 1, "min": 340},
+                            "c": [
+                              {"t": "island", "i": "timeline", "size": {"share": 1, "min": 120}},
+                              {"t": "island", "i": "composer", "size": {"auto": true}}
+                            ]
+                          },
+                          {"t": "island", "i": "panel", "size": {"fixed": 324}}
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "floats": [],
+          "hidden": [],
+          "collapse": [{"ref": "panel", "to": "overlay", "below": 1000}, {"ref": "side", "to": "drawer", "below": 1100}],
+          "opts": {"nav": {"orient": "h"}, "dms": {"orient": "h"}, "spaces": {"orient": "h"}}
+        },
+        "phone": {"rail": ["nav", "dms", "spaces"], "list": ["rooms", "widgets", "account"], "hidden": [], "opts": {}}
+      },
+      "handheld": {
+        "status": "draft (step 4)",
+        "desktop": {
+          "preset": "handheld",
+          "density": "touch",
+          "root": {
+            "t": "row",
+            "id": "body",
+            "c": [
+              {
+                "t": "col",
+                "id": "rail",
+                "size": {"fixed": 76},
+                "c": [
+                  {"t": "island", "i": "nav", "size": {"auto": true}},
+                  {"t": "island", "i": "dms", "size": {"auto": true}},
+                  {"t": "island", "i": "spaces", "size": {"share": 1, "min": 112}}
+                ]
+              },
+              {
+                "t": "col",
+                "id": "sidecol",
+                "size": {"fixed": 320},
+                "c": [
+                  {
+                    "t": "stack",
+                    "id": "sidetabs",
+                    "size": {"share": 1},
+                    "active": "rooms",
+                    "c": [{"t": "island", "i": "rooms"}, {"t": "island", "i": "widgets"}]
+                  },
+                  {"t": "island", "i": "account", "size": {"auto": true}}
+                ]
+              },
+              {
+                "t": "col",
+                "id": "main",
+                "size": {"share": 1, "min": 360},
+                "c": [
+                  {"t": "island", "i": "header", "size": {"auto": true}},
+                  {"t": "island", "i": "call", "size": {"auto": true, "min": 252}},
+                  {
+                    "t": "row",
+                    "id": "convrow",
+                    "size": {"share": 1, "min": 160, "minPm": 250},
+                    "c": [
+                      {
+                        "t": "col",
+                        "id": "roomcol",
+                        "size": {"share": 1, "min": 360},
+                        "c": [
+                          {"t": "island", "i": "timeline", "size": {"share": 1, "min": 120}},
+                          {"t": "island", "i": "composer", "size": {"auto": true}}
+                        ]
+                      },
+                      {"t": "island", "i": "panel", "size": {"fixed": 324}}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "floats": [],
+          "hidden": [],
+          "collapse": [
+            {"ref": "panel", "to": "overlay", "below": 1000},
+            {"ref": "sidecol", "to": "drawer", "below": 1000, "w": 360}
+          ],
+          "opts": {}
+        },
+        "phone": {"rail": ["nav", "dms", "spaces"], "list": ["rooms", "widgets", "account"], "hidden": [], "opts": {}}
+      }
+    },
+    "internalPresets": {
+      "note": "Migration only (ISLANDS-ARCH.md sections 3.3 and 4). Stage 1 (islands commit C5) = the form below with the compat islands '_nav' (today's whole ThNav / NavColumn: rail + room list + its floating account card) and '_room' (today's whole room page: header, banners, call panel + seam, conversation, right panel with its own docked/overlay rule). Stage 2 (C6) replaces it, one commit per island, by the Classic tree of real islands with container 'gap' overrides and island-internal paddings measured from the approved baseline B2 (the C6 commit writes that form here and its vectors). Never stored, never offered in the UI, only selectable by the gate pin TINHAT_LAYOUT=classic-flush / ?layout=classic-flush in test builds. Run with the theme shape gap 0 / margin 0 / radius 0 / border 0 and compared at 0 px against the approved baseline of the phase (section 3.3: B0 before C2, B2 after), never against 10.6.0. Deleted, with '_nav', '_room' and every flush-only code path, in C7.",
+      "classic-flush": {
+        "desktop": {
+          "preset": "classic-flush",
+          "gap": 0,
+          "margin": 0,
+          "root": {
+            "t": "row",
+            "id": "body",
+            "c": [
+              {"t": "island", "i": "_nav", "size": {"fixed": 360}},
+              {"t": "island", "i": "_room", "size": {"share": 1, "min": 360}}
+            ]
+          },
+          "floats": [],
+          "hidden": [],
+          "collapse": [{"ref": "_nav", "to": "drawer", "below": 720, "w": 340}],
+          "opts": {}
+        }
+      }
+    },
+    "informationalNotes": ["unknown-island-kept", "unknown-node-kept"],
+    "notesNote": "A note is the string '<note> <subject>' (LAYOUT.md appendix B lists the subject of each). validate() = the notes repair would produce, without the informational ones; a form is valid iff that list is empty."
+  }
+}
