@@ -2992,6 +2992,8 @@ Kirigami.ApplicationWindow {
         canBootstrap: login.sasCanBootstrap
         keyFirst: login.keyFirst
         onSetUpRecoveryRequested: (pw) => login.setUpRecovery(pw)
+        startOverNote: login.startOverNote
+        onStartOverRequested: (pw) => login.startOver(pw)
     }
 
     // A device we're already signed in to can be asked to verify a NEW one, so the
@@ -3002,7 +3004,8 @@ Kirigami.ApplicationWindow {
             if (login.sasState === "waiting" && login.sasIncoming && !verifySheet.opened)
                 verifySheet.open()
             // F2: the first device's new Security Key (--tinhat-noverify too: it is shown once, never skipped)
-            if (login.sasState === "recovery-done" && login.firstDevice && !verifySheet.opened)
+            // (12.0.1: and any other new key — Start over's, Set up recovery's — if the sheet was closed meanwhile)
+            if (login.sasState === "recovery-done" && (login.firstDevice || login.recoveryKey.length > 0) && !verifySheet.opened)
                 verifySheet.open()
             // 10.1 (TH-FIRST-19): the emoji matched — the keys arrive a moment later; say "verified" only then.
             // Braces (2026-09-25): without them the toast fired on EVERY sasState change

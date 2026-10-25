@@ -43,6 +43,9 @@ Controls.Dialog {
     property bool keyPathOpen: false
     // Secret Storage but no identity (a moved server, moved.rs): no other device can vouch, the Security Key first
     property bool keyFirst: false
+    // 12.0.1: "Lost your Security Key? Start over" (start_over.rs; Tin Hat Web's same panel)
+    property bool startOverOpen: false
+    property string startOverNote: ""       // why it didn't happen ("" = nothing to say); nothing changed then
 
     signal verifyRequested(string key)      // Security-Key path (fallback)
     signal useAnotherDeviceRequested()      // start emoji verification
@@ -52,10 +55,11 @@ Controls.Dialog {
     signal sasCancelled()                   // cancel / dismissed
     signal startComparisonRequested()       // S2 "Start emoji comparison" (requester, waiting)
     signal setUpRecoveryRequested(string password) // no device can vouch — create recovery instead
+    signal startOverRequested(string password)     // no key, no device: a new identity + Security Key
 
     // named clearForm, NOT reset: "reset" collides with QQC2 Dialog's built-in
     // reset() signal (qt.qml.invalidOverride at every load)
-    function clearForm() { secKeyField.text = ""; pwField.text = ""; dlg.keyPathOpen = false }
+    function clearForm() { secKeyField.text = ""; pwField.text = ""; soPwField.text = ""; dlg.keyPathOpen = false; dlg.startOverOpen = false }
 
     // Hold (same rule as Tin Hat Web's S9 hold, SHEET_HOLD_MS; adversarial review 2026-09-25): the dialog is
     // centred, so the NEXT state's buttons appear where the pointer just was — in the real app a double click on
@@ -176,6 +180,55 @@ Controls.Dialog {
                 visible: dlg.status.length > 0
                 text: dlg.status
                 color: dlg.busy ? Th.dialogFg : Th.dialogErrorFg
+            }
+
+            // 12.0.1: no Security Key and no other signed-in device — the way out (start_over.rs). Before this, such
+            // an account could sign in but never unlock or verify anything again, and nobody could help.
+            Controls.Button {
+                width: parent.width
+                flat: true
+                text: dlg.startOverOpen ? "Never mind, I'll keep looking" : "Lost your Security Key? Start over"
+                onClicked: dlg.startOverOpen = !dlg.startOverOpen
+            }
+            Column {
+                width: parent.width
+                spacing: Kirigami.Units.smallSpacing
+                visible: dlg.startOverOpen
+                Controls.Label {
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                    font.bold: true
+                    text: "Start over with a new Security Key"
+                }
+                Controls.Label {
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                    color: Th.dialogHintFg
+                    text: "Only for when no other device is signed in and your Security Key is gone. Messages from "
+                          + "before stay locked, unless a device that still has them signs in again. People who "
+                          + "verified you will see that your security changed, and may verify you again."
+                }
+                Controls.TextField {
+                    id: soPwField
+                    width: parent.width
+                    placeholderText: "Account password"
+                    echoMode: TextInput.Password
+                    enabled: !dlg.busy
+                    onAccepted: if (text.length > 0) dlg.startOverRequested(text)
+                }
+                Controls.Button {
+                    width: parent.width
+                    text: "Start over"
+                    enabled: !dlg.busy && soPwField.text.length > 0
+                    onClicked: dlg.startOverRequested(soPwField.text)
+                }
+                Controls.Label {
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                    visible: dlg.startOverNote.length > 0
+                    text: dlg.startOverNote
+                    color: Th.dialogErrorFg
+                }
             }
         }
 

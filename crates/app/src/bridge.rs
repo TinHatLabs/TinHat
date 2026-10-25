@@ -51,6 +51,7 @@ pub mod qobject {
         #[qproperty(bool, sas_can_start)] // QML: sasCanStart — S2: the peer lets its user pick (QR too); offer "Start emoji comparison"
         #[qproperty(QString, created_room)] // QML: createdRoom — id of the room just created/reused, so QML can open it
         #[qproperty(QString, recovery_key)] // QML: recoveryKey — shown ONCE after setting up recovery
+        #[qproperty(QString, start_over_note)] // QML: startOverNote — why "Start over" didn't happen ("" = nothing to say)
         #[qproperty(bool, sas_can_bootstrap)] // QML: sasCanBootstrap — this dead end is fixable by setting up recovery here
         #[qproperty(QString, moved_note)] // QML: movedNote — sign-in: "OLD moved to NEW: sign in there…" (moved.rs), "" otherwise
         #[qproperty(QString, moved_to)] //   QML: movedTo — the address the note sends people to
@@ -198,6 +199,10 @@ pub mod qobject {
         // account that has never had it, which also verifies THIS device.
         #[qinvokable]
         fn set_up_recovery(self: Pin<&mut LoginController>, password: &QString);
+        // QML: loginController.startOver(password) — "Lost your Security Key? Start over" (start_over.rs): a new
+        // identity, key backup and Security Key; the password is checked first and a wrong one changes nothing.
+        #[qinvokable]
+        fn start_over(self: Pin<&mut LoginController>, password: &QString);
         // QML: loginController.setTheme(name) — persist the chosen theme to disk.
         #[qinvokable]
         fn set_theme(self: Pin<&mut LoginController>, name: &QString);
@@ -306,6 +311,7 @@ pub struct LoginControllerRust {
     sas_shown_inc: u64,
     created_room: QString,
     recovery_key: QString,
+    start_over_note: QString,
     sas_can_bootstrap: bool,
     moved_note: QString,
     moved_to: QString,
@@ -370,6 +376,7 @@ impl Default for LoginControllerRust {
             sas_shown_inc: 0,
             created_room: QString::default(),
             recovery_key: QString::from(""),
+            start_over_note: QString::default(),
             sas_can_bootstrap: false,
             moved_note: QString::default(),
             moved_to: QString::default(),
@@ -3410,6 +3417,59 @@ impl qobject::LoginController {
     /// recovery also cross-signs THIS device, which breaks the deadlock.
     ///
     /// The returned key is shown ONCE and never stored — that is the whole point of it.
+    /// "Lost your Security Key? Start over" (start_over.rs; the web's startOver). Any stop leaves the dialog on the
+    /// Security Key page with `startOverNote` (before the new identity: "Nothing was changed."; after it: "Press Start
+    /// over again to finish."); success shows the new Security Key once, the same way a new recovery does. One run at a
+    /// time; a result for a session that has gone meanwhile is dropped.
+    pub fn start_over(mut self: Pin<&mut Self>, password: &QString) {
+        let Some(client) = self.rust().client.clone() else { return };
+        if crate::start_over::is_running() {
+            return;
+        }
+        let password = password.to_string();
+        if password.is_empty() {
+            self.as_mut().set_start_over_note(QString::from("Enter your account password to continue."));
+            return;
+        }
+        self.as_mut().set_start_over_note(QString::default());
+        self.as_mut().set_sas_state(QString::from("recovery-working"));
+        self.as_mut().set_sas_note(QString::from("Starting over — this takes a few seconds…"));
+        let qt = self.qt_thread();
+        runtime().spawn(async move {
+            let r = crate::start_over::start_over(&client, &password).await;
+            if !same_session(&client) {
+                eprintln!("[start-over] finished for a session that has ended — not shown");
+                return;
+            }
+            let verified = is_device_verified(&client).await;
+            match &r {
+                Ok(_) => eprintln!("[start-over] done; device_verified={verified}"),
+                Err(e) => eprintln!("[start-over] stopped: {e:?}"),
+            }
+            let _ = qt.queue(move |mut o| match r {
+                // (and again here, on the Qt thread: a sign-out may have landed while this was queued)
+                _ if !same_session(&client) => {}
+                Ok(key) => {
+                    o.as_mut().set_recovery_key(QString::from(&key));
+                    o.as_mut().set_sas_state(QString::from("recovery-done"));
+                    o.as_mut().set_sas_note(QString::from(
+                        "You've started over. This is your new Security Key: save it somewhere safe — it is shown \
+                         once and can't be retrieved later. Messages from before stay locked unless a device that \
+                         still has them signs in again.",
+                    ));
+                    o.as_mut().set_verified(verified);
+                    o.as_mut().refresh_rooms();
+                }
+                Err(crate::start_over::StartOverError::Busy) => {} // the run that's going owns the dialog
+                Err(e) => {
+                    // back to the Security Key page; the panel says why and whether anything changed
+                    o.as_mut().set_sas_state(QString::default());
+                    o.as_mut().set_start_over_note(QString::from(&e.note()));
+                }
+            });
+        });
+    }
+
     pub fn set_up_recovery(mut self: Pin<&mut Self>, password: &QString) {
         let Some(client) = self.rust().client.clone() else { return };
         let password = password.to_string();

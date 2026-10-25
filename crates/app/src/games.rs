@@ -370,7 +370,7 @@ impl qobject::GamesController {
         };
         let session = self.session_id().to_string();
         let present = self.rust().present.clone();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         self.as_mut().set_busy(true);
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
@@ -406,13 +406,25 @@ impl qobject::GamesController {
         });
     }
 
+    /// `<api>/games` as it is now. The base comes from the user's server (its announced API, else the homeserver
+    /// origin), which isn't known yet when this controller is built at startup: before a fresh sign-in it was
+    /// "/games" and stayed that way until a restart, so Steam import, search and art failed on the PC with nothing
+    /// sent (12.0.0, a Windows sign-in after the installer's Repair). Re-read on every use; QML's art URLs follow.
+    fn fresh_catalog_base(mut self: Pin<&mut Self>) -> String {
+        let now = default_catalog_base();
+        if now != self.catalog_base().to_string() {
+            self.as_mut().set_catalog_base(QString::from(&now));
+        }
+        now
+    }
+
     /// Rebuild every derived property from the cached store read + presence + the clock.
     /// Returns the computed state (for callers that need `standing` / the roster).
     fn recompute(mut self: Pin<&mut Self>) -> Option<Computed> {
         let data = self.rust().data.clone()?;
         let session = self.session_id().to_string();
         let present = self.rust().present.clone();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         let now = crate::appstate::now_ms();
         let c = compute(&data, &base, &session, &present, &data.settings, now);
         self.as_mut().set_my_id(QString::from(&data.me));
@@ -456,7 +468,7 @@ impl qobject::GamesController {
 
     pub fn search_catalog(mut self: Pin<&mut Self>, q: &QString) {
         let q = q.to_string().trim().to_string();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         // selfhost: a server without the catalogue (games: false) answers no search; games are added by name
         let q = if crate::server_offer::feature_on_global(crate::server_offer::ServerFeature::Games) { q } else { String::new() };
         if q.is_empty() {
@@ -496,7 +508,7 @@ impl qobject::GamesController {
 
     pub fn add_custom_game(mut self: Pin<&mut Self>, name: &QString) {
         let name = name.to_string().trim().to_string();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         if name.is_empty() {
             return;
         }
@@ -524,7 +536,7 @@ impl qobject::GamesController {
 
     pub fn import_steam_library(mut self: Pin<&mut Self>, profile: &QString, multiplayer_only: bool) {
         let profile = profile.to_string().trim().to_string();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         if profile.is_empty() {
             return;
         }
@@ -579,7 +591,7 @@ impl qobject::GamesController {
         let cid = self.container_id().to_string();
         let session = self.session_id().to_string();
         let present = self.rust().present.clone();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         // 10.5.1: an empty session is fine — do_spin resolves it to tonight's ad-hoc session.
         // 10.5.2: not while an admin reset is rewriting tonight (the web disables Spin too).
         if cid.is_empty() || self.rust().spinning || *self.resetting() {
@@ -643,7 +655,7 @@ impl qobject::GamesController {
         self.as_mut().set_busy(true);
         let session = self.session_id().to_string();
         let present = self.rust().present.clone();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
             let res = do_adjust(&cid, &base, &session, &present, &mxid, delta as i64, &reason).await;
@@ -771,7 +783,7 @@ impl qobject::GamesController {
         }
         let session = self.session_id().to_string();
         let present = self.rust().present.clone();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         self.as_mut().set_last_error(QString::default());
         self.as_mut().set_resetting(true);
         let qt = self.qt_thread();
@@ -799,7 +811,7 @@ impl qobject::GamesController {
         let settings = data.settings.merged(&patch);
         let session = self.session_id().to_string();
         let present = self.rust().present.clone();
-        let base = self.catalog_base().to_string();
+        let base = self.as_mut().fresh_catalog_base();
         let c = compute(&data, &base, &session, &present, &settings, crate::appstate::now_ms());
         self.as_mut().set_simulation_json(QString::from(&c.json.to_string()));
     }
@@ -2245,6 +2257,16 @@ fn http() -> matrix_sdk::reqwest::Client {
     crate::proxy::http(Some(std::time::Duration::from_secs(20)))
 }
 
+/// `<base><path>`, or a plain error while the base is still unknown (not signed in yet: "/games"). A relative URL
+/// used to reach reqwest and come back as "builder error: relative URL without a base".
+fn catalog_url(base: &str, path: &str) -> Result<String, String> {
+    if base.starts_with("https://") || base.starts_with("http://") {
+        Ok(format!("{base}{path}"))
+    } else {
+        Err("not connected to your server yet — try again in a moment".to_string())
+    }
+}
+
 async fn catalog_get(base: &str, path: &str) -> Result<Value, String> {
     catalog_get_auth(base, path, None).await
 }
@@ -2252,7 +2274,7 @@ async fn catalog_get(base: &str, path: &str) -> Result<Value, String> {
 /// 10.1 (TH-REEL-01): `/search` sits behind `requireMatrixUser` on the catalog service, so the
 /// typed-search path needs the same bearer `catalog_post` already sends.
 pub(crate) async fn catalog_get_auth(base: &str, path: &str, bearer: Option<&str>) -> Result<Value, String> {
-    let url = format!("{base}{path}");
+    let url = catalog_url(base, path)?;
     let mut req = http().get(&url);
     if let Some(t) = bearer {
         req = req.header("Authorization", format!("Bearer {t}"));
@@ -2267,7 +2289,7 @@ pub(crate) async fn catalog_get_auth(base: &str, path: &str, bearer: Option<&str
 }
 
 async fn catalog_post(base: &str, path: &str, body: Value, bearer: Option<&str>) -> Result<Value, String> {
-    let url = format!("{base}{path}");
+    let url = catalog_url(base, path)?;
     let mut req = http().post(&url).header("Content-Type", "application/json").body(body.to_string());
     if let Some(t) = bearer {
         req = req.header("Authorization", format!("Bearer {t}"));
@@ -2685,6 +2707,18 @@ mod tests {
     const KAI: &str = "@kai:example.com";
     const SAM: &str = "@sam:example.com";
     const JO: &str = "@jo:example.com";
+
+    /// 12.0.1: nothing goes out while the base is still unknown ("/games" before the first sign-in) — a plain
+    /// error instead of reqwest's "relative URL without a base".
+    #[test]
+    fn catalog_url_needs_a_server() {
+        assert_eq!(
+            catalog_url("https://example.com/api/games", "/steam/library").unwrap(),
+            "https://example.com/api/games/steam/library"
+        );
+        assert!(catalog_url("/games", "/steam/library").is_err());
+        assert!(catalog_url("", "/game/steam%3A1").is_err());
+    }
 
     /// 10.5.2 admin "Reset spins": every record the reset rewrites still verifies against its seed
     /// event with the desktop's own `verify` (pool / roster / session / winner untouched; the spinner

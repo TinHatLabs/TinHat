@@ -62,6 +62,7 @@ pub mod joinsound; // per-user join sounds published over the soundboard bridge 
 pub mod livekit; // OpenID -> lk-jwt-service LiveKit token (used by stream)
 pub mod proxy; // the user's server's Tin Hat API client (gif/soundboard/watch — keys stay server-side; the base from its well-known)
 pub mod server_offer; // selfhost: what the user's server offers (dev.tinhat.server in its well-known): API base, features, recorder, call service
+pub mod start_over; // 12.0.1: "Lost your Security Key? Start over" — a new identity, backup and Security Key (password first)
 pub mod password; // selfhost: a forgotten password (the server's owner resets it: account.password_reset) and Change password (UIA)
 #[cfg(windows)]
 pub mod qvideo; // FFI to the QVideoSink prototype shim + TINHAT_QVS_TEST (Windows video tail)
@@ -1538,6 +1539,14 @@ fn main() {
     if std::env::var_os("TINHAT_AUDIO_TEST").is_some() {
         let _g = bridge::runtime().enter();
         let ok = bridge::runtime().block_on(async { room::headless_audio_test().await });
+        boot::exit_early(if ok { 0 } else { 1 });
+    }
+
+    // Gate "Lost your Security Key? Start over" against a real server with a throwaway account (start_over.rs):
+    //   TINHAT_STARTOVER_TEST=1 TINHAT_HS=… TINHAT_USER=… TINHAT_PASS=… ./tinhat
+    if std::env::var_os("TINHAT_STARTOVER_TEST").is_some() {
+        let _g = bridge::runtime().enter();
+        let ok = bridge::runtime().block_on(async { start_over::headless_start_over_test().await });
         boot::exit_early(if ok { 0 } else { 1 });
     }
 
