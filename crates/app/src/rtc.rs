@@ -422,6 +422,9 @@ pub async fn join_rtc_session(room: &Room, service_url: &str) -> matrix_sdk::Res
             // the mixed audio. Advertised on every (re)publish, so a mid-call flip
             // lands at the next membership refresh.
             "record_optout": crate::settings::record_optout(),
+            // Pad (docs/PAD.md): "pad1" = my other verified devices may drive this call from their Pad (Settings →
+            // Calls → Pad, default on). Nothing else reads `caps` today; older clients ignore it.
+            "caps": if crate::pad_ctl::pad_enabled() { serde_json::json!([crate::padrules::PAD_CAP]) } else { serde_json::json!([]) },
         },
     });
     room.send_state_event_raw(MEMBER_EVENT_TYPE, &state_key, content).await?;

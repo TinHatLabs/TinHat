@@ -1762,6 +1762,23 @@ Window {
                             }
                         }
                     }
+                    // Pad (docs/PAD.md): this device's call may be driven from my other verified devices (default on)
+                    SettingsSection {
+                        title: "Pad"
+                        SettingsRow {
+                            app: win.app
+                            anchorId: "calls.pad"   // the Settings search lands here (settings_index.json)
+                            label: "Let my other verified devices control my calls here"
+                            description: "While this device is in a call, your phone (or another device of yours) can play sounds, mute you and set people's volumes here. Only your own verified devices can; the call bar shows a chip while one does."
+                            toggle: padSw
+                            trailing: ThSwitch {
+                                id: padSw
+                                Accessible.name: "Let my other verified devices control my calls here"
+                                checked: win.app.mPadOn
+                                onToggled: win.app.padCtl.applyPadOn(checked)
+                            }
+                        }
+                    }
                     SettingsSection {
                         title: "Camera"
                         SettingsRow {

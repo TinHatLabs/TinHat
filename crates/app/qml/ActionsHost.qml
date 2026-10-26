@@ -39,7 +39,11 @@ Item {
             "room.favourite": r.favourite === true,
             "room.hasUnread": (r.unread || 0) > 0,
             "room.callLive": r.call === true,
-            "room.inCall": app.mInCall === true && app.mCallRoomId === id
+            "room.inCall": app.mInCall === true && app.mCallRoomId === id,
+            // 12.0.2 Pad: one of my other devices is in this room's call and this device is not in (or joining) it — the
+            // rooms where the Pad button shows beside Join (Main.qml padTargetIn; the web: providers.ts, the same rule)
+            "room.padTarget": (r.membership === undefined || r.membership === "join")
+                && !((app.mInCall === true || app.mConnecting === true) && app.mCallRoomId === id) && app.padTargetIn(id) !== null
         }
         if (r.notifyMode) v["room.notifyMode"] = String(r.notifyMode)
         // the call's room (decision 1: Rec / Clip act on it): its recording marker (RoomController.callRecordOn)
@@ -551,6 +555,12 @@ Item {
         case "call.join":
             r = host._room(ctx)
             if (r.length > 0) { if (app.mInCall && app.mCallRoomId !== r) app.callctl.switchCall(r); else app.callctl.joinCall(r) }
+            return true
+        // 12.0.2 Pad (docs/PAD.md): the Pad button beside Join for the target room's call (Main.qml openPad: a greyed Pad
+        // shows its one line instead)
+        case "call.pad.open":
+            r = host._room(ctx)
+            if (r.length > 0) app.openPad(r, app.padTargetIn(r))
             return true
         // 11.0.2: "Keep call buttons visible" — the bar's pin and Settings → Calls run the same (AppCore.setCallBarPinned)
         case "call.bar.pin.toggle": app.setCallBarPinned(!app.callBarPinned); return true

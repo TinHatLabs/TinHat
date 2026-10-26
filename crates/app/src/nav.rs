@@ -469,7 +469,7 @@ pub(crate) async fn mark_rooms_read(client: &Client, ids: Vec<String>) {
     }
 }
 
-async fn resolve_call_participants(client: &Client, room: &Room) -> Vec<Value> {
+pub(crate) async fn resolve_call_participants(client: &Client, room: &Room) -> Vec<Value> {
     let ids = crate::rtc::call_participants(room).await;
     let mut out = Vec::with_capacity(ids.len());
     for uid in ids {

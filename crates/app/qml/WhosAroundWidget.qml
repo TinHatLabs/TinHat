@@ -289,6 +289,8 @@ Item {
         property var g: ({ room: "", people: [], name: "", game: "", emoji: "", cover: "" })
         property bool playing: false
         readonly property bool here: w.inRoomCall(rr.g.room)
+        // Pad (docs/PAD.md): another of my devices is in that call → "Pad" next to Join
+        readonly property var padT: (w.app && w.app.padTargetIn && !w.preview) ? w.app.padTargetIn(rr.g.room) : null
         readonly property string key: "r:" + rr.g.room
         onKeyChanged: if (w.isFresh(rr.key)) rrIn.play()
         Component.onCompleted: if (w.isFresh(rr.key)) rrIn.play()
@@ -328,6 +330,22 @@ Item {
                     Faces { id: facesRow; people: rr.g.people; size: 16; max: 4 }
                     Item { Layout.fillWidth: true }
                 }
+            }
+            ThButton {
+                visible: !rr.here && !!rr.padT
+                Layout.preferredHeight: 24
+                app: w.app
+                text: "Pad"
+                icon.name: "smartphone-symbolic"
+                implicitHeight: 24
+                leftPadding: 10; rightPadding: 10
+                opacity: rr.padT && rr.padT.ready ? 1 : 0.5
+                font.pointSize: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * 0.85
+                font.weight: Font.DemiBold
+                Controls.ToolTip.text: rr.padT ? (rr.padT.ready ? "Control the call on " + rr.padT.name + " from here — sounds, mute, volumes" : w.app.padWhyLine(rr.padT)) : ""
+                Controls.ToolTip.visible: hovered
+                Controls.ToolTip.delay: 300
+                onClicked: w.app.openPad(rr.g.room, rr.padT)
             }
             // (preview: shown but not clickable, like the web's disabled Join)
             ThButton {

@@ -155,8 +155,8 @@ Controls.Dialog {
                 text: dlg.keyFirst
                       ? "It's the key you saved when you first signed in. If your server moved to a new address, "
                         + "this brings your messages back and makes this device your new verified one."
-                      : "Your Security Key lives in Settings → Security → Secure Backup on a "
-                        + "client where you're already signed in."
+                      : "It's the Security Key you saved when you first set up encryption (Tin Hat shows it "
+                        + "only once, so look where you keep it: a password manager, a note, a printout)."
             }
             Controls.TextField {
                 id: secKeyField

@@ -288,6 +288,40 @@ fn example_13_keep_call_buttons_visible_a_preference_toggle_short_faces_for_the_
     assert_eq!(json!([it["label"], it["keys"], it["defaults"]]), json!(["Keep call buttons visible", [], []]));
 }
 
+#[test]
+fn example_14_pad_the_pad_button_beside_join_as_an_action_where_one_of_my_other_devices_is_in_the_rooms_call() {
+    let ready = evaluate(&json!({"app": "desktop", "action": "call.pad.open", "snapshot": world(json!({}), json!({"room.joined": true, "room.padTarget": true}))}));
+    assert_eq!(
+        strs(&[&ready["visible"], &ready["enabled"], &ready["label"], &ready["icon"]]),
+        vec![json!(true), json!(true), json!("Pad"), json!("smartphone-symbolic")]
+    );
+    // nobody of mine in this room's call, or this device is in it itself (room.padTarget false there): unavailable
+    let none = evaluate(&json!({"app": "web", "action": "call.pad.open", "snapshot": world(json!({"call.in": true}), json!({"room.joined": true, "room.inCall": true}))}));
+    assert_eq!(strs(&[&none["visible"], &none["enabled"], &none["why"]]), vec![json!(true), json!(false), json!("when")]);
+    // a stored room names the button
+    let snap = json!({
+        "current": {"room": ROOM},
+        "subjects": {"room": {ROOM: {"name": "Gaming Central", "values": {}}, "!v:x": {"name": "Valheim", "values": {"room.padTarget": true}}}},
+    });
+    let stored = evaluate(&json!({"app": "web", "action": "call.pad.open", "target": {"room": "!v:x"}, "snapshot": snap}));
+    assert_eq!(
+        strs(&[&stored["enabled"], &stored["label"], &stored["tip"]]),
+        vec![json!(true), json!("Pad — Valheim"), json!("Pad — control Valheim's call on your other device")]
+    );
+    // Ctrl+K: "remote" finds it by its keyword; dimmed where Pad reaches no call
+    let p = palette(&json!({"app": "desktop", "snapshot": world(json!({}), json!({"room.joined": true, "room.padTarget": true})), "query": "remote"}));
+    let on = &p["items"][0];
+    assert_eq!(json!([on["kind"], on["id"], on["label"], on["enabled"]]), json!(["action", "call.pad.open", "Pad", true]));
+    let q = palette(&json!({"app": "web", "snapshot": world(json!({}), json!({"room.joined": true})), "query": "remote"}));
+    let off = &q["items"][0];
+    assert_eq!(json!([off["id"], off["enabled"]]), json!(["call.pad.open", false]));
+    // assignable: Settings → Shortcuts lists it under Calls, with no key until someone gives it one
+    let sc = dispatch("shortcuts", &json!({"app": "desktop"})).expect("the shortcuts view");
+    let calls = sc["groups"].as_array().unwrap().iter().find(|g| g["group"] == "calls").expect("the Calls group");
+    let it = calls["items"].as_array().unwrap().iter().find(|i| i["a"] == "call.pad.open").expect("the action is listed");
+    assert_eq!(json!([it["label"], it["keys"], it["defaults"]]), json!(["Pad", [], []]));
+}
+
 // ---- the table's own rules ------------------------------------------------------------------------------------------
 
 #[test]

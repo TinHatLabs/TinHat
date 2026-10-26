@@ -2014,6 +2014,35 @@
         "web"
       ],
       "group": "calls",
+      "icon": "smartphone-symbolic",
+      "id": "call.pad.open",
+      "keywords": [
+        "remote",
+        "phone",
+        "control",
+        "other device",
+        "soundboard remote"
+      ],
+      "label": "Pad",
+      "notes": "12.0.2 Pad (docs/PAD.md): the Pad button beside Join as an action — opens the Pad for the target room's call on another of your own devices (the newest ready one; the chooser in the Pad lists the others). A Pad that can't work (this device not verified, Pad off there, an older Tin Hat there) shows its one line as a toast instead, like a tap on the greyed button.",
+      "since": "11.0",
+      "target": {
+        "absent": "currentRoom",
+        "kind": "room"
+      },
+      "targetFace": {
+        "label": "Pad — {name}",
+        "tip": "Pad — control {name}'s call on your other device"
+      },
+      "tip": "Pad — control your call on your other device from here (sounds, mute, volumes)",
+      "when": "room.padTarget"
+    },
+    {
+      "apps": [
+        "desktop",
+        "web"
+      ],
+      "group": "calls",
       "icon": "pin-symbolic",
       "id": "call.pin.clear",
       "label": "Unpin the main tile",
@@ -8053,6 +8082,11 @@
         "mentions",
         "mute"
       ]
+    },
+    "room.padTarget": {
+      "doc": "One of your other devices is in this room's call and this device is not in it (Pad can drive that call; it may still be greyed: this device not verified, Pad off there, an older Tin Hat there).",
+      "scope": "room",
+      "type": "bool"
     },
     "room.recordOn": {
       "doc": "Calls in the room are recorded (Memories).",

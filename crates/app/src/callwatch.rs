@@ -41,6 +41,9 @@ struct State {
     /// Rooms whose call is live with nobody but the recorder in it: re-checked every pass, since
     /// the first person to join is the real start (no rising edge will come for it).
     recorder_alone: std::collections::HashSet<String>,
+    /// Rooms whose incoming card is up (an alert went out, the call hasn't ended): checked every pass for "answered
+    /// elsewhere" — one of my OTHER devices joined that call, so the card goes and the ring stops.
+    presented: std::collections::HashSet<String>,
 }
 
 /// What one sync pass means for one room (unit-tested).
@@ -78,6 +81,26 @@ pub(crate) fn is_recorder_only(participants: &[String], recorder: Option<&str>) 
 /// after a missed or dropped call must still reach you (the flapping calls that needed the long
 /// window were all in group rooms: test rigs, reconnecting clients, recorder retries), but a
 /// call that reconnects every few seconds rings once (A5.7).
+/// Answered elsewhere (Pad phase 3, 2026-10-26; the web's alertrules.ts `answeredElsewhere`, the same cases): one of MY
+/// OTHER devices has a live, well-formed session in the room's call — the call was taken on another device, so this
+/// device's incoming card goes and the ring stops (the banner / room-list bar then offer Pad · Join). Pad's discovery
+/// rule decides (padrules::pad_targets: liveness + the state key owned by the sender and that device), whatever that
+/// device's trust or caps. `events` = the room's raw call-membership state events.
+pub(crate) fn answered_elsewhere(me: &str, my_device: &str, now_ms: i64, events: &[serde_json::Value]) -> bool {
+    !me.is_empty() && !my_device.is_empty() && !crate::padrules::pad_targets(me, my_device, now_ms, false, &[], events).is_empty()
+}
+
+/// [`answered_elsewhere`] on a room's call-membership state as this device's store has it.
+async fn answered_elsewhere_in(client: &Client, room: &matrix_sdk::Room) -> bool {
+    use matrix_sdk::ruma::events::call::member::CallMemberEventContent;
+    let me = client.user_id().map(|u| u.to_string()).unwrap_or_default();
+    let my_dev = client.device_id().map(|d| d.to_string()).unwrap_or_default();
+    let now_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0);
+    let Ok(raws) = room.get_state_events_static::<CallMemberEventContent>().await else { return false };
+    let events: Vec<serde_json::Value> = raws.iter().filter_map(|x| serde_json::to_value(x).ok()).collect();
+    answered_elsewhere(&me, &my_dev, now_ms, &events)
+}
+
 pub(crate) fn should_announce(last: Option<Instant>, now: Instant, participants: &[String], is_dm: bool, recorder: Option<&str>) -> bool {
     if is_recorder_only(participants, recorder) {
         return false;
@@ -145,6 +168,7 @@ pub async fn scan(client: &Client) -> Vec<Edge> {
             }
         }
         st.recorder_alone.retain(|id| seen.get(id).copied().unwrap_or(false));
+        st.presented.retain(|id| seen.get(id).copied().unwrap_or(false));
         st.active = seen;
         st.seeded = true;
     }
@@ -155,6 +179,16 @@ pub async fn scan(client: &Client) -> Vec<Edge> {
         }
     }
     let mut edges = Vec::new();
+    // answered elsewhere: a card up for a call one of MY OTHER devices is now in goes (the web does the same)
+    let up: Vec<String> = state().lock().unwrap().presented.iter().cloned().collect();
+    for id in up {
+        let Some(r) = matrix_sdk::ruma::RoomId::parse(id.as_str()).ok().and_then(|rid| client.get_room(&rid)) else { continue };
+        if answered_elsewhere_in(client, &r).await {
+            eprintln!("[callwatch] call in {id} answered on another of my devices — card dismissed");
+            state().lock().unwrap().presented.remove(&id);
+            edges.push(Edge { room_id: id, room_name: String::new(), who: String::new(), started: false });
+        }
+    }
     for r in falling {
         edges.push(Edge { room_id: r.room_id().to_string(), room_name: String::new(), who: String::new(), started: false });
     }
@@ -178,6 +212,11 @@ pub async fn scan(client: &Client) -> Vec<Edge> {
         }
         // a person is in it: this pass is the call's real start, whatever we decide below
         state().lock().unwrap().recorder_alone.remove(&id);
+        // already taken on another of my devices (both arrived in this pass): no card, no ring (Astra 2026-10-26)
+        if answered_elsewhere_in(client, &r).await {
+            eprintln!("[callwatch] call in {id} already answered on another of my devices — not announced");
+            continue;
+        }
         let is_dm = r.is_direct().await.unwrap_or(false);
         let mode = crate::notify::effective_mode(client, &r, is_dm).await;
         if matches!(mode, matrix_sdk_base::notification_settings::RoomNotificationMode::Mute) {
@@ -210,6 +249,7 @@ pub async fn scan(client: &Client) -> Vec<Edge> {
             }
         }
         eprintln!("[callwatch] incoming call in {room_name} ({id}) started by {who:?}");
+        state().lock().unwrap().presented.insert(id.clone());
         edges.push(Edge { room_id: id, room_name, who, started: true });
     }
     if crate::session::generation() != gen {
@@ -298,5 +338,28 @@ mod tests {
         assert!(should_announce(None, t0, &p(&[REC, "@dale:example.com"]), false, Some(REC)));
         // Nothing visible yet (membership not synced): keep the old behaviour and alert.
         assert!(should_announce(None, t0, &[], false, Some(REC)));
+    }
+
+    /// Pad phase 3 — the web's alertrules.test.ts "answered_elsewhere" cases.
+    #[test]
+    fn answered_elsewhere() {
+        use serde_json::json;
+        const ME: &str = "@me:example.org";
+        let now: i64 = 1_790_121_600_000;
+        let mem = |sender: &str, dev: &str, created: i64| {
+            json!({"sender": sender, "state_key": format!("_{sender}_{dev}_m.call"), "origin_server_ts": now - 5_000,
+                   "content": {"application": "m.call", "call_id": "", "scope": "m.room", "device_id": dev,
+                               "focus_active": {"type": "livekit", "focus_selection": "oldest_membership"}, "foci_preferred": [],
+                               "created_ts": created, "expires": 14_400_000}})
+        };
+        assert!(super::answered_elsewhere(ME, "PHONE", now, &[mem("@bob:example.org", "B1", now - 5_000), mem(ME, "PC", now - 5_000)]), "my other device in the call");
+        assert!(!super::answered_elsewhere(ME, "PHONE", now, &[mem("@bob:example.org", "B1", now - 5_000), mem(ME, "PHONE", now - 5_000)]), "only this device of mine");
+        assert!(!super::answered_elsewhere(ME, "PHONE", now, &[mem("@bob:example.org", "B1", now - 5_000)]), "someone else only");
+        assert!(!super::answered_elsewhere(ME, "PHONE", now, &[mem(ME, "PC", now - 5 * 3_600_000)]), "my other device's session expired");
+        let left = json!({"sender": ME, "state_key": format!("_{ME}_PC_m.call"), "origin_server_ts": now, "content": {}});
+        assert!(!super::answered_elsewhere(ME, "PHONE", now, &[left]), "a left (empty) membership");
+        let mut eve = mem(ME, "PC", now - 5_000);
+        eve["sender"] = json!("@eve:example.org");
+        assert!(!super::answered_elsewhere(ME, "PHONE", now, &[eve]), "a state key that isn't the sender's");
     }
 }

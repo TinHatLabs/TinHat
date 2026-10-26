@@ -62,6 +62,7 @@ pub mod qobject {
         #[qproperty(QString, rooms_json)] // QML: roomsJson — JSON [{id,name}]
         #[qproperty(QString, auto_join_room)] // QML: autoJoinRoom — self-test auto-join (env TINHAT_GUI_AUTOJOIN)
         #[qproperty(QString, auto_login)] //     QML: autoLogin — self-test sign-in "user:password" (env TINHAT_GUI_LOGIN, 10.0.6)
+        #[qproperty(QString, auto_sec_key)] //   QML: autoSecKey — self-test: verify this device with the Security Key in the file TINHAT_GUI_SECKEY_FILE (lab gates)
         #[qproperty(bool, auto_cam)] //          QML: autoCam — also enable the camera after auto-join (env TINHAT_GUI_AUTOCAM)
         #[qproperty(bool, auto_mute)] //         QML: autoMute — mute the mic ~6s after auto-join (env TINHAT_GUI_AUTOMUTE)
         #[qproperty(QString, auto_open_room)] // QML: autoOpenRoom — open a room (NO call) for screenshots (env TINHAT_GUI_OPENROOM)
@@ -322,6 +323,7 @@ pub struct LoginControllerRust {
     rooms_json: QString,
     auto_join_room: QString,
     auto_login: QString, // 10.0.6: TINHAT_GUI_LOGIN self-test sign-in
+    auto_sec_key: QString, // TINHAT_GUI_SECKEY_FILE self-test verification (Pad phase-3 lab gate)
     auto_cam: bool,
     auto_mute: bool,
     auto_open_room: QString,
@@ -391,6 +393,14 @@ impl Default for LoginControllerRust {
                 std::env::var("TINHAT_GUI_AUTOJOIN").unwrap_or_default().as_str(),
             ),
             auto_login: QString::from(std::env::var("TINHAT_GUI_LOGIN").unwrap_or_default().as_str()),
+            // a FILE (never the key itself in the environment / ps): the lab gate's own copy of the account's key
+            auto_sec_key: QString::from(
+                std::env::var_os("TINHAT_GUI_SECKEY_FILE")
+                    .and_then(|p| std::fs::read_to_string(p).ok())
+                    .map(|k| k.trim().to_string())
+                    .unwrap_or_default()
+                    .as_str(),
+            ),
             auto_cam: std::env::var_os("TINHAT_GUI_AUTOCAM").is_some(),
             auto_mute: std::env::var_os("TINHAT_GUI_AUTOMUTE").is_some(),
             auto_open_room: QString::from(
@@ -1645,7 +1655,9 @@ impl qobject::LoginController {
                             // downstream). Absence => peer never targeted us (membership).
                             // Skip the chatty per-message m.room.key spam.
                             let is_room_key = ty == "m.room.key" || ty == "m.room_key";
-                            if variant != "decrypted" || !is_room_key {
+                            // Pad (docs/PAD.md): up to 4 states a second while a Pad is open — logged by pad_net.rs
+                            let is_pad = ty == crate::padrules::PAD_CMD || ty == crate::padrules::PAD_STATE;
+                            if variant != "decrypted" || !(is_room_key || is_pad) {
                                 eprintln!("[recv1-td] {variant} type={ty} from {sender}");
                             }
                             // Media-key events are trusted ONLY when Olm decrypted them. A
@@ -1681,6 +1693,12 @@ impl qobject::LoginController {
                                         "[recv1-td] REJECTED {variant} encryption_keys from {sender} — only Olm-decrypted key events are trusted"
                                     );
                                 }
+                            } else if is_pad {
+                                // Pad: the phone as a remote for my call. Only an Olm-decrypted event from another
+                                // verified device of MY account is ever acted on (pad_net.rs looks up the facts for
+                                // every message, padrules.rs decides); plaintext / UTD of these types are dropped
+                                // there with a log line and no reply.
+                                crate::pad_ctl::on_to_device(pe).await;
                             } else {
                                 crate::call_ctl::ingest_todevice_raw(raw);
                             }

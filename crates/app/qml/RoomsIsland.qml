@@ -67,6 +67,15 @@ ColumnLayout {
         Kirigami.Separator { anchors.bottom: parent.bottom; width: parent.width; height: 1 }
     }
 
+    // ── Pad (docs/PAD.md): "You're in {room}'s call on {device} · Pad · Join" ──
+    PadBar {
+        Layout.fillWidth: true
+        Layout.leftMargin: Kirigami.Units.smallSpacing
+        Layout.rightMargin: Kirigami.Units.smallSpacing
+        Layout.topMargin: Kirigami.Units.smallSpacing
+        app: island.app
+    }
+
     // ── filter ──────────────────────────────────────────────────────────
     Kirigami.SearchField {
         id: filterField

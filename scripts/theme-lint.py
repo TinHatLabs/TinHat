@@ -66,6 +66,8 @@ MIGRATED = [
     # the Settings window (feat/settings-window, contract SETTINGS-WINDOW.md): the window, its pieces, the meter
     "SettingsWindow.qml", "SettingsPage.qml", "SettingsSection.qml", "SettingsCard.qml", "SettingsRow.qml",
     "SettingsRowGroup.qml", "LevelMeter.qml", "LayoutSection.qml",
+    # Pad (feat/pad, docs/PAD.md): the Pad window, its sound button and volume menu, the room-list bar, the executor
+    "PadWindow.qml", "PadSoundButton.qml", "PadVolumeMenu.qml", "PadBar.qml", "PadHost.qml", "PadChip.qml",
 ]
 # FallbackTheme IS the shim (it may forward DEPRECATED names); it still may not hold a literal.
 SHIM_FILES = {"FallbackTheme.qml"}

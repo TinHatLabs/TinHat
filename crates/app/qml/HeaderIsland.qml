@@ -25,6 +25,9 @@ ColumnLayout {
     spacing: Kirigami.Units.smallSpacing
     readonly property bool barShown: !(island.app.callMaximized && island.app.callShown)
     readonly property bool joinShown: island.app.mCallActive && !island.app.mInCall && !island.app.mConnecting && !island.app.fakeCall
+    // Pad (docs/PAD.md): another of my devices is in this room's call → "Pad" next to Join (greyed with its line when
+    // it can't work); null = none of mine there
+    readonly property var padT: island.app.padTargetIn(island.app.room ? island.app.room.roomId : "")
     readonly property bool wpShown: island.app.mLoggedIn && island.app.room.watchPartyOn && !island.app.watchCtl.inParty
     // selfhost (docs/GUESTS.md): THE Guests room's bar — what it shows is decided in Rust (guests_ctl.rs view_json: the
     // room state through sync, the doc's roles; null for guests, for those who may not see it, and when the server's
@@ -208,10 +211,19 @@ ColumnLayout {
                         var r = island.app.mNavRooms[i]
                         if (!r || r.id !== island.app.room.roomId) continue
                         var ps = r.participants || []
-                        for (var j = 0; j < ps.length; j++) names.push(String(ps[j].name || ps[j].mxid || ""))
+                        // Pad: my other device is one of them — the line is about it, and about the others
+                        for (var j = 0; j < ps.length; j++) if (!island.padT || ps[j].mxid !== island.app.mUserId) names.push(String(ps[j].name || ps[j].mxid || ""))
                         break
                     }
                     names = names.filter(function (n) { return n.length > 0 })
+                    if (island.padT) {
+                        var here = "You're in this call on " + island.padT.name
+                        if (names.length === 0) return here
+                        if (names.length === 1) return here + " — " + names[0] + " is there too"
+                        if (names.length === 2) return here + " — " + names[0] + " and " + names[1] + " are there too"
+                        if (names.length === 3) return here + " — " + names[0] + ", " + names[1] + " and " + names[2] + " are there too"
+                        return here + " — " + names[0] + ", " + names[1] + " and " + (names.length - 2) + " others are there too"
+                    }
                     if (names.length === 0) return "There's a call going on in this room"
                     if (names.length === 1) return names[0] + " is in a call"
                     if (names.length === 2) return names[0] + " and " + names[1] + " are in a call"
@@ -219,6 +231,20 @@ ColumnLayout {
                     return names[0] + ", " + names[1] + " and " + (names.length - 2) + " others are in a call"
                 }
                 color: Th.callJoinBannerFg
+            }
+            ThButton {
+                id: padBtn
+                visible: !!island.padT
+                app: island.app
+                text: "Pad"
+                icon.name: "smartphone-symbolic"
+                opacity: island.padT && island.padT.ready ? 1 : 0.5   // greyed, still clickable: the click explains
+                Controls.ToolTip.text: island.padT && island.padT.ready
+                    ? "Control the call on " + island.padT.name + " from here — sounds, mute, volumes"
+                    : island.app.padWhyLine(island.padT)
+                Controls.ToolTip.visible: hovered
+                Controls.ToolTip.delay: 300
+                onClicked: island.app.openPad(island.app.room.roomId, island.padT)
             }
             GlowButton {
                 app: island.app

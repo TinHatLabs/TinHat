@@ -2,7 +2,7 @@
 // OLED theme. DO NOT EDIT: every build rewrites this file when it is stale — commit the result with the change
 // that caused it (scripts/theme-lint.py fails on an uncommitted Th.qml).
 //
-// The ACTIVE theme: one `color` per role (52) and per element token (1649), named in lowerCamel
+// The ACTIVE theme: one `color` per role (52) and per element token (1667), named in lowerCamel
 // after the id — `composer.border.focus` → Th.composerBorderFocus. Paint with the token of the element (NAMING.md;
 // the site → token map is audit/merged/sitemap-desktop.jsonl); a role only where the sitemap says so (plumbing).
 // Defaults = the built-in OLED. AppCore.applyTheme() fills everything from ThemeController (the Rust engine,
@@ -131,7 +131,7 @@ QtObject {
     property color textPrimary: "#e0e0e0"                                   // text.primary
     property color textSecondary: "#aaaaaa"                                 // text.secondary
 
-    // ---- element tokens (1649): <id> = <default expression over roles>
+    // ---- element tokens (1667): <id> = <default expression over roles>
     property color accountAskBg: "#1a1a1a"                                  // account.ask.bg = surface.raised
     property color accountAskBorder: "#222222"                              // account.ask.border = border.subtle
     property color accountAskDot: "#3ba55c"                                 // account.ask.dot = presence.online
@@ -1025,6 +1025,24 @@ QtObject {
     property color overlayPillIconMuted: "#d06868"                          // overlay.pill.icon.muted = #d06868
     property color overlaySharingIcon: "#3cbad0"                            // overlay.sharing.icon = accent.bright
     property color overlayWindowBg: "#050507"                               // overlay.window.bg = #050507
+    property color padChipBg: Qt.rgba(255/255, 255/255, 255/255, 0.08)      // pad.chip.bg = call.hiddenChip.bg
+    property color padChipBgHover: Qt.rgba(255/255, 255/255, 255/255, 0.16) // pad.chip.bg.hover = call.hiddenChip.bg.hover
+    property color padChipBorder: Qt.rgba(255/255, 255/255, 255/255, 0.18)  // pad.chip.border = call.hiddenChip.border
+    property color padChipFg: "#aaaaaa"                                     // pad.chip.fg = call.hiddenChip.fg
+    property color padDot: "#aaaaaa"                                        // pad.dot = call.statusBar.dot
+    property color padDotLive: "#3ad07a"                                    // pad.dot.live = call.statusBar.dot.live
+    property color padListBarBg: Qt.rgba(30/255, 106/255, 118/255, 0.16)    // pad.listBar.bg = call.joinBanner.bg
+    property color padListBarBorder: Qt.rgba(30/255, 106/255, 118/255, 0.45) // pad.listBar.border = call.joinBanner.border
+    property color padListBarFg: "#e0e0e0"                                  // pad.listBar.fg = call.joinBanner.fg
+    property color padMyRowBg: Qt.rgba(0/255, 0/255, 0/255, 0.6)            // pad.myRow.bg = callbar.mobile.bg
+    property color padMyRowBorder: Qt.rgba(255/255, 255/255, 255/255, 0.1)  // pad.myRow.border = callbar.mobile.border
+    property color padPanelBg: "#0a0a0a"                                    // pad.panel.bg = soundboard.bg
+    property color padPanelBorder: Qt.rgba(255/255, 255/255, 255/255, 0.12) // pad.panel.border = soundboard.border
+    property color padPendingRing: "#3cbad0"                                // pad.pending.ring = callbar.button.border.focus
+    property color padPersonBgHover: "#1a1a1a"                              // pad.person.bg.hover = soundboard.card.bg.hover
+    property color padPersonBgPressed: Qt.rgba(255/255, 255/255, 255/255, 0.05) // pad.person.bg.pressed = soundboard.card.bg
+    property color padPersonRingSpeaking: "#3ad07a"                         // pad.person.ring.speaking = tile.ring.speaking
+    property color padSoundPendingRing: "#1e6a76"                           // pad.sound.pending.ring = soundboard.card.border.focus
     property color panelActivityFg: "#3cbad0"                               // panel.activity.fg = accent.bright
     property color panelBackBgPressed: "#1a1a1a"                            // panel.back.bg.pressed = surface.pressed
     property color panelBg: "#0a0a0a"                                       // panel.bg = surface.island

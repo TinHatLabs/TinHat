@@ -258,6 +258,131 @@
         }
       },
       "input": {
+        "action": "call.pad.open",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "call.pad.open: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "input": {
+        "action": "call.pad.open",
+        "target": {
+          "room": "!gone:example.com"
+        }
+      },
+      "name": "call.pad.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "input": {
+        "action": "call.pad.open",
+        "target": {
+          "room": "!other:example.com"
+        }
+      },
+      "name": "call.pad.open: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "target": {
+          "room": "room-without-bang"
+        }
+      },
+      "name": "call.pad.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "target": {
+          "room": 7
+        }
+      },
+      "name": "call.pad.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "call.pad.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "call.pad.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "target": "x"
+      },
+      "name": "call.pad.open: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "call.pad.open"
+      },
+      "name": "call.pad.open: no target"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "input": {
         "action": "memories.open",
         "target": {
           "room": "!room:example.com"

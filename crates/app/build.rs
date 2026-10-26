@@ -236,6 +236,13 @@ fn main() {
                 "qml/Island.qml", // islands C4: an island's frame in the dock host
                 "qml/DockHost.qml", // islands C4: the flat dock host (solve + one imperative apply; episodes; focus recovery)
                 "qml/HostTest.qml", // islands C4: the host's offscreen test (TINHAT_HOST_TEST)
+                // Pad (docs/PAD.md): the receiver's executor + snapshot, the Pad window and its pieces, the room-list bar
+                "qml/PadHost.qml",
+                "qml/PadWindow.qml",
+                "qml/PadSoundButton.qml",
+                "qml/PadVolumeMenu.qml",
+                "qml/PadBar.qml",
+                "qml/PadChip.qml",
             ])
             // themes (desktop C1): the active theme's colours, generated above (docs/MIGRATING-THEME.md).
             .qml_file(QmlFile::from(theme_gen::TH_FILE).singleton(true))
@@ -289,6 +296,7 @@ fn main() {
         .file("src/lowgpu_ctl.rs") // LowGpuController (step 3: the low-GPU contract's rules for QML, GPU.md)
         .file("src/layout_ctl.rs") // LayoutController (islands C1: the layout engine, JSON in / JSON out; no UI yet)
         .file("src/actions_ctl.rs") // ActionsController (11.0 step 3: the actions engine — rows, the palette, JSON in / out)
+        .file("src/pad_ctl.rs") // PadController (Pad: the phone as a remote for my call — docs/PAD.md)
         .cc_builder(|cc| {
             if cc.get_compiler().is_like_msvc() {
                 cc.flag("/utf-8");

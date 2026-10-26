@@ -1263,6 +1263,34 @@ impl Drop for JoiningMark {
 /// before `active_call_room` is set — it is the newest intent, so it wins over a call being left), else
 /// the active call. The generation changes with every join and leave, so a held key never crosses from
 /// one call into the next, even in the same room. None = no call.
+/// The LiveKit focus (broker URL) of the call we are in, for [`republish_membership`].
+fn active_focus_url() -> &'static std::sync::Mutex<Option<String>> {
+    static F: OnceLock<std::sync::Mutex<Option<String>>> = OnceLock::new();
+    F.get_or_init(|| std::sync::Mutex::new(None))
+}
+
+/// Pad (pad_ctl.rs, docs/PAD.md): re-publish our call membership NOW — Settings → Calls → Pad changed its `pad1`
+/// cap, which would otherwise wait for the 30-min refresh. The same path as that refresh (join_rtc_session keeps the
+/// original created_ts, so no peer rotates its key). Nothing outside a call.
+pub(crate) async fn republish_membership() {
+    let my_gen = join_gen().load(std::sync::atomic::Ordering::SeqCst);
+    let Some(rid) = active_call_room().lock().unwrap().clone() else { return };
+    if current_call().lock().await.is_none() {
+        return;
+    }
+    let Some(svc) = active_focus_url().lock().unwrap().clone() else { return };
+    let Some(client) = crate::session::client() else { return };
+    let Some(room) = matrix_sdk::ruma::RoomId::parse(rid.as_str()).ok().and_then(|r| client.get_room(&r)) else { return };
+    // bound to this join: a leave / rejoin since (it bumps the generation) must not get a stale membership back
+    if active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) || join_gen_stale(my_gen) {
+        return;
+    }
+    match crate::rtc::join_rtc_session(&room, &svc).await {
+        Ok(()) => eprintln!("[call] membership re-published (Pad setting changed)"),
+        Err(e) => eprintln!("[call] membership re-publish failed: {e}"),
+    }
+}
+
 pub(crate) fn key_intake_room() -> Option<(String, u64)> {
     if let Some((gen, room)) = joining_room().lock().unwrap().clone() {
         if !join_gen_stale(gen) {
@@ -4203,6 +4231,7 @@ async fn do_join(
     // leave_on_exit can withdraw it even if the app quits before this join finishes
     // (current_call is only set at the very end). Failure paths below clear it.
     *active_call_room().lock().unwrap() = Some(room_id.to_string());
+    *active_focus_url().lock().unwrap() = Some(focus.service_url.clone()); // Pad: republish_membership()
 
     // Refresh our MatrixRTC membership before EC's 4h expiry lapses, so peers keep
     // enumerating us as a key recipient (and re-send rotations) on long calls. Ends

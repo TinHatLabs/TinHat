@@ -11558,6 +11558,216 @@
         "typing": true
       },
       "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Ctrl+Shift+M"
+      },
+      "name": "call.pad.open Ctrl+Shift+M"
+    },
+    {
+      "expect": {
+        "key": "F9",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "F9"
+      },
+      "name": "call.pad.open F9"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Ctrl"
+      },
+      "name": "call.pad.open Ctrl"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Alt"
+      },
+      "name": "call.pad.open Alt"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+J",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Ctrl+J"
+      },
+      "name": "call.pad.open Ctrl+J"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "K"
+      },
+      "name": "call.pad.open K"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Shift+K"
+      },
+      "name": "call.pad.open Shift+K"
+    },
+    {
+      "expect": {
+        "error": "reserved",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Escape"
+      },
+      "name": "call.pad.open Escape"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+T",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Ctrl+T"
+      },
+      "name": "call.pad.open Ctrl+T"
+    },
+    {
+      "expect": {
+        "error": "fixed-taken",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Ctrl+V"
+      },
+      "name": "call.pad.open Ctrl+V"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Return"
+      },
+      "name": "call.pad.open Return"
+    },
+    {
+      "expect": {
+        "key": "Alt+Shift+Down",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Alt+Shift+Down"
+      },
+      "name": "call.pad.open Alt+Shift+Down"
+    },
+    {
+      "expect": {
+        "key": "Meta+1",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Meta+1"
+      },
+      "name": "call.pad.open Meta+1"
+    },
+    {
+      "expect": {
+        "key": "F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "F5"
+      },
+      "name": "call.pad.open F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Ctrl+F5"
+      },
+      "name": "call.pad.open Ctrl+F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+P",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "call.pad.open",
+        "app": "desktop",
+        "key": "Ctrl+P"
+      },
+      "name": "call.pad.open Ctrl+P"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+Shift+M",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
         "action": "call.pin.clear",
         "app": "desktop",
         "key": "Ctrl+Shift+M"

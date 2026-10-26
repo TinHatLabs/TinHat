@@ -242,6 +242,33 @@ Kirigami.ApplicationWindow {
     readonly property var invitesCtl: core.c_invitesCtl   // 10.4 invite codes (docs/INVITES.md)
     readonly property var guestsCtl: core.c_guestsCtl   // selfhost: the guest room (docs/GUESTS.md)
     readonly property var gameServersCtl: core.c_gameServers   // 11.1 the Game servers widget (docs/GAMESERVERS.md)
+    readonly property var padCtl: core.c_padCtl   // Pad: the phone as a remote for my call (docs/PAD.md)
+    property alias mPadOn: core.mPadOn
+    property alias mPadChips: core.mPadChips
+    property alias mPadTargets: core.mPadTargets
+    property alias mPadRemote: core.mPadRemote
+    property alias mPadSounds: core.mPadSounds
+    // My other devices in `roomId`'s call, ready ones first ([] = none): {device, name, ready, why, createdTs}.
+    function padTargetsIn(roomId) {
+        var rs = (root.mPadTargets && root.mPadTargets.rooms) ? root.mPadTargets.rooms : ({})
+        var l = (roomId && rs[roomId]) ? rs[roomId].slice() : []
+        l.sort(function (a, b) { return (a.ready === b.ready) ? 0 : (a.ready ? -1 : 1) })   // stable: newest first within each
+        return l
+    }
+    function padTargetIn(roomId) { var l = root.padTargetsIn(roomId); return l.length > 0 ? l[0] : null }
+    // The one line under a greyed Pad (DESIGN §1): Verify this device / Verify {device} / Update Tin Hat on {device}.
+    function padWhyLine(t) { return t && !t.ready ? String(padCtl.whyText(t.why, t.name, "")) : "" }
+    // Pad → the Pad window for that device's call (a greyed one explains in a toast; "Verify this device…" offers
+    // Devices & security).
+    function openPad(roomId, t) {
+        if (!t) return
+        if (!t.ready) {
+            if (t.why === "unverified") root.showPassiveNotification(root.padWhyLine(t), 4000, "Devices & security", function () { settingsWindow.openAt("security") })
+            else root.showPassiveNotification(root.padWhyLine(t), 4000)
+            return
+        }
+        padWindow.openFor(String(roomId), String(t.device))
+    }
     readonly property var presenceCtl: core.c_presenceCtl   // 10.6 opt-in presence (docs/REACH.md §2)
     // 11.0 step 3 (buttons, ACTIONS.md): the actions engine, its table, and the runtime (the live snapshot, the one run
     // path, the id → command map — ActionsHost.qml; its `ui` below names the surfaces it opens)
@@ -2296,6 +2323,9 @@ Kirigami.ApplicationWindow {
         root.mSbRecent = next
         settings.applyPref("soundboard-recent", JSON.stringify(next))
     }
+    // Pad (docs/PAD.md): the receiver's executor + snapshot, and the Pad window (this device driving another of mine).
+    PadHost { id: padHost; app: root }
+    PadWindow { id: padWindow; app: root }
     SoundboardPopover {
         id: soundboardPanel
         app: root
@@ -2818,6 +2848,25 @@ Kirigami.ApplicationWindow {
                 root.raise(); root.requestActivate() // bring to front for the self-test screenshot
                 running = false
             }
+        }
+    }
+    // Self-test only (env TINHAT_GUI_SECKEY_FILE: a lab gate's file with the account's Security Key): once signed in
+    // and the first-device check is over, verify THIS device with it — login.verify(), what the verify sheet's
+    // "Verify with Security Key" button calls — so a gate's desktop device is a verified device of its account.
+    Timer {
+        id: autoKeyTimer
+        interval: 1500
+        repeat: true
+        running: !autoKeyTimer.done && login.autoSecKey.length > 0
+        property bool done: false
+        onTriggered: {
+            if (!login.loggedIn || login.firstDevicePending || root.mBusy) return
+            done = true
+            var key = login.autoSecKey
+            login.autoSecKey = ""   // used once: the key isn't kept in the property (Astra 2026-10-26)
+            if (login.verified) { console.log("[autokey] this device is verified already"); return }
+            console.log("[autokey] verifying this device with the Security Key (TINHAT_GUI_SECKEY_FILE)")
+            login.verify(key)
         }
     }
     // Test hook (TINHAT_GUI_AUTOMUTE): mute the mic ~6s after auto-join (call connected),
@@ -3525,6 +3574,118 @@ Kirigami.ApplicationWindow {
             root.mCorner = { mine: "demo", active: true, members: ["@morgan:example.com"],
                              corners: { demo: ["@morgan:example.com", login.userId + ":ME"] } }
         }
+    }
+    // --tinhat-paddrive=FILE (+ QML_XHR_ALLOW_FILE_READ=1; lab gates only — the Pad phase-3 gate): a gate drives the
+    // REAL Pad window. FILE gets one JSON step per line: {"do": "open"[, room, device]} = the room-list bar's / banner's
+    // Pad button, anything else = PadWindow.drive() (what that control's click runs). Each step and every answer is
+    // logged "[paddrive] …" with this process's clock (t=ms), so the gate can time tap → ack and tap → heard.
+    Timer {
+        id: padDrive
+        interval: 120
+        repeat: true
+        running: root.mLoggedIn && root._hookArg("--tinhat-paddrive") !== null
+        property int done: 0
+        property bool reading: false
+        onTriggered: {
+            if (padDrive.reading) return
+            padDrive.reading = true
+            var x = new XMLHttpRequest()
+            x.onreadystatechange = function () {
+                if (x.readyState !== XMLHttpRequest.DONE) return
+                padDrive.reading = false
+                var lines = String(x.responseText || "").split("\n")
+                // only whole lines (the last piece may still be being written)
+                for (var i = padDrive.done; i < lines.length - 1; i++) {
+                    padDrive.done = i + 1
+                    if (lines[i].trim().length === 0) continue
+                    var step = null
+                    try { step = JSON.parse(lines[i]) } catch (e) { console.log("[paddrive] #" + i + " not JSON") }
+                    if (step) root._padDriveStep(i, step)
+                }
+            }
+            x.open("GET", "file://" + String(root._hookArg("--tinhat-paddrive")))
+            x.send()
+        }
+    }
+    function _padDriveStep(n, s) {
+        var r
+        if (s.do === "open") {
+            var order = (root.mPadTargets && root.mPadTargets.order) ? root.mPadTargets.order : []
+            var room = s.room ? String(s.room) : (order.length > 0 ? String(order[0]) : "")
+            var l = root.padTargetsIn(room), t = null
+            for (var i = 0; i < l.length; i++) if (!s.device || l[i].device === String(s.device)) { t = l[i]; break }
+            if (!t) r = "no target"
+            else { root.openPad(room, t); r = t.ready ? "opened " + t.device : "greyed (" + t.why + "): " + t.device + " not opened — its line shown" }
+        } else if (s.do === "targets") r = root.mPadTargets
+        // the receiver's side: the Settings switches and the chip's ×, by the same calls as their handlers
+        else if (s.do === "pad-allow") { padCtl.applyPadOn(s.on === true); r = "pad " + (s.on === true ? "on" : "off") }
+        else if (s.do === "ptt") { callctl.applyPushToTalk(s.on === true); r = "ptt " + (s.on === true ? "on" : "off") }
+        else if (s.do === "chip-x") { padCtl.refuseDevice(String(s.device || "")); r = "refused " + String(s.device || "") }
+        else if (s.do === "rx") {
+            var v = {}
+            if (s.user) for (var k = 0, cs = ["mic", "screenshare", "music"]; k < cs.length; k++)
+                v[cs[k]] = { level: parseFloat(audioPrefsCtl.volumeFor(String(s.user), cs[k])), muted: audioPrefsCtl.mutedFor(String(s.user), cs[k]) }
+            r = { verified: login.verified, inCall: root.mInCall, room: root.mCallRoomId, micMuted: callctl.micMuted, ptt: callctl.pushToTalk,
+                  serverMuted: callctl.serverMuted, deaf: callctl.deafened, brb: !!afkCtl && afkCtl.localAfk === true,
+                  playing: soundboardPanel ? String(soundboardPanel.playingUrl || "") : "", chips: root.mPadChips, padOn: padCtl.padOn, vol: v }
+        }
+        else r = padWindow.drive(s)
+        console.log("[paddrive] #" + n + " " + s.do + " -> " + (typeof r === "object" ? JSON.stringify(r) : String(r)) + " t=" + Date.now())
+    }
+    Connections {
+        target: root._hookArg("--tinhat-paddrive") !== null ? padCtl : null
+        ignoreUnknownSignals: true
+        function onAcked(seq, ok, why, op) { console.log("[paddrive] acked seq=" + seq + " ok=" + ok + " why=" + why + " op=" + op + " t=" + Date.now()) }
+        function onFailed(seq, op) { console.log("[paddrive] failed seq=" + seq + " op=" + op + " t=" + Date.now()) }
+        function onEnded(why) { console.log("[paddrive] ended why=" + why + " t=" + Date.now()) }
+    }
+    // --tinhat-paddemo=window|pending|notice|unreachable|replaced|connecting|volume|ptt|server|chooser|chip|entry (docs/PAD.md): Pad's states for the review
+    // screenshots — sample data in the Pad mirrors (AppCore.padDemo holds the real mirror back); nothing is sent.
+    Timer {
+        interval: 4500
+        running: root.mLoggedIn && root._hookArg("--tinhat-paddemo") !== null
+        onTriggered: root._padDemo(String(root._hookArg("--tinhat-paddemo") || "window"))
+    }
+    function _padDemo(kind) {
+        var room = root.room.roomId.length > 0 ? root.room.roomId : (root.mRooms.length > 0 ? root.mRooms[0].id : "!demo:lab.test")
+        var pc = "DEMOPC", phone = "DEMOPHONE"
+        var mi = function (f) { return "https://sounds.example.org/" + f }
+        var names = {}; names[pc] = "Desktop PC"; names[phone] = "Phone"
+        var rooms = {}; rooms[room] = [{ device: pc, name: "Desktop PC", ready: true, why: "", createdTs: Date.now() }]
+        if (kind === "chooser") rooms[room].push({ device: "DEMOLAPTOP", name: "Work laptop", ready: true, why: "", createdTs: Date.now() - 60000 })
+        core.padDemo = true
+        core.mPadTargets = { rooms: rooms, order: Object.keys(rooms), names: names }
+        if (kind === "chip") {
+            core.mPadChips = [{ device: phone, name: "Phone" }]
+            core.notifyAction("Phone is now a Pad for this call", 8000, "Settings", function () { root.openCallSettings() })
+            return
+        }
+        if (kind === "entry") return
+        var favs = [{ name: "Bruh", sourceUrl: mi("bruh.mp3"), emoji: "😐" }, { name: "MLG Airhorn", sourceUrl: mi("airhorn.mp3"), emoji: "📯" },
+                    { name: "Sad trombone", sourceUrl: mi("sadtrombone.mp3"), emoji: "🎺" }, { name: "Vine boom", sourceUrl: mi("vine-boom.mp3"), emoji: "💥" },
+                    { name: "Emotional damage", sourceUrl: mi("emotional-damage.mp3"), emoji: "😭" }, { name: "Drum roll", sourceUrl: mi("drumroll.mp3"), emoji: "🥁" }]
+        core.mPersonalSounds = favs
+        var ptt = kind === "ptt"
+        var state = { v: 1, sid: "RGVtb1NpZDAwMDAw", rseq: 42, rt: Date.now(), re: 0, ok: true, why: "",
+            ops: ["sound.play", "sound.stop", "mic", "deafen", "brb", "vol", "vol.reset", "leave"],
+            call: { room: room, gen: "demo1", since: Date.now() - 1800000,
+                me: { mic: ptt ? "ptt" : (kind === "server" ? "server" : "on"), deaf: false, brb: false, talk: false, sound: ptt ? null : { url: mi("airhorn.mp3") },
+                      gate: ptt ? { allowed: false, hint: "The soundboard is off for your role in this call." } : { allowed: true, hint: "" } },
+                people: [{ u: "@morgan:lab.test", talk: true, micOff: false, away: false },
+                         { u: "@riley:lab.test", talk: false, micOff: true, away: false, mute: ["music"] },
+                         { u: "@sam:lab.test", talk: false, micOff: false, away: true, vol: { mic: 0.6 } }],
+                more: 0,
+                recent: [{ name: "Vine boom", url: mi("vine-boom.mp3"), emoji: "💥" }, { name: "Oof", url: mi("oof.mp3"), emoji: "🔊" }, { name: "Bruh", url: mi("bruh.mp3"), emoji: "😐" }] } }
+        core.mPadSounds = { room: room, roomSounds: [{ name: "Victory fanfare", url: mi("fanfare.mp3"), emoji: "🏆" }, { name: "GG", url: mi("gg.mp3"), emoji: "🎮" }, { name: "Crickets", url: mi("crickets.mp3"), emoji: "🦗" }],
+            people: [{ mxid: "@morgan:lab.test", name: "Morgan", avatar: "" }, { mxid: "@riley:lab.test", name: "Riley", avatar: "" }, { mxid: "@sam:lab.test", name: "Sam", avatar: "" }] }
+        core.mPadRemote = { room: room, device: pc, name: "Desktop PC", sid: state.sid, reach: kind === "unreachable" ? "unreachable" : "ok", opened: true,
+            ended: null, gen: "demo1", state: state, ops: state.ops, pending: [] }
+        if (kind === "replaced") { core.mPadRemote.ended = "replaced"; core.mPadRemote = JSON.parse(JSON.stringify(core.mPadRemote)) }
+        if (kind === "connecting") core.mPadRemote = { room: room, device: pc, sid: state.sid, reach: "connecting", opened: false, ended: null, gen: "", state: null, ops: [], pending: [] }
+        var opt = kind === "pending" ? { mic: { v: true, seq: 43, at: Date.now() + 1e9 }, sound: { v: mi("vine-boom.mp3"), seq: 44, at: Date.now() + 1e9 } } : ({})
+        padWindow.demo(room, pc, opt)
+        if (kind === "volume") Qt.callLater(function () { padWindow.demoVolume(2) })
+        if (kind === "notice") padWindow.demoNotice("unknown-sound", "sound.play")
     }
     // --tinhat-soundboard: open the soundboard window 3 s after login (screenshot).
     Timer {

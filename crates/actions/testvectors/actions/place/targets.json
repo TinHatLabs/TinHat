@@ -4503,6 +4503,154 @@
     },
     {
       "expect": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": "!room:example.com"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": "!room:example.com"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: the known subject"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": "!gone:example.com"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": "!gone:example.com"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: an unknown subject"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": "!other:example.com"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": "!other:example.com"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: another room"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": "room-without-bang"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "room",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "room": 7
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: a number"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "zzz": "1"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": {
+            "a1": "1",
+            "a2": "2",
+            "a3": "3",
+            "a4": "4",
+            "a5": "5"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "call.pad.open",
+          "target": "x"
+        },
+        "row": "buttons.main"
+      },
+      "name": "call.pad.open: not an object"
+    },
+    {
+      "expect": {
         "error": "not-targetable",
         "ok": false
       },

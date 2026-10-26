@@ -595,6 +595,11 @@ default rows placeable, every icon (and the placeholder's) in both packs. Warnin
     buttons visible" (short "Keep buttons visible"), not active, available outside a call too (a preference); on →
     active, "Let call buttons hide" (short "Let buttons hide"); hidden on phones (`requires: not ui.phone`); Ctrl+K
     "auto hide" finds it by its keyword; assignable (Settings → Shortcuts lists it under Calls, no default key).
+14. **Pad** (`call.pad.open`, target room, absent the current room, `when: room.padTarget`): one of your other
+    devices is in the room's call and this one is not → "Pad" `smartphone-symbolic`, available; nobody of yours there,
+    or this device is in that call itself → unavailable (`when`: dimmed in a row and in Ctrl+K); a stored room target
+    reads "Pad — Valheim"; Ctrl+K "remote" finds it by its keyword; assignable (Settings → Shortcuts, Calls, no
+    default key). Running it = the Pad button beside Join (a greyed Pad shows its one line).
 
 ## 14. Running actions (per app; informative, parity required)
 

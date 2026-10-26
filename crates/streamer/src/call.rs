@@ -184,6 +184,18 @@ fn category_for_source(source: TrackSource) -> &'static str {
 /// find it. Stores a WeakRef (a dropped pipeline yields a dead ref, never a leak).
 /// Applies any recorded desired pref (see [`desired_track_prefs`]) so late subscribers
 /// and mid-call republishes honour saved per-user volume/mute.
+/// TINHAT_GAIN_LOG (lab gates only): log what a track's `volume` element really plays at, read back from the element,
+/// whenever a track registers or a pref / mute is applied to it ("[call] gain …"). Off = not a line.
+fn gain_log_on() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| std::env::var_os("TINHAT_GAIN_LOG").is_some())
+}
+fn gain_log(why: &str, identity: &str, category: &str, el: &gst::Element) {
+    if gain_log_on() {
+        eprintln!("[call] gain {why} {identity} {category}: volume={:.3} mute={}", el.property::<f64>("volume"), el.property::<bool>("mute"));
+    }
+}
+
 fn register_track_gain(identity: &str, category: &str, sid: &str, element: &gst::Element) {
     // 9.4: a track plays at the user's pref × the corner factor (10 % outside my corner, 0 for
     // the mic of a corner I am not in), so one subscribing mid-aside starts at the right level.
@@ -218,6 +230,7 @@ fn register_track_gain(identity: &str, category: &str, sid: &str, element: &gst:
         .lock()
         .unwrap()
         .insert((identity.to_owned(), category.to_owned(), sid.to_owned()), weak);
+    gain_log("starts", identity, category, element);
     // A late subscriber inherits the CURRENT deafen/AFK state. Without this, deafen only
     // ever muted the tracks that existed at the moment it was pressed: anyone who joined,
     // unmuted, or republished afterwards came through at full volume while the UI still
@@ -949,6 +962,7 @@ pub fn set_track_gain(user_id: &str, category: &str, gain: f64) {
     for (id, w) in entries {
         if let Some(el) = w.upgrade() {
             el.set_property("volume", effective_volume(&id, category));
+            gain_log("set", &id, category, &el);
         }
     }
 }
@@ -983,6 +997,18 @@ pub fn set_track_muted(user_id: &str, category: &str, muted: bool) {
     let _ = muted;
     for id in ids {
         apply_layered_mute(&id, category);
+        if gain_log_on() {
+            let els: Vec<glib::WeakRef<gst::Element>> = track_gains()
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|((i, c, _), _)| *i == id && c == category)
+                .map(|(_, w)| w.clone())
+                .collect();
+            for el in els.iter().filter_map(|w| w.upgrade()) {
+                gain_log("mute", &id, category, &el);
+            }
+        }
     }
 }
 
@@ -1080,6 +1106,7 @@ pub(crate) fn reconcile_auto_mute() {
             if let Some(el) = weak.upgrade() {
                 if !el.property::<bool>("mute") {
                     el.set_property("mute", true);
+                    gain_log("cut", &key.0, &key.1, &el);
                     if muted.insert(key) {
                         newly += 1;
                     }
@@ -1099,6 +1126,7 @@ pub(crate) fn reconcile_auto_mute() {
         for key in keys {
             if let Some(el) = live.get(&key).and_then(|w| w.upgrade()) {
                 el.set_property("mute", false);
+                gain_log("restored", &key.0, &key.1, &el);
                 restored += 1;
             }
         }

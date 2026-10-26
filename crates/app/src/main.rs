@@ -47,6 +47,11 @@ pub mod logship; // opt-OUT scrubbed log upload + problem reports, to the user's
 pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
 pub mod key_intake; // every Olm-decrypted media key goes through keyrules before the keyring
+pub mod padrules; // Pad: the phone as a remote for my call — the pure rules (= the web's features/calls/pad/rules.ts; docs/PAD.md)
+pub mod pad_engine; // Pad: the receiver + controller state machines over the rules (no I/O, injected clocks)
+pub mod pad_net; // Pad: Olm to-device transport + the trust glue (one node per session)
+pub mod pad_ctl; // Pad: PadController — the QML bridge (exec → PadHost.qml, the chip, discovery, the Pad window)
+pub mod pad_lab; // Pad: TINHAT_PAD_TEST — the headless two-device lab gate (a local / *.test server only)
 pub mod embeds; // inline click-to-play media-embed URL parser (ported from the earlier web client)
 pub mod linkpreview; // OpenGraph link-preview cards via the homeserver's /media/preview_url (9.3)
 pub mod floating; // FloatingController — #6 floating chat-bubble registry + metadata
@@ -1547,6 +1552,16 @@ fn main() {
     if std::env::var_os("TINHAT_STARTOVER_TEST").is_some() {
         let _g = bridge::runtime().enter();
         let ok = bridge::runtime().block_on(async { start_over::headless_start_over_test().await });
+        boot::exit_early(if ok { 0 } else { 1 });
+    }
+
+    // Gate Pad (docs/PAD.md) on a LAB server: two verified devices + an unverified one of one throwaway account and a
+    // second account (pad_lab.rs; refuses anything but a local / *.test server):
+    //   TINHAT_PAD_TEST=1 TINHAT_HS=http://127.0.0.1:8008 TINHAT_USER=… TINHAT_PASS=… TINHAT_USER2=… TINHAT_PASS2=… ./tinhat
+    if std::env::var_os("TINHAT_PAD_TEST").is_some() {
+        let _g = bridge::runtime().enter();
+        let seed = std::env::var("TINHAT_PAD_TEST").as_deref() == Ok("seed"); // the screenshots' lab state (pad-shots.sh)
+        let ok = bridge::runtime().block_on(async { if seed { pad_lab::headless_pad_seed().await } else { pad_lab::headless_pad_test().await } });
         boot::exit_early(if ok { 0 } else { 1 });
     }
 

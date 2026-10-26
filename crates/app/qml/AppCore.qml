@@ -65,6 +65,7 @@ Item {
     readonly property LowGpuController c_lowgpu: lowgpuCtl   // 11.0 (GPU.md): the low-GPU contract's rules
     readonly property ActionsController c_actionsCtl: actionsCtl   // 11.0 step 3 (buttons): the actions engine (ACTIONS.md)
     readonly property GameServersController c_gameServers: gameServersCtl   // 11.1: the Game servers widget (GAMESERVERS.md)
+    readonly property PadController c_padCtl: padCtl   // Pad: the phone as a remote for my call (docs/PAD.md)
     readonly property var c_tileModel: tileModel
 
     property string themeName: "oled"
@@ -945,6 +946,39 @@ Item {
     // 11.1 (docs/GAMESERVERS.md): the Game servers status — ONE poller for the widget, Up next and the calendar card; it
     // follows the RENDER window state (focused 15 s, unfocused 60 s, hidden: nothing) and forgets everything on sign-out
     GameServersController { id: gameServersCtl; Component.onCompleted: gameServersCtl.setWindow(core.winState) }
+    // Pad (docs/PAD.md, pad_ctl.rs): my other verified devices drive my call here (the receiver: PadHost.qml in the
+    // shell runs their commands), and this device drives theirs (the Pad window). Mirrored below on `changed`.
+    PadController { id: padCtl }
+    property bool mPadOn: true                       // Settings → Calls → Pad
+    property var mPadChips: []                       // [{device, name}] my devices with a live Pad session here
+    property var mPadTargets: ({ rooms: {}, names: {} })   // my other devices in each call (discovery + why not)
+    property var mPadRemote: null                    // the session this device drives (state, reach, pending)
+    property var mPadSounds: ({})                    // {room, roomSounds, people} for the Pad window
+    property int _padRev: -1
+    property bool padDemo: false                     // --tinhat-paddemo (Main.qml): sample data stays, the mirror waits
+    function _mirrorPad() {
+        if (core.padDemo || padCtl.rev === core._padRev) return
+        core._padRev = padCtl.rev
+        core.mPadOn = padCtl.padOn
+        try { core.mPadChips = JSON.parse(padCtl.chipsJson) || [] } catch (e) { core.mPadChips = [] }
+        try { core.mPadTargets = JSON.parse(padCtl.targetsJson) || ({ rooms: {}, names: {} }) } catch (e) { core.mPadTargets = ({ rooms: {}, names: {} }) }
+        try { core.mPadRemote = JSON.parse(padCtl.remoteJson) } catch (e) { core.mPadRemote = null }
+        try { core.mPadSounds = JSON.parse(padCtl.soundsJson) || ({}) } catch (e) { core.mPadSounds = ({}) }
+    }
+    Connections {
+        target: padCtl
+        function onChanged() { core._mirrorPad() }
+        // the first Pad ever from a device: one toast (DESIGN §1 "On the receiver")
+        function onFirstPad(device, name) {
+            core.notifyAction(String(name) + " is now a Pad for this call", 8000, "Settings", function () { if (core.shell && core.shell.openCallSettings) core.shell.openCallSettings() })
+        }
+    }
+    // discovery: my other devices in the calls around me, every 3 s while signed in (local store only)
+    Timer {
+        interval: Motion.focused ? 3000 : 10000; repeat: true; triggeredOnStart: true
+        running: core.mLoggedIn
+        onTriggered: { padCtl.refreshTargets(); core._mirrorPad() }
+    }
     // One-shot startup update check, a few seconds after we're logged in (non-blocking;
     // fails silently to "up to date / check failed" if no manifest is hosted yet).
     Timer {
@@ -2257,6 +2291,7 @@ Item {
     // On launch: apply a forced theme (test hook TINHAT_THEME), then silently sign
     // back in if a saved session exists.
     Component.onCompleted: {
+        padCtl.attach()       // Pad: events reach the controller from now on (before the session is restored)
         core._syncTileModel() // 0.8.28: seed the grid model (fake tiles / empty)
         // 10.6 (REACH §2): the presence engine waits for a session on its own; it never runs in
         // the recorder (no QML there, and presence.rs refuses under TINHAT_VOD_SERVICE).

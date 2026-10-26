@@ -112,6 +112,19 @@ ColumnLayout {
                     color: Th.callStatusBarCountFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
+                // Pad (docs/PAD.md, security rule 8): a device of mine drives this call from its Pad — shown for as long
+                // as it lasts; × ends that Pad and refuses the device for the rest of this call (PadChip.qml = the web's
+                // PadChip.tsx: the strip chip's shape, pad.chip.* tokens).
+                Repeater {
+                    model: (island.app.mInCall || island.app.fakeCall) ? island.app.mPadChips : []
+                    delegate: PadChip {
+                        required property var modelData
+                        app: island.app
+                        device: String(modelData.device || "")
+                        name: String(modelData.name || "")
+                        onDisconnect: island.app.padCtl.refuseDevice(modelData.device)
+                    }
+                }
                 // "N hidden ▾" — the way back for hidden tiles, in the call
                 // header where it is always reachable (the tiles themselves are
                 // gone). 0.8.7: a click opens a MENU naming each hidden stream
