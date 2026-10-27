@@ -95,6 +95,7 @@ Rectangle {
         width: card.width - 20
         spacing: 10
         Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: totalText
             Layout.minimumWidth: 44
             Layout.alignment: Qt.AlignVCenter

@@ -191,6 +191,7 @@ ColumnLayout {
                 : Th.dmMoreBg
             Behavior on color { ColorAnimation { duration: island.railRef._a.dur } }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.centerIn: parent
                 text: "+" + island.railRef._dmOverflow
                 color: Th.dmMoreFg

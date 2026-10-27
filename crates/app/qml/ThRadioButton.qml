@@ -36,6 +36,7 @@ T.RadioButton {
         }
     }
     contentItem: Text {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         text: rb.text
         font: rb.font
         color: rb.enabled ? Th.toggleFg : Th.toggleFgDisabled

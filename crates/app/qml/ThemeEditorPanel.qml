@@ -169,6 +169,7 @@ FocusScope {
                         font.weight: Font.DemiBold
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         text: panel.st.target === "mine" ? "One of My themes" : "A new theme from " + (panel.st.baseName || "")
                         color: Th.settingsHintFg
@@ -224,7 +225,7 @@ FocusScope {
                 model: [["simple", "Simple"], ["advanced", "Advanced"]]
                 delegate: Controls.ToolButton {
                     required property var modelData
-                    text: modelData[1]
+                    text: LinkGate.plain(modelData[1])
                     display: Controls.AbstractButton.TextOnly
                     checkable: true
                     checked: panel.mode === modelData[0]
@@ -275,7 +276,7 @@ FocusScope {
                 Layout.fillWidth: true
                 visible: panel.saveError.length > 0
                 type: Kirigami.MessageType.Error
-                text: panel.saveError
+                text: LinkGate.plain(panel.saveError)
             }
             RowLayout {
                 Layout.fillWidth: true

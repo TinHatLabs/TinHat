@@ -187,14 +187,15 @@ Item {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 2
-                        Text { text: session.title && session.title.length ? session.title : "Tonight"; color: Th.reelFg; font.pixelSize: 22; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
+                        Text { textFormat: Text.PlainText; text: session.title && session.title.length ? session.title : "Tonight"; color: Th.reelFg; font.pixelSize: 22; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
                         Text {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: (session.adhoc ? "No calendar session" : session.start ? Qt.formatDateTime(new Date(session.start), "ddd d MMM · h:mm AP") : "No session picked")
                                   + (session.game && session.game.length ? " · " + session.game : " · Game TBD")
                             color: Th.reelMetaFg; font.pixelSize: 13; elide: Text.ElideRight; Layout.fillWidth: true
                         }
                     }
-                    Text { text: panel.hereText(); color: Th.reelMetaFg; font.pixelSize: 13 }
+                    Text { textFormat: Text.PlainText; text: panel.hereText(); color: Th.reelMetaFg; font.pixelSize: 13 }
                     Row {
                         spacing: -8
                         Repeater {
@@ -217,7 +218,7 @@ Item {
                     visible: ctl.lastError.length > 0
                     Layout.fillWidth: true
                     spacing: 8
-                    Text { text: ctl.lastError; color: Th.reelErrorFg; font.pixelSize: 13; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Text { textFormat: Text.PlainText; text: ctl.lastError; color: Th.reelErrorFg; font.pixelSize: 13; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     // 10.1 (TH-GAP-19): the error line used to stick for the whole session.
                     ReelButton { text: "✕"; quiet: true; implicitWidth: 26; implicitHeight: 24; onClicked: ctl.clearError(); radius: panel.app.radiusSm; hint: "Dismiss" }
                 }
@@ -237,6 +238,7 @@ Item {
                     border.color: Th.reelStripBorder
                     clip: true
                     Text {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         visible: !panel.mainPool.length
                         anchors.centerIn: parent
                         width: parent.width - 48
@@ -310,7 +312,7 @@ Item {
                         onClicked: ctl.veto()
                         radius: panel.app.radius
                     }
-                    Text { visible: panel.hasResult && (snap.respinsLeft !== undefined); text: snap.respinsLeft + " re-spin" + (snap.respinsLeft === 1 ? "" : "s") + " left"; color: Th.reelMetaFg; font.pixelSize: 12 }
+                    Text { textFormat: Text.PlainText; visible: panel.hasResult && (snap.respinsLeft !== undefined); text: snap.respinsLeft + " re-spin" + (snap.respinsLeft === 1 ? "" : "s") + " left"; color: Th.reelMetaFg; font.pixelSize: 12 }
                     ReelButton {
                         visible: panel.canReset
                         text: "Reset spins"
@@ -321,7 +323,7 @@ Item {
                         radius: panel.app.radius
                     }
                     // TH-REEL-03: why Spin is grey, in the snapshot's own words.
-                    Text { visible: !panel.hasResult && !!(snap.notice && snap.notice.length > 0) && panel.mainPool.length > 0; text: snap.notice ? String(snap.notice) : ""; color: Th.reelMetaFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.maximumWidth: 360 }
+                    Text { textFormat: Text.PlainText; visible: !panel.hasResult && !!(snap.notice && snap.notice.length > 0) && panel.mainPool.length > 0; text: snap.notice ? String(snap.notice) : ""; color: Th.reelMetaFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.maximumWidth: 360 }
                     // 10.5.2 settings credits.mode "free" (the web's "Free spins" chip)
                     Rectangle {
                         visible: snap.creditsMode === "free"
@@ -339,7 +341,7 @@ Item {
                     Item { Layout.fillWidth: true }
                     // TH-REEL-09: the race / void explanation the snapshot writes (`spin.note`); the old
                     // hard-coded "two people spun at once" text was unreachable (superseded is always false).
-                    Text { visible: !!(panel.spin && panel.spin.note && panel.spin.note.length > 0); text: (panel.spin && panel.spin.note) ? String(panel.spin.note) : ""; color: Th.reelWarningFg; font.pixelSize: 12; wrapMode: Text.WordWrap; Layout.maximumWidth: 420 }
+                    Text { textFormat: Text.PlainText; visible: !!(panel.spin && panel.spin.note && panel.spin.note.length > 0); text: (panel.spin && panel.spin.note) ? String(panel.spin.note) : ""; color: Th.reelWarningFg; font.pixelSize: 12; wrapMode: Text.WordWrap; Layout.maximumWidth: 420 }
                     Text { visible: !!(panel.spin && panel.spin.verified === false); text: "Could not verify this spin’s winner on this device."; color: Th.reelWarningFg; font.pixelSize: 12 }
                 }
 
@@ -359,9 +361,9 @@ Item {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 3
-                            Text { text: "Tonight: " + panel.nameOfGame(panel.spin ? panel.spin.winner : ""); color: Th.reelFg; font.pixelSize: 18; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
-                            Text { text: panel.ownersLine(panel.spin ? panel.spin.winner : ""); color: Th.reelMetaFg; font.pixelSize: 12; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                            Text { text: (session.adhoc ? "Just for tonight (no calendar session)" : session.gameId === (panel.spin ? panel.spin.winner : "-") ? "✓ Set on the calendar" : "Setting on the calendar…") + (panel.spin && panel.spin.by ? " · spun by " + panel.nameOf(panel.spin.by) : "") + (panel.spin && panel.spin.credit === false ? " · not counted for credit" : ""); color: Th.reelMetaFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { textFormat: Text.PlainText; text: "Tonight: " + panel.nameOfGame(panel.spin ? panel.spin.winner : ""); color: Th.reelFg; font.pixelSize: 18; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { textFormat: Text.PlainText; text: panel.ownersLine(panel.spin ? panel.spin.winner : ""); color: Th.reelMetaFg; font.pixelSize: 12; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                            Text { textFormat: Text.PlainText; text: (session.adhoc ? "Just for tonight (no calendar session)" : session.gameId === (panel.spin ? panel.spin.winner : "-") ? "✓ Set on the calendar" : "Setting on the calendar…") + (panel.spin && panel.spin.by ? " · spun by " + panel.nameOf(panel.spin.by) : "") + (panel.spin && panel.spin.credit === false ? " · not counted for credit" : ""); color: Th.reelMetaFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
                         }
                         // 10.5.2 admin: tonight's result stays, only credit ignores it (and back)
                         ReelButton {
@@ -398,6 +400,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: 8
                             Text {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                                 color: Th.reelMetaFg; font.pixelSize: 12

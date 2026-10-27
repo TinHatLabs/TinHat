@@ -90,6 +90,7 @@ Item {
                         isMask: true
                     }
                     Text {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
@@ -99,6 +100,7 @@ Item {
                         text: ph.t.name
                     }
                     Text {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         width: parent.width
                         visible: ph.t.absent.length > 0
                         horizontalAlignment: Text.AlignHCenter
@@ -114,8 +116,8 @@ Item {
                     anchors.centerIn: parent
                     visible: ph.isShort
                     spacing: 8
-                    Text { anchors.verticalCenter: parent.verticalCenter; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.editmodePlaceholderFg; text: ph.t.name }
-                    Text { anchors.verticalCenter: parent.verticalCenter; font.pixelSize: 12; color: Th.editmodePlaceholderFg; text: ph.t.absent; visible: ph.t.absent.length > 0 }
+                    Text { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.editmodePlaceholderFg; text: ph.t.name }
+                    Text { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; font.pixelSize: 12; color: Th.editmodePlaceholderFg; text: ph.t.absent; visible: ph.t.absent.length > 0 }
                 }
             }
         }

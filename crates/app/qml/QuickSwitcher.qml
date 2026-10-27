@@ -203,6 +203,7 @@ Controls.Popup {
 
         // pick mode: the title over the field
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: qs.pick !== null
             Layout.fillWidth: true
             Layout.leftMargin: 8
@@ -227,7 +228,7 @@ Controls.Popup {
                     id: stageRow
                     anchors.centerIn: parent
                     spacing: 4
-                    Controls.Label { anchors.verticalCenter: parent.verticalCenter; text: qs._stageLabel; color: Th.actionPaletteStageFg }
+                    Controls.Label { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; text: qs._stageLabel; color: Th.actionPaletteStageFg }
                     ThIcon {
                         anchors.verticalCenter: parent.verticalCenter
                         width: 12; height: 12
@@ -284,6 +285,7 @@ Controls.Popup {
             model: qs.results
             currentIndex: 0
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.centerIn: parent
                 visible: qs.results.length === 0
                 text: qs.query.trim().length > 0 ? String(qs._texts.empty).replace("{query}", qs.query.trim())
@@ -324,6 +326,7 @@ Controls.Popup {
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: !!row.modelData.emoji
                                 anchors.centerIn: parent
                                 text: row.modelData.emoji ? row.modelData.emoji : ""
@@ -341,6 +344,7 @@ Controls.Popup {
                             }
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             text: row.modelData.label !== undefined ? row.modelData.label : ""
                             color: row.off ? Th.actionPaletteItemFgDisabled : Th.switcherItemFg
@@ -355,6 +359,7 @@ Controls.Popup {
                             implicitWidth: invitePillText.implicitWidth + 12
                             color: Th.roomsPillInviteBg
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 id: invitePillText
                                 anchors.centerIn: parent
                                 text: String(qs._texts.inviteMarker || "Invited")
@@ -371,6 +376,7 @@ Controls.Popup {
                             highlight: row.roomEntry !== null && row.roomEntry.highlight === true   // 10.1 (TH-NAV-10)
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             // the first key in effect on this device (Settings → Shortcuts may have changed it, ACTIONS.md §8.8)
                             readonly property string keyHint: row.modelData.kind === "action" && row.modelData.a && qs.app && qs.app.actions
                                                               ? (qs.app.actions.keysFor(row.modelData.a)[0] || "") : (row.modelData.hint || "")

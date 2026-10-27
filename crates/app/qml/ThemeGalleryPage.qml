@@ -193,7 +193,7 @@ FocusScope {
                             model: [["all", "All"], ["dark", "Dark"], ["light", "Light"]]
                             delegate: Controls.ToolButton {
                                 required property var modelData
-                                text: modelData[1]
+                                text: LinkGate.plain(modelData[1])
                                 display: Controls.AbstractButton.TextOnly
                                 checkable: true
                                 checked: page.filter === modelData[0]
@@ -254,6 +254,7 @@ FocusScope {
                         }
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         id: headLabel
                         visible: rowItem.modelData.kind === "head"
                         y: rowItem.modelData.top ? 0 : 16

@@ -92,6 +92,7 @@ T.ComboBox {
         hoverEnabled: true
         padding: 0
         contentItem: Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             text: row.text
             color: Th.comboItemFg
             font.pointSize: box.font.pointSize

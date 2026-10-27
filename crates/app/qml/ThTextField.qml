@@ -28,6 +28,7 @@ T.TextField {
 
     // The template draws no placeholder: this is it.
     Text {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         id: placeholder
         x: field.leftPadding
         y: field.topPadding

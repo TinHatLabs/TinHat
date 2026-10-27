@@ -411,6 +411,34 @@ pub async fn notify_action(summary: &str, body: &str, icon: Option<String>, acti
     .await;
 }
 
+/// Security review 2026-10-26 (M7's notification twin): a body is someone's text (a message, a name), and a
+/// notification server that advertises `body-markup` (Plasma, GNOME, mako, dunst) renders `<b>`, `<a href>` and — with
+/// `body-images` — `<img>` in it. The spec says escape the text for such a server (and only for such a server: one
+/// without markup shows "&lt;" as it is). Pure; the caller asks the server once.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub(crate) fn markup_escape(body: &str) -> String {
+    body.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+/// The body as this notification server needs it: escaped when it renders markup (its capabilities, asked once).
+#[cfg(target_os = "linux")]
+async fn body_for_server(conn: &zbus::Connection, body: &str) -> String {
+    static MARKUP: tokio::sync::OnceCell<bool> = tokio::sync::OnceCell::const_new();
+    let markup = *MARKUP
+        .get_or_init(|| async {
+            match conn
+                .call_method(Some("org.freedesktop.Notifications"), "/org/freedesktop/Notifications", Some("org.freedesktop.Notifications"), "GetCapabilities", &())
+                .await
+            {
+                Ok(reply) => reply.body().deserialize::<Vec<String>>().map(|c| c.iter().any(|x| x == "body-markup")).unwrap_or(true),
+                // can't tell: escape (a stray "&lt;" beats a rendered <img>)
+                Err(_) => true,
+            }
+        })
+        .await;
+    if markup { markup_escape(body) } else { body.to_string() }
+}
+
 /// Fire ONE notification via `org.freedesktop.Notifications.Notify`. Best-effort:
 /// any error (bus gone mid-session, service crashed) is logged at most once and
 /// swallowed — never panics, never blocks the sync loop meaningfully.
@@ -424,7 +452,8 @@ pub async fn notify_call(summary: &str, body: &str, room_id: &str) {
     hints.insert("urgency", zbus::zvariant::Value::from(2u8));
     hints.insert("category", zbus::zvariant::Value::from("call.incoming"));
     let actions: Vec<&str> = vec!["default", "Join", "join", "Join"];
-    let body_tuple = ("Tin Hat", 0u32, "dev.tinhat.TinHat", summary, body, actions, hints, CALL_EXPIRE_MS);
+    let body = body_for_server(&conn, body).await;
+    let body_tuple = ("Tin Hat", 0u32, "dev.tinhat.TinHat", summary, body.as_str(), actions, hints, CALL_EXPIRE_MS);
     match conn
         .call_method(Some("org.freedesktop.Notifications"), "/org/freedesktop/Notifications", Some("org.freedesktop.Notifications"), "Notify", &body_tuple)
         .await
@@ -558,12 +587,13 @@ pub async fn notify_action_id(summary: &str, body: &str, icon: Option<String>, a
     // Notify(app_name, replaces_id, app_icon, summary, body, actions, hints, expire_timeout)
     // "default" = the click on the toast itself (no button drawn); the listener maps the id back.
     let actions: Vec<&str> = if action.is_empty() { Vec::new() } else { vec!["default", "Open"] };
+    let body = body_for_server(&conn, body).await;
     let body_tuple = (
         "Tin Hat", // app_name
         0u32,          // replaces_id (0 = new notification each time)
         "dev.tinhat.TinHat", // app_icon (10.1, TH-COPY-20: the rename missed this one)
         summary,
-        body,
+        body.as_str(),
         actions,
         hints,
         EXPIRE_MS, // expire_timeout (ms)
@@ -1261,6 +1291,14 @@ mod tests {
     //! real ruma push-rule engine over a typical account's ruleset shape: the server defaults +
     //! the 15 quiet overrides (quietrules.rs) + an All-messages room rule on a busy group room.
     use super::*;
+
+    /// security review 2026-10-26: a message body never reaches a markup-rendering notification server as markup
+    #[test]
+    fn notification_bodies_are_escaped_for_markup_servers() {
+        assert_eq!(super::markup_escape("<img src=\"https://evil.example/p\">hi & bye"), "&lt;img src=\"https://evil.example/p\"&gt;hi &amp; bye");
+        assert_eq!(super::markup_escape("plain"), "plain");
+        assert_eq!(super::markup_escape("&lt;"), "&amp;lt;");
+    }
     use matrix_sdk::ruma::push::{
         Action, EventMatchConditionData, NewConditionalPushRule, NewPushRule, NewSimplePushRule, PushCondition,
         PushConditionRoomCtx, Ruleset, Tweak,

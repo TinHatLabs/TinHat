@@ -1,0 +1,1959 @@
+{
+ "about": "Shared rules for what another member's content may become in Tin Hat (security review 2026-10-26: H1, H2). Byte-identical copies: desktop crates/app/src/testvectors/member-content.json (replayed by richtext.rs, viewer.rs and tools/link-gate-test.mjs on LinkGate.qml), web src/features/chat/lib/testvectors/member-content.json. html: 'in' = a member's formatted_body; after sanitising, 'text' = the visible text (text nodes, entities decoded), 'hrefs' = every link's href (WHATWG-serialised, as new URL(x).href), 'absent' = substrings that must not survive (case-insensitive); 'qt' = the desktop's exact output (Qt rich text dialect: font->span, del/strike->s, details->div, summary->p>b). The rules: the Matrix tag subset; img -> its alt text (never loaded); script/style/iframe/svg/math/audio/video/mx-reply/... dropped with their contents; other tags keep their text; only href (links rule), ol start (digits), code class language-*, data-mx-color/color/data-mx-bg-color #hex (-> style), data-mx-spoiler survive; a link whose text names another host (the claims rule below) is followed by ' (<href host>)'; a link with a user name before the host is no link. links: the one link gate for everything the apps open (web: core/openlink.ts safeExternalUrl; desktop: richtext.rs link_verdict + LinkGate.qml): trim C0/space at both ends; a control character or DEL left inside -> bad-char; no 'scheme:' -> no-scheme; scheme not http/https/mailto/steam -> scheme; steam needs '//' and something after it (no space), and 'ask': 'steam' = it opens only after an 'Open in Steam?' confirmation (every other app scheme is refused); http(s) needs '//' and a host (a space in the host -> bad-char, a user name/password -> userinfo, none -> no-host); 'why' is the desktop's word (the web only checks 'open'); 'as' = what an allowed link opens (a mailto keeps only its subject, body and cc fields, names case-insensitive, no fragment). Cases where Qt and a browser parse differently (a backslash, 'https:host', 'https:///host') are not here: the desktop refuses them, the web normalises them with new URL. viewer: attachment mime (parameters dropped, case-insensitive) -> the extension it is opened as (null = Save as only); inline = decoded in the bubble. sniff: the bytes (hex, first bytes) are that extension's type. claims: the host a link's text claims — the note after a link and the question at the click, both apps. Only for an http(s) link with a host that is not matrix.to (a mention pill's text is a display name). Invisible characters (\\p{Cf}, \\p{Default_Ignorable_Code_Point}) are dropped; the text is split at white space; each word loses its leading and trailing characters that are not letters or digits (\\p{L}\\p{N}); a word claims a host when (a) it has a scheme ('://', http/https), starts with 'www.' or has a path ('/'), and its host (http://<word> unless it has a scheme) is dotted with a last label of >= 2 ASCII letters or xn--, or (b) it is a bare dotted name whose last label is a top-level domain in testvectors/tlds.txt (IANA's list, byte-identical in both repos, case-insensitive). Hosts compare lower-case without a trailing dot or a leading www.; the first claim other than the link's host counts; 'claim' = that host, null = none. claimExclude: as BARE dotted names (no scheme, no www., no '/') words whose last label is one of these do not claim (code-file names: README.md, main.py, lib.rs, run.sh); zip and mov still do. ownSounds: a stored sound URL is this server's own upload only as <base>/soundboard/clip?id=[A-Za-z0-9_-]{1,128} or <base>/soundboard/file/<one name: [A-Za-z0-9_-] then [A-Za-z0-9_.-], at most 128> (the base compared case-insensitively; anything else — another path, a query, %2e, %2f, %5c in any case — is not). soundRoute: how a stored sound URL plays, in this order: 'myinstants' (it starts with '/' or contains 'myinstants.com/') -> play = <base>/soundboard/clip?url=<pctEncode(url)> (RFC 3986 unreserved kept, every other byte %XX upper case); 'own' (the ownSounds shapes under <base>) -> play = the URL itself; 'foreign' (another Tin Hat server's upload: https://<host>[:443]/api/soundboard/clip?id=[A-Za-z0-9_-]{1,128} with no other query, or https://<host>[:443]/api/soundboard/file/<[A-Za-z0-9_-][A-Za-z0-9_.-]{0,127}>; the host a dotted DNS name other than <base>'s host, not an IP address; no user name, no other port, no fragment, no %2e/%2f/%5c in any case, no backslash or white space) -> play = <base>/soundboard/clip?url=<pctEncode(url)> (our own server fetches it; never directly); else 'refuse' (no play).",
+ "html": [
+  {
+   "name": "markdown basics",
+   "in": "<p>Hello <strong>world</strong> and <em>you</em></p>",
+   "text": "Hello world and you",
+   "hrefs": [],
+   "qt": "<p>Hello <strong>world</strong> and <em>you</em></p>"
+  },
+  {
+   "name": "code block keeps its language",
+   "in": "<pre><code class=\"language-rust\">fn main() {}\n</code></pre>",
+   "text": "fn main() {}\n",
+   "hrefs": [],
+   "qt": "<pre><code class=\"language-rust\">fn main() {}\n</code></pre>"
+  },
+  {
+   "name": "inline code entities stay text",
+   "in": "<code>a &lt; b &amp;&amp; c</code>",
+   "text": "a < b && c",
+   "hrefs": [],
+   "qt": "<code>a &lt; b &amp;&amp; c</code>"
+  },
+  {
+   "name": "lists and a numeric start",
+   "in": "<ol start=\"3\"><li>x</li><li>y</li></ol><ul><li>z</li></ul>",
+   "text": "xyz",
+   "hrefs": [],
+   "qt": "<ol start=\"3\"><li>x</li><li>y</li></ol><ul><li>z</li></ul>"
+  },
+  {
+   "name": "a start that is not a number goes",
+   "in": "<ol start=\"1; color:red\"><li>x</li></ol>",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "color"
+   ],
+   "qt": "<ol><li>x</li></ol>"
+  },
+  {
+   "name": "headings quotes rules breaks",
+   "in": "<h1>T</h1><blockquote>q<br>r</blockquote><hr>",
+   "text": "Tqr",
+   "hrefs": [],
+   "qt": "<h1>T</h1><blockquote>q<br>r</blockquote><hr>"
+  },
+  {
+   "name": "a mention pill",
+   "in": "<a href=\"https://matrix.to/#/@bob:example.org\">Bob</a>: hi",
+   "text": "Bob: hi",
+   "hrefs": [
+    "https://matrix.to/#/@bob:example.org"
+   ],
+   "qt": "<a href=\"https://matrix.to/#/@bob:example.org\">Bob</a>: hi"
+  },
+  {
+   "name": "a link with a query",
+   "in": "<a href=\"https://example.org/a?b=1&amp;c=2\">example.org/a</a>",
+   "text": "example.org/a",
+   "hrefs": [
+    "https://example.org/a?b=1&c=2"
+   ],
+   "qt": "<a href=\"https://example.org/a?b=1&amp;c=2\">example.org/a</a>"
+  },
+  {
+   "name": "javascript: link loses its link",
+   "in": "<a href=\"javascript:alert(1)\">click</a>",
+   "text": "click",
+   "hrefs": [],
+   "absent": [
+    "javascript",
+    "<a"
+   ],
+   "qt": "click"
+  },
+  {
+   "name": "obfuscated javascript: link",
+   "in": "<a href=\"  JaVa&#x09;Script:alert(1)\">x</a>",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "script",
+    "<a"
+   ],
+   "qt": "x"
+  },
+  {
+   "name": "file: link",
+   "in": "<a href=\"file:///etc/passwd\">passwords</a>",
+   "text": "passwords",
+   "hrefs": [],
+   "absent": [
+    "file:",
+    "<a"
+   ],
+   "qt": "passwords"
+  },
+  {
+   "name": "OS handler schemes",
+   "in": "<a href=\"search-ms:query=x\">a</a><a href=\"ms-msdt:/id x\">b</a><a href=\"smb://host.example/share\">c</a><a href=\"data:text/html,x\">d</a><a href=\"tinhat://x\">e</a><a href=\"matrix:u/bob:example.org\">f</a>",
+   "text": "abcdef",
+   "hrefs": [],
+   "absent": [
+    "<a",
+    "search-ms",
+    "ms-msdt",
+    "smb:",
+    "data:",
+    "tinhat:",
+    "matrix:"
+   ],
+   "qt": "abcdef"
+  },
+  {
+   "name": "relative link",
+   "in": "<a href=\"/foo\">rel</a>",
+   "text": "rel",
+   "hrefs": [],
+   "absent": [
+    "<a"
+   ],
+   "qt": "rel"
+  },
+  {
+   "name": "mailto link",
+   "in": "<a href=\"mailto:ana@example.org\">mail</a>",
+   "text": "mail",
+   "hrefs": [
+    "mailto:ana@example.org"
+   ],
+   "qt": "<a href=\"mailto:ana@example.org\">mail</a>"
+  },
+  {
+   "name": "link text naming another host",
+   "in": "<a href=\"https://evil.example/login\">https://bank.example</a>",
+   "text": "https://bank.example (evil.example)",
+   "hrefs": [
+    "https://evil.example/login"
+   ],
+   "qt": "<a href=\"https://evil.example/login\">https://bank.example</a> (evil.example)"
+  },
+  {
+   "name": "bare host text naming another host",
+   "in": "<a href=\"https://evil.example/\">www.bank.example/login</a>",
+   "text": "www.bank.example/login (evil.example)",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "qt": "<a href=\"https://evil.example/\">www.bank.example/login</a> (evil.example)"
+  },
+  {
+   "name": "www. is the same host",
+   "in": "<a href=\"https://www.example.org/x\">example.org</a>",
+   "text": "example.org",
+   "hrefs": [
+    "https://www.example.org/x"
+   ],
+   "qt": "<a href=\"https://www.example.org/x\">example.org</a>"
+  },
+  {
+   "name": "a user name before the host is no link",
+   "in": "<a href=\"https://bank.example@evil.example/\">Bank</a>",
+   "text": "Bank",
+   "hrefs": [],
+   "absent": [
+    "<a",
+    "evil.example"
+   ],
+   "qt": "Bank"
+  },
+  {
+   "name": "plain words are no host claim",
+   "in": "<a href=\"https://evil.example/\">click here</a>",
+   "text": "click here",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "qt": "<a href=\"https://evil.example/\">click here</a>"
+  },
+  {
+   "name": "remote image never loads",
+   "in": "<p>hi<img src=\"https://attacker.example/t.gif\" width=\"1\" height=\"1\"></p>",
+   "text": "hi",
+   "hrefs": [],
+   "absent": [
+    "<img",
+    "attacker",
+    "src="
+   ],
+   "qt": "<p>hi</p>"
+  },
+  {
+   "name": "an image becomes its alt text",
+   "in": "<img src=\"mxc://example.org/abc\" alt=\":party:\"> yay",
+   "text": ":party: yay",
+   "hrefs": [],
+   "absent": [
+    "<img",
+    "mxc:"
+   ],
+   "qt": ":party: yay"
+  },
+  {
+   "name": "image event handler",
+   "in": "<img src=x onerror=\"alert(1)\">ok",
+   "text": "ok",
+   "hrefs": [],
+   "absent": [
+    "onerror",
+    "alert",
+    "<img"
+   ],
+   "qt": "ok"
+  },
+  {
+   "name": "data: image",
+   "in": "<img src=\"data:image/svg+xml;base64,PHN2Zz4=\">x",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "data:",
+    "<img"
+   ],
+   "qt": "x"
+  },
+  {
+   "name": "script and style",
+   "in": "<script>alert(1)</script><style>body{}</style>ok",
+   "text": "ok",
+   "hrefs": [],
+   "absent": [
+    "<script",
+    "alert",
+    "<style",
+    "body{"
+   ],
+   "qt": "ok"
+  },
+  {
+   "name": "iframe svg object",
+   "in": "<iframe src=\"https://x.example/\"></iframe><svg><a href=\"https://x.example/\">s</a><text>t</text></svg><object data=\"x\">o</object>ok",
+   "text": "ook",
+   "hrefs": [],
+   "absent": [
+    "<iframe",
+    "<svg",
+    "<object",
+    "x.example"
+   ],
+   "qt": "ook"
+  },
+  {
+   "name": "inline style goes",
+   "in": "<span style=\"background:url(https://x.example/y)\">a</span>",
+   "text": "a",
+   "hrefs": [],
+   "absent": [
+    "style",
+    "url("
+   ],
+   "qt": "<span>a</span>"
+  },
+  {
+   "name": "colours become our own style",
+   "in": "<font color=\"#FF0000\">red</font><span data-mx-color=\"#00ff00\" data-mx-bg-color=\"#000\">g</span><span data-mx-color=\"red\">n</span>",
+   "text": "redgn",
+   "hrefs": [],
+   "absent": [
+    "color:red"
+   ],
+   "qt": "<span style=\"color:#ff0000\">red</span><span style=\"color:#00ff00;background-color:#000\">g</span><span>n</span>"
+  },
+  {
+   "name": "event handlers ids classes",
+   "in": "<p onclick=\"x\" onmouseover=\"y\" id=\"z\" class=\"evil\">p</p>",
+   "text": "p",
+   "hrefs": [],
+   "absent": [
+    "onclick",
+    "onmouseover",
+    "id=",
+    "class="
+   ],
+   "qt": "<p>p</p>"
+  },
+  {
+   "name": "reply fallback goes",
+   "in": "<mx-reply><blockquote><a href=\"https://matrix.to/#/!r:example.org/$e\">In reply to</a> quoted</blockquote></mx-reply>answer",
+   "text": "answer",
+   "hrefs": [],
+   "absent": [
+    "In reply to",
+    "quoted",
+    "mx-reply"
+   ],
+   "qt": "answer"
+  },
+  {
+   "name": "details and summary",
+   "in": "<details><summary>More</summary>hidden text</details>",
+   "text": "Morehidden text",
+   "hrefs": [],
+   "qt": "<div><p><b>More</b></p>hidden text</div>"
+  },
+  {
+   "name": "del and strike",
+   "in": "<del>a</del><strike>b</strike><s>c</s>",
+   "text": "abc",
+   "hrefs": [],
+   "qt": "<s>a</s><s>b</s><s>c</s>"
+  },
+  {
+   "name": "tables",
+   "in": "<table><thead><tr><th>h</th></tr></thead><tbody><tr><td>c</td></tr></tbody></table>",
+   "text": "hc",
+   "hrefs": [],
+   "qt": "<table><thead><tr><th>h</th></tr></thead><tbody><tr><td>c</td></tr></tbody></table>"
+  },
+  {
+   "name": "table and cell backgrounds go",
+   "in": "<table background=\"https://evil.example/t.png\"><tr><td background=\"https://evil.example/c.png\">c</td></tr></table>",
+   "text": "c",
+   "hrefs": [],
+   "absent": [
+    "background",
+    "evil.example"
+   ],
+   "qt": "<table><tbody><tr><td>c</td></tr></tbody></table>"
+  },
+  {
+   "name": "unknown tags keep their text",
+   "in": "<article><section>x<marquee>y</marquee></section></article>",
+   "text": "xy",
+   "hrefs": [],
+   "absent": [
+    "<article",
+    "<marquee"
+   ],
+   "qt": "xy"
+  },
+  {
+   "name": "forms keep their text only",
+   "in": "<form action=\"https://x.example/\"><input value=\"v\"><button>b</button>t</form>",
+   "text": "bt",
+   "hrefs": [],
+   "absent": [
+    "<form",
+    "<input",
+    "<button",
+    "x.example"
+   ],
+   "qt": "bt"
+  },
+  {
+   "name": "escaped markup stays text",
+   "in": "a &lt;img src=x&gt; b",
+   "text": "a <img src=x> b",
+   "hrefs": [],
+   "absent": [
+    "<img"
+   ],
+   "qt": "a &lt;img src=x&gt; b"
+  },
+  {
+   "name": "comments go",
+   "in": "a<!-- <img src=x> -->b",
+   "text": "ab",
+   "hrefs": [],
+   "absent": [
+    "<!--",
+    "<img"
+   ],
+   "qt": "ab"
+  },
+  {
+   "name": "an anchor without a link",
+   "in": "<a>plain</a>",
+   "text": "plain",
+   "hrefs": [],
+   "absent": [
+    "<a"
+   ],
+   "qt": "plain"
+  },
+  {
+   "name": "a spoiler keeps only its text",
+   "in": "<span data-mx-spoiler=\"why\">secret <b>bold</b></span>",
+   "text": "secret bold",
+   "hrefs": [],
+   "qt": "<span data-mx-spoiler=\"why\">secret bold</span>"
+  },
+  {
+   "name": "maths keeps its fallback",
+   "in": "<span data-mx-maths=\"x^2\">x<sup>2</sup></span>",
+   "text": "x2",
+   "hrefs": [],
+   "absent": [
+    "data-mx-maths"
+   ],
+   "qt": "<span>x<sup>2</sup></span>"
+  },
+  {
+   "name": "code classes other than language-*",
+   "in": "<code class=\"language-js evil\">x</code>",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "evil"
+   ],
+   "qt": "<code class=\"language-js\">x</code>"
+  },
+  {
+   "name": "quotes in a link cannot leave the attribute",
+   "in": "<a href='https://example.org/\"onmouseover=\"x'>q</a>",
+   "text": "q",
+   "hrefs": [
+    "https://example.org/%22onmouseover=%22x"
+   ],
+   "absent": [
+    "onmouseover=\""
+   ],
+   "qt": "<a href=\"https://example.org/%22onmouseover=%22x\">q</a>"
+  },
+  {
+   "name": "an image inside a link",
+   "in": "<a href=\"https://example.org\"><img src=\"https://evil.example/x.png\" alt=\"logo\"></a>",
+   "text": "logo",
+   "hrefs": [
+    "https://example.org/"
+   ],
+   "absent": [
+    "<img",
+    "evil.example"
+   ],
+   "qt": "<a href=\"https://example.org/\">logo</a>"
+  },
+  {
+   "name": "plain http link",
+   "in": "<a href=\"http://example.org\">x</a>",
+   "text": "x",
+   "hrefs": [
+    "http://example.org/"
+   ],
+   "qt": "<a href=\"http://example.org/\">x</a>"
+  },
+  {
+   "name": "upper-case tags and links",
+   "in": "<A HREF=\"HTTPS://EXAMPLE.ORG/Path\">Up</A>",
+   "text": "Up",
+   "hrefs": [
+    "https://example.org/Path"
+   ],
+   "qt": "<a href=\"https://example.org/Path\">Up</a>"
+  },
+  {
+   "name": "unicode text",
+   "in": "<p>héllo 👋 <b>wörld</b></p>",
+   "text": "héllo 👋 wörld",
+   "hrefs": [],
+   "qt": "<p>héllo 👋 <b>wörld</b></p>"
+  },
+  {
+   "name": "text escaping",
+   "in": "5 > 3 &amp; \"quotes\"",
+   "text": "5 > 3 & \"quotes\"",
+   "hrefs": [],
+   "qt": "5 &gt; 3 &amp; \"quotes\""
+  },
+  {
+   "name": "a style next to a colour",
+   "in": "<p style=\"color:red\" data-mx-color=\"#123456\">c</p>",
+   "text": "c",
+   "hrefs": [],
+   "absent": [
+    "color:red"
+   ],
+   "qt": "<p style=\"color:#123456\">c</p>"
+  },
+  {
+   "name": "target rel title go",
+   "in": "<a href=\"https://example.org/\" target=\"_blank\" rel=\"opener\" title=\"t\">t</a>",
+   "text": "t",
+   "hrefs": [
+    "https://example.org/"
+   ],
+   "absent": [
+    "target",
+    "rel=",
+    "title"
+   ],
+   "qt": "<a href=\"https://example.org/\">t</a>"
+  },
+  {
+   "name": "base cannot retarget links",
+   "in": "<base href=\"https://evil.example/\"><a href=\"x\">rel</a>",
+   "text": "rel",
+   "hrefs": [],
+   "absent": [
+    "<base",
+    "evil.example",
+    "<a"
+   ],
+   "qt": "rel"
+  },
+  {
+   "name": "meta and link go",
+   "in": "<meta http-equiv=\"refresh\" content=\"0;url=https://evil.example/\"><link rel=\"stylesheet\" href=\"https://evil.example/x.css\">x",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "<meta",
+    "<link",
+    "evil.example"
+   ],
+   "qt": "x"
+  },
+  {
+   "name": "body background",
+   "in": "<body background=\"https://evil.example/b.png\">x</body>",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "background",
+    "evil.example"
+   ],
+   "qt": "x"
+  },
+  {
+   "name": "font size and face go",
+   "in": "<font size=\"7\" face=\"Comic Sans\">big</font>",
+   "text": "big",
+   "hrefs": [],
+   "absent": [
+    "size",
+    "face"
+   ],
+   "qt": "<span>big</span>"
+  },
+  {
+   "name": "align and dir go",
+   "in": "<div align=\"center\" dir=\"rtl\">x</div>",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "align",
+    "dir="
+   ],
+   "qt": "<div>x</div>"
+  },
+  {
+   "name": "a space in a link's host",
+   "in": "<a href=\"https://exa mple.org\">x</a>",
+   "text": "x",
+   "hrefs": [],
+   "absent": [
+    "<a"
+   ],
+   "qt": "x"
+  },
+  {
+   "name": "a space in a link's path",
+   "in": "<a href=\"https://example.org/a b\">x</a>",
+   "text": "x",
+   "hrefs": [
+    "https://example.org/a%20b"
+   ],
+   "qt": "<a href=\"https://example.org/a%20b\">x</a>"
+  },
+  {
+   "name": "audio video canvas",
+   "in": "<audio src=\"https://evil.example/a.mp3\">a</audio><video poster=\"https://evil.example/p.png\">v</video>ok",
+   "text": "ok",
+   "hrefs": [],
+   "absent": [
+    "<audio",
+    "<video",
+    "evil.example"
+   ],
+   "qt": "ok"
+  },
+  {
+   "name": "a spoiler reason that is markup, on a div (web regression guard)",
+   "in": "<div data-mx-spoiler=\"<span data-mx-spoiler><img src=https://attacker.example/pixel onerror=alert(1)></span>\"></div>",
+   "text": "",
+   "hrefs": [],
+   "absent": [
+    "<img",
+    "onerror",
+    "attacker",
+    "data-mx-spoiler"
+   ],
+   "qt": "<div></div>"
+  },
+  {
+   "name": "a spoiler reason that is markup, on a span (web regression guard)",
+   "in": "<span data-mx-spoiler=\"<span data-mx-spoiler><img src=https://attacker.example/pixel onerror=alert(1)></span>\"></span>",
+   "text": "",
+   "hrefs": [],
+   "absent": [
+    "<img",
+    "<span data-mx-spoiler>"
+   ],
+   "qt": "<span data-mx-spoiler=\"&lt;span data-mx-spoiler&gt;&lt;img src=https://attacker.example/pixel onerror=alert(1)&gt;&lt;/span&gt;\"></span>"
+  },
+  {
+   "name": "an invisible character in the claimed host still gets the note",
+   "in": "<a href=\"https://attacker.example/\">example.com&#x200e;</a>",
+   "text": "example.com‎ (attacker.example)",
+   "hrefs": [
+    "https://attacker.example/"
+   ],
+   "qt": "<a href=\"https://attacker.example/\">example.com‎</a> (attacker.example)"
+  },
+  {
+   "name": "punctuation around a claimed host doesn't hide it",
+   "in": "<a href=\"https://evil.example/login\">Log in at example.com!</a> <a href=\"https://evil.example/\">(example.com)</a>",
+   "text": "Log in at example.com! (evil.example) (example.com) (evil.example)",
+   "hrefs": [
+    "https://evil.example/login",
+    "https://evil.example/"
+   ],
+   "qt": "<a href=\"https://evil.example/login\">Log in at example.com!</a> (evil.example) <a href=\"https://evil.example/\">(example.com)</a> (evil.example)"
+  },
+  {
+   "name": "file and product names claim no host",
+   "in": "<a href=\"https://nodejs.org/\">Node.js</a>, <a href=\"https://example.org/package.json\">package.json</a>, <a href=\"https://example.org/dl\">Valheim.exe</a>",
+   "text": "Node.js, package.json, Valheim.exe",
+   "hrefs": [
+    "https://nodejs.org/",
+    "https://example.org/package.json",
+    "https://example.org/dl"
+   ],
+   "qt": "<a href=\"https://nodejs.org/\">Node.js</a>, <a href=\"https://example.org/package.json\">package.json</a>, <a href=\"https://example.org/dl\">Valheim.exe</a>"
+  },
+  {
+   "name": "a mention pill claims no host",
+   "in": "<a href=\"https://matrix.to/#/@ana:example.org\">ana.com</a> and <a href=\"https://matrix.to/#/@j.doe:example.org\">J.Doe</a>",
+   "text": "ana.com and J.Doe",
+   "hrefs": [
+    "https://matrix.to/#/@ana:example.org",
+    "https://matrix.to/#/@j.doe:example.org"
+   ],
+   "qt": "<a href=\"https://matrix.to/#/@ana:example.org\">ana.com</a> and <a href=\"https://matrix.to/#/@j.doe:example.org\">J.Doe</a>"
+  },
+  {
+   "name": "a mailto link keeps only subject, body and cc",
+   "in": "<a href=\"mailto:ana@example.org?attach=/home/u/.ssh/id_ed25519&subject=Hi&bcc=x@example.org\">mail me</a>",
+   "text": "mail me",
+   "hrefs": [
+    "mailto:ana@example.org?subject=Hi"
+   ],
+   "absent": [
+    "attach",
+    "bcc"
+   ],
+   "qt": "<a href=\"mailto:ana@example.org?subject=Hi\">mail me</a>"
+  },
+  {
+   "name": "a steam link stays a link (the app asks first)",
+   "in": "<a href=\"steam://run/105600\">Play Valheim</a>",
+   "text": "Play Valheim",
+   "hrefs": [
+    "steam://run/105600"
+   ],
+   "qt": "<a href=\"steam://run/105600\">Play Valheim</a>"
+  },
+  {
+   "name": "code-file names claim no host",
+   "in": "<a href=\"https://evil.example/r\">README.md</a> <a href=\"https://evil.example/z\">evil.zip</a>",
+   "text": "README.md evil.zip (evil.example)",
+   "hrefs": [
+    "https://evil.example/r",
+    "https://evil.example/z"
+   ],
+   "qt": "<a href=\"https://evil.example/r\">README.md</a> <a href=\"https://evil.example/z\">evil.zip</a> (evil.example)"
+  }
+ ],
+ "links": [
+  {
+   "url": "https://example.org/x",
+   "open": true
+  },
+  {
+   "url": "http://example.org",
+   "open": true
+  },
+  {
+   "url": "HTTPS://EXAMPLE.ORG",
+   "open": true
+  },
+  {
+   "url": "  https://example.org/  ",
+   "open": true
+  },
+  {
+   "url": "https://example.org/a b",
+   "open": true
+  },
+  {
+   "url": "mailto:ana@example.org",
+   "open": true
+  },
+  {
+   "url": "MAILTO:ana@example.org",
+   "open": true
+  },
+  {
+   "url": "https://matrix.to/#/@bob:example.org",
+   "open": true
+  },
+  {
+   "url": "https://matrix.to/#/#lounge:example.org",
+   "open": true
+  },
+  {
+   "url": "https://[::1]:8080/x",
+   "open": true
+  },
+  {
+   "url": "https://example.org:8448/_matrix",
+   "open": true
+  },
+  {
+   "url": "\n https://example.org/x\t",
+   "open": true
+  },
+  {
+   "url": "file:///etc/passwd",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "FILE:///C:/Windows/System32/calc.exe",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "smb://attacker.example/share",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "\\\\attacker.example\\share",
+   "open": false,
+   "why": "no-scheme"
+  },
+  {
+   "url": "search-ms:query=x&crumb=location:\\\\attacker.example\\s",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "ms-msdt:/id PCWDiagnostic",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "ms-settings:",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "ms-word:ofe|u|https://evil.example/x.docx",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "javascript:alert(1)",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "JaVaScRiPt:alert(1)",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "java\tscript:alert(1)",
+   "open": false,
+   "why": "bad-char"
+  },
+  {
+   "url": "java\nscript:alert(1)",
+   "open": false,
+   "why": "bad-char"
+  },
+  {
+   "url": " javascript:alert(1)",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "https://exa\tmple.org/",
+   "open": false,
+   "why": "bad-char"
+  },
+  {
+   "url": "https://user:pw@evil.example/",
+   "open": false,
+   "why": "userinfo"
+  },
+  {
+   "url": "https://bank.example@evil.example/",
+   "open": false,
+   "why": "userinfo"
+  },
+  {
+   "url": "data:text/html,<script>alert(1)</script>",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "vbscript:msgbox(1)",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "tinhat://join/x",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "steam://run/892970",
+   "open": true,
+   "as": "steam://run/892970",
+   "ask": "steam"
+  },
+  {
+   "url": "matrix:u/bob:example.org",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "ftp://example.org/x",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "about:blank",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "blob:https://example.org/x",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "qrc:/qml/Main.qml",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "C:\\Windows\\System32\\calc.exe",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "https://exa mple.org/",
+   "open": false,
+   "why": "bad-char"
+  },
+  {
+   "url": "https://example.org/\u0000x",
+   "open": false,
+   "why": "bad-char"
+  },
+  {
+   "url": "https://",
+   "open": false,
+   "why": "no-host"
+  },
+  {
+   "url": "https://:443/",
+   "open": false,
+   "why": "no-host"
+  },
+  {
+   "url": "",
+   "open": false,
+   "why": "no-scheme"
+  },
+  {
+   "url": "example.org",
+   "open": false,
+   "why": "no-scheme"
+  },
+  {
+   "url": "//evil.example/x",
+   "open": false,
+   "why": "no-scheme"
+  },
+  {
+   "url": "1http://x",
+   "open": false,
+   "why": "no-scheme"
+  },
+  {
+   "url": "mailto:ana@example.org?attach=/home/u/.ssh/id_ed25519",
+   "open": true,
+   "as": "mailto:ana@example.org"
+  },
+  {
+   "url": "mailto:ana@example.org?subject=Hi&attach=x&body=Yo&cc=bo@example.org&bcc=c@example.org",
+   "open": true,
+   "as": "mailto:ana@example.org?subject=Hi&body=Yo&cc=bo@example.org"
+  },
+  {
+   "url": "mailto:ana@example.org?SUBJECT=Hi&Attach=x",
+   "open": true,
+   "as": "mailto:ana@example.org?SUBJECT=Hi"
+  },
+  {
+   "url": "mailto:ana@example.org?subject=a%20b#frag",
+   "open": true,
+   "as": "mailto:ana@example.org?subject=a%20b"
+  },
+  {
+   "url": "mailto:ana@example.org",
+   "open": true,
+   "as": "mailto:ana@example.org"
+  },
+  {
+   "url": "steam://run/105600",
+   "open": true,
+   "as": "steam://run/105600",
+   "ask": "steam"
+  },
+  {
+   "url": "STEAM://connect/203.0.113.5:27015",
+   "open": true,
+   "as": "STEAM://connect/203.0.113.5:27015",
+   "ask": "steam"
+  },
+  {
+   "url": "steam://",
+   "open": false,
+   "why": "no-host"
+  },
+  {
+   "url": "steam:run/105600",
+   "open": false,
+   "why": "no-host"
+  },
+  {
+   "url": "steam://run/1 2",
+   "open": false,
+   "why": "bad-char"
+  },
+  {
+   "url": "steamcmd://run/1",
+   "open": false,
+   "why": "scheme"
+  },
+  {
+   "url": "discord://discord.com/channels/1",
+   "open": false,
+   "why": "scheme"
+  }
+ ],
+ "viewer": [
+  {
+   "mime": "image/png",
+   "ext": "png",
+   "inline": true
+  },
+  {
+   "mime": "image/jpeg",
+   "ext": "jpg",
+   "inline": true
+  },
+  {
+   "mime": "image/jpg",
+   "ext": "jpg",
+   "inline": true
+  },
+  {
+   "mime": "image/pjpeg",
+   "ext": "jpg",
+   "inline": true
+  },
+  {
+   "mime": "image/gif",
+   "ext": "gif",
+   "inline": true
+  },
+  {
+   "mime": "image/webp",
+   "ext": "webp",
+   "inline": true
+  },
+  {
+   "mime": "image/avif",
+   "ext": "avif",
+   "inline": false
+  },
+  {
+   "mime": "IMAGE/PNG; charset=binary",
+   "ext": "png",
+   "inline": true
+  },
+  {
+   "mime": "video/mp4",
+   "ext": "mp4",
+   "inline": false
+  },
+  {
+   "mime": "video/mp4; codecs=avc1.42E01E",
+   "ext": "mp4",
+   "inline": false
+  },
+  {
+   "mime": "video/webm",
+   "ext": "webm",
+   "inline": false
+  },
+  {
+   "mime": "audio/mpeg",
+   "ext": "mp3",
+   "inline": false
+  },
+  {
+   "mime": "audio/mp3",
+   "ext": "mp3",
+   "inline": false
+  },
+  {
+   "mime": "audio/ogg",
+   "ext": "ogg",
+   "inline": false
+  },
+  {
+   "mime": "audio/ogg; codecs=opus",
+   "ext": "ogg",
+   "inline": false
+  },
+  {
+   "mime": "audio/opus",
+   "ext": "opus",
+   "inline": false
+  },
+  {
+   "mime": "audio/wav",
+   "ext": "wav",
+   "inline": false
+  },
+  {
+   "mime": "audio/x-wav",
+   "ext": "wav",
+   "inline": false
+  },
+  {
+   "mime": "audio/wave",
+   "ext": "wav",
+   "inline": false
+  },
+  {
+   "mime": "audio/vnd.wave",
+   "ext": "wav",
+   "inline": false
+  },
+  {
+   "mime": "audio/flac",
+   "ext": "flac",
+   "inline": false
+  },
+  {
+   "mime": "audio/x-flac",
+   "ext": "flac",
+   "inline": false
+  },
+  {
+   "mime": "audio/mp4",
+   "ext": "m4a",
+   "inline": false
+  },
+  {
+   "mime": "audio/x-m4a",
+   "ext": "m4a",
+   "inline": false
+  },
+  {
+   "mime": "audio/m4a",
+   "ext": "m4a",
+   "inline": false
+  },
+  {
+   "mime": "audio/aac",
+   "ext": "aac",
+   "inline": false
+  },
+  {
+   "mime": "audio/webm",
+   "ext": "weba",
+   "inline": false
+  },
+  {
+   "mime": "application/pdf",
+   "ext": "pdf",
+   "inline": false
+  },
+  {
+   "mime": "text/plain",
+   "ext": "txt",
+   "inline": false
+  },
+  {
+   "mime": "text/plain; charset=utf-8",
+   "ext": "txt",
+   "inline": false
+  },
+  {
+   "mime": "Text/Plain",
+   "ext": "txt",
+   "inline": false
+  },
+  {
+   "mime": "image/svg+xml",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image/bmp",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image/tiff",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image/heic",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image/x-icon",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "video/quicktime",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "video/x-matroska",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "text/html",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/xhtml+xml",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "text/xml",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/xml",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "text/javascript",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/javascript",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/x-msdownload",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/vnd.microsoft.portable-executable",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/octet-stream",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/x-sh",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/zip",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/java-archive",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "application/x-ms-shortcut",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "text/markdown",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "text/csv",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image/svg",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image/",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "image/png/x",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "text/html;x=image/png",
+   "ext": null,
+   "inline": false
+  },
+  {
+   "mime": "text/plain/x",
+   "ext": null,
+   "inline": false
+  }
+ ],
+ "sniff": [
+  {
+   "ext": "png",
+   "hex": "89504e470d0a1a0a0000000d49484452",
+   "ok": true
+  },
+  {
+   "ext": "png",
+   "hex": "3c7376672f3e",
+   "ok": false
+  },
+  {
+   "ext": "png",
+   "hex": "ffd8ffe000104a464946",
+   "ok": false
+  },
+  {
+   "ext": "jpg",
+   "hex": "ffd8ffe000104a464946",
+   "ok": true
+  },
+  {
+   "ext": "jpg",
+   "hex": "89504e470d0a1a0a",
+   "ok": false
+  },
+  {
+   "ext": "gif",
+   "hex": "474946383961",
+   "ok": true
+  },
+  {
+   "ext": "gif",
+   "hex": "474946383761",
+   "ok": true
+  },
+  {
+   "ext": "gif",
+   "hex": "3c737667",
+   "ok": false
+  },
+  {
+   "ext": "webp",
+   "hex": "52494646000000005745425056503820",
+   "ok": true
+  },
+  {
+   "ext": "webp",
+   "hex": "52494646000000005741564566",
+   "ok": false
+  },
+  {
+   "ext": "avif",
+   "hex": "0000001c66747970617669660000000061766966000000006d696631",
+   "ok": true
+  },
+  {
+   "ext": "avif",
+   "hex": "000000186674797069736f6d00000000",
+   "ok": false
+  },
+  {
+   "ext": "mp4",
+   "hex": "000000186674797069736f6d0000000069736f6d6d703432",
+   "ok": true
+  },
+  {
+   "ext": "mp4",
+   "hex": "0000001c66747970617669660000000061766966000000006d696631",
+   "ok": false
+  },
+  {
+   "ext": "mp4",
+   "hex": "1a45dfa3",
+   "ok": false
+  },
+  {
+   "ext": "webm",
+   "hex": "1a45dfa39f4286810142f7",
+   "ok": true
+  },
+  {
+   "ext": "webm",
+   "hex": "000000186674797069736f6d",
+   "ok": false
+  },
+  {
+   "ext": "ogg",
+   "hex": "4f67675300020000",
+   "ok": true
+  },
+  {
+   "ext": "opus",
+   "hex": "4f67675300020000",
+   "ok": true
+  },
+  {
+   "ext": "ogg",
+   "hex": "664c6143",
+   "ok": false
+  },
+  {
+   "ext": "wav",
+   "hex": "524946460000000057415645666d7420",
+   "ok": true
+  },
+  {
+   "ext": "wav",
+   "hex": "52494646000000005745425056503820",
+   "ok": false
+  },
+  {
+   "ext": "flac",
+   "hex": "664c614300000022",
+   "ok": true
+  },
+  {
+   "ext": "mp3",
+   "hex": "4944330400000000",
+   "ok": true
+  },
+  {
+   "ext": "mp3",
+   "hex": "fffb9064",
+   "ok": true
+  },
+  {
+   "ext": "mp3",
+   "hex": "3c68746d6c3e",
+   "ok": false
+  },
+  {
+   "ext": "pdf",
+   "hex": "255044462d312e370a",
+   "ok": true
+  },
+  {
+   "ext": "pdf",
+   "hex": "3c68746d6c3e255044462d",
+   "ok": false
+  },
+  {
+   "ext": "txt",
+   "hex": "68656c6c6f0a",
+   "ok": true
+  },
+  {
+   "ext": "txt",
+   "hex": "3c21646f63747970652068746d6c3e",
+   "ok": false
+  },
+  {
+   "ext": "txt",
+   "hex": "3c73766720",
+   "ok": false
+  },
+  {
+   "ext": "txt",
+   "hex": "4d5a90000300",
+   "ok": false
+  },
+  {
+   "ext": "exe",
+   "hex": "4d5a90000300",
+   "ok": false
+  },
+  {
+   "ext": "svg",
+   "hex": "3c737667",
+   "ok": false
+  },
+  {
+   "ext": "avif",
+   "hex": "3c212d2d66747970617669662d2d3e3c73766720786d6c6e733d22687474703a2f2f7777772e77332e6f72672f323030302f737667223e3c696d61676520687265663d222f2f686f73742f73686172652f782e706e67222f3e3c2f7376673e",
+   "ok": false
+  },
+  {
+   "ext": "mp4",
+   "hex": "3c212d2d66747970617669662d2d3e3c73766720786d6c6e733d22687474703a2f2f7777772e77332e6f72672f323030302f737667223e3c696d61676520687265663d222f2f686f73742f73686172652f782e706e67222f3e3c2f7376673e",
+   "ok": false
+  },
+  {
+   "ext": "avif",
+   "hex": "0000001c6674797061766966000000006176696600000000",
+   "ok": false
+  },
+  {
+   "ext": "mp4",
+   "hex": "000000086674797069736f6d",
+   "ok": false
+  }
+ ],
+ "claims": [
+  {
+   "text": "https://bank.example",
+   "href": "https://evil.example/login",
+   "claim": "bank.example"
+  },
+  {
+   "text": "www.bank.example/login",
+   "href": "https://evil.example/login",
+   "claim": "bank.example"
+  },
+  {
+   "text": "bank.example/login",
+   "href": "https://evil.example/login",
+   "claim": "bank.example"
+  },
+  {
+   "text": "bank.example",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "Log in at example.com!",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "(example.com)",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "example.com.",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "'example.com'",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "example.com, now",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "«example.com»",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "example.com‎",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "exam​ple.com",
+   "href": "https://evil.example/login",
+   "claim": "example.com"
+  },
+  {
+   "text": "https://bank.example x",
+   "href": "https://evil.example/login",
+   "claim": "bank.example"
+  },
+  {
+   "text": "EXAMPLE.COM",
+   "href": "https://www.example.com/x",
+   "claim": null
+  },
+  {
+   "text": "https://www.example.com/",
+   "href": "https://example.com/",
+   "claim": null
+  },
+  {
+   "text": "evil.example",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "Node.js",
+   "href": "https://nodejs.org/",
+   "claim": null
+  },
+  {
+   "text": "package.json",
+   "href": "https://example.org/package.json",
+   "claim": null
+  },
+  {
+   "text": "Valheim.exe",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "the Vue.js guide",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "index.html",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "e.g. this",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "v1.2.3",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "1.2.3.4",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "ana.com",
+   "href": "https://matrix.to/#/@ana:example.org",
+   "claim": null
+  },
+  {
+   "text": "J.Doe",
+   "href": "https://matrix.to/#/@j.doe:example.org",
+   "claim": null
+  },
+  {
+   "text": "example.com",
+   "href": "mailto:ana@example.com",
+   "claim": null
+  },
+  {
+   "text": "Read the docs",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "bank.example.com",
+   "href": "https://bank.example.com.evil.example/",
+   "claim": "bank.example.com"
+  },
+  {
+   "text": "ftp://bank.example",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "README.md",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "main.py",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "lib.rs",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "run.sh",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "script.pl",
+   "href": "https://evil.example/login",
+   "claim": null
+  },
+  {
+   "text": "evil.zip",
+   "href": "https://evil.example/login",
+   "claim": "evil.zip"
+  },
+  {
+   "text": "clip.mov",
+   "href": "https://evil.example/login",
+   "claim": "clip.mov"
+  },
+  {
+   "text": "https://readme.md/",
+   "href": "https://evil.example/login",
+   "claim": "readme.md"
+  },
+  {
+   "text": "www.main.py",
+   "href": "https://evil.example/login",
+   "claim": "main.py"
+  },
+  {
+   "text": "docs.rs/serde",
+   "href": "https://evil.example/login",
+   "claim": "docs.rs"
+  }
+ ],
+ "ownSounds": [
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/clip?id=0123abcd",
+   "own": true
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/0123abcd.mp3",
+   "own": true
+  },
+  {
+   "base": "https://chat.example.net/api/",
+   "url": "https://chat.example.net/api/soundboard/clip?id=x_y-z",
+   "own": true
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/clip?id=0123abcd&x=1",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/%2e%2e/admin/x",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/%2e%2e/vods/file/x",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/%2E%2E/x",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/%2e%2e",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/%2Fetc%2Fpasswd",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/a%5cb",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/a%5Cb",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/..",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/a/b",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fwww.myinstants.com%2Fx.mp3",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/vods/file/r/1/a.mka",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "http://chat.example.net/api/soundboard/clip?id=1",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/apix/soundboard/clip?id=1",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://other.example/api/soundboard/clip?id=1",
+   "own": false
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/clip?id=1#x",
+   "own": false
+  }
+ ],
+ "claimExclude": [
+  "md",
+  "py",
+  "rs",
+  "sh",
+  "pl"
+ ],
+ "soundRoute": [
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://www.myinstants.com/media/sounds/airhorn.mp3",
+   "route": "myinstants",
+   "play": "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fwww.myinstants.com%2Fmedia%2Fsounds%2Fairhorn.mp3"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "/media/sounds/airhorn.mp3",
+   "route": "myinstants",
+   "play": "https://chat.example.net/api/soundboard/clip?url=%2Fmedia%2Fsounds%2Fairhorn.mp3"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://evil.example/myinstants.com/x.mp3",
+   "route": "myinstants",
+   "play": "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fevil.example%2Fmyinstants.com%2Fx.mp3"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/clip?id=0123abcd",
+   "route": "own",
+   "play": "https://chat.example.net/api/soundboard/clip?id=0123abcd"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/file/0123abcd.mp3",
+   "route": "own",
+   "play": "https://chat.example.net/api/soundboard/file/0123abcd.mp3"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/clip?id=0123abcd&x=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/%2e%2e/vods/file/x",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/vods/file/r/1/a.mka",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/clip?id=0123abcd",
+   "route": "foreign",
+   "play": "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fpeer.example.org%2Fapi%2Fsoundboard%2Fclip%3Fid%3D0123abcd"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org:443/api/soundboard/clip?id=0123abcd",
+   "route": "foreign",
+   "play": "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fpeer.example.org%3A443%2Fapi%2Fsoundboard%2Fclip%3Fid%3D0123abcd"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/file/0123abcd.mp3",
+   "route": "foreign",
+   "play": "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fpeer.example.org%2Fapi%2Fsoundboard%2Ffile%2F0123abcd.mp3"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://Peer.Example.org/api/soundboard/file/a_b-c.ogg",
+   "route": "foreign",
+   "play": "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2FPeer.Example.org%2Fapi%2Fsoundboard%2Ffile%2Fa_b-c.ogg"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/clip?id=1&x=2",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/clip?url=x",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/clip",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/file/a.mp3?x=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/file/..",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/file/a/b",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/%2e%2e/x",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/file/%2Fetc",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/file/a%5Cb",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/api/soundboard/clip?id=1#x",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://user@peer.example.org/api/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://user:pw@peer.example.org/api/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org:8443/api/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "http://peer.example.org/api/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://203.0.113.5/api/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://[2001:db8::1]/api/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://localhost/api/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/apix/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://peer.example.org/API/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/api/soundboard/clip?id=1&x=2",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://chat.example.net/other/soundboard/clip?id=1",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "https://attacker.example/x.mp3",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "file:///etc/passwd",
+   "route": "refuse"
+  },
+  {
+   "base": "https://chat.example.net/api",
+   "url": "",
+   "route": "refuse"
+  }
+ ]
+}

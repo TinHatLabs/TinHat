@@ -152,6 +152,7 @@ Item {
                 spacing: 0
 
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: headerBar.roomName.length > 0 ? headerBar.roomName : "Room"
                     color: Th.headerTitleFg
@@ -160,6 +161,7 @@ Item {
                     elide: Text.ElideRight
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: text.length > 0
                     text: headerBar.subtitle
@@ -199,6 +201,7 @@ Item {
                         hovered: nextMa.containsMouse
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         anchors.verticalCenter: parent.verticalCenter
                         text: nextUpChip.ev ? headerBar.nextUpText(nextUpChip.ev) : ""
                         color: Th.headerNextUpFg

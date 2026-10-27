@@ -43,6 +43,7 @@ Item {
         width: w.width - x - 5
         spacing: 4
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             text: w.fixes.length === 1 ? "1 colour is hard to read" : w.fixes.length + " colours are hard to read"
             color: Th.bannerFg
@@ -55,6 +56,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 8
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: modelData.line
                     color: Th.settingsThemeEditorWarnFg
@@ -70,6 +72,7 @@ Item {
             }
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: w.fixes.length > 4
             Layout.fillWidth: true
             text: "and " + (w.fixes.length - 4) + " more — see Advanced"

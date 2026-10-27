@@ -179,6 +179,7 @@ Item {
 
                 // ---- a section heading (28, bold, bottom-aligned, padding 0 12 4 12)
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: it.modelData.t === "section"
                     x: 11
                     anchors.bottom: parent.bottom
@@ -217,16 +218,19 @@ Item {
                         RowLayout {
                             spacing: 0
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: it.modelData.t === "group" ? it.modelData.g.label : ""
                                 color: Th.settingsThemeEditorGroupFg
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: it.modelData.t === "group" ? " · " + it.modelData.g.rows.length : ""
                                 color: Th.settingsHintFg
                             }
                         }
                         Item { Layout.fillWidth: true }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             readonly property int n: it.modelData.t === "group" ? adv.countChanged(it.modelData.g) : 0
                             visible: n > 0
                             text: n + " changed"
@@ -276,12 +280,14 @@ Item {
                             Layout.minimumWidth: 0
                             spacing: 0
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 text: rowBtn.row ? rowBtn.row.label : ""
                                 color: Th.settingsFg
                                 elide: Text.ElideRight
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 text: rowBtn.row ? rowBtn.row.id : ""
                                 color: Th.settingsHintFg
@@ -300,6 +306,7 @@ Item {
                             border.width: 1
                             border.color: Th.settingsThemeEditorSwatchBorder
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 id: badgeText
                                 anchors.centerIn: parent
                                 text: it.modelData.badge || ""
@@ -332,6 +339,7 @@ Item {
 
             // nothing to list
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: 24
                 width: parent.width - 24

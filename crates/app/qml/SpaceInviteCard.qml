@@ -50,6 +50,7 @@ Item {
             wrapMode: Text.WordWrap
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.alignment: Qt.AlignHCenter
             visible: card.memberCount > 0 || card.inviterMxid.length > 0
             text: (card.memberCount > 0 ? (card.memberCount + (card.memberCount === 1 ? " member" : " members")) : "")

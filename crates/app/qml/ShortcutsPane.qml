@@ -78,6 +78,7 @@ ColumnLayout {
             }
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: (pane.view.conflicts || 0) > 0
             Layout.fillWidth: true
             Layout.topMargin: 6
@@ -127,6 +128,7 @@ ColumnLayout {
                                 border.width: 1
                                 border.color: clash ? Th.stateWarning : Th.settingsCardBorder
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     id: chipText
                                     anchors.centerIn: parent
                                     text: modelData + (row.modelData.hold ? " (hold)" : "")
@@ -198,7 +200,7 @@ ColumnLayout {
             } catch (e) { return [] }
         }
         function openFor(it) { recorder.item = it; recorder.recKey = ""; recorder.pendingMod = ""; recorder.open() }
-        title: recorder.item ? "Key for “" + recorder.item.label + "”" : "Key"
+        title: LinkGate.plain(recorder.item ? "Key for “" + recorder.item.label + "”" : "Key")
         modal: true
         parent: Controls.Overlay.overlay
         anchors.centerIn: parent
@@ -296,6 +298,7 @@ ColumnLayout {
                 }
                 TapHandler { onTapped: recBox.forceActiveFocus() }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     anchors.centerIn: parent
                     text: recorder.recKey.length > 0 ? recorder.recKey : "Press the keys…"
                     color: recorder.recKey.length === 0 ? Th.dialogHintFg : (recorder.errorText.length > 0 ? Th.dialogErrorFg : Th.dialogFg)
@@ -305,6 +308,7 @@ ColumnLayout {
                 }
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: recorder.errorText.length > 0
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
@@ -313,6 +317,7 @@ ColumnLayout {
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: recorder.errorText.length === 0 && recorder.takes.length > 0
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
@@ -322,6 +327,7 @@ ColumnLayout {
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: !!recorder.item && (recorder.item.defaults || []).length > 0
                 Layout.fillWidth: true
                 text: "Tin Hat's key: " + (recorder.item ? (recorder.item.defaults || []).join(", ") : "")

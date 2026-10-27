@@ -85,6 +85,7 @@ Item {
     }
 
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: 24 }
         visible: lb.alt.length > 0
         text: lb.alt

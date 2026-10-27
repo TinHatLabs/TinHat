@@ -80,6 +80,7 @@ Item {
                 isMask: true
             }
             Text {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: b.showLabel
                 anchors.verticalCenter: parent.verticalCenter
                 font.pixelSize: 13
@@ -95,6 +96,7 @@ Item {
                 radius: 8
                 color: Th.badgeBg
                 Text {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: badgeText
                     anchors.centerIn: parent
                     font.pixelSize: 11
@@ -329,8 +331,8 @@ Item {
                         anchors.rightMargin: 4
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 2
-                        Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: prow.modelData.name }
-                        Text { width: parent.width; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: prow.modelData.line }
+                        Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: prow.modelData.name }
+                        Text { textFormat: Text.PlainText; width: parent.width; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: prow.modelData.line }
                     }
                     Kirigami.Icon {
                         id: check
@@ -417,8 +419,8 @@ Item {
                             x: 40
                             width: parent.width - 40 - restoreBtn.width - 12
                             anchors.verticalCenter: parent.verticalCenter
-                            Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: hrow.t.name }
-                            Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: hrow.t.about }
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: hrow.t.name }
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: hrow.t.about }
                         }
                         MouseArea {
                             id: rowMa

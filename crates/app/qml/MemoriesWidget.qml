@@ -151,6 +151,7 @@ Item {
                     sourceSize.width: 128
                 }
                 Text {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     anchors.centerIn: parent
                     visible: poster.status !== Image.Ready
                     text: w.glyphOf(mr.m)

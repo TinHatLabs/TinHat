@@ -175,6 +175,7 @@ Controls.Dialog {
                 onClicked: dlg.verifyRequested(secKeyField.text)
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 width: parent.width
                 wrapMode: Text.WordWrap
                 visible: dlg.status.length > 0
@@ -223,6 +224,7 @@ Controls.Dialog {
                     onClicked: dlg.startOverRequested(soPwField.text)
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     width: parent.width
                     wrapMode: Text.WordWrap
                     visible: dlg.startOverNote.length > 0
@@ -246,6 +248,7 @@ Controls.Dialog {
                 progress: dlg.sasState
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 width: parent.width
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
@@ -285,6 +288,7 @@ Controls.Dialog {
             visible: dlg.sasState === "emoji"
 
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: dlg.sasPeer.length > 0
@@ -301,11 +305,13 @@ Controls.Dialog {
                         required property var modelData
                         spacing: 0
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: parent.modelData.e
                             font.pointSize: 24
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: parent.modelData.name
                             color: Th.dialogHintFg
@@ -336,6 +342,7 @@ Controls.Dialog {
             visible: dlg.sasState === "done" || dlg.sasState === "cancelled"
 
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: dlg.sasNote
@@ -393,6 +400,7 @@ Controls.Dialog {
                 progress: dlg.sasNote
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 width: parent.width
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
@@ -405,6 +413,7 @@ Controls.Dialog {
             spacing: Kirigami.Units.smallSpacing
             visible: dlg.sasState === "recovery-done"
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: dlg.sasNote

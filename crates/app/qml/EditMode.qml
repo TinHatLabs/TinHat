@@ -47,7 +47,7 @@ QtObject {
     function engineApplyOp(formJson, opJson, ctxJson) { return String(em.layoutCtl.applyOp(formJson, opJson, ctxJson)) }
     function engineSolve(formJson, ctxJson) { return String(em.layoutCtl.solve(formJson, ctxJson)) }
     function enginePreset(name) { return String(em.layoutCtl.preset(name)) }
-    function toast(text, ms) { if (em.app && em.app.showPassiveNotification) em.app.showPassiveNotification(text, ms || 3000) }
+    function toast(text, ms) { if (em.app && em.app.showPassiveNotification) em.app.showPassiveNotification(LinkGate.plain(text), ms || 3000) }
 
     /** Open a session on the layout this device renders (the reset override included). */
     function openEdit() {

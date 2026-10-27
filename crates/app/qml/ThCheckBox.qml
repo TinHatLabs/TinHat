@@ -46,6 +46,7 @@ T.CheckBox {
         }
     }
     contentItem: Text {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         text: cb.text
         font: cb.font
         color: cb.enabled ? cb.labelColor : Th.toggleFgDisabled

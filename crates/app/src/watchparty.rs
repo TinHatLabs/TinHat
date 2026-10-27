@@ -243,6 +243,15 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "classifyLink"]
         fn classify_link(self: &WatchPartyController, text: &QString) -> QString;
+        /// QML: mpvTarget(url) — M8 (security review 2026-10-26): what the player may hand libmpv for the shared
+        /// now-playing url, as JSON `{ok, load, ytdl, why}` (`mpv_target`); `ok:false` = don't load it.
+        #[qinvokable]
+        #[cxx_name = "mpvTarget"]
+        fn mpv_target(self: &WatchPartyController, url: &QString) -> QString;
+        /// QML: mpvOptions() — the window's fixed mpv settings that hold the ytdl hook to YouTube (`mpv_options`).
+        #[qinvokable]
+        #[cxx_name = "mpvOptions"]
+        fn mpv_options(self: &WatchPartyController) -> QString;
         /// QML: watchRoom(roomId) — 11.4 (Media Party): poll `roomId`'s party every 3 s into callPartyJson
         /// (the call bar's "a party is live here" cue + now-playing strip); "" stops the poll.
         #[qinvokable]
@@ -721,6 +730,18 @@ impl qobject::WatchPartyController {
 
     pub fn classify_link(&self, text: &QString) -> QString {
         QString::from(&crate::medialinks::parse_media_link(&text.to_string()).to_string())
+    }
+
+    pub fn mpv_options(&self) -> QString {
+        QString::from(&mpv_options().to_string())
+    }
+
+    pub fn mpv_target(&self, url: &QString) -> QString {
+        let t = mpv_target(&url.to_string());
+        if t.get("ok") != Some(&Value::Bool(true)) {
+            eprintln!("[watchparty] player refused the shared url: {}", t.get("why").and_then(Value::as_str).unwrap_or(""));
+        }
+        QString::from(&t.to_string())
     }
 
     /// 11.4: the one box / a chat card → a queue item (see the bridge doc). Runs the server round trips off the UI
@@ -1630,6 +1651,84 @@ pub fn queue_upcoming_label(q: &[Value], now: &str) -> String {
     }
     let mins = (known / 60.0 + 0.5).floor() as u64; // round half up
     format!("{}{} left", fmt_dur_mins(mins), if unknown { "+" } else { "" })
+}
+
+/// M8 (security review 2026-10-26): what the Media Party window may hand libmpv for the shared now-playing url. That url
+/// is room STATE (`dev.tinhat.watchparty.playback`), so whoever can write it — a room's creator, a moderator, the server —
+/// picks it for everyone with the party open; only the SENDING side (add_link / enqueue) used to require http(s). mpv
+/// opens whatever it knows (`file://`, `smb://`, `edl://`, `av://`, `lavf://`, …), follows playlists inside what it
+/// opened, and its ytdl hook runs yt-dlp on any web address mpv can't play itself. So:
+///   * only an http(s) address with a host, no user name or password, no whitespace or control characters, at most
+///     2048 bytes (Tin Hat Web plays http(s) only too: a YouTube video in its player, a direct media file in <video>);
+///     it goes to mpv as it is, so mpv's own origin rule (a web stream may only lead to other web streams) holds;
+///   * a YouTube / YouTube Music video (`parse_media_link`) is handed over as its canonical
+///     `https://www.youtube.com/watch?v=<id>` with mpv's demuxer on auto (yt-dlp's answer for YouTube is an EDL);
+///   * anything else loads with `demuxer: "lavf"`: FFmpeg reads it, so mpv's own playlist / EDL / CUE parsers never
+///     see it and nothing inside it becomes another file mpv opens (FFmpeg's nested requests — HLS segments and keys —
+///     stay on http(s) through the window's protocol whitelist).
+///   The ytdl hook is held to YouTube on every call by [`mpv_options`] (its exclude list = everything but the canonical
+///   watch address; yt-dlp limited to its YouTube extractors).
+/// Security review follow-up (Astra, 2026-10-26): the first version handed other links over as `lavf://<url>`, which
+/// mpv treats as an UNSAFE origin that may open anything — a playlist behind it could play a local file. Checked with
+/// mpv 0.41: that case played a local WAV; the rule here plays none, spawns no yt-dlp for non-YouTube pages, and still
+/// plays http(s) files, HLS and YouTube.
+/// Returns `{ok:true, load, ytdl, demuxer}` or `{ok:false, why}`.
+pub fn mpv_target(url: &str) -> Value {
+    let refuse = |why: &str| serde_json::json!({ "ok": false, "why": why });
+    let raw = url.trim();
+    if raw.is_empty() {
+        return refuse("nothing to play");
+    }
+    if raw.len() > 2048 || raw.chars().any(|c| c.is_whitespace() || c.is_control()) {
+        return refuse("This link can't play in the Media Party.");
+    }
+    let Ok(u) = Url::parse(raw) else { return refuse("This link can't play in the Media Party: it isn't a web address.") };
+    if !matches!(u.scheme(), "http" | "https") || u.host_str().map_or(true, str::is_empty) {
+        return refuse("This link can't play in the Media Party: only web links (https://…) can.");
+    }
+    if !u.username().is_empty() || u.password().is_some() {
+        return refuse("This link can't play in the Media Party.");
+    }
+    let link = crate::medialinks::parse_media_link(raw);
+    if matches!(link.get("kind").and_then(Value::as_str), Some("youtube" | "ytmusic")) {
+        let id = link.get("id").and_then(Value::as_str).unwrap_or("");
+        if !id.is_empty() {
+            return serde_json::json!({ "ok": true, "load": format!("{YT_WATCH}{id}"), "ytdl": true, "demuxer": "" });
+        }
+    }
+    serde_json::json!({ "ok": true, "load": u.as_str(), "ytdl": false, "demuxer": "lavf" })
+}
+
+/// The one address the ytdl hook may act on (what [`mpv_target`] hands over for a YouTube video).
+const YT_WATCH: &str = "https://www.youtube.com/watch?v=";
+
+/// The Lua patterns for the ytdl hook's `exclude` option: every address that does NOT start with
+/// `www.youtube.com/watch?v=` (the hook matches them against the address without `http(s)://`, lower-cased). Lua
+/// patterns have no "not", so the list spells it out: a different character at each position of the prefix, or the
+/// address ending inside it. No pattern contains `|` (the hook's separator).
+pub fn ytdl_exclude_patterns() -> String {
+    let prefix = &YT_WATCH["https://".len()..];
+    let esc = |c: char| if "^$()%.[]*+-?".contains(c) { format!("%{c}") } else { c.to_string() };
+    let escs = |s: &str| s.chars().map(esc).collect::<String>();
+    let mut pats = Vec::new();
+    for (i, c) in prefix.char_indices() {
+        pats.push(format!("^{}[^{}]", escs(&prefix[..i]), esc(c)));
+    }
+    for i in 1..prefix.len() {
+        pats.push(format!("^{}$", escs(&prefix[..i])));
+    }
+    pats.join("|")
+}
+
+/// The mpv options the Media Party window sets once (QML watchCtl.mpvOptions): the ytdl hook's exclude list (as
+/// `script-opts`, length-quoted: the patterns hold `=` and `,`-free text) and yt-dlp held to its YouTube extractors
+/// (`ytdl-raw-options`: a non-YouTube address is refused by yt-dlp before it fetches anything).
+pub fn mpv_options() -> Value {
+    let pats = ytdl_exclude_patterns();
+    serde_json::json!({
+        "scriptOpts": format!("ytdl_hook-exclude=%{}%{}", pats.len(), pats),
+        "ytdlRawOptions": "use-extractors=youtube",
+    })
 }
 
 /// `fmtTime`: "m:ss", "h:mm:ss" from one hour; anything not finite / negative reads 0:00.
@@ -2738,6 +2837,101 @@ pub async fn headless_verify(room_id: &str) {
 #[cfg(test)]
 mod mediaparty_tests {
     use super::*;
+
+    /// M8: the shared now-playing url reaches mpv only as an http(s) address; yt-dlp only for a YouTube video.
+    #[test]
+    fn the_player_loads_only_web_links_and_ytdl_only_youtube() {
+        let ok = |u: &str| mpv_target(u);
+        let yt = ok("https://youtu.be/dQw4w9WgXcQ?t=5");
+        assert_eq!(yt["ok"], true);
+        assert_eq!(yt["ytdl"], true);
+        assert_eq!(yt["load"], "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+        assert_eq!(ok("https://music.youtube.com/watch?v=dQw4w9WgXcQ")["load"], "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+        // a direct file / any other web link: FFmpeg's reader, never yt-dlp
+        let f = ok("https://example.com/clips/a.mp4");
+        assert_eq!((f["ok"].clone(), f["ytdl"].clone(), f["load"].clone()), (Value::from(true), Value::from(false), Value::from("https://example.com/clips/a.mp4")));
+        // a non-YouTube load goes to FFmpeg only: mpv's playlist / EDL parsers never see it (Astra follow-up)
+        assert_eq!(f["demuxer"], "lavf");
+        assert_eq!(yt["demuxer"], "");
+        assert_eq!(ok("http://example.com/live/a.m3u8")["load"], "http://example.com/live/a.m3u8");
+        assert_eq!(ok("https://example.com/party.m3u")["demuxer"], "lavf");
+        assert_eq!(ok("https://example.com/page")["ytdl"], false);
+        // youtube.com pages that aren't a video don't get yt-dlp either
+        assert_eq!(ok("https://www.youtube.com/redirect?q=https://evil.example/x")["ytdl"], false);
+        assert_eq!(ok("https://www.youtube.com/playlist?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf")["ytdl"], false);
+        // what mpv must never be handed
+        for bad in [
+            "file:///etc/passwd", "smb://attacker/share/x.mkv", "edl://%10%/etc/passwd", "av://lavfi:sine", "lavf://https://x/a",
+            "ytdl://ytsearch:x", "memory://abc", "data:video/mp4;base64,AAAA", "javascript:alert(1)", "ftp://x/a.mp4",
+            "https://user:pw@example.com/a.mp4", "https://example.com/a b.mp4", "https://example.com/a\nloadfile x", "",
+            "  ", "/relative/a.mp4", "tinhat-memory://!room:x/1",
+        ] {
+            assert_eq!(ok(bad)["ok"], false, "{bad:?}");
+        }
+        assert_eq!(ok(&format!("https://example.com/{}", "a".repeat(2100)))["ok"], false);
+    }
+
+    /// Lua `str:match(pat)` for the subset ytdl_exclude_patterns uses (`^`, `$`, `%x` escapes, `[^x]`), in Rust.
+    fn lua_match(s: &str, pat: &str) -> bool {
+        let mut re = String::new();
+        let mut cs = pat.chars().peekable();
+        while let Some(c) = cs.next() {
+            match c {
+                '^' if re.is_empty() => re.push('^'),
+                '$' if cs.peek().is_none() => re.push('$'),
+                '%' => re.push_str(&regex::escape(&cs.next().unwrap().to_string())),
+                '[' => {
+                    assert_eq!(cs.next(), Some('^'));
+                    let mut x = cs.next().unwrap();
+                    if x == '%' {
+                        x = cs.next().unwrap();
+                    }
+                    assert_eq!(cs.next(), Some(']'));
+                    re.push_str(&format!("[^{}]", regex::escape(&x.to_string())));
+                }
+                _ => re.push_str(&regex::escape(&c.to_string())),
+            }
+        }
+        regex::Regex::new(&re).unwrap().is_match(s)
+    }
+    /// The hook's is_blacklisted(): the address without `http(s)://`, lower-cased, against every pattern.
+    fn excluded(url: &str) -> bool {
+        let rest = url.split_once("://").map(|(_, r)| r).unwrap_or(url).to_lowercase();
+        ytdl_exclude_patterns().split('|').any(|p| lua_match(&rest, p))
+    }
+
+    /// Prints mpv_options() for the mpv proof on builder (run by hand: `cargo test … print_mpv_options -- --ignored
+    /// --nocapture`; the proof script sets exactly these strings over mpv's IPC, as the window does).
+    #[test]
+    #[ignore]
+    fn print_mpv_options() {
+        println!("MPV_OPTIONS={}", mpv_options());
+    }
+
+    /// Astra follow-up: the ytdl hook acts on the canonical YouTube watch address only — every other address mpv may
+    /// meet (a playlist child, a redirect target, a page) is in the exclude list.
+    #[test]
+    fn the_ytdl_hook_is_held_to_the_canonical_youtube_address() {
+        let pats = ytdl_exclude_patterns();
+        assert!(!pats.contains(','), "no `,` — the option list's separator");
+        assert_eq!(pats.split('|').count(), 2 * "www.youtube.com/watch?v=".len() - 1);
+        for keep in ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=5"] {
+            assert!(!excluded(keep), "{keep}");
+        }
+        for out in [
+            "https://example.com/page.html", "http://127.0.0.1:8000/x", "https://youtu.be/dQw4w9WgXcQ",
+            "https://m.youtube.com/watch?v=dQw4w9WgXcQ", "https://music.youtube.com/watch?v=x", "https://www.youtube.com/",
+            "https://www.youtube.com/watch", "https://www.youtube.com/watch?v", "https://www.youtube.com/redirect?q=x",
+            "https://www.youtube.com.evil.example/watch?v=x", "https://evil.example/www.youtube.com/watch?v=x",
+            "https://www.twitch.tv/x", "https://w", "https://www.youtube%2ecom/watch?v=x",
+        ] {
+            assert!(excluded(out), "{out}");
+        }
+        let o = mpv_options();
+        let so = o["scriptOpts"].as_str().unwrap();
+        assert_eq!(so, format!("ytdl_hook-exclude=%{}%{}", pats.len(), pats));
+        assert_eq!(o["ytdlRawOptions"], "use-extractors=youtube");
+    }
 
     fn vectors(name: &str) -> Value {
         let path = format!("{}/testvectors/mediaparty/{name}", env!("CARGO_MANIFEST_DIR"));

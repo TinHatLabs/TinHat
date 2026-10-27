@@ -68,7 +68,7 @@ Window {
     function esc(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") }
     function localpart(s) { return s ? String(s).replace(/^@/, "").split(":")[0] : "" }
     function senderColor(m) { return app.senderColor(m) }   // `app` is required (the names algorithm is content)
-    function toast(text) { if (app && app.showPassiveNotification) app.showPassiveNotification(text, 3000) }
+    function toast(text) { if (app && app.showPassiveNotification) app.showPassiveNotification(LinkGate.plain(text), 3000) }
 
     // ---- window ----------------------------------------------------------------------------
     readonly property string spaceName: (summary && summary.name) ? String(summary.name) : ""
@@ -517,7 +517,7 @@ Window {
         ColumnLayout {
             anchors.fill: parent
             spacing: Kirigami.Units.smallSpacing
-            Kirigami.Heading { level: 3; text: "Invite to " + (win.spaceName.length > 0 ? win.spaceName : "the space"); color: Th.invitePopoverFg; elide: Text.ElideRight; Layout.fillWidth: true }
+            Kirigami.Heading { textFormat: Text.PlainText; level: 3; text: "Invite to " + (win.spaceName.length > 0 ? win.spaceName : "the space"); color: Th.invitePopoverFg; elide: Text.ElideRight; Layout.fillWidth: true }
             HintLabel { app: win.app; Layout.fillWidth: true; text: "Search the directory, or paste a full @user:server id and press Enter." }
             ThTextField {
                 id: inviteQuery
@@ -565,8 +565,8 @@ Window {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
-                            Controls.Label { Layout.fillWidth: true; text: hit.modelData.name || win.localpart(hit.modelData.mxid); color: Th.invitePopoverFg; font.bold: true; elide: Text.ElideRight }
-                            Controls.Label { Layout.fillWidth: true; text: hit.modelData.mxid || ""; color: Th.inviteHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideMiddle }
+                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: hit.modelData.name || win.localpart(hit.modelData.mxid); color: Th.invitePopoverFg; font.bold: true; elide: Text.ElideRight }
+                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: hit.modelData.mxid || ""; color: Th.inviteHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideMiddle }
                         }
                         Controls.Label { visible: hit.taken; text: "already a member"; color: Th.inviteHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.italic: true }
                         ThIcon { visible: !hit.taken; app: win.app; name: "list-add-user"; width: 16; height: 16; color: Th.inviteResultIcon; hovered: hitMa.containsMouse }
@@ -618,6 +618,7 @@ Window {
                     imageSource: (win.summary && win.summary.avatar) ? String(win.summary.avatar) : ""
                 }
                 Kirigami.Heading {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     level: 3
                     horizontalAlignment: Text.AlignHCenter
@@ -628,6 +629,7 @@ Window {
                     wrapMode: Text.WordWrap
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: Number((win.summary && win.summary.memberCount) ? win.summary.memberCount : win.joinedCount)
@@ -672,6 +674,7 @@ Window {
                                     active: railItem.highlighted
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.fillWidth: true
                                     text: railItem.modelData.t
                                     color: Th.spaceSettingsFg
@@ -723,8 +726,8 @@ Window {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 2
-                    Kirigami.Heading { level: 2; text: win.tabs[win.tab].t; color: Th.spaceSettingsTitleFg }
-                    Controls.Label { Layout.fillWidth: true; text: win.tabs[win.tab].d; color: Th.spaceSettingsHintFg; elide: Text.ElideRight }
+                    Kirigami.Heading { textFormat: Text.PlainText; level: 2; text: win.tabs[win.tab].t; color: Th.spaceSettingsTitleFg }
+                    Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: win.tabs[win.tab].d; color: Th.spaceSettingsHintFg; elide: Text.ElideRight }
                 }
                 // the status strip: the toast, where you are looking
                 Rectangle {
@@ -736,6 +739,7 @@ Window {
                     border.width: 1
                     border.color: win.stripError ? Th.spaceSettingsStripBorderError : Th.spaceSettingsStripBorder
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         id: stripLabel
                         anchors.centerIn: parent
                         width: Math.min(implicitWidth, parent.width - Kirigami.Units.largeSpacing * 2)
@@ -910,6 +914,7 @@ Window {
 
                         Kirigami.Separator { Layout.fillWidth: true; Layout.maximumWidth: Kirigami.Units.gridUnit * 40 }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             text: {
                                 var s = win.summary || {}
@@ -973,8 +978,8 @@ Window {
                                             id: pillRow
                                             anchors.centerIn: parent
                                             spacing: 6
-                                            Controls.Label { anchors.verticalCenter: parent.verticalCenter; text: pill.modelData.l; color: pill.on ? Th.spaceSettingsFilterFgSelected : Th.spaceSettingsFilterFg; font.bold: pill.on }
-                                            Controls.Label { anchors.verticalCenter: parent.verticalCenter; text: pill.modelData.n; color: Th.spaceSettingsFilterCountFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                            Controls.Label { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; text: pill.modelData.l; color: pill.on ? Th.spaceSettingsFilterFgSelected : Th.spaceSettingsFilterFg; font.bold: pill.on }
+                                            Controls.Label { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; text: pill.modelData.n; color: Th.spaceSettingsFilterCountFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                                         }
                                     }
                                 }
@@ -1007,6 +1012,7 @@ Window {
                             width: memberList.width
                             height: Kirigami.Units.gridUnit * 1.8
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 anchors.left: parent.left
                                 anchors.leftMargin: Kirigami.Units.smallSpacing
                                 anchors.bottom: parent.bottom
@@ -1061,6 +1067,7 @@ Window {
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.smallSpacing
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.maximumWidth: parent.width
                                             text: (mrow.modelData.name && String(mrow.modelData.name).length > 0) ? mrow.modelData.name : win.localpart(mrow.modelData.mxid)
                                             // 10.4 (space tags): the custom role's colour, else the hashed hue
@@ -1073,6 +1080,7 @@ Window {
                                         Item { Layout.fillWidth: true }
                                     }
                                     Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         Layout.fillWidth: true
                                         text: (mrow.modelData.membership === "ban" && mrow.modelData.reason && String(mrow.modelData.reason).length > 0)
                                               ? mrow.modelData.mxid + "  ·  " + mrow.modelData.reason
@@ -1223,6 +1231,7 @@ Window {
                                                 border.width: 1; border.color: Th.rolesDotBorder
                                             }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 Layout.fillWidth: true
                                                 text: String(roleRow.modelData.name || roleRow.modelData.id)
                                                 color: Th.spaceSettingsFg
@@ -1235,6 +1244,7 @@ Window {
                                                 app: win.app; name: "system-users-symbolic"; color: Th.spaceSettingsHintFg
                                             }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 visible: roleRow.modelData.isEveryone !== true
                                                 text: Number(roleRow.modelData.memberCount || 0)
                                                 color: Th.spaceSettingsHintFg
@@ -1408,6 +1418,7 @@ Window {
                                             Layout.fillWidth: true
                                             spacing: 2
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 Layout.topMargin: Kirigami.Units.smallSpacing
                                                 text: String(permGroup.modelData.group)
                                                 color: Th.rolesPermGroupFg
@@ -1449,6 +1460,7 @@ Window {
                                                             Layout.fillWidth: true
                                                             spacing: 0
                                                             Controls.Label {
+                                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                                 Layout.fillWidth: true
                                                                 text: String(permRow.modelData.label || permRow.key)
                                                                 color: Th.spaceSettingsFg
@@ -1564,7 +1576,7 @@ Window {
                                     color: Th.spaceSettingsSyncChipStaleBg
                                     border.width: 1
                                     border.color: Th.spaceSettingsSyncChipStaleBorder
-                                    Controls.Label { id: oosText; anchors.centerIn: parent; text: win.outOfSync + (win.outOfSync === 1 ? " room out of sync" : " rooms out of sync"); color: Th.spaceSettingsSyncChipStaleFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { textFormat: Text.PlainText; id: oosText; anchors.centerIn: parent; text: win.outOfSync + (win.outOfSync === 1 ? " room out of sync" : " rooms out of sync"); color: Th.spaceSettingsSyncChipStaleFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                                 }
                                 ThButton {
                                     app: win.app
@@ -1587,6 +1599,7 @@ Window {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             text: win.rooms.length + (win.rooms.length === 1 ? " room" : " rooms")
                                   + (win.rolesActive ? (win.outOfSync > 0 ? "  ·  " + win.outOfSync + " out of sync" : "  ·  all in sync") : "")
@@ -1644,6 +1657,7 @@ Window {
                                     opacity: rrow.modelData.joined === false ? 0.6 : 1
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.fillWidth: true
                                     text: rrow.modelData.name || rrow.modelData.id
                                     color: rrow.modelData.joined === false ? Th.spaceSettingsRoomNameFgOff : Th.spaceSettingsRoomNameFg

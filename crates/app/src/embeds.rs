@@ -304,9 +304,20 @@ pub fn parse_embed(raw: &str) -> Option<Value> {
         return Some(embed(&mp4, "media", "video", &mp4, None, "Video", "video"));
     }
     if path_lower.ends_with(".gif") {
-        return Some(embed(raw, "media", "image", raw, None, "GIF", "gif"));
+        // M9 (security review 2026-10-26): a GIF shows by itself only from Giphy (the GIF picker's own provider, whose
+        // picks arrive as plain links); from any other host it waits for a click (ThEmbedCard), so a stranger's link
+        // can't make every reader's client fetch their file (address + time of reading) and decode their bytes.
+        let mut e = embed(raw, "media", "image", raw, None, "GIF", "gif");
+        e["autoload"] = Value::from(is_giphy_host(&host));
+        e["host"] = Value::from(u.host_str().unwrap_or("").to_lowercase());
+        return Some(e);
     }
     None
+}
+
+/// Giphy's own hosts (giphy.com and its media subdomains: media*.giphy.com, i.giphy.com).
+fn is_giphy_host(host: &str) -> bool {
+    host == "giphy.com" || host.ends_with(".giphy.com")
 }
 
 #[cfg(test)]
@@ -379,6 +390,14 @@ mod tests {
         assert_eq!(e("https://x.com/a.mp4")["mode"], Value::from("video"));
         assert_eq!(src(&e("https://x.com/a.gifv")), "https://x.com/a.mp4");
         assert_eq!(e("https://x.com/a.gif")["mode"], Value::from("image"));
+        // M9: only Giphy's GIFs show by themselves; any other host's wait for a click
+        assert_eq!(e("https://x.com/a.gif")["autoload"], Value::from(false));
+        assert_eq!(e("https://x.com/a.gif")["host"], Value::from("x.com"));
+        assert_eq!(e("https://media4.giphy.com/media/abc/giphy.gif")["autoload"], Value::from(true));
+        assert_eq!(e("https://i.giphy.com/abc.gif")["autoload"], Value::from(true));
+        assert_eq!(e("https://giphy.com/x.gif")["autoload"], Value::from(true));
+        assert_eq!(e("https://notgiphy.com/x.gif")["autoload"], Value::from(false));
+        assert_eq!(e("https://giphy.com.evil.example/x.gif")["autoload"], Value::from(false));
     }
 
     #[test]

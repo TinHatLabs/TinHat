@@ -180,6 +180,7 @@ Item {
                 width: parent.width
                 spacing: 2
                 Text {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: pb.d.emoji
                     font.pixelSize: pb.compact ? 13 : 20

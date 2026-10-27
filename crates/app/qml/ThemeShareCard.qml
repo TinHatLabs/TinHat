@@ -74,6 +74,7 @@ Item {
         }
         // refused / newer: the reason
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: !card.ok
             Layout.fillWidth: true
             text: card.refusedText
@@ -86,6 +87,7 @@ Item {
             Layout.fillWidth: true
             spacing: 2
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 text: card.name
                 color: card.k.fg || "transparent"
@@ -93,6 +95,7 @@ Item {
                 elide: Text.ElideRight
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 text: (card.row && card.row.author ? "by " + card.row.author + " · " : "")
                       + (card.row && card.row.variant === "light" ? "Light theme" : "Dark theme")

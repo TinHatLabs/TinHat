@@ -309,6 +309,7 @@ Item {
                                     imageSource: slot.meta.avatar || (mgr.app ? mgr.app.dmPictureOf(slot.roomId) : "")
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.fillWidth: true
                                     text: slot.meta.name.length > 0 ? slot.meta.name : "Chat"
                                     color: Th.chatHeadTitleBarFg

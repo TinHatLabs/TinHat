@@ -384,7 +384,20 @@ Window {
         function toggle(url) {
             if (!url || url.length === 0) return
             if (playingUrl === url) { stop(); playingUrl = ""; return }
-            stop(); source = win.app.soundboardClipUrl(url); playingUrl = url; play()   // via the clip cache
+            var clip = String(win.app.soundboardClipUrl(url))   // via the clip cache; "" = not ours (M9): nothing plays
+            stop(); if (clip.length === 0) { playingUrl = ""; return }
+            // server 0.3.4: QtMultimedia can't send the bearer — play what resolveClip answers (a signed link for a
+            // myinstants sound)
+            playingUrl = url
+            win.app.soundboardCtl.resolveClip(url)
+        }
+    }
+    Connections {
+        target: (win.app && win.app.soundboardCtl) ? win.app.soundboardCtl : null
+        function onClipResolved(sourceUrl, playUrl) {
+            if (String(sourceUrl) !== joinPreview.playingUrl || joinPreview.playingUrl.length === 0) return
+            if (String(playUrl).length === 0) { joinPreview.playingUrl = ""; return }
+            joinPreview.source = String(playUrl); joinPreview.play()
         }
     }
 
@@ -431,6 +444,7 @@ Window {
             border.color: db.activeFocus ? Th.buttonBorderFocus : Th.settingsDangerBorder
         }
         contentItem: Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             text: db.text
             font: db.font
             color: Th.settingsDangerFg
@@ -515,6 +529,7 @@ Window {
                         Accessible.name: "Search settings"
                         onTextEdited: win.query = text
                         Text {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.fill: parent
                             verticalAlignment: Text.AlignVCenter
                             visible: searchField.length === 0 && !searchField.preeditText
@@ -570,6 +585,7 @@ Window {
                                 spacing: 0
                                 visible: grp.modelData.keys.some(function (k) { return win.paneKeys.indexOf(k) >= 0 })
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.fillWidth: true
                                     Layout.topMargin: 16
                                     Layout.bottomMargin: 6
@@ -609,6 +625,7 @@ Window {
                                                 active: railItem.selected
                                             }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 Layout.fillWidth: true
                                                 text: railItem.info.t
                                                 color: railItem.selected ? Th.settingsRailItemFgSelected : Th.settingsRailItemFg
@@ -664,6 +681,7 @@ Window {
                             font.weight: Font.DemiBold
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             Layout.bottomMargin: 16
                             text: win.results.length === 0 ? "No settings match “" + win.query.trim() + "”."
@@ -706,6 +724,7 @@ Window {
                                     elide: Text.ElideRight
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.fillWidth: true
                                     text: res.modelData.paneTitle + " › " + res.modelData.section
                                     color: Th.settingsResultPathFg
@@ -918,6 +937,7 @@ Window {
                                             color: jsRow.jsPlaying ? Th.settingsSoundRowIconActive : Th.settingsSoundRowIcon
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
                                             text: jsRow.modelData.name || jsRow.jsUrl
                                             color: Th.settingsSoundRowFg
@@ -1166,7 +1186,7 @@ Window {
                                 : "Writes a text file to your home folder: your app log with tokens and keys stripped, plus your audio and video settings. Read it, then send it to your server's owner if you like. Messages are never logged."
                             trailing: [
                                 ThButton { app: win.app; text: "Create report"; enabled: win.app.diagnostics.enabled; onClicked: win.app.diagnostics.createReport() },
-                                ThButton { app: win.app; flat: true; text: "Open report"; visible: win.app.diagnostics.reportPath.length > 0; onClicked: Qt.openUrlExternally("file://" + win.app.diagnostics.reportPath) }
+                                ThButton { app: win.app; flat: true; text: "Open report"; visible: win.app.diagnostics.reportPath.length > 0; onClicked: LinkGate.openLocal("file://" + win.app.diagnostics.reportPath) }
                             ]
                         }
                     }
@@ -1377,7 +1397,8 @@ Window {
                                 labelFontFamily: Th.fontMono
                                 labelWeight: Font.Bold
                                 label: (/^TH-/i.test(String(invRow.modelData.code)) ? "<font color=\"" + Th.settingsInviteCodePrefixFg + "\">TH-</font>" : "")
-                                       + win.app.inviteBlip(invRow.modelData.code)
+                                       // (security review 2026-10-26: the code is the server's text — escaped in this markup)
+                                       + String(win.app.inviteBlip(invRow.modelData.code)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
                                 labelColor: invRow.modelData.active ? Th.settingsInviteCodeFg : Th.settingsInviteCodeFgOff
                                 description: win.app.inviteSummary(invRow.modelData)
                                 trailing: [
@@ -1690,6 +1711,7 @@ Window {
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.largeSpacing
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
                                             elide: Text.ElideRight
                                             color: Th.settingsRowLabelFg
@@ -2097,6 +2119,7 @@ Window {
                                     onMoved: win.app.settings.applyPref("snd.volume", String(Math.round(value)))
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.preferredWidth: 40
                                     text: Math.round(sndVolume.value) + "%"
                                     color: Th.settingsLabelFg
@@ -2386,6 +2409,7 @@ Window {
                         width: Math.min(implicitWidth, strip.maxW - 32)
                         spacing: 10
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             Layout.maximumWidth: strip.maxW - 32 - (stripBtn.visible ? stripBtn.implicitWidth + 10 : 0)
                             text: win.stripText

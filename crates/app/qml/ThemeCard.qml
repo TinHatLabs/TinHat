@@ -185,6 +185,7 @@ Item {
                     color: cell.usable ? cell.k.island : "transparent"
                     Rectangle { width: parent.width; height: 1; color: cell.usable ? cell.k.border : Th.settingsThemeCardBorder }
                     Text {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         x: 8; y: 1
                         width: parent.width - 16 - ((cell.selected && cell.usable) ? 14 + 6 : 0)
                         height: 25

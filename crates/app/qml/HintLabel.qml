@@ -8,6 +8,7 @@ import dev.tinhat.app   // Th: the active theme (docs/MIGRATING-THEME.md)
 
 Controls.Label {
     property var app
+    textFormat: Text.PlainText   // security review 2026-10-26 (M7): a caption is text, never markup
 
     wrapMode: Text.Wrap
     color: Th.labelHintFg

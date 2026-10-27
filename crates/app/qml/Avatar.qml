@@ -115,6 +115,7 @@ Item {
 
         // Centered initial (hidden when a photo or a furry fox face is shown).
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             anchors.centerIn: parent
             visible: avatar.imageSource.length === 0 || photo.status === Image.Error   // 10.1 (TH-MSG-26): a dead photo shows the letter, not an empty disc
             text: avatar.initial

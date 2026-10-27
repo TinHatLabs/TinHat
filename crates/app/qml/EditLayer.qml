@@ -178,6 +178,7 @@ Item {
                     Repeater { model: 6; delegate: Rectangle { width: 2; height: 2; radius: 1; color: Th.editmodeHandleFg } }
                 }
                 Text {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: chipName
                     visible: !isl.narrow
                     x: 8 + 6 + 8
@@ -345,6 +346,7 @@ Item {
                             Repeater { model: 6; delegate: Rectangle { width: 2; height: 2; radius: 1; color: Th.editmodeHandleFg } }
                         }
                         Text {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             id: tcName
                             x: 18
                             width: Math.max(0, tc.width - x - 8)
@@ -544,6 +546,7 @@ Item {
             Repeater { model: 6; delegate: Rectangle { width: 2; height: 2; radius: 1; color: Th.editmodeHandleFg } }
         }
         Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: ghostName
             x: 22
             anchors.verticalCenter: parent.verticalCenter
@@ -555,6 +558,7 @@ Item {
     }
     // screen readers: the live region
     Text {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         visible: false
         text: el.em.announce
         Accessible.role: Accessible.StaticText
@@ -594,14 +598,14 @@ Item {
         readonly property bool floating: ref.length > 0 && el.em.floating(ref)
         readonly property bool floatable: el.em.floatable(ref) && !floating
         Controls.MenuItem {
-            text: el.menuRows.length > 1 ? "Buttons: " + (el.menuRows[0] ? el.menuRows[0].title : "") + "…" : "Edit buttons…"
+            text: LinkGate.plain(el.menuRows.length > 1 ? "Buttons: " + (el.menuRows[0] ? el.menuRows[0].title : "") + "…" : "Edit buttons…")
             icon.name: "document-edit-symbolic"
             visible: el.menuRows.length >= 1
             height: visible ? implicitHeight : 0
             onTriggered: el.editRow(0)
         }
         Controls.MenuItem {
-            text: "Buttons: " + (el.menuRows[1] ? el.menuRows[1].title : "") + "…"
+            text: LinkGate.plain("Buttons: " + (el.menuRows[1] ? el.menuRows[1].title : "") + "…")
             icon.name: "document-edit-symbolic"
             visible: el.menuRows.length >= 2
             height: visible ? implicitHeight : 0

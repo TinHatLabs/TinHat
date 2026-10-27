@@ -25,6 +25,7 @@ ColumnLayout {
         Layout.preferredHeight: 44
         HoverHandler { id: headerHover }
         Kirigami.Heading {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             anchors.left: parent.left; anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Kirigami.Units.largeSpacing
@@ -260,6 +261,7 @@ ColumnLayout {
                     isMask: true
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     Layout.minimumWidth: 72   // 10.1 (TH-NAV-09): the invite actions can no longer crush the name to nothing
                     text: row.room.name
@@ -365,6 +367,7 @@ ColumnLayout {
                     color: row.showActivity ? Th.roomsActivityIcon : Th.roomsActivityIconOff
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     readonly property string prefix: row.activityEmoji.length > 0
                         ? row.activityEmoji + " " : ""
@@ -483,6 +486,7 @@ ColumnLayout {
                                 imageSource: partRow.modelData.avatar || ""
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 text: partRow.modelData.name
                                 elide: Text.ElideRight
@@ -594,6 +598,7 @@ ColumnLayout {
                 Repeater {
                     model: row.statuses
                     delegate: Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         required property var modelData
                         Layout.fillWidth: true
                         text: String(modelData.name || modelData.userId || "") + ": " + String(modelData.text || "")

@@ -24,9 +24,10 @@ Item {
     function close() { shown = false }
     implicitWidth: Kirigami.Units.gridUnit * 18
     clip: true
-    // 10.1 (TH-RP-08): plain text with URLs → rich text with anchors (escaped first).
+    // 10.1 (TH-RP-08): plain text with URLs → rich text with anchors (escaped first). Security review 2026-10-26: quotes
+    // too — a " in a link closed the href attribute; the anchors open through LinkGate.
     function linkify(s) {
-        var t = String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+        var t = String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\n/g, "<br>")
         return t.replace(/(https?:\/\/[^\s<]+)/g, function (u) { var trail = /[.,;:!?)]+$/.exec(u); var core = trail ? u.slice(0, -trail[0].length) : u; return "<a href=\"" + core + "\">" + core + "</a>" + (trail ? trail[0] : "") })
     }
     required property var app
@@ -141,11 +142,13 @@ Item {
                 ColumnLayout {
                     spacing: 2
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: panel.cardName.length > 0 ? panel.cardName : panel.cardMxid
                         font.bold: true
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: panel.cardMxid
                         color: Th.profileCardHintFg
                         font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -174,7 +177,7 @@ Item {
                 text: visible ? panel.linkify(panel.cardData.bio) : ""
                 textFormat: Text.RichText
                 linkColor: Th.profileCardLinkFg
-                onLinkActivated: (link) => Qt.openUrlExternally(link)
+                onLinkActivated: (link) => LinkGate.open(link)
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 HoverHandler { cursorShape: parent.hoveredLink.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor }
@@ -261,7 +264,7 @@ Item {
                 onClicked: panel.tab = 0
             }
             Controls.Button {
-                text: "Members" + (panel.joinedCount > 0 ? " · " + panel.joinedCount : "")
+                text: LinkGate.plain("Members" + (panel.joinedCount > 0 ? " · " + panel.joinedCount : ""))
                 checkable: true; autoExclusive: true
                 checked: panel.tab === 1
                 onClicked: panel.tab = 1
@@ -311,6 +314,7 @@ Item {
                 imageSource: panel.summary.avatar || panel.app.dmPictureOf(panel.roomId)
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 visible: !panel.editingInfo
@@ -321,6 +325,7 @@ Item {
                 wrapMode: Text.WordWrap
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 visible: !panel.editingInfo && text.length > 0
@@ -422,7 +427,7 @@ Item {
                 text: panel.linkify(panel.summary.topic || "")
                 textFormat: Text.RichText
                 linkColor: Th.panelLinkFg
-                onLinkActivated: (link) => Qt.openUrlExternally(link)
+                onLinkActivated: (link) => LinkGate.open(link)
                 color: Th.panelFg
                 wrapMode: Text.WordWrap
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -450,6 +455,7 @@ Item {
                     color: Th.panelActivityFg
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: ((panel.activity.emoji && panel.activity.emoji.length > 0) ? panel.activity.emoji + " "
                           : "")
@@ -568,6 +574,7 @@ Item {
                 width: memberList.width
                 height: Kirigami.Units.gridUnit * 1.6
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     anchors.left: parent.left
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 2
@@ -644,6 +651,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: 0
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 text: row.modelData.name || (panel.app ? panel.app.localpart(row.modelData.mxid) : row.modelData.mxid)
                                 // 10.4 (space tags): the custom role's colour, else the hashed hue.
@@ -667,6 +675,7 @@ Item {
                                 maxWidth: parent.width
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: !(row.pres && row.pres.chip)
                                 Layout.fillWidth: true
                                 // Show the member's "looking to play" status if they have one,
@@ -825,7 +834,7 @@ Item {
                 height: visible ? implicitHeight : 0
                 checkable: true
                 checked: panel.actorPower === modelData.v
-                text: modelData.t
+                text: LinkGate.plain(modelData.t)
                 onTriggered: {
                     panel.setMemberPower(panel.actorMxid, modelData.v)
                     // the click toggled `checked` imperatively, killing the binding —

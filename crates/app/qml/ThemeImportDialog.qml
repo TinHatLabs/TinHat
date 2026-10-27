@@ -129,6 +129,7 @@ Controls.Dialog {
                     onClicked: fileDialog.open()
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: dlg.fileName.length > 0
                     text: dlg.fileName
@@ -140,13 +141,13 @@ Controls.Dialog {
                 Layout.fillWidth: true
                 visible: dlg.readResult !== null && dlg.readResult.ok === false
                 type: Kirigami.MessageType.Error
-                text: (dlg.readResult && dlg.readResult.text) ? dlg.readResult.text : ""
+                text: LinkGate.plain((dlg.readResult && dlg.readResult.text) ? dlg.readResult.text : "")
             }
             Kirigami.InlineMessage {
                 Layout.fillWidth: true
                 visible: dlg.saveError.length > 0
                 type: Kirigami.MessageType.Error
-                text: dlg.saveError
+                text: LinkGate.plain(dlg.saveError)
             }
             RowLayout {
                 visible: dlg.readOk
@@ -181,12 +182,14 @@ Controls.Dialog {
                         onAccepted: dlg.save(true)
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         color: Th.settingsThemeMetaFg
                         elide: Text.ElideRight
                         text: dlg.readOk ? dlg.readResult.formatName + " theme · " + (dlg.readResult.variant === "light" ? "Light" : "Dark") : ""
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         visible: dlg.readOk && dlg.readResult.adjusted > 0
                         wrapMode: Text.Wrap

@@ -20,9 +20,9 @@ ColumnLayout {
         readonly property string pack: o && o.pack === "goose" ? "Goose" : "Tin Hat"
         visible: o !== null
         type: Kirigami.MessageType.Information
-        text: o ? o.themeName + " comes with its own sounds. Use " + pack + " sounds too?" : ""
+        text: LinkGate.plain(o ? o.themeName + " comes with its own sounds. Use " + pack + " sounds too?" : "")
         actions: [
-            Kirigami.Action { text: "Use " + offerMsg.pack + " sounds"; onTriggered: notes.ctl.acceptOffer() },
+            Kirigami.Action { text: LinkGate.plain("Use " + offerMsg.pack + " sounds"); onTriggered: notes.ctl.acceptOffer() },
             Kirigami.Action { text: "No thanks"; onTriggered: notes.ctl.dismissOffer() }
         ]
     }
@@ -38,8 +38,8 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: typeof notes.st.unknownTheme === "string" && notes.st.unknownTheme.length > 0
         type: Kirigami.MessageType.Warning
-        text: "Your account uses a theme this version of Tin Hat doesn't have (“" + notes.st.unknownTheme + "”). This device keeps "
-              + Th.themeName + " until you update."
+        text: LinkGate.plain("Your account uses a theme this version of Tin Hat doesn't have (“" + notes.st.unknownTheme + "”). This device keeps "
+              + Th.themeName + " until you update.")
     }
     Kirigami.InlineMessage {
         id: ovMsg

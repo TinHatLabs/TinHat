@@ -222,8 +222,9 @@ async fn download_image(client: &matrix_sdk::Client, mxc: &str) -> Option<String
     use matrix_sdk::ruma::events::room::MediaSource;
     use matrix_sdk::ruma::OwnedMxcUri;
     let dir = cache_dir();
-    let path = dir.join(format!("{}.img", key_of(mxc)));
-    if path.exists() {
+    let id = key_of(mxc);
+    // security review 2026-10-26: only a raster image's bytes, cached as that format (viewer.rs) — never SVG
+    if let Some(path) = crate::viewer::cached_image(&dir, &id) {
         return Some(crate::platform::file_url(&path));
     }
     let uri = OwnedMxcUri::from(mxc.to_string());
@@ -235,6 +236,7 @@ async fn download_image(client: &matrix_sdk::Client, mxc: &str) -> Option<String
     if bytes.is_empty() {
         return None;
     }
+    let path = crate::viewer::image_path_for(&dir, &id, &bytes)?;
     tokio::fs::create_dir_all(&dir).await.ok()?;
     tokio::fs::write(&path, &bytes).await.ok()?;
     Some(crate::platform::file_url(&path))

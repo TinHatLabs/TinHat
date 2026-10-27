@@ -251,7 +251,7 @@ Item {
                 delegate: Controls.MenuItem {
                     id: mi
                     required property var modelData
-                    text: mi.modelData.name
+                    text: LinkGate.plain(mi.modelData.name)
                     icon.name: "media-playback-start-symbolic"
                     contentItem: RowLayout {
                         spacing: 6

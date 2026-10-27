@@ -195,6 +195,7 @@ Item {
                 radius: height / 2
                 color: Th.settingsRailItemBgSelected
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: chipText
                     anchors.centerIn: parent
                     text: row.chip
@@ -213,7 +214,7 @@ Item {
             color: row.descriptionColor
             font.pixelSize: Math.round(12 * Th.textScale)
             wrapMode: Text.Wrap
-            onLinkActivated: (link) => Qt.openUrlExternally(link)
+            onLinkActivated: (link) => LinkGate.open(link)
         }
     }
 

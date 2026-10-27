@@ -11,7 +11,16 @@
 //! `tinhat-<ver>-x86_64.bin`) and `…/latest-windows.json` (Windows: url = the `tinhat-<ver>-win64.zip` bundle,
 //! `installer` = the Setup .exe, unused here); every URL pinned to that release's assets. `releases/latest` never
 //! names a draft or a pre-release. GitHub answers with a redirect to its download host (followed); the requests carry
-//! the app's User-Agent. Integrity as before: the sha256 in the manifest, fetched over HTTPS.
+//! the app's User-Agent.
+//!
+//! Trust (12.0.3, security review H3 — update_trust.rs has the rules and their tests): a manifest counts only with
+//! `<manifest>.minisig` beside it, signed by the Tin Hat release key compiled into the app, its trusted comment naming
+//! this platform's manifest and the version inside; the download must sit in that version's release (`…/releases/
+//! download/v<version>/`), every redirect https with no user name (any host for the GitHub feed: GitHub has moved its
+//! download host before), at most 5; never an older or the same version;
+//! then the sha256 in the signed manifest as before. Anything else fails closed with a plain sentence in the banner.
+//! Builds before 12.0.3 ignore the `.minisig`, so publishing it breaks nothing for them; the first verifying build
+//! must be published WITH its signature (it reads its own release's manifest at its first check).
 //!
 //! Manifest (HTTPS, override with `TINHAT_UPDATE_URL`):
 //!   { "version":"0.2.0", "url":"https://…/tinhat-0.2.0", "sha256":"…", "notes":"…",
@@ -265,7 +274,7 @@ impl qobject::UpdateController {
                 o.as_mut().set_checking(false);
                 match result {
                     Ok((ver, url, sha, notes)) => {
-                        let avail = parse_ver(&ver) > parse_ver(&current);
+                        let avail = is_upgrade(&ver, &current);
                         o.as_mut().set_latest_version(QString::from(&ver));
                         o.as_mut().set_release_notes(QString::from(&notes));
                         o.as_mut().set_download_url(QString::from(&url));
@@ -522,19 +531,102 @@ impl qobject::UpdateController {
 /// app's GitHub releases. The repository is a deliberate choice (2026-10-21: the desktop app is `TinHatLabs/TinHat`;
 /// the server moves to `TinHatLabs/TinHatServer`); the feed must be published there before a build ships
 /// (`TINHAT_UPDATE_URL` overrides it for testing).
+///
+/// **Never rename or transfer `TinHatLabs/TinHat` (or move the feed) without a bridge release first** (launch-gate's
+/// review #10): from 12.0.3 on, a build takes a download only from the `v<version>` release of the repository its feed
+/// names (update_trust::download_allowed), so an install whose feed stops answering, or answers from another
+/// repository, never updates again without a manual reinstall. A bridge release = one that reads the new place, shipped
+/// (and taken by installs) from the old one before the old one goes.
 pub const UPDATE_FEED_URL: &str = "https://github.com/TinHatLabs/TinHat/releases/latest/download/latest.json";
 /// Windows has its OWN channel (UPDATE_PATH.md §2): the url points at a bundle ZIP (not a bare binary) and the
 /// sha256 is of that zip; its feed is published beside the Linux one.
 pub const UPDATE_FEED_URL_WINDOWS: &str = "https://github.com/TinHatLabs/TinHat/releases/latest/download/latest-windows.json";
 
-/// Manifest URL: env override (for testing) or the release feed ([`UPDATE_FEED_URL`] / [`UPDATE_FEED_URL_WINDOWS`]).
-fn manifest_url() -> String {
-    std::env::var("TINHAT_UPDATE_URL").ok().filter(|s| !s.trim().is_empty()).unwrap_or_else(|| {
-        if cfg!(windows) { UPDATE_FEED_URL_WINDOWS.to_string() } else { UPDATE_FEED_URL.to_string() }
-    })
+/// The feed this build reads and whether it is the `TINHAT_UPDATE_URL` test override: the override (any URL; a
+/// manifest from it still has to carry a signature this build trusts) or the release feed ([`UPDATE_FEED_URL`] /
+/// [`UPDATE_FEED_URL_WINDOWS`]).
+fn feed() -> (String, bool) {
+    match std::env::var("TINHAT_UPDATE_URL").ok().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()) {
+        Some(u) => (u, true),
+        None => ((if cfg!(windows) { UPDATE_FEED_URL_WINDOWS } else { UPDATE_FEED_URL }).to_string(), false),
+    }
 }
 
-/// (version, download_url, download_sha256, notes)
+/// Manifest URL (the headless update test logs it).
+#[cfg_attr(not(windows), allow(dead_code))]
+fn manifest_url() -> String {
+    feed().0
+}
+
+/// The largest payload we take (the Windows bundle zip is ~330 MB, the Linux binary ~200 MB in 12.0.2).
+const PAYLOAD_MAX: usize = 1536 * 1024 * 1024;
+
+/// The HTTP client for the feed and the payload: the app's User-Agent (GitHub's download host is friendlier to a named
+/// client), redirects only where update_trust::redirect_allowed says (at most 5), https only unless the feed is the
+/// test override. Fails closed: no client, no update (never a default client without the redirect rule).
+fn update_http(feed: &url::Url, overridden: bool, timeout: Option<std::time::Duration>) -> Result<matrix_sdk::reqwest::Client, String> {
+    use matrix_sdk::reqwest::redirect::{Attempt, Policy};
+    let f = feed.clone();
+    let policy = Policy::custom(move |a: Attempt| {
+        if a.previous().len() > 5 {
+            return a.error("too many redirects");
+        }
+        if crate::update_trust::redirect_allowed(a.url(), &f, overridden) {
+            a.follow()
+        } else {
+            let to = a.url().host_str().unwrap_or("?").to_string();
+            a.error(format!("the download was sent on to {to}, which isn't where Tin Hat updates come from"))
+        }
+    });
+    let mut b = matrix_sdk::reqwest::Client::builder()
+        .user_agent(crate::proxy::user_agent())
+        .redirect(policy)
+        .https_only(!overridden);
+    if let Some(t) = timeout {
+        b = b.timeout(t);
+    }
+    b.build().map_err(|e| format!("couldn't set up the download: {e}"))
+}
+
+/// An error with its causes (reqwest puts a refused redirect's reason in the source).
+fn err_chain(e: &dyn std::error::Error) -> String {
+    let mut s = e.to_string();
+    let mut src = e.source();
+    while let Some(c) = src {
+        let t = c.to_string();
+        if !s.contains(&t) {
+            s.push_str(": ");
+            s.push_str(&t);
+        }
+        src = c.source();
+    }
+    s
+}
+
+/// GET `url`, at most `max` bytes. `Ok(None)` = 404 (a missing signature file reads as "unsigned", not as a network
+/// error).
+async fn get_capped(http: &matrix_sdk::reqwest::Client, url: &str, max: usize) -> Result<Option<Vec<u8>>, String> {
+    let mut resp = http.get(url).send().await.map_err(|e| err_chain(&e))?;
+    if resp.status() == matrix_sdk::reqwest::StatusCode::NOT_FOUND {
+        return Ok(None);
+    }
+    if !resp.status().is_success() {
+        return Err(format!("HTTP {}", resp.status()));
+    }
+    if resp.content_length().is_some_and(|n| n > max as u64) {
+        return Err(format!("the download is bigger than {max} bytes"));
+    }
+    let mut out = Vec::new();
+    while let Some(chunk) = resp.chunk().await.map_err(|e| err_chain(&e))? {
+        out.extend_from_slice(&chunk);
+        if out.len() > max {
+            return Err(format!("the download is bigger than {max} bytes"));
+        }
+    }
+    Ok(Some(out))
+}
+
+/// (version, download_url, download_sha256, notes) of the SIGNED feed (update_trust.rs).
 ///
 /// U3: the manifest may carry `url_bin`/`sha256_bin` (a BARE executable) and `url_pkg`/
 /// `sha256_pkg` (the package archive) alongside the legacy `url`/`sha256`. The download-
@@ -545,28 +637,49 @@ fn manifest_url() -> String {
 /// pair unconditionally: its channel is a bundle ZIP by design (UPDATE_PATH.md §2), and
 /// a bare-exe url_bin must never preempt the folder-swap payload there.
 async fn fetch_manifest() -> Result<(String, String, String, String), String> {
-    let url = manifest_url();
-    // the app's User-Agent (proxy::http): GitHub's download host is friendlier to a named client
-    let resp = crate::proxy::http(Some(std::time::Duration::from_secs(30)))
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-    if !resp.status().is_success() {
-        return Err(format!("HTTP {}", resp.status()));
+    use crate::update_trust as trust;
+    let (feed, overridden) = feed();
+    let feed_url = url::Url::parse(&feed).map_err(|e| format!("the update feed's address is unusable: {e}"))?;
+    let http = update_http(&feed_url, overridden, Some(std::time::Duration::from_secs(30)))?;
+    if let Some(dev) = trust::dev_key() {
+        eprintln!(
+            "[update] DEVELOPMENT BUILD: also trusts the update key {} — {}",
+            trust::key_id(dev).unwrap_or_else(|| "(unreadable)".into()),
+            trust::lab_marker()
+        );
     }
-    let txt = resp.text().await.map_err(|e| e.to_string())?;
-    let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| e.to_string())?;
-    pick_download(&v, cfg!(windows), std::env::var("TINHAT_UPDATE_URL").is_ok_and(|s| !s.trim().is_empty()))
+    let role = trust::feed_role(cfg!(windows));
+    let keys = trust::trusted_keys();
+    let sig_url = format!("{feed}.minisig");
+    // GitHub's `latest` can move between the two requests (a release published in between): the feed of one release
+    // and the signature of the next don't match, so a refusal is fetched once more before it counts (the server's
+    // updater does the same).
+    let mut refusal = trust::Refusal::Unsigned;
+    for _ in 0..2 {
+        let body = get_capped(&http, &feed, trust::MANIFEST_MAX).await?.ok_or_else(|| "HTTP 404 Not Found".to_string())?;
+        let sig = get_capped(&http, &sig_url, trust::SIG_MAX).await?.map(|b| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
+        match trust::verify_manifest(&body, &sig, role, &keys) {
+            Ok(v) => return pick_download(&v, cfg!(windows), &feed, overridden),
+            Err(r) => refusal = r,
+        }
+    }
+    eprintln!("[update] refused the feed {feed}: {refusal:?}");
+    Err(refusal.message())
 }
 
 /// The manifest's (version, download_url, download_sha256, notes) for this platform — the pure half of
-/// [`fetch_manifest`], tested with the exact shapes publish-desktop-github writes. Linux prefers `url_bin` +
-/// `sha256_bin` (U3; an empty sha256_bin is NOT a fallback trigger — do_download_and_apply hard-errors on a missing
-/// sha); Windows takes `url` + `sha256` (the bundle zip). The download must be https:// unless the feed itself was
-/// overridden for a test (`overridden`).
-pub(crate) fn pick_download(v: &serde_json::Value, windows: bool, overridden: bool) -> Result<(String, String, String, String), String> {
-    let get = |k: &str| v.get(k).and_then(|x| x.as_str()).unwrap_or("").to_string();
+/// [`fetch_manifest`] (after the signature), tested with the exact shapes publish-desktop-github writes. Linux prefers
+/// `url_bin` + `sha256_bin` (U3; an empty sha256_bin is NOT a fallback to url/sha256: it is refused); Windows takes
+/// `url` + `sha256` (the bundle zip). A named download must sit in this version's release (update_trust::
+/// download_allowed: https, the GitHub tag `v<version>` of the feed's repository, or the feed's own folder for a test
+/// override, where plain http is allowed) and carry a sha256.
+pub(crate) fn pick_download(
+    v: &serde_json::Value,
+    windows: bool,
+    feed: &str,
+    overridden: bool,
+) -> Result<(String, String, String, String), String> {
+    let get = |k: &str| v.get(k).and_then(|x| x.as_str()).unwrap_or("").trim().to_string();
     let ver = get("version");
     if ver.is_empty() {
         return Err("manifest has no version".into());
@@ -581,10 +694,19 @@ pub(crate) fn pick_download(v: &serde_json::Value, windows: bool, overridden: bo
             (get("url"), get("sha256"))
         }
     };
-    if !dl_url.is_empty() && !overridden && !dl_url.starts_with("https://") {
-        return Err(format!("manifest names a download that isn't https ({dl_url}) — refusing it"));
+    if !dl_url.is_empty() {
+        crate::update_trust::download_allowed(&dl_url, feed, &ver, overridden).map_err(|r| r.message())?;
+        if !crate::update_trust::plain_sha256(&dl_sha) {
+            return Err("manifest has no sha256 for this download — refusing to install unverified bytes".into());
+        }
     }
     Ok((ver, dl_url, dl_sha, get("notes")))
+}
+
+/// Is `candidate` newer than `current` (the build version, never the U string)? An update is only ever offered and
+/// installed when it is: an older signed release (a replayed feed) or the same one is never installed.
+pub(crate) fn is_upgrade(candidate: &str, current: &str) -> bool {
+    parse_ver(candidate) > parse_ver(current)
 }
 
 /// The UNIVERSAL feature-set version — what the user sees, shared by all three
@@ -661,23 +783,25 @@ async fn do_download_and_apply(
     if url.is_empty() {
         return Err("no download url".into());
     }
-    // the app's User-Agent, no overall timeout (a large download on a slow line); GitHub redirects to its download host
-    let resp = crate::proxy::http(None)
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-    if !resp.status().is_success() {
-        return Err(format!("HTTP {}", resp.status()));
-    }
-    let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
-
     // U3 guard (b): a manifest that names a download but carries no checksum is
     // malformed. The old behavior here — skip verification when sha256 is empty —
-    // would install unverified bytes; HARD error instead.
-    if expected_sha.trim().is_empty() {
+    // would install unverified bytes; HARD error instead. (Checked before the download now.)
+    if !crate::update_trust::plain_sha256(expected_sha.trim()) {
         return Err("manifest has no sha256 for this download — refusing to install unverified bytes".into());
     }
+    // H3 (12.0.3): the same rules the check applied, once more right before the bytes are fetched — never an older or
+    // the same version, never a download outside that version's release.
+    let current = env!("CARGO_PKG_VERSION");
+    if !is_upgrade(expected_version, current) {
+        return Err(format!("the update ({expected_version}) isn't newer than this build ({current}) — refusing it"));
+    }
+    let (feed, overridden) = feed();
+    crate::update_trust::download_allowed(url, &feed, expected_version, overridden).map_err(|r| r.message())?;
+    let feed_url = url::Url::parse(&feed).map_err(|e| format!("the update feed's address is unusable: {e}"))?;
+    // the app's User-Agent, no overall timeout (a large download on a slow line); GitHub redirects to its download
+    // host — and nowhere else (update_http)
+    let http = update_http(&feed_url, overridden, None)?;
+    let bytes = get_capped(&http, url, PAYLOAD_MAX).await?.ok_or_else(|| "HTTP 404 Not Found".to_string())?;
     {
         let mut h = Sha256::new();
         h.update(&bytes);
@@ -773,7 +897,7 @@ pub fn headless_update_test(mode: &str) -> ! {
                 };
                 // Compare the BUILD version, never the U string — see UNIVERSAL_VERSION.
                 let current = env!("CARGO_PKG_VERSION");
-                let avail = parse_ver(&ver) > parse_ver(current);
+                let avail = is_upgrade(&ver, current);
                 eprintln!("[updtest] running={current} manifest={ver} update_available={avail}");
                 if !avail {
                     eprintln!("[updtest] VERDICT: FAIL — manifest does not advertise a newer version");
@@ -849,12 +973,12 @@ mod tests {
     // the two manifests exactly as the release tool (publish-desktop-github) writes them (its python block)
     const BASE: &str = "https://github.com/TinHatLabs/TinHat/releases/download/v11.4.0";
     fn latest() -> serde_json::Value {
-        json!({ "version": "11.4.0", "url": format!("{BASE}/tinhat-11.4.0-x86_64.bin"), "sha256": "aa",
-                "url_bin": format!("{BASE}/tinhat-11.4.0-x86_64.bin"), "sha256_bin": "aa", "notes": "Notes." })
+        json!({ "version": "11.4.0", "url": format!("{BASE}/tinhat-11.4.0-x86_64.bin"), "sha256": "a".repeat(64),
+                "url_bin": format!("{BASE}/tinhat-11.4.0-x86_64.bin"), "sha256_bin": "a".repeat(64), "notes": "Notes." })
     }
     fn latest_windows() -> serde_json::Value {
-        json!({ "version": "11.4.0", "url": format!("{BASE}/tinhat-11.4.0-win64.zip"), "sha256": "bb",
-                "installer": format!("{BASE}/TinHat-Setup-11.4.0.exe"), "sha256_installer": "cc", "notes": "Notes." })
+        json!({ "version": "11.4.0", "url": format!("{BASE}/tinhat-11.4.0-win64.zip"), "sha256": "b".repeat(64),
+                "installer": format!("{BASE}/TinHat-Setup-11.4.0.exe"), "sha256_installer": "c".repeat(64), "notes": "Notes." })
     }
 
     #[test]
@@ -866,34 +990,115 @@ mod tests {
         }
     }
 
+    const FEED: &str = UPDATE_FEED_URL;
+
     #[test]
     fn the_tools_manifests_give_each_platform_its_payload() {
         // Linux: the bare binary (url_bin + sha256_bin)
         assert_eq!(
-            pick_download(&latest(), false, false).unwrap(),
-            ("11.4.0".into(), format!("{BASE}/tinhat-11.4.0-x86_64.bin"), "aa".into(), "Notes.".into())
+            pick_download(&latest(), false, FEED, false).unwrap(),
+            ("11.4.0".into(), format!("{BASE}/tinhat-11.4.0-x86_64.bin"), "a".repeat(64), "Notes.".into())
         );
         // Windows: the bundle zip (url + sha256), never the installer
         assert_eq!(
-            pick_download(&latest_windows(), true, false).unwrap(),
-            ("11.4.0".into(), format!("{BASE}/tinhat-11.4.0-win64.zip"), "bb".into(), "Notes.".into())
+            pick_download(&latest_windows(), true, UPDATE_FEED_URL_WINDOWS, false).unwrap(),
+            ("11.4.0".into(), format!("{BASE}/tinhat-11.4.0-win64.zip"), "b".repeat(64), "Notes.".into())
         );
         // a legacy manifest without url_bin still works on Linux
-        let legacy = json!({ "version": "1.0.0", "url": "https://x.test/a.bin", "sha256": "dd" });
-        assert_eq!(pick_download(&legacy, false, false).unwrap().1, "https://x.test/a.bin");
-        // an empty sha256_bin is not a fallback to url/sha256 (the download step refuses unverified bytes)
-        let no_sha = json!({ "version": "1.0.0", "url": "https://x.test/a", "sha256": "dd", "url_bin": "https://x.test/b", "sha256_bin": "" });
-        assert_eq!(pick_download(&no_sha, false, false).unwrap().2, "");
+        let legacy = json!({ "version": "11.4.0", "url": format!("{BASE}/a.bin"), "sha256": "d".repeat(64) });
+        assert_eq!(pick_download(&legacy, false, FEED, false).unwrap().1, format!("{BASE}/a.bin"));
+        // an empty sha256_bin is not a fallback to url/sha256: refused (unverified bytes are never installed)
+        let no_sha = json!({ "version": "11.4.0", "url": format!("{BASE}/a"), "sha256": "d".repeat(64), "url_bin": format!("{BASE}/b"), "sha256_bin": "" });
+        assert!(pick_download(&no_sha, false, FEED, false).unwrap_err().contains("no sha256"));
+        let bad_sha = json!({ "version": "11.4.0", "url_bin": format!("{BASE}/b"), "sha256_bin": "zz" });
+        assert!(pick_download(&bad_sha, false, FEED, false).is_err());
     }
 
     #[test]
     fn a_manifest_without_a_version_or_with_a_plain_http_download_is_refused() {
-        assert!(pick_download(&json!({ "url": "https://x.test/a" }), false, false).is_err());
-        assert!(pick_download(&json!("x"), false, false).is_err());
-        let http = json!({ "version": "1.0.0", "url_bin": "http://x.test/a", "sha256_bin": "aa" });
-        assert!(pick_download(&http, false, false).is_err());
-        // … unless the feed itself was overridden for a test (TINHAT_UPDATE_URL, a local server)
-        assert_eq!(pick_download(&http, false, true).unwrap().1, "http://x.test/a");
+        assert!(pick_download(&json!({ "url": "https://x.test/a" }), false, FEED, false).is_err());
+        assert!(pick_download(&json!("x"), false, FEED, false).is_err());
+        let http = json!({ "version": "11.4.0", "url_bin": "http://github.com/TinHatLabs/TinHat/releases/download/v11.4.0/a", "sha256_bin": "a".repeat(64) });
+        assert!(pick_download(&http, false, FEED, false).is_err());
+        // … unless the feed itself was overridden for a test (TINHAT_UPDATE_URL, a local server): its own host and folder
+        let local = json!({ "version": "11.4.0", "url_bin": "http://127.0.0.1:8000/a", "sha256_bin": "a".repeat(64) });
+        assert_eq!(pick_download(&local, false, "http://127.0.0.1:8000/latest.json", true).unwrap().1, "http://127.0.0.1:8000/a");
+        assert!(pick_download(&local, false, "http://127.0.0.1:9000/latest.json", true).is_err());
+    }
+
+    #[test]
+    fn a_signed_manifest_naming_another_host_or_release_is_refused() {
+        for u in [
+            "https://x.test/tinhat-11.4.0-x86_64.bin".to_string(),
+            "https://github.com/someone/TinHat/releases/download/v11.4.0/tinhat-11.4.0-x86_64.bin".to_string(),
+            "https://github.com/TinHatLabs/TinHat/releases/download/v11.3.0/tinhat-11.3.0-x86_64.bin".to_string(),
+            "https://release-assets.githubusercontent.com/github-production-release-asset/1/2".to_string(),
+        ] {
+            let v = json!({ "version": "11.4.0", "url_bin": u, "sha256_bin": "a".repeat(64) });
+            assert!(pick_download(&v, false, FEED, false).is_err(), "{u}");
+        }
+    }
+
+    #[test]
+    fn an_older_or_the_same_version_is_never_an_upgrade() {
+        assert!(is_upgrade("12.0.3", "12.0.2"));
+        assert!(!is_upgrade("12.0.2", "12.0.2"));
+        assert!(!is_upgrade("12.0.1", "12.0.2"));
+        assert!(!is_upgrade("11.9.9", "12.0.2"));
+        assert!(!is_upgrade("", "12.0.2"));
+        assert!(!is_upgrade("garbage", "12.0.2"));
+    }
+
+    #[test]
+    fn the_apply_step_refuses_a_downgrade_and_a_missing_checksum_before_any_download() {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let bin = |v: &str| format!("https://github.com/TinHatLabs/TinHat/releases/download/v{v}/tinhat-{v}-x86_64.bin");
+        // older than this build: refused without a network request (the url would not even resolve in the test)
+        let e = rt.block_on(do_download_and_apply(&bin("1.0.0"), &"a".repeat(64), "1.0.0")).unwrap_err();
+        assert!(e.contains("isn't newer"), "{e}");
+        let e = rt.block_on(do_download_and_apply(&bin("999.0.0"), "", "999.0.0")).unwrap_err();
+        assert!(e.contains("no sha256"), "{e}");
+        if std::env::var_os("TINHAT_UPDATE_URL").is_none() {
+            let e = rt.block_on(do_download_and_apply("https://x.test/tinhat-999.0.0-x86_64.bin", &"a".repeat(64), "999.0.0")).unwrap_err();
+            assert!(e.contains("refusing"), "{e}");
+        }
+    }
+
+    /// LIVE (network; run by hand: `cargo test --release -p tinhat-app live_github_feed -- --ignored --nocapture`):
+    /// the real feed of GitHub's newest release through the update client's redirect rule (github.com → the tag →
+    /// GitHub's asset host), its signature checked as the app does, and the first bytes of its binary through the same
+    /// client (a Range request, so nothing big is downloaded).
+    #[test]
+    #[ignore]
+    fn live_github_feed_through_the_redirect_rule() {
+        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        rt.block_on(async {
+            use crate::update_trust as trust;
+            let feed = url::Url::parse(UPDATE_FEED_URL).unwrap();
+            let http = update_http(&feed, false, Some(std::time::Duration::from_secs(60))).unwrap();
+            let body = get_capped(&http, UPDATE_FEED_URL, trust::MANIFEST_MAX).await.expect("the feed").expect("not a 404");
+            let sig = get_capped(&http, &format!("{UPDATE_FEED_URL}.minisig"), trust::SIG_MAX).await.expect("the signature request");
+            let sig = sig.map(|b| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
+            let verdict = trust::verify_manifest(&body, &sig, "latest.json", &trust::trusted_keys());
+            eprintln!("[live] feed {} bytes, signature {} bytes -> {:?}", body.len(), sig.len(), verdict.as_ref().map(|v| v["version"].clone()));
+            if sig.is_empty() {
+                // a release from before the signed feed (<= 12.0.2): refused, with the banner's sentence
+                assert_eq!(verdict, Err(trust::Refusal::Unsigned));
+            } else {
+                assert!(verdict.is_ok(), "{verdict:?}");
+            }
+            // the binary the (unverified) feed names: pinned to its tag, reachable through the redirect rule
+            let v: serde_json::Value = serde_json::from_slice(&body).unwrap();
+            let ver = v["version"].as_str().unwrap().to_string();
+            let bin = v["url_bin"].as_str().unwrap().to_string();
+            assert_eq!(trust::download_allowed(&bin, UPDATE_FEED_URL, &ver, false), Ok(()));
+            let resp = http.get(&bin).header("Range", "bytes=0-3").send().await.expect("the binary through the redirect rule");
+            eprintln!("[live] {} -> {} {}", bin, resp.status(), resp.url().host_str().unwrap_or(""));
+            assert!(resp.status().is_success(), "{}", resp.status());
+            let head = resp.bytes().await.unwrap();
+            assert_eq!(&head[..4], b"\x7fELF");
+        });
     }
 
     #[test]

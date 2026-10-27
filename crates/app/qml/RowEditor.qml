@@ -19,7 +19,7 @@ Controls.Dialog {
     id: dlg
     property var app: null
     property var req: null                 // {island, row, form, title}
-    title: dlg.req ? "Edit buttons — " + dlg.req.title : "Edit buttons"
+    title: LinkGate.plain(dlg.req ? "Edit buttons — " + dlg.req.title : "Edit buttons")
     modal: true
     parent: Controls.Overlay.overlay
     anchors.centerIn: parent
@@ -290,6 +290,7 @@ Controls.Dialog {
                                         Layout.preferredHeight: 22
                                         Layout.alignment: Qt.AlignVCenter
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             anchors.centerIn: parent
                                             visible: !!itemRow.face && !!itemRow.face.emoji
                                             text: itemRow.face && itemRow.face.emoji ? itemRow.face.emoji : ""
@@ -313,6 +314,7 @@ Controls.Dialog {
                                         Layout.bottomMargin: 4
                                         spacing: 2
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
                                             text: !itemRow.face ? "" : (itemRow.known ? (itemRow.face.label || "") : (itemRow.face.label || "Needs a newer Tin Hat"))
                                             color: Th.dialogFg
@@ -433,6 +435,7 @@ Controls.Dialog {
                                 spacing: 1
                                 bottomPadding: 6
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     leftPadding: 8
                                     topPadding: 4
                                     bottomPadding: 2
@@ -497,6 +500,7 @@ Controls.Dialog {
             anchors.rightMargin: 8
             spacing: 8
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: dr.emoji.length > 0
                 Layout.preferredWidth: 16
                 horizontalAlignment: Text.AlignHCenter
@@ -513,6 +517,7 @@ Controls.Dialog {
                 isMask: true
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 text: dr.label
                 color: Th.dialogFg

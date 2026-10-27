@@ -29,6 +29,7 @@ ColumnLayout {
         Layout.minimumHeight: 24
         spacing: 8
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             text: Th.themeName
             color: Th.settingsThemeNameFg
             font.bold: true
@@ -36,6 +37,7 @@ ColumnLayout {
             Layout.maximumWidth: Math.max(0, Math.min(implicitWidth, row.width / 2))
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             Layout.maximumWidth: Math.max(0, implicitWidth)
@@ -80,6 +82,7 @@ ColumnLayout {
             isMask: true
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             color: Th.settingsThemeNoteFg
             text: sum.ctl ? (sum.ctl.adjusted === 1 ? "1 colour adjusted for readability"
                                                     : sum.ctl.adjusted + " colours adjusted for readability") : ""

@@ -88,6 +88,7 @@ Item {
             onPressedChanged: if (!sl.pressed) sr._g = 0
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.minimumWidth: 48
             text: sr.valueText
             color: Th.settingsHintFg
@@ -180,6 +181,7 @@ Item {
                         }
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         text: simple.st.roles ? String(simple.st.roles["surface.island"]) : ""
                         color: Th.settingsFg
@@ -286,7 +288,7 @@ Item {
                         color: Th.settingsThemeNoteIcon
                         isMask: true
                     }
-                    Controls.Label { text: ThemeEditorLib.adjustedText(simple.st.adjusted || 0); color: Th.settingsThemeNoteFg }
+                    Controls.Label { textFormat: Text.PlainText; text: ThemeEditorLib.adjustedText(simple.st.adjusted || 0); color: Th.settingsThemeNoteFg }
                 }
                 // §13.5: what the edits broke — "‹n› colours are hard to read", at most 4 lines with Fix
                 ThemeEditorWarnings {
@@ -342,7 +344,7 @@ Item {
                         model: [["compact", "Compact"], ["normal", "Normal"], ["touch", "Touch"]]
                         delegate: Controls.RadioButton {
                             required property var modelData
-                            text: modelData[1]
+                            text: LinkGate.plain(modelData[1])
                             checked: simple.look.density === modelData[0]
                             onClicked: {
                                 simple.edit({ op: "density", value: modelData[0] === "normal" ? null : modelData[0] }, 0)

@@ -84,8 +84,16 @@ if [ $? -ne 0 ]; then
     fatal=$((fatal + 1))
 fi
 
+# Security review 2026-10-26 (M7, H2): bound label text declares its textFormat (other people's text is never markup),
+# style-drawn controls show bound text through LinkGate.plain, and only LinkGate.qml calls Qt.openUrlExternally.
+tf=$(python3 "$HERE/qml-textformat-lint.py" "$QML_DIR" 2>&1)
+if [ $? -ne 0 ]; then
+    echo "$tf" | grep -v "PENDING" | sed "s/^/QMLLINT FAIL: /"
+    fatal=$((fatal + 1))
+fi
+
 if [ "$fatal" -eq 0 ]; then
-    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name errors (${layout} layout-positioning warnings, non-fatal)"
+    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat errors (${layout} layout-positioning warnings, non-fatal)"
     exit 0
 fi
 echo "QMLLINT FAIL: $fatal file(s) would fail to load"

@@ -146,6 +146,7 @@ Controls.Popup {
                     radius: picker.theme.radiusSm
                     color: ema.containsMouse ? Th.emojiCellBgHover : "transparent"
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         anchors.centerIn: parent
                         text: modelData.e
                         font.pixelSize: 22

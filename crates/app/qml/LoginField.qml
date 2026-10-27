@@ -32,6 +32,7 @@ ColumnLayout {
     spacing: 3
 
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         text: field.label
         color: Th.loginFieldLabelFg
         font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -77,6 +78,7 @@ ColumnLayout {
             }
 
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: field.prefix.length > 0
                 text: field.prefix
                 color: input.activeFocus ? Th.loginFieldPrefixFgFocus : Th.loginFieldPrefixFg

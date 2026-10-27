@@ -26,7 +26,37 @@ fn generate_th_qml() {
     }
 }
 
+/// H3 dev-key segregation (security review follow-up, 2026-10-26): the updater trusts a development key only in a LAB
+/// build — the `lab-update-key` feature AND `TINHAT_UPDATE_DEV_KEY` (a minisign public key) together; either one alone
+/// stops the build (a stray variable in a shell can't slip a key into an ordinary build), and so does the feature when
+/// the build says it is a release (`TINHAT_RELEASE_BUILD=1`, set by the release trains). A lab binary carries a fixed
+/// marker the publish step refuses (src/update_trust.rs LAB_TRUST_MARKER).
+fn check_update_trust_config() {
+    println!("cargo:rerun-if-env-changed=TINHAT_UPDATE_DEV_KEY");
+    println!("cargo:rerun-if-env-changed=TINHAT_RELEASE_BUILD");
+    let lab = std::env::var_os("CARGO_FEATURE_LAB_UPDATE_KEY").is_some();
+    let key = std::env::var("TINHAT_UPDATE_DEV_KEY").ok().filter(|k| !k.trim().is_empty());
+    let release = std::env::var("TINHAT_RELEASE_BUILD").map(|v| v.trim() == "1").unwrap_or(false);
+    match (lab, &key) {
+        (false, Some(_)) => panic!(
+            "TINHAT_UPDATE_DEV_KEY is set, but this is not a lab build: unset it (a lab build adds --features lab-update-key)"
+        ),
+        (true, None) => panic!("--features lab-update-key needs TINHAT_UPDATE_DEV_KEY (the development minisign public key)"),
+        _ => {}
+    }
+    if let Some(k) = key {
+        let k = k.trim();
+        if k.len() != 56 || !k.starts_with("RW") || !k.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'+' || b == b'/') {
+            panic!("TINHAT_UPDATE_DEV_KEY is not a minisign public key (the base64 line of a .pub file)");
+        }
+        if release {
+            panic!("TINHAT_RELEASE_BUILD=1 with --features lab-update-key: a release never trusts a development update key");
+        }
+    }
+}
+
 fn main() {
+    check_update_trust_config();
     generate_th_qml();
 
     // Bake a short git hash so dev vs released builds are distinguishable (About sheet +
@@ -116,6 +146,7 @@ fn main() {
                 "qml/RoomHeaderBar.qml",
                 "qml/EmptyState.qml",
                 "qml/ConfirmDialog.qml",
+                "qml/TextViewerDialog.qml",   // launch-gate's web review #8: text-like attachments shown in the app
                 "qml/ChangePasswordDialog.qml",   // selfhost: Settings → Devices & security → Password (password.rs)
                 "qml/BugReportDialog.qml",
                 "qml/VerifyDeviceDialog.qml",
@@ -252,6 +283,8 @@ fn main() {
             .qml_file(QmlFile::from("qml/Seeds.qml").singleton(true))
             // selfhost/firstrun §4: an invite link pasted into the sign-in screen (the web's invite.ts)
             .qml_file(QmlFile::from("qml/InviteLink.qml").singleton(true))
+            // security review 2026-10-26: the one door every link / attachment the app hands to the OS goes through
+            .qml_file(QmlFile::from("qml/LinkGate.qml").singleton(true))
             // 11.0 step 5: the theme editor's pure helpers (targets + colour maths; the web's targets.ts + colour.ts)
             .qml_file(QmlFile::from("qml/ThemeEditorLib.qml").singleton(true)),
         )

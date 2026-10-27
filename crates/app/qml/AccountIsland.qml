@@ -94,6 +94,7 @@ Rectangle {
                     Layout.alignment: Qt.AlignVCenter
                     spacing: 1
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         text: island.panelRef.app ? island.panelRef._a.localpart(island.panelRef.app.mUserId) : ""
                         elide: Text.ElideRight

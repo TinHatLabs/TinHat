@@ -74,8 +74,24 @@ fn opted_in() -> bool {
 /// Strip anything that could impersonate the user or decrypt their media. Deliberately
 /// aggressive: it is better to redact a harmless string than to leak a session.
 pub(crate) fn redact(input: &str) -> String {
+    // Security review 2026-10-26 (Low): two shapes the token rule below let through —
+    //  * a secret-looking URL parameter (`sig=`, `token=`, `key=`, …): its value goes whatever it looks like (the
+    //    Memories file links carry a lowercase-hex `sig`, and a short secret has no length to give it away);
+    //  * a long run of hex digits (32+: a SHA-256 / HMAC / 128-bit token in lowercase hex has no uppercase letter).
+    static PARAM_RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    static HEX_RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let param_re = PARAM_RE.get_or_init(|| {
+        regex::Regex::new(
+            r"(?i)([?&;](?:sig|signature|token|access_token|refresh_token|key|apikey|api_key|secret|auth|code|password|pw|pass|hmac|jwt|login_token|loginToken)=)[^&\s#\x22'<>]+",
+        )
+        .unwrap()
+    });
+    let hex_re = HEX_RE.get_or_init(|| regex::Regex::new(r"\b[0-9a-fA-F]{32,}\b").unwrap());
     let mut out = String::with_capacity(input.len());
     for line in input.lines() {
+        let line = param_re.replace_all(line, "${1}<REDACTED>");
+        let line = hex_re.replace_all(&line, "<REDACTED>").into_owned();
+        let line = line.as_str();
         let mut l = line.to_string();
         // Long opaque blobs: JWTs (eyJ...), access tokens, base64 keys. The charset
         // INCLUDES `+` and `/`: STANDARD base64 (curve25519 keys, olm blobs) uses them,
@@ -218,5 +234,33 @@ impl qobject::DiagnosticsController {
                 self.as_mut().set_status(QString::from(&format!("Couldn't write the report: {e}")));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::redact;
+
+    #[test]
+    fn lowercase_hex_secrets_and_secret_url_parameters_are_redacted() {
+        let sig = "9f2c4e1a7b3d5f60817263544a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7";
+        let line = format!("[vods] file https://chat.example.net/api/vods/file?id=abc&exp=1790000000&sig={sig} ok");
+        let r = redact(&line);
+        assert!(!r.contains(sig), "{r}");
+        assert!(r.contains("sig=<REDACTED>"), "{r}");
+        assert!(r.contains("id=abc"), "an ordinary parameter stays: {r}");
+        // a short secret behind a secret-looking name, any case
+        assert!(!redact("GET /x?token=abc123&v=1").contains("abc123"));
+        assert!(redact("GET /x?token=abc123&v=1").contains("v=1"));
+        assert!(!redact("https://x/y?KEY=s3cr3t").contains("s3cr3t"));
+        // a bare 32+ hex run (a sha256, an HMAC, a 128-bit token) anywhere in a line
+        assert!(!redact(&format!("checksum mismatch (expected {sig}, got 00)")).contains(sig));
+        assert!(!redact("guest key 0123456789abcdef0123456789abcdef").contains("0123456789abcdef0123456789abcdef"));
+        // what stays readable: ordinary words, short hex (a build hash), a YouTube id, the host
+        let ok = redact("[update] build 3e8e3ce5 · watch?v=dQw4w9WgXcQ on chat.example.net");
+        assert!(ok.contains("3e8e3ce5") && ok.contains("dQw4w9WgXcQ") && ok.contains("chat.example.net"), "{ok}");
+        // the earlier rules still hold
+        assert!(!redact("Authorization: Bearer syt_abc_def").contains("syt_abc_def"));
+        assert!(redact("access_token=xyz").ends_with("<REDACTED>\n"));
     }
 }

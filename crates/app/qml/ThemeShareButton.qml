@@ -47,6 +47,7 @@ Controls.AbstractButton {
     contentItem: Item {
         // a Label (not a Text): it inherits the window's font — a theme's interface font (ENGINE.md §10)
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: label
             anchors.centerIn: parent
             text: b.text

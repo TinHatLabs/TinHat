@@ -33,8 +33,8 @@ Kirigami.ApplicationWindow {
         shell: root
         navOpened: cornerNav.opened
         memoriesWanted: memoriesWindow.visible
-        onNotify: (m, t) => { if (t === undefined || t === null) root.showPassiveNotification(m); else root.showPassiveNotification(m, t) }
-        onNotifyAction: (m, t, a, cb) => root.showPassiveNotification(m, t, a, cb)   // themes 1b: a toast with an action
+        onNotify: (m, t) => { if (t === undefined || t === null) root.showPassiveNotification(LinkGate.plain(m)); else root.showPassiveNotification(LinkGate.plain(m), t) }
+        onNotifyAction: (m, t, a, cb) => root.showPassiveNotification(LinkGate.plain(m), t, a, cb)   // themes 1b: a toast with an action
         onOpenIconGallery: iconGallery.openOrRaise()
         onFocusCalendarEvent: (id) => calendarWindow.focusEvent(id)
         onOpenCalendarWindow: calendarWindow.openOrRaise()
@@ -81,6 +81,7 @@ Kirigami.ApplicationWindow {
                     color: Th.bannerSafeModeIcon
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     color: Th.bannerSafeModeFg
@@ -151,7 +152,7 @@ Kirigami.ApplicationWindow {
                     text: "Keep for all devices"
                     onTriggered: {
                         var r = layoutStoreObj.keepOverride()
-                        if (r !== "saved" && r !== "noop") root.showPassiveNotification("That didn't work (" + r + ").", 5000)
+                        if (r !== "saved" && r !== "noop") root.showPassiveNotification(LinkGate.plain("That didn't work (" + r + ")."), 5000)
                     }
                 },
                 Kirigami.Action { text: "Restore"; onTriggered: layoutStoreObj.clearOverride() }
@@ -185,12 +186,12 @@ Kirigami.ApplicationWindow {
             Layout.bottomMargin: root.flatLayout ? Kirigami.Units.smallSpacing : 0
             visible: root.mUpdateAvailable || root.mUpdateDownloading || root.mUpdateReady
             type: root.mUpdateReady ? Kirigami.MessageType.Positive : Kirigami.MessageType.Information
-            text: root.mUpdateReady
+            text: LinkGate.plain(root.mUpdateReady
                 ? ("Update installed (v" + root.mLatestVersion + ") — restart to apply.")
                 : (root.mUpdateDownloading
                    ? (updater.channel === "flatpak" ? root.mUpdateStatus : "Downloading update…")   // 10.0.2: the portal path narrates itself
                    : ("Update available: v" + root.mAppVersion + " → v" + root.mLatestVersion
-                      + (root.mCanSelfUpdate ? "" : " — " + root.manualUpdateHint)))
+                      + (root.mCanSelfUpdate ? "" : " — " + root.manualUpdateHint))))
             actions: [
                 Kirigami.Action {
                     text: "What's new"
@@ -263,8 +264,8 @@ Kirigami.ApplicationWindow {
     function openPad(roomId, t) {
         if (!t) return
         if (!t.ready) {
-            if (t.why === "unverified") root.showPassiveNotification(root.padWhyLine(t), 4000, "Devices & security", function () { settingsWindow.openAt("security") })
-            else root.showPassiveNotification(root.padWhyLine(t), 4000)
+            if (t.why === "unverified") root.showPassiveNotification(LinkGate.plain(root.padWhyLine(t)), 4000, "Devices & security", function () { settingsWindow.openAt("security") })
+            else root.showPassiveNotification(LinkGate.plain(root.padWhyLine(t)), 4000)
             return
         }
         padWindow.openFor(String(roomId), String(t.device))
@@ -297,7 +298,7 @@ Kirigami.ApplicationWindow {
         if (settingsWindow.visible) root.settingsHandOff("appearance", "roomPicker", "")
         quickSwitcher.pickRoom("Share " + name + " to…", "Search rooms", function (roomId) {
             var err = core.c_editorCtl.shareToRoom(roomId, docJson)
-            if (err.length > 0) root.showPassiveNotification(err, "long")
+            if (err.length > 0) root.showPassiveNotification(LinkGate.plain(err), "long")
         })
     }
     readonly property string mIconStyle: core.mIconStyle   // themes 1b: "duotone" | "mono" (ThIcon's accent tone)
@@ -803,12 +804,12 @@ Kirigami.ApplicationWindow {
             // with Open (the chime and the OS notification come from Rust, guests_ctl.rs announce)
             if (action.indexOf("guest-waiting:") === 0) {
                 var gt = action.indexOf("\t"), gRoom = action.substring(14, gt > 0 ? gt : action.length)
-                if (gt > 0) root.showPassiveNotification(action.substring(gt + 1), 8000, "Open", function () { root.openRoomId(gRoom) })
+                if (gt > 0) root.showPassiveNotification(LinkGate.plain(action.substring(gt + 1)), 8000, "Open", function () { root.openRoomId(gRoom) })
                 return
             }
             if (action.indexOf("invite-room:") === 0) {
                 var tab = action.indexOf("\t")
-                if (tab > 0) root.showPassiveNotification(action.substring(tab + 1), 4000)
+                if (tab > 0) root.showPassiveNotification(LinkGate.plain(action.substring(tab + 1)), 4000)
                 root.playUiSound("notify")
                 return
             }
@@ -1143,7 +1144,7 @@ Kirigami.ApplicationWindow {
         Controls.MenuItem {
             text: "Mark all as read"
             icon.name: "checkmark-symbolic"
-            onTriggered: { nav.markSpaceRead(root.ctxRoomId); root.showPassiveNotification("Marking everything in " + root.ctxRoomName + " as read…", "short") }
+            onTriggered: { nav.markSpaceRead(root.ctxRoomId); root.showPassiveNotification(LinkGate.plain("Marking everything in " + root.ctxRoomName + " as read…"), "short") }
         }
         Controls.MenuItem {
             text: "Invite people…"
@@ -1290,6 +1291,7 @@ Kirigami.ApplicationWindow {
         ColumnLayout {
             spacing: 8
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 26
                 wrapMode: Text.WordWrap
@@ -1498,7 +1500,7 @@ Kirigami.ApplicationWindow {
             onTriggered: {
                 if (floatingCtl.isOpen(root.ctxRoomId)) floatingChats.focusBubble(root.ctxRoomId)
                 else if (!floatingCtl.openBubble(root.ctxRoomId))   // 10.1 (TH-FLOAT-09): the cap used to no-op silently
-                    root.showPassiveNotification("You can have " + floatingCtl.maxBubbles + " popped-out chats at once — close one first", "short")
+                    root.showPassiveNotification(LinkGate.plain("You can have " + floatingCtl.maxBubbles + " popped-out chats at once — close one first"), "short")
             }
         }
         Controls.MenuSeparator {}
@@ -1603,6 +1605,7 @@ Kirigami.ApplicationWindow {
                 onAccepted: if (newDmDialog.target.length > 0) login.createDm(newDmDialog.target)
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 text: newDmField.text.trim().length === 0
                       ? "Just their username is enough. Someone on another server: @name:their.server."
                       : (newDmDialog.target.length > 0 ? "Messages " + newDmDialog.target
@@ -1637,7 +1640,7 @@ Kirigami.ApplicationWindow {
     // Invite to whichever room was right-clicked (ctxRoomId), which may be a space.
     Kirigami.PromptDialog {
         id: inviteDialog
-        title: "Invite to " + root.ctxRoomName
+        title: LinkGate.plain("Invite to " + root.ctxRoomName)
         standardButtons: Kirigami.Dialog.NoButton
         customFooterActions: [
             Kirigami.Action {
@@ -1674,9 +1677,9 @@ Kirigami.ApplicationWindow {
 
     Kirigami.PromptDialog {
         id: newRoomDialog
-        title: newRoomIsSpace.checked ? "New space"
+        title: LinkGate.plain(newRoomIsSpace.checked ? "New space"
              : (newRoomInSpace.checked && newRoomDialog.spaceName.length > 0
-                ? "New room in " + newRoomDialog.spaceName : "New room")
+                ? "New room in " + newRoomDialog.spaceName : "New room"))
         // The space selected in the nav when the dialog opened. Captured on open rather
         // than bound live, so switching spaces behind a half-filled dialog cannot move
         // the room somewhere the user did not choose.
@@ -1719,10 +1722,11 @@ Kirigami.ApplicationWindow {
             Controls.CheckBox {
                 id: newRoomInSpace
                 visible: !newRoomIsSpace.checked && newRoomDialog.spaceId.length > 0
-                text: "Put it in " + newRoomDialog.spaceName
+                text: LinkGate.plain("Put it in " + newRoomDialog.spaceName)
                 checked: true
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 // only a PUBLIC room in the space is open to its members; a private one still needs an invite
                 visible: newRoomInSpace.visible && newRoomInSpace.checked && !newRoomPrivate.checked
                 text: "Everyone in " + newRoomDialog.spaceName + " can open this room without waiting for an invite."
@@ -1732,6 +1736,7 @@ Kirigami.ApplicationWindow {
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 // 2026-10-23: encrypted or not, in the web's words (login.newRoomHint = new_room.rs hint, shared
                 // vectors). The parent is exactly what Create hands createRoom.
                 id: newRoomEncHint
@@ -1871,7 +1876,7 @@ Kirigami.ApplicationWindow {
                 // gate A, 2026-09-27: live menu switches vs menuref)
                 Qt.callLater(function () {
                     var err = core.chooseTheme(id, false)
-                    if (err && err.length > 0) root.showPassiveNotification(err, 6000)
+                    if (err && err.length > 0) root.showPassiveNotification(LinkGate.plain(err), 6000)
                 })
             }
             Instantiator {
@@ -2032,8 +2037,9 @@ Kirigami.ApplicationWindow {
     Kirigami.OverlaySheet {
         id: updateNotesSheet
         parent: Controls.Overlay.overlay
-        header: Kirigami.Heading { text: "What's new in Tin Hat " + (root.mLatestVersion.length > 0 ? root.mLatestVersion : root.mAppVersion) }
+        header: Kirigami.Heading { textFormat: Text.PlainText; text: "What's new in Tin Hat " + (root.mLatestVersion.length > 0 ? root.mLatestVersion : root.mAppVersion) }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.preferredWidth: Kirigami.Units.gridUnit * 22
             wrapMode: Text.Wrap
             color: Th.sheetFg
@@ -2062,20 +2068,21 @@ Kirigami.ApplicationWindow {
             rowSpacing: Kirigami.Units.smallSpacing
             // 11.0 (ACTIONS.md §8): a row whose action got keys of its own on this device shows them (actionsHost.helpKey);
             // everything else reads exactly as before (the web's dialogs.tsx shortcutRows does the same)
-            Controls.Label { text: actionsHost.helpKey("nav.quickSwitcher.open", "Ctrl+K"); font.bold: true }            Controls.Label { text: "Jump to any room" }
-            Controls.Label { text: actionsHost.helpKey("app.settings.open", "Ctrl+,"); font.bold: true }            Controls.Label { text: "Settings" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("nav.quickSwitcher.open", "Ctrl+K"); font.bold: true }            Controls.Label { text: "Jump to any room" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("app.settings.open", "Ctrl+,"); font.bold: true }            Controls.Label { text: "Settings" }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 text: (actionsHost.changedActions.indexOf("nav.room.previous") >= 0 || actionsHost.changedActions.indexOf("nav.room.next") >= 0)
                       ? actionsHost.helpKey("nav.room.previous", "Alt+Up") + " / " + actionsHost.helpKey("nav.room.next", "Alt+Down") : "Alt+↑ / Alt+↓"
                 font.bold: true
             }
             Controls.Label { text: "Previous / next room  (+Shift: unread only)" }
-            Controls.Label { text: actionsHost.helpKey("call.mic.toggle", "Ctrl+Shift+M"); font.bold: true }      Controls.Label { text: "Mute / unmute your mic" }
-            Controls.Label { text: actionsHost.helpKey("call.deafen.toggle", "Ctrl+Shift+D"); font.bold: true }      Controls.Label { text: "Deafen / undeafen" }
-            Controls.Label { text: actionsHost.helpKey("call.pushToTalk.hold", "Ctrl") + " (hold)"; font.bold: true }       Controls.Label { text: "Push to talk, when enabled" }
-            Controls.Label { text: "Esc / " + actionsHost.helpKey("call.fill.toggle", "F11"); font.bold: true }         Controls.Label { text: "Leave / toggle \"fill the app\" in a call" }
-            Controls.Label { text: actionsHost.helpKey("soundboard.open", "Ctrl+Shift+S"); font.bold: true }      Controls.Label { text: "Soundboard" }
-            Controls.Label { text: actionsHost.helpKey("calendar.open", "Ctrl+Shift+E"); font.bold: true }      Controls.Label { text: "Calendar" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("call.mic.toggle", "Ctrl+Shift+M"); font.bold: true }      Controls.Label { text: "Mute / unmute your mic" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("call.deafen.toggle", "Ctrl+Shift+D"); font.bold: true }      Controls.Label { text: "Deafen / undeafen" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("call.pushToTalk.hold", "Ctrl") + " (hold)"; font.bold: true }       Controls.Label { text: "Push to talk, when enabled" }
+            Controls.Label { textFormat: Text.PlainText; text: "Esc / " + actionsHost.helpKey("call.fill.toggle", "F11"); font.bold: true }         Controls.Label { text: "Leave / toggle \"fill the app\" in a call" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("soundboard.open", "Ctrl+Shift+S"); font.bold: true }      Controls.Label { text: "Soundboard" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("calendar.open", "Ctrl+Shift+E"); font.bold: true }      Controls.Label { text: "Calendar" }
             Controls.Label { text: "PgUp / PgDn / Home / End"; font.bold: true }  Controls.Label { text: "Scroll the conversation" }
             Controls.Label { text: "Esc"; font.bold: true }               Controls.Label { text: "Cancel a reply or edit; jump to the newest message" }
             Controls.Label { text: "Ctrl+V"; font.bold: true }            Controls.Label { text: "Paste an image or file into the composer" }
@@ -2134,7 +2141,7 @@ Kirigami.ApplicationWindow {
             model: sharePicker.sources
             delegate: Controls.MenuItem {
                 required property var modelData
-                text: modelData.label
+                text: LinkGate.plain(modelData.label)
                 icon.name: modelData.kind === "monitor"
                     ? "video-display-brightness-symbolic" : "window-duplicate-symbolic"
                 onTriggered: callctl.shareScreenSource(modelData.kind, modelData.handle)
@@ -2196,6 +2203,7 @@ Kirigami.ApplicationWindow {
                         implicitHeight: 40
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.alignment: Qt.AlignHCenter
                         text: "Drop to attach in " + (root.mRoomName.length > 0 ? root.mRoomName : "this room")
                         font.bold: true
@@ -2260,7 +2268,7 @@ Kirigami.ApplicationWindow {
         ctl: core.c_editorCtl
         host: QtObject {
             readonly property Item pickRoot: root.contentItem
-            function notify(text, timeout) { root.showPassiveNotification(text, timeout) }
+            function notify(text, timeout) { root.showPassiveNotification(LinkGate.plain(text), timeout) }
             function shareDoc(docJson, name) { root.shareThemeToRoom(docJson, name) }
             function realColours() { return core._thColours }
         }
@@ -2285,7 +2293,7 @@ Kirigami.ApplicationWindow {
         context: Qt.ApplicationShortcut
         onActivated: {
             if (!root.mInCall) return
-            if (root.mServerMuted) root.showPassiveNotification(root.serverMutedText(), 3000)   // RBAC §7.4: locked
+            if (root.mServerMuted) root.showPassiveNotification(LinkGate.plain(root.serverMutedText()), 3000)   // RBAC §7.4: locked
             else callctl.toggleMic()
         }
     }
@@ -2617,6 +2625,7 @@ Kirigami.ApplicationWindow {
                 imageSource: profileFlyout.profile.avatar || ""
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 text: profileFlyout.profile.name || root.localpart(root.profileMxid)
@@ -2628,6 +2637,7 @@ Kirigami.ApplicationWindow {
                 wrapMode: Text.WordWrap
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 text: root.profileMxid
@@ -2699,9 +2709,9 @@ Kirigami.ApplicationWindow {
     // window's passive notification (Appearance's Undo, layout outcomes, pack errors …)
     function settingsToast(message, timeout, actionText, callBack) {
         if (settingsWindow.visible && settingsWindow.active) settingsWindow.toast(message, timeout, actionText, callBack)
-        else if (actionText !== undefined) root.showPassiveNotification(message, timeout, actionText, callBack)
-        else if (timeout !== undefined) root.showPassiveNotification(message, timeout)
-        else root.showPassiveNotification(message)
+        else if (actionText !== undefined) root.showPassiveNotification(LinkGate.plain(message), timeout, actionText, callBack)
+        else if (timeout !== undefined) root.showPassiveNotification(LinkGate.plain(message), timeout)
+        else root.showPassiveNotification(LinkGate.plain(message))
     }
     // 10.1 (TH-SET-11), now between windows: a surface of THIS window opened from Settings — Settings steps aside, this
     // window comes forward, and closing that surface brings Settings back on the pane you left (`pane` "" = no return).
@@ -3302,7 +3312,7 @@ Kirigami.ApplicationWindow {
         onTriggered: {
             if (floatingCtl.isOpen(room.roomId)) floatingChats.focusBubble(room.roomId)
             else if (!floatingCtl.openBubble(room.roomId))
-                root.showPassiveNotification("You can have " + floatingCtl.maxBubbles + " popped-out chats at once — close one first", "short")
+                root.showPassiveNotification(LinkGate.plain("You can have " + floatingCtl.maxBubbles + " popped-out chats at once — close one first"), "short")
         }
     }
 
@@ -3827,11 +3837,14 @@ Kirigami.ApplicationWindow {
                 status: root.mStatus
                 homeserver: login.homeserver
                 movedNote: login.movedNote
+                movedTo: login.movedTo
                 resetStage: root.mResetStage
                 resetStatus: root.mResetStatus
                 resetMode: root.mResetMode
                 resetNote: root.mResetNote
                 onHomeserverEdited: (value) => { login.homeserver = value; movedCheck.restart() }
+                // the moved server's new address, on the person's click (bridge.rs check_moved no longer switches it)
+                onUseMovedServer: () => { if (String(login.movedTo).length > 0) { login.homeserver = login.movedTo; movedCheck.restart() } }
                 // moved.rs: does the server say it moved to its own domain? At start, each time the card shows (a move
                 // ends every session; logout() puts the server you were on in the field) and once typing stops, as
                 // Tin Hat Web's LoginView (on mount and on each edit). Signed in, the note goes (the web view unmounts).
@@ -3947,7 +3960,7 @@ Kirigami.ApplicationWindow {
                             progress: root.mStatus
                             label: root.mLoggedIn ? "Loading your rooms…" : "Signing in…"
                         }
-                        Controls.Label {   // 10.1 (TH-MOTION-14): a spinner with a caption
+                        Controls.Label { textFormat: Text.PlainText;   // 10.1 (TH-MOTION-14): a spinner with a caption
                             Layout.alignment: Qt.AlignHCenter
                             visible: root.mBusy
                             text: bootMark.shownLabel

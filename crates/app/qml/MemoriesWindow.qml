@@ -1208,6 +1208,7 @@ Window {
                         size: Math.max(24, Math.min(40, Math.round(st.height * 0.24)))
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.alignment: Qt.AlignHCenter
                         text: st.notStarted ? "joins at " + mem.fmtTime(st.tileOffset) : "left at " + mem.fmtTime(st.tileEnd)
                         color: Th.memoriesTileRestFg
@@ -1236,6 +1237,7 @@ Window {
                         size: 18
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: st.personName
                         color: Th.memoriesTileNameFg
                         font.bold: true
@@ -1244,13 +1246,14 @@ Window {
                         Layout.maximumWidth: st.width * 0.5
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: mem.kindGlyph(st.track ? st.track.kind : "") + (st.width >= 250 ? " " + st.povLabel : "")
                         color: Th.memoriesTileMetaFg
                         font.pointSize: Kirigami.Theme.smallFont.pointSize
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
-                    Controls.Label { // keyboard number
+                    Controls.Label { textFormat: Text.PlainText; // keyboard number
                         visible: st.povKey > 0
                         text: String(st.povKey)
                         color: Th.memoriesTileMetaFg
@@ -1646,6 +1649,7 @@ Window {
         implicitWidth: pillLbl.implicitWidth + 14
         implicitHeight: pillLbl.implicitHeight + 6
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: pillLbl
             anchors.centerIn: parent
             text: parent.text
@@ -1693,12 +1697,14 @@ Window {
             anchors.centerIn: parent
             spacing: 6
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.verticalCenter: parent.verticalCenter
                 text: pb.pov ? mem.kindGlyph(pb.pov.kind) : ""
                 color: pb.onStage ? Th.memoriesPovMetaFgActive : Th.memoriesPovMetaFg
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.verticalCenter: parent.verticalCenter
                 text: pb.pov ? pb.pov.label : ""
                 color: pb.onStage ? Th.memoriesPovFgActive : Th.memoriesPovFg
@@ -1706,6 +1712,7 @@ Window {
                 font.strikeout: pb.hidden
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.verticalCenter: parent.verticalCenter
                 visible: pb.onStage || pb.upcoming || pb.gone
                 text: pb.onStage ? "· on stage" : (pb.upcoming ? "· joins " + mem.fmtTime(pb.pov.off) : "· left " + mem.fmtTime(pb.pov.end))
@@ -1713,7 +1720,7 @@ Window {
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
                 opacity: pb.onStage ? 0.9 : 1
             }
-            Controls.Label { // keyboard number
+            Controls.Label { textFormat: Text.PlainText; // keyboard number
                 anchors.verticalCenter: parent.verticalCenter
                 text: pb.pov ? String(pb.pov.key) : ""
                 color: pb.onStage ? Th.memoriesPovMetaFgActive : Th.memoriesPovMetaFg
@@ -1787,12 +1794,14 @@ Window {
                 ColumnLayout {
                     spacing: 0
                     Kirigami.Heading {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: mem.sel ? mem.fmtDateLong(mem.sel.start_ms) : "Memories"
                         color: Th.memoriesTitleFg
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                         color: Th.memoriesMetaFg
@@ -1854,6 +1863,7 @@ Window {
                             : mem.listNoticeKind === "warn" ? Th.memoriesNoticeWarnBorder : Th.memoriesNoticeBorder
                 implicitHeight: noticeLbl.implicitHeight + Kirigami.Units.largeSpacing * 1.5
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: noticeLbl
                     anchors.fill: parent
                     anchors.margins: Kirigami.Units.largeSpacing * 0.75
@@ -2037,6 +2047,7 @@ Window {
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     text: mem.fmtDate(card.modelData.start_ms)
                                     color: Th.memoriesCardTitleFg
                                     font.bold: true
@@ -2050,6 +2061,7 @@ Window {
                                 Item { Layout.fillWidth: true }
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                                 color: Th.memoriesCardMetaFg
@@ -2076,6 +2088,7 @@ Window {
                                     }
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                     color: Th.memoriesCardMetaFg
@@ -2098,6 +2111,7 @@ Window {
                                 Pill { visible: Number(card.modelData.bytes || 0) > 0; text: mem.fmtBytes(card.modelData.bytes) }
                                 Item { Layout.fillWidth: true }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     visible: card.openable && Number(mem.resumeAt[String(card.modelData.id)] || 0) > 5
                                     text: "resume at " + mem.fmtTime(Number(mem.resumeAt[String(card.modelData.id)] || 0))
                                     color: Th.memoriesCardResumeFg
@@ -2207,6 +2221,7 @@ Window {
                                 size: 72
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.alignment: Qt.AlignHCenter
                                 text: mem.focusedTrack ? mem.povDescr(mem.focusedTrack) : ""
                                 color: Th.memoriesStageFg
@@ -2214,6 +2229,7 @@ Window {
                                 font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.alignment: Qt.AlignHCenter
                                 text: "starts at " + mem.fmtTime(mem.focusedOffset) + " · " + mem.fmtTime(Math.max(0, mem.focusedOffset - mem.globalPos)) + " to go"
                                 color: Th.memoriesStageMetaFg
@@ -2273,11 +2289,13 @@ Window {
                                 size: 22
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: mem.focusedTrack ? mem.shortName(mem.focusedTrack.identity) : ""
                                 color: Th.memoriesCaptionFg
                                 font.bold: true
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: mem.focusedTrack ? (mem.kindGlyph(mem.focusedTrack.kind) + " " + mem.povDescr(mem.focusedTrack).replace(/^.*'s /, "")) : ""
                                 color: Th.memoriesCaptionMetaFg
                             }
@@ -2291,6 +2309,7 @@ Window {
                         opacity: 0
                         z: 6
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.centerIn: parent
                             text: mem.stageFlashText
                             color: Th.memoriesStageFg
@@ -2327,7 +2346,7 @@ Window {
                         border.color: Th.memoriesToastBorder
                         width: toastLbl.implicitWidth + 22
                         height: toastLbl.implicitHeight + 10
-                        Controls.Label { id: toastLbl; anchors.centerIn: parent; text: mem.toast; color: Th.memoriesToastFg }
+                        Controls.Label { textFormat: Text.PlainText; id: toastLbl; anchors.centerIn: parent; text: mem.toast; color: Th.memoriesToastFg }
                     }
                     // P2: ended-state overlay — replaces the frozen-at-end look
                     Rectangle {
@@ -2345,6 +2364,7 @@ Window {
                                 font.bold: true
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.alignment: Qt.AlignHCenter
                                 text: mem.fmtTime(mem.durSecs) + " relived"
                                 color: Th.memoriesStageMetaFg
@@ -2518,6 +2538,7 @@ Window {
                             onClicked: mem.skipBy(10)
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: mem.fmtTime(mem.globalPos) + "  /  " + mem.fmtTime(mem.durSecs)
                             color: Th.memoriesTimeFg
                             font.family: Th.fontMono
@@ -2581,7 +2602,7 @@ Window {
                     }
                     Controls.Button {
                         visible: mem.hiddenCount > 0
-                        text: "Show all (" + mem.hiddenCount + " hidden)"
+                        text: LinkGate.plain("Show all (" + mem.hiddenCount + " hidden)")
                         flat: true
                         focusPolicy: Qt.NoFocus
                         onClicked: mem.showAll()
@@ -2604,6 +2625,7 @@ Window {
                                 size: 24
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: povGroup.modelData.name
                                 color: Th.memoriesFg
@@ -2632,6 +2654,7 @@ Window {
                         implicitHeight: aoLbl.implicitHeight + 10
                         Behavior on color { ColorAnimation { duration: mem.theme.dur } }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             id: aoLbl
                             anchors.centerIn: parent
                             text: "🎧 Voices only" + (parent.on ? " · on stage" : "") + "  0"
@@ -2674,6 +2697,7 @@ Window {
                             implicitHeight: clipLbl.implicitHeight + 10
                             Behavior on color { ColorAnimation { duration: mem.theme.dur } }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 id: clipLbl
                                 anchors.centerIn: parent
                                 text: "🔖 " + mem.fmtTime(modelData.off) + " · " + mem.shortName(modelData.by)

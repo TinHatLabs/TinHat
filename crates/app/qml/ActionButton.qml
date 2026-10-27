@@ -131,6 +131,7 @@ Item {
                     seed: ab.item.subject ? ab.item.subject : (ab.item.label || "")
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: ab.emoji.length > 0
                     Layout.preferredWidth: ab.iconSize
                     Layout.preferredHeight: ab.iconSize
@@ -153,6 +154,7 @@ Item {
                     active: ab.active || tb.checked
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: ab.text.length > 0
                     Layout.alignment: Qt.AlignVCenter
                     text: ab.text

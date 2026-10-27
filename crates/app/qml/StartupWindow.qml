@@ -127,6 +127,7 @@ Window {
             font.weight: Font.Bold
         }
         Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: versionText
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: wordmark.bottom
@@ -192,6 +193,7 @@ Window {
 
         // ---- What is happening right now, under the bar ----
         Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: stageText
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: track.bottom
@@ -205,6 +207,7 @@ Window {
             elide: Text.ElideRight
         }
         Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: detailText
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: stageText.bottom
@@ -219,6 +222,7 @@ Window {
             visible: text.length > 0
         }
         Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 16

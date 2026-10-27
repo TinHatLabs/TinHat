@@ -153,7 +153,7 @@ pub mod qobject {
         #[qinvokable]
         fn refresh_rooms(self: Pin<&mut LoginController>);
         /// QML: login.checkMoved(server) — sign-in: has this server moved to its own domain (its well-known's
-        /// dev.tinhat.moved_to)? Then movedNote says so and the Server field follows.
+        /// dev.tinhat.moved_to)? Then movedNote says so; the Server field changes only when the person confirms it.
         #[qinvokable]
         #[cxx_name = "checkMoved"]
         fn check_moved(self: Pin<&mut LoginController>, server: &QString);
@@ -1023,8 +1023,9 @@ impl qobject::LoginController {
     }
 
     /// Sign-in: a server that moved to its own domain (Tin Hat Server: Move to your own domain) answers at its old
-    /// name with dev.tinhat.moved_to in /.well-known/matrix/client (moved.rs parse_move). The Server field follows and
-    /// the sign-in screen says why, as Tin Hat Web's LoginView does (other builds); signing in at the old name would
+    /// name with dev.tinhat.moved_to in /.well-known/matrix/client (moved.rs parse_move). The sign-in screen says where it
+    /// went and offers the new address (the field changes on the person's click), as Tin Hat Web's LoginView does
+    /// ("Go to <new address>"); signing in at the old name would
     /// work too (its well-known's base_url is the new address), but the app would keep the old name.
     pub fn check_moved(mut self: Pin<&mut Self>, server: &QString) {
         let host = server.to_string().trim().trim_start_matches("https://").trim_start_matches("http://")
@@ -1053,9 +1054,14 @@ impl qobject::LoginController {
                 if now != host {
                     return; // typed another server meanwhile
                 }
-                o.as_mut().set_moved_note(QString::from(&format!("{host} moved to {to}: sign in there with the same username and password.")));
+                // Security review 2026-10-26 (Low): the note used to switch the Server field by itself, so whoever answers
+                // for the typed name (a lapsed or typo'd domain, a compromised server) could send the password form to
+                // any host. Now it only says so; the field changes when the person presses "Use <new address>" (as
+                // Tin Hat Web's "Go to <new address>").
+                o.as_mut().set_moved_note(QString::from(&format!(
+                    "{host} says it moved to {to}. If you expect that, use the new address and sign in there with the same username and password."
+                )));
                 o.as_mut().set_moved_to(QString::from(&to));
-                o.as_mut().set_homeserver(QString::from(&to));
             });
         });
     }
@@ -1939,8 +1945,9 @@ pub(crate) async fn resolve_avatar(
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
         .collect();
     let dir = data_dir().join("avatars");
-    let path = dir.join(format!("{id}.img"));
-    if path.exists() {
+    // security review 2026-10-26: cached as the raster format its bytes are (viewer.rs) — an SVG / TIFF / … avatar is
+    // never handed to Qt's image plugins (it was `<id>.img`, content-sniffed)
+    if let Some(path) = crate::viewer::cached_image(&dir, &id) {
         crate::room::touch_mtime(&path); // keep viewed avatars warm for the cache sweep
         return Some(crate::platform::file_url(&path));
     }
@@ -1968,6 +1975,13 @@ pub(crate) async fn resolve_avatar(
             }
             return None;
         }
+    };
+    let Some(path) = crate::viewer::image_path_for(&dir, &id, &bytes) else {
+        // not a picture we draw: no avatar (initials), and not fetched again for a while
+        if let Ok(mut map) = failed_avatars().lock() {
+            map.insert(key, std::time::Instant::now());
+        }
+        return None;
     };
     tokio::fs::create_dir_all(&dir).await.ok()?;
     tokio::fs::write(&path, &bytes).await.ok()?;
@@ -3043,16 +3057,11 @@ fn save_session(client: &Client, session: &MatrixSession) -> Result<(), String> 
         session: session.clone(),
     };
     let path = session_file();
-    std::fs::write(&path, serde_json::to_string(&saved).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
-    // Protect the access token: chmod 0600 on unix. On Windows %LOCALAPPDATA% is already
-    // per-user ACL-protected — skipping is the accepted call (PLATFORM_AUDIT.md §11).
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))
-            .map_err(|e| e.to_string())?;
-    }
+    // Protect the access token: on unix the file is created 0600 by the open itself (M10, security review 2026-10-26:
+    // it used to be written at the default umask and chmodded after), and an older 0644 one is narrowed before the
+    // token goes in. On Windows %LOCALAPPDATA% is already per-user ACL-protected (PLATFORM_AUDIT.md §11).
+    let json = serde_json::to_string(&saved).map_err(|e| e.to_string())?;
+    crate::platform::write_private_file(&path, json.as_bytes()).map_err(|e| e.to_string())?;
     Ok(())
 }
 

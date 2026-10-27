@@ -65,6 +65,7 @@ Rectangle {
             isMask: true
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: hpText
             anchors.verticalCenter: parent.verticalCenter
             text: hp.compact && hp.shortText.length > 0 ? hp.shortText : hp.text
@@ -74,6 +75,7 @@ Rectangle {
             font.pointSize: Kirigami.Theme.smallFont.pointSize
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             id: hpAct
             visible: hp.action.length > 0
             anchors.verticalCenter: parent.verticalCenter

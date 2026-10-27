@@ -53,6 +53,8 @@ pub mod pad_net; // Pad: Olm to-device transport + the trust glue (one node per 
 pub mod pad_ctl; // Pad: PadController — the QML bridge (exec → PadHost.qml, the chip, discovery, the Pad window)
 pub mod pad_lab; // Pad: TINHAT_PAD_TEST — the headless two-device lab gate (a local / *.test server only)
 pub mod embeds; // inline click-to-play media-embed URL parser (ported from the earlier web client)
+pub mod richtext; // security review 2026-10-26 (H2): another member's HTML → what the bubble shows (shared vectors with the web)
+pub mod viewer; // security review 2026-10-26: which attachments are shown inline / opened, and as what (shared vectors with the web)
 pub mod linkpreview; // OpenGraph link-preview cards via the homeserver's /media/preview_url (9.3)
 pub mod floating; // FloatingController — #6 floating chat-bubble registry + metadata
 pub mod gif; // GifController — in-chat Giphy picker (via the server's Tin Hat API)
@@ -81,6 +83,7 @@ pub mod soundboard; // SoundboardController — room + personal sounds, web sear
 pub mod status_ctl; // per-person "looking to play" status (dev.tinhat.userstatus)
 pub mod stream; // StreamController — NVENC screen-share publish into a call
 pub mod update; // UpdateController — in-app / startup update check + self-replace
+pub mod update_trust; // H3: what the updater believes — the signed feed (minisign, release key compiled in), pinned downloads (pure)
 pub mod video; // FFI to the C++ qml6glsink bridge (native remote-video tiles)
 pub mod vodsvc; // Memories — the headless call-recorder service (0.8.7; the recorder service host only)
 pub mod medialinks; // Media Party link parsing (pure; twin of the web links.ts)
@@ -615,6 +618,11 @@ fn main() {
     // each run. stdout still prints a pointer to it.
     redirect_diagnostics_to_file();
 
+    // M10 (security review 2026-10-26): the data, cache and prefs roots are owner-only (0700) — new installs get them so,
+    // existing ones are narrowed here, before anything reads the session or opens the encrypted store. Unix only.
+    #[cfg(unix)]
+    let private_dirs = platform::harden_private_dirs();
+
     // Version banner, FIRST thing in every log: shipped logs carried no version at all,
     // so triage had to infer the build from log-format archaeology (one tester ran a 10-day-old
     // build for a week and nobody could tell from the uploads).
@@ -630,6 +638,10 @@ fn main() {
     // marker path, what the previous start left, this start's mode.
     #[cfg(windows)]
     boot::report_start_marker();
+    #[cfg(unix)]
+    for line in &private_dirs {
+        eprintln!("[main] private folders: {line}");
+    }
 
     // TERM/INT/HUP: run the SAME clean-exit path as a window close, so a `kill`, a logout,
     // or a session teardown doesn't strand us in the call. Without this the app dies with its

@@ -86,6 +86,7 @@ Controls.Dialog {
         width: dlg.boxWidth - dlg.leftPadding - dlg.rightPadding
         spacing: 8
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             Layout.bottomMargin: 4
             text: dlg.error.length > 0 ? dlg.error : "Your other devices stay signed in."

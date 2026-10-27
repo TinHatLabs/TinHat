@@ -40,6 +40,7 @@ FocusScope {
         anchors.rightMargin: 8
         spacing: 4
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             Layout.rightMargin: 8
             text: bar.trial ? "Trying " + bar.trial.name + " · " + bar.trial.left + " s" : ""

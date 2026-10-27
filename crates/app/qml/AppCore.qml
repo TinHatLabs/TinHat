@@ -10,6 +10,7 @@
 import QtQuick
 import QtQuick.Window
 import QtMultimedia
+import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app
 
@@ -1001,10 +1002,11 @@ Item {
     }
     // A resolved video/file/audio (room.openMedia) opens in the system handler —
     // the file:// is the decrypted cache copy, so E2EE media plays like any local file.
+    // Security review 2026-10-26: only a viewer type whose bytes Rust checked (viewer.rs), through the one gate.
     Connections {
         target: room
         function onMediaOpenedChanged() {
-            if (room.mediaOpened.length > 0) Qt.openUrlExternally(room.mediaOpened)
+            if (room.mediaOpened.length > 0) LinkGate.openMedia(room.mediaOpened)
         }
     }
     Connections {
@@ -2288,9 +2290,50 @@ Item {
             core.mirrored()
         }
     }
+    // Decided 2026-10-26: a steam:// link opens only after "Open in Steam?" (LinkGate.ask; every other app scheme is refused)
+    ConfirmDialog {
+        id: steamConfirm
+        property string url: ""
+        dialogTitle: "Open in Steam?"
+        message: steamConfirm.url
+        confirmText: "Open"
+        cancelText: "Cancel"
+        onConfirmed: LinkGate.openAsked(steamConfirm.url)
+    }
+    // Security review 2026-10-26: a link or attachment LinkGate refused says so (the log has which one and why).
+    Connections {
+        target: LinkGate
+        function onAsk(url, kind) {
+            if (kind !== "steam") return
+            steamConfirm.url = url
+            steamConfirm.open()
+        }
+        function onRefused(url, why) {
+            core.notify(why === "not-a-viewer-file" ? "Tin Hat doesn't open that kind of file — use Save as… to keep it"
+                                                    : "Tin Hat doesn't open that kind of link (only web, email and Steam links)", 6000)
+        }
+    }
+    // Security review 2026-10-26 (M7): every attached tooltip shows its text as typed. The style's one shared tooltip
+    // draws it with Qt's default AutoText, so a name or a status with markup in it was rendered (and an <img> in it
+    // loaded); its label(s) become PlainText once, at start (Basic: the Text content item; KDE: a Label inside an Item).
+    function _plainTooltips() {
+        var n = 0
+        var walk = function (it, depth) {
+            if (!it || depth > 4) return
+            if (it.textFormat !== undefined) { it.textFormat = Text.PlainText; n++ }
+            var kids = it.children || []
+            for (var i = 0; i < kids.length; i++) walk(kids[i], depth + 1)
+        }
+        var tip = Controls.ToolTip.toolTip
+        walk(tip ? tip.contentItem : null, 0)
+        // launch-gate's review #7: fail closed — the room and DM tooltips escape their text unless this worked
+        LinkGate.tooltipsPlain = n > 0
+        if (n === 0) console.warn("[tooltips] no text item found in the shared tooltip — tooltips stay AutoText, LinkGate.tipText escapes")
+    }
     // On launch: apply a forced theme (test hook TINHAT_THEME), then silently sign
     // back in if a saved session exists.
     Component.onCompleted: {
+        try { core._plainTooltips() } catch (e) { console.warn("[tooltips] " + e) }   // never in the way of the start
         padCtl.attach()       // Pad: events reach the controller from now on (before the session is restored)
         core._syncTileModel() // 0.8.28: seed the grid model (fake tiles / empty)
         // 10.6 (REACH §2): the presence engine waits for a session on its own; it never runs in

@@ -39,12 +39,14 @@ Controls.AbstractButton {
             width: parent.width
             spacing: 2
             Text {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: pb.emoji.length > 0 ? pb.emoji : "🔊"
                 font.pixelSize: 20
                 color: Th.soundboardCardFg
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 id: nameText
                 width: parent.width - 12
                 anchors.horizontalCenter: parent.horizontalCenter

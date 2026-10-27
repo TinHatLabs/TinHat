@@ -62,6 +62,7 @@ Controls.AbstractButton {
                 isMask: true
             }
             Text {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap

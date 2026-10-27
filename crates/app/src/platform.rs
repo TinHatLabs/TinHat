@@ -287,6 +287,75 @@ pub(crate) fn old_log_path() -> PathBuf {
     log_dir().join("tinhat.old.log")
 }
 
+// ── M10 (security review 2026-10-26): the app's per-user folders are private ─────────────────────────────────────
+//
+// The data root holds session.json (the access token) and the E2EE store (device keys, room keys, the backup key);
+// the cache root holds decrypted timeline snapshots, member lists and decrypted media; the prefs folder holds chat
+// drafts. Created at the default umask they were 0755: every local account could read the history and the token.
+// Unix: each root is 0700 — created so, and an existing install's roots narrowed at every start (files inside need no
+// change: nobody else can walk into the folder). The log folder was already 0700 (0.8.29). Windows: %LOCALAPPDATA% is
+// per-user already (PLATFORM_AUDIT.md §11). Not covered here (a later change): a passphrase for the E2EE store kept in
+// the OS keyring, so a copy of the folder (a backup, a disk image) is no use without the account's keyring.
+
+/// The roots [`harden_private_dirs`] keeps private: the data root, the cache root, the prefs folder.
+#[cfg(unix)]
+pub(crate) fn private_roots() -> Vec<PathBuf> {
+    vec![app_data_dir(), cache_base_dir().join("TinHat"), config_home().join("tinhat")]
+}
+
+/// Create each of [`private_roots`] as 0700 (and any missing parent, as the XDG spec wants them) and narrow an existing
+/// one that lets group or others in. Returns one line per root that was changed (or could not be), for the log.
+#[cfg(unix)]
+pub(crate) fn harden_private_dirs() -> Vec<String> {
+    let mut out = Vec::new();
+    for d in private_roots() {
+        match make_private_dir(&d) {
+            Ok(true) => out.push(format!("{}: narrowed to 0700", d.display())),
+            Ok(false) => {}
+            Err(e) => out.push(format!("{}: couldn't make it private: {e}", d.display())),
+        }
+    }
+    out
+}
+
+/// `dir` as a private folder: created 0700 when missing (`Ok(false)`), narrowed to 0700 when group/others had any
+/// access (`Ok(true)`), left alone when already private (`Ok(false)`).
+#[cfg(unix)]
+pub(crate) fn make_private_dir(dir: &Path) -> std::io::Result<bool> {
+    use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+    if !dir.exists() {
+        std::fs::DirBuilder::new().recursive(true).mode(0o700).create(dir)?;
+        // the umask may have narrowed it further than 0700 (never wider): fine either way
+        return Ok(false);
+    }
+    let mode = std::fs::metadata(dir)?.permissions().mode();
+    if mode & 0o077 == 0 {
+        return Ok(false);
+    }
+    std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o700))?;
+    Ok(true)
+}
+
+/// Write `bytes` to `path` as a private file (Unix: created 0600 by the open itself, and an existing file narrowed to
+/// 0600 too — no window where the token sits at the default umask). Windows: a plain write (per-user folder).
+pub(crate) fn write_private_file(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::io::Write;
+        use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+        let mut f = std::fs::OpenOptions::new().write(true).create(true).truncate(true).mode(0o600).open(path)?;
+        // an existing file keeps its mode across the open: narrow it before the secret goes in
+        f.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+        f.write_all(bytes)?;
+        f.sync_all()?;
+        Ok(())
+    }
+    #[cfg(not(unix))]
+    {
+        std::fs::write(path, bytes)
+    }
+}
+
 /// Per-user cache base dir. Linux: the historical `$XDG_CACHE_HOME` → `$HOME/.cache`.
 /// Windows: `%LOCALAPPDATA%` — there is no data/cache split, so cache callers (which
 /// join their own `Tin Hat/...` subpath) land inside the same app root; caches and
@@ -1311,6 +1380,37 @@ fn rename_retry(from: &Path, to: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// M10: the private-folder and private-file helpers (Unix modes; a temp folder of the test's own).
+    #[cfg(unix)]
+    #[test]
+    fn private_folders_and_files_are_owner_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = |p: &Path| std::fs::metadata(p).unwrap().permissions().mode() & 0o777;
+        let base = std::env::temp_dir().join(format!("tinhat-m10-{}-{}", std::process::id(), line!()));
+        let _ = std::fs::remove_dir_all(&base);
+        // a fresh install: created 0700 (and its missing parent too)
+        let fresh = base.join("share").join("TinHat");
+        assert!(!make_private_dir(&fresh).unwrap());
+        assert_eq!(mode(&fresh) & 0o077, 0);
+        assert_eq!(mode(&base.join("share")) & 0o077, 0);
+        // an existing install at the old default: narrowed once, then left alone
+        let old = base.join("cache-TinHat");
+        std::fs::create_dir_all(&old).unwrap();
+        std::fs::set_permissions(&old, std::fs::Permissions::from_mode(0o755)).unwrap();
+        assert!(make_private_dir(&old).unwrap());
+        assert_eq!(mode(&old), 0o700);
+        assert!(!make_private_dir(&old).unwrap());
+        // session.json: a new file is 0600 from its creation; an old 0644 one is narrowed before the token goes in
+        let f = fresh.join("session.json");
+        write_private_file(&f, b"{\"a\":1}").unwrap();
+        assert_eq!(mode(&f), 0o600);
+        std::fs::set_permissions(&f, std::fs::Permissions::from_mode(0o644)).unwrap();
+        write_private_file(&f, b"{\"b\":2}").unwrap();
+        assert_eq!(mode(&f), 0o600);
+        assert_eq!(std::fs::read_to_string(&f).unwrap(), "{\"b\":2}");
+        let _ = std::fs::remove_dir_all(&base);
+    }
     use std::collections::HashMap;
     use std::ffi::OsString;
 

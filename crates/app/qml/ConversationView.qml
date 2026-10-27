@@ -41,7 +41,7 @@ Item {
     // chat-head passes itself; the main window (the default) keeps everything in place.
     property var host: null
     readonly property var _hostObj: (host && host.showPassiveNotification) ? host : app
-    function _toast(msg, t) { if (conv._hostObj && conv._hostObj.showPassiveNotification) conv._hostObj.showPassiveNotification(msg, t) }
+    function _toast(msg, t) { if (conv._hostObj && conv._hostObj.showPassiveNotification) conv._hostObj.showPassiveNotification(LinkGate.plain(msg), t) }
     // A RoomController instance already .open(roomId)'d by the parent (Legacy's shared `room`,
     // or a bubble's own controller).
     required property var room
@@ -568,9 +568,15 @@ Item {
     Connections {
         target: conv.room
         function onMediaOpenedChanged() {
-            if (conv.room && conv.room.mediaOpened.length > 0) Qt.openUrlExternally(conv.room.mediaOpened)
+            if (conv.room && conv.room.mediaOpened.length > 0) LinkGate.openMedia(conv.room.mediaOpened)   // security review 2026-10-26
+        }
+        // launch-gate's web review #8: a text-like attachment is shown in the app as plain text, never opened outside
+        // (only here: the main view's controller is AppCore's `room` too, so a second handler there would show it twice)
+        function onMediaTextChanged() {
+            if (conv.room && conv.room.mediaText.length > 0) convTextViewer.show(conv.room.mediaText)
         }
     }
+    TextViewerDialog { id: convTextViewer }
     // Mirror of room.mediaResolved for the inline video players.
     property var mResolvedMedia: ({})
     property string _resolvedRaw: ""
@@ -661,7 +667,7 @@ Item {
                 model: ["👍", "❤️", "😂", "🔥", "🎉", "🦊"]
                 delegate: Controls.MenuItem {
                     required property var modelData
-                    text: modelData
+                    text: LinkGate.plain(modelData)
                     onTriggered: conv.room.react(conv.ctxMsgId, modelData)
                 }
             }
@@ -1075,6 +1081,7 @@ Item {
                     anchors.centerIn: parent
                     spacing: 6
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         anchors.verticalCenter: parent.verticalCenter
                         visible: conv.newBelow > 0
                         text: conv.newBelow + (conv.newBelow === 1 ? " new message" : " new messages")
@@ -1134,6 +1141,7 @@ Item {
                         visible: msgDelegate.newDay
                         height: visible ? daypill.implicitHeight + Kirigami.Units.smallSpacing : 0
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             id: daypill
                             anchors.centerIn: parent
                             text: conv._dayLabel(msgDelegate.modelData.ts)
@@ -1187,6 +1195,7 @@ Item {
                         media: msgDelegate.modelData.media !== undefined ? msgDelegate.modelData.media : ""
                         mediaBusy: conv.room ? String(conv.room.mediaBusy || "") : ""   // 10.1 (TH-MSG-13)
                         mimetype: msgDelegate.modelData.mimetype !== undefined ? msgDelegate.modelData.mimetype : ""
+                        canOpen: msgDelegate.modelData.canOpen === true   // security review 2026-10-26 (viewer.rs)
                         durationMs: msgDelegate.modelData.durationMs !== undefined ? msgDelegate.modelData.durationMs : 0
                         fileSize: msgDelegate.modelData.size !== undefined ? msgDelegate.modelData.size : 0
                         imageW: msgDelegate.modelData.w !== undefined ? msgDelegate.modelData.w : 0
@@ -1335,6 +1344,7 @@ Item {
                     }
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: typingLabel
                     Layout.fillWidth: true
                     elide: Text.ElideRight
@@ -1394,12 +1404,14 @@ Item {
                         Layout.fillWidth: true
                         spacing: 0
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: conv.editToId.length > 0 ? "Editing message" : ("Replying to " + (conv.replyToName.length > 0 ? conv.replyToName : "a message"))
                             color: Th.replyTitleFg
                             font.bold: true
                             font.pointSize: Kirigami.Theme.smallFont.pointSize
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             text: conv.editToId.length > 0 ? conv.editToBody : conv.replyToBody
                             color: Th.replyBodyFg
@@ -1455,7 +1467,7 @@ Item {
                             visible: !modelData.isImage
                             spacing: 6
                             Kirigami.Icon { source: "document-send-symbolic"; Layout.preferredWidth: 18; Layout.preferredHeight: 18 }
-                            Controls.Label { Layout.fillWidth: true; text: modelData.name; elide: Text.ElideMiddle; color: Th.composerStagedFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.name; elide: Text.ElideMiddle; color: Th.composerStagedFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                         }
                         Rectangle {
                             anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 3
@@ -1735,6 +1747,7 @@ Item {
                                         imageSource: modelData.avatar !== undefined ? modelData.avatar : ""
                                     }
                                     Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         Layout.fillWidth: true
                                         text: modelData.room === true ? "@room — everyone here" : (modelData.name !== undefined ? modelData.name : "")
                                         color: Th.composerAutocompleteFg
@@ -1769,8 +1782,9 @@ Item {
                                 onClicked: composer._pickEmoji(modelData)
                                 contentItem: RowLayout {
                                     spacing: 8
-                                    Controls.Label { text: modelData.e; font.pixelSize: 18 }
+                                    Controls.Label { textFormat: Text.PlainText; text: modelData.e; font.pixelSize: 18 }
                                     Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         Layout.fillWidth: true
                                         text: ":" + String(modelData.k).split(" ")[0] + ":"
                                         color: Th.composerAutocompleteHintFg
@@ -1913,6 +1927,7 @@ Item {
                                 }
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 horizontalAlignment: Text.AlignHCenter
                                 visible: bubbleGifPopup.gifs.length === 0
@@ -1950,7 +1965,7 @@ Item {
                     id: pinnedButton
                     Layout.row: 0; Layout.column: Math.max(0, crowEnd.colOf("room.pinned.open"))
                     visible: crowEnd.shows("room.pinned.open") && conv.pinnedCount > 0
-                    text: "📌 " + conv.pinnedCount
+                    text: LinkGate.plain("📌 " + conv.pinnedCount)
                     display: Controls.AbstractButton.TextOnly
                     Controls.ToolTip.text: "Pinned messages"
                     Controls.ToolTip.visible: hovered
@@ -1989,8 +2004,8 @@ Item {
                                         anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                                         anchors.margins: 6
                                         spacing: 1
-                                        Controls.Label { text: (modelData.senderName || "") + " · " + Qt.formatDateTime(new Date(modelData.ts || 0), "MMM d") + ", " + ((conv.app && conv.app.fmtClock) ? conv.app.fmtClock(modelData.ts || 0) : Qt.formatTime(new Date(modelData.ts || 0), Locale.ShortFormat)); color: Th.composerPinnedRowMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
-                                        Controls.Label { Layout.fillWidth: true; text: modelData.body || ""; color: Th.composerPinnedRowFg; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight }
+                                        Controls.Label { textFormat: Text.PlainText; text: (modelData.senderName || "") + " · " + Qt.formatDateTime(new Date(modelData.ts || 0), "MMM d") + ", " + ((conv.app && conv.app.fmtClock) ? conv.app.fmtClock(modelData.ts || 0) : Qt.formatTime(new Date(modelData.ts || 0), Locale.ShortFormat)); color: Th.composerPinnedRowMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                        Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.body || ""; color: Th.composerPinnedRowFg; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight }
                                     }
                                     MouseArea {
                                         id: pinMa

@@ -118,6 +118,7 @@ Rectangle {
             spacing: 6
             Controls.Label { text: "📅"; font.pixelSize: 14 }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 text: card.live ? card.kindLabel(card.live) : "Calendar event"
                 color: card.fgDim
@@ -135,6 +136,7 @@ Rectangle {
             }
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: card.live !== null
             Layout.fillWidth: true
             text: card.live ? (card.live.title + (card.live.game ? "  ·  " + card.live.game : "")) : ""
@@ -145,6 +147,7 @@ Rectangle {
             wrapMode: Text.WordWrap
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: card.live !== null && text.length > 0
             Layout.fillWidth: true
             text: card.fmtWhen(card.live)
@@ -161,6 +164,7 @@ Rectangle {
             strongColor: card.fg
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: card.live !== null && !!card.live.notes
             Layout.fillWidth: true
             text: (card.live && card.live.notes) ? card.live.notes : ""
@@ -179,6 +183,7 @@ Rectangle {
             font.pointSize: Kirigami.Theme.smallFont.pointSize
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: card.live !== null && !card.canceled && card.live.kind !== "focus"
             Layout.fillWidth: true
             text: {

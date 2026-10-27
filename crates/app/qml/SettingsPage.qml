@@ -49,6 +49,7 @@ Controls.ScrollView {
                 Layout.fillWidth: true
                 spacing: 4
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: page.title
                     color: Th.settingsPaneTitleFg
@@ -58,6 +59,7 @@ Controls.ScrollView {
                     Accessible.role: Accessible.Heading
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: page.description.length > 0
                     text: page.description

@@ -67,11 +67,11 @@ Item {
         function onMNavDmStripChanged() { rail._syncDm() }
     }
     Component.onCompleted: rail._syncDm()
-    // 10.6.0 review: a tooltip is auto-detected rich text — a status or a name with markup in it would
-    // render (and load an <img>). With a "<" in it the whole tip is escaped, which shows it literally.
+    // 10.6.0 review: a tooltip was auto-detected rich text — a status or a name with markup in it would render (and load
+    // an <img>). Security review 2026-10-26: every tooltip is PlainText (AppCore._plainTooltips), so the text goes in as it
+    // is — but only once that worked (LinkGate.tooltipsPlain); until then, or if it couldn't, it is escaped (review #7).
     function _tipSafe(s) {
-        s = String(s || "")
-        return s.indexOf("<") < 0 ? s : s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        return LinkGate.tipText(s)
     }
     function _dmTip(e, pres) {
         var name = String((e && e.name) || "")

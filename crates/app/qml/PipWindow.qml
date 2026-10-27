@@ -86,7 +86,7 @@ Window {
         visible: !surface.hasFrame
         spacing: 6
         ThIcon { anchors.horizontalCenter: parent.horizontalCenter; app: null; name: pip.isShare ? "monitor-symbolic" : "camera-video-symbolic"; width: 36; height: 36; color: Th.pipEmptyIcon; isMask: true }
-        Text { anchors.horizontalCenter: parent.horizontalCenter; text: waitLong.running ? "Waiting for video…" : ("No video from " + pip.who + " right now"); color: Th.pipEmptyFg }
+        Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: waitLong.running ? "Waiting for video…" : ("No video from " + pip.who + " right now"); color: Th.pipEmptyFg }
         Timer { id: waitLong; interval: 4000; running: true }
     }
 
@@ -117,6 +117,7 @@ Window {
             GradientStop { position: 1.0; color: Th.pipCaptionBg }
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
             text: pip.who + (pip.isShare ? " — stream" : "")
             color: Th.pipFg
@@ -200,6 +201,7 @@ Window {
                     }
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     text: Math.round(pip.vol * 100) + "%"
                     color: Th.pipFg
                     Layout.preferredWidth: 40
@@ -218,6 +220,7 @@ Window {
                     border.width: 1
                     border.color: Th.pipQualityPillBorder
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         id: qualityLbl
                         anchors.centerIn: parent
                         text: pip.qualityLabel + " ▾"
@@ -256,7 +259,7 @@ Window {
                             ]
                             delegate: Controls.MenuItem {
                                 required property var modelData
-                                text: ((pip.quality === modelData.mode || (pip.quality === "" && modelData.mode === "auto")) ? "✓ " : "   ") + modelData.label
+                                text: LinkGate.plain(((pip.quality === modelData.mode || (pip.quality === "" && modelData.mode === "auto")) ? "✓ " : "   ") + modelData.label)
                                 palette.text: Th.textPrimary
                                 palette.windowText: Th.textPrimary
                                 onTriggered: {

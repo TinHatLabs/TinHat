@@ -86,6 +86,7 @@ Item {
 
         // ---- Copy -------------------------------------------------------------
         Kirigami.Heading {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             level: 2
@@ -95,6 +96,7 @@ Item {
             wrapMode: Text.WordWrap
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             visible: empty.shownExplanation.length > 0

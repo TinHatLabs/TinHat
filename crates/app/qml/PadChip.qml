@@ -31,8 +31,9 @@ Rectangle {
     HoverHandler { id: chipHover }
     Controls.ToolTip.visible: chipHover.hovered
     Controls.ToolTip.delay: 300
-    // rich text on purpose, with the name escaped: a device name is shown literally, never as markup
-    Controls.ToolTip.text: "<html>" + chip.esc(chip.name) + " is controlling this call with Pad (sounds, mute, volumes). × disconnects it for this call.</html>"
+    // the device name shown literally, never as markup: tooltips are PlainText (AppCore._plainTooltips) and
+    // LinkGate.tipText escapes when they couldn't be made so (launch-gate's review #8: no "<html>" wrapper of our own)
+    Controls.ToolTip.text: LinkGate.tipText(chip.name + " is controlling this call with Pad (sounds, mute, volumes). × disconnects it for this call.")
     Accessible.role: Accessible.StaticText
     Accessible.name: "Pad · " + chip.name
     Row {

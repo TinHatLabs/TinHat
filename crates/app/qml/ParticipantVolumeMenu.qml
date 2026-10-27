@@ -37,7 +37,7 @@ ThMenu {
     readonly property bool canKickSpace: menu.callSpaceId.length > 0 && menu.callPerms.kick === true && menu.mxid.length > 0 && menu.mxid !== menu.myMxid
     readonly property bool canBanSpace: menu.callSpaceId.length > 0 && menu.callPerms.ban === true && menu.mxid.length > 0 && menu.mxid !== menu.myMxid
     readonly property bool canManageRoles: menu.callSpaceId.length > 0 && menu.callPerms.manage_roles === true
-    function toast(text, ms) { if (menu.app && menu.app.showPassiveNotification) menu.app.showPassiveNotification(text, ms || 3000) }
+    function toast(text, ms) { if (menu.app && menu.app.showPassiveNotification) menu.app.showPassiveNotification(LinkGate.plain(text), ms || 3000) }
     // The three server actions: a local refusal comes back as text (toast it); the network
     // result lands in CallController.status / lastError, which AppCore already toasts.
     function moderate(action) {
@@ -75,7 +75,7 @@ ThMenu {
         var t = menu.participant.length > 0 ? menu.participant : menu.mxid
         if (menu.app.markLocalCorner) menu.app.markLocalCorner()   // 10.1: I started this — no "pulled you aside" toast
         var err = kind === "pull" ? menu.app.callctl.pullAside(t) : menu.app.callctl.joinCorner(t)
-        if (err.length > 0 && menu.app.showPassiveNotification) menu.app.showPassiveNotification(err, 3000)
+        if (err.length > 0 && menu.app.showPassiveNotification) menu.app.showPassiveNotification(LinkGate.plain(err), 3000)
     }
     Controls.MenuItem {
         text: menu.myCorner.length > 0 ? "Pull into your corner" : "Pull aside"
@@ -116,7 +116,7 @@ ThMenu {
             if (!menu.app || !menu.app.callctl) return
             var t = menu.participant.length > 0 ? menu.participant : menu.mxid
             var err = menu.app.callctl.sameRoomLink(t)
-            if (err.length > 0 && menu.app.showPassiveNotification) menu.app.showPassiveNotification(err, 3000)
+            if (err.length > 0 && menu.app.showPassiveNotification) menu.app.showPassiveNotification(LinkGate.plain(err), 3000)
         }
     }
     Controls.MenuItem {
@@ -262,6 +262,7 @@ ThMenu {
     }
 
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         leftPadding: Kirigami.Units.smallSpacing
         rightPadding: Kirigami.Units.smallSpacing
         topPadding: Kirigami.Units.smallSpacing
@@ -284,6 +285,7 @@ ThMenu {
             // Layout.* margins are ignored — inset with explicit spacer Items.
             Item { Layout.preferredWidth: Kirigami.Units.smallSpacing }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 // the web's column (menus.module.css .volLabel: max(118px, 8.75em)) — at a 16 px small font "Their
                 // screen share" is wider than 118 and used to run under the slider
                 Layout.preferredWidth: Math.max(118, Math.ceil(8.75 * fontInfo.pixelSize))
@@ -323,6 +325,7 @@ ThMenu {
                 }
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.preferredWidth: 38
                 text: Math.round(menu._valFor(dialRow.cat) * 100) + "%"
                 color: Th.callVolumeValueFg

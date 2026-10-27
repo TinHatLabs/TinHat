@@ -123,6 +123,7 @@ Item {
                         Layout.fillWidth: true
                         spacing: 2
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             text: "Incoming call · " + modelData.roomName
                             color: Th.callIncomingFg
@@ -130,6 +131,7 @@ Item {
                             elide: Text.ElideRight
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
                             text: (modelData.who && modelData.who.length > 0 ? modelData.who + " started a call" : "Someone started a call")
                                   + (toast.inOtherCall ? " — you're in another call" : "")

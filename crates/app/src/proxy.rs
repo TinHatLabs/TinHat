@@ -65,6 +65,11 @@ pub fn rebase_url(url: &str) -> String {
     rebase_onto(url, &b, &known_bases())
 }
 
+#[cfg(test)]
+pub(crate) fn rebase_onto_for_tests(url: &str, base: &str, known: &[String]) -> String {
+    rebase_onto(url, base, known)
+}
+
 fn rebase_onto(url: &str, base: &str, known: &[String]) -> String {
     for k in known {
         let Some(head) = url.get(..k.len()) else { continue };
@@ -141,13 +146,26 @@ pub fn url(path: &str) -> Result<String, String> {
 
 /// GET `<base><path>` and parse the JSON body. `path` must start with `/` and carry any
 /// (already percent-encoded) query string. Returns the parsed value or a description.
+///
+/// Security review 2026-10-26 (server 0.3.4, H4): the extras that spend the owner's keys and outbound fetches — the GIF
+/// picker (`/gifs/*`), Media Party's YouTube (`/watch/*`), the soundboard's search (`/soundboard/search`), every caller
+/// of this function — want the signed-in person's Matrix access token (`Authorization: Bearer`, as `/vods`, `/games`,
+/// `/moderation` and the uploads already send it). It only ever goes to [`base`]: the server's own API
+/// (`server_offer::api_allowed` keeps an announced `api` on the homeserver's host), never a third party. A server
+/// before 0.3.4 ignores it. A `401` (a bad token, or the server's `{signin: true}` for a token-less caller) is an
+/// error like any other: the caller shows its normal "couldn't load" state; nothing here retries.
 pub async fn get_json(path: &str) -> Result<serde_json::Value, String> {
     let url = url(path)?;
-    let resp = http(None)
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| format!("proxy GET {url} failed: {e}"))?;
+    get_json_at(&url, crate::session::client().and_then(|c| c.access_token())).await
+}
+
+/// [`get_json`] on a full URL with an optional bearer (the network half; tested on a local listener).
+async fn get_json_at(url: &str, bearer: Option<String>) -> Result<serde_json::Value, String> {
+    let mut req = http(None).get(url);
+    if let Some(t) = bearer.filter(|t| !t.is_empty()) {
+        req = req.header("Authorization", format!("Bearer {t}"));
+    }
+    let resp = req.send().await.map_err(|e| format!("proxy GET {url} failed: {e}"))?;
     let status = resp.status();
     let text = resp.text().await.map_err(|e| e.to_string())?;
     if !status.is_success() {
@@ -250,6 +268,38 @@ mod tests {
         let k = known_from("https://chat.crew.test/api", &["alpha.local".into()]);
         assert_eq!(rebase_onto("https://other.example/api/soundboard/clip?id=1&sig=x", "https://chat.crew.test/api", &k), "https://other.example/api/soundboard/clip?id=1&sig=x");
         assert_eq!(rebase_onto("https://alpha.local/api/vods/file/r/1/a.mka?sig=y", "https://chat.crew.test/api", &k), "https://chat.crew.test/api/vods/file/r/1/a.mka?sig=y");
+    }
+
+    /// 0.3.4 servers (H4): the extras' requests carry the bearer when signed in, none when not; a 401 is an error.
+    #[test]
+    fn the_extras_carry_the_bearer() {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = std::thread::spawn(move || {
+            let mut seen = Vec::new();
+            for status in ["200 OK", "200 OK", "401 Unauthorized"] {
+                let (mut c, _) = listener.accept().unwrap();
+                let mut buf = vec![0u8; 8192];
+                let n = c.read(&mut buf).unwrap();
+                seen.push(String::from_utf8_lossy(&buf[..n]).to_string());
+                let body = if status.starts_with("401") { r#"{"error":"Sign in to use this. If you are signed in, update Tin Hat.","signin":true}"# } else { "[]" };
+                let _ = write!(c, "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
+            }
+            seen
+        });
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let base = format!("http://127.0.0.1:{port}/api");
+        let ok = rt.block_on(get_json_at(&format!("{base}/gifs/trending"), Some("syt_test_token".into())));
+        assert_eq!(ok, Ok(serde_json::json!([])));
+        assert!(rt.block_on(get_json_at(&format!("{base}/soundboard/search?q=x"), None)).is_ok());
+        let e = rt.block_on(get_json_at(&format!("{base}/watch/search?q=x"), Some("bad".into()))).unwrap_err();
+        assert!(e.contains("401"), "{e}");
+        let seen = server.join().unwrap();
+        let auth = |r: &str| r.lines().find(|l| l.to_ascii_lowercase().starts_with("authorization:")).map(|l| l.to_string());
+        assert_eq!(auth(&seen[0]).as_deref(), Some("authorization: Bearer syt_test_token"));
+        assert_eq!(auth(&seen[1]), None, "signed out: no header at all");
+        assert!(seen[0].starts_with("GET /api/gifs/trending "));
     }
 
     #[test]

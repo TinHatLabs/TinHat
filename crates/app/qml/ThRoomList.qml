@@ -71,11 +71,11 @@ Item {
     property string volName: ""
     property int volRev: 0
     property bool _pendingResort: false   // 10.1 (TH-NAV-05)
-    // 10.6.0 review: a tooltip is auto-detected rich text — a status or a name with markup in it would
-    // render (and load an <img>). With a "<" in it the whole tip is escaped, which shows it literally.
+    // 10.6.0 review: a tooltip was auto-detected rich text — a status or a name with markup in it would render (and load
+    // an <img>). Security review 2026-10-26: every tooltip is PlainText (AppCore._plainTooltips), so the text goes in as it
+    // is — but only once that worked (LinkGate.tooltipsPlain); until then, or if it couldn't, it is escaped (review #7).
     function _tipSafe(s) {
-        s = String(s || "")
-        return s.indexOf("<") < 0 ? s : s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        return LinkGate.tipText(s)
     }
     function openFirstMatch() {           // 10.1 (TH-NAV-12)
         var q = panel.query.toLowerCase()
@@ -271,8 +271,9 @@ Item {
                             id: presetRow
                             anchors.centerIn: parent
                             spacing: 6
-                            Text { text: presetChip.modelData.emoji; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+                            Text { textFormat: Text.PlainText; text: presetChip.modelData.emoji; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
                             Text {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: presetChip.modelData.text
                                 color: presetChip.current ? presetChip.hex : Th.statusPresetFg
                                 font.pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))

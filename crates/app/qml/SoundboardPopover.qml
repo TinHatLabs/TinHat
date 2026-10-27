@@ -130,11 +130,20 @@ Controls.Popup {
         if (!g.allowed) { sheet.localNote = g.hint; sheet.noteIsError = true; return }
         sheet.noteIsError = false
         stopCurrent()
-        var playUrl = sheet.app ? sheet.app.soundboardClipUrl(url) : url
+        var playUrl = sheet.app ? String(sheet.app.soundboardClipUrl(url)) : ""
+        // M9: a sound that isn't on the server or myinstants never plays (soundboard.rs clip_url_for)
+        if (playUrl.length === 0) {
+            sheet.localNote = "This sound isn't on your server or myinstants, so Tin Hat won't play it."
+            sheet.noteIsError = true
+            return
+        }
         console.log("[soundboard] play", name || "", "->", playUrl)
+        // server 0.3.4: QtMultimedia can't send the bearer — the clip URL to play (a signed link for a myinstants
+        // sound) comes back through soundboardCtl.clipResolved; until then nothing plays (usually a few ms)
+        sheet.pendingClip = url
         localPlayer.source = ""
-        localPlayer.source = playUrl
-        localPlayer.play()
+        if (sheet.app && sheet.app.soundboardCtl) sheet.app.soundboardCtl.resolveClip(url)
+        else sheet._playLocal(playUrl)
         sheet.playingUrl = url
         sheet.playingName = name || ""
         sheet.playStartedAt = Date.now()
@@ -142,7 +151,23 @@ Controls.Popup {
         sheet.playSound(url)
         if (sheet.app.sbPushRecent) sheet.app.sbPushRecent(name || "", url, emoji || "")
     }
+    // the source being resolved for the local copy (resolveClip → onClipResolved); "" = none
+    property string pendingClip: ""
+    function _playLocal(playUrl) {
+        localPlayer.source = ""
+        localPlayer.source = playUrl
+        localPlayer.play()
+    }
+    Connections {
+        target: (sheet.app && sheet.app.soundboardCtl) ? sheet.app.soundboardCtl : null
+        function onClipResolved(sourceUrl, playUrl) {
+            if (String(sourceUrl) !== sheet.pendingClip || sheet.pendingClip.length === 0) return   // stopped / replaced meanwhile
+            sheet.pendingClip = ""
+            if (String(playUrl).length > 0) sheet._playLocal(String(playUrl))
+        }
+    }
     function stopCurrent() {
+        sheet.pendingClip = ""
         if (sheet.playingUrl.length === 0) return
         localPlayer.stop()
         sheet.stopSound()
@@ -259,6 +284,7 @@ Controls.Popup {
             Controls.Label {
                 anchors.centerIn: parent
                 visible: !card.isPlaying
+                textFormat: Text.PlainText
                 text: card.soundEmoji.length > 0 ? card.soundEmoji : "🔊"
                 font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.6
             }
@@ -272,6 +298,7 @@ Controls.Popup {
         }
         Controls.Label {
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 6 }
+            textFormat: Text.PlainText
             text: card.soundName
             color: Th.soundboardCardFg
             horizontalAlignment: Text.AlignHCenter
@@ -287,7 +314,7 @@ Controls.Popup {
             width: 18; height: 18; radius: 5
             color: Th.soundboardHotkeyBg
             border.width: 1; border.color: Th.soundboardHotkeyBorder
-            Controls.Label { anchors.centerIn: parent; text: card.hotkey; color: Th.soundboardHotkeyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+            Controls.Label { anchors.centerIn: parent; textFormat: Text.PlainText; text: card.hotkey; color: Th.soundboardHotkeyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
         }
         // Remove ✕ on hover (own sounds only).
         Controls.ToolButton {
@@ -363,8 +390,8 @@ Controls.Popup {
         property string hint: ""
         Layout.fillWidth: true
         Layout.topMargin: 6
-        Controls.Label { text: title; color: Th.soundboardSectionFg; font.bold: true }
-        Controls.Label { text: hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.fillWidth: true; elide: Text.ElideRight }
+        Controls.Label { textFormat: Text.PlainText; text: title; color: Th.soundboardSectionFg; font.bold: true }
+        Controls.Label { textFormat: Text.PlainText; text: hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.fillWidth: true; elide: Text.ElideRight }
     }
 
     contentItem: ColumnLayout {
@@ -410,6 +437,7 @@ Controls.Popup {
             visible: sheet.errorText.length > 0 || sheet.localNote.length > 0
             Layout.fillWidth: true
             Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.bottomMargin: 6
+            textFormat: Text.PlainText
             text: sheet.errorText.length > 0 ? sheet.errorText : sheet.localNote
             color: (sheet.errorText.length > 0 || sheet.noteIsError) ? Th.soundboardStatusFgError : Th.soundboardStatusFg
             wrapMode: Text.WordWrap
@@ -442,6 +470,7 @@ Controls.Popup {
                 Controls.Label {
                     visible: sheet.favShown.length === 0
                     Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14
+                    textFormat: Text.PlainText
                     text: sheet.personalSounds.length === 0
                         ? "Nothing here yet — add a clip with + Add, or search below. Right-click any sound to favourite it."
                         : "No favourites match “" + sheet.query.trim() + "”."
@@ -463,6 +492,7 @@ Controls.Popup {
                 Controls.Label {
                     visible: sheet.roomShown.length === 0
                     Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14
+                    textFormat: Text.PlainText
                     text: sheet.roomSounds.length === 0 ? "Nothing shared yet — right-click a sound → Add to room sounds."
                                                         : "No room sounds match “" + sheet.query.trim() + "”."
                     color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; wrapMode: Text.WordWrap
@@ -494,6 +524,7 @@ Controls.Popup {
                 Controls.Label {
                     visible: sheet.webSearchable && !sheet.searching && sheet.searchResults.length === 0
                     Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14
+                    textFormat: Text.PlainText
                     text: "No results on the web for “" + sheet.query.trim() + "”."
                     color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }

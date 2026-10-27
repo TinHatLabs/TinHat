@@ -46,6 +46,7 @@ ThMenu {
     function level(x) { return Math.round(Math.max(0, Math.min(2, x)) * 100) / 100 }
 
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         leftPadding: Kirigami.Units.smallSpacing
         rightPadding: Kirigami.Units.smallSpacing
         topPadding: Kirigami.Units.smallSpacing
@@ -64,6 +65,7 @@ ThMenu {
             spacing: Kirigami.Units.smallSpacing
             Item { Layout.preferredWidth: Kirigami.Units.smallSpacing }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.preferredWidth: Math.max(118, Math.ceil(8.75 * fontInfo.pixelSize))
                 text: modelData.label
                 color: menu.muted[dialRow.cat] ? Th.callVolumeLabelFgMuted : Th.callVolumeLabelFg
@@ -97,6 +99,7 @@ ThMenu {
                 }
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.preferredWidth: 38
                 text: Math.round(menu.vals[dialRow.cat] * 100) + "%"
                 color: Th.callVolumeValueFg

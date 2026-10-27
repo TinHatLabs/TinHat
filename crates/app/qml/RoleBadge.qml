@@ -31,6 +31,7 @@ Rectangle {
     border.color: tone
 
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         id: label
         anchors.centerIn: parent
         text: badge.name

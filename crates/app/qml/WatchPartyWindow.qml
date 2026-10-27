@@ -187,7 +187,7 @@ Window {
     function queueItemOf(it, music) {
         var q = { url: String(it.url || ""), title: String(it.title || ""), addedBy: "", kind: music ? "song" : "video",
                   source: { service: music ? "ytmusic" : "youtube", url: String(it.url || ""), id: String(it.id || "") } }
-        if (it.thumb) q.art = String(it.thumb)
+        if (LinkGate.imageSrc(it.thumb)) q.art = LinkGate.imageSrc(it.thumb)
         if (it.channel) q.artist = String(it.channel)
         if (it.durationSec) q.durationSec = Number(it.durationSec)
         return q
@@ -660,7 +660,7 @@ Window {
             sheet.addNote = ""
             var t = (li.item && li.item.title) ? String(li.item.title) : ""
             if (li.item && li.item.url) sheet.markAdded(String(li.item.url))
-            if (sheet.app) sheet.app.showPassiveNotification(st === "playing" ? ("Playing " + (t.length > 0 ? t : "now")) : ("Added to the queue" + (t.length > 0 ? " — " + t : "")), 2500)
+            if (sheet.app) sheet.app.showPassiveNotification(LinkGate.plain(st === "playing" ? ("Playing " + (t.length > 0 ? t : "now")) : ("Added to the queue" + (t.length > 0 ? " — " + t : ""))), 2500)
             return
         }
         if (st === "browse") { if (sheet.searchOn) sheet.browseTab = "playlists"; return }
@@ -741,7 +741,7 @@ Window {
         Controls.MenuItem { opacity: enabled ? 1 : 0.45; text: "Move up"; icon.name: "go-up-symbolic"; enabled: sheet.inParty && rowMenu.idx > 0; onTriggered: sheet.moveItem(rowMenu.idx, rowMenu.idx - 1) }
         Controls.MenuItem { opacity: enabled ? 1 : 0.45; text: "Move down"; icon.name: "go-down-symbolic"; enabled: sheet.inParty && rowMenu.idx >= 0 && rowMenu.idx < sheet.queue.length - 1; onTriggered: sheet.moveItem(rowMenu.idx, rowMenu.idx + 1) }
         Controls.MenuSeparator {}
-        Controls.MenuItem { opacity: enabled ? 1 : 0.45; text: "Open link"; icon.name: "link-symbolic"; enabled: rowMenu.link.length > 0; onTriggered: Qt.openUrlExternally(rowMenu.link) }
+        Controls.MenuItem { opacity: enabled ? 1 : 0.45; text: "Open link"; icon.name: "link-symbolic"; enabled: rowMenu.link.length > 0; onTriggered: LinkGate.open(rowMenu.link) }
         Controls.MenuItem { opacity: enabled ? 1 : 0.45; text: "Copy link"; icon.name: "edit-copy-symbolic"; enabled: rowMenu.link.length > 0; onTriggered: { if (sheet.app) sheet.app.copyToClipboard(rowMenu.link); sheet.showOsd("Link copied", "edit-copy-symbolic") } }
         Controls.MenuSeparator {}
         Controls.MenuItem { opacity: enabled ? 1 : 0.45; text: "Remove"; icon.name: "edit-delete-remove-symbolic"; enabled: sheet.inParty; onTriggered: sheet.removeAt(rowMenu.idx) }
@@ -842,6 +842,7 @@ Window {
                                     Layout.fillWidth: true
                                     horizontalAlignment: Text.AlignRight
                                     visible: sheet.inParty
+                                    textFormat: Text.PlainText
                                     text: sheet.viewers.length + " watching"
                                           + (sheet.amAdvancer ? " · you sync" : "")
                                           + (sheet.hostId.length > 0 ? " · host: " + (sheet.amHost ? "you" : sheet.hostName) : "")   // 10.1 (TH-WP-05)
@@ -863,6 +864,7 @@ Window {
                             Controls.Label {
                                 Layout.fillWidth: true
                                 visible: sheet.errorText.length > 0
+                                textFormat: Text.PlainText
                                 text: sheet.errorText
                                 color: Th.watchpartyErrorFg
                                 wrapMode: Text.WordWrap
@@ -879,7 +881,7 @@ Window {
                                     border.width: 1; border.color: Th.watchpartyQueueRowBorder
                                     Image {
                                         anchors.fill: parent
-                                        source: (sheet.nowItem && sheet.nowItem.art) ? String(sheet.nowItem.art) : ""
+                                        source: LinkGate.imageSrc(sheet.nowItem ? sheet.nowItem.art : "")   // review #5: https only
                                         visible: status === Image.Ready
                                         fillMode: Image.PreserveAspectCrop
                                         asynchronous: true
@@ -887,7 +889,7 @@ Window {
                                     }
                                     Kirigami.Icon {
                                         anchors.centerIn: parent
-                                        visible: !(sheet.nowItem && sheet.nowItem.art)
+                                        visible: LinkGate.imageSrc(sheet.nowItem ? sheet.nowItem.art : "") === ""
                                         source: "video-television-symbolic"
                                         color: Th.watchpartyEmptyIcon
                                         implicitWidth: 22; implicitHeight: 22
@@ -899,6 +901,7 @@ Window {
                                     spacing: 0
                                     Controls.Label {
                                         Layout.fillWidth: true
+                                        textFormat: Text.PlainText
                                         text: sheet.nowItem ? ((sheet.nowItem.title && sheet.nowItem.title.length > 0) ? String(sheet.nowItem.title) : String(sheet.nowItem.url || "")) : ""
                                         color: Th.watchpartyFg
                                         font.bold: true
@@ -909,6 +912,7 @@ Window {
                                         readonly property string dur: (sheet.nowItem && sheet.nowItem.durationSec) ? sheet.fmtTime(Number(sheet.nowItem.durationSec)) : (sheet.mpvDuration > 0 ? sheet.fmtTime(sheet.mpvDuration) : "")
                                         readonly property string artist: (sheet.nowItem && sheet.nowItem.artist) ? String(sheet.nowItem.artist) : ""
                                         visible: text.length > 0
+                                        textFormat: Text.PlainText
                                         text: artist.length > 0 && dur.length > 0 ? artist + " · " + dur : (artist.length > 0 ? artist : dur)
                                         color: Th.watchpartyMetaFg
                                         font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -919,19 +923,19 @@ Window {
                                     visible: !!(sheet.nowItem && sheet.nowItem.addedBy && String(sheet.nowItem.addedBy).length > 0)
                                     spacing: 4
                                     Avatar { app: sheet.app; size: 20; name: sheet.nowItem ? sheet.nameOf(String(sheet.nowItem.addedBy || "")) : ""; seed: sheet.nowItem ? String(sheet.nowItem.addedBy || "") : ""; imageSource: sheet.nowItem ? sheet.avatarOf(String(sheet.nowItem.addedBy || "")) : "" }
-                                    Controls.Label { visible: stageCol.width >= 560; text: sheet.nowItem ? sheet.nameOf(String(sheet.nowItem.addedBy || "")) : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.maximumWidth: 120 }
+                                    Controls.Label { visible: stageCol.width >= 560; textFormat: Text.PlainText; text: sheet.nowItem ? sheet.nameOf(String(sheet.nowItem.addedBy || "")) : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.maximumWidth: 120 }
                                 }
                                 Rectangle {   // source badge
                                     visible: sheet.badgeOf(sheet.nowItem).length > 0 && stageCol.width >= 640
                                     implicitWidth: npBadge.implicitWidth + 12; implicitHeight: npBadge.implicitHeight + 2; radius: 8
                                     color: Th.watchpartyQueueRowBg; border.width: 1; border.color: Th.watchpartyQueueRowBorder
-                                    Controls.Label { id: npBadge; anchors.centerIn: parent; text: sheet.badgeOf(sheet.nowItem); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { id: npBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: sheet.badgeOf(sheet.nowItem); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                                 }
                                 ThButton {
                                     app: sheet.app
                                     visible: !!(sheet.nowItem && sheet.nowItem.source && sheet.nowItem.source.service && sheet.nowItem.source.service !== "youtube") && stageCol.width >= 480
                                     text: sheet.openInLabel(sheet.nowItem && sheet.nowItem.source ? String(sheet.nowItem.source.service || "") : "")
-                                    onClicked: Qt.openUrlExternally(String(sheet.nowItem.source.url || sheet.nowItem.url))
+                                    onClicked: LinkGate.open(String(sheet.nowItem.source.url || sheet.nowItem.url))
                                 }
                                 ThToolButton { app: sheet.app; iconName: "document-share-symbolic"; iconSize: 16; tip: "Share to chat"; onClicked: sheet.shareToChat() }   // 11.4
                             }
@@ -1002,10 +1006,24 @@ Window {
                                         if (sheet.nowUrl.indexOf("tinhat-memory://") === 0)
                                             mpv.command(["stop"])   // Memories replays play in the Memories window
                                         else if (sheet.nowUrl.length > 0) {
+                                            // M8 (security review 2026-10-26): the shared url is room state anyone with the
+                                            // power can write — mpv gets it only through watchCtl.mpvTarget (http(s) only;
+                                            // yt-dlp only for a YouTube video, everything else via FFmpeg's own reader)
+                                            var t = null
+                                            try { t = JSON.parse(String(sheet.app.watchCtl.mpvTarget(sheet.nowUrl))) } catch (e) { t = null }
+                                            if (!t || t.ok !== true || !t.load) {
+                                                mpv.command(["stop"])
+                                                sheet.playbackError = (t && t.why) ? String(t.why) : "This link can't play in the Media Party."
+                                                return
+                                            }
                                             // 11.3 QOL: load paused when the shared clock is paused (mpv starts a file
                                             // playing, so a paused party used to run on locally until the next flip)
                                             mpv.setProperty("pause", !sheet.isPlaying)
-                                            mpv.command(["loadfile", sheet.nowUrl])
+                                            // "lavf" for anything but a YouTube video: FFmpeg reads it, so no playlist or
+                                            // EDL inside it becomes another file mpv opens; "" (auto) for YouTube, whose
+                                            // yt-dlp answer is an EDL. Set right before the load (the calls are in order).
+                                            mpv.setProperty("demuxer", String(t.demuxer || ""))
+                                            mpv.command(["loadfile", String(t.load)])
                                         }
                                         else
                                             mpv.command(["stop"])
@@ -1021,7 +1039,20 @@ Window {
                                         mpv.setProperty("demuxer-max-back-bytes", "75MiB")
                                         mpv.setProperty("demuxer-readahead-secs", 30)
                                         // ytdl_hook resolves YouTube via yt-dlp from PATH — never pin an absolute path here.
-                                        mpv.setProperty("ytdl", true)
+                                        // M8: the hook is held to the canonical YouTube watch address on every call (its
+                                        // exclude list = everything else; mpv delivers this change to the hook before any
+                                        // load's hook runs) and yt-dlp to its YouTube extractors (watchparty.rs mpv_options).
+                                        var o = null
+                                        try { o = JSON.parse(String(sheet.app.watchCtl.mpvOptions())) } catch (e) { o = null }
+                                        if (o) {
+                                            mpv.setProperty("script-opts", String(o.scriptOpts))
+                                            mpv.setProperty("ytdl-raw-options", String(o.ytdlRawOptions))
+                                        }
+                                        mpv.setProperty("ytdl", !!o)   // no rules, no yt-dlp (YouTube then fails to load)
+                                        // M8: a playlist inside a web file may only lead to other web files, and FFmpeg's
+                                        // nested requests (HLS segments and keys) stay on the web.
+                                        mpv.setProperty("load-unsafe-playlists", false)
+                                        mpv.setProperty("demuxer-lavf-o", "protocol_whitelist=[http,https,tls,tcp,crypto,data,httpproxy]")
                                     }
                                     Component.onCompleted: {
                                         mpv.tuneMpv()
@@ -1117,7 +1148,7 @@ Window {
                                     spacing: Kirigami.Units.smallSpacing
                                     visible: sheet.playbackError.length > 0 && sheet.nowUrl.length > 0
                                     Kirigami.Icon { Layout.alignment: Qt.AlignHCenter; source: "dialog-warning-symbolic"; color: Th.watchpartyFailureIcon; implicitWidth: 40; implicitHeight: 40 }
-                                    Controls.Label { Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; text: sheet.playbackError; color: Th.watchpartyFailureFg; wrapMode: Text.WordWrap }
+                                    Controls.Label { Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; textFormat: Text.PlainText; text: sheet.playbackError; color: Th.watchpartyFailureFg; wrapMode: Text.WordWrap }
                                     GlowButton {
                                         Layout.alignment: Qt.AlignHCenter
                                         app: sheet.app
@@ -1148,6 +1179,7 @@ Window {
                                         spacing: 6
                                         Kirigami.Icon { visible: osd.icon.length > 0; source: osd.icon; color: Th.watchpartyClickToPlayFg; implicitWidth: 16; implicitHeight: 16 }
                                         Controls.Label {
+                                            textFormat: Text.PlainText
                                             text: osd.text
                                             color: Th.watchpartyClickToPlayFg
                                             font.bold: true
@@ -1242,6 +1274,7 @@ Window {
                                     }
                                 }
                                 Controls.Label {   // 11.3 QOL: click = elapsed ⇄ remaining ("−3:20 / 4:05"), remembered
+                                    textFormat: Text.PlainText
                                     text: (sheet.timeRemaining && sheet.mpvDuration > 0 ? "−" + sheet.fmtTime(Math.max(0, sheet.mpvDuration - sheet.mpvPos)) : sheet.fmtTime(sheet.mpvPos))
                                           + (sheet.mpvDuration > 0 ? " / " + sheet.fmtTime(sheet.mpvDuration) : "")
                                     color: sheet.videoOnly ? Th.watchpartyClickToPlayFg : Th.watchpartyTimeFg
@@ -1325,7 +1358,7 @@ Window {
                                         spacing: 4
                                         readonly property string uid: String(modelData.userId || "")
                                         Avatar { app: sheet.app; size: 20; name: sheet.nameOf(parent.uid); seed: parent.uid; imageSource: sheet.avatarOf(parent.uid) }
-                                        Controls.Label { text: sheet.nameOf(parent.uid); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.maximumWidth: 120 }
+                                        Controls.Label { textFormat: Text.PlainText; text: sheet.nameOf(parent.uid); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.maximumWidth: 120 }
                                         Rectangle {
                                             visible: sheet.hostId.length > 0 && parent.uid === sheet.hostId
                                             implicitWidth: hostLbl.implicitWidth + 10; implicitHeight: 14; radius: 7
@@ -1419,6 +1452,7 @@ Window {
                             spacing: Kirigami.Units.smallSpacing
                             Controls.Label {
                                 Layout.fillWidth: true
+                                textFormat: Text.PlainText
                                 text: "Queue" + (sheet.queue.length > 0 ? " · " + sheet.queue.length : "") + (sheet.upcomingLabel.length > 0 ? " · " + sheet.upcomingLabel : "")
                                 color: Th.watchpartySectionFg
                                 font.bold: true
@@ -1530,7 +1564,7 @@ Window {
                                         }
                                     }
                                     // the number, or the playing row's "Now playing" tag (accent); the next row's "Up next"
-                                    Controls.Label { visible: !qRow.isNow; text: (qRow.index + 1) + "."; color: Th.watchpartyMetaFg; Layout.minimumWidth: 18 }
+                                    Controls.Label { visible: !qRow.isNow; textFormat: Text.PlainText; text: (qRow.index + 1) + "."; color: Th.watchpartyMetaFg; Layout.minimumWidth: 18 }
                                     Rectangle {
                                         visible: qRow.isNow
                                         implicitWidth: nowTag.implicitWidth + 12; implicitHeight: nowTag.implicitHeight + 4; radius: height / 2
@@ -1544,8 +1578,8 @@ Window {
                                         Controls.Label { id: nextTag; anchors.centerIn: parent; text: "Up next"; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize; color: Th.watchpartyFg }
                                     }
                                     Image {   // 11.4: the item's art
-                                        visible: !!(qRow.modelData.art && String(qRow.modelData.art).length > 0) && status === Image.Ready
-                                        source: qRow.modelData.art ? String(qRow.modelData.art) : ""
+                                        visible: source.toString().length > 0 && status === Image.Ready
+                                        source: LinkGate.imageSrc(qRow.modelData.art)   // review #5: https only
                                         Layout.preferredWidth: 32; Layout.preferredHeight: 24
                                         fillMode: Image.PreserveAspectCrop
                                         asynchronous: true
@@ -1553,6 +1587,7 @@ Window {
                                     }
                                     Controls.Label {
                                         Layout.fillWidth: true
+                                        textFormat: Text.PlainText
                                         text: ((qRow.modelData.title && qRow.modelData.title.length > 0) ? qRow.modelData.title : qRow.url)
                                               + ((qRow.modelData.artist && String(qRow.modelData.artist).length > 0) ? " · " + qRow.modelData.artist : "")
                                         color: Th.watchpartyQueueRowFg
@@ -1562,7 +1597,7 @@ Window {
                                         visible: sheet.badgeOf(qRow.modelData).length > 0 && queueView.width >= 480
                                         implicitWidth: qBadge.implicitWidth + 12; implicitHeight: qBadge.implicitHeight + 2; radius: 8
                                         color: Th.watchpartyQueueRowBg; border.width: 1; border.color: Th.watchpartyQueueRowBorder
-                                        Controls.Label { id: qBadge; anchors.centerIn: parent; text: sheet.badgeOf(qRow.modelData); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                        Controls.Label { id: qBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: sheet.badgeOf(qRow.modelData); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                                     }
                                     // 10.1 (TH-WP-12) / 11.3 QOL: who queued it — the avatar, the name in its tooltip
                                     Avatar {
@@ -1615,6 +1650,7 @@ Window {
                                     anchors.verticalCenter: parent.verticalCenter
                                     x: 26; width: parent.width - 36
                                     readonly property var it: (sheet.dragFrom >= 0 && sheet.dragFrom < sheet.queue.length) ? sheet.queue[sheet.dragFrom] : null
+                                    textFormat: Text.PlainText
                                     text: it ? String(it.title || it.url || "") : ""
                                     color: Th.watchpartyQueueRowFg
                                     elide: Text.ElideRight
@@ -1667,6 +1703,7 @@ Window {
                         Controls.Label {
                             Layout.fillWidth: true
                             visible: sheet.addNote.length > 0
+                            textFormat: Text.PlainText
                             text: sheet.addNote
                             color: Th.watchpartyMetaFg
                             font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -1689,22 +1726,22 @@ Window {
                                 Rectangle {
                                     implicitWidth: 48; implicitHeight: 48; radius: 6; clip: true
                                     color: Th.watchpartyQueueRowBg; border.width: 1; border.color: Th.watchpartyQueueRowBorder
-                                    Image { anchors.fill: parent; source: String(parent.parent.parent.meta.thumb || ""); visible: status === Image.Ready; fillMode: Image.PreserveAspectCrop; asynchronous: true; sourceSize.width: 96; sourceSize.height: 96 }
-                                    Kirigami.Icon { anchors.centerIn: parent; visible: String(parent.parent.parent.meta.thumb || "").length === 0; source: "emblem-music-symbolic"; color: Th.watchpartyEmptyIcon; implicitWidth: 22; implicitHeight: 22 }
+                                    Image { anchors.fill: parent; source: LinkGate.imageSrc(parent.parent.parent.meta.thumb); visible: status === Image.Ready; fillMode: Image.PreserveAspectCrop; asynchronous: true; sourceSize.width: 96; sourceSize.height: 96 }
+                                    Kirigami.Icon { anchors.centerIn: parent; visible: LinkGate.imageSrc(parent.parent.parent.meta.thumb) === ""; source: "emblem-music-symbolic"; color: Th.watchpartyEmptyIcon; implicitWidth: 22; implicitHeight: 22 }
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 0
-                                    Controls.Label { Layout.fillWidth: true; text: String(parent.parent.parent.meta.title || parent.parent.parent.link.input || ""); color: Th.watchpartyFg; font.bold: true; elide: Text.ElideRight }
-                                    Controls.Label { Layout.fillWidth: true; visible: text.length > 0; text: [String(parent.parent.parent.meta.artist || ""), String(parent.parent.parent.meta.album || "")].filter(function (x) { return x.length > 0 }).join(" · "); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
-                                    Controls.Label { Layout.fillWidth: true; text: sheet.songCard ? String(sheet.songCard.message || "") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; wrapMode: Text.WordWrap }
+                                    Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: String(parent.parent.parent.meta.title || parent.parent.parent.link.input || ""); color: Th.watchpartyFg; font.bold: true; elide: Text.ElideRight }
+                                    Controls.Label { Layout.fillWidth: true; visible: text.length > 0; textFormat: Text.PlainText; text: [String(parent.parent.parent.meta.artist || ""), String(parent.parent.parent.meta.album || "")].filter(function (x) { return x.length > 0 }).join(" · "); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
+                                    Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.songCard ? String(sheet.songCard.message || "") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; wrapMode: Text.WordWrap }
                                 }
                                 Rectangle {   // source badge
                                     readonly property string b: sheet.badgeOf({ source: { service: String(parent.parent.link.service || "") } })
                                     visible: b.length > 0
                                     implicitWidth: cBadge.implicitWidth + 12; implicitHeight: cBadge.implicitHeight + 2; radius: 8
                                     color: Th.watchpartyQueueRowBg; border.width: 1; border.color: Th.watchpartyQueueRowBorder
-                                    Controls.Label { id: cBadge; anchors.centerIn: parent; text: parent.b; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { id: cBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.b; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                                 }
                                 ThButton {
                                     app: sheet.app
@@ -1713,7 +1750,7 @@ Window {
                                     icon.name: sheet.previewPlaying ? "media-playback-stop" : "media-playback-start"
                                     onClicked: sheet.togglePreview(String(parent.parent.meta.preview || ""))
                                 }
-                                ThButton { app: sheet.app; highlighted: true; text: sheet.openInLabel(String(parent.parent.link.service || "")); onClicked: Qt.openUrlExternally(String(parent.parent.link.input || "")) }
+                                ThButton { app: sheet.app; highlighted: true; text: sheet.openInLabel(String(parent.parent.link.service || "")); onClicked: LinkGate.open(String(parent.parent.link.input || "")) }
                                 ThToolButton { app: sheet.app; iconName: "window-close-symbolic"; iconSize: 16; tip: "Dismiss"; onClicked: { previewPlayer.stop(); sheet.songCard = null } }
                             }
                         }
@@ -1739,7 +1776,7 @@ Window {
                                             required property var modelData
                                             readonly property bool on: sheet.browseTab === modelData.id
                                             width: tabLbl.implicitWidth + 20; height: tabLbl.implicitHeight + 11
-                                            Controls.Label { id: tabLbl; anchors.centerIn: parent; anchors.verticalCenterOffset: -1; text: parent.modelData.label; font.bold: true; color: (parent.on || tabMa.containsMouse) ? Th.watchpartyFg : Th.watchpartyMetaFg }
+                                            Controls.Label { id: tabLbl; anchors.centerIn: parent; anchors.verticalCenterOffset: -1; textFormat: Text.PlainText; text: parent.modelData.label; font.bold: true; color: (parent.on || tabMa.containsMouse) ? Th.watchpartyFg : Th.watchpartyMetaFg }
                                             Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 2; visible: parent.on; color: Th.watchpartyQueueRowBorderHover }
                                             MouseArea { id: tabMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: sheet.setTab(parent.modelData.id) }
                                         }
@@ -1761,7 +1798,7 @@ Window {
                                         implicitWidth: chipLbl.implicitWidth + 20; implicitHeight: chipLbl.implicitHeight + 4; radius: 10
                                         color: (on || chipMa.containsMouse) ? Th.watchpartyQueueRowBgHover : Th.watchpartyQueueRowBg
                                         border.width: 1; border.color: on ? Th.watchpartyQueueRowBorderHover : Th.watchpartyQueueRowBorder
-                                        Controls.Label { id: chipLbl; anchors.centerIn: parent; text: parent.modelData.label; font.pointSize: Kirigami.Theme.smallFont.pointSize; color: parent.on ? Th.watchpartyFg : Th.watchpartyMetaFg }
+                                        Controls.Label { id: chipLbl; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.modelData.label; font.pointSize: Kirigami.Theme.smallFont.pointSize; color: parent.on ? Th.watchpartyFg : Th.watchpartyMetaFg }
                                         MouseArea {
                                             id: chipMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                             onClicked: { if (sheet.browseTab === "trending") { sheet.trendingCat = parent.modelData.id; sheet.runBrowse() } else { sheet.searchType = parent.modelData.id; if (searchField.text.trim().length > 0) sheet.runBrowse() } }
@@ -1790,7 +1827,7 @@ Window {
                                             Layout.fillWidth: true
                                             implicitHeight: sugLbl.implicitHeight + 8
                                             color: sugMa.containsMouse ? Th.watchpartyResultRowBgHover : "transparent"
-                                            Controls.Label { id: sugLbl; anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter; text: String(parent.modelData); color: Th.watchpartyResultRowFg }
+                                            Controls.Label { id: sugLbl; anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: String(parent.modelData); color: Th.watchpartyResultRowFg }
                                             MouseArea { id: sugMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { searchField.text = String(parent.modelData); sheet.suggest(""); searchField.forceActiveFocus() } }
                                         }
                                     }
@@ -1799,6 +1836,7 @@ Window {
                             Controls.Label {
                                 Layout.fillWidth: true
                                 visible: sheet.addNote.length === 0 && sheet.browseError.length > 0 && sheet.browseTab !== "history" && sheet.browseTab !== "playlists"
+                                textFormat: Text.PlainText
                                 text: sheet.browseError
                                 color: Th.watchpartyMetaFg
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -1824,6 +1862,7 @@ Window {
                             Controls.Label {
                                 Layout.fillWidth: true
                                 visible: sheet.browseTab === "playlists" && sheet.listing === null && !sheet.browsing
+                                textFormat: Text.PlainText
                                 text: sheet.browseError.length > 0 ? sheet.browseError : "Paste a playlist or channel link in the box above, or open one from the search results."
                                 color: Th.watchpartyMetaFg
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -1840,12 +1879,12 @@ Window {
                                     id: listRow
                                     anchors.fill: parent; anchors.margins: 4
                                     spacing: Kirigami.Units.smallSpacing
-                                    Image { visible: !!(sheet.listing && sheet.listing.thumb); source: sheet.listing ? String(sheet.listing.thumb || "") : ""; Layout.preferredWidth: 72; Layout.preferredHeight: 43; fillMode: Image.PreserveAspectCrop; asynchronous: true }
+                                    Image { visible: source.toString().length > 0; source: LinkGate.imageSrc(sheet.listing ? sheet.listing.thumb : ""); Layout.preferredWidth: 72; Layout.preferredHeight: 43; fillMode: Image.PreserveAspectCrop; asynchronous: true }
                                     ColumnLayout {
                                         Layout.fillWidth: true
                                         spacing: 0
-                                        Controls.Label { Layout.fillWidth: true; text: sheet.listing ? String(sheet.listing.title || "") : ""; color: Th.watchpartyResultRowFg; font.bold: true; elide: Text.ElideRight }
-                                        Controls.Label { Layout.fillWidth: true; text: sheet.listing ? [String(sheet.listing.channel || ""), sheet.listing.itemCount ? sheet.listing.itemCount + " videos" : ""].filter(function (x) { return x.length > 0 }).join(" · ") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
+                                        Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.listing ? String(sheet.listing.title || "") : ""; color: Th.watchpartyResultRowFg; font.bold: true; elide: Text.ElideRight }
+                                        Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.listing ? [String(sheet.listing.channel || ""), sheet.listing.itemCount ? sheet.listing.itemCount + " videos" : ""].filter(function (x) { return x.length > 0 }).join(" · ") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
                                     }
                                     ThButton { app: sheet.app; highlighted: true; text: "Add all"; enabled: sheet.inParty && !!(sheet.listing && sheet.listing.items && sheet.listing.items.length > 0); onClicked: sheet.addAll() }
                                     ThToolButton { app: sheet.app; iconName: "window-close-symbolic"; iconSize: 16; tip: "Close"; onClicked: sheet.listing = null }
@@ -1892,7 +1931,7 @@ Window {
                                         anchors.margins: Kirigami.Units.smallSpacing
                                         spacing: Kirigami.Units.smallSpacing
                                         Image {
-                                            readonly property string src: rowIsHistory ? String(modelData.art || "") : String(modelData.thumb || "")
+                                            readonly property string src: LinkGate.imageSrc(rowIsHistory ? modelData.art : modelData.thumb)   // review #5
                                             visible: src.length > 0
                                             source: src
                                             Layout.preferredWidth: (rowKind === "channel" || browseView.music) ? 43 : Kirigami.Units.gridUnit * 4
@@ -1903,8 +1942,8 @@ Window {
                                         ColumnLayout {
                                             Layout.fillWidth: true
                                             spacing: 0
-                                            Controls.Label { Layout.fillWidth: true; text: modelData.title || modelData.url || ""; color: Th.watchpartyResultRowFg; elide: Text.ElideRight; wrapMode: Text.WordWrap; maximumLineCount: 2 }
-                                            Controls.Label { Layout.fillWidth: true; visible: metaLine.length > 0; text: metaLine; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
+                                            Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: modelData.title || modelData.url || ""; color: Th.watchpartyResultRowFg; elide: Text.ElideRight; wrapMode: Text.WordWrap; maximumLineCount: 2 }
+                                            Controls.Label { Layout.fillWidth: true; visible: metaLine.length > 0; textFormat: Text.PlainText; text: metaLine; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
                                         }
                                         ThButton { app: sheet.app; visible: rowKind !== "video"; text: rowKind === "playlist" ? "Open playlist" : "Open channel"; onClicked: sheet.openListing(rowKind, String(modelData.id || ""), browseView.music) }
                                         // 11.3 QOL (§6): already queued → a check "In the queue" in place of Add (an Add flips it at once)
@@ -1991,7 +2030,7 @@ Window {
                                 required property var modelData
                                 Layout.fillWidth: true
                                 spacing: 4
-                                Controls.Label { text: kGroup.modelData.group; color: Th.watchpartySectionFg; font.bold: true; Layout.topMargin: 6 }
+                                Controls.Label { textFormat: Text.PlainText; text: kGroup.modelData.group; color: Th.watchpartySectionFg; font.bold: true; Layout.topMargin: 6 }
                                 Repeater {
                                     model: kGroup.modelData.rows.length / 2
                                     delegate: RowLayout {
@@ -2016,11 +2055,11 @@ Window {
                                                     color: sep ? "transparent" : Th.watchpartyQueueRowBgHover
                                                     border.width: sep ? 0 : 1
                                                     border.color: Th.watchpartyQueueRowBorder
-                                                    Controls.Label { id: kcap; anchors.centerIn: parent; text: String(parent.modelData); color: Th.watchpartyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                                    Controls.Label { id: kcap; anchors.centerIn: parent; textFormat: Text.PlainText; text: String(parent.modelData); color: Th.watchpartyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                                                 }
                                             }
                                         }
-                                        Controls.Label { Layout.fillWidth: true; text: kRow.what; color: Th.watchpartyMetaFg; wrapMode: Text.WordWrap }
+                                        Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: kRow.what; color: Th.watchpartyMetaFg; wrapMode: Text.WordWrap }
                                     }
                                 }
                             }

@@ -25,6 +25,7 @@ ColumnLayout {
         visible: sec.title.length > 0 || headRight.implicitWidth > 0
         spacing: 8
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             text: sec.title
             color: Th.settingsSectionTitleFg
@@ -35,6 +36,7 @@ ColumnLayout {
         RowLayout { id: headRight; spacing: 4 }
     }
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         Layout.fillWidth: true
         Layout.topMargin: 2
         visible: sec.hint.length > 0
@@ -42,7 +44,7 @@ ColumnLayout {
         color: Th.settingsSectionHintFg
         font.pixelSize: Math.round(12 * Th.textScale)
         wrapMode: Text.Wrap
-        onLinkActivated: (link) => Qt.openUrlExternally(link)
+        onLinkActivated: (link) => LinkGate.open(link)
     }
     SettingsCard {
         id: card

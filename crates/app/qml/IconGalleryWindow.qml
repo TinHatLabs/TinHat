@@ -107,6 +107,7 @@ Window {
                     spacing: Kirigami.Units.largeSpacing
                     Kirigami.Heading { level: 2; text: "Icon gallery"; color: Th.iconGalleryFg }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         elide: Text.ElideMiddle
                         color: Th.iconGalleryMetaFg
@@ -138,7 +139,7 @@ Window {
                     Controls.CheckBox { text: "Play all"; checked: gal.playAll; onToggled: gal.playAll = checked }
                     Controls.CheckBox { text: "Active state"; checked: gal.showActive; onToggled: gal.showActive = checked }
                     Item { Layout.fillWidth: true }
-                    Controls.Label { text: gal.shown.length + " icons"; color: Th.iconGalleryMetaFg }
+                    Controls.Label { textFormat: Text.PlainText; text: gal.shown.length + " icons"; color: Th.iconGalleryMetaFg }
                 }
             }
         }
@@ -183,6 +184,7 @@ Window {
                         }
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData
@@ -191,6 +193,7 @@ Window {
                         elide: Text.ElideMiddle
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.alignment: Qt.AlignHCenter
                         visible: gal.isAnimated(modelData)
                         text: gal.isAnimated(modelData) ? ("animated · " + (gal.pack.icons[modelData].trigger || "hover")) : ""

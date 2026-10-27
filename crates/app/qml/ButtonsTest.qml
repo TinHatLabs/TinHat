@@ -114,7 +114,7 @@ Window {
                     RowLayout {
                         id: rowLine
                         spacing: 12
-                        Label { text: r[2] + (inCall ? " — in a call" : " — idle") }
+                        Label { textFormat: Text.PlainText; text: r[2] + (inCall ? " — in a call" : " — idle") }
                         PreviewRow {
                             inCall: parent.parent.inCall
                             rowKind: parent.parent.r[2]
@@ -136,7 +136,7 @@ Window {
                     RowLayout {
                         id: islandLine
                         spacing: 12
-                        Label { text: "buttons island — " + parent.parent.look + " " + parent.parent.sc }
+                        Label { textFormat: Text.PlainText; text: "buttons island — " + parent.parent.look + " " + parent.parent.sc }
                         PreviewRow {
                             Layout.preferredWidth: 1250
                             wrap: true

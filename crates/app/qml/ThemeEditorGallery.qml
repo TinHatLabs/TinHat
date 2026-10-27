@@ -239,7 +239,7 @@ Controls.ApplicationWindow {
                         radius: 6
                         color: index === 1 ? Th.roomsItemBgSelected : "transparent"
                         // the text fills the row (the web's row div carries the text colour): a Pick on the row finds it
-                        Controls.Label { x: 8; width: parent.width - 16; anchors.verticalCenter: parent.verticalCenter; text: "# " + modelData; color: Th.roomsItemFg }
+                        Controls.Label { textFormat: Text.PlainText; x: 8; width: parent.width - 16; anchors.verticalCenter: parent.verticalCenter; text: "# " + modelData; color: Th.roomsItemFg }
                     }
                 }
             }
@@ -315,6 +315,7 @@ Controls.ApplicationWindow {
                     radius: 12
                     color: Th.bubbleOtherBg
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         id: senderLabel
                         x: 12; y: 8
                         text: modelData.sender

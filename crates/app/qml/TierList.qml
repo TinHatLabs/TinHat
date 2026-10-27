@@ -14,8 +14,8 @@ ColumnLayout {
     property bool dim: false
     property bool showReason: false
     spacing: 6
-    Text { text: tier.title; color: Th.reelSectionFg; font.pixelSize: 12; font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
-    Text { visible: tier.subtitle.length > 0; text: tier.subtitle; color: Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+    Text { textFormat: Text.PlainText; text: tier.title; color: Th.reelSectionFg; font.pixelSize: 12; font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
+    Text { textFormat: Text.PlainText; visible: tier.subtitle.length > 0; text: tier.subtitle; color: Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
     Flow {
         Layout.fillWidth: true
         spacing: 10
@@ -34,8 +34,9 @@ ColumnLayout {
                         Rectangle { visible: !!modelData.weight; anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 4; color: Th.reelOddsTrack
                                     Rectangle { width: parent.width * Math.min(1, modelData.odds || 0); height: 4; color: Th.reelOddsFill } }
                     }
-                    Text { text: modelData.name || modelData.id; color: Th.reelFg; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                    Text { textFormat: Text.PlainText; text: modelData.name || modelData.id; color: Th.reelFg; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
                     Text {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                         color: Th.reelMetaFg; font.pixelSize: 10

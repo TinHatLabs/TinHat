@@ -139,8 +139,8 @@ T.Popup {
         property string badge: ""
         property color stateColor: Th.callbarPopoverBadgeFg
         Layout.fillWidth: true
-        Controls.Label { Layout.fillWidth: true; text: parent.title; font.bold: true; font.pointSize: Kirigami.Theme.defaultFont.pointSize + 1; color: Th.callbarPopoverTitleFg }
-        Controls.Label { text: parent.badge; color: parent.stateColor; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.bold: true }
+        Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: parent.title; font.bold: true; font.pointSize: Kirigami.Theme.defaultFont.pointSize + 1; color: Th.callbarPopoverTitleFg }
+        Controls.Label { textFormat: Text.PlainText; text: parent.badge; color: parent.stateColor; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.bold: true }
     }
     component Hint: Controls.Label {
         Layout.fillWidth: true
@@ -190,6 +190,7 @@ T.Popup {
             }
             // 10.5: who receives us — reported by the listeners' own apps (tinhat.rx), not guessed.
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: app.mInCall && app.heardSummary().length > 0
                 Layout.fillWidth: true
                 text: app.heardSummary()
@@ -218,6 +219,7 @@ T.Popup {
                     Controls.ToolTip.text: "Pick every output that plays through your speakers — all of them get cancelled."
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: app.mEcOutputs.length > 0
                     text: app.ecOutputLabels()

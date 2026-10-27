@@ -98,6 +98,7 @@ ColumnLayout {
                 // the header that carries the room name is hidden while the call
                 // fills the app, and people typed into the wrong room.
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: island.app.mRoomName.length > 0
                     text: "· " + island.app.mRoomName
                     color: Th.callStatusBarFg
@@ -107,6 +108,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: island.app.callTiles.length > 0
                     text: "· " + island.app.callTiles.length + (island.app.callTiles.length === 1 ? " stream" : " streams")
                     color: Th.callStatusBarCountFg
@@ -208,7 +210,7 @@ ColumnLayout {
                     tip: who + " is heard through your mic as well as their own, so everyone else hears them twice. Linking up makes Tin Hat send one voice from your room (whoever's own mic hears them loudest) and stops your devices playing each other."
                     onActivated: {
                         var err = app.callctl.sameRoomLink(cand[0])
-                        if (err.length > 0) app.showPassiveNotification(err, 4000)
+                        if (err.length > 0) app.showPassiveNotification(LinkGate.plain(err), 4000)
                     }
                 }
                 HearPill {
@@ -366,6 +368,7 @@ ColumnLayout {
                             color: Th.callHiddenChipFg
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.verticalCenter: parent.verticalCenter
                             text: island.app.hiddenTileCount + " hidden ▾"
                             color: Th.callHiddenChipFg
@@ -382,11 +385,11 @@ ColumnLayout {
                             model: island.app.callTiles.filter(function(t) { return t && island.app.isTileHidden(t.id) })
                             delegate: Controls.MenuItem {
                                 readonly property bool recOnly: island.app.isRecOnlyHidden(modelData.id)
-                                text: recOnly
+                                text: LinkGate.plain(recOnly
                                     ? "Tune in to " + (modelData.name || island.app.tileMxid(modelData.participant)) + "'s recording stream"
                                     : "Show " + (modelData.name || island.app.tileMxid(modelData.participant))
                                         + (modelData.screenshare === true ? " — screen share"
-                                           : (modelData.kind === "avatar" ? "" : " — camera"))
+                                           : (modelData.kind === "avatar" ? "" : " — camera")))
                                 icon.name: recOnly ? "media-record-symbolic" : "layer-visible-on-symbolic"
                                 onTriggered: {
                                     if (recOnly) island.app.callctl.setTileTunedIn(modelData.id, true)
@@ -569,7 +572,7 @@ ColumnLayout {
             readonly property var ask: (island.app.mSameRoom && island.app.mSameRoom.ask) ? island.app.mSameRoom.ask : null
             visible: island.app.mInCall && ask !== null
             type: Kirigami.MessageType.Information
-            text: ask ? (island.app.hearName(ask.from) + " says you're in the same room — link up? One of your mics sends at a time and you won't hear each other through Tin Hat.") : ""
+            text: LinkGate.plain(ask ? (island.app.hearName(ask.from) + " says you're in the same room — link up? One of your mics sends at a time and you won't hear each other through Tin Hat.") : "")
             actions: [
                 Kirigami.Action { text: "Link up"; icon.name: "dialog-ok"; onTriggered: island.app.callctl.sameRoomAnswer(true) },
                 Kirigami.Action { text: "Not now"; onTriggered: island.app.callctl.sameRoomAnswer(false) }
@@ -581,7 +584,7 @@ ColumnLayout {
             Layout.fillWidth: true
             visible: island.app.mServerMuted && (island.app.mInCall || island.app.mConnecting)
             type: Kirigami.MessageType.Warning
-            text: island.app.serverMutedText() + ". Ask them to unmute you."
+            text: LinkGate.plain(island.app.serverMutedText() + ". Ask them to unmute you.")
         }
         // Connection trouble banner: amber while auto-reconnecting, red + Rejoin
         // when the call dropped terminally (so a dead call never looks fine).
@@ -612,6 +615,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 0
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         text: !island.app.mCallFailed ? reconnMark.shownLabel
                             : (island.app.mRemovedBy.length > 0 ? island.app.mRemovedBy + " disconnected you from the call"   // RBAC §7.4
@@ -622,6 +626,7 @@ ColumnLayout {
                     }
                     // 10.1 (TH-CALL-03): the reason, in a sentence, instead of a 4 s toast.
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         visible: island.app.mCallFailed && island.app.mCallFailReason.length > 0
                         text: island.app.mCallFailReason.length > 0 ? island.app.mCallFailReason.charAt(0).toUpperCase() + island.app.mCallFailReason.slice(1) : ""
@@ -1380,6 +1385,7 @@ ColumnLayout {
                                 border.width: 1
                                 border.color: Th.tileServerMutedBorder
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     id: srvPillText
                                     anchors.centerIn: parent
                                     text: "Muted by " + micOffGlyph.srvBy
@@ -1513,6 +1519,7 @@ ColumnLayout {
                                 }
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: {
                                     var who = tile.isSelf ? "You"
@@ -1709,6 +1716,7 @@ ColumnLayout {
                                     TapHandler { id: zoomOutTap; onTapped: tile.zoomBy(1 / 1.15) }
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     id: zoomLbl
                                     height: 20
                                     text: (Math.round(tile.zoomPercent / 5) * 5) + "%"
@@ -2040,6 +2048,7 @@ ColumnLayout {
                                     }
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.preferredWidth: 38
                                     text: Math.round(qualityMenu.vol * 100) + "%"
                                     color: Th.callVolumeValueFg
@@ -2298,7 +2307,7 @@ ColumnLayout {
                     ringColor: island.coreRef.mutedTalkNow ? Th.callbarButtonRingMuted
                         : (app.mInCall && !app.mMicMuted && app.mHear && app.mHear.tx && app.mHear.tx.state === "notsent") ? Th.callbarButtonRingError
                         : "transparent"
-                    onClicked: { if (app.mServerMuted) app.showPassiveNotification(app.serverMutedText(), 3000); else app.callctl.toggleMic() }
+                    onClicked: { if (app.mServerMuted) app.showPassiveNotification(LinkGate.plain(app.serverMutedText()), 3000); else app.callctl.toggleMic() }
                     // 10.5: "You're muted" — the reminder every voice app should have (it lived only in the
                     // overlay HUD, off by default). Above the button, one action, never steals focus.
                     Controls.Popup {
@@ -2327,6 +2336,7 @@ ColumnLayout {
                                 isMask: true
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.topMargin: 9; Layout.bottomMargin: 9
                                 text: island.app.callctl.pushToTalk ? "You're muted — hold " + (island.app.actions && island.app.actions.pttKeys.length > 0 ? island.app.actions.pttKeys[0] : "Ctrl") + " to talk" : "You're muted"
                                 color: Th.callbarMutedBubbleFg
@@ -2578,6 +2588,7 @@ ColumnLayout {
                                             Layout.fillWidth: true
                                             spacing: Kirigami.Units.smallSpacing
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: statsPopup.kindLabel(modelData.kind)
                                                 font.bold: true
                                                 color: Th.healthCardTitleFg
@@ -2590,6 +2601,7 @@ ColumnLayout {
                                             }
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             // What actually ENGAGED (libwebrtc's implementation
                                             // string), with the requested pick alongside when the
                                             // stats haven't reported yet / differ.
@@ -2605,22 +2617,26 @@ ColumnLayout {
                                             Layout.fillWidth: true
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             visible: modelData.w > 0
                                             text: modelData.w + "×" + modelData.h + " @ " + modelData.fps + " fps"
                                             color: Th.healthCardValueFg
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             text: statsPopup.fmtRate(modelData.sendKbps)
                                                   + (modelData.targetKbps > 0
                                                      ? "  ·  cap " + statsPopup.fmtRate(modelData.targetKbps) : "")
                                             color: Th.healthCardValueFg
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             text: statsPopup.statusText(modelData)
                                             color: statsPopup.statusColor(modelData)
                                             font.pointSize: Kirigami.Theme.smallFont.pointSize
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             visible: modelData.w > 0
                                             text: "keyframes " + modelData.key + " · nack " + modelData.nack + " · pli " + modelData.pli
                                             color: Th.healthCardDetailFg
@@ -2679,6 +2695,7 @@ ColumnLayout {
                             // 11.0 (GPU.md §2.2, R6): STATIC — shown lit (it blinked every 700 ms while a sound played).
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: island.app.soundboardPanel.playingName.length > 0 ? island.app.soundboardPanel.playingName : "Sound"
                             color: Th.callbarNowPlayingFg
                             font.bold: true
@@ -2779,7 +2796,7 @@ ColumnLayout {
                                 color: Th.callbarNowPlayingBorder
                                 Image {
                                     anchors.fill: parent
-                                    source: String(mpCell.npItem.art || "")
+                                    source: LinkGate.imageSrc(mpCell.npItem.art)   // review #5: https only
                                     visible: status === Image.Ready
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true
@@ -2787,7 +2804,7 @@ ColumnLayout {
                                 }
                                 Kirigami.Icon {
                                     anchors.centerIn: parent
-                                    visible: String(mpCell.npItem.art || "").length === 0
+                                    visible: LinkGate.imageSrc(mpCell.npItem.art) === ""
                                     source: "video-television-symbolic"
                                     color: Th.callbarNowPlayingIcon
                                     implicitWidth: 16; implicitHeight: 16
@@ -2796,6 +2813,7 @@ ColumnLayout {
                             ColumnLayout {
                                 spacing: 0
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     text: String(mpCell.npItem.title || "").length > 0 ? String(mpCell.npItem.title) : "Media Party"
                                     color: Th.callbarNowPlayingFg
                                     font.bold: true
@@ -2803,6 +2821,7 @@ ColumnLayout {
                                     Layout.maximumWidth: 180
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     visible: String(mpCell.npItem.addedBy || "").length > 0
                                     text: "queued by " + island.app.localpart(String(mpCell.npItem.addedBy || ""))
                                     color: Th.callbarNowPlayingFg
@@ -2934,6 +2953,7 @@ ColumnLayout {
                                     anchors.margins: Kirigami.Units.smallSpacing
                                     spacing: 2
                                     Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         Layout.fillWidth: true
                                         text: (island.app.mActivity && island.app.mActivity.game) ? ("🎮  " + String(app.mActivity.game)) : ""
                                         color: Th.callbarGamePopupSharedFg; font.bold: true; elide: Text.ElideRight
@@ -2943,6 +2963,7 @@ ColumnLayout {
                                         visible: island.app.mActivity && String(island.app.mActivity.code || "").length > 0
                                         spacing: Kirigami.Units.smallSpacing
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
                                             text: (island.app.mActivity && island.app.mActivity.code) ? String(island.app.mActivity.code) : ""
                                             font.family: Th.fontMono; color: Th.callbarGamePopupSharedFg; elide: Text.ElideRight

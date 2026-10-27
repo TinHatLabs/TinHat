@@ -154,6 +154,7 @@ Controls.Popup {
             Layout.preferredWidth: 256
             spacing: 0
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 text: pop.ctl ? ThemeEditorLib.targetLabel(pop.ctl, pop.target) : ""
                 color: Th.settingsFg
@@ -161,6 +162,7 @@ Controls.Popup {
                 elide: Text.ElideRight
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 text: ThemeEditorLib.targetId(pop.target)
                 color: Th.settingsHintFg
@@ -345,6 +347,7 @@ Controls.Popup {
             }
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: pop.withAlpha
             Layout.preferredWidth: 256
             text: pop.stored !== null ? pop.stored
@@ -378,6 +381,7 @@ Controls.Popup {
             }
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: pop.error.length > 0
             Layout.preferredWidth: 256
             text: ThemeEditorLib.errorText(pop.error)
@@ -408,6 +412,7 @@ Controls.Popup {
                     isMask: true
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: modelData.line
                     color: Th.settingsThemeEditorWarnFg

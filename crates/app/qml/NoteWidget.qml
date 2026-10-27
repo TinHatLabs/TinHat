@@ -180,7 +180,7 @@ Item {
                 linkColor: Th.widgetNoteLinkFg
                 font.family: Kirigami.Theme.defaultFont.family
                 font.pointSize: Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10
-                onLinkActivated: (link) => { if (!w.preview && !w.sample) Qt.openUrlExternally(link) }
+                onLinkActivated: (link) => { if (!w.preview && !w.sample) LinkGate.open(link) }
                 onImplicitHeightChanged: paper.syncH()
                 Component.onCompleted: paper.syncH()
                 HoverHandler { cursorShape: noteText.hoveredLink ? Qt.PointingHandCursor : (paperHover.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor) }

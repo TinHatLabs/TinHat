@@ -15,7 +15,7 @@ Controls.Dialog {
     readonly property var reg: (dlg.hostRef && dlg.index >= 0 && dlg.index < dlg.hostRef.items.length) ? dlg.hostRef.regOf(dlg.hostRef.items[dlg.index].w) : null
     readonly property var values: (dlg.hostRef && dlg.index >= 0) ? (dlg.hostRef.settingsOf[dlg.index] || ({})) : ({})
     function openFor(i) { dlg.index = i; dlg.open() }
-    title: dlg.reg ? dlg.reg.title + " — settings" : "Settings"
+    title: LinkGate.plain(dlg.reg ? dlg.reg.title + " — settings" : "Settings")
     modal: true
     parent: Controls.Overlay.overlay
     anchors.centerIn: parent
@@ -44,6 +44,7 @@ Controls.Dialog {
                     width: parent.width
                     spacing: 12
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         text: st.modelData.label || st.modelData.id
                         color: Th.widgetFg

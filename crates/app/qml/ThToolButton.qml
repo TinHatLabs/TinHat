@@ -44,6 +44,7 @@ Controls.ToolButton {
             active: tb.active || tb.checked
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: tb.label.length > 0
             Layout.alignment: Qt.AlignVCenter
             text: tb.label

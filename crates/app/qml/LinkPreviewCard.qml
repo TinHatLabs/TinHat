@@ -63,6 +63,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 2
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: card.site.length > 0
                     text: card.site.toUpperCase()
@@ -74,6 +75,7 @@ Item {
                     elide: Text.ElideRight
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: card.title.length > 0
                     text: card.title
@@ -84,9 +86,10 @@ Item {
                     elide: Text.ElideRight
                     font.underline: titleHover.hovered
                     HoverHandler { id: titleHover; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { onTapped: Qt.openUrlExternally(card.url) }
+                    TapHandler { onTapped: LinkGate.open(card.url) }
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: card.description.length > 0
                     text: card.description
@@ -113,7 +116,7 @@ Item {
                     asynchronous: true
                     cache: true
                     sourceSize.width: 840
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Qt.openUrlExternally(card.url) }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: LinkGate.open(card.url) }
                 }
             }
             // Small square image at the right.
@@ -127,7 +130,7 @@ Item {
                 asynchronous: true
                 cache: true
                 sourceSize.width: 128
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Qt.openUrlExternally(card.url) }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: LinkGate.open(card.url) }
             }
         }
     }

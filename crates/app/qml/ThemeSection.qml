@@ -65,6 +65,7 @@ ColumnLayout {
 
     // ---- §3.4 My themes ----------------------------------------------------------------------------------------
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         readonly property int n: (sec.st.mine || []).length
         Layout.topMargin: 4
         text: "My themes" + (n > 0 ? " · " + n : "")

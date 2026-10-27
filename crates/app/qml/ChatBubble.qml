@@ -83,6 +83,8 @@ Item {
     property string formatted: ""       // HTML formatted_body (rich text); empty = plain
     property string msgtype: "m.text"
     property string mimetype: ""
+    /// security review 2026-10-26 (viewer.rs): the attachment is a viewer type the OS may open; else Save as only
+    property bool canOpen: false
     property int durationMs: 0
     property real fileSize: 0
     property string media: ""           // decrypted file:// path for an m.image (else "")
@@ -121,6 +123,10 @@ Item {
     signal pollEnd()
     /// ENGINE.md §10: a theme's code font (type.code) on the code of a formatted message (inline and blocks) — the rich
     /// text's <code> / <pre> get it as their font-family (the allowed families are plain words); without one, as sent
+    /// Text → rich text that shows it as typed (an emote's name next to a formatted body).
+    function _esc(s) {
+        return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+    }
     function _codeFont(html) {
         if (Th.fontCode.length === 0 || (html.indexOf("<code") < 0 && html.indexOf("<pre") < 0)) return html
         return html.replace(/<(code|pre)(?=[\s>])/g, "<$1 style=\"font-family:'" + Th.fontCode + "'\"")
@@ -325,6 +331,7 @@ Item {
                 visible: !bubble.grouped && !bubble.mine && !bubble.isEmote
                 spacing: 6
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.maximumWidth: bubble.maxBubble - (roleTag.visible ? roleTag.implicitWidth + 6 : 0)
                     text: bubble.displayName
                     font.bold: true
@@ -416,7 +423,7 @@ Item {
                                 readonly property bool mineAlready: chip !== null && chip.mine === true
                                 width: 26; height: 24; radius: 6
                                 color: mineAlready ? Th.bubbleHoverBarButtonBgChecked : (qrMa.containsMouse ? Th.bubbleHoverBarButtonBgHover : "transparent")
-                                Controls.Label { anchors.centerIn: parent; text: parent.modelData; font.pixelSize: 15 }
+                                Controls.Label { textFormat: Text.PlainText; anchors.centerIn: parent; text: parent.modelData; font.pixelSize: 15 }
                                 MouseArea {
                                     id: qrMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: {
@@ -533,12 +540,14 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 0
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: bubble.replyToSender.length > 0 ? bubble.replyToSender : "Replying to an earlier message"
                                 color: bubble.mine ? Th.bubbleOwnQuoteFg : (bubble.replyToSender.length > 0 ? bubble.theme.senderColor(bubble.replyToSender) : Th.bubbleOtherQuoteFg)
                                 font.bold: true
                                 font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.95)
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.maximumWidth: bubble.maxBubble - 44
                                 text: bubble.replyToBody.length > 0 ? bubble.replyToBody : (bubble.replyToSender.length > 0 ? "" : "Older than what's loaded — click to look for it")
                                 color: bubble.mine ? Th.bubbleOwnQuoteFg : Th.bubbleOtherQuoteFg
@@ -571,6 +580,7 @@ Item {
                             isMask: true
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.maximumWidth: bubble.maxBubble - 70
                             // selfhost/firstrun §3: why it can't be read, in the web's words (the row's body, utd.rs)
                             text: bubble.body.length > 0 ? bubble.body : "Can't read this message yet — its key hasn't reached this device."
@@ -601,7 +611,9 @@ Item {
                                  && !bubble.hasPollCard    // widgets W3: a poll card replaces its body line
                         // Rich text when a formatted_body (markdown/HTML) is present. 9.3: an
                         // emote reads "∗ Name does a thing" in italics; emoji-only lines go big.
-                        text: bubble.isEmote ? ("∗ " + bubble.displayName + " " + (bubble.formatted.length > 0 ? bubble._codeFont(bubble.formatted) : bubble.body))
+                        // (security review 2026-10-26: `formatted` is richtext.rs's sanitised HTML; the name in an emote is
+                        // someone's text, escaped before it joins it)
+                        text: bubble.isEmote ? ("∗ " + (bubble.formatted.length > 0 ? bubble._esc(bubble.displayName) : bubble.displayName) + " " + (bubble.formatted.length > 0 ? bubble._codeFont(bubble.formatted) : bubble.body))
                             : (bubble.formatted.length > 0 ? bubble._codeFont(bubble.formatted) : bubble.body)
                         textFormat: bubble.formatted.length > 0 ? TextEdit.RichText : TextEdit.PlainText
                         font.italic: bubble.isEmote
@@ -617,12 +629,25 @@ Item {
                         selectionColor: Th.bubbleSelectionBg
                         selectedTextColor: Th.bubbleSelectionFg
                         // A matrix.to user link is a @mention "pill" → open the profile
-                        // flyout (not a browser); any other link opens externally.
+                        // flyout (not a browser); any other link opens externally — through LinkGate (security review
+                        // 2026-10-26: http/https/mailto only), and hovering one says where it really goes.
                         onLinkActivated: (link) => {
                             var who = bubble.mentionTarget(link)
-                            if (who.length > 0) bubble.avatarClicked(who)
-                            else Qt.openUrlExternally(link)
+                            if (who.length > 0) { bubble.avatarClicked(who); return }
+                            // review follow-up (Astra, 2026-10-26): a link whose text names another host opens only
+                            // after the app's own dialog has said so (Tin Hat Web's words) — the "(real host)" note in
+                            // the message can be hidden or stopped by its sender (richtext.rs link_claim)
+                            var c = null
+                            try { var j = String(bubble.app.room.linkClaim(bubble.formatted, link)); c = j.length > 0 ? JSON.parse(j) : null } catch (e) { c = null }
+                            if (c && LinkGate.verdict(link).open) {
+                                maskedLink.url = String(link); maskedLink.claimed = String(c.claimed); maskedLink.real = String(c.real)
+                                maskedLink.active = true; maskedLink.item.open()
+                            }
+                            else LinkGate.open(link)
                         }
+                        Controls.ToolTip.visible: bodyText.hoveredLink.length > 0 && bubble.mentionTarget(bodyText.hoveredLink).length === 0
+                        Controls.ToolTip.text: bodyText.hoveredLink.length === 0 ? "" : (LinkGate.describe(bodyText.hoveredLink).length > 0 ? "Opens " + LinkGate.describe(bodyText.hoveredLink) : "Tin Hat won't open this link")
+                        Controls.ToolTip.delay: 300
                         TapHandler {
                             acceptedButtons: Qt.RightButton
                             onTapped: bodyMenu.popup()
@@ -808,10 +833,14 @@ Item {
                             onClicked: bubble.imageClicked(bubble.media, inlineImg.natW, inlineImg.natH, bubble.body)
                         }
                     }
-                    // Image still decrypting / unavailable → a labeled placeholder.
+                    // Image still decrypting / unavailable → a labeled placeholder. Security review 2026-10-26: also an image
+                    // that is not shown inline (bigger than 32 MiB, SVG, bytes that are no png/jpeg/gif/webp) — a viewer
+                    // type opens on click (Rust checks its bytes first), anything else is Save as (right-click).
                     RowLayout {   // 0.8.30: pack glyph (was a typeset 🖼)
                         visible: bubble.msgtype === "m.image" && bubble.media.length === 0 && !bubble.redacted
                         spacing: 6
+                        HoverHandler { id: imgPlaceHover; enabled: bubble.canOpen; cursorShape: Qt.PointingHandCursor }
+                        TapHandler { enabled: bubble.canOpen; onTapped: bubble.mediaClicked(bubble.eventId) }
                         ThIcon {
                             Layout.preferredWidth: 16; Layout.preferredHeight: 16
                             app: bubble.app
@@ -820,6 +849,7 @@ Item {
                             isMask: true
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: bubble.body.length > 0 ? bubble.body : "image"
                             color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
                         }
@@ -838,6 +868,7 @@ Item {
                             isMask: true
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: (bubble.body.length > 0 ? bubble.body : "file") + (bubble.opening ? "  — opening…" : "")   // 10.1 (TH-MSG-13)
                             color: bubble.mine ? Th.bubbleOwnLinkFg : Th.bubbleOtherLinkFg
                             font.underline: true
@@ -934,12 +965,14 @@ Item {
                                 spacing: 1
                                 Layout.fillWidth: true
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     text: bubble.body.length > 0 ? bubble.body : "video"
                                     elide: Text.ElideMiddle
                                     Layout.fillWidth: true
                                     color: Th.bubbleVideoFg
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     text: bubble.videoLoading
                                           ? "Downloading…"
                                           : (bubble.fmtSize(bubble.fileSize)
@@ -1002,12 +1035,14 @@ Item {
                                 spacing: 1
                                 Layout.fillWidth: true
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     text: bubble.body.length > 0 ? bubble.body : "file"
                                     elide: Text.ElideMiddle
                                     Layout.fillWidth: true
                                     color: bubble.mine ? Th.bubbleOwnFg : Th.bubbleOtherFg
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     text: bubble.fmtSize(bubble.fileSize)
                                     visible: bubble.fileSize > 0
                                     color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
@@ -1022,6 +1057,7 @@ Item {
                             }
                             Controls.ToolButton {
                                 icon.name: "document-open-symbolic"
+                                visible: bubble.canOpen   // security review 2026-10-26: other kinds are Save as only
                                 enabled: !bubble.opening
                                 Controls.ToolTip.text: bubble.opening ? "Opening…" : "Open"
                                 Controls.ToolTip.visible: hovered
@@ -1076,6 +1112,7 @@ Item {
                                 onMoved: audioPlayer.position = value
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: bubble.fmtTime(audioPlayer.position) + " / "
                                       + bubble.fmtTime(audioPlayer.duration > 0 ? audioPlayer.duration
                                                                                 : bubble.durationMs)
@@ -1084,6 +1121,7 @@ Item {
                             }
                         }
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: bubble.body.length > 0 ? bubble.body : "audio"
                             color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
                             font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -1126,6 +1164,7 @@ Item {
                     // Timestamp row, right-aligned within the bubble. 9.3: delivery state
                     // (sending… / not sent), the pin, and the full date on hover.
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         id: stampLabel
                         Layout.fillWidth: true
                         text: bubble.failed ? "Not sent"
@@ -1149,6 +1188,7 @@ Item {
                 visible: bubble.failed
                 spacing: 8
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     text: bubble.sendError.length > 0 ? bubble.sendError : "Couldn't send"
                     color: Th.bubbleFgError
                     font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
@@ -1228,10 +1268,12 @@ Item {
                             anchors.centerIn: parent
                             spacing: 3
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: modelData.key !== undefined ? modelData.key : ""
                                 font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: modelData.count !== undefined && modelData.count > 1
                                 text: modelData.count
                                 color: Th.bubbleReactionCountFg
@@ -1277,6 +1319,7 @@ Item {
                     }
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: bubble.receipts.length > 5
                     text: "+" + (bubble.receipts.length - 5)
                     color: Th.bubbleReceiptsFg
@@ -1287,5 +1330,24 @@ Item {
 
         // Spacer pushes the bubble column to the correct edge and lets it shrink.
         Item { Layout.fillWidth: true }
+    }
+    // the confirmation for a link whose text names another host (see bodyText.onLinkActivated): made on first use, one
+    // per bubble; Tin Hat Web's words (linkconfirm.tsx)
+    Loader {
+        id: maskedLink
+        property string url: ""
+        property string claimed: ""
+        property string real: ""
+        active: false
+        sourceComponent: Component {
+            ConfirmDialog {
+                app: bubble.app
+                dialogTitle: "Open this link?"
+                message: "The text says " + maskedLink.claimed + ", but this link opens " + maskedLink.real + "."
+                confirmText: "Open " + maskedLink.real
+                cancelText: "Cancel"
+                onConfirmed: LinkGate.open(maskedLink.url)
+            }
+        }
     }
 }

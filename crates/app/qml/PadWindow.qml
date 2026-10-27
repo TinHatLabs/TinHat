@@ -216,6 +216,7 @@ Controls.Popup {
                     }
                     Controls.Label { text: "·"; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2 }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
                         text: pad.roomName
@@ -257,7 +258,7 @@ Controls.Popup {
                                 model: pad.targets
                                 delegate: Controls.MenuItem {
                                     required property var modelData
-                                    text: modelData.ready ? String(modelData.name) : String(modelData.name) + " — " + pad.app.padWhyLine(modelData)
+                                    text: LinkGate.plain(modelData.ready ? String(modelData.name) : String(modelData.name) + " — " + pad.app.padWhyLine(modelData))
                                     enabled: modelData.ready === true
                                     checkable: true
                                     checked: modelData.device === pad.deviceId
@@ -301,6 +302,7 @@ Controls.Popup {
                 anchors.leftMargin: 12; anchors.rightMargin: 6
                 spacing: 8
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: pad.noticeText
                     color: Th.callConnBannerTitleFg
@@ -345,6 +347,7 @@ Controls.Popup {
                 isMask: true
             }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 Layout.leftMargin: 24; Layout.rightMargin: 24
                 horizontalAlignment: Text.AlignHCenter
@@ -461,6 +464,7 @@ Controls.Popup {
                     }
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     Layout.leftMargin: 16; Layout.rightMargin: 16
                     visible: pad.mic === "ptt"
@@ -487,6 +491,7 @@ Controls.Popup {
                 SubHead { visible: pad.recent.length > 0; title: "Recent on " + pad.deviceName }
                 SoundGrid { sounds: pad.recent; visible: pad.recent.length > 0 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: !!pad.me && !pad.gateOk
                     Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16
                     text: pad.me && pad.me.gate && String(pad.me.gate.hint || "").length > 0 ? String(pad.me.gate.hint) : pad.why("off-role", "")
@@ -520,6 +525,7 @@ Controls.Popup {
                     }
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     visible: !!pad.view && (pad.view.more || 0) > 0
                     Layout.leftMargin: 16
                     text: "+" + (pad.view ? pad.view.more : 0) + " more"
@@ -539,10 +545,11 @@ Controls.Popup {
         Layout.leftMargin: 16; Layout.rightMargin: 16
         Layout.topMargin: 4
         spacing: 8
-        Controls.Label { text: parent.title; color: Th.soundboardSectionFg; font.bold: true }
-        Controls.Label { text: parent.hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.fillWidth: true; elide: Text.ElideRight }
+        Controls.Label { textFormat: Text.PlainText; text: parent.title; color: Th.soundboardSectionFg; font.bold: true }
+        Controls.Label { textFormat: Text.PlainText; text: parent.hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.fillWidth: true; elide: Text.ElideRight }
     }
     component SubHead: Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         property string title: ""
         Layout.leftMargin: 16
         Layout.topMargin: 2
@@ -603,6 +610,7 @@ Controls.Popup {
             onClicked: act.activated()
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.alignment: Qt.AlignHCenter
             text: act.caption
             color: Th.callStatusBarCountFg
@@ -677,6 +685,7 @@ Controls.Popup {
                 Layout.fillWidth: true
                 spacing: 0
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: pr.name
                     color: Th.callVolumeLabelFg
@@ -684,6 +693,7 @@ Controls.Popup {
                     elide: Text.ElideRight
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: pr.volLine.length > 0
                     text: pr.volLine

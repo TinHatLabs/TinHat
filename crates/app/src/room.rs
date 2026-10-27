@@ -50,6 +50,7 @@ pub mod qobject {
         #[qproperty(QString, mod_error)] //         QML: modError — friendly message on a failed moderation write ("" = ok)
         #[qproperty(QString, game_code_json)] //    QML: gameCodeJson — latest game join code {game,code,sender} ("" = none)
         #[qproperty(QString, media_opened)] //      QML: mediaOpened — file:// of the media open_media just resolved
+        #[qproperty(QString, media_text)] //        QML: mediaText — {id,name,text} of a text-like attachment open_media shows in the app ("" = none)
         #[qproperty(QString, media_busy)] //        QML: mediaBusy — event id being fetched for Open / Save as ("" = idle); the chip spins off it (10.1 TH-MSG-13)
         #[qproperty(bool, record_on)] //            QML: recordOn — Memories recording marker active in this room (0.8.7)
         #[qproperty(bool, call_record_on)] //       QML: callRecordOn — the recording marker of callRecordRoom (11.0: Rec / Clip act on the call's room)
@@ -68,6 +69,12 @@ pub mod qobject {
         #[qproperty(bool, can_send_poll)] //         QML: canSendPoll — widgets W3: may we start a poll here (the poll start event)
         type RoomController = super::RoomControllerRust;
 
+        /// QML: room.linkClaim(formatted, link) — review follow-up (Astra, 2026-10-26): `{"claimed","real"}` when this
+        /// link's text in a bubble's sanitised HTML names another host than the one it opens (the bubble asks before
+        /// opening it, in Tin Hat Web's words), "" otherwise (richtext::link_claim).
+        #[qinvokable]
+        #[cxx_name = "linkClaim"]
+        fn link_claim(self: &RoomController, formatted: &QString, link: &QString) -> QString;
         /// QML: roomController.open(roomId) — load a room's timeline.
         #[qinvokable]
         fn open(self: Pin<&mut RoomController>, room_id: &QString);
@@ -341,6 +348,7 @@ pub struct RoomControllerRust {
     mod_error: QString,
     game_code_json: QString,
     media_opened: QString,
+    media_text: QString,
     media_busy: QString,
     media_resolved: QString,
     can_change_photo: bool,
@@ -377,6 +385,13 @@ pub struct RoomControllerRust {
 }
 
 impl qobject::RoomController {
+    pub fn link_claim(&self, formatted: &QString, link: &QString) -> QString {
+        match crate::richtext::link_claim(&formatted.to_string(), &link.to_string()) {
+            Some((claimed, real)) => QString::from(&serde_json::json!({ "claimed": claimed, "real": real }).to_string()),
+            None => QString::default(),
+        }
+    }
+
     pub fn open(mut self: Pin<&mut Self>, room_id: &QString) {
         let room_id = room_id.to_string();
         // 10.5.2: a new generation BEFORE anything can observe the new room id.
@@ -942,6 +957,7 @@ impl qobject::RoomController {
             return;
         }
         self.as_mut().set_media_opened(QString::default());
+        self.as_mut().set_media_text(QString::default());
         self.as_mut().set_media_busy(QString::from(&event_id));   // 10.1 (TH-MSG-13): the chip spins while this runs
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
@@ -968,18 +984,47 @@ impl qobject::RoomController {
                     .map(String::from);
                 (v.get("content").cloned().unwrap_or_default(), mime)
             };
-            match resolve_image_media(content, &event_id, mime.as_deref()).await {
-                Some(url) => {
+            // launch-gate's web review #8: a text-like file (plain text, JSON, CSV, Markdown, logs, source) is shown in the
+            // app as plain text — never handed to an outside opener
+            let name = attachment_name(&content);
+            let msgtype = content.get("msgtype").and_then(|m| m.as_str()).unwrap_or("").to_string();
+            if open_as(&msgtype, true, mime.as_deref().unwrap_or(""), &name) == OpenAs::Text {
+                let shown = match fetch_media(content, &event_id, mime.as_deref(), MediaUse::Text).await {
+                    Ok(url) => tokio::fs::read(crate::platform::path_from_file_url(&url)).await.map_err(|_| MediaRefused::Failed),
+                    Err(e) => Err(e),
+                };
+                let _ = qt.queue(move |mut o| {
+                    o.as_mut().set_media_busy(QString::default());
+                    match shown {
+                        Ok(bytes) => {
+                            let text = String::from_utf8_lossy(&bytes);
+                            let json = serde_json::json!({ "id": event_id, "name": name, "text": text.trim_start_matches('\u{feff}') });
+                            o.as_mut().set_media_text(QString::from(&json.to_string()));
+                        }
+                        Err(why) => {
+                            eprintln!("[room] open_media (text): {why:?} for {event_id}");
+                            o.as_mut().set_status(QString::default());
+                            o.as_mut().set_status(QString::from(why.text_toast()));
+                        }
+                    }
+                });
+                return;
+            }
+            // security review 2026-10-26: the OS opener gets only a viewer type whose bytes are that type (viewer.rs)
+            match fetch_media(content, &event_id, mime.as_deref(), MediaUse::Open).await {
+                Ok(url) => {
                     let _ = qt.queue(move |mut o| {
                         o.as_mut().set_media_busy(QString::default());
                         o.as_mut().set_media_opened(QString::from(&url));
                     });
                 }
-                None => {
-                    eprintln!("[room] open_media: resolve failed for {event_id}");
-                    let _ = qt.queue(|mut o| {
+                Err(why) => {
+                    eprintln!("[room] open_media: {why:?} for {event_id} ({})", mime.as_deref().unwrap_or("no type"));
+                    let _ = qt.queue(move |mut o| {
                         o.as_mut().set_media_busy(QString::default());
-                        o.as_mut().set_status(QString::from("Couldn't download that file"));
+                        // blank first so the same refusal twice still toasts
+                        o.as_mut().set_status(QString::default());
+                        o.as_mut().set_status(QString::from(why.toast()));
                     });
                 }
             }
@@ -1018,7 +1063,7 @@ impl qobject::RoomController {
                     .map(String::from);
                 (v.get("content").cloned().unwrap_or_default(), mime)
             };
-            let url = resolve_image_media(content, &event_id, mime.as_deref())
+            let url = fetch_media(content, &event_id, mime.as_deref(), MediaUse::Play)
                 .await
                 .unwrap_or_default();
             if url.is_empty() {
@@ -1066,7 +1111,7 @@ impl qobject::RoomController {
                     .map(String::from);
                 (v.get("content").cloned().unwrap_or_default(), mime)
             };
-            let msg = match resolve_image_media(content, &event_id, mime.as_deref()).await {
+            let msg = match fetch_media(content, &event_id, mime.as_deref(), MediaUse::Save).await.ok() {
                 Some(url) => {
                     let src = crate::platform::path_from_file_url(&url);
                     match tokio::fs::copy(&src, &dest).await {
@@ -4129,7 +4174,9 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
                     }
                 })
                 .unwrap_or("");
-            let formatted_owned = crate::embeds::hide_spoilers(formatted_raw);   // 10.1 (TH-MSG-05)
+            // security review 2026-10-26 (H2): another member's HTML is sanitised before QML's rich text sees it
+            // (richtext.rs); the spoilers are hidden after (10.1 TH-MSG-05)
+            let formatted_owned = crate::richtext::message_html(formatted_raw);
             let formatted = formatted_owned.as_str();
             // Media source: plaintext `url`, or encrypted `file.url` (mxc://…).
             let media_url = content
@@ -4175,10 +4222,14 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
             // Inline image: download + decrypt to a cached file:// (m.image only; other
             // media types show as a chip). Resolved AFTER the pagination loop with
             // bounded concurrency; record which message index needs it.
-            const AUDIO_PREFETCH_MAX: u64 = 8 * 1024 * 1024;
             let prefetch_audio =
                 msgtype == "m.audio" && (size_bytes == 0 || size_bytes <= AUDIO_PREFETCH_MAX);
-            if msgtype == "m.image" || prefetch_audio {
+            // security review 2026-10-26: an image is fetched for the bubble only when it may be an inline image (an
+            // inline type, or no type given — its bytes decide, viewer.rs) and not bigger than INLINE_IMAGE_MAX
+            let prefetch_image = msgtype == "m.image"
+                && (mimetype.is_empty() || crate::viewer::inline_image(mimetype))
+                && size_bytes <= crate::viewer::INLINE_IMAGE_MAX;
+            if prefetch_image || prefetch_audio {
                 if let Some(c) = content {
                     pending_media.push((
                         msgs.len(),
@@ -4236,6 +4287,9 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
                 "msgtype": msgtype, "formatted": formatted, "media": "",
                 "mxc": media_url, "mimetype": mimetype, "w": w, "h": h,
                 "durationMs": duration_ms, "size": size_bytes,
+                // security review 2026-10-26: Open only for viewer types (viewer.rs: the OS opener) and text-like files
+                // (shown in the app as plain text, launch-gate's web review #8); everything else is Save as only
+                "canOpen": open_as(msgtype, !media_url.is_empty(), mimetype, &content.map(attachment_name).unwrap_or_default()) != OpenAs::SaveOnly,
                 "replyTo": reply_to, "redacted": redacted,
                 "embeds": crate::embeds::extract_embeds(body),
                 "onlyEmbed": crate::embeds::body_is_only_embed(body),
@@ -4254,7 +4308,8 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
         use futures_util::StreamExt;
         let resolved: Vec<(usize, String)> = futures_util::stream::iter(pending_media)
             .map(|(i, c, id, mime)| async move {
-                (i, resolve_image_media(c, &id, mime.as_deref()).await.unwrap_or_default())
+                let purpose = if c.get("msgtype").and_then(|m| m.as_str()) == Some("m.image") { MediaUse::InlineImage } else { MediaUse::PrefetchAudio };
+                (i, fetch_media(c, &id, mime.as_deref(), purpose).await.unwrap_or_default())
             })
             .buffer_unordered(4)
             .collect()
@@ -4269,7 +4324,7 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
             if let Some((nb, nf)) = edits.get(&mid) {
                 m["body"] = serde_json::json!(nb);
                 // 10.1 (TH-MSG-08): an edit to plain text CLEARS the old rich text (it used to survive forever).
-                    m["formatted"] = serde_json::json!(nf);
+                    m["formatted"] = serde_json::json!(crate::richtext::message_html(nf));   // H2: an edit's HTML too
                 m["edited"] = serde_json::json!(true);
             }
         }
@@ -4817,17 +4872,6 @@ pub(crate) fn forget_session() {
     theme_shares().lock().unwrap_or_else(|p| p.into_inner()).clear();
 }
 
-fn media_ext(mime: Option<&str>) -> &'static str {
-    match mime.unwrap_or("") {
-        "image/png" => "png",
-        "image/jpeg" => "jpg",
-        "image/gif" => "gif",
-        "image/webp" => "webp",
-        "image/bmp" => "bmp",
-        "image/svg+xml" => "svg",
-        _ => "img",
-    }
-}
 
 fn sanitize_id(s: &str) -> String {
     s.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect()
@@ -5096,7 +5140,7 @@ pub async fn headless_audio_test() -> bool {
 
     // THE point of the feature: the same resolver the timeline uses turns it into a
     // local file the player can open.
-    let url = resolve_image_media(content, event_id.as_str(), Some("audio/ogg")).await;
+    let url = fetch_media(content, event_id.as_str(), Some("audio/ogg"), MediaUse::Play).await.ok();
     check("audio resolved to a local url", url.is_some());
     let path = crate::platform::path_from_file_url(url.as_deref().unwrap_or(""));
     let meta = std::fs::metadata(&path).ok();
@@ -5138,7 +5182,7 @@ pub async fn headless_audio_test() -> bool {
                 == Some("m.video"),
         );
         if let Some(vcontent) = vcontent {
-            let vurl = resolve_image_media(vcontent, vid.as_str(), Some("video/mp4")).await;
+            let vurl = fetch_media(vcontent, vid.as_str(), Some("video/mp4"), MediaUse::Play).await.ok();
             check("video resolved to a local url", vurl.is_some());
             let vpath = crate::platform::path_from_file_url(vurl.as_deref().unwrap_or(""));
             let vmeta = std::fs::metadata(&vpath).ok();
@@ -5155,17 +5199,262 @@ pub async fn headless_audio_test() -> bool {
     fails == 0
 }
 
-async fn resolve_image_media(content: serde_json::Value, event_id: &str, mime: Option<&str>) -> Option<String> {
+/// What an attachment is fetched for (security review 2026-10-26: the desktop side of the web's H1; viewer.rs).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum MediaUse {
+    /// an m.image decoded in the bubble: only when its BYTES are png / jpeg / gif / webp (never SVG or AVIF), at most
+    /// viewer::INLINE_IMAGE_MAX; the cached file carries the sniffed format's extension
+    InlineImage,
+    /// played in this app (inline audio / video): the viewer list's extension, else `.bin`
+    Play,
+    /// an audio clip fetched for the timeline without a click (the voice-message player): as Play, but at most
+    /// [`AUDIO_PREFETCH_MAX`] bytes downloaded (Astra review 2026-10-26: a forged `info.size` must not pull more)
+    PrefetchAudio,
+    /// handed to the OS opener: a viewer type only, and only when the bytes are that type
+    Open,
+    /// shown in the app as plain text (a text-like file, viewer::text_like): `.txt`, bytes that pass the `txt` sniff, at
+    /// most viewer::TEXT_VIEW_MAX
+    Text,
+    /// copied where the user saves it: anything (`.bin` when it is no viewer type)
+    Save,
+}
+
+/// Why an attachment was not made available (open_media's toast).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum MediaRefused {
+    /// not a viewer type (Save as only)
+    NotViewable,
+    /// the bytes are not what the event says
+    Mismatch,
+    /// bigger than an inline image may be
+    TooBig,
+    /// no download (network, keys, no client)
+    Failed,
+}
+
+impl MediaRefused {
+    fn toast(self) -> &'static str {
+        match self {
+            MediaRefused::NotViewable => "Tin Hat doesn't open this kind of file — use Save as… to keep it",
+            MediaRefused::Mismatch => "This file isn't the kind of file it says it is, so Tin Hat won't open it — use Save as… to keep it",
+            MediaRefused::TooBig => "That image is too big to show here — use Save as… to keep it",
+            MediaRefused::Failed => "Couldn't download that file",
+        }
+    }
+    /// The toast of the in-app text view (launch-gate's web review #8).
+    fn text_toast(self) -> &'static str {
+        match self {
+            MediaRefused::TooBig => "That file is too big to show here — use Save as… to keep it",
+            MediaRefused::Mismatch | MediaRefused::NotViewable => {
+                "That file isn't plain text, so Tin Hat won't show it — use Save as… to keep it"
+            }
+            MediaRefused::Failed => "Couldn't download that file",
+        }
+    }
+}
+
+/// At most this much of an audio clip is fetched for the timeline without a click.
+pub(crate) const AUDIO_PREFETCH_MAX: u64 = 8 * 1024 * 1024;
+/// At most this much of any attachment someone asked for (Open, Save as, Play): far above what a server takes.
+pub(crate) const ON_DEMAND_MAX: u64 = 1024 * 1024 * 1024;
+
+/// The most bytes `purpose` may download (Astra review 2026-10-26: enforced while the bytes arrive, not afterwards).
+fn media_budget(purpose: MediaUse) -> u64 {
+    match purpose {
+        MediaUse::InlineImage => crate::viewer::INLINE_IMAGE_MAX,
+        MediaUse::PrefetchAudio => AUDIO_PREFETCH_MAX,
+        MediaUse::Text => crate::viewer::TEXT_VIEW_MAX,
+        MediaUse::Play | MediaUse::Open | MediaUse::Save => ON_DEMAND_MAX,
+    }
+}
+
+/// The one check an attachment passes before it is handed on, the same for a cached copy and a fresh download (Astra
+/// review 2026-10-26: a cached inline image used to skip the size limit): `want` = the extension the purpose asks for
+/// (None for an inline image: its bytes decide), `head` = its first bytes, `len` = its full size. Returns the
+/// extension the file is (to be) kept under.
+pub(crate) fn validate_media(purpose: MediaUse, want: Option<&'static str>, head: &[u8], len: u64) -> Result<&'static str, MediaRefused> {
+    use crate::viewer;
+    if len > media_budget(purpose) {
+        return Err(MediaRefused::TooBig);
+    }
+    match purpose {
+        MediaUse::InlineImage => viewer::sniff_image(head).ok_or(MediaRefused::Mismatch),
+        MediaUse::Open => {
+            let e = want.ok_or(MediaRefused::NotViewable)?;
+            if viewer::sniff(e, head) {
+                Ok(e)
+            } else {
+                Err(MediaRefused::Mismatch)
+            }
+        }
+        MediaUse::Text => {
+            if viewer::sniff("txt", head) {
+                Ok("txt")
+            } else {
+                Err(MediaRefused::Mismatch)
+            }
+        }
+        MediaUse::Play | MediaUse::PrefetchAudio | MediaUse::Save => Ok(want.unwrap_or("bin")),
+    }
+}
+
+/// What Open does with an attachment: hand a viewer type to the OS opener (after its bytes check out), show a text-like
+/// file in the app as plain text (launch-gate's web review #8), or nothing — Save as only.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum OpenAs {
+    Os,
+    Text,
+    SaveOnly,
+}
+
+pub(crate) fn open_as(msgtype: &str, has_media: bool, mime: &str, name: &str) -> OpenAs {
+    if !has_media || !matches!(msgtype, "m.file" | "m.image" | "m.video" | "m.audio") {
+        return OpenAs::SaveOnly;
+    }
+    if crate::viewer::open_ext(mime).is_some() {
+        OpenAs::Os
+    } else if crate::viewer::text_like(mime, name) {
+        OpenAs::Text
+    } else {
+        OpenAs::SaveOnly
+    }
+}
+
+/// An attachment's file name: `filename` when the event has a caption, else `body`.
+fn attachment_name(content: &serde_json::Value) -> String {
+    content
+        .get("filename")
+        .or_else(|| content.get("body"))
+        .and_then(|x| x.as_str())
+        .unwrap_or("")
+        .to_string()
+}
+
+/// Is a 404/405 from the authenticated media endpoint a reason to try the legacy one? Yes unless the server said, in
+/// Matrix's own words, that the file doesn't exist (`M_NOT_FOUND`): a server without authenticated media answers
+/// `M_UNRECOGNIZED`, and a reverse proxy in front of an older server may answer a plain, non-Matrix 404 (launch-gate's
+/// review #12: that used to break every picture on such a server).
+fn media_fallback(status: u16, body: &str) -> bool {
+    if !matches!(status, 404 | 405) {
+        return false;
+    }
+    let errcode = serde_json::from_str::<serde_json::Value>(body).ok().and_then(|v| v.get("errcode")?.as_str().map(str::to_string));
+    errcode.as_deref() != Some("M_NOT_FOUND")
+}
+
+/// Download (and decrypt) an attachment holding at most `max` bytes: the transfer stops at `max + 1` (Astra review
+/// 2026-10-26: the SDK's get_media_content buffers the whole file before anyone can look at its size, and an event's
+/// `info.size` is the sender's word). Authenticated media endpoint with this account's token (the SDK's choice too),
+/// the legacy one only when the server doesn't know it; an encrypted file is decrypted (and its hash checked) after,
+/// from the at-most-`max` ciphertext. A local echo still in the send queue comes from the SDK's own store.
+async fn download_media_capped(source: &matrix_sdk::ruma::events::room::MediaSource, max: u64) -> Result<Vec<u8>, MediaRefused> {
     use matrix_sdk::media::{MediaFormat, MediaRequestParameters};
+    use matrix_sdk::ruma::events::room::MediaSource;
+    let client = crate::session::client().ok_or(MediaRefused::Failed)?;
+    let uri = match source {
+        MediaSource::Plain(u) => u.clone(),
+        MediaSource::Encrypted(f) => f.url.clone(),
+    };
+    let (server, media_id) = uri.parts().map_err(|_| MediaRefused::Failed)?;
+    if server.as_str() == "send-queue.localhost" {
+        let req = MediaRequestParameters { source: source.clone(), format: MediaFormat::File };
+        let b = client.media().get_media_content(&req, true).await.map_err(|_| MediaRefused::Failed)?;
+        return if b.len() as u64 > max { Err(MediaRefused::TooBig) } else { Ok(b) };
+    }
+    let token = client.access_token().ok_or(MediaRefused::Failed)?;
+    let endpoint = |path: &[&str]| -> Result<url::Url, MediaRefused> {
+        let mut u = client.homeserver();
+        u.set_query(None);
+        u.set_fragment(None);
+        u.path_segments_mut().map_err(|_| MediaRefused::Failed)?.pop_if_empty().extend(path).push(server.as_str()).push(media_id);
+        Ok(u)
+    };
+    let http = crate::proxy::http(None);
+    let mut resp = http
+        .get(endpoint(&["_matrix", "client", "v1", "media", "download"])?)
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .map_err(|_| MediaRefused::Failed)?;
+    if matches!(resp.status().as_u16(), 404 | 405) {
+        let status = resp.status().as_u16();
+        let body = resp.text().await.unwrap_or_default();
+        if !media_fallback(status, &body) {
+            return Err(MediaRefused::Failed);
+        }
+        resp = http
+            .get(endpoint(&["_matrix", "media", "v3", "download"])?)
+            .send()
+            .await
+            .map_err(|_| MediaRefused::Failed)?;
+    }
+    if !resp.status().is_success() {
+        return Err(MediaRefused::Failed);
+    }
+    if resp.content_length().is_some_and(|n| n > max) {
+        return Err(MediaRefused::TooBig);
+    }
+    let mut data: Vec<u8> = Vec::new();
+    while let Some(chunk) = resp.chunk().await.map_err(|_| MediaRefused::Failed)? {
+        if data.len() as u64 + chunk.len() as u64 > max {
+            return Err(MediaRefused::TooBig);
+        }
+        data.extend_from_slice(&chunk);
+    }
+    match source {
+        MediaSource::Plain(_) => Ok(data),
+        MediaSource::Encrypted(file) => {
+            use std::io::Read;
+            let mut cursor = std::io::Cursor::new(data);
+            let reader = matrix_sdk_base::crypto::AttachmentDecryptor::new(&mut cursor, file.as_ref().clone().into())
+                .map_err(|_| MediaRefused::Failed)?;
+            let mut out = Vec::new();
+            reader.take(max + 1).read_to_end(&mut out).map_err(|_| MediaRefused::Failed)?;
+            if out.len() as u64 > max {
+                return Err(MediaRefused::TooBig);
+            }
+            Ok(out)
+        }
+    }
+}
+
+/// Download + decrypt an attachment into the media cache (`<event>.<ext>`, the extension from viewer.rs, never from
+/// the event), returning a `file://` url. Cached by event id, so after the first load this is a `Path::exists` check
+/// plus [`validate_media`] (the same check a fresh download passes). `purpose` decides what may come back and how much
+/// may be downloaded (see [`MediaUse`]).
+pub(crate) async fn fetch_media(content: serde_json::Value, event_id: &str, mime: Option<&str>, purpose: MediaUse) -> Result<String, MediaRefused> {
+    use crate::viewer;
     use matrix_sdk::ruma::events::room::message::MessageType;
 
     let dir = media_cache_dir();
-    let path = dir.join(format!("{}.{}", sanitize_id(event_id), media_ext(mime)));
-    if path.exists() {
-        touch_mtime(&path); // keep viewed media warm for the LRU cache sweep
-        return Some(crate::platform::file_url(&path));
+    let id = sanitize_id(event_id);
+    let mime = mime.unwrap_or("");
+    let want: Option<&'static str> = match purpose {
+        MediaUse::InlineImage => None, // decided by the bytes
+        MediaUse::Open => Some(viewer::open_ext(mime).ok_or(MediaRefused::NotViewable)?),
+        MediaUse::Text => Some("txt"),
+        MediaUse::Play | MediaUse::PrefetchAudio | MediaUse::Save => Some(viewer::viewer_ext(mime).unwrap_or("bin")),
+    };
+    let candidates: &[&str] = match want {
+        Some(ref e) => std::slice::from_ref(e),
+        None => viewer::INLINE_EXTS,
+    };
+    for ext in candidates {
+        let path = dir.join(format!("{id}.{ext}"));
+        if path.exists() {
+            // a copy cached for playing or saving was never checked: it passes the same check as a fresh download
+            // before the OS or Qt's image plugins get it (an unchecked `.png` that isn't one would be
+            // content-sniffed — an SVG among them; one bigger than an inline image may be is not decoded inline)
+            let len = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(u64::MAX);
+            let ok = validate_media(purpose, want, &viewer::file_head(&path, 8192), len)?;
+            if ok != *ext {
+                return Err(MediaRefused::Mismatch);
+            }
+            touch_mtime(&path); // keep viewed media warm for the LRU cache sweep
+            return Ok(crate::platform::file_url(&path));
+        }
     }
-    let mt: MessageType = serde_json::from_value(content).ok()?;
+    let mt: MessageType = serde_json::from_value(content).map_err(|_| MediaRefused::Failed)?;
     // Any media-bearing message type resolves the same way (download + decrypt to the
     // LRU cache): images inline at load; video/file/audio on demand via open_media
     // ("no clear way to view an mp4" — 0.3.3 feedback).
@@ -5174,14 +5463,14 @@ async fn resolve_image_media(content: serde_json::Value, event_id: &str, mime: O
         MessageType::Video(m) => m.source,
         MessageType::File(m) => m.source,
         MessageType::Audio(m) => m.source,
-        _ => return None,
+        _ => return Err(MediaRefused::Failed),
     };
-    let client = crate::session::client()?;
-    let req = MediaRequestParameters { source, format: MediaFormat::File };
-    let bytes = client.media().get_media_content(&req, true).await.ok()?;
-    tokio::fs::create_dir_all(&dir).await.ok()?;
-    tokio::fs::write(&path, &bytes).await.ok()?;
-    Some(crate::platform::file_url(&path))
+    let bytes = download_media_capped(&source, media_budget(purpose)).await?;
+    let ext = validate_media(purpose, want, &bytes, bytes.len() as u64)?;
+    let path = dir.join(format!("{id}.{ext}"));
+    tokio::fs::create_dir_all(&dir).await.map_err(|_| MediaRefused::Failed)?;
+    tokio::fs::write(&path, &bytes).await.map_err(|_| MediaRefused::Failed)?;
+    Ok(crate::platform::file_url(&path))
 }
 
 /// LRU touch: bump a cache file's mtime so the startup sweep treats recently-viewed
@@ -5195,15 +5484,31 @@ pub(crate) fn touch_mtime(path: &std::path::Path) {
 
 /// Kick off the once-per-launch background sweep of the unbounded on-disk caches:
 /// decrypted inline media (`media_cache_dir`) and avatars (`bridge::data_dir()/avatars`).
-/// LRU by mtime (resolve_image_media / bridge::resolve_avatar touch on hit) with
+/// LRU by mtime (fetch_media / bridge::resolve_avatar touch on hit) with
 /// generous TTL + size budgets so files referenced by the instant-paint timeline caches
 /// are rarely evicted — a stale reference self-heals via re-download on the next load.
 pub(crate) fn spawn_cache_sweep() {
     let _ = crate::bridge::runtime().spawn_blocking(|| {
+        // security review 2026-10-26: `<id>.img` (content-sniffed by Qt, an SVG among them) is no longer written; the
+        // copies older versions left go (they are fetched again, as what their bytes are — viewer.rs)
+        for dir in [media_cache_dir(), crate::linkpreview::cache_dir(), crate::bridge::data_dir().join("avatars"), crate::settings::avatar_cache_dir()] {
+            drop_legacy_img(&dir);
+        }
         sweep_cache_dir(&media_cache_dir(), 512 * 1024 * 1024, 60);
         sweep_cache_dir(&crate::linkpreview::cache_dir(), 64 * 1024 * 1024, 14);
         sweep_cache_dir(&crate::bridge::data_dir().join("avatars"), 64 * 1024 * 1024, 90);
     });
+}
+
+/// Delete the plain `*.img` files directly in a cache dir (no recursion, symlinks untouched).
+fn drop_legacy_img(dir: &std::path::Path) {
+    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    for e in rd.flatten() {
+        let p = e.path();
+        if p.extension().is_some_and(|x| x == "img") && std::fs::symlink_metadata(&p).is_ok_and(|m| m.is_file()) {
+            let _ = std::fs::remove_file(&p);
+        }
+    }
 }
 
 /// Delete regular files from a cache dir, oldest-mtime-first, until it fits
@@ -5320,6 +5625,29 @@ mod reply_mention_tests {
         assert_eq!(super::row_sender(rows, "$a"), simon);
         assert_eq!(super::row_sender(rows, "$missing"), "");
         assert_eq!(super::row_sender("", "$a"), "");
+    }
+}
+
+#[cfg(test)]
+mod media_fallback_tests {
+    use super::media_fallback;
+
+    /// Launch-gate's review #12: the legacy media endpoint is tried on any 404/405 except Matrix's own "no such file".
+    #[test]
+    fn a_plain_404_falls_back_and_a_missing_file_does_not() {
+        // a server without authenticated media
+        assert!(media_fallback(404, r#"{"errcode":"M_UNRECOGNIZED","error":"Unrecognized request"}"#));
+        assert!(media_fallback(405, r#"{"errcode":"M_UNRECOGNIZED"}"#));
+        // a reverse proxy's own 404 page, or nothing at all
+        assert!(media_fallback(404, "<html><body>404 Not Found</body></html>"));
+        assert!(media_fallback(404, ""));
+        assert!(media_fallback(405, "Method Not Allowed"));
+        // the file really is missing: no second request
+        assert!(!media_fallback(404, r#"{"errcode":"M_NOT_FOUND","error":"Not found"}"#));
+        // other statuses never fall back (a 401/403 is about the token, a 5xx about the server)
+        for st in [200u16, 401, 403, 429, 500, 502] {
+            assert!(!media_fallback(st, r#"{"errcode":"M_UNRECOGNIZED"}"#), "{st}");
+        }
     }
 }
 

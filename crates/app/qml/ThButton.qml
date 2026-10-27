@@ -55,6 +55,7 @@ T.Button {
             Kirigami.Icon { source: btn.icon.name; implicitWidth: 16; implicitHeight: 16; color: btn.fg; isMask: true }
         }
         Text {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             anchors.verticalCenter: parent.verticalCenter
             text: btn.text
             font: btn.font

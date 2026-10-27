@@ -28,6 +28,7 @@ T.TextArea {
     wrapMode: TextEdit.Wrap
 
     Text {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         id: placeholder
         x: area.leftPadding
         y: area.topPadding

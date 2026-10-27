@@ -505,7 +505,7 @@ Item {
         case "app.update":
             if (app.mUpdateReady) app.updater.restart()
             else if (app.mUpdateAvailable && (app.mCanSelfUpdate || app.updater.channel === "flatpak")) app.updater.downloadAndApply()
-            else if (app.mUpdateAvailable) app.showPassiveNotification("Update: " + app.manualUpdateHint)
+            else if (app.mUpdateAvailable) app.showPassiveNotification(LinkGate.plain("Update: " + app.manualUpdateHint))
             else app.updater.checkForUpdates()
             return true
         case "app.verify": ui.verifySheet.open(); return true
@@ -568,7 +568,7 @@ Item {
         case "call.layout.set": { var lv = host._param(ctx, "value"); if (lv.length > 0) app.setCallLayout(lv); return true }
         case "call.leave": app.callctl.leaveCall(); return true
         case "call.mic.toggle":
-            if (app.mServerMuted) app.showPassiveNotification(app.serverMutedText(), 3000); else app.callctl.toggleMic()
+            if (app.mServerMuted) app.showPassiveNotification(LinkGate.plain(app.serverMutedText()), 3000); else app.callctl.toggleMic()
             return true
         case "call.micCheck": ui.callOptions.toggleFor(ctx.anchor || ui.callIsland || null, "mic"); return true
         case "call.music.file": ui.musicFileDialog.open(); return true
@@ -653,7 +653,7 @@ Item {
         case "room.popOut": {
             r = host._room(ctx)
             if (app.floatingCtl.isOpen(r)) ui.floatingChats.focusBubble(r)
-            else if (!app.floatingCtl.openBubble(r)) app.showPassiveNotification("You can have " + app.floatingCtl.maxBubbles + " popped-out chats at once — close one first", "short")
+            else if (!app.floatingCtl.openBubble(r)) app.showPassiveNotification(LinkGate.plain("You can have " + app.floatingCtl.maxBubbles + " popped-out chats at once — close one first"), "short")
             return true
         }
         // the table asked "Record calls here?" when turning it on — no second confirm
@@ -691,7 +691,7 @@ Item {
             return true
         }
         case "space.markAllRead":
-            if (ctx.subject) { app.nav.markSpaceRead(ctx.subject); app.showPassiveNotification("Marking everything in " + host._nameOf("space", ctx.subject) + " as read…", "short") }
+            if (ctx.subject) { app.nav.markSpaceRead(ctx.subject); app.showPassiveNotification(LinkGate.plain("Marking everything in " + host._nameOf("space", ctx.subject) + " as read…"), "short") }
             return true
         case "space.settings.open": if (ctx.subject) app.openSpaceSettings(ctx.subject, host._param(ctx, "tab") || "overview"); return true
         // ---- fun ----

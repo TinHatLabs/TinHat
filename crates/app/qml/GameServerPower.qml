@@ -24,7 +24,7 @@ Item {
         for (var i = 0; i < list.length; ++i) if (list[i].id === id) return list[i]
         return null
     }
-    function toast(t) { if (pw.app && pw.app.showPassiveNotification) pw.app.showPassiveNotification(t, 4000) }
+    function toast(t) { if (pw.app && pw.app.showPassiveNotification) pw.app.showPassiveNotification(LinkGate.plain(t), 4000) }
     function send(action, id, first) { if (pw.ctl && !pw.preview) pw.ctl.power(action, id, first || "") }
     function run(action, id) {
         if (!pw.ctl || pw.preview || !pw.view) return

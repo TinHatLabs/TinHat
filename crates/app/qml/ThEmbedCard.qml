@@ -48,6 +48,9 @@ Item {
     readonly property string poster: (embed && embed.poster) ? embed.poster : ""
     readonly property string label:  (embed && embed.label)  ? embed.label  : "Link"
     readonly property bool isImage:  mode === "image"
+    // M9 (security review 2026-10-26): a GIF from a host other than Giphy waits for a click (embeds.rs `autoload`;
+    // a descriptor without the field — an older cached timeline — waits too)
+    readonly property bool imageWaits: isImage && !(embed && embed.autoload === true) && !activated
 
     // Flipped true on the first click — load-bearing: until then no third-party load.
     property bool activated: false
@@ -143,7 +146,7 @@ Item {
 
     implicitWidth: cardW
     implicitHeight: isImage
-        ? (gifImg.paintedHeight > 0 ? Math.min(300, gifImg.paintedHeight) : 160)
+        ? (imageWaits ? 56 : (gifImg.paintedHeight > 0 ? Math.min(300, gifImg.paintedHeight) : 160))
         : cardH
 
     // ---- inline GIF / still image ------------------------------------------------
@@ -160,9 +163,49 @@ Item {
         anchors.top: parent.top
         width: parent.width
         fillMode: Image.PreserveAspectFit
-        source: card.isImage ? card.src : ""
+        source: (card.isImage && !card.imageWaits) ? card.src : ""
         asynchronous: true
         cache: true
+    }
+    // M9: the click-to-show face of a GIF from another host — nothing is fetched until it is clicked
+    // (the poster look of the click-to-play cards below: their gradient + scrim, so the overlay text reads in every theme)
+    Rectangle {
+        visible: card.imageWaits
+        anchors.fill: parent
+        radius: card.theme.radiusLg
+        clip: true
+        border.width: 1
+        border.color: Th.embedBorder
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Th.embedPosterTopBg }
+            GradientStop { position: 1.0; color: Th.embedPosterBottomBg }
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            color: gifShowMa.containsMouse ? Th.embedControlBgHover : Th.embedPosterOverlay
+        }
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            spacing: 8
+            ThIcon { Layout.preferredWidth: 18; Layout.preferredHeight: 18; app: card.app; name: "image-x-generic-symbolic"; color: Th.embedOverlayFg; isMask: true }
+            Controls.Label {
+                Layout.fillWidth: true
+                textFormat: Text.PlainText
+                elide: Text.ElideMiddle
+                text: "GIF from " + String((card.embed && card.embed.host) || "another site") + " — click to show"
+                color: Th.embedOverlayFg
+            }
+        }
+        MouseArea {
+            id: gifShowMa
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: card.activated = true
+        }
     }
 
     // ---- non-image (video / iframe): poster card OR the live player --------------
@@ -265,6 +308,7 @@ Item {
                 implicitWidth: platLabel.implicitWidth + 12
                 implicitHeight: platLabel.implicitHeight + 6
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: platLabel
                     anchors.centerIn: parent
                     text: card.label
@@ -323,7 +367,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: Qt.openUrlExternally(card.src)
+                    onClicked: LinkGate.open(card.src)
                 }
             }
             Rectangle {

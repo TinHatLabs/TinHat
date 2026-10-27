@@ -177,8 +177,8 @@ Controls.Popup {
             id: pillCol
             anchors.centerIn: parent
             spacing: 1
-            Controls.Label { text: pill.text; color: Th.callbarPillFg; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
-            Controls.Label { visible: pill.sub.length > 0; text: pill.sub; color: Th.callbarPillSubFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; anchors.horizontalCenter: parent.horizontalCenter }
+            Controls.Label { textFormat: Text.PlainText; text: pill.text; color: Th.callbarPillFg; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
+            Controls.Label { textFormat: Text.PlainText; visible: pill.sub.length > 0; text: pill.sub; color: Th.callbarPillSubFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; anchors.horizontalCenter: parent.horizontalCenter }
         }
     }
 
@@ -209,6 +209,7 @@ Controls.Popup {
                 color: Th.callbarLiveChipBg   // 10.1 (TH-POP-21): palette reds
                 border.width: 1; border.color: Th.callbarLiveChipBorder
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: liveLbl
                     anchors.centerIn: parent
                     text: "● LIVE" + (app.mCallSharing ? " · screen" : "") + (app.mMusicPlaying ? " · audio" : "") + (app.mShareRecOnly ? " · recording only" : "")
@@ -254,6 +255,7 @@ Controls.Popup {
                     GradientStop { position: 1.0; color: Th.callbarPreviewCaptionBg }
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
                     text: "What you're sending · " + pop.qualitySummary + " · " + pop.audioSummary
                     color: Th.callbarPreviewCaptionFg
@@ -314,7 +316,7 @@ Controls.Popup {
                             source: modelData.kind === "monitor" ? "monitor-symbolic" : "window-symbolic"
                             color: Th.callbarSourceListItemIcon; implicitWidth: 16; implicitHeight: 16
                         }
-                        Controls.Label { Layout.fillWidth: true; text: modelData.label; color: Th.callbarSourceListItemFg; elide: Text.ElideRight }
+                        Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.label; color: Th.callbarSourceListItemFg; elide: Text.ElideRight }
                         Kirigami.Icon { visible: chosen; source: "checkmark-symbolic"; color: Th.callbarSourceListItemIconSelected; implicitWidth: 16; implicitHeight: 16 }
                     }
                 }
@@ -322,6 +324,7 @@ Controls.Popup {
         }
         // 10.1 (TH-CALL-01): say what the button will share, by name.
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             visible: pop.sources.length > 0
             Layout.fillWidth: true
             text: pop.chosenHandle.length > 0 ? "Sharing: " + pop.sourceLabel(pop.chosenHandle) : "Pick a screen or window above."
@@ -335,6 +338,7 @@ Controls.Popup {
             Layout.fillWidth: true
             SectionTitle { text: "Quality"; Layout.fillWidth: true }
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 text: pop.presetIndex < 0 ? "Custom: " + pop.qualitySummary : pop.qualitySummary
                 color: Th.callbarPopoverHintFg
                 font.pointSize: Kirigami.Theme.smallFont.pointSize

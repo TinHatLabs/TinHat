@@ -280,6 +280,7 @@ Item {
                             color: parent.color
                         }
                         Text {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.fill: parent
                             anchors.leftMargin: 10
                             anchors.rightMargin: 10

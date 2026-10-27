@@ -152,6 +152,7 @@ Item {
         border.color: Th.callbarButtonSlashBorder
     }
     Text {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         visible: cb.badge.length > 0 && !cb.busy
         text: cb.badge
         anchors.right: parent.right; anchors.bottom: parent.bottom

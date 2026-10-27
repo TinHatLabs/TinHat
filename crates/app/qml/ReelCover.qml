@@ -63,12 +63,12 @@ Item {
                         required property var modelData
                         radius: 7; height: 18; width: bt.implicitWidth + 12
                         color: modelData.kind === "credit" ? Th.reelCoverBadgeCreditBg : modelData.kind === "favorite" ? Th.reelCoverBadgeFavoriteBg : Th.reelCoverBadgeBg
-                        Text { id: bt; anchors.centerIn: parent; text: modelData.text; color: modelData.kind === "credit" || modelData.kind === "favorite" ? Th.reelCoverBadgeFilledFg : Th.reelCoverBadgeFg; font.pixelSize: 10; font.weight: Font.DemiBold }
+                        Text { textFormat: Text.PlainText; id: bt; anchors.centerIn: parent; text: modelData.text; color: modelData.kind === "credit" || modelData.kind === "favorite" ? Th.reelCoverBadgeFilledFg : Th.reelCoverBadgeFg; font.pixelSize: 10; font.weight: Font.DemiBold }
                     }
                 }
             }
         }
-        Text { text: cover.game.name || cover.game.id || ""; color: Th.reelFg; font.pixelSize: 12; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
+        Text { textFormat: Text.PlainText; text: cover.game.name || cover.game.id || ""; color: Th.reelFg; font.pixelSize: 12; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
@@ -76,7 +76,7 @@ Item {
                 Layout.fillWidth: true; height: 6; radius: 3; color: Th.reelOddsTrack
                 Rectangle { width: parent.width * Math.min(1, cover.game.odds || 0); height: parent.height; radius: 3; color: Th.reelOddsFill; Behavior on width { NumberAnimation { duration: Motion.durLong } } }
             }
-            Text { text: Math.round((cover.game.odds || 0) * 100) + "%"; color: Th.reelMetaFg; font.pixelSize: 11 }
+            Text { textFormat: Text.PlainText; text: Math.round((cover.game.odds || 0) * 100) + "%"; color: Th.reelMetaFg; font.pixelSize: 11 }
         }
     }
     // explain on hover

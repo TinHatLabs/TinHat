@@ -1,0 +1,4 @@
+# Signed test fixtures and shared test vectors are compared byte for byte (minisign signatures, sha256s shared
+# with Tin Hat Web): never convert their line endings (a Windows checkout with core.autocrlf would break them).
+crates/app/testvectors/** -text
+crates/app/src/testvectors/** -text

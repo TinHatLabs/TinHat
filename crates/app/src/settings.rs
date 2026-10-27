@@ -1043,8 +1043,8 @@ async fn resolve_avatar(client: &matrix_sdk::Client, mxc: &matrix_sdk::ruma::Mxc
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
         .collect();
     let dir = avatar_cache_dir();
-    let path = dir.join(format!("{id}.img"));
-    if path.exists() {
+    // security review 2026-10-26: only a raster image's bytes, cached as that format (viewer.rs) — never SVG
+    if let Some(path) = crate::viewer::cached_image(&dir, &id) {
         return Some(crate::platform::file_url(&path));
     }
     let req = MediaRequestParameters {
@@ -1052,6 +1052,7 @@ async fn resolve_avatar(client: &matrix_sdk::Client, mxc: &matrix_sdk::ruma::Mxc
         format: MediaFormat::File,
     };
     let bytes = client.media().get_media_content(&req, true).await.ok()?;
+    let path = crate::viewer::image_path_for(&dir, &id, &bytes)?;
     std::fs::create_dir_all(&dir).ok()?;
     std::fs::write(&path, &bytes).ok()?;
     Some(crate::platform::file_url(&path))

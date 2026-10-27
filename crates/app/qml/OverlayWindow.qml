@@ -308,6 +308,7 @@ Window {
                         border.width: pill.lit ? 2 : 0
                         border.color: Th.overlayPillAvatarRingSpeaking
                         Text {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.centerIn: parent
                             text: (pill.modelData.label || "?").charAt(0).toUpperCase()
                             color: Th.overlayPillAvatarFg
@@ -317,6 +318,7 @@ Window {
                     }
 
                     Text {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         anchors.verticalCenter: parent.verticalCenter
                         text: pill.warn ? pill.modelData.label + " — muted!" : pill.modelData.label
                         color: pill.warn ? Th.overlayPillFgError

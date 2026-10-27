@@ -1,6 +1,6 @@
 [package]
 name = "tinhat-app"
-version = "12.0.2"
+version = "12.0.3"
 edition.workspace = true
 license.workspace = true
 description = "Tin Hat native KDE/Kirigami app (Qt6/QML + Rust core via CXX-Qt)"
@@ -31,7 +31,7 @@ matrix-sdk = { version = "0.18", default-features = false, features = ["e2e-encr
 # desktop-notification preview can name `latest_event::LatestEventValue::Remote`
 # (the cached latest event matrix-sdk does NOT re-export at the top level).
 matrix-sdk-base = "0.18"
-tokio = { version = "1", features = ["rt-multi-thread", "time", "fs"] }
+tokio = { version = "1", features = ["rt-multi-thread", "time", "fs", "sync"] }  # sync: soundboard.rs PlayGate (already on via matrix-sdk)
 # Bounded-concurrency inline-image resolves in the room loader (already in the
 # dependency tree via matrix-sdk).
 futures-util = "0.3"
@@ -51,7 +51,12 @@ sha2 = "0.10"
 # Inline media-embed URL parsing: robust URL parse + URL
 # extraction from message bodies.
 url = "2"
+# H3 (security review 2026-10-26): the self-updater verifies the minisign signature of its feed against the release key
+# compiled in (update_trust.rs) — the same scheme Tin Hat Server's updater uses. Pure Rust, no dependencies of its own.
+minisign-verify = "0.2.5"
 regex = "1"
+# security review 2026-10-26 (H2): the HTML parser under the message sanitiser (richtext.rs); already in the tree via ruma
+ruma-html = "0.8"
 # Settings window search (settings_search.rs, contract SETTINGS-WINDOW.md §4): NFD + combining marks for normalize()
 # — already in the tree (via idna/url); declared directly.
 unicode-normalization = "0.1"
@@ -112,6 +117,12 @@ serde_json = "1"
 # Windows exe icon + VERSIONINFO resource (polish §8.1) — shells the SDK's rc.exe.
 [target.'cfg(windows)'.build-dependencies]
 winresource = "0.1"
+
+[features]
+# H3 (security review follow-up, 2026-10-26): a LAB build whose updater also trusts the development minisign key in
+# TINHAT_UPDATE_DEV_KEY (build.rs refuses the key without this feature, the feature without the key, and the feature
+# when TINHAT_RELEASE_BUILD=1). Such a binary carries update_trust::LAB_TRUST_MARKER; the publish step refuses it.
+lab-update-key = []
 
 [[bin]]
 name = "tinhat"

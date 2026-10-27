@@ -170,6 +170,7 @@ Kirigami.OverlaySheet {
                     }
 
                     Kirigami.Heading {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         level: 2
@@ -178,6 +179,7 @@ Kirigami.OverlaySheet {
                         wrapMode: Text.WordWrap
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         Layout.leftMargin: Kirigami.Units.largeSpacing
                         Layout.rightMargin: Kirigami.Units.largeSpacing

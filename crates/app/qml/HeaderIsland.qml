@@ -126,6 +126,7 @@ ColumnLayout {
                 spacing: 12
                 ThIcon { Layout.preferredWidth: 16; Layout.preferredHeight: 16; app: island.app; name: "system-users-symbolic"; color: Th.accountAskIcon; isMask: true }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: island.guests.bar ? String(island.guests.bar.text) : ""
                     color: Th.accountAskFg
@@ -202,6 +203,7 @@ ColumnLayout {
             anchors.rightMargin: Kirigami.Units.smallSpacing
             spacing: Kirigami.Units.smallSpacing
             Controls.Label {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 elide: Text.ElideRight
                 // 10.1 (TH-CONV-14): say who is in it (the nav row carries the participants).

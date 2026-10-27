@@ -24,6 +24,7 @@ T.Button {
         opacity: b.enabled ? 1 : 0.45
     }
     contentItem: Text {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         text: b.text
         color: b.primary ? Th.reelButtonPrimaryFg : Th.reelButtonFg
         font.pixelSize: 13

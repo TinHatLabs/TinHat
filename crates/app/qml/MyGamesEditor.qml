@@ -81,7 +81,7 @@ Rectangle {
                 anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10
                 color: Th.reelFieldFg; font.pixelSize: 13; verticalAlignment: TextInput.AlignVCenter
                 placeholderText: ed.catalogOn ? "Add a game — type its name" : "Add a game — type its name, then press Enter"
-                Text { visible: !searchField.text.length && !searchField.activeFocus; text: searchField.placeholderText; color: Th.reelFieldPlaceholder; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+                Text { textFormat: Text.PlainText; visible: !searchField.text.length && !searchField.activeFocus; text: searchField.placeholderText; color: Th.reelFieldPlaceholder; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
                 onTextEdited: searchDebounce.restart()
                 // "Press Enter to add it by name" (the copy below) — now true (TH-REEL-01 / TH-GAP-19).
                 onAccepted: if (text.trim().length >= 2 && ed.results.length === 0) ed.ctl.addCustomGame(text.trim())
@@ -102,8 +102,8 @@ Rectangle {
                         Image { source: ed.art(modelData.id); Layout.preferredWidth: 28; Layout.preferredHeight: 42; fillMode: Image.PreserveAspectCrop; asynchronous: true }
                         ColumnLayout {
                             Layout.fillWidth: true; spacing: 1
-                            Text { text: modelData.name; color: Th.reelFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
-                            Text { text: (modelData.year ? modelData.year + " · " : "") + (modelData.flags === null ? "checking…" : (modelData.flags && (modelData.flags.multiplayer || modelData.flags.coop || modelData.flags.onlinePvp || modelData.flags.onlineCoop)) ? "multiplayer" : "single-player"); color: Th.reelMetaFg; font.pixelSize: 10 }
+                            Text { textFormat: Text.PlainText; text: modelData.name; color: Th.reelFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { textFormat: Text.PlainText; text: (modelData.year ? modelData.year + " · " : "") + (modelData.flags === null ? "checking…" : (modelData.flags && (modelData.flags.multiplayer || modelData.flags.coop || modelData.flags.onlinePvp || modelData.flags.onlineCoop)) ? "multiplayer" : "single-player"); color: Th.reelMetaFg; font.pixelSize: 10 }
                         }
                         ReelButton { text: "+"; implicitWidth: 30; implicitHeight: 26; onClicked: ed.addTo("wouldPlay", modelData); radius: app.radiusSm; hint: "Add to would-play" }
                         ReelButton { text: "✕"; implicitWidth: 30; implicitHeight: 26; quiet: true; onClicked: ed.addTo("definitelyNot", modelData); radius: app.radiusSm; hint: "Definitely not" }
@@ -135,8 +135,8 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
                     spacing: 4
-                    Text { text: modelData.title; color: Th.reelSectionFg; font.pixelSize: 11; font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
-                    Text { text: modelData.hint; color: Th.reelMetaFg; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Text { textFormat: Text.PlainText; text: modelData.title; color: Th.reelSectionFg; font.pixelSize: 11; font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
+                    Text { textFormat: Text.PlainText; text: modelData.hint; color: Th.reelMetaFg; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Repeater {
                         model: ed.prefs[modelData.key] || []
                         delegate: Rectangle {
@@ -147,7 +147,7 @@ Rectangle {
                             RowLayout {
                                 anchors.fill: parent; anchors.margins: 4; spacing: 6
                                 Image { source: ed.art(modelData); Layout.preferredWidth: 18; Layout.preferredHeight: 26; fillMode: Image.PreserveAspectCrop; asynchronous: true }
-                                Text { text: ed.nameOf(modelData); color: Th.reelFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
+                                Text { textFormat: Text.PlainText; text: ed.nameOf(modelData); color: Th.reelFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
                                 ReelButton { visible: listKey === "wouldPlay"; text: (ed.prefs.favorites || []).indexOf(modelData) !== -1 ? "★" : "☆"; quiet: true; implicitWidth: 26; implicitHeight: 24; onClicked: ed.toggleFavorite(modelData); radius: app.radiusSm; hint: "Favorite" }
                                 ReelButton { text: "–"; quiet: true; implicitWidth: 26; implicitHeight: 24; onClicked: ed.remove(modelData); radius: app.radiusSm; hint: "Remove" }
                             }
@@ -195,6 +195,7 @@ Rectangle {
             readonly property var imp: { try { return JSON.parse(ed.ctl.importJson || "{}") } catch (e) { return {} } }
             visible: imp.error !== undefined || (imp.items !== undefined)
             Text {
+                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 text: impRow.imp.error ? impRow.imp.error : ((impRow.imp.items || []).length + " games found" + (impRow.imp.pending ? " (" + impRow.imp.pending + " still being checked)" : "") + " — tick the ones you’d play:")
                 color: impRow.imp.error ? Th.reelErrorFg : Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }

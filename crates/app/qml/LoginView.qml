@@ -30,8 +30,9 @@ Item {
     property bool busy: false
     property string status: ""
     property string homeserver: ""
-    // a server that moved to its own domain (moved.rs): "OLD moved to NEW: sign in there…" (the field follows)
+    // a server that moved to its own domain (moved.rs): "OLD says it moved to NEW…" (the field changes only on a click)
     property string movedNote: ""
+    property string movedTo: ""   // the address the note offers (bridge.rs check_moved); the field changes only on a click
     // "" idle | "sent" (link is in their inbox) | "done" (password changed)
     property string resetStage: ""
     property string resetStatus: ""
@@ -53,6 +54,7 @@ Item {
 
     // ---- Intent signals (parent wires these to LoginController) -------------
     signal homeserverEdited(string value)
+    signal useMovedServer()   // the person accepted the moved server's new address (the note's link)
     signal submit(string username, string password)
 
     // 10.0.6: self-test sign-in (env TINHAT_GUI_LOGIN="user:password") — the headless gates run the
@@ -260,6 +262,7 @@ Item {
                     onAccepted: usernameField.focusField()
                 }
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     visible: loginView.movedNote.length > 0 && !loginView.showReset
                     wrapMode: Text.WordWrap
@@ -267,6 +270,27 @@ Item {
                     text: loginView.movedNote
                     color: Th.loginSubtitleFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+                // the moved server's new address, taken only when the person asks (a quiet link, like the two below)
+                Controls.Label {
+                    readonly property string typed: String(loginView.homeserver).trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "").toLowerCase()
+                    visible: loginView.movedNote.length > 0 && loginView.movedTo.length > 0 && !loginView.showReset
+                             && typed !== loginView.movedTo
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    textFormat: Text.PlainText
+                    text: "Use " + loginView.movedTo
+                    color: movedLinkArea.containsMouse ? Th.loginLinkFgHover : Th.loginLinkFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.underline: movedLinkArea.containsMouse
+                    MouseArea {
+                        id: movedLinkArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: !loginView.busy
+                        onClicked: loginView.useMovedServer()
+                    }
                 }
                 LoginField {
                     app: loginView.app
@@ -441,6 +465,7 @@ Item {
                         onClicked: loginView.tryCreate()
                     }
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
@@ -482,6 +507,7 @@ Item {
                     spacing: Kirigami.Units.smallSpacing
 
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         visible: loginView.resetMode === "owner" && loginView.resetStage === ""
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
@@ -583,6 +609,7 @@ Item {
                     }
 
                     Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
@@ -615,6 +642,7 @@ Item {
 
                 // ---- Status line ---------------------------------------------
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap

@@ -32,7 +32,7 @@ Controls.Dialog {
     // call sites ignore it; the log-sharing consent uses it as "decline".
     signal cancelled()
 
-    title: dlg.dialogTitle
+    title: LinkGate.plain(dlg.dialogTitle)
     modal: true
     parent: Controls.Overlay.overlay
     anchors.centerIn: parent
@@ -74,6 +74,7 @@ Controls.Dialog {
     Component {
         id: dangerText
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             text: dlg.confirmText
             color: Th.dialogButtonDangerFg
             font.bold: true
@@ -102,6 +103,7 @@ Controls.Dialog {
         width: dlg.boxWidth - dlg.leftPadding - dlg.rightPadding
         spacing: Kirigami.Units.largeSpacing
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             width: parent.width
             text: dlg.message
             wrapMode: Text.WordWrap

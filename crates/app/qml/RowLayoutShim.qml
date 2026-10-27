@@ -26,6 +26,7 @@ RowLayout {
         implicitHeight: Kirigami.Units.iconSizes.small
     }
     Controls.Label {
+        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         text: r.labelText
         color: r.labelColor
         // Explicit pass-through: the shim may sit under a plain wrapper Item (GlowButton's

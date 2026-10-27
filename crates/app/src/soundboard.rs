@@ -111,6 +111,15 @@ pub mod qobject {
         /// else is returned as-is. See `clip_url_for`.
         #[qinvokable]
         fn clip_url(self: &SoundboardController, source_url: &QString) -> QString;
+        /// QML: resolveClip(sourceUrl) — server 0.3.4 (security review H4): the URL a player that can't send a header
+        /// (QtMultimedia, GStreamer) should play, resolved off the UI thread: for a myinstants sound a signed link from
+        /// the server (`/soundboard/clip/sign`), else what clipUrl gives. Answers with clipResolved(sourceUrl, playUrl)
+        /// ("" = this sound never plays: M9).
+        #[qinvokable]
+        fn resolve_clip(self: Pin<&mut SoundboardController>, source_url: &QString);
+        /// The answer to resolveClip.
+        #[qsignal]
+        fn clip_resolved(self: Pin<&mut SoundboardController>, source_url: QString, play_url: QString);
         /// QML: padSounds(personalSoundsJson, max) — widgets W2 (the Soundboard pad, WIDGETS.md §22): the favourites as the
         /// pad's buttons `[{name, url, emoji}]` (tinhat_widgets::soundpad::pad_sounds on `{sounds: …}`).
         #[qinvokable]
@@ -313,13 +322,21 @@ impl qobject::SoundboardController {
     /// stop-any-current-then-play (handled in `play_url_in_call`).
     pub fn play_sound(mut self: Pin<&mut Self>, room_id: &QString, source_url: &QString) {
         // 0.8.21: publish the CACHED clip (see clip_url_for), never the myinstants URL.
-        let url = clip_url_for(&source_url.to_string());
+        let src = source_url.to_string();
+        let url = clip_url_for(&src);
         let room = room_id.to_string();
         self.as_mut().set_error(QString::default());
         if url.trim().is_empty() {
+            if !source_url.to_string().trim().is_empty() {
+                eprintln!("[soundboard] playSound refused a sound that isn't on the server or myinstants");
+                self.as_mut().set_error(QString::from(FOREIGN_SOUND_NOTE));
+            }
             return;
         }
         let qt = self.qt_thread();
+        // this request replaces any earlier one still on its way (Astra follow-up: a slow /clip/sign answer for A must
+        // not start A after the person stopped it or pressed B)
+        let ticket = play_gate().begin();
         crate::bridge::runtime().spawn(async move {
             if !crate::call_ctl::in_active_call().await {
                 // Not in a call: the call-publish is a no-op, but QML's local MediaPlayer
@@ -327,11 +344,28 @@ impl qobject::SoundboardController {
                 eprintln!("[soundboard] playSound(room={room}): not in a call — local-only");
                 return;
             }
+            // server 0.3.4: GStreamer can't send the bearer — a myinstants sound plays from a signed link
+            let url = playable_clip_url(&src).await;
+            if url.is_empty() {
+                return;
+            }
+            // one start at a time; the newest request wins; a stop or a newer press while this one was starting
+            // stops it again right after
+            let _turn = play_gate().turn.lock().await;
+            if !play_gate().current(ticket) {
+                eprintln!("[soundboard] playSound: stopped or replaced while its link was fetched — not published");
+                return;
+            }
+            if !crate::call_ctl::in_active_call().await {
+                return; // left the call meanwhile
+            }
             if let Err(e) = tinhat_streamer::play_url_in_call(&url).await {
                 eprintln!("[soundboard] playSound (call publish) failed: {e}");
                 let _ = qt.queue(|mut o| {
                     o.as_mut().set_error(QString::from("Couldn't play the sound into the call"));
                 });
+            } else if !play_gate().current(ticket) {
+                tinhat_streamer::stop_url_in_call();
             }
         });
     }
@@ -363,11 +397,21 @@ impl qobject::SoundboardController {
     /// hearing it). The local self-playback MediaPlayer is stopped separately in QML. Cheap +
     /// idempotent: a no-op when nothing is playing or not in a call.
     pub fn stop_sound(self: Pin<&mut Self>) {
+        play_gate().cancel(); // a play still fetching its link must not start after this
         tinhat_streamer::stop_url_in_call();
     }
 
     pub fn clip_url(&self, source_url: &QString) -> QString {
         QString::from(&clip_url_for(&source_url.to_string()))
+    }
+
+    pub fn resolve_clip(self: Pin<&mut Self>, source_url: &QString) {
+        let src = source_url.to_string();
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let play = playable_clip_url(&src).await;
+            let _ = qt.queue(move |mut o| o.as_mut().clip_resolved(QString::from(&src), QString::from(&play)));
+        });
     }
 
     pub fn upload_file(mut self: Pin<&mut Self>, file_url: &QString, name: &QString) {
@@ -760,14 +804,243 @@ async fn upload_clip(path: &std::path::Path, name: &str) -> Result<String, Strin
 /// heard nothing while gst (souphttpsrc) fetched fine for the call — and
 /// (b) one cached fetch then serves everyone, forever. 10.5.1: a link on one of our own API
 /// names (an uploaded sound, stored as `https://<former name>/api/soundboard/clip?id=…`
-/// by 10.5.0 and older) is re-homed onto `proxy::base()` first. Anything else is returned as-is.
+/// by 10.5.0 and older) is re-homed onto `proxy::base()` first.
+/// M9 (security review 2026-10-26): ANYTHING ELSE IS REFUSED ("" = nothing plays). A room sound's `sourceUrl` is room
+/// state any moderator can write; returned as-is it sent every clicker's GStreamer `uridecodebin` (any URI scheme it
+/// knows) to a stranger's host, decoded their bytes and published the result into the call. The server's clip cache
+/// only fetches myinstants (it answers 403 to any other host), so there is nothing to route a foreign link through.
 pub fn clip_url_for(source_url: &str) -> String {
-    let s = crate::proxy::rebase_url(source_url.trim());
-    if s.is_empty() || !(s.starts_with('/') || s.contains("myinstants.com/")) {
-        return s;
-    }
-    format!("{}/soundboard/clip?url={}", crate::proxy::base(), enc(&s))
+    clip_url_with(&crate::proxy::rebase_url(source_url.trim()), &crate::proxy::base())
 }
+
+/// The pure half of [`clip_url_for`]: `s` already re-homed, `base` = the server's API base ("" signed out). The myinstants
+/// and relative-path mapping is byte-identical with Tin Hat Web's clipUrlFor (shared/clip.ts).
+fn clip_url_with(s: &str, base: &str) -> String {
+    let s = s.trim();
+    match sound_route(s, base) {
+        // the server's clip cache: myinstants clips, and (decided 2026-10-26) another Tin Hat server's uploads — never
+        // fetched from there by this app
+        SoundRoute::Myinstants | SoundRoute::Foreign if !base.is_empty() => format!("{base}/soundboard/clip?url={}", enc(s)),
+        SoundRoute::Own => s.to_string(), // an uploaded sound on this account's own server
+        _ => String::new(),
+    }
+}
+
+/// How a stored sound URL is played (shared rule: member-content.json `soundRoute`, the same order in both apps and
+/// the server's clip cache): myinstants (a relative path or anything naming myinstants.com/) → our server's clip cache;
+/// an upload on our own server in its exact shape ([`own_api_url`]) → direct; another Tin Hat server's upload
+/// ([`foreign_upload`]) → our server's clip cache; anything else → refused.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum SoundRoute {
+    Myinstants,
+    Own,
+    Foreign,
+    Refuse,
+}
+
+pub(crate) fn sound_route(s: &str, base: &str) -> SoundRoute {
+    let s = s.trim();
+    if s.is_empty() {
+        SoundRoute::Refuse
+    } else if s.starts_with('/') || s.contains("myinstants.com/") {
+        SoundRoute::Myinstants
+    } else if own_api_url(s, base) {
+        SoundRoute::Own
+    } else if foreign_upload(s, base) {
+        SoundRoute::Foreign
+    } else {
+        SoundRoute::Refuse
+    }
+}
+
+/// Another Tin Hat server's uploaded sound (decided 2026-10-26): `https://<host>[:443]/api/soundboard/clip?id=<id>` (no
+/// other query) or `https://<host>[:443]/api/soundboard/file/<name>`, on a host that isn't our own server's, with no
+/// user name, no other port, no fragment, no `%2e` / `%2f` / `%5c` (any case), no white space or controls; the host a
+/// DNS name (not an IP address, not a single label). Names as [`own_api_url`]'s (a letter, digit, `_` or `-` first).
+fn foreign_upload(s: &str, base: &str) -> bool {
+    static ID: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    static FILE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let id = ID.get_or_init(|| regex::Regex::new(r"^id=[A-Za-z0-9_-]{1,128}$").unwrap());
+    let file = FILE.get_or_init(|| regex::Regex::new(r"^/api/soundboard/file/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,127}$").unwrap());
+    let lower = s.to_ascii_lowercase();
+    if ["%2e", "%2f", "%5c", "#", "\\"].iter().any(|b| lower.contains(b)) || s.chars().any(|c| c.is_whitespace() || c.is_control()) {
+        return false;
+    }
+    let Ok(u) = url::Url::parse(s) else { return false };
+    if u.scheme() != "https" || !u.username().is_empty() || u.password().is_some() || u.port().is_some() || u.fragment().is_some() {
+        return false;
+    }
+    let Some(url::Host::Domain(host)) = u.host() else { return false };
+    if !host.contains('.') {
+        return false;
+    }
+    let ours = url::Url::parse(base).ok().and_then(|b| b.host_str().map(str::to_ascii_lowercase));
+    if ours.as_deref() == Some(host.to_ascii_lowercase().as_str()) {
+        return false; // our own server: only its exact upload shapes, under the API base (own_api_url)
+    }
+    match (u.path(), u.query()) {
+        ("/api/soundboard/clip", Some(q)) => id.is_match(q),
+        (p, None) => file.is_match(p),
+        _ => false,
+    }
+}
+
+/// The part of `s` after this account's own API base (`<base>…`, compared case-insensitively), if it is under it.
+fn under_api_base<'a>(s: &'a str, base: &str) -> Option<&'a str> {
+    let base = base.trim_end_matches('/');
+    if base.is_empty() || !(base.starts_with("https://") || base.starts_with("http://")) {
+        return None;
+    }
+    s.get(..base.len()).filter(|h| h.eq_ignore_ascii_case(base)).map(|_| &s[base.len()..])
+}
+
+/// Is `s` an uploaded sound on this account's own API? ONLY `<base>/soundboard/clip?id=<id>` or
+/// `<base>/soundboard/file/<name>` (launch-gate's review, 2026-10-26: `%2e%2e`, `%2f`, `%5c` got through a `/../` check,
+/// and the bearer / cookies go to whatever path a URL normalises to). Shared rule: member-content.json `ownSounds`.
+fn own_api_url(s: &str, base: &str) -> bool {
+    static SHAPE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let shape = SHAPE.get_or_init(|| {
+        regex::Regex::new(r"^/soundboard/(?:clip\?id=[A-Za-z0-9_-]{1,128}|file/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,127})$").unwrap()
+    });
+    under_api_base(s, base).is_some_and(|rest| shape.is_match(rest))
+}
+
+/// A signed clip link the server handed out: `<base>/soundboard/clip?url=…&exp=<ms>&sig=…` (no fragment, no spaces,
+/// no backslash; the path is fixed).
+fn own_signed_clip(s: &str, base: &str) -> bool {
+    under_api_base(s, base).is_some_and(|rest| {
+        rest.starts_with("/soundboard/clip?url=")
+            && rest.contains("&exp=")
+            && rest.contains("&sig=")
+            && !rest.chars().any(|c| c.is_whitespace() || c.is_control() || c == '\\' || c == '#')
+    })
+}
+
+/// The note when a sound is refused (QML: the soundboard's line, the call publish's error).
+pub const FOREIGN_SOUND_NOTE: &str = "This sound isn't on your server or myinstants, so Tin Hat won't play it.";
+
+/// The soundboard's call publishes in order (Astra follow-up, 2026-10-26): each playSound takes a ticket; stopSound and
+/// every newer playSound make older tickets stale; a publish goes ahead only if its ticket is still the newest, checked
+/// right before it starts and again right after (a stop that came while it was starting stops it). `turn` makes the
+/// check-and-start of two presses happen one after the other.
+pub(crate) struct PlayGate {
+    gen: std::sync::atomic::AtomicU64,
+    pub(crate) turn: tokio::sync::Mutex<()>,
+}
+impl PlayGate {
+    const fn new() -> Self {
+        Self { gen: std::sync::atomic::AtomicU64::new(0), turn: tokio::sync::Mutex::const_new(()) }
+    }
+    pub(crate) fn begin(&self) -> u64 {
+        self.gen.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1
+    }
+    pub(crate) fn cancel(&self) {
+        self.gen.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
+    pub(crate) fn current(&self, ticket: u64) -> bool {
+        self.gen.load(std::sync::atomic::Ordering::SeqCst) == ticket
+    }
+}
+fn play_gate() -> &'static PlayGate {
+    static G: PlayGate = PlayGate::new();
+    &G
+}
+
+// ── Signed clip links (server 0.3.4, security review H4) ───────────────────────────────────────────────────────────
+// A 0.3.4 server fetches a myinstants sound it doesn't have yet only for a signed-in member. QtMultimedia and GStreamer
+// can't send a header, so before one of them plays a myinstants sound the app asks
+// `GET <api>/soundboard/clip/sign?url=<the same value clip?url= carries>` with the bearer → `{url, exp}` (exp in ms, an
+// hour) and plays that link (Tin Hat Web does the same for <audio>). Kept per sound until 5 minutes before it runs
+// out. A server without the route (0.3.3 and older: 404) is remembered for 30 minutes and plays today's plain clip URL;
+// any other failure plays the plain URL too (a cached clip still plays from it).
+
+/// `(signed url, exp ms)` per `base\nsource`, and the bases whose server has no /clip/sign (until when).
+fn sign_cache() -> &'static Mutex<std::collections::HashMap<String, (String, u64)>> {
+    static C: std::sync::OnceLock<Mutex<std::collections::HashMap<String, (String, u64)>>> = std::sync::OnceLock::new();
+    C.get_or_init(Default::default)
+}
+fn sign_unsupported() -> &'static Mutex<std::collections::HashMap<String, u64>> {
+    static C: std::sync::OnceLock<Mutex<std::collections::HashMap<String, u64>>> = std::sync::OnceLock::new();
+    C.get_or_init(Default::default)
+}
+/// A signed link is reused until this long before it runs out.
+const SIGN_MARGIN_MS: u64 = 5 * 60 * 1000;
+
+/// The URL QtMultimedia / GStreamer should play for a stored sound: "" (refused, M9), an uploaded sound as stored, a
+/// myinstants sound as a signed link when the server gives one, else the plain clip URL.
+pub async fn playable_clip_url(source_url: &str) -> String {
+    let s = crate::proxy::rebase_url(source_url.trim());
+    let base = crate::proxy::base();
+    let plain = clip_url_with(&s, &base);
+    if plain.is_empty() || !goes_through_clip_cache(&s) {
+        return plain;
+    }
+    match signed_clip_url(s.trim(), &base).await {
+        Some(u) => u,
+        None => plain,
+    }
+}
+
+/// The sounds the server's clip cache serves (myinstants, relative paths): the ones that may need a signed link.
+fn goes_through_clip_cache(s: &str) -> bool {
+    matches!(sound_route(s, &crate::proxy::base()), SoundRoute::Myinstants | SoundRoute::Foreign)
+}
+
+async fn signed_clip_url(s: &str, base: &str) -> Option<String> {
+    let now = crate::appstate::now_ms();
+    let key = format!("{base}\n{s}");
+    if let Some((u, exp)) = sign_cache().lock().ok()?.get(&key).cloned() {
+        if exp > now + SIGN_MARGIN_MS {
+            return Some(u);
+        }
+    }
+    if sign_unsupported().lock().ok()?.get(base).is_some_and(|until| *until > now) {
+        return None;
+    }
+    let token = crate::session::client().and_then(|c| c.access_token())?;
+    let url = format!("{base}/soundboard/clip/sign?url={}", enc(s));
+    let resp = crate::proxy::http(Some(std::time::Duration::from_secs(8)))
+        .get(&url)
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .map_err(|e| eprintln!("[soundboard] clip/sign: {e}"))
+        .ok()?;
+    let status = resp.status().as_u16();
+    if status == 404 {
+        // a server before 0.3.4: plain clip URLs, as before
+        if let Ok(mut m) = sign_unsupported().lock() {
+            m.insert(base.to_string(), now + 30 * 60 * 1000);
+        }
+        return None;
+    }
+    if status != 200 {
+        eprintln!("[soundboard] clip/sign: HTTP {status} — playing the plain clip URL");
+        return None;
+    }
+    let v: Value = serde_json::from_str(&resp.text().await.ok()?).ok()?;
+    let (u, exp) = accept_signed_clip(&v, base, now)?;
+    if let Ok(mut m) = sign_cache().lock() {
+        if m.len() > 500 {
+            m.retain(|_, (_, e)| *e > now + SIGN_MARGIN_MS);
+        }
+        m.insert(key, (u.clone(), exp));
+    }
+    Some(u)
+}
+
+/// The server's `{url, exp}` answer, accepted only when the link is a clip URL on this account's own API (M9: nothing
+/// else ever reaches GStreamer) and still has more than [`SIGN_MARGIN_MS`] to run (a former name of the server is
+/// re-homed first, as every stored link is).
+fn accept_signed_clip(v: &Value, base: &str, now: u64) -> Option<(String, u64)> {
+    let u = crate::proxy::rebase_url(v.get("url")?.as_str()?.trim());
+    let exp = v.get("exp").and_then(|e| e.as_u64().or_else(|| e.as_f64().filter(|f| *f > 0.0).map(|f| f as u64)))?;
+    if !own_signed_clip(&u, base) || exp <= now + SIGN_MARGIN_MS {
+        return None;
+    }
+    Some((u, exp))
+}
+
 
 fn enc(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
@@ -878,4 +1151,148 @@ async fn find_state_key(room_id: &str, name: &str) -> Option<String> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const BASE: &str = "https://chat.example.net/api";
+
+    /// M9: a sound plays from the server's clip cache (myinstants, relative paths — the web's mapping, byte for byte),
+    /// from this account's own server (uploads), or not at all.
+    #[test]
+    fn sounds_play_only_through_the_server() {
+        let mi = "https://www.myinstants.com/media/sounds/airhorn.mp3";
+        assert_eq!(
+            clip_url_with(mi, BASE),
+            "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fwww.myinstants.com%2Fmedia%2Fsounds%2Fairhorn.mp3"
+        );
+        assert_eq!(clip_url_with("/media/sounds/a.mp3", BASE), "https://chat.example.net/api/soundboard/clip?url=%2Fmedia%2Fsounds%2Fa.mp3");
+        // an uploaded sound on our own server plays as stored
+        let up = "https://chat.example.net/api/soundboard/clip?id=0123abcd";
+        assert_eq!(clip_url_with(up, BASE), up);
+        assert_eq!(clip_url_with(&format!("{up} "), BASE), up);
+        // everything else: refused
+        for bad in [
+            "https://attacker.example/x.mp3",
+            "http://chat.example.net/api/soundboard/clip?id=1",       // our host, but not https like our base
+            "https://chat.example.net/apix/soundboard/clip?id=1",     // not under the api path
+            "https://chat.example.net.evil.example/api/x.mp3",
+            "https://chat.example.net/api/../../etc/passwd",
+            "https://chat.example.net/api/soundboard/clip?id=1\nx",
+            "file:///etc/passwd",
+            "smb://attacker/share/a.mp3",
+            "mxc://example.net/abc",
+            "rtsp://attacker/live",
+        ] {
+            assert_eq!(clip_url_with(bad, BASE), "", "{bad:?}");
+        }
+        // a link that merely mentions myinstants goes to the clip cache, which fetches only real myinstants clips
+        assert!(clip_url_with("https://evil.example/myinstants.com/a.mp3", BASE).starts_with("https://chat.example.net/api/soundboard/clip?url="));
+        // signed out: nothing plays
+        assert_eq!(clip_url_with(mi, ""), "");
+        assert_eq!(clip_url_with(up, ""), "");
+        assert_eq!(clip_url_with("", BASE), "");
+    }
+
+    /// Astra follow-up: a publish whose ticket went stale (stopped, or a newer press) never starts.
+    #[test]
+    fn a_stopped_or_replaced_sound_is_not_published() {
+        let g = PlayGate::new();
+        let a = g.begin();
+        assert!(g.current(a));
+        let b = g.begin(); // the person pressed B while A's link was on its way
+        assert!(!g.current(a) && g.current(b));
+        g.cancel(); // then stopped
+        assert!(!g.current(b));
+        let c = g.begin();
+        assert!(g.current(c) && c > b);
+    }
+
+    /// The shared routing rule (member-content.json `soundRoute`): myinstants → own → another Tin Hat server → refused,
+    /// and what plays.
+    #[test]
+    fn sound_route_vectors() {
+        let v: Value = serde_json::from_str(include_str!("testvectors/member-content.json")).unwrap();
+        let cases = v["soundRoute"].as_array().expect("soundRoute cases");
+        assert!(cases.len() >= 25);
+        let mut fails = Vec::new();
+        for c in cases {
+            let (url, base, want) = (c["url"].as_str().unwrap(), c["base"].as_str().unwrap(), c["route"].as_str().unwrap());
+            let got = match sound_route(url, base) {
+                SoundRoute::Myinstants => "myinstants",
+                SoundRoute::Own => "own",
+                SoundRoute::Foreign => "foreign",
+                SoundRoute::Refuse => "refuse",
+            };
+            if got != want {
+                fails.push(format!("{url} under {base}: {got}, want {want}"));
+            }
+            let play = clip_url_with(url, base.trim_end_matches('/'));
+            let want_play = c.get("play").and_then(Value::as_str).unwrap_or("");
+            if play != want_play {
+                fails.push(format!("{url}: plays {play:?}, want {want_play:?}"));
+            }
+        }
+        assert!(fails.is_empty(), "{}", fails.join("\n"));
+    }
+
+    /// The shared own-sound rule (member-content.json `ownSounds`): only the two upload shapes, no encoded dots,
+    /// slashes or backslashes.
+    #[test]
+    fn own_sound_vectors() {
+        let v: Value = serde_json::from_str(include_str!("testvectors/member-content.json")).unwrap();
+        let cases = v["ownSounds"].as_array().expect("ownSounds cases");
+        assert!(cases.len() >= 12);
+        for c in cases {
+            let (url, base) = (c["url"].as_str().unwrap(), c["base"].as_str().unwrap());
+            assert_eq!(own_api_url(url, base), c["own"].as_bool().unwrap(), "{url} under {base}");
+        }
+    }
+
+    /// Launch-gate's web review #3: the desktop takes a sound stored under one of the server's FORMER API names
+    /// (an address that isn't today's API base — e.g. the web app's host when it served the API) as the server's own,
+    /// after re-homing it (proxy.rs rebase_onto, the names the server's well-known lists in dev.tinhat.moved_from);
+    /// an address on a host the server never named is not re-homed (it's another server's: proxied, never direct).
+    #[test]
+    fn a_sound_on_a_former_api_name_is_rehomed_then_played() {
+        let base = "https://chat.example.net/api";
+        let known = vec![base.to_string(), "https://web.example.net/api".to_string()];
+        let stored = "https://web.example.net/api/soundboard/clip?id=0123abcd";
+        let rehomed = crate::proxy::rebase_onto_for_tests(stored, base, &known);
+        assert_eq!(rehomed, "https://chat.example.net/api/soundboard/clip?id=0123abcd");
+        assert_eq!(clip_url_with(&rehomed, base), rehomed);
+        // a host the server never named is another Tin Hat server: fetched through our own server, never directly
+        let stranger = "https://other.example.net/api/soundboard/clip?id=0123abcd";
+        assert_eq!(crate::proxy::rebase_onto_for_tests(stranger, base, &known), stranger);
+        assert_eq!(clip_url_with(stranger, base), format!("{base}/soundboard/clip?url={}", enc(stranger)));
+    }
+
+    /// Server 0.3.4: the signed link the server hands out is taken only as a clip URL on our own API with time left.
+    #[test]
+    fn a_signed_clip_link_is_ours_and_fresh() {
+        let now = 1_790_000_000_000u64;
+        let link = "https://chat.example.net/api/soundboard/clip?url=https%3A%2F%2Fwww.myinstants.com%2Fmedia%2Fsounds%2Fa.mp3&exp=1790003600000&sig=0a1b";
+        let ok = serde_json::json!({ "url": link, "exp": 1_790_003_600_000u64 });
+        assert_eq!(accept_signed_clip(&ok, BASE, now), Some((link.to_string(), 1_790_003_600_000)));
+        // a float exp (JavaScript numbers) reads the same
+        let f = serde_json::json!({ "url": link, "exp": 1_790_003_600_000f64 });
+        assert_eq!(accept_signed_clip(&f, BASE, now).map(|x| x.1), Some(1_790_003_600_000));
+        for bad in [
+            serde_json::json!({ "url": "https://evil.example/soundboard/clip?url=x&exp=1&sig=2", "exp": 1_790_003_600_000u64 }),
+            serde_json::json!({ "url": "https://chat.example.net/api/soundboard/other?x=1", "exp": 1_790_003_600_000u64 }),
+            serde_json::json!({ "url": link, "exp": now + 60_000 }),          // runs out within the margin
+            serde_json::json!({ "url": link }),
+            serde_json::json!({ "exp": 1_790_003_600_000u64 }),
+            serde_json::json!("x"),
+        ] {
+            assert_eq!(accept_signed_clip(&bad, BASE, now), None, "{bad}");
+        }
+        // only clip-cache sounds ask for a link; an uploaded sound plays as stored
+        assert_eq!(sound_route("https://www.myinstants.com/media/sounds/a.mp3", BASE), SoundRoute::Myinstants);
+        assert_eq!(sound_route("/media/sounds/a.mp3", BASE), SoundRoute::Myinstants);
+        assert_eq!(sound_route("https://chat.example.net/api/soundboard/clip?id=1", BASE), SoundRoute::Own);
+        assert_eq!(sound_route("https://peer.example.org/api/soundboard/clip?id=1", BASE), SoundRoute::Foreign);
+    }
 }

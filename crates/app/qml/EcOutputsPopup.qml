@@ -116,6 +116,7 @@ T.Popup {
             }
         }
         Controls.Label {
+            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             color: Th.callbarPopoverHintFg

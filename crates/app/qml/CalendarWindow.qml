@@ -530,6 +530,7 @@ Window {
                     width: 26; height: 26; active: true
                 }
                 Kirigami.Heading {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     level: 2
                     visible: cal.containers.length <= 1   // 10.1 (TH-VIS-19): the picker already names the room
                     text: cal.containerLabel.length > 0 ? cal.containerLabel : "Calendar"
@@ -587,6 +588,7 @@ Window {
                                         hovered: tabBtn.hovered; active: tabBtn.on
                                     }
                                     Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: tabBtn.modelData.l
                                         color: tabBtn.on ? Th.calendarTabFgActive : Th.calendarTabFg
@@ -652,6 +654,7 @@ Window {
                 anchors.rightMargin: 12
                 spacing: 10
                 Controls.Label {
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                     text: cal.missing.length + (cal.missing.length === 1 ? " person" : " people") + " in " + cal.sourceLabel + (cal.missing.length === 1 ? " isn't" : " aren't") + " in " + cal.containerLabel
@@ -687,7 +690,7 @@ Window {
             visible: cal.errorText.length > 0
             implicitHeight: visible ? 30 : 0
             color: Th.calendarBannerErrorBg
-            Controls.Label { anchors.centerIn: parent; text: cal.errorText; color: Th.calendarBannerFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+            Controls.Label { textFormat: Text.PlainText; anchors.centerIn: parent; text: cal.errorText; color: Th.calendarBannerFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
         }
 
         // ---- body -------------------------------------------------------------------------
@@ -709,6 +712,7 @@ Window {
                         Layout.fillWidth: true
                         Controls.ToolButton { icon.name: "go-previous-symbolic"; onClicked: cal.shiftMonth(-1); Controls.ToolTip.text: "Previous month"; Controls.ToolTip.visible: hovered; Accessible.name: "Previous month" }
                         Kirigami.Heading {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             level: 3
                             text: Qt.formatDate(new Date(cal.viewYear, cal.viewMonth, 1), "MMMM yyyy")
                             color: Th.calendarFg
@@ -723,6 +727,7 @@ Window {
                         // 900 px minimum the whole window (header, grid, day panel) ran ~100 px off its right edge.
                         // At most their text width, so a wide window draws them exactly as before.
                         Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             visible: cal.undated.length > 0
                             Layout.fillWidth: true
                             Layout.preferredWidth: Math.ceil(implicitWidth)   // whole px: a fractional width elided the last letters
@@ -747,6 +752,7 @@ Window {
                         Layout.fillWidth: true
                         locale: grid.locale
                         delegate: Controls.Label {
+                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             required property var model
                             text: model.shortName
                             horizontalAlignment: Text.AlignHCenter
@@ -802,6 +808,7 @@ Window {
                                     height: dayNum.implicitHeight + (model.today ? 2 : 0)
                                     Rectangle { anchors.fill: parent; radius: height / 2; color: Th.calendarDayTodayBg; visible: model.today }
                                     Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         id: dayNum
                                         anchors.centerIn: parent
                                         text: model.day
@@ -833,6 +840,7 @@ Window {
                                             // 10.1 (TH-CAL-02): the GAME is what survives; the time sits dim on the right
                                             // (and drops off a narrow cell) — "7:00 PM Val…" said nothing.
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 width: parent.width - 10 - (timeLbl.visible ? timeLbl.implicitWidth + 4 : 0)
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: (modelData.game && modelData.game.length > 0 ? modelData.game : modelData.title)
@@ -842,6 +850,7 @@ Window {
                                                 elide: Text.ElideRight
                                             }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 id: timeLbl
                                                 visible: !!modelData.effStart && cell.width > 96
                                                 anchors.verticalCenter: parent.verticalCenter
@@ -857,6 +866,7 @@ Window {
                                     }
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     visible: cell.evs.length > cell.chipCap
                                     text: "+" + (cell.evs.length - cell.chipCap) + " more" + (cellMa.containsMouse ? " — click the day" : "")
                                     color: cellMa.containsMouse ? Th.calendarDayMoreFgHover : Th.calendarDayMoreFg
@@ -865,6 +875,7 @@ Window {
                             }
                             // main-game label: on the range's first day and at the start of each week
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: cell.mainGameStart && cell.inMonth
                                 anchors.left: parent.left; anchors.bottom: parent.bottom
                                 anchors.leftMargin: 8; anchors.bottomMargin: 6
@@ -915,7 +926,7 @@ Window {
                                     RowLayout {
                                         anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 10
                                         Controls.Label { text: "Main game"; color: cal.chipColor(modelData); font.bold: true }
-                                        Controls.Label { Layout.fillWidth: true; text: ((modelData.game && modelData.game.length > 0) ? modelData.game : modelData.title) + "  ·  " + cal.whenLine(modelData); color: Th.calendarFg; elide: Text.ElideRight }
+                                        Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: ((modelData.game && modelData.game.length > 0) ? modelData.game : modelData.title) + "  ·  " + cal.whenLine(modelData); color: Th.calendarFg; elide: Text.ElideRight }
                                     }
                                     MouseArea { anchors.fill: parent; onClicked: { cal.selectedId = modelData.id; cal.editing = false } }
                                 }
@@ -950,11 +961,13 @@ Window {
                                             Layout.preferredWidth: 130
                                             spacing: 0
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: modelData.effStart ? (cal.relDay(modelData.effStart) || Qt.formatDate(new Date(modelData.effStart), "ddd")) : "Vote"
                                                 color: Th.calendarEmphasisFg
                                                 font.bold: true
                                             }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: modelData.effStart ? (cal.fmtDay(modelData.effStart) + "\n" + cal.fmtTime(modelData.effStart)) : "time to be decided"
                                                 color: Th.calendarMetaFg
                                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -963,8 +976,9 @@ Window {
                                         ColumnLayout {
                                             Layout.fillWidth: true
                                             spacing: 2
-                                            Controls.Label { text: modelData.title; color: Th.calendarFg; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true }
+                                            Controls.Label { textFormat: Text.PlainText; text: modelData.title; color: Th.calendarFg; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: (modelData.game ? modelData.game + "  ·  " : "") + cal.kindLabel(modelData.kind)
                                                       + (modelData.freePlay && modelData.kind !== "freeplay" ? "  ·  free play allowed" : "")
                                                       + (modelData.joinIfYouCan ? "  ·  join if you can" : "")
@@ -986,6 +1000,7 @@ Window {
                                             }
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             text: (modelData.rsvp ? modelData.rsvp.yes.length : 0) + " going"
                                                   + ((modelData.rsvp && modelData.rsvp.maybe.length > 0) ? " · " + modelData.rsvp.maybe.length + " maybe" : "")
                                             color: Th.calendarMetaFg
@@ -1016,7 +1031,7 @@ Window {
                                 delegate: Controls.ItemDelegate {
                                     required property var modelData
                                     Layout.fillWidth: true
-                                    text: cal.fmtDay(modelData.effStart) + "  ·  " + modelData.title + (modelData.game ? "  ·  " + modelData.game : "")
+                                    text: LinkGate.plain(cal.fmtDay(modelData.effStart) + "  ·  " + modelData.title + (modelData.game ? "  ·  " + modelData.game : ""))
                                     onClicked: { cal.selectedId = modelData.id; cal.editing = false }
                                 }
                             }
@@ -1072,7 +1087,7 @@ Window {
                                         contentItem: Row {
                                             spacing: 8
                                             Rectangle { width: 14; height: 14; radius: 7; color: modelData; anchors.verticalCenter: parent.verticalCenter }
-                                            Controls.Label { text: "Colour " + (index + 1); anchors.verticalCenter: parent.verticalCenter }
+                                            Controls.Label { textFormat: Text.PlainText; text: "Colour " + (index + 1); anchors.verticalCenter: parent.verticalCenter }
                                         }
                                     }
                                     contentItem: Row {
@@ -1132,8 +1147,9 @@ Window {
                                         RowLayout {
                                             Layout.fillWidth: true
                                             Rectangle { Layout.preferredWidth: 12; Layout.preferredHeight: 12; radius: 6; color: modelData.color }   // 10.1 (TH-CAL-09): a layout child sizes from Layout.*, so this drew 0×0
-                                            Kirigami.Heading { level: 4; text: modelData.name; color: Th.calendarFg }
+                                            Kirigami.Heading { textFormat: Text.PlainText; level: 4; text: modelData.name; color: Th.calendarFg }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 visible: !!(modelData.server && modelData.server.length > 0)
                                                 text: modelData.server
                                                 color: Th.calendarEmphasisFg
@@ -1156,6 +1172,7 @@ Window {
                                             }
                                         }
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
                                             wrapMode: Text.WordWrap
                                             text: (modelData.rules && modelData.rules.length > 0) ? modelData.rules : "No standing rules yet."
@@ -1242,6 +1259,7 @@ Window {
                                 }
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                                 text: cal.kindHint(cal.dKind)
@@ -1305,6 +1323,7 @@ Window {
                                 }
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: cal.dKind !== "focus"
                                 text: cal.validKey(cal.dDate) ? (cal.fmtDayLong(cal.keyToDate(cal.dDate).getTime()) + " · " + cal.timeSlots[Math.floor(cal.dTime / 15)] + " " + cal.tz()) : "Pick a valid date"
                                 color: Th.calendarMetaFg
@@ -1323,6 +1342,7 @@ Window {
                                         required property int index
                                         Layout.fillWidth: true
                                         Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
                                             text: (index + 1) + ".  " + cal.fmtDay(cal.keyToDate(modelData.date, modelData.time).getTime()) + " · " + cal.timeSlots[Math.floor(modelData.time / 15)]
                                             color: Th.calendarFg
@@ -1399,13 +1419,13 @@ Window {
                                     radius: 9; implicitHeight: 18; implicitWidth: kindLbl.implicitWidth + 14
                                     color: cal.tint(cal.kindColor(detail.ev.kind), 0.22)
                                     border.width: 1; border.color: cal.kindColor(detail.ev.kind)
-                                    Controls.Label { id: kindLbl; anchors.centerIn: parent; text: cal.kindLabel(detail.ev.kind); color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 }
+                                    Controls.Label { textFormat: Text.PlainText; id: kindLbl; anchors.centerIn: parent; text: cal.kindLabel(detail.ev.kind); color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 }
                                 }
                                 Rectangle {
                                     visible: !!(detail.ev.game && detail.ev.game.length > 0)
                                     radius: 9; implicitHeight: 18; implicitWidth: gameLbl.implicitWidth + 14
                                     color: cal.tint(cal.chipColor(detail.ev), 0.22)
-                                    Controls.Label { id: gameLbl; anchors.centerIn: parent; text: detail.ev.game || ""; color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 }
+                                    Controls.Label { textFormat: Text.PlainText; id: gameLbl; anchors.centerIn: parent; text: detail.ev.game || ""; color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 }
                                 }
                                 // 9.0 Game Reel: a session with no game yet offers the picker (DESIGN §4.1).
                                 Controls.AbstractButton {
@@ -1442,11 +1462,11 @@ Window {
                                     onClicked: { deleteConfirm.targetId = detail.ev.id; deleteConfirm.open() }
                                 }
                             }
-                            Kirigami.Heading { Layout.fillWidth: true; level: 2; text: detail.ev.title || ""; color: Th.calendarFg; wrapMode: Text.WordWrap }
+                            Kirigami.Heading { textFormat: Text.PlainText; Layout.fillWidth: true; level: 2; text: detail.ev.title || ""; color: Th.calendarFg; wrapMode: Text.WordWrap }
                             RowLayout {
                                 spacing: 8
                                 ThIcon { app: cal.app; name: "view-calendar-upcoming-events-symbolic"; width: 18; height: 18; color: Th.calendarDetailWhenIcon }
-                                Controls.Label { Layout.fillWidth: true; text: cal.whenLine(detail.ev) + (detail.ev.effStart ? "  " + cal.tz() : ""); color: Th.calendarFg; font.bold: true; wrapMode: Text.WordWrap }
+                                Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: cal.whenLine(detail.ev) + (detail.ev.effStart ? "  " + cal.tz() : ""); color: Th.calendarFg; font.bold: true; wrapMode: Text.WordWrap }
                             }
                             Flow {
                                 Layout.fillWidth: true
@@ -1457,9 +1477,10 @@ Window {
                             RowLayout {
                                 spacing: 6
                                 Avatar { app: cal.app; size: 20; name: detail.ev.creator ? detail.ev.creator.name : ""; seed: detail.ev.createdBy || ""; imageSource: detail.ev.creator ? detail.ev.creator.avatar : "" }
-                                Controls.Label { text: "Organised by " + (detail.ev.creator ? detail.ev.creator.name : ""); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                Controls.Label { textFormat: Text.PlainText; text: "Organised by " + (detail.ev.creator ? detail.ev.creator.name : ""); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: !!(detail.ev.notes && detail.ev.notes.length > 0)
                                 Layout.fillWidth: true
                                 text: detail.ev.notes || ""
@@ -1472,8 +1493,9 @@ Window {
                                 spacing: 2
                                 visible: !!((detail.ev.rules && detail.ev.rules.length > 0) || (cal.gameFor(detail.ev) && cal.gameFor(detail.ev).rules && cal.gameFor(detail.ev).rules.length > 0))
                                 Controls.Label { text: "Rules"; color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
-                                Controls.Label { visible: !!(detail.ev.rules && detail.ev.rules.length > 0); Layout.fillWidth: true; text: detail.ev.rules || ""; color: Th.calendarFg; wrapMode: Text.WordWrap }
+                                Controls.Label { textFormat: Text.PlainText; visible: !!(detail.ev.rules && detail.ev.rules.length > 0); Layout.fillWidth: true; text: detail.ev.rules || ""; color: Th.calendarFg; wrapMode: Text.WordWrap }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     visible: !!(cal.gameFor(detail.ev) && cal.gameFor(detail.ev).rules && cal.gameFor(detail.ev).rules.length > 0)
                                     Layout.fillWidth: true
                                     text: cal.gameFor(detail.ev) ? (cal.gameFor(detail.ev).name + " standing rules: " + cal.gameFor(detail.ev).rules) : ""
@@ -1481,6 +1503,7 @@ Window {
                                     wrapMode: Text.WordWrap
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     visible: !!(cal.gameFor(detail.ev) && cal.gameFor(detail.ev).server && cal.gameFor(detail.ev).server.length > 0)
                                     text: cal.gameFor(detail.ev) ? ("Join: " + cal.gameFor(detail.ev).server) : ""
                                     color: Th.calendarEmphasisFg
@@ -1522,7 +1545,7 @@ Window {
                                             ColumnLayout {
                                                 Layout.fillWidth: true
                                                 spacing: 0
-                                                Controls.Label { text: cal.fmtDay(modelData.start) + " · " + cal.fmtTime(modelData.start); color: Th.calendarFg; font.bold: true }
+                                                Controls.Label { textFormat: Text.PlainText; text: cal.fmtDay(modelData.start) + " · " + cal.fmtTime(modelData.start); color: Th.calendarFg; font.bold: true }
                                                 Row {
                                                     spacing: -6
                                                     Repeater {
@@ -1531,7 +1554,7 @@ Window {
                                                     }
                                                 }
                                             }
-                                            Controls.Label { text: (modelData.votes ? modelData.votes.length : 0) + (modelData.votes && modelData.votes.length === 1 ? " can" : " can"); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                            Controls.Label { textFormat: Text.PlainText; text: (modelData.votes ? modelData.votes.length : 0) + (modelData.votes && modelData.votes.length === 1 ? " can" : " can"); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                                             ThButton {
                                                 app: cal.app;
                                                 visible: detail.ev.canEdit === true && detail.ev.chosen < 0
@@ -1574,6 +1597,7 @@ Window {
                                             border.color: rsvpBtn.on ? rsvpBtn.modelData.c : Th.calendarRsvpBorder
                                         }
                                         contentItem: Controls.Label {
+                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             text: rsvpBtn.modelData.l + "  " + rsvpBtn.n
                                             horizontalAlignment: Text.AlignHCenter
                                             verticalAlignment: Text.AlignVCenter
@@ -1610,7 +1634,7 @@ Window {
                                             Row {
                                                 id: yesRow; anchors.centerIn: parent; spacing: 5
                                                 Avatar { app: cal.app; size: 20; name: modelData.name; seed: modelData.mxid; imageSource: modelData.avatar; anchors.verticalCenter: parent.verticalCenter }
-                                                Controls.Label { text: modelData.name; color: Th.calendarFg; anchors.verticalCenter: parent.verticalCenter }
+                                                Controls.Label { textFormat: Text.PlainText; text: modelData.name; color: Th.calendarFg; anchors.verticalCenter: parent.verticalCenter }
                                             }
                                         }
                                     }
@@ -1623,12 +1647,13 @@ Window {
                                             Row {
                                                 id: mayRow; anchors.centerIn: parent; spacing: 5
                                                 Avatar { app: cal.app; size: 20; name: modelData.name; seed: modelData.mxid; imageSource: modelData.avatar; anchors.verticalCenter: parent.verticalCenter }
-                                                Controls.Label { text: modelData.name + " (maybe)"; color: Th.calendarFg; anchors.verticalCenter: parent.verticalCenter }
+                                                Controls.Label { textFormat: Text.PlainText; text: modelData.name + " (maybe)"; color: Th.calendarFg; anchors.verticalCenter: parent.verticalCenter }
                                             }
                                         }
                                     }
                                 }
                                 Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     visible: !!(detail.ev.rsvp && detail.ev.rsvp.no.length > 0)
                                     Layout.fillWidth: true
                                     text: "Can't make it: " + (detail.ev.rsvp ? detail.ev.rsvp.no.map(function (p) { return p.name }).join(", ") : "")
@@ -1646,17 +1671,20 @@ Window {
                             Layout.margins: 12
                             spacing: 8
                             Kirigami.Heading {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 level: 3
                                 text: cal.validKey(cal.selectedDay) ? cal.fmtDayLong(cal.keyToDate(cal.selectedDay).getTime()) : ""
                                 color: Th.calendarFg
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: !!(cal.validKey(cal.selectedDay) && cal.relDay(cal.keyToDate(cal.selectedDay).getTime()).length > 0)
                                 text: cal.validKey(cal.selectedDay) ? cal.relDay(cal.keyToDate(cal.selectedDay).getTime()) : ""
                                 color: Th.calendarEmphasisFg
                                 font.bold: true
                             }
                             Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: cal.focusOn(cal.selectedDay) !== null
                                 Layout.fillWidth: true
                                 text: cal.focusOn(cal.selectedDay) ? ("Main game: " + ((cal.focusOn(cal.selectedDay).game && cal.focusOn(cal.selectedDay).game.length > 0) ? cal.focusOn(cal.selectedDay).game : cal.focusOn(cal.selectedDay).title) + "  ·  " + cal.whenLine(cal.focusOn(cal.selectedDay))) : ""
@@ -1690,13 +1718,15 @@ Window {
                                         ColumnLayout {
                                             Layout.fillWidth: true
                                             spacing: 1
-                                            Controls.Label { text: modelData.title; color: Th.calendarFg; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true; font.strikeout: modelData.canceled === true }
+                                            Controls.Label { textFormat: Text.PlainText; text: modelData.title; color: Th.calendarFg; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true; font.strikeout: modelData.canceled === true }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: cal.fmtTime(modelData.effStart) + (modelData.end > modelData.effStart ? " – " + cal.fmtTime(modelData.end) : "")
                                                       + (modelData.game ? "  ·  " + modelData.game : "") + "  ·  " + cal.kindLabel(modelData.kind)
                                                 color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.fillWidth: true
                                             }
                                             Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: (modelData.rsvp ? modelData.rsvp.yes.length : 0) + " going"
                                                       + ((modelData.rsvp && modelData.rsvp.maybe.length > 0) ? " · " + modelData.rsvp.maybe.length + " maybe" : "")
                                                       + (cal.myStatus(modelData) === "yes" ? "  ·  you're in" : "")
