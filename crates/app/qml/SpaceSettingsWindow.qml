@@ -415,6 +415,21 @@ Window {
             height: visible ? implicitHeight : 0
             onTriggered: win.messageUser(String(win.actor.mxid || ""))
         }
+        // account safety (safety.rs): Ignore… / Stop ignoring · Report… (the web's PersonMenuItems)
+        Controls.MenuItem {
+            visible: !!win.actor && win.actor.isMe !== true && !!win.app.safety
+            height: visible ? implicitHeight : 0
+            text: LinkGate.plain(visible ? (win.app.safety.isIgnored(String(win.actor.mxid || "")) ? String(win.app.safety.w.unignore) : String(win.app.safety.w.ignore)) : "")
+            icon.name: "dialog-cancel-symbolic"
+            onTriggered: win.app.safety.openIgnore(String(win.actor.mxid || ""), win.actorName)
+        }
+        Controls.MenuItem {
+            visible: !!win.actor && win.actor.isMe !== true && !!win.app.safety
+            height: visible ? implicitHeight : 0
+            text: LinkGate.plain(visible ? String(win.app.safety.w.report) : "")
+            icon.name: "dialog-warning"
+            onTriggered: win.app.safety.openReport(String(win.actor.mxid || ""), win.spaceId, "", win.actorName)
+        }
         Controls.MenuSeparator { visible: rolesItem.visible; height: visible ? implicitHeight : 0 }
         Controls.MenuItem {
             id: rolesItem

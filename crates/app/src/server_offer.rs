@@ -131,6 +131,9 @@ pub struct ServerOffer {
     pub recorder: String,
     /// `account.password_reset`: Owner only for the string "owner" (password.rs)
     pub password_reset: PasswordReset,
+    /// `account.owner`: the server owner's account (a valid user id, else ""); safety.rs refuses "Delete my account"
+    /// for it (Tin Hat Server: SERVER-SPEC.md of the account-safety round)
+    pub owner: String,
 }
 
 /// No announcement (today's behaviour everywhere).
@@ -186,7 +189,8 @@ pub fn parse_offer(well_known: &Value) -> ServerOffer {
         Some("owner") => PasswordReset::Owner,
         _ => PasswordReset::Email,
     };
-    ServerOffer { server, api, features, recorder, password_reset }
+    let owner = t.get("account").and_then(obj).and_then(|a| a.get("owner")).and_then(Value::as_str).filter(|o| is_mxid(o)).unwrap_or("").to_string();
+    ServerOffer { server, api, features, recorder, password_reset, owner }
 }
 
 /// Is the feature on? Only an explicit `false` turns it off.
@@ -205,7 +209,7 @@ pub fn feature_for(offer: &ServerOffer, f: ServerFeature, guest: bool) -> bool {
 
 /// Settings rows a temporary guest account never sees, whatever the server offers (they leave the Settings search too;
 /// SettingsWindow hides them by `app.mGuestAccount`): its password is the server's, not one it chose.
-pub const GUEST_HIDDEN_SETTINGS: [&str; 1] = ["security.password"];
+pub const GUEST_HIDDEN_SETTINGS: [&str; 2] = ["security.password", "security.delete"];
 
 /// Is this settings row shown to this user? (GUEST_HIDDEN_SETTINGS for a guest account.)
 pub fn setting_for_guest(id: &str, guest: bool) -> bool {
@@ -245,6 +249,12 @@ pub fn offer_to_json(o: &ServerOffer) -> Value {
     let mut v = json!({ "server": o.server, "api": o.api, "features": f, "recorder": o.recorder });
     if o.password_reset == PasswordReset::Owner {
         v["account"] = json!({ "password_reset": PasswordReset::Owner.name() });
+    }
+    if !o.owner.is_empty() {
+        if !v["account"].is_object() {
+            v["account"] = json!({});
+        }
+        v["account"]["owner"] = Value::String(o.owner.clone());
     }
     v
 }
@@ -899,6 +909,7 @@ mod tests {
                 ]),
                 recorder: "@recorder:maplehouse.tinhat.me".into(),
                 password_reset: PasswordReset::Email,
+                owner: "".into(),
             }
         );
         for f in [Calls, Soundboard, Gifs, Games, Presence, Push, Memories, Reports, Guests] {
@@ -936,7 +947,7 @@ mod tests {
     #[test]
     fn only_booleans_count_unknown_keys_and_odd_values_are_ignored() {
         let o = parse_offer(&offer_with(json!({ "memories": "false", "soundboard": 0, "calls": null, "gifs": "no", "extra": true }), json!({ "server": 7, "api": null })));
-        assert_eq!(o, ServerOffer { server: "".into(), api: "".into(), features: BTreeMap::new(), recorder: "".into(), password_reset: PasswordReset::Email });
+        assert_eq!(o, ServerOffer { server: "".into(), api: "".into(), features: BTreeMap::new(), recorder: "".into(), password_reset: PasswordReset::Email, owner: "".into() });
         for f in SERVER_FEATURES {
             assert!(feature_on(&o, f), "{}", f.name());
         }
@@ -995,6 +1006,25 @@ mod tests {
         assert_eq!(parse_offer(&json!({ DISCOVERY_KEY: kept })), o);
         assert!(offer_to_json(&no_offer()).get("account").is_none());
         assert_eq!(no_offer().password_reset, PasswordReset::Email);
+    }
+
+    /// account-safety round: `account.owner` (the server owner's account; "Delete my account" refuses it). The web's
+    /// offer.test.ts "the owner" checks the same cases.
+    #[test]
+    fn the_owner() {
+        let ow = |a: Value| parse_offer(&json!({ DISCOVERY_KEY: { "account": a } })).owner;
+        assert_eq!(ow(json!({ "owner": "@boss:x.test" })), "@boss:x.test");
+        for bad in [json!("boss"), json!(""), json!(5), json!(null), json!("@ boss:x")] {
+            assert_eq!(ow(json!({ "owner": bad.clone() })), "", "{bad}");
+        }
+        let o = parse_offer(&json!({ DISCOVERY_KEY: { "server": "0.3.5", "account": { "password_reset": "owner", "owner": "@boss:x.test" } } }));
+        assert_eq!(o.password_reset, PasswordReset::Owner);
+        let kept = offer_to_json(&o);
+        assert_eq!(kept["account"], json!({ "password_reset": "owner", "owner": "@boss:x.test" }));
+        assert_eq!(parse_offer(&json!({ DISCOVERY_KEY: kept })), o);
+        let only = parse_offer(&json!({ DISCOVERY_KEY: { "account": { "owner": "@boss:x.test" } } }));
+        assert_eq!(offer_to_json(&only)["account"], json!({ "owner": "@boss:x.test" }));
+        assert!(!same_offer(&o, &ServerOffer { owner: "".into(), ..o.clone() }));
     }
 
     #[test]

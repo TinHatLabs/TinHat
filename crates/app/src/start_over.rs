@@ -53,6 +53,30 @@ static START_OVER_BUSY: AtomicBool = AtomicBool::new(false);
 /// The check's request went through without the server asking for the password (the web says the same).
 pub const NOT_ASKED: &str = "your server didn't ask for your password, so Tin Hat can't confirm it's you";
 
+/// The way into Start over (VerifyDeviceDialog.qml; the web's START_OVER.link, byte for byte).
+pub const LINK: &str = "Lost your Security Key? Start over";
+/// The second way out, the Security Key (the chooser's own words, repeated on the screens below; the web's USE_KEY).
+pub const USE_KEY: &str = "No other device? Use your Security Key";
+
+/// Which verification screens carry the way out (USE_KEY, then LINK), fix/recovery-escape-desktop 2026-10-26 — the
+/// web's offersStartOver (startOver.ts), same table. A friend on a phone saw only "Use another device": Start over sat
+/// inside the Security Key panel (behind a button that asks for the very key they didn't have), and once they had
+/// tried another device the waiting and cancelled screens offered only Cancel / Try again. The desktop was the same.
+/// - the first screen (state ""), waiting for my other device (I asked) and cancelled: while this device is not
+///   verified (on the first screen right under the Security Key option, no other click needed). A verified device
+///   keeps it where 12.0.1 put it, inside the Security Key panel: one click further from an accidental reset
+/// - never while another device's request is being answered (someone is there) or emoji are on screen.
+pub fn offers_start_over(sas_state: &str, sas_incoming: bool, this_device_verified: bool) -> bool {
+    if this_device_verified {
+        return false;
+    }
+    match sas_state {
+        "" => true,
+        "waiting" => !sas_incoming,
+        s => s == "cancelled",
+    }
+}
+
 /// Is a Start over running now? (The dialog ignores a second press instead of disturbing the first.)
 pub fn is_running() -> bool {
     START_OVER_BUSY.load(Ordering::SeqCst)
@@ -315,6 +339,37 @@ mod tests {
         assert!(!lab_server("https://chat.example.org"));
         assert!(!lab_server("https://name.tinhat.me"));
         assert!(!lab_server("https://test.example.com"));
+    }
+
+    /// The web's startOver.test.ts "the way out is on every screen a new device can end up on", same cases.
+    #[test]
+    fn the_way_out_is_on_every_screen() {
+        let at = |s: &str| offers_start_over(s, false, false);
+        // the first screen, no other click (a verified device: only inside the Security Key panel, as in 12.0.1)
+        assert!(at(""));
+        assert!(!offers_start_over("", false, true));
+        // tried another device: waiting on it, or it was cancelled / timed out / nothing could vouch
+        assert!(at("waiting"));
+        assert!(at("cancelled"));
+        assert!(offers_start_over("cancelled", true, false));
+        // not while someone is there (another device asks), emoji are compared or keys are being made
+        assert!(!offers_start_over("waiting", true, false));
+        for s in ["emoji", "confirming", "done", "recovery-working", "recovery-done"] {
+            assert!(!at(s), "{s}");
+        }
+        // a verified device has nothing to escape from
+        assert!(!offers_start_over("waiting", false, true));
+        assert!(!offers_start_over("cancelled", false, true));
+    }
+
+    /// The two ways out keep the web's words (startOver.ts USE_KEY / START_OVER.link), and the dialog says them.
+    #[test]
+    fn the_two_ways_out_keep_the_webs_words() {
+        assert_eq!(USE_KEY, "No other device? Use your Security Key");
+        assert_eq!(LINK, "Lost your Security Key? Start over");
+        let qml = include_str!("../qml/VerifyDeviceDialog.qml");
+        assert!(qml.contains(&format!("\"{USE_KEY}\"")));
+        assert!(qml.contains(&format!("\"{LINK}\"")));
     }
 
     /// Two at once is refused; the guard is released when a run ends.

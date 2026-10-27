@@ -148,6 +148,9 @@ fn main() {
                 "qml/ConfirmDialog.qml",
                 "qml/TextViewerDialog.qml",   // launch-gate's web review #8: text-like attachments shown in the app
                 "qml/ChangePasswordDialog.qml",   // selfhost: Settings → Devices & security → Password (password.rs)
+                "qml/TrustDeviceDialog.qml",   // 12.0.4: Settings → Devices & security → the phone's "Trust…" (trust_device.rs)
+                "qml/SafetyHost.qml",   // account safety: the Ignore + Report dialogs (safety.rs)
+                "qml/DeleteAccountDialog.qml",   // account safety: Settings → Devices & security → Delete my account
                 "qml/BugReportDialog.qml",
                 "qml/VerifyDeviceDialog.qml",
                 "qml/EmojiPicker.qml",

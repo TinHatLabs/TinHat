@@ -29,13 +29,13 @@ use livekit::{Room, RoomOptions};
 use crate::capture::ScreenCast;
 
 // H.264 (incl. NVENC) maxes at 4096 per dimension; ultrawide/4K screens exceed it,
-// which silently produces no encoded media (blank tile). We scale the source DOWN to
-// fit the chosen quality box PRESERVING ASPECT (no more squishing an ultrawide into
-// 16:9).
+// which silently produces no encoded media (blank tile). We scale the source DOWN
+// PRESERVING ASPECT (no more squishing an ultrawide into 16:9) — see fit_even.
 
-// ---- Screen-share quality: a resolution cap (box), fps, and bitrate the user picks.
-// The source is fit into the box preserving aspect, so the published frame matches the
-// monitor's real shape (an ultrawide stays ultrawide).
+// ---- Screen-share quality: a resolution preset (box), fps, and bitrate the user picks.
+// The preset's short side is the line count the source is scaled to, preserving aspect,
+// so the published frame matches the monitor's real shape (an ultrawide stays ultrawide
+// AND keeps the preset's lines).
 /// Which encoder the screen-share publishes with. The two viable choices on this
 /// stack (libwebrtc's NVENC factory only does H.264/H.265, and browsers can only
 /// *decode* H.264 of those over WebRTC):
@@ -82,8 +82,8 @@ pub struct ShareQuality {
 }
 impl Default for ShareQuality {
     fn default() -> Self {
-        // "Game High": 1080p box, 30fps, 12 Mbps over hardware NVENC. Aspect-preserving +
-        // ÷16-aligned (an ultrawide publishes ~1920x800). Safe default; higher/lower
+        // "Game High": 1080p, 30fps, 12 Mbps over hardware NVENC. Aspect-preserving +
+        // ÷16-aligned (a 21:9 ultrawide publishes 2560x1072). Safe default; higher/lower
         // presets are user-selectable.
         Self { max_w: 1920, max_h: 1080, fps: 30, bitrate_kbps: 12_000, encoder: ShareEncoder::NvencH264 }
     }
@@ -246,18 +246,29 @@ fn align16(x: u32) -> u32 {
     (x / 16) * 16
 }
 
-/// Fit (sw,sh) into the (max_w,max_h) box preserving aspect, never upscaling, with BOTH
-/// dimensions aligned to a multiple of 16. H.264 (incl. NVENC / libwebrtc) needs ÷16
-/// dimensions — a non-aligned width (e.g. 3412) silently encodes to a BLACK frame for
-/// peers even though local capture looks fine (the bug that broke ultrawide shares).
-/// The ≤15px aspect drift from alignment is imperceptible.
+/// The longest side a share is published at: H.264 (incl. NVENC) stops at 4096 per dimension, and a share must
+/// stay decodable when it falls back to H.264.
+pub const SHARE_MAX_DIM: u32 = 4096;
+
+/// The share's published size for a (sw,sh) source under a preset box (max_w,max_h) — the rule Tin Hat Web shares
+/// (`shareFit.ts`, vectors in testvectors/share-fit/vectors.json).
+///
+/// The preset's SHORT side is its line count: "1080p" (1920x1080) means 1080 lines, so the source's short side is
+/// scaled to it and the long side follows the source's aspect: a 21:9 5120x2160 publishes 2560x1072 at 1080p, a 16:9
+/// screen 1920x1072 as before, a portrait 1080x1920 screen 1072x1920. (The old rule fitted the source into the 16:9
+/// box itself, so the width bound first on any wider screen: 1080p on 21:9 came out 1920x800, 1440p 2560x1072.)
+/// Never upscaled; the long side at most [`SHARE_MAX_DIM`]. Each side rounded to the nearest pixel, then aligned down to a multiple of 16:
+/// H.264 (incl. NVENC / libwebrtc) needs ÷16 dimensions — a non-aligned width (e.g. 3412) silently encodes to a
+/// BLACK frame for peers even though local capture looks fine. The ≤15px aspect drift is imperceptible.
+/// An unknown source (0x0) gets the box itself.
 pub fn fit_even(sw: u32, sh: u32, max_w: u32, max_h: u32) -> (u32, u32) {
     if sw == 0 || sh == 0 {
         return (align16(max_w).max(16), align16(max_h).max(16));
     }
-    let cap_w = max_w.min(4096) as f64;
-    let cap_h = max_h.min(4096) as f64;
-    let scale = (cap_w / sw as f64).min(cap_h / sh as f64).min(1.0);
+    let lines = max_w.min(max_h) as f64;
+    let scale = (lines / sw.min(sh) as f64)
+        .min(SHARE_MAX_DIM as f64 / sw.max(sh) as f64)
+        .min(1.0);
     let w = align16((sw as f64 * scale).round() as u32).max(16);
     let h = align16((sh as f64 * scale).round() as u32).max(16);
     (w, h)
@@ -868,9 +879,20 @@ pub async fn selftest(ws_url: &str, jwt: &str, identity: &str, secs: u64) -> Res
 pub(crate) fn cuda_scale_available() -> bool {
     static OK: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *OK.get_or_init(|| {
-        ["cudaupload", "cudaconvertscale", "cudadownload"]
-            .iter()
-            .all(|n| gst::ElementFactory::find(n).is_some())
+        let missing: Vec<&str> = ["cudaupload", "cudaconvertscale", "cudadownload"]
+            .into_iter()
+            .filter(|n| gst::ElementFactory::find(n).is_none())
+            .collect();
+        if !missing.is_empty() {
+            // Said once: without it every share silently took the CPU path (a 12.0.0 Flatpak log had nothing).
+            let nvcodec = gst::Registry::get().find_plugin("nvcodec").is_some();
+            eprintln!(
+                "[capture] GPU (CUDA) scale unavailable: no {} (GStreamer nvcodec plugin {}) — shares scale on the CPU",
+                missing.join("/"),
+                if nvcodec { "loaded, CUDA elements not registered" } else { "not found" }
+            );
+        }
+        missing.is_empty()
     })
 }
 
@@ -980,7 +1002,14 @@ pub(crate) fn install_first_frame_repin(
                     if rw > 0 && rh > 0 {
                         *memo.lock().unwrap() = Some((rw, rh));
                     }
-                    eprintln!("[lk] capture real {rw}x{rh} -> publishing {ow}x{oh} (aspect-correct, {path})");
+                    // What the portal actually hands the scaler: memory:DMABuf on the CPU path is a GPU->CPU read of the
+                    // whole source per frame (the expensive case), system memory is the compositor's own copy.
+                    let mem = caps.features(0).map(|f| f.to_string()).unwrap_or_default();
+                    let fmt = s.get::<&str>("format").unwrap_or("?");
+                    eprintln!(
+                        "[lk] capture real {rw}x{rh} -> publishing {ow}x{oh} (aspect-correct, {path}; input {fmt} {})",
+                        if mem.is_empty() { "memory:SystemMemory" } else { mem.as_str() }
+                    );
                 }
             }
         }
@@ -1103,14 +1132,32 @@ pub(crate) fn cpu_capture_threads() -> u32 {
     (n / 2).clamp(1, 4)
 }
 
+/// The CPU path's convert + scale: ONE `videoconvertscale` pass (GStreamer 1.22+) where it exists. The old pair
+/// converted the WHOLE source to I420 and then read that full-size copy again to scale it; one pass reads the source
+/// once and writes only the output. Measured on builder (lanczos, 4 threads, ms per frame): 5120x2160 -> 2560x1072
+/// 7.8 -> 5.1, 5120x2160 -> 1920x800 6.5 -> 4.2, 3840x2160 -> 1920x1072 6.0 -> 3.9 — and about 4x all of those while
+/// another build loaded the box, i.e. what a game does to the share on the same machine.
+fn cpu_convert_scale(threads: u32) -> String {
+    static ONE_PASS: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    let one_pass = *ONE_PASS.get_or_init(|| {
+        let _ = gst::init();
+        gst::ElementFactory::find("videoconvertscale").is_some()
+    });
+    if one_pass {
+        format!("videoconvertscale method=lanczos add-borders=false n-threads={threads} name=vscale")
+    } else {
+        format!("videoconvert n-threads={threads} ! videoscale method=lanczos add-borders=false n-threads={threads} name=vscale")
+    }
+}
+
 /// The launch line of the CPU capture (tests feed a videotestsrc head).
 pub(crate) fn cpu_capture_desc(src: &str, download: &str, fps: u32, threads: u32) -> String {
+    let convert_scale = cpu_convert_scale(threads);
     format!(
         "{src} ! \
          videorate drop-only=true ! \
          video/x-raw(ANY),framerate={fps}/1 ! \
-         {download}videoconvert n-threads={threads} ! \
-         videoscale method=lanczos add-borders=false n-threads={threads} name=vscale ! \
+         {download}{convert_scale} ! \
          capsfilter name=outcaps caps=video/x-raw,format=I420 ! \
          queue max-size-buffers=4 leaky=downstream ! \
          appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
@@ -1608,6 +1655,37 @@ mod quiet_hook_tests {
 #[cfg(test)]
 mod share_capture_tests {
     use super::*;
+
+    /// The share size rule, case by case from the vectors Tin Hat Web runs too (testvectors/share-fit).
+    #[test]
+    fn share_fit_matches_the_shared_vectors() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testvectors/share-fit/vectors.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 10);
+        let pair = |c: &serde_json::Value, k: &str| (c[k][0].as_u64().unwrap() as u32, c[k][1].as_u64().unwrap() as u32);
+        for c in cases {
+            let (sw, sh) = pair(c, "src");
+            let (bw, bh) = pair(c, "box");
+            assert_eq!(fit_even(sw, sh, bw, bh), pair(c, "out"), "{}", c["name"]);
+        }
+    }
+
+    /// A 21:9 5120x2160 under every share preset: the preset's lines, the screen's aspect, H.264-safe.
+    #[test]
+    fn ultrawide_keeps_the_preset_lines() {
+        for (bw, bh) in [(1280, 720), (1920, 1080), (2560, 1440), (3840, 2160)] {
+            let (w, h) = fit_even(5120, 2160, bw, bh);
+            assert!(w <= SHARE_MAX_DIM && h <= SHARE_MAX_DIM && w % 16 == 0 && h % 16 == 0, "{w}x{h}");
+            if 5120 * bh / 2160 <= SHARE_MAX_DIM {
+                assert!(h + 16 > bh, "{bw}x{bh} -> {w}x{h} lost lines");
+            } else {
+                assert_eq!(w, SHARE_MAX_DIM, "{bw}x{bh} -> {w}x{h}: the long side is the limit");
+            }
+            let aspect = w as f64 / h as f64;
+            assert!((aspect - 5120.0 / 2160.0).abs() < 0.03, "{bw}x{bh} -> {w}x{h} aspect {aspect}");
+        }
+    }
 
     const SRC: &str = "videotestsrc is-live=true pattern=smpte ! video/x-raw,format=BGRx,width=3245,height=2067,framerate=60/1";
 

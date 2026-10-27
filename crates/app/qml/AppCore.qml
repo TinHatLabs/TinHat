@@ -1923,6 +1923,7 @@ Item {
             if (login.loggedIn && !core._myAvatarAsked) {
                 core._myAvatarAsked = true
                 settings.refreshMyAvatar()
+                settings.startSafety()   // account safety: the ignored list (safety.rs)
             }
             if (settings.avatarHttp !== mMyAvatar) mMyAvatar = settings.avatarHttp
             mNavActiveSpace = nav.activeSpace

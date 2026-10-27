@@ -194,6 +194,21 @@ Item {
                 color: Th.profileCardHintFg
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
             }
+            // account safety (safety.rs): Ignore… / Stop ignoring · Report… (the web's ProfileCard PersonButtons)
+            RowLayout {
+                visible: panel.cardMxid.length > 0 && panel.cardMxid !== String(panel.app.mUserId || "") && !!panel.app.safety
+                Layout.alignment: Qt.AlignHCenter
+                Controls.Button {
+                    icon.name: "dialog-cancel-symbolic"
+                    text: LinkGate.plain(parent.visible ? (panel.app.safety.isIgnored(panel.cardMxid) ? String(panel.app.safety.w.unignore) : String(panel.app.safety.w.ignore)) : "")
+                    onClicked: { var m = panel.cardMxid, n = panel.cardName || panel.cardMxid; profileCard.close(); panel.app.safety.openIgnore(m, n) }
+                }
+                Controls.Button {
+                    icon.name: "dialog-warning"
+                    text: LinkGate.plain(parent.visible ? String(panel.app.safety.w.report) : "")
+                    onClicked: { var m = panel.cardMxid, n = panel.cardName || panel.cardMxid; profileCard.close(); panel.app.safety.openReport(m, panel.roomId, "", n) }
+                }
+            }
             RowLayout {
                 Controls.Button {
                     text: "Play join sound"
@@ -777,6 +792,22 @@ Item {
                 panel.requestProfileCard(panel.actorMxid)
                 profileCard.open()
             }
+        }
+        // account safety (safety.rs): Ignore… / Stop ignoring · Report… (the web's PersonMenuItems; never for myself)
+        Controls.MenuItem {
+            readonly property bool other: panel.actorMxid.length > 0 && panel.actorMxid !== String(panel.app.mUserId || "")
+            visible: other
+            height: visible ? implicitHeight : 0
+            text: LinkGate.plain(panel.app.safety.isIgnored(panel.actorMxid) ? String(panel.app.safety.w.unignore) : String(panel.app.safety.w.ignore))
+            icon.name: "dialog-cancel-symbolic"
+            onTriggered: panel.app.safety.openIgnore(panel.actorMxid, panel.actorName)
+        }
+        Controls.MenuItem {
+            visible: panel.actorMxid.length > 0 && panel.actorMxid !== String(panel.app.mUserId || "")
+            height: visible ? implicitHeight : 0
+            text: LinkGate.plain(String(panel.app.safety.w.report))
+            icon.name: "dialog-warning"
+            onTriggered: panel.app.safety.openReport(panel.actorMxid, panel.roomId, "", panel.actorName)
         }
         Controls.MenuSeparator {}
         Controls.MenuItem {

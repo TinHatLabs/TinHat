@@ -118,6 +118,12 @@ pub mod qobject {
         // QML: loginController.logout()
         #[qinvokable]
         fn logout(self: Pin<&mut LoginController>);
+        /// QML: loginController.signOutDeleted() — account safety: the account was just deleted (settings.deleteAccount;
+        /// the server already ended every session): end here without telling the server, forget the account, and the
+        /// sign-in card says "Your account has been deleted." (safety.rs deleteDone)
+        #[qinvokable]
+        #[cxx_name = "signOutDeleted"]
+        fn sign_out_deleted(self: Pin<&mut LoginController>);
         // ---- Forgot password -------------------------------------------------
         // Same three-step flow the website uses, so a reset started in either client
         // is the same reset: ask the homeserver to mail a link, the user clicks it,
@@ -190,6 +196,14 @@ pub mod qobject {
         // QML: loginController.cancelDeviceVerification() — cancel / dismiss.
         #[qinvokable]
         fn cancel_device_verification(self: Pin<&mut LoginController>);
+        // QML: login.resetDeviceVerification() — back to the first screen (the web's resetVerification): ends the flow
+        // on screen and sends its cancel if one is still live (fix/recovery-escape-desktop).
+        #[qinvokable]
+        fn reset_device_verification(self: Pin<&mut LoginController>);
+        // QML: login.offersStartOver(sasState, sasIncoming, verified) — which screens carry the way out
+        // (start_over::offers_start_over; the web's offersStartOver, same table).
+        #[qinvokable]
+        fn offers_start_over(self: &LoginController, sas_state: &QString, sas_incoming: bool, verified: bool) -> bool;
         // QML: login.mismatchDeviceVerification() — "They don't match" (sends m.mismatched_sas).
         #[qinvokable]
         fn mismatch_device_verification(self: Pin<&mut LoginController>);
@@ -780,6 +794,22 @@ impl qobject::LoginController {
         self.end_session(true, "Signed out");
     }
 
+    /// account safety: after "Delete my account" (the tokens are dead already).
+    pub fn sign_out_deleted(mut self: Pin<&mut Self>) {
+        crate::safety::set_deleting(false);
+        let gone = std::mem::take(&mut *crate::safety::deleted_user().lock().unwrap());
+        let me = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
+        if *self.logged_in() && (gone.is_empty() || me != gone) {
+            return; // another account signed in meanwhile: never end ITS session
+        }
+        if !*self.logged_in() {
+            // the sync loop's rejected token got there first (the deletion killed it): only the words
+            self.as_mut().set_status(QString::from(crate::safety::word("deleteDone")));
+            return;
+        }
+        self.end_session(false, crate::safety::word("deleteDone"));
+    }
+
     /// The end of this session on this device, in Tin Hat Web's order (session.ts doLogout). First the call ends
     /// while the token still works (call_ctl::leave_for_sign_out: the call service told, mic and camera off, the
     /// membership withdrawn); a sign-out mid-call used to leave the call running, the mic live, behind the sign-in
@@ -822,6 +852,7 @@ impl qobject::LoginController {
         let goodbye = crate::presence::on_sign_out(old_client.clone());
         crate::theme_store::on_sign_out(&old_user); // themes 1b: this account's theme sync state is forgotten
         crate::layout_store::on_sign_out(); // 11.0 edit mode: the layouts' in-memory state is forgotten
+        crate::safety::forget(); // account safety: this device's copy of the ignored list
         // 10.6: after clear_client (the sync task is ended, the session generation bumped): nothing
         // of this session — notification levels, pending clicks, invites, call edges — acts for the next.
         crate::notify::forget_session();
@@ -1783,6 +1814,7 @@ impl qobject::LoginController {
                         crate::presence::on_sync(&client, &response.account_data).await;
                         crate::theme_store::on_sync(&client, &response.account_data).await; // themes 1b (THEMES-SYNC.md)
                         crate::layout_store::on_sync(&client, &response.account_data).await; // 11.0 edit mode (EDITMODE-UI §16)
+                        crate::safety::on_sync(&response.account_data); // account safety: the ignored list
                         // 10.0: incoming-call edges (rooms whose call started/ended this pass).
                         let edges = crate::callwatch::scan(&client).await;
                         if !edges.is_empty() {
@@ -1819,10 +1851,17 @@ impl qobject::LoginController {
                         if text.contains("M_UNKNOWN_TOKEN") || text.contains("UnknownToken") {
                             eprintln!("[sync] token rejected by the server — signing out: {text}");
                             // the server ended it already: nothing to tell it (end_session's tell_server)
-                            let _ = qt.queue(|mut o| {
+                            // account safety: a deletion in flight kills every token before its own answer
+                            // lands — the sign-in card then says what happened (safety.rs deleteDone)
+                            let deleting = crate::safety::deleting();
+                            let _ = qt.queue(move |mut o| {
                                 o.as_mut().end_session(
                                     false,
-                                    "You were signed out: this session expired or was ended from another device. Sign in again.",
+                                    if deleting {
+                                        crate::safety::word("deleteDone")
+                                    } else {
+                                        "You were signed out: this session expired or was ended from another device. Sign in again."
+                                    },
                                 );
                             });
                             return;
@@ -2002,6 +2041,12 @@ async fn rooms_json(client: &Client) -> String {
     }
     // Pending invites (otherwise completely invisible) — surfaced + sorted to the top.
     for room in client.invited_rooms() {
+        // account safety (safety.rs): an invite from someone I ignore is hidden (the server sends no new ones)
+        if let Ok(inv) = room.invite_details().await {
+            if inv.inviter.as_ref().is_some_and(|m| crate::safety::is_ignored(m.user_id().as_str())) {
+                continue;
+            }
+        }
         rooms.push(room_entry(client, &settings, &room, "invite").await);
     }
     // Order (Discord's, which is what people expect): pending invites, then DMs with
@@ -3603,6 +3648,32 @@ impl qobject::LoginController {
         self.as_mut().set_sas_note(QString::from(&crate::sas_policy::cancel_note(Some("m.user"))));
         self.as_mut().set_sas_can_start(false);
         runtime().spawn(ended.cancel_on_wire(false));
+    }
+
+    /// The ways out of the waiting / cancelled screens (fix/recovery-escape-desktop; the web's wayOut →
+    /// resetVerification): end whatever flow is showing — a live request gets its cancel on the wire, the same code
+    /// as Cancel (m.user) — and go back to the first screen, where the dialog opens the Security Key or Start over.
+    pub fn reset_device_verification(mut self: Pin<&mut Self>) {
+        let ended = crate::sas_driver::end_by_user();
+        self.as_mut().rust_mut().sas_shown_inc = crate::sas_driver::current_inc();
+        self.as_mut().set_sas_state(QString::default());
+        self.as_mut().set_sas_note(QString::default());
+        self.as_mut().set_sas_emoji(QString::from("[]"));
+        self.as_mut().set_sas_peer(QString::default());
+        self.as_mut().set_sas_incoming(false);
+        self.as_mut().set_sas_can_start(false);
+        self.as_mut().set_sas_can_bootstrap(false);
+        // the Security Key panel's last answer goes too (the web's status: ""; Astra review 2026-10-26)
+        if !*self.busy() {
+            self.as_mut().set_status(QString::default());
+        }
+        // A late write of the ended flow can't bring a screen back: queue_sas applies only while its incarnation is
+        // live/open, and end_by_user moved it on (the same path as Cancel).
+        runtime().spawn(ended.cancel_on_wire(false));
+    }
+
+    pub fn offers_start_over(&self, sas_state: &QString, sas_incoming: bool, verified: bool) -> bool {
+        crate::start_over::offers_start_over(&sas_state.to_string(), sas_incoming, verified)
     }
 
     /// "They don't match" — like cancel, but tells the other device WHY (m.mismatched_sas, as

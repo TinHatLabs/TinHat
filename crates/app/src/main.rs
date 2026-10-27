@@ -69,7 +69,9 @@ pub mod joinsound; // per-user join sounds published over the soundboard bridge 
 pub mod livekit; // OpenID -> lk-jwt-service LiveKit token (used by stream)
 pub mod proxy; // the user's server's Tin Hat API client (gif/soundboard/watch — keys stay server-side; the base from its well-known)
 pub mod server_offer; // selfhost: what the user's server offers (dev.tinhat.server in its well-known): API base, features, recorder, call service
+pub mod trust_device; // 12.0.4: trust the phone's native device — Devices → "Trust…" (the web's features/native/trust.ts)
 pub mod start_over; // 12.0.1: "Lost your Security Key? Start over" — a new identity, backup and Security Key (password first)
+pub mod safety; // account safety: ignore / report / delete my account (shared vectors with the web; docs/ACCOUNT-SAFETY.md)
 pub mod password; // selfhost: a forgotten password (the server's owner resets it: account.password_reset) and Change password (UIA)
 #[cfg(windows)]
 pub mod qvideo; // FFI to the QVideoSink prototype shim + TINHAT_QVS_TEST (Windows video tail)

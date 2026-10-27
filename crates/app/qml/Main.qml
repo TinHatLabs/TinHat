@@ -2089,6 +2089,10 @@ Kirigami.ApplicationWindow {
             Controls.Label { text: "↑ (empty composer)"; font.bold: true } Controls.Label { text: "Edit your last message" }
         }
     }
+    // account safety (safety.rs; the web's features/safety): Ignore… / Report… from every person menu and the message
+    // menu — root.safety.openIgnore(mxid, name) / openReport(user, room, event, name) / isIgnored(mxid)
+    SafetyHost { id: safetyHost; app: root }
+    readonly property var safety: safetyHost
     BugReportDialog {
         id: bugReportDialog
         app: root
@@ -2591,7 +2595,8 @@ Kirigami.ApplicationWindow {
         closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside
         width: 320
         // 10.6: + the presence line (REACH §2.6 item 4) when they share
-        height: 300 + (profileFlyout.pres ? 26 : 0)
+        height: 300 + (profileFlyout.pres ? 26 : 0) + (profileFlyout.other ? 40 : 0)   // + account safety's row (the web: 340)
+        readonly property bool other: root.profileMxid.length > 0 && root.profileMxid !== String(root.mUserId || "")
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
         padding: Kirigami.Units.largeSpacing
@@ -2671,6 +2676,23 @@ Kirigami.ApplicationWindow {
                 text: "Direct message"
                 // 10.1 (TH-SHELL-03): createDm has worked for months — the card said "coming soon".
                 onClicked: { login.createDm(root.profileMxid); profileFlyout.close() }
+            }
+            // account safety (safety.rs): Ignore… / Stop ignoring · Report… — the web's PersonButtons, same order
+            RowLayout {
+                visible: profileFlyout.other
+                Layout.alignment: Qt.AlignHCenter
+                spacing: Kirigami.Units.smallSpacing
+                readonly property string who: profileFlyout.profile.name || root.localpart(root.profileMxid)
+                Controls.Button {
+                    icon.name: "dialog-cancel-symbolic"
+                    text: LinkGate.plain(root.safety.isIgnored(root.profileMxid) ? String(root.safety.w.unignore) : String(root.safety.w.ignore))
+                    onClicked: { var m = root.profileMxid, n = parent.who; profileFlyout.close(); root.safety.openIgnore(m, n) }
+                }
+                Controls.Button {
+                    icon.name: "dialog-warning"
+                    text: LinkGate.plain(String(root.safety.w.report))
+                    onClicked: { var m = root.profileMxid, n = parent.who; profileFlyout.close(); root.safety.openReport(m, (room && room.roomId) ? String(room.roomId) : "", "", n) }
+                }
             }
         }
     }
@@ -3053,6 +3075,8 @@ Kirigami.ApplicationWindow {
         onSetUpRecoveryRequested: (pw) => login.setUpRecovery(pw)
         startOverNote: login.startOverNote
         onStartOverRequested: (pw) => login.startOver(pw)
+        offersStartOver: login.offersStartOver(login.sasState, login.sasIncoming, login.verified)
+        onSasResetRequested: login.resetDeviceVerification()
     }
 
     // A device we're already signed in to can be asked to verify a NEW one, so the

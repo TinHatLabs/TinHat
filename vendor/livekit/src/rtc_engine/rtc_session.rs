@@ -1860,6 +1860,16 @@ impl SessionInner {
             }
 
             matched.append(&mut partial_matched);
+            // PATCH (Tin Hat, local vendored copy): offer EVERY codec, the requested one first — never the requested
+            // one alone. The SFU (LiveKit 1.13.7, measured against a production server) negotiates the video codecs of a
+            // publisher connection on its FIRST video m-line and answers every later m-line from that set, whatever
+            // the later offer holds: after a VP9 share, an H.264-only offer came back answered VP9 (a payload type
+            // it never offered), libwebrtc took it, and the "H.264/NVENC" share ran libvpx on the CPU for the rest of
+            // the call (a 12.0.0 field report: every share at 11-22 fps). With the full list on every m-line the
+            // first negotiation holds all codecs and each later answer follows the offer's order, so each publish
+            // gets the codec it asks for (codecprobe: vp9 -> h264 -> av1 -> vp9 and h264 -> vp9 -> av1 -> h264,
+            // each step the requested codec).
+            matched.append(&mut unmatched);
 
             transceiver.set_codec_preferences(matched)?;
         }

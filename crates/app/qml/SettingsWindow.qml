@@ -366,11 +366,24 @@ Window {
         destructive: true
         onConfirmed: win.app.settings.removeEmail(removeEmailConfirm.address)
     }
+    // Devices & security → the phone's "Trust…" (trust_device.rs; the web's TrustSheet)
+    TrustDeviceDialog {
+        id: trustDialog
+        app: win.app
+        onDone: (text) => { win.toast(text, "short"); win.app.settings.refresh() }
+        onVerifyRequested: win.handOff("security", "verify")
+    }
     // selfhost: Devices & security → Your account → Password → "Change…" (password.rs; the web's twin)
     ChangePasswordDialog {
         id: changePasswordDialog
         app: win.app
         onChanged: (text) => win.toast(text, "long")
+    }
+    // account safety: Devices & security → Your account → Delete my account → "Delete…"; deleted = sign out here
+    DeleteAccountDialog {
+        id: deleteAccountDialog
+        app: win.app
+        onDeleted: { win.close(); win.app.login.signOutDeleted() }
     }
     // 0.8.33: which outputs the echo canceller listens to (the call bar's popup, here in this window)
     EcOutputsPopup { id: ecPop; app: win.app; ctl: win.app.callctl }
@@ -1208,6 +1221,37 @@ Window {
                             }
                         }
                     }
+                    // account safety (safety.rs; the web's IgnoredPeopleSection): the people I ignore, each with Stop
+                    // ignoring, or "You aren't ignoring anyone."
+                    SettingsSection {
+                        id: ignoredSection
+                        readonly property var list: { try { return JSON.parse(String(win.app.settings.ignoredJson || "[]")) } catch (e) { return [] } }
+                        title: String(win.app.safety.w.ignoredSection || "Ignored people")
+                        hint: String(win.app.safety.w.ignoredSectionHint || "")
+                        SettingsRow {
+                            visible: ignoredSection.list.length === 0
+                            app: win.app
+                            anchorId: "privacy.ignored"
+                            label: String(win.app.safety.w.ignoredEmpty || "")
+                        }
+                        Repeater {
+                            model: ignoredSection.list
+                            SettingsRow {
+                                required property var modelData
+                                required property int index
+                                app: win.app
+                                anchorId: index === 0 ? "privacy.ignored" : ""
+                                iconName: "dialog-cancel-symbolic"
+                                label: win.app.localpart(String(modelData))
+                                description: String(modelData)
+                                trailing: ThButton {
+                                    app: win.app
+                                    text: String(win.app.safety.w.unignore || "Stop ignoring")
+                                    onClicked: win.app.safety.setIgnored(String(modelData), win.app.localpart(String(modelData)), false)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // ================================ Devices & security ================================
@@ -1311,6 +1355,13 @@ Window {
                                 chip: devRow.modelData.isCurrent ? "This device" : ""
                                 description: (devRow.modelData.lastSeenTs > 0 ? "Last active " + win.app._agoText(devRow.modelData.lastSeenTs) : "")
                                              + (devRow.modelData.lastSeenIp && devRow.modelData.lastSeenIp.length > 0 ? (devRow.modelData.lastSeenTs > 0 ? "  ·  " : "") + devRow.modelData.lastSeenIp : "")
+                                // the phone's own Tin Hat device, not signed by my self-signing key yet (settings.rs "trustable")
+                                trailing: ThButton {
+                                    app: win.app
+                                    visible: devRow.modelData.trustable === true
+                                    text: JSON.parse(String(win.app.settings.trustWords(""))).action
+                                    onClicked: trustDialog.show(devRow.modelData.id, devRow.modelData.name || devRow.modelData.id)
+                                }
                                 HoverHandler { id: devHover }
                                 Controls.ToolTip.text: "Session " + devRow.modelData.id
                                 Controls.ToolTip.visible: devHover.hovered
@@ -1331,6 +1382,25 @@ Window {
                             label: "Password"
                             description: "Change the password you sign in with"
                             trailing: ThButton { app: win.app; text: "Change…"; onClicked: changePasswordDialog.open() }
+                        }
+                        // account safety (safety.rs; the web's DeleteAccountRow): explained, the password, deactivate
+                        // (erase); for the server's owner / system account the row says why it can't instead
+                        SettingsRow {
+                            id: deleteRow
+                            readonly property string refusal: win.visible && win.currentKey === "security" ? String(win.app.settings.deleteRefusal()) : ""
+                            app: win.app
+                            anchorId: "security.delete"
+                            iconName: "delete-symbolic"
+                            label: String(win.app.safety.w.deleteRow || "Delete my account")
+                            labelColor: deleteRow.refusal.length > 0 ? Th.settingsRowLabelFg : Th.settingsErrorFg
+                            description: deleteRow.refusal.length > 0 ? deleteRow.refusal : String(win.app.safety.w.deleteRowHint || "")
+                            trailing: ThButton {
+                                visible: deleteRow.refusal.length === 0
+                                app: win.app
+                                danger: true
+                                text: "Delete…"
+                                onClicked: deleteAccountDialog.open()
+                            }
                         }
                     }
                 }

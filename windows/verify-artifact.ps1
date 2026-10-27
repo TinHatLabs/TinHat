@@ -148,6 +148,36 @@ foreach ($m in @(
     }
 }
 
+# The signed updater (12.0.3, H3): a published exe trusts exactly Tin Hat's release key. A LAB build
+# (--features lab-update-key) carries the TINHAT-LAB-BUILD marker and a development key and must never ship
+# (gate 9, 2026-10-26: this script used to call such an exe publishable). Same rule as
+# the release tooling's sign-desktop-feeds: no marker, the release key present, and no other embedded
+# minisign public key (any 56-character "RW..." that decodes to 42 bytes starting with "Ed").
+$releaseKey = "RWQUG5ce+eVTK+HZgYoCViu7WY1nwnbLR8s54/zRQR0DLiACjVuh5Mkv"   # key id 2B53E5F91E971B14
+if ($exeText.Contains("TINHAT-LAB-BUILD")) {
+    "verify FAIL: TINHAT-LAB-BUILD marker present - a LAB build that trusts a development update key"
+    $fail++
+}
+# Every start position (a lookahead: overlapping candidates too, so one "RW..." can't hide the next), and an ordinal,
+# case-sensitive set: base64 is case-sensitive, PowerShell's @{} and -ne are not (Astra, 12.0.3 train).
+$keys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+foreach ($k in [regex]::Matches($exeText, "(?=(RW[A-Za-z0-9+/]{54}))")) {
+    $v = $k.Groups[1].Value
+    try { $b = [Convert]::FromBase64String($v) } catch { continue }
+    if ($b.Length -eq 42 -and $b[0] -eq 0x45 -and $b[1] -eq 0x64) { [void]$keys.Add($v) }
+}
+if ($keys.Contains($releaseKey)) {
+    "verify ok: the release update key is compiled in"
+} else {
+    "verify FAIL: the release update key is MISSING - built before the signed updater, or not ours"
+    $fail++
+}
+$others = @($keys | Where-Object { $_ -cne $releaseKey })
+if ($others.Count -gt 0) {
+    "verify FAIL: another minisign public key is compiled in besides the release key: $($others -join ', ')"
+    $fail++
+}
+
 if ($fail -ne 0) { "VERIFY: ARTIFACT IS NOT PUBLISHABLE"; exit 1 }
 "VERIFY PASS: artifact is publishable"
 exit 0

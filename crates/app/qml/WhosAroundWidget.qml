@@ -507,6 +507,21 @@ Item {
         Controls.MenuItem { text: "Message"; icon.name: "dialog-messages-symbolic"; onTriggered: if (personMenu.who) w.dm(personMenu.who) }
         Controls.MenuItem { text: "Call"; icon.name: "call-start-symbolic"; onTriggered: if (personMenu.who) w.callWith(personMenu.who) }
         Controls.MenuItem { text: "View profile"; icon.name: "user-identity-symbolic"; onTriggered: if (personMenu.who && w.app) w.app.openProfileFlyout(personMenu.who.mxid) }
+        // account safety (safety.rs): the web's WhosAround PersonMenuItems
+        Controls.MenuItem {
+            visible: !!personMenu.who && !!w.app && !!w.app.safety
+            height: visible ? implicitHeight : 0
+            text: LinkGate.plain(visible ? (w.app.safety.isIgnored(personMenu.who.mxid) ? String(w.app.safety.w.unignore) : String(w.app.safety.w.ignore)) : "")
+            icon.name: "dialog-cancel-symbolic"
+            onTriggered: w.app.safety.openIgnore(personMenu.who.mxid, String(personMenu.who.name || personMenu.who.mxid))
+        }
+        Controls.MenuItem {
+            visible: !!personMenu.who && !!w.app && !!w.app.safety
+            height: visible ? implicitHeight : 0
+            text: LinkGate.plain(visible ? String(w.app.safety.w.report) : "")
+            icon.name: "dialog-warning"
+            onTriggered: w.app.safety.openReport(personMenu.who.mxid, "", "", String(personMenu.who.name || personMenu.who.mxid))
+        }
     }
 
     // ── hover 500 ms → the profile card (the house Popover: avatar 48 · name, id, their presence line) ──

@@ -63,6 +63,21 @@ ThMenu {
         height: visible ? implicitHeight : 0
         onTriggered: menu.messageUser(menu.mxid)
     }
+    // account safety (safety.rs): Ignore… / Stop ignoring · Report… (the web's r.memberMenu safety-ignore / -report)
+    Controls.MenuItem {
+        visible: !!menu.app && !!menu.app.safety && menu.mxid.length > 0 && menu.mxid !== menu.myMxid
+        height: visible ? implicitHeight : 0
+        text: LinkGate.plain(visible ? (menu.app.safety.isIgnored(menu.mxid) ? String(menu.app.safety.w.unignore) : String(menu.app.safety.w.ignore)) : "")
+        icon.name: "dialog-cancel-symbolic"
+        onTriggered: menu.app.safety.openIgnore(menu.mxid, menu.name || menu.mxid)
+    }
+    Controls.MenuItem {
+        visible: !!menu.app && !!menu.app.safety && menu.mxid.length > 0 && menu.mxid !== menu.myMxid
+        height: visible ? implicitHeight : 0
+        text: LinkGate.plain(visible ? String(menu.app.safety.w.report) : "")
+        icon.name: "dialog-warning"
+        onTriggered: menu.app.safety.openReport(menu.mxid, String(menu.app.mCallRoomId || ""), "", menu.name || menu.mxid)
+    }
     // 9.4 corners ("pull aside"): a free person can be pulled into my corner (a new one if I am in
     // none); someone already aside can be joined; someone in MY corner shows Leave.
     readonly property string targetCorner: (menu.app && menu.mxid.length > 0)

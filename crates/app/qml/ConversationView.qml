@@ -486,7 +486,7 @@ Item {
                 if (!Array.isArray(parsed)) {
                     console.warn("[timeline] unreadable timeline JSON (" + conv._messagesRaw.length + " bytes) — kept what is on screen")
                     parsed = conv.mMessages
-                }
+                } else parsed = conv._dropIgnored(parsed)
                 conv.mMessages = parsed
                 // 10.0 receive sound: a NEW newest row from someone else, in the primary view, and
                 // not a history load. The first parse after a room open only seeds the tail.
@@ -590,12 +590,26 @@ Item {
         }
     }
 
+    // account safety (safety.rs): what someone I ignore already sent stays off screen (the server sends no more); the
+    // web's useRoomTimeline does the same. A change of the list re-reads the timeline.
+    readonly property string _ignoredRaw: (conv.app && conv.app.settings) ? String(conv.app.settings.ignoredJson || "") : ""
+    on_IgnoredRawChanged: conv._messagesRaw = ""   // the next poll re-parses (and filters) the timeline
+    function _dropIgnored(rows) {
+        var ign = []
+        try { ign = conv._ignoredRaw.length > 0 ? JSON.parse(conv._ignoredRaw) : [] } catch (e) { ign = [] }
+        if (!ign.length) return rows
+        var out = []
+        for (var i = 0; i < rows.length; i++) if (!rows[i] || ign.indexOf(String(rows[i].sender)) < 0) out.push(rows[i])
+        return out
+    }
+
     // ---- message action menu (right-click / long-press / the hover bar's "more") ----------
     property string ctxMsgId: ""
     property string ctxMsgBody: ""
     property bool ctxMsgMine: false
     property bool ctxMsgIsMedia: false
     property string ctxMsgSenderName: ""   // 10.1 (TH-CONV-07): for "Replying to <name>"
+    property string ctxMsgSender: ""   // account safety: the sender's id (Report…)
     property bool ctxMsgRedacted: false
     property bool ctxMsgPinned: false
     property bool ctxMsgEcho: false
@@ -637,6 +651,7 @@ Item {
         conv.ctxMsgName = (md.body !== undefined && String(md.body).length > 0) ? String(md.body) : "file"
         conv.ctxMsgRedacted = md.redacted === true || md.undecryptable === true   // 10.1: nothing to reply to / react to on a locked row
         conv.ctxMsgSenderName = md.senderName !== undefined ? String(md.senderName) : ""   // 10.1 (TH-CONV-07)
+        conv.ctxMsgSender = md.sender !== undefined ? String(md.sender) : ""   // account safety
         conv.ctxMsgPinned = md.pinned === true
         conv.ctxMsgEcho = md.echo === true
         conv.ctxMsgIsDice = md.dice !== undefined && md.dice !== null && md.redacted !== true
@@ -731,6 +746,20 @@ Item {
             visible: conv.ctxMsgMine && !conv.ctxMsgRedacted && !conv.ctxMsgEcho
             height: visible ? implicitHeight : 0
             onTriggered: msgDeleteConfirm.open()
+        }
+        // account safety (safety.rs): someone else's message → Report… (the web's message-menu entry, after Delete)
+        Controls.MenuSeparator {
+            visible: reportMsgItem.visible
+            height: visible ? implicitHeight : 0
+        }
+        Controls.MenuItem {
+            id: reportMsgItem
+            text: LinkGate.plain(conv.app && conv.app.safety ? String(conv.app.safety.w.report) : "")
+            icon.name: "dialog-warning"
+            visible: !conv.ctxMsgMine && !conv.ctxMsgEcho && conv.ctxMsgSender.length > 0 && conv.ctxMsgId.length > 0
+                     && conv.ctxMsgId.charAt(0) === "$" && !!conv.app && !!conv.app.safety
+            height: visible ? implicitHeight : 0
+            onTriggered: conv.app.safety.openReport(conv.ctxMsgSender, conv.room.roomId, conv.ctxMsgId, conv.ctxMsgSenderName)
         }
     }
     EmojiPicker {

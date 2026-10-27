@@ -12,6 +12,9 @@ repository = "https://github.com/TinHatLabs/TinHat"
 # threads on unpublish — upstream leaks them for the call lifetime (~30 threads per re-publish:
 # camera toggle / BRB cam-off / screen-share quality change). Vendored from crates.io 0.7.46;
 # see vendor/livekit/src/room/participant/local_participant.rs (search "PATCH (Tin Hat").
+# Also: create_sender offers every codec with the requested one first (the SFU pins a connection's video codecs on
+# its first m-line, so a one-codec offer stuck every later share to the first one's codec) —
+# vendor/livekit/src/rtc_engine/rtc_session.rs (search "PATCH (Tin Hat").
 [patch.crates-io]
 livekit = { path = "vendor/livekit" }
 # Vendored fork of webrtc-sys 0.3.35 (was previously patched in-place in the cargo

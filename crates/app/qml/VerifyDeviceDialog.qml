@@ -46,6 +46,9 @@ Controls.Dialog {
     // 12.0.1: "Lost your Security Key? Start over" (start_over.rs; Tin Hat Web's same panel)
     property bool startOverOpen: false
     property string startOverNote: ""       // why it didn't happen ("" = nothing to say); nothing changed then
+    // fix/recovery-escape-desktop (2026-10-26): the screens that carry the way out — login.offersStartOver
+    // (start_over::offers_start_over, the web's offersStartOver: same table, same tests)
+    property bool offersStartOver: false
 
     signal verifyRequested(string key)      // Security-Key path (fallback)
     signal useAnotherDeviceRequested()      // start emoji verification
@@ -56,6 +59,19 @@ Controls.Dialog {
     signal startComparisonRequested()       // S2 "Start emoji comparison" (requester, waiting)
     signal setUpRecoveryRequested(string password) // no device can vouch — create recovery instead
     signal startOverRequested(string password)     // no key, no device: a new identity + Security Key
+    signal sasResetRequested()              // back to the first screen (sends the cancel if a request is live)
+
+    // The ways out on the screens after "Use another device" (waiting on it, cancelled / timed out / nothing could
+    // vouch) — before, those offered only Cancel / Try again (a friend's phone, 2026-10-26; the web's wayOut). Each one
+    // ends the request on screen and opens the first screen at that option.
+    // The password field is emptied on the way (Astra review 2026-10-26): Start over opens under the pointer, held,
+    // and never with a password left from an earlier try.
+    function wayOut(to) {
+        soPwField.text = ""
+        dlg.sasResetRequested()
+        dlg.keyPathOpen = to === "key" || dlg.keyPathOpen
+        dlg.startOverOpen = to === "start-over"
+    }
 
     // named clearForm, NOT reset: "reset" collides with QQC2 Dialog's built-in
     // reset() signal (qt.qml.invalidOverride at every load)
@@ -131,7 +147,7 @@ Controls.Dialog {
                 width: parent.width
                 flat: true
                 text: dlg.keyPathOpen ? "Hide the Security Key option"
-                                      : "No other device? Use your Security Key"
+                                      : "No other device? Use your Security Key"   // start_over::USE_KEY
                 onClicked: dlg.keyPathOpen = !dlg.keyPathOpen
             }
         }
@@ -182,13 +198,23 @@ Controls.Dialog {
                 text: dlg.status
                 color: dlg.busy ? Th.dialogFg : Th.dialogErrorFg
             }
+        }
 
-            // 12.0.1: no Security Key and no other signed-in device — the way out (start_over.rs). Before this, such
-            // an account could sign in but never unlock or verify anything again, and nobody could help.
+        // ---- Start over ----
+        // 12.0.1: no Security Key and no other signed-in device — the way out (start_over.rs). Before this, such an
+        // account could sign in but never unlock or verify anything again, and nobody could help.
+        // fix/recovery-escape-desktop (2026-10-26): on the first screen itself, under the Security Key option — it used
+        // to sit INSIDE the Security Key panel, so someone without the key never saw it. Same order as before: another
+        // device, the Security Key, then Start over. A verified device sees it with the Security Key panel only, as
+        // before (offersStartOver).
+        Column {
+            width: parent.width
+            spacing: Kirigami.Units.smallSpacing
+            visible: dlg.sasState === "" && (dlg.offersStartOver || dlg.keyPathOpen || dlg.keyFirst)
             Controls.Button {
                 width: parent.width
                 flat: true
-                text: dlg.startOverOpen ? "Never mind, I'll keep looking" : "Lost your Security Key? Start over"
+                text: dlg.startOverOpen ? "Never mind, I'll keep looking" : "Lost your Security Key? Start over"   // start_over::LINK
                 onClicked: dlg.startOverOpen = !dlg.startOverOpen
             }
             Column {
@@ -214,13 +240,14 @@ Controls.Dialog {
                     width: parent.width
                     placeholderText: "Account password"
                     echoMode: TextInput.Password
-                    enabled: !dlg.busy
-                    onAccepted: if (text.length > 0) dlg.startOverRequested(text)
+                    // the hold (held) here too: the ways out land on this form where their button was
+                    enabled: !dlg.busy && !dlg.held
+                    onAccepted: if (text.length > 0 && !dlg.held) dlg.startOverRequested(text)
                 }
                 Controls.Button {
                     width: parent.width
                     text: "Start over"
-                    enabled: !dlg.busy && soPwField.text.length > 0
+                    enabled: !dlg.busy && !dlg.held && soPwField.text.length > 0
                     onClicked: dlg.startOverRequested(soPwField.text)
                 }
                 Controls.Label {
@@ -278,6 +305,23 @@ Controls.Dialog {
                 enabled: !dlg.held
                 text: "Cancel"
                 onClicked: dlg.sasCancelled()
+            }
+            // the ways out (offersStartOver: not while another device's request is answered)
+            Controls.Button {
+                width: parent.width
+                flat: true
+                visible: dlg.offersStartOver && dlg.sasState === "waiting"
+                enabled: !dlg.held && !dlg.busy
+                text: "No other device? Use your Security Key"
+                onClicked: dlg.wayOut("key")
+            }
+            Controls.Button {
+                width: parent.width
+                flat: true
+                visible: dlg.offersStartOver && dlg.sasState === "waiting"
+                enabled: !dlg.held && !dlg.busy
+                text: "Lost your Security Key? Start over"
+                onClicked: dlg.wayOut("start-over")
             }
         }
 
@@ -384,6 +428,22 @@ Controls.Dialog {
                 enabled: pwField.text.length > 0
                 text: "Set up encryption on this device"
                 onClicked: dlg.setUpRecoveryRequested(pwField.text)
+            }
+            Controls.Button {
+                width: parent.width
+                flat: true
+                visible: dlg.offersStartOver && dlg.sasState === "cancelled"
+                enabled: !dlg.held && !dlg.busy
+                text: "No other device? Use your Security Key"
+                onClicked: dlg.wayOut("key")
+            }
+            Controls.Button {
+                width: parent.width
+                flat: true
+                visible: dlg.offersStartOver && dlg.sasState === "cancelled"
+                enabled: !dlg.held && !dlg.busy
+                text: "Lost your Security Key? Start over"
+                onClicked: dlg.wayOut("start-over")
             }
         }
 

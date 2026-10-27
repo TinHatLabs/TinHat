@@ -1,0 +1,645 @@
+{
+ "about": "Account safety shared vectors (web src/core/safety.ts, desktop crates/app/src/safety.rs). docs/ACCOUNT-SAFETY.md.",
+ "ignored_users": [
+  {
+   "name": "no content",
+   "content": null,
+   "expect": []
+  },
+  {
+   "name": "not an object",
+   "content": [
+    1
+   ],
+   "expect": []
+  },
+  {
+   "name": "no map",
+   "content": {
+    "other": 1
+   },
+   "expect": []
+  },
+  {
+   "name": "sorted, invalid dropped",
+   "content": {
+    "ignored_users": {
+     "@b:x": {},
+     "@a:x": {
+      "why": 1
+     },
+     "nope": {},
+     "@ bad:x": {}
+    }
+   },
+   "expect": [
+    "@a:x",
+    "@b:x"
+   ]
+  }
+ ],
+ "with_ignored": [
+  {
+   "name": "add to nothing",
+   "content": null,
+   "mxid": "@a:x",
+   "ignore": true,
+   "expect": {
+    "ignored_users": {
+     "@a:x": {}
+    }
+   }
+  },
+  {
+   "name": "add keeps others and extra keys",
+   "content": {
+    "ignored_users": {
+     "@b:x": {
+      "k": 1
+     }
+    },
+    "extra": true
+   },
+   "mxid": "@a:x",
+   "ignore": true,
+   "expect": {
+    "ignored_users": {
+     "@b:x": {
+      "k": 1
+     },
+     "@a:x": {}
+    },
+    "extra": true
+   }
+  },
+  {
+   "name": "add twice keeps the entry",
+   "content": {
+    "ignored_users": {
+     "@a:x": {
+      "k": 2
+     }
+    }
+   },
+   "mxid": "@a:x",
+   "ignore": true,
+   "expect": {
+    "ignored_users": {
+     "@a:x": {
+      "k": 2
+     }
+    }
+   }
+  },
+  {
+   "name": "add over a non-object entry",
+   "content": {
+    "ignored_users": {
+     "@a:x": 5
+    }
+   },
+   "mxid": "@a:x",
+   "ignore": true,
+   "expect": {
+    "ignored_users": {
+     "@a:x": {}
+    }
+   }
+  },
+  {
+   "name": "remove",
+   "content": {
+    "ignored_users": {
+     "@a:x": {},
+     "@b:x": {}
+    }
+   },
+   "mxid": "@a:x",
+   "ignore": false,
+   "expect": {
+    "ignored_users": {
+     "@b:x": {}
+    }
+   }
+  },
+  {
+   "name": "remove absent",
+   "content": {
+    "ignored_users": {}
+   },
+   "mxid": "@a:x",
+   "ignore": false,
+   "expect": {
+    "ignored_users": {}
+   }
+  },
+  {
+   "name": "map not an object",
+   "content": {
+    "ignored_users": []
+   },
+   "mxid": "@a:x",
+   "ignore": true,
+   "expect": {
+    "ignored_users": {
+     "@a:x": {}
+    }
+   }
+  }
+ ],
+ "ignore_refusal": [
+  {
+   "me": "@me:x",
+   "target": "@a:x",
+   "expect": ""
+  },
+  {
+   "me": "@me:x",
+   "target": "@me:x",
+   "expect": "You can't ignore yourself."
+  },
+  {
+   "me": "@me:x",
+   "target": "a",
+   "expect": "That isn't an account."
+  }
+ ],
+ "report_ready": [
+  {
+   "category": "",
+   "details": "",
+   "expect": false
+  },
+  {
+   "category": "spam",
+   "details": "",
+   "expect": true
+  },
+  {
+   "category": "bogus",
+   "details": "x",
+   "expect": false
+  },
+  {
+   "category": "other",
+   "details": "   ",
+   "expect": false
+  },
+  {
+   "category": "other",
+   "details": " why ",
+   "expect": true
+  },
+  {
+   "category": "other",
+   "details": "",
+   "expect": true
+  },
+  {
+   "category": "other",
+   "details": "　﻿",
+   "expect": false
+  }
+ ],
+ "clean_details": [
+  {
+   "input": "  hi  ",
+   "expect": "hi"
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa b",
+   "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀",
+   "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀",
+   "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀"
+  },
+  {
+   "input": "x ",
+   "expect": "x"
+  },
+  {
+   "input": "﻿  x 　",
+   "expect": "x"
+  }
+ ],
+ "abuse_report": [
+  {
+   "name": "a message",
+   "input": {
+    "reporter": "@me:x",
+    "target": {
+     "user": "@bad:x",
+     "room": "!r:x",
+     "event": "$e"
+    },
+    "category": "harassment",
+    "details": " mean ",
+    "platform": "web (Chrome on Linux)",
+    "version": "12.0.3"
+   },
+   "expect": {
+    "kind": "abuse",
+    "type": "abuse",
+    "title": "[report] Harassment or hate: @bad:x",
+    "category": "harassment",
+    "details": "mean",
+    "reported_user": "@bad:x",
+    "room_id": "!r:x",
+    "event_id": "$e",
+    "reporter": "@me:x",
+    "platform": "web (Chrome on Linux)",
+    "version": "12.0.3"
+   }
+  },
+  {
+   "name": "a person, no room",
+   "input": {
+    "reporter": "@me:x",
+    "target": {
+     "user": "@bad:x",
+     "room": "",
+     "event": ""
+    },
+    "category": "zzz",
+    "details": "",
+    "platform": "desktop (Linux)",
+    "version": "12.0.3"
+   },
+   "expect": {
+    "kind": "abuse",
+    "type": "abuse",
+    "title": "[report] Something else: @bad:x",
+    "category": "other",
+    "details": "",
+    "reported_user": "@bad:x",
+    "reporter": "@me:x",
+    "platform": "desktop (Linux)",
+    "version": "12.0.3"
+   }
+  }
+ ],
+ "matrix_reason": [
+  {
+   "category": "spam",
+   "details": "",
+   "expect": "Spam or a scam"
+  },
+  {
+   "category": "violence",
+   "details": " he said x ",
+   "expect": "Violence or threats: he said x"
+  },
+  {
+   "category": "nope",
+   "details": "",
+   "expect": "Something else"
+  }
+ ],
+ "report_plan": [
+  {
+   "name": "message with the inbox",
+   "tinhat": true,
+   "target": {
+    "user": "@bad:x",
+    "room": "!r:x",
+    "event": "$e/1"
+   },
+   "category": "spam",
+   "details": "",
+   "expect": [
+    {
+     "via": "tinhat",
+     "method": "POST",
+     "path": "/reports",
+     "body": {
+      "$report": true
+     }
+    },
+    {
+     "via": "matrix",
+     "method": "POST",
+     "path": "/rooms/!r%3Ax/report/%24e%2F1",
+     "body": {
+      "reason": "Spam or a scam"
+     }
+    }
+   ]
+  },
+  {
+   "name": "person in a room, no inbox",
+   "tinhat": false,
+   "target": {
+    "user": "@bad:x",
+    "room": "!r:x",
+    "event": ""
+   },
+   "category": "sexual",
+   "details": "pics",
+   "expect": [
+    {
+     "via": "matrix",
+     "method": "POST",
+     "path": "/users/%40bad%3Ax/report",
+     "body": {
+      "reason": "Sexual content: pics"
+     }
+    },
+    {
+     "via": "matrix",
+     "method": "POST",
+     "path": "/rooms/!r%3Ax/report",
+     "body": {
+      "reason": "Sexual content: pics (reported: @bad:x)"
+     }
+    }
+   ]
+  },
+  {
+   "name": "person, nowhere",
+   "tinhat": true,
+   "target": {
+    "user": "@b'(*)~:x",
+    "room": "",
+    "event": ""
+   },
+   "category": "other",
+   "details": "x",
+   "expect": [
+    {
+     "via": "tinhat",
+     "method": "POST",
+     "path": "/reports",
+     "body": {
+      "$report": true
+     }
+    },
+    {
+     "via": "matrix",
+     "method": "POST",
+     "path": "/users/%40b'(*)~%3Ax/report",
+     "body": {
+      "reason": "Something else: x"
+     }
+    }
+   ]
+  }
+ ],
+ "delete_refusal": [
+  {
+   "me": "@me:x",
+   "owner": "",
+   "guest": false,
+   "expect": ""
+  },
+  {
+   "me": "@me:x",
+   "owner": "@boss:x",
+   "guest": false,
+   "expect": ""
+  },
+  {
+   "me": "@boss:x",
+   "owner": "@boss:x",
+   "guest": false,
+   "expect": "You own this server, so this account can't be deleted from the app: the server needs it. Manage it from the server's dashboard."
+  },
+  {
+   "me": "@tinhat-system:x",
+   "owner": "",
+   "guest": false,
+   "expect": "This is the server's own system account. It can't be deleted from the app."
+  },
+  {
+   "me": "@guest-abc:x",
+   "owner": "",
+   "guest": true,
+   "expect": "Guest accounts are deleted by the server when the visit ends."
+  }
+ ],
+ "deactivate_body": [
+  {
+   "auth": null,
+   "expect": {
+    "erase": true
+   }
+  },
+  {
+   "auth": {
+    "user": "@me:x",
+    "password": "pw"
+   },
+   "expect": {
+    "erase": true,
+    "auth": {
+     "type": "m.login.password",
+     "identifier": {
+      "type": "m.id.user",
+      "user": "@me:x"
+     },
+     "password": "pw"
+    }
+   }
+  },
+  {
+   "auth": {
+    "user": "@me:x",
+    "password": "pw",
+    "session": "S"
+   },
+   "expect": {
+    "erase": true,
+    "auth": {
+     "type": "m.login.password",
+     "identifier": {
+      "type": "m.id.user",
+      "user": "@me:x"
+     },
+     "password": "pw",
+     "session": "S"
+    }
+   }
+  }
+ ],
+ "delete_first": [
+  {
+   "status": 200,
+   "body": "{}",
+   "expect": {
+    "step": "done"
+   }
+  },
+  {
+   "status": 401,
+   "body": "{\"flows\":[{\"stages\":[\"m.login.password\"]}],\"session\":\"S\"}",
+   "expect": {
+    "step": "password",
+    "session": "S"
+   }
+  },
+  {
+   "status": 401,
+   "body": "{\"flows\":[{\"stages\":[\"m.login.password\"]}]}",
+   "expect": {
+    "step": "password"
+   }
+  },
+  {
+   "status": 401,
+   "body": "{\"flows\":[{\"stages\":[\"m.login.sso\"]},{\"stages\":[\"m.login.password\",\"m.login.email.identity\"]}],\"session\":\"S\"}",
+   "expect": {
+    "step": "failed",
+    "text": "This server wants another way to confirm it's you: delete your account where you signed up."
+   }
+  },
+  {
+   "status": 401,
+   "body": "{\"errcode\":\"M_UNKNOWN_TOKEN\",\"error\":\"Invalid access token\"}",
+   "expect": {
+    "step": "failed",
+    "text": "Invalid access token"
+   }
+  },
+  {
+   "status": 403,
+   "body": "not json",
+   "expect": {
+    "step": "failed",
+    "text": "The server didn't delete the account (HTTP 403)."
+   }
+  }
+ ],
+ "delete_second": [
+  {
+   "status": 200,
+   "body": "{\"id_server_unbind_result\":\"no-support\"}",
+   "expect": {
+    "kind": "deleted"
+   }
+  },
+  {
+   "status": 401,
+   "body": "{\"errcode\":\"M_FORBIDDEN\",\"error\":\"Invalid username or password\",\"flows\":[]}",
+   "expect": {
+    "kind": "wrong",
+    "text": "That isn't your password."
+   }
+  },
+  {
+   "status": 403,
+   "body": "{\"errcode\":\"M_FORBIDDEN\",\"error\":\"Deactivation is disabled\"}",
+   "expect": {
+    "kind": "failed",
+    "text": "Deactivation is disabled"
+   }
+  },
+  {
+   "status": 500,
+   "body": "{\"error\":\"  \"}",
+   "expect": {
+    "kind": "failed",
+    "text": "The server didn't delete the account (HTTP 500)."
+   }
+  }
+ ],
+ "fill": [
+  {
+   "template": "Ignore {name}?",
+   "vars": {
+    "name": "Ana"
+   },
+   "expect": "Ignore Ana?"
+  },
+  {
+   "template": "HTTP {status} {missing}",
+   "vars": {
+    "status": 404
+   },
+   "expect": "HTTP 404 {missing}"
+  }
+ ],
+ "delete_lines_for": "@me:x",
+ "delete_lines_expect": [
+  "This closes @me:x for good.",
+  "You're signed out on every device.",
+  "You leave every room, and your name and photo are removed.",
+  "Your messages are hidden from anyone who joins a room later; people who already saw them may keep their copies.",
+  "Nobody can sign up with this name again.",
+  "This can't be undone."
+ ],
+ "words": {
+  "ignore": "Ignore…",
+  "unignore": "Stop ignoring",
+  "ignoreTitle": "Ignore {name}?",
+  "ignoreText": "You won't see their messages or invites anywhere. They aren't told. Settings → Privacy → Ignored people lists everyone you ignore.",
+  "ignoreConfirm": "Ignore",
+  "ignoredToast": "You're ignoring {name}.",
+  "unignoredToast": "You're no longer ignoring {name}. Their new messages show again.",
+  "ignoreSelf": "You can't ignore yourself.",
+  "ignoreFailed": "Couldn't change your ignored list. Try again in a moment.",
+  "ignoredSection": "Ignored people",
+  "ignoredSectionHint": "Their messages and invites are hidden on every device you use.",
+  "ignoredEmpty": "You aren't ignoring anyone.",
+  "report": "Report…",
+  "reportPersonTitle": "Report {name}",
+  "reportMessageTitle": "Report this message",
+  "reportIntro": "Reports go to the people who run {server}. The person you report isn't told who sent it.",
+  "reportWhat": "What's wrong?",
+  "reportDetails": "Anything else they should know (optional)",
+  "reportAlsoIgnore": "Also ignore them",
+  "reportSend": "Send report",
+  "reportSent": "Report sent. Thank you.",
+  "reportFailed": "Couldn't send the report. Try again in a moment.",
+  "deleteRow": "Delete my account",
+  "deleteRowHint": "Close this account for good",
+  "deleteTitle": "Delete your account?",
+  "deleteLines": [
+   "This closes {mxid} for good.",
+   "You're signed out on every device.",
+   "You leave every room, and your name and photo are removed.",
+   "Your messages are hidden from anyone who joins a room later; people who already saw them may keep their copies.",
+   "Nobody can sign up with this name again.",
+   "This can't be undone."
+  ],
+  "deletePassword": "Enter your account password to confirm.",
+  "deleteConfirm": "Delete my account",
+  "deleteDone": "Your account has been deleted.",
+  "deleteWrong": "That isn't your password.",
+  "deleteUnsupported": "This server wants another way to confirm it's you: delete your account where you signed up.",
+  "deleteFailedHttp": "The server didn't delete the account (HTTP {status}).",
+  "deleteSystem": "This is the server's own system account. It can't be deleted from the app.",
+  "deleteOwner": "You own this server, so this account can't be deleted from the app: the server needs it. Manage it from the server's dashboard.",
+  "deleteGuest": "Guest accounts are deleted by the server when the visit ends.",
+  "unreachable": "Couldn't reach your server. Try again in a moment."
+ },
+ "categories": [
+  [
+   "spam",
+   "Spam or a scam"
+  ],
+  [
+   "harassment",
+   "Harassment or hate"
+  ],
+  [
+   "sexual",
+   "Sexual content"
+  ],
+  [
+   "violence",
+   "Violence or threats"
+  ],
+  [
+   "other",
+   "Something else"
+  ]
+ ]
+}

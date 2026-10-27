@@ -27,7 +27,7 @@ pub mod qobject {
         #[qproperty(QString, profile_accent)] //      QML: profileAccent — "#rrggbb" personal colour, PUBLIC
         #[qproperty(QString, join_sound)] //          QML: joinSound — url played when you enter a call
         #[qproperty(QString, card_json)] //           QML: cardJson — ANOTHER user's public profile
-        #[qproperty(QString, devices_json)] //        QML: devicesJson — JSON [{id,name,lastSeenTs,lastSeenIp,isCurrent}]
+        #[qproperty(QString, devices_json)] //        QML: devicesJson — JSON [{id,name,lastSeenTs,lastSeenIp,isCurrent,trustable}]
         #[qproperty(QString, bug_report_status)] //   QML: bugReportStatus — in-app report outcome
         #[qproperty(QString, status)] //              QML: status
         #[qproperty(bool, busy)] //                   QML: busy
@@ -51,6 +51,25 @@ pub mod qobject {
         #[qproperty(QString, password_outcome)] //    QML: passwordOutcome — the last answer: "changed" | "wrong" | "failed"
         #[qproperty(QString, password_text)] //       QML: passwordText — its words (the toast / the dialog's subtitle)
         #[qproperty(i32, password_answers)] //        QML: passwordAnswers — counts the answers (QML acts on each one once)
+        // Devices & security → a phone's "Trust…" (trust_device.rs; the web's TrustSheet)
+        #[qproperty(QString, trust_key)] //           QML: trustKey — the server's ed25519 key of the device being shown ("" = none)
+        #[qproperty(QString, trust_outcome)] //       QML: trustOutcome — the last answer's word ("signed", "keys-locked", …; "" = loading)
+        #[qproperty(QString, trust_text)] //          QML: trustText — its sentence (the dialog's note, or the toast when done)
+        #[qproperty(bool, trust_busy)] //             QML: trustBusy — a look-up or a signature is on its way
+        #[qproperty(i32, trust_answers)] //           QML: trustAnswers — counts the answers (QML acts on each one once)
+        #[qproperty(QString, trust_answer_for)] //    QML: trustAnswerFor — the device id the last answer is about (a late one for another device is ignored)
+        // account safety (safety.rs; docs/ACCOUNT-SAFETY.md in Tin Hat Web): ignore / report / delete my account
+        #[qproperty(QString, ignored_json)] //        QML: ignoredJson — JSON ["@mxid", …] I ignore (sorted; live)
+        #[qproperty(QString, ignore_text)] //         QML: ignoreText — the last ignore change's error words ("" = done)
+        #[qproperty(QString, ignore_toast)] //        QML: ignoreToast — … and its toast when it worked
+        #[qproperty(i32, ignore_answers)] //          QML: ignoreAnswers — counts the answers
+        #[qproperty(bool, report_busy)] //            QML: reportBusy
+        #[qproperty(bool, report_sent)] //            QML: reportSent — the last report reached someone
+        #[qproperty(i32, report_answers)] //          QML: reportAnswers
+        #[qproperty(bool, delete_busy)] //            QML: deleteBusy
+        #[qproperty(QString, delete_outcome)] //      QML: deleteOutcome — "deleted" | "wrong" | "failed"
+        #[qproperty(QString, delete_text)] //         QML: deleteText — its words
+        #[qproperty(i32, delete_answers)] //          QML: deleteAnswers
         type SettingsController = super::SettingsControllerRust;
 
         /// QML: settings.refresh() — load profile + devices + security state.
@@ -198,6 +217,25 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "changePassword"]
         fn change_password(self: Pin<&mut SettingsController>, current: &QString, new_password: &QString);
+        // ---- Trust the phone's native device (trust_device.rs; docs/TRUST.md in Tin Hat Web) ----
+        /// QML: settings.trustLoad(deviceId, name) — the server's key for my device `deviceId` → trustKey (or the
+        /// "not-published" words in trustText); bumps trustAnswers.
+        #[qinvokable]
+        #[cxx_name = "trustLoad"]
+        fn trust_load(self: Pin<&mut SettingsController>, device_id: &QString, name: &QString);
+        /// QML: settings.trustDevice(deviceId, ed25519, name) — steps 2–5 for that device and the key that was shown;
+        /// the answer lands in trustOutcome / trustText and bumps trustAnswers.
+        #[qinvokable]
+        #[cxx_name = "trustDevice"]
+        fn trust_device(self: Pin<&mut SettingsController>, device_id: &QString, ed25519: &QString, name: &QString);
+        /// QML: settings.trustWords(name) — JSON {action, title, body, button, cancel, working, verify}: the web's words.
+        #[qinvokable]
+        #[cxx_name = "trustWords"]
+        fn trust_words(self: &SettingsController, name: &QString) -> QString;
+        /// QML: settings.trustFingerprint(key) — the key in groups of four.
+        #[qinvokable]
+        #[cxx_name = "trustFingerprint"]
+        fn trust_fingerprint(self: &SettingsController, key: &QString) -> QString;
         // ---- Settings window search (contract SETTINGS-WINDOW.md §4, settings_search.rs) ----
         /// QML: settings.searchSettings(query, operator) — JSON [{id, pane, paneTitle, section, label, labelHtml,
         /// score}], best first, at most 30; operator-only rows (Invites) only when `is_operator`.
@@ -208,6 +246,44 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "settingsPaneOf"]
         fn settings_pane_of(self: &SettingsController, id: &QString) -> QString;
+        // ---- account safety (safety.rs; the web's features/safety) -----------------------------
+        /// QML: settings.startSafety() — once, after sign-in: read the ignored list, hear its later changes.
+        #[qinvokable]
+        #[cxx_name = "startSafety"]
+        fn start_safety(self: Pin<&mut SettingsController>);
+        /// QML: settings.safetyWords() — JSON {words: {...}, categories: [[id, label], …]} (the shared words).
+        #[qinvokable]
+        #[cxx_name = "safetyWords"]
+        fn safety_words(self: &SettingsController) -> QString;
+        /// QML: settings.ignoreRefusal(mxid) — "" = may be ignored, else why not.
+        #[qinvokable]
+        #[cxx_name = "ignoreRefusal"]
+        fn ignore_refusal(self: &SettingsController, target: &QString) -> QString;
+        /// QML: settings.setIgnored(mxid, name, ignore) — the answer lands in ignoreText / ignoreToast (ignoreAnswers).
+        #[qinvokable]
+        #[cxx_name = "setIgnored"]
+        fn set_ignored(self: Pin<&mut SettingsController>, target: &QString, name: &QString, ignore: bool);
+        /// QML: settings.reportReady(category, details) — "Send report" enabled.
+        #[qinvokable]
+        #[cxx_name = "reportReady"]
+        fn report_ready(self: &SettingsController, category: &QString, details: &QString) -> bool;
+        /// QML: settings.sendReport(user, room, event, category, details) — reportSent / reportAnswers.
+        #[qinvokable]
+        #[cxx_name = "sendReport"]
+        fn send_report(self: Pin<&mut SettingsController>, user: &QString, room: &QString, event: &QString, category: &QString, details: &QString);
+        /// QML: settings.deleteRefusal() — "" = this account may be deleted from the app, else why not.
+        #[qinvokable]
+        #[cxx_name = "deleteRefusal"]
+        fn delete_refusal(self: &SettingsController) -> QString;
+        /// QML: settings.deleteLinesJson() — the explainer's lines for this account (JSON array).
+        #[qinvokable]
+        #[cxx_name = "deleteLinesJson"]
+        fn delete_lines_json(self: &SettingsController) -> QString;
+        /// QML: settings.deleteAccount(password) — deactivate (erase) with the password step; deleteOutcome /
+        /// deleteText / deleteAnswers. On "deleted" QML closes the dialog, then loginController.signOutDeleted().
+        #[qinvokable]
+        #[cxx_name = "deleteAccount"]
+        fn delete_account(self: Pin<&mut SettingsController>, password: &QString);
     }
 
     impl cxx_qt::Threading for SettingsController {}
@@ -215,6 +291,23 @@ pub mod qobject {
 
 #[derive(Default)]
 pub struct SettingsControllerRust {
+    trust_answer_for: QString,
+    trust_key: QString,
+    trust_outcome: QString,
+    trust_text: QString,
+    trust_busy: bool,
+    trust_answers: i32,
+    ignored_json: QString,
+    ignore_text: QString,
+    ignore_toast: QString,
+    ignore_answers: i32,
+    report_busy: bool,
+    report_sent: bool,
+    report_answers: i32,
+    delete_busy: bool,
+    delete_outcome: QString,
+    delete_text: QString,
+    delete_answers: i32,
     password_busy: bool,
     password_outcome: QString,
     password_text: QString,
@@ -583,19 +676,25 @@ impl qobject::SettingsController {
             let cur = client.device_id().map(|d| d.to_string()).unwrap_or_default();
             let devices_json = match client.devices().await {
                 Ok(resp) => {
-                    let arr: Vec<serde_json::Value> = resp
-                        .devices
-                        .iter()
-                        .map(|d| {
-                            serde_json::json!({
-                                "id": d.device_id.to_string(),
-                                "name": d.display_name.clone().unwrap_or_default(),
-                                "lastSeenTs": d.last_seen_ts.map(|t| u64::from(t.0)).unwrap_or(0),
-                                "lastSeenIp": d.last_seen_ip.clone().unwrap_or_default(),
-                                "isCurrent": d.device_id.as_str() == cur,
-                            })
-                        })
-                        .collect();
+                    let look = crate::trust_device::MatrixLookup::new(client.clone());
+                    let mut arr: Vec<serde_json::Value> = Vec::with_capacity(resp.devices.len());
+                    for d in &resp.devices {
+                        let name = d.display_name.clone().unwrap_or_default();
+                        let is_current = d.device_id.as_str() == cur;
+                        // "Trust…" on the phone's own Tin Hat device while my self-signing key hasn't signed it
+                        // (never while trust_device::DEVICES_FALLBACK is off, 12.0.4)
+                        let trustable = !is_current
+                            && crate::trust_device::fallback_offers_trust(&name)
+                            && !crate::trust_device::TrustLookup::cross_signed(&look, d.device_id.as_str()).await.unwrap_or(true);
+                        arr.push(serde_json::json!({
+                            "id": d.device_id.to_string(),
+                            "name": name,
+                            "lastSeenTs": d.last_seen_ts.map(|t| u64::from(t.0)).unwrap_or(0),
+                            "lastSeenIp": d.last_seen_ip.clone().unwrap_or_default(),
+                            "isCurrent": is_current,
+                            "trustable": trustable,
+                        }));
+                    }
                     serde_json::to_string(&arr).unwrap_or_else(|_| "[]".into())
                 }
                 Err(e) => {
@@ -1282,6 +1381,248 @@ impl qobject::SettingsController {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Trust the phone's native device (trust_device.rs): Devices & security → the phone's "Trust…". The key shown is the
+// key checked: trustDevice runs the contract's steps 2–5 for that device and that key only.
+// ---------------------------------------------------------------------------
+impl qobject::SettingsController {
+    pub fn trust_load(mut self: Pin<&mut Self>, device_id: &QString, name: &QString) {
+        let Some(client) = crate::session::client() else { return };
+        let device_id = device_id.to_string();
+        let name = name.to_string();
+        self.as_mut().set_trust_key(QString::default());
+        self.as_mut().set_trust_outcome(QString::default());
+        self.as_mut().set_trust_text(QString::default());
+        self.as_mut().set_trust_busy(true);
+        let qt = self.as_mut().qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let look = crate::trust_device::MatrixLookup::new(client);
+            use crate::trust_device::TrustLookup;
+            // a device the server doesn't list yet: the rule's own wait (my keys asked for again, ≤ 5 s) first
+            let mut key = look.device_key(&device_id).await;
+            if matches!(key, Ok(None)) {
+                look.next_device_update(&device_id, crate::trust_device::WAIT_MS).await;
+                key = look.device_key(&device_id).await;
+            }
+            let (key, outcome, text) = match key {
+                Ok(Some(k)) if !k.is_empty() => (k, "loaded", String::new()),
+                Ok(Some(_)) => (String::new(), "mismatch", crate::trust_device::result_text(crate::trust_device::TrustResult::Mismatch, &name)),
+                Ok(None) => (String::new(), "not-published", crate::trust_device::result_text(crate::trust_device::TrustResult::NotPublished, &name)),
+                Err(e) => {
+                    eprintln!("[trust] key look-up failed: {e}");
+                    (String::new(), "failed", crate::trust_device::result_text(crate::trust_device::TrustResult::Failed, &name))
+                }
+            };
+            let _ = qt.queue(move |mut o| {
+                o.as_mut().set_trust_answer_for(QString::from(&device_id));
+                o.as_mut().set_trust_key(QString::from(&key));
+                o.as_mut().set_trust_outcome(QString::from(outcome));
+                o.as_mut().set_trust_text(QString::from(&text));
+                o.as_mut().set_trust_busy(false);
+                let n = *o.trust_answers();
+                o.as_mut().set_trust_answers(n.wrapping_add(1));
+            });
+        });
+    }
+
+    pub fn trust_device(mut self: Pin<&mut Self>, device_id: &QString, ed25519: &QString, name: &QString) {
+        let device_id = device_id.to_string();
+        let key = ed25519.to_string();
+        let name = name.to_string();
+        // every call gets exactly one answer (the dialog waits for it; a look-up of another row may still be running)
+        let Some(client) = crate::session::client() else {
+            let r = crate::trust_device::TrustResult::Failed;
+            self.as_mut().set_trust_answer_for(QString::from(&device_id));
+            self.as_mut().set_trust_outcome(QString::from(r.as_str()));
+            self.as_mut().set_trust_text(QString::from(&crate::trust_device::result_text(r, &name)));
+            let n = *self.trust_answers();
+            self.as_mut().set_trust_answers(n.wrapping_add(1));
+            return;
+        };
+        self.as_mut().set_trust_busy(true);
+        let qt = self.as_mut().qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            use crate::trust_device::{done_text, result_text, trust_device, MatrixLookup, TrustResult, WAIT_MS};
+            let r = trust_device(&MatrixLookup::new(client), &device_id, &key, WAIT_MS).await;
+            eprintln!("[trust] {device_id}: {}", r.as_str());
+            let text = match r {
+                TrustResult::Signed | TrustResult::Already => done_text(r, &name),
+                _ => result_text(r, &name),
+            };
+            let _ = qt.queue(move |mut o| {
+                o.as_mut().set_trust_answer_for(QString::from(&device_id));
+                o.as_mut().set_trust_outcome(QString::from(r.as_str()));
+                o.as_mut().set_trust_text(QString::from(&text));
+                o.as_mut().set_trust_busy(false);
+                let n = *o.trust_answers();
+                o.as_mut().set_trust_answers(n.wrapping_add(1));
+            });
+        });
+    }
+
+    pub fn trust_words(&self, name: &QString) -> QString {
+        use crate::trust_device as t;
+        let name = name.to_string();
+        QString::from(
+            &serde_json::json!({
+                "action": t::ACTION, "title": t::TITLE, "body": t::body(&name), "button": t::BUTTON,
+                "cancel": t::CANCEL, "working": t::WORKING, "verify": t::VERIFY,
+            })
+            .to_string(),
+        )
+    }
+
+    pub fn trust_fingerprint(&self, key: &QString) -> QString {
+        QString::from(&crate::trust_device::fingerprint_text(&key.to_string()))
+    }
+}
+
 fn uint(n: u64) -> matrix_sdk::ruma::UInt {
     matrix_sdk::ruma::UInt::try_from(n).unwrap_or_default()
+}
+
+/// safety.rs store(): the ignored list changed (sync, this device, another one).
+pub fn set_ignored_json(o: Pin<&mut qobject::SettingsController>, json: &str) {
+    o.set_ignored_json(QString::from(json));
+}
+
+// ---- account safety (safety.rs) ----------------------------------------------------------------------------------------
+impl qobject::SettingsController {
+    pub fn start_safety(mut self: Pin<&mut Self>) {
+        crate::safety::attach_sink(self.qt_thread());
+        crate::safety::set_deleting(false); // a new session: an earlier deletion's mark is over
+        let Some(client) = crate::session::client() else { return };
+        let (Some(user), Some(token)) = (client.user_id().map(|u| u.to_string()), client.access_token()) else { return };
+        let hs = client.homeserver().to_string();
+        let gen = crate::session::generation();
+        let rev = crate::safety::revision();
+        crate::bridge::runtime().spawn(async move {
+            match crate::safety::fetch_ignored(&hs, &token, &user).await {
+                // dropped when sync / an ignore stored a newer copy while this GET was on its way
+                Ok(v) => crate::safety::store_initial(gen, rev, crate::safety::ignored_users(&v)),
+                Err(e) => eprintln!("[safety] the ignored list didn't load ({e})"),
+            }
+        });
+    }
+
+    pub fn safety_words(&self) -> QString {
+        let cats: Vec<serde_json::Value> = crate::safety::REPORT_CATEGORIES.iter().map(|(a, b)| serde_json::json!([a, b])).collect();
+        QString::from(&serde_json::json!({ "words": crate::safety::words_json(), "categories": cats, "detailsMax": crate::safety::DETAILS_MAX }).to_string())
+    }
+
+    pub fn ignore_refusal(&self, target: &QString) -> QString {
+        let me = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
+        QString::from(crate::safety::ignore_refusal(&me, &target.to_string()))
+    }
+
+    pub fn set_ignored(mut self: Pin<&mut Self>, target: &QString, name: &QString, ignore: bool) {
+        let target = target.to_string();
+        let name = name.to_string();
+        let Some(client) = crate::session::client() else { return };
+        let (Some(user), Some(token)) = (client.user_id().map(|u| u.to_string()), client.access_token()) else { return };
+        let why = if ignore { crate::safety::ignore_refusal(&user, &target) } else { "" };
+        if !why.is_empty() {
+            self.as_mut().set_ignore_toast(QString::default());
+            self.as_mut().set_ignore_text(QString::from(why));
+            let n = *self.ignore_answers();
+            self.as_mut().set_ignore_answers(n.wrapping_add(1));
+            return;
+        }
+        let hs = client.homeserver().to_string();
+        let gen = crate::session::generation();
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let r = crate::safety::set_ignored(&hs, &token, &user, &target, ignore).await;
+            if crate::session::generation() != gen {
+                return; // signed out meanwhile: nothing of it is shown to the next account
+            }
+            let (text, toast) = match r {
+                Ok(list) => {
+                    eprintln!("[safety] ignored list: {} one (now {})", if ignore { "added" } else { "removed" }, list.len());
+                    crate::safety::store_for(gen, list);
+                    let t = crate::safety::word(if ignore { "ignoredToast" } else { "unignoredToast" });
+                    (String::new(), crate::safety::fill(t, &[("name", &name)]))
+                }
+                Err(e) => {
+                    eprintln!("[safety] ignored list: not changed ({e})");
+                    (crate::safety::word("ignoreFailed").to_string(), String::new())
+                }
+            };
+            let _ = qt.queue(move |mut o| {
+                o.as_mut().set_ignore_text(QString::from(&text));
+                o.as_mut().set_ignore_toast(QString::from(&toast));
+                let n = *o.ignore_answers();
+                o.as_mut().set_ignore_answers(n.wrapping_add(1));
+            });
+        });
+    }
+
+    pub fn report_ready(&self, category: &QString, details: &QString) -> bool {
+        crate::safety::report_ready(&category.to_string(), &details.to_string())
+    }
+
+    pub fn send_report(mut self: Pin<&mut Self>, user: &QString, room: &QString, event: &QString, category: &QString, details: &QString) {
+        if *self.report_busy() {
+            return;
+        }
+        let Some(client) = crate::session::client() else { return };
+        let (Some(me), Some(token)) = (client.user_id().map(|u| u.to_string()), client.access_token()) else { return };
+        let target = crate::safety::ReportTarget { user: user.to_string(), room: room.to_string(), event: event.to_string() };
+        let (category, details) = (category.to_string(), details.to_string());
+        let platform = if cfg!(windows) { "desktop (Windows)" } else { "desktop (Linux)" };
+        let report = crate::safety::abuse_report(&me, &target, &category, &details, platform, env!("CARGO_PKG_VERSION"));
+        // the server's inbox when it takes reports from this account (not a guest's); proxy::base is the API it announced
+        let tinhat = crate::server_offer::feature_on_global(crate::server_offer::ServerFeature::Reports);
+        let plan = crate::safety::report_plan(tinhat, &report, &target, &category, &details);
+        let (hs, api) = (client.homeserver().to_string(), crate::proxy::base());
+        self.as_mut().set_report_busy(true);
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let ok = crate::safety::send_report(&hs, &api, &token, &plan).await;
+            let _ = qt.queue(move |mut o| {
+                o.as_mut().set_report_busy(false);
+                o.as_mut().set_report_sent(ok);
+                let n = *o.report_answers();
+                o.as_mut().set_report_answers(n.wrapping_add(1));
+            });
+        });
+    }
+
+    pub fn delete_refusal(&self) -> QString {
+        let me = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
+        let owner = crate::server_offer::current().owner;
+        QString::from(crate::safety::delete_refusal(&me, &owner, crate::server_offer::is_guest_account(&me)))
+    }
+
+    pub fn delete_lines_json(&self) -> QString {
+        let me = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
+        QString::from(&serde_json::Value::from(crate::safety::delete_lines(&me)).to_string())
+    }
+
+    pub fn delete_account(mut self: Pin<&mut Self>, password: &QString) {
+        if *self.delete_busy() {
+            return;
+        }
+        let Some(client) = crate::session::client() else { return };
+        let (Some(user), Some(token)) = (client.user_id().map(|u| u.to_string()), client.access_token()) else { return };
+        let refusal = crate::safety::delete_refusal(&user, &crate::server_offer::current().owner, crate::server_offer::is_guest_account(&user));
+        let password = password.to_string();
+        if !refusal.is_empty() || password.is_empty() {
+            return;
+        }
+        let hs = client.homeserver().to_string();
+        self.as_mut().set_delete_busy(true);
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let out = crate::safety::delete_account(&hs, &token, &user, &password).await;
+            drop(password);
+            let _ = qt.queue(move |mut o| {
+                o.as_mut().set_delete_busy(false);
+                o.as_mut().set_delete_outcome(QString::from(out.kind()));
+                o.as_mut().set_delete_text(QString::from(&out.text()));
+                let n = *o.delete_answers();
+                o.as_mut().set_delete_answers(n.wrapping_add(1));
+            });
+        });
+    }
 }

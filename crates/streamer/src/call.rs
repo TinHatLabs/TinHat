@@ -695,6 +695,30 @@ pub fn set_share_refit_hook(hook: Arc<dyn Fn() + Send + Sync>) {
     *share_refit_hook_cell().lock().unwrap() = Some(hook);
 }
 
+/// Does the running encoder match the resolved choice (`enc_pick`, e.g. "H.264/NVENC (GPU)")? `None` = it does,
+/// else what differs. Unknown labels (the camera's) only compare the codec they name.
+fn encoder_mismatch(enc_pick: &str, mime: &str, implementation: &str) -> Option<&'static str> {
+    let mime = mime.to_ascii_lowercase();
+    let want = if enc_pick.contains("H.264") {
+        "video/h264"
+    } else if enc_pick.contains("VP9") {
+        "video/vp9"
+    } else if enc_pick.contains("AV1") {
+        "video/av1"
+    } else {
+        return None;
+    };
+    if mime != want {
+        return Some("other codec");
+    }
+    // libwebrtc names the NVENC encoders "NVIDIA H264 Encoder" / "NVIDIA AV1 Encoder"; a software stand-in for a
+    // hardware pick (OpenH264 for NVENC) is the black-tile / CPU-load case the encoder ladder exists to avoid.
+    if enc_pick.contains("NVENC") && !implementation.contains("NVIDIA") {
+        return Some("other encoder");
+    }
+    None
+}
+
 fn spawn_publish_stats_task(
     kind: &'static str,
     enc_pick: String,
@@ -735,6 +759,7 @@ fn spawn_publish_stats_task(
         let mut auto_agree: u32 = 0;
         let mut auto_last_refit: Option<std::time::Instant> = None;
         let mut stats_errs: u32 = 0;
+        let mut codec_checked = false;
         loop {
             tokio::time::sleep(std::time::Duration::from_secs(3)).await;
             if stop.load(std::sync::atomic::Ordering::Relaxed) {
@@ -780,9 +805,32 @@ fn spawn_publish_stats_task(
                 }
             }
             let mut entries: Vec<(String, String)> = Vec::new();
+            let codec_mime: HashMap<&str, &str> = stats
+                .iter()
+                .filter_map(|s| match s {
+                    RtcStats::Codec(c) => Some((c.rtc.id.as_str(), c.codec.mime_type.as_str())),
+                    _ => None,
+                })
+                .collect();
             for s in &stats {
                 let RtcStats::OutboundRtp(o) = s else { continue };
                 let ob = &o.outbound;
+                // Once per stream, as soon as an encoder is running: is it the codec + encoder we asked for? The
+                // SFU can answer a codec we never offered (it pinned every share of a real call to the first one's
+                // VP9) and libwebrtc takes it silently; the "as H.264/NVENC" line then lied for the whole call.
+                let mime = codec_mime.get(o.stream.codec_id.as_str()).copied().unwrap_or("");
+                if !codec_checked && kind != "mic" && !ob.encoder_implementation.is_empty() && !mime.is_empty() {
+                    codec_checked = true;
+                    if let Some(why) = encoder_mismatch(&enc_pick, mime, &ob.encoder_implementation) {
+                        eprintln!(
+                            "[call] {kind}: ENCODER MISMATCH — asked {enc_pick}, the call negotiated {mime} on '{}' ({why})",
+                            ob.encoder_implementation
+                        );
+                    } else {
+                        // (a label encoder_mismatch can't read — the camera's — lands here unchecked; it says so)
+                        eprintln!("[call] {kind}: encoding {mime} on '{}' (asked {enc_pick})", ob.encoder_implementation);
+                    }
+                }
                 match kind {
                     // Legacy gate lines — DO NOT reformat (ship gates grep these).
                     "screen" => {
@@ -13647,5 +13695,33 @@ Sink Input #302\n\tSink: 14925\n\tProperties:\n\t\ttinhat.role = \"call-playback
         let queued = src.property::<u64>("current-level-buffers");
         let _ = pipeline.set_state(gst::State::Null);
         assert!(queued <= 3, "a paused tile queued {queued} frames (~{} MB)", queued as usize * frame / 1_000_000);
+    }
+}
+
+#[cfg(test)]
+mod encoder_mismatch_tests {
+    use super::encoder_mismatch;
+
+    /// The 12.0.0 field case: "as H.264/NVENC (GPU)" while libwebrtc reported VP9 on libvpx.
+    #[test]
+    fn the_field_case_is_a_mismatch() {
+        assert_eq!(encoder_mismatch("H.264/NVENC (GPU)", "video/VP9", "libvpx"), Some("other codec"));
+        assert_eq!(encoder_mismatch("AV1/NVENC (GPU)", "video/VP9", "libvpx"), Some("other codec"));
+        assert_eq!(encoder_mismatch("VP9 (software)", "video/H264", "OpenH264"), Some("other codec"));
+    }
+
+    #[test]
+    fn a_software_stand_in_for_nvenc_is_a_mismatch() {
+        assert_eq!(encoder_mismatch("H.264/NVENC (GPU)", "video/H264", "OpenH264"), Some("other encoder"));
+    }
+
+    #[test]
+    fn what_was_asked_is_fine() {
+        assert_eq!(encoder_mismatch("H.264/NVENC (GPU)", "video/H264", "NVIDIA H264 Encoder"), None);
+        assert_eq!(encoder_mismatch("AV1/NVENC (GPU)", "video/AV1", "NVIDIA AV1 Encoder"), None);
+        assert_eq!(encoder_mismatch("VP9 (software)", "video/VP9", "libvpx"), None);
+        assert_eq!(encoder_mismatch("VP9 (software fallback)", "video/VP9", "libvpx"), None);
+        assert_eq!(encoder_mismatch("H.264/VAAPI (GPU)", "video/H264", "VAAPI H264"), None);
+        assert_eq!(encoder_mismatch("Opus", "audio/opus", "x"), None); // unknown label: nothing to compare
     }
 }
