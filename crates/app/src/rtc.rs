@@ -7,7 +7,7 @@
 //! livekit_alias: <room_id> }`, and the JWT broker maps that alias verbatim to the
 //! LiveKit room. So `alias == room_id` here; we keep `room_id` as a safe fallback.
 
-use matrix_sdk::ruma::events::call::member::{CallMemberEventContent, Focus};
+use matrix_sdk::ruma::events::call::member::CallMemberEventContent;
 use matrix_sdk::{Room, RoomState};
 
 /// Element Call membership state-event type (MSC3401/MSC4143 session format).
@@ -39,42 +39,27 @@ pub fn is_call_active(room: &Room) -> bool {
 
 /// Read the room's `org.matrix.msc3401.call.member` state and resolve the LiveKit
 /// focus (broker url + alias). Returns `None` if no live member advertises one.
+///
+/// 12.0.5 (the web's `resolveFocus`): the OLDEST live session with a livekit focus wins (by `created_ts`, else the
+/// event's `origin_server_ts`; ties keep store order), not the first one in store order, so ghosts of an earlier
+/// call can't send the desktop and the web to different call services. Sessions come from
+/// [`crate::keyrules::live_sessions_from`]: live, room-scoped `m.call`, a device id, a state key owned by the sender.
 pub async fn resolve_focus(room: &Room) -> matrix_sdk::Result<Option<CallFocus>> {
     let raws = room
         .get_state_events_static::<CallMemberEventContent>()
         .await?;
+    let events: Vec<serde_json::Value> = raws.iter().filter_map(|r| serde_json::to_value(r).ok()).collect();
+    Ok(oldest_focus(&crate::keyrules::live_sessions_from(&events, now_ms()), room.room_id().as_str()))
+}
 
-    for raw in &raws {
-        let Ok(ev) = raw.deserialize() else { continue };
-        // Fallback for expiry when the membership omits created_ts (initial joins).
-        let origin_ts = ev.origin_server_ts();
-        let Some(content) = ev.original_content() else {
-            continue; // empty `{}` content = a member who has left (tombstone)
-        };
-        // active_memberships drops expired/empty entries (matches is_call_active).
-        for m in content.active_memberships(origin_ts) {
-            if !m.is_room_call() {
-                continue; // only the room-scoped m.call session
-            }
-            for focus in m.foci_preferred() {
-                match focus {
-                    Focus::Livekit(lk) => {
-                        let alias = if lk.alias.is_empty() {
-                            room.room_id().to_string()
-                        } else {
-                            lk.alias.clone()
-                        };
-                        return Ok(Some(CallFocus {
-                            service_url: lk.service_url.clone(),
-                            alias,
-                        }));
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
-    Ok(None)
+/// The focus of the oldest live session that names one (stable: equal `created_ts` keep their order); an empty
+/// alias means the room id.
+pub(crate) fn oldest_focus(sessions: &[crate::keyrules::LiveSession], room_id: &str) -> Option<CallFocus> {
+    let mut with: Vec<&crate::keyrules::LiveSession> = sessions.iter().filter(|s| s.focus.is_some()).collect();
+    with.sort_by_key(|s| s.created_ts); // stable, like the web's Array.prototype.sort
+    let (service_url, alias) = with.first()?.focus.clone()?;
+    let alias = if alias.is_empty() { room_id.to_string() } else { alias };
+    Some(CallFocus { service_url, alias })
 }
 
 /// User-ids currently joined to the room's MatrixRTC call (active room-scoped
@@ -135,8 +120,8 @@ pub(crate) fn call_member_users_from(events: &[serde_json::Value], now: u64) -> 
 }
 
 /// `(user_id, device_id)` for every LIVE MatrixRTC call membership in `room` (room-scoped
-/// `m.call` sessions). Used to pick to-device recipients for our media-key announcement so
-/// Element Call peers can decrypt our outgoing audio/video. Skips tombstoned memberships
+/// `m.call` sessions). NOT a key-recipient list (no joined / well-formed / ownership check — 12.0.5
+/// moved key sends to [`key_recipient_devices`]); used for head counts. Skips tombstoned memberships
 /// (empty content = a member who left) and reads the local store only. Deduped.
 ///
 /// EXPIRED memberships are skipped too: an unclean exit (SIGKILL, crash, dead battery)
@@ -196,6 +181,60 @@ pub async fn call_member_devices(room: &Room) -> Vec<(String, String)> {
         }
     }
     out
+}
+
+/// Who may receive our media key right now (12.0.5, the web's `keyRecipients` + `membershipIn`): devices of live,
+/// well-formed call sessions whose user is JOINED to `room`, never our own device. The sessions are read first and
+/// the memberships LAST, all fresh from the local store in one pass (nothing cached across a network wait), so a
+/// leave / kick that synced before the pass is seen.
+///
+/// `load_members`: before that pass, if a candidate's membership is unknown and the member list isn't loaded, load
+/// it (a joined peer must not go keyless just because lazy-loading never sent us their `m.room.member`; the SDK
+/// dedups concurrent loads and skips it once synced). The final re-check before a send passes `false`: store reads
+/// only, no network.
+pub async fn key_recipient_devices(room: &Room, own_user: &str, own_device: &str, load_members: bool) -> Vec<(String, String)> {
+    if load_members && !room.are_members_synced() {
+        let sessions = live_sessions(room).await;
+        let mut unknown = false;
+        for s in candidates(&sessions, own_user, own_device) {
+            if membership_in(room, &s).await.is_none() {
+                unknown = true;
+                break;
+            }
+        }
+        if unknown {
+            if let Err(e) = room.sync_members().await {
+                eprintln!("[send-key-td] member list of {} not loaded: {e}", room.room_id());
+            }
+        }
+    }
+    let sessions = live_sessions(room).await;
+    let mut ms: std::collections::HashMap<String, Option<String>> = std::collections::HashMap::new();
+    for u in candidates(&sessions, own_user, own_device) {
+        let m = membership_in(room, &u).await;
+        ms.insert(u, m);
+    }
+    let of = |u: &str| ms.get(u).cloned().flatten();
+    crate::keyrules::key_recipients(&sessions, &of, own_user, own_device)
+}
+
+/// The distinct senders whose membership decides [`key_recipient_devices`]: those of well-formed sessions other than
+/// our own device (the only ones `key_recipients` asks about).
+fn candidates(sessions: &[crate::keyrules::LiveSession], own_user: &str, own_device: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for s in sessions {
+        if s.well_formed && !s.device_id.is_empty() && !(s.sender == own_user && s.device_id == own_device) && !out.contains(&s.sender) {
+            out.push(s.sender.clone());
+        }
+    }
+    out
+}
+
+/// `user_id`'s room membership ("join", "leave", "ban", "invite", "knock"), `None` when the store doesn't know it.
+async fn membership_in(room: &Room, user_id: &str) -> Option<String> {
+    let uid = matrix_sdk::ruma::UserId::parse(user_id).ok()?;
+    let m = room.get_member_no_sync(&uid).await.ok().flatten()?;
+    Some(m.membership().as_str().to_string())
 }
 
 /// The room's live MatrixRTC sessions as the media-key rules see them (schema, state-key ownership,
@@ -495,6 +534,34 @@ pub async fn leave_rtc_session(room: &Room) -> matrix_sdk::Result<()> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// 12.0.5: the focus of the OLDEST live session (the web's resolveFocus), not the first in store order; expired,
+    /// not-owned and focus-less sessions never pick it; an empty alias is the room id; ties keep store order.
+    #[test]
+    fn resolve_focus_takes_the_oldest_live_session() {
+        let room = "!call:a.test";
+        let now = 1_761_400_000_000u64;
+        let m = |s: &str, d: &str, c: u64, url: &str, alias: &str, sk: Option<&str>| {
+            let mut content = json!({"application":"m.call","call_id":"","scope":"m.room","device_id":d,
+                "created_ts":c,"expires":14_400_000u64,"membershipID":format!("{s}:{d}")});
+            if !url.is_empty() {
+                content["foci_preferred"] = json!([{"type":"livekit","livekit_service_url":url,"livekit_alias":alias}]);
+            }
+            json!({"type":"org.matrix.msc3401.call.member","sender":s,"origin_server_ts":c,
+                   "state_key": sk.map(str::to_string).unwrap_or_else(|| format!("_{s}_{d}_m.call")),"content":content})
+        };
+        let evs = vec![
+            m("@new:a.test", "N", now - 1_000, "https://new.test/livekit/jwt", room, None),
+            m("@ghost:b.test", "G", now - 20_000_000, "https://ghost.test/livekit/jwt", room, None), // expired
+            m("@mallory:b.test", "M", now - 9_000, "https://evil.test/livekit/jwt", room, Some("_@victim:a.test_V_m.call")), // not owned
+            m("@nofocus:a.test", "X", now - 8_000, "", "", None),
+            m("@old:a.test", "O", now - 5_000, "https://old.test/livekit/jwt", "", None),
+            m("@tie:a.test", "T", now - 5_000, "https://tie.test/livekit/jwt", room, None),
+        ];
+        let f = oldest_focus(&crate::keyrules::live_sessions_from(&evs, now), room).unwrap();
+        assert_eq!((f.service_url.as_str(), f.alias.as_str()), ("https://old.test/livekit/jwt", room));
+        assert!(oldest_focus(&crate::keyrules::live_sessions_from(&evs[1..4], now), room).is_none());
+    }
 
     /// The strip must count BOTH membership spellings, both content formats, skip
     /// tombstones and expired ghosts, and dedupe multi-device users.

@@ -12,6 +12,9 @@
 //!      membership there. A key that is otherwise valid but whose membership has not synced yet is
 //!      "pending" (held briefly, re-checked), never installed on trust;
 //!   5. it is not under our own identity.
+//! Announce ([`key_recipients`]) — our key goes only to live, well-formed call-member devices whose user is a
+//! JOINED room member, never to ourselves; the caller re-runs the check right before sending (12.0.5: the
+//! desktop used to key every live membership, joined or not).
 //! Then: at most [`MAX_ENTRIES_PER_EVENT`] key entries per event, indices 0..=254, and at most
 //! [`MAX_INDICES_PER_DEVICE`] indices held per device (oldest evicted) — no sender can fill the registry.
 //!
@@ -189,6 +192,21 @@ pub struct LiveSession {
     pub membership_id: String,
     /// strict schema (application m.call, scope m.room, call_id "", finite expires > 0): required for keys
     pub well_formed: bool,
+    /// `created_ts` of the session, else the event's `origin_server_ts` (the web's `createdTs`)
+    pub created_ts: u64,
+    /// the session's first livekit focus `(livekit_service_url, livekit_alias)` from `foci_preferred`, else
+    /// `foci_active` (the web's `focusOf`); the alias is "" when absent (the caller uses the room id)
+    pub focus: Option<(String, String)>,
+}
+
+/// The web's `focusOf`: the first `{type: livekit, livekit_service_url: <non-empty>}` of `foci_preferred` (else
+/// `foci_active`).
+fn focus_of(e: &serde_json::Map<String, serde_json::Value>) -> Option<(String, String)> {
+    let list = e.get("foci_preferred").and_then(|v| v.as_array()).or_else(|| e.get("foci_active").and_then(|v| v.as_array()))?;
+    list.iter().find_map(|f| {
+        let s = |k: &str| f.get(k).and_then(|v| v.as_str()).unwrap_or("");
+        (s("type") == "livekit" && !s("livekit_service_url").is_empty()).then(|| (s("livekit_service_url").to_string(), s("livekit_alias").to_string()))
+    })
 }
 
 /// Default membership lifetime when `expires` is absent (MSC4143 / the web's MEMBERSHIP_EXPIRES_MS).
@@ -246,12 +264,15 @@ pub fn live_sessions_from(events: &[serde_json::Value], now: u64) -> Vec<LiveSes
                 continue;
             }
             let expires = e.get("expires").and_then(|v| v.as_f64()).filter(|f| f.is_finite()).unwrap_or(0.0);
+            let created_ts = e.get("created_ts").and_then(|v| v.as_f64()).filter(|f| f.is_finite() && *f >= 0.0).map(|f| f as u64).unwrap_or(origin);
             out.push(LiveSession {
                 sender: sender.to_string(),
                 device_id: dev.to_string(),
                 state_key: state_key.to_string(),
                 membership_id: s("membershipID").unwrap_or("").to_string(),
                 well_formed: s("application") == Some("m.call") && s("scope") == Some("m.room") && s("call_id") == Some("") && expires > 0.0,
+                created_ts,
+                focus: focus_of(e),
             });
         }
     }
@@ -261,6 +282,36 @@ pub fn live_sessions_from(events: &[serde_json::Value], now: u64) -> Vec<LiveSes
 /// The (user, device) pairs whose keys may be installed: live AND well-formed sessions.
 pub fn live_key_members(sessions: &[LiveSession]) -> HashSet<(String, String)> {
     sessions.iter().filter(|s| s.well_formed).map(|s| (s.sender.clone(), s.device_id.clone())).collect()
+}
+
+/// Who may receive our media key (the web's `keyRecipients`): the devices of live, well-formed call sessions whose
+/// user is a JOINED member of the room (`membership_of` = "join"; `None` = not loaded = no key), never our own
+/// device (our OTHER devices are included); deduped, in session order. The caller re-runs it right before sending.
+pub fn key_recipients(
+    live: &[LiveSession],
+    membership_of: &dyn Fn(&str) -> Option<String>,
+    own_user_id: &str,
+    own_device_id: &str,
+) -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = Vec::new();
+    let mut seen: HashSet<(String, String)> = HashSet::new();
+    for m in live {
+        if m.sender.is_empty() || m.device_id.is_empty() || !m.well_formed {
+            continue;
+        }
+        if m.sender == own_user_id && m.device_id == own_device_id {
+            continue;
+        }
+        if membership_of(&m.sender).as_deref() != Some("join") {
+            continue;
+        }
+        let k = (m.sender.clone(), m.device_id.clone());
+        if !seen.insert(k.clone()) {
+            continue;
+        }
+        out.push(k);
+    }
+    out
 }
 
 /// The key entries of one event (`content` = the event's content): the first [`MAX_ENTRIES_PER_EVENT`] objects
@@ -477,5 +528,141 @@ mod tests {
         assert_eq!(note_index(&mut held, 100), vec![0u8], "…and keeps its place: the oldest goes (the web's policy)");
         assert_eq!(held.len(), MAX_INDICES_PER_DEVICE);
         assert_eq!(note_index(&mut held, 101), vec![1u8]);
+    }
+    // ---- announce recipients (web keyrules.test.ts "announce recipients", the same cases) ----
+    fn session(sender: &str, dev: &str, well_formed: bool) -> LiveSession {
+        LiveSession {
+            sender: sender.into(),
+            device_id: dev.into(),
+            state_key: format!("_{sender}_{dev}_m.call"),
+            membership_id: String::new(),
+            well_formed,
+            created_ts: 0,
+            focus: None,
+        }
+    }
+    #[test]
+    fn announce_joined_live_members_only_deduped_never_self() {
+        let live = vec![
+            session(ALICE, "ADEV1", true),
+            session(ALICE, "ADEV1", true),
+            session(ME, "MEDEV", true),
+            session(ME, "OTHER", true),
+            session("@kicked:example.com", "K1", true),
+            session("@unknown:x", "U1", true),
+            session(MALLORY, "", true),
+        ];
+        // (unsorted: session order, as the web's loop)
+        let ids: Vec<String> = key_recipients(&live, &membership, ME, "MEDEV").into_iter().map(|(u, d)| format!("{u}|{d}")).collect();
+        assert_eq!(ids, vec![format!("{ALICE}|ADEV1"), format!("{ME}|OTHER")]);
+    }
+    #[test]
+    fn announce_skips_memberships_that_fail_the_strict_schema() {
+        assert!(key_recipients(&[session(ALICE, "ADEV1", false)], &membership, ME, "MEDEV").is_empty());
+    }
+    /// 12.0.5: kicked / banned / left / invited / knocking members get no key; the membership is read per call, so
+    /// a leave that lands between scheduling and sending drops the device on the re-check.
+    #[test]
+    fn announce_only_joined_never_left_kicked_banned_or_unknown() {
+        let live = vec![session(ALICE, "ADEV1", true), session("@bob:example.com", "BDEV", true), session(ME, "PHONE", true)];
+        for (state, expect_bob) in [("join", true), ("leave", false), ("ban", false), ("invite", false), ("knock", false)] {
+            let ms = |u: &str| if u == "@bob:example.com" { Some(state.to_string()) } else { membership(u) };
+            let r = key_recipients(&live, &ms, ME, "MEDEV");
+            assert_eq!(r.iter().any(|(u, _)| u == "@bob:example.com"), expect_bob, "bob {state}");
+            assert!(r.contains(&(ALICE.to_string(), "ADEV1".to_string())) && r.contains(&(ME.to_string(), "PHONE".to_string())), "{state}");
+        }
+        // not loaded = no key (never sent on trust)
+        let none = |_: &str| None;
+        assert!(key_recipients(&live, &none, ME, "MEDEV").is_empty());
+        // the re-check before sending: bob was joined when the send was scheduled, left before it went out
+        let left = std::cell::Cell::new(false);
+        let ms = |u: &str| if u == "@bob:example.com" && left.get() { Some("leave".into()) } else { membership(u).or(Some("join".into())) };
+        let scheduled = key_recipients(&live, &ms, ME, "MEDEV");
+        assert_eq!(scheduled.len(), 3);
+        left.set(true);
+        let still: HashSet<(String, String)> = key_recipients(&live, &ms, ME, "MEDEV").into_iter().collect();
+        let sent: Vec<_> = scheduled.into_iter().filter(|r| still.contains(r)).collect();
+        assert!(!sent.iter().any(|(u, _)| u == "@bob:example.com") && sent.len() == 2);
+    }
+    #[test]
+    fn live_sessions_carry_created_ts_and_focus() {
+        let mut a = good("ADEV1");
+        a["foci_preferred"] = json!([{ "type": "nextgen", "livekit_service_url": "https://x.test" },
+            { "type": "livekit", "livekit_service_url": "" }, { "type": "livekit", "livekit_service_url": "https://a.test/livekit/jwt", "livekit_alias": "!r:a.test" }]);
+        let mut b = good("ADEV2");
+        b.as_object_mut().unwrap().remove("created_ts");
+        b["foci_active"] = json!([{ "type": "livekit", "livekit_service_url": "https://b.test/livekit/jwt" }]);
+        let mut e2 = mem(ALICE, &format!("_{ALICE}_ADEV2_m.call"), b);
+        e2["origin_server_ts"] = json!(1_500u64);
+        let s = live_sessions_from(&[mem(ALICE, &format!("_{ALICE}_ADEV1_m.call"), a), e2], 2_000);
+        assert_eq!((s[0].created_ts, s[0].focus.clone()), (1_000, Some(("https://a.test/livekit/jwt".into(), "!r:a.test".into()))));
+        assert_eq!((s[1].created_ts, s[1].focus.clone()), (1_500, Some(("https://b.test/livekit/jwt".into(), String::new()))));
+    }
+
+    // ---- shared calls-round vectors (share calls-round/calls.vectors.draft.json, copied verbatim): section
+    // `recipients`. Cases 15–17 are today's web rule (joined + well-formed + not self) and must pass; 18–20 add the
+    // 12.1.0 clauses (known device list, call-server departures) that neither the web nor 12.0.5 has yet.
+    fn merge_patch(target: &mut serde_json::Value, patch: &serde_json::Value) {
+        let (Some(t), Some(p)) = (target.as_object_mut(), patch.as_object()) else { return };
+        for (k, v) in p {
+            if v.is_null() {
+                t.remove(k);
+            } else if v.is_object() && t.get(k).map(|x| x.is_object()).unwrap_or(false) {
+                merge_patch(t.get_mut(k).unwrap(), v);
+            } else {
+                t.insert(k.clone(), v.clone());
+            }
+        }
+    }
+    fn expand_member(m: &serde_json::Value, room: &str) -> serde_json::Value {
+        let g = |k: &str| m.get(k).and_then(|v| v.as_str()).map(str::to_string);
+        let (s, d) = (g("s").unwrap(), g("d").unwrap());
+        let c = m["c"].as_u64().unwrap();
+        let mut content = json!({
+            "application": "m.call", "call_id": "", "scope": "m.room", "device_id": d,
+            "focus_active": { "type": "livekit", "focus_selection": "oldest_membership" },
+            "foci_preferred": [{ "type": "livekit",
+                "livekit_service_url": g("f").unwrap_or_else(|| "https://a.test/livekit/jwt".into()),
+                "livekit_alias": g("a").unwrap_or_else(|| room.to_string()) }],
+            "created_ts": c, "expires": 14_400_000u64, "membershipID": format!("{s}:{d}"),
+        });
+        if let Some(p) = m.get("patch") {
+            merge_patch(&mut content, p);
+        }
+        json!({ "type": "org.matrix.msc3401.call.member", "sender": s,
+                "state_key": g("sk").unwrap_or_else(|| format!("_{s}_{d}_m.call")), "origin_server_ts": c, "content": content })
+    }
+    #[test]
+    fn calls_vectors_recipients() {
+        let v: serde_json::Value = serde_json::from_str(include_str!("testvectors/calls-draft.json")).unwrap();
+        let defs = &v["defaults"];
+        let cases = v["recipients"].as_array().unwrap();
+        assert_eq!(cases.len(), 6);
+        for (i, case) in cases.iter().enumerate() {
+            let num = 15 + i; // the vectors' global numbering (focus 1–13, sfuUrl 14)
+            let field = |k: &str| case.get(k).unwrap_or(&defs[k]).clone();
+            let room = field("room").as_str().unwrap().to_string();
+            let now = field("now").as_u64().unwrap();
+            let me = field("me").as_str().unwrap().to_string();
+            let (me_user, me_dev) = me.split_once('|').unwrap();
+            let joined = field("joined");
+            let events: Vec<serde_json::Value> = case["members"].as_array().unwrap().iter().map(|m| expand_member(m, &room)).collect();
+            let sessions = live_sessions_from(&events, now);
+            let ms = |u: &str| Some(joined.get(u).and_then(|x| x.as_str()).unwrap_or("join").to_string());
+            let mut got: Vec<String> = key_recipients(&sessions, &ms, me_user, me_dev).into_iter().map(|(u, d)| format!("{u}|{d}")).collect();
+            got.sort();
+            let expect: Vec<String> = case["expect"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
+            let name = case["name"].as_str().unwrap();
+            match num {
+                15..=17 | 20 => assert_eq!(got, expect, "#{num} {name}"),
+                // 12.1.0 clauses (removed device, call-server departure) are not in today's rule: it still keys the
+                // device those cases exclude, and nothing else changes
+                18 | 19 => {
+                    assert_ne!(got, expect, "#{num} {name}: passes already — promote it to the asserted set");
+                    assert_eq!(got, vec!["@alice:a.test|ADEV".to_string(), "@bob:b.test|BDEV".to_string()], "#{num} {name}");
+                }
+                _ => unreachable!(),
+            }
+        }
     }
 }

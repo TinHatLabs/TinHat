@@ -1071,6 +1071,12 @@ fn current_media_key() -> &'static std::sync::Mutex<Option<([u8; 16], u8)>> {
 /// crypto `Device` and hands them to [`crate::e2ee_keys::send_our_key_to_device`]. Logs the
 /// reachable/failed counts. Best-effort: a peer we can't resolve yet is retried when it
 /// raises `ParticipantJoined`.
+///
+/// 12.0.5 (the web's rule, `keys.ts` sendKeyToDevice): recipients are [`crate::rtc::key_recipient_devices`]
+/// (JOINED room members with a live, well-formed membership, not us) — a kicked / banned / departed user's
+/// lingering membership no longer gets our key — and the rule is re-checked right before the send, after the
+/// device lookups (which may wait on a key query), so a leave / kick that synced meanwhile is dropped. Every
+/// key send goes through here: join, ladder rungs, the 60 s steady loop, membership refresh, screen share.
 pub(crate) async fn announce_key_to_members(
     client: &matrix_sdk::Client,
     room: &matrix_sdk::Room,
@@ -1081,10 +1087,7 @@ pub(crate) async fn announce_key_to_members(
 ) {
     let our_member_id = format!("{user_id}:{device_id}");
     let mut targets: Vec<matrix_sdk::encryption::identities::Device> = Vec::new();
-    for (peer_user, peer_dev) in crate::rtc::call_member_devices(room).await {
-        if peer_user == user_id && peer_dev == device_id {
-            continue; // skip ourselves
-        }
+    for (peer_user, peer_dev) in crate::rtc::key_recipient_devices(room, user_id, device_id, true).await {
         if let Ok(uid) = matrix_sdk::ruma::UserId::parse(&peer_user) {
             let did = matrix_sdk::ruma::OwnedDeviceId::from(peer_dev.as_str());
             let mut dev = client.encryption().get_device(&uid, &did).await.ok().flatten();
@@ -1103,6 +1106,19 @@ pub(crate) async fn announce_key_to_members(
             if let Some(dev) = dev {
                 targets.push(dev);
             }
+        }
+    }
+    // Re-check right before sending (fresh store reads, no network): a recipient whose leave / kick synced during
+    // the device lookups must not get the key. (The SDK's encrypt-and-send still claims one-time keys for a NEW Olm
+    // session before encrypting; with matrix-sdk 0.18 that step can't be split off to re-check after it, as the web
+    // does after encrypting. Steady-state sends reuse the sessions, so that claim is a no-op.)
+    if !targets.is_empty() {
+        let still: std::collections::HashSet<(String, String)> =
+            crate::rtc::key_recipient_devices(room, user_id, device_id, false).await.into_iter().collect();
+        let before = targets.len();
+        targets.retain(|d| still.contains(&(d.user_id().to_string(), d.device_id().to_string())));
+        if targets.len() < before {
+            eprintln!("[send-key-td] {} recipient(s) left before sending — not sent", before - targets.len());
         }
     }
     match crate::e2ee_keys::send_our_key_to_device(
