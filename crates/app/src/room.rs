@@ -4895,19 +4895,25 @@ pub enum JoinTarget {
 
 /// Parse anything a user might paste into "join with a link".
 pub fn parse_join_link(input: &str) -> Result<JoinTarget, String> {
-    let s = input.trim();
+    use crate::share_link::{js_space, js_trim};
+    let s = js_trim(input);
     if s.is_empty() {
         return Err("Paste a link first.".to_string());
     }
 
+    // A wrapped link (`https://tinhat.dev/open#<a server's link>`, share_link.rs) carries the real one in its fragment.
+    let s = s.strip_prefix(crate::share_link::OPEN_PREFIX).unwrap_or(s);
     // For both matrix.to and the web client the interesting part lives after `#/`.
     let frag = s.split_once("#/").map(|(_, a)| a).unwrap_or(s);
-    let frag = frag.strip_prefix("room/").unwrap_or(frag);
-    // Percent-encoded forms turn up whenever a link has been through a chat client.
+    // `#/room/…`, or a profile (`#/user/@…`: a person, answered as one)
+    let frag = frag.strip_prefix("room/").or_else(|| frag.strip_prefix("user/")).unwrap_or(frag);
+    // Percent-encoded forms turn up whenever a link has been through a chat client (and Tin Hat's own links encode
+    // the room part like encodeURIComponent: share_link.rs). The web's parseJoinLink decodes the same five.
     let decoded = frag
         .replace("%21", "!")
         .replace("%23", "#")
         .replace("%40", "@")
+        .replace("%24", "$")
         .replace("%3A", ":")
         .replace("%3a", ":");
 
@@ -4916,14 +4922,34 @@ pub fn parse_join_link(input: &str) -> Result<JoinTarget, String> {
         .split('&')
         .filter_map(|kv| kv.strip_prefix("via="))
         .filter(|v| !v.is_empty())
-        .map(str::to_string)
+        .map(crate::share_link::decode_component)
         .collect();
-    let target = target.trim_end_matches('/').trim();
+    let target = js_trim(target.trim_end_matches('/'));
+    // a link to a message (`!room:server/$event`, matrix.to's and ours): the room. Only a `/` followed by an event id
+    // (`$…`) ends the room part (`/` is legal in an alias: a bare `#a/b:server` stays whole). Cut before decoding, so an
+    // encoded `%2F` inside an alias stays in it and a broken escape in the event part can't stop the room decoding …
+    let sigil = |t: &str| t.starts_with('!') || t.starts_with('#');
+    let target = match target.split_once('/') {
+        Some((head, tail)) if !head.is_empty() && sigil(head) && tail.starts_with('$') => head,
+        _ => target,
+    };
+    // anything still encoded (a non-ASCII alias); a malformed escape keeps the text as it is (the web's decode)
+    let target = crate::share_link::decode_component(target);
+    let target = js_trim(&target);
+    // … and again after it, for a link that encoded the `/$` too
+    let target = match target.find("/$") {
+        Some(i) if i > 0 && sigil(target) => &target[..i],
+        _ => target,
+    };
 
     if target.starts_with('@') && target.contains(':') {
         return Ok(JoinTarget::Person(target.to_string()));
     }
-    if (target.starts_with('!') || target.starts_with('#')) && target.contains(':') {
+    // `!id:server` / `#alias:server` (something on both sides of the `:`), or a room-version-12 id `!opaque` with no
+    // server part (the web's parseJoinLink, same two rules)
+    let with_server = sigil(target) && target[1..].split_once(':').is_some_and(|(l, r)| !l.is_empty() && !r.is_empty());
+    let v12 = target.starts_with('!') && target.len() > 1 && !target.contains(':') && !target.contains(js_space);
+    if with_server || v12 {
         return Ok(JoinTarget::RoomOrAlias { id: target.to_string(), via });
     }
     Err("That doesn't look like a Tin Hat link. Paste an invite link, or a room \

@@ -158,6 +158,15 @@ if ($exeText.Contains("TINHAT-LAB-BUILD")) {
     "verify FAIL: TINHAT-LAB-BUILD marker present - a LAB build that trusts a development update key"
     $fail++
 }
+# Calls round M1 (2026-10-27): a LAB build (--features lab-call-host) answers the "call hosted elsewhere" sheet from
+# the TINHAT_TEST_CALL_HOST environment variable - the user's consent bypassed. A release build never reads it, so its
+# name is never in a publishable exe (same refusal as sign-desktop-feeds).
+if ($exeText.Contains("TINHAT_TEST_CALL_HOST")) {
+    "verify FAIL: TINHAT_TEST_CALL_HOST present - a LAB build (--features lab-call-host) that answers the call-host sheet by itself"
+    $fail++
+} else {
+    "verify ok: no lab call-host answer (TINHAT_TEST_CALL_HOST absent)"
+}
 # Every start position (a lookahead: overlapping candidates too, so one "RW..." can't hide the next), and an ordinal,
 # case-sensitive set: base64 is case-sensitive, PowerShell's @{} and -ne are not (Astra, 12.0.3 train).
 $keys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)

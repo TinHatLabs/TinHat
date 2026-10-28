@@ -1,6 +1,6 @@
 [package]
 name = "tinhat-app"
-version = "12.0.5"
+version = "12.1.0"
 edition.workspace = true
 license.workspace = true
 description = "Tin Hat native KDE/Kirigami app (Qt6/QML + Rust core via CXX-Qt)"
@@ -123,6 +123,10 @@ winresource = "0.1"
 # TINHAT_UPDATE_DEV_KEY (build.rs refuses the key without this feature, the feature without the key, and the feature
 # when TINHAT_RELEASE_BUILD=1). Such a binary carries update_trust::LAB_TRUST_MARKER; the publish step refuses it.
 lab-update-key = []
+# Calls round M1 (2026-10-27): a LAB build whose call-host sheet can be answered by TINHAT_TEST_CALL_HOST (the gates'
+# native peer). Without this feature the variable is never read and its name isn't in the binary; build.rs refuses the
+# feature when TINHAT_RELEASE_BUILD=1. The sheet is the user's consent — a release never answers it by itself.
+lab-call-host = []
 
 [[bin]]
 name = "tinhat"

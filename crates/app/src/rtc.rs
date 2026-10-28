@@ -11,9 +11,14 @@ use matrix_sdk::ruma::events::call::member::CallMemberEventContent;
 use matrix_sdk::{Room, RoomState};
 
 /// Element Call membership state-event type (MSC3401/MSC4143 session format).
-const MEMBER_EVENT_TYPE: &str = "org.matrix.msc3401.call.member";
+pub(crate) const MEMBER_EVENT_TYPE: &str = "org.matrix.msc3401.call.member";
 /// Default membership lifetime (ms) — must refresh before this elapses (EC = 4h).
 const MEMBER_EXPIRES_MS: u64 = 14_400_000;
+
+/// Wall-clock ms (the clock membership liveness and the key planner run on).
+pub(crate) fn now_ms_pub() -> u64 {
+    now_ms()
+}
 
 fn now_ms() -> u64 {
     std::time::SystemTime::now()
@@ -37,27 +42,66 @@ pub fn is_call_active(room: &Room) -> bool {
     room.has_active_room_call()
 }
 
-/// Read the room's `org.matrix.msc3401.call.member` state and resolve the LiveKit
-/// focus (broker url + alias). Returns `None` if no live member advertises one.
-///
-/// 12.0.5 (the web's `resolveFocus`): the OLDEST live session with a livekit focus wins (by `created_ts`, else the
-/// event's `origin_server_ts`; ties keep store order), not the first one in store order, so ghosts of an earlier
-/// call can't send the desktop and the web to different call services. Sessions come from
-/// [`crate::keyrules::live_sessions_from`]: live, room-scoped `m.call`, a device id, a state key owned by the sender.
-pub async fn resolve_focus(room: &Room) -> matrix_sdk::Result<Option<CallFocus>> {
-    let raws = room
-        .get_state_events_static::<CallMemberEventContent>()
-        .await?;
-    let events: Vec<serde_json::Value> = raws.iter().filter_map(|r| serde_json::to_value(r).ok()).collect();
-    Ok(oldest_focus(&crate::keyrules::live_sessions_from(&events, now_ms()), room.room_id().as_str()))
+/// The room's raw `org.matrix.msc3401.call.member` state events (local store), as the pure rules read them.
+async fn member_events(room: &Room) -> matrix_sdk::Result<Vec<serde_json::Value>> {
+    let raws = room.get_state_events_static::<CallMemberEventContent>().await?;
+    Ok(raws.iter().filter_map(|r| serde_json::to_value(r).ok()).collect())
 }
 
-/// The focus of the oldest live session that names one (stable: equal `created_ts` keep their order); an empty
-/// alias means the room id.
+/// Calls round M1 (DESIGN §2): which call service a join in `room` uses, and whether the user must be asked first.
+/// The running call's service is the oldest live membership's (by created_ts, sender, device: a total order, the
+/// same pick as the web and the phones); our own services are the server's well-known focus and
+/// `<homeserver>/livekit/jwt`; the allow-list is account data `dev.tinhat.call_hosts`. No call running = start on
+/// our own service. Nothing here contacts the call service.
+pub async fn focus_decision_for(client: &matrix_sdk::Client, room: &Room) -> matrix_sdk::Result<crate::callrules::FocusDecision> {
+    let events = member_events(room).await?;
+    let (start, own) = own_foci(client).await;
+    let allow = call_hosts(client).await;
+    Ok(crate::callrules::focus_decision(room.room_id().as_str(), now_ms(), &events, &own, &start, &allow))
+}
+
+/// Our own call services `(start, set)` (callrules::own_foci over the server's well-known focus and the homeserver).
+pub async fn own_foci(client: &matrix_sdk::Client) -> (String, Vec<String>) {
+    let origin = crate::session::origin_of(client.homeserver().as_str());
+    let wk_url = focus_service_url(client).await; // the well-known's focus, else the homeserver fallback
+    let wk = serde_json::json!({ "org.matrix.msc4143.rtc_foci": [{ "type": "livekit", "livekit_service_url": wk_url }] });
+    crate::callrules::own_foci(&wk, &origin)
+}
+
+/// Account data type of the call hosts the user chose "Always trust" for (`{"v":1,"allow":["host[:port]", …]}`),
+/// synced across the user's devices and read by web, desktop and phone alike.
+pub const CALL_HOSTS_TYPE: &str = "dev.tinhat.call_hosts";
+
+async fn call_hosts_content(client: &matrix_sdk::Client) -> serde_json::Value {
+    use matrix_sdk::ruma::events::GlobalAccountDataEventType;
+    let raw = client.account().account_data_raw(GlobalAccountDataEventType::from(CALL_HOSTS_TYPE)).await.ok().flatten();
+    raw.and_then(|r| serde_json::from_str::<serde_json::Value>(r.json().get()).ok()).unwrap_or(serde_json::Value::Null)
+}
+
+/// The hosts the user trusts for calls (empty when none or unreadable).
+pub async fn call_hosts(client: &matrix_sdk::Client) -> Vec<String> {
+    crate::callrules::allow_list_from(&call_hosts_content(client).await)
+}
+
+/// Add (`trust`) or remove a host from the trusted call hosts (account data, read-modify-write).
+pub async fn set_call_host(client: &matrix_sdk::Client, host: &str, trust: bool) -> Result<(), String> {
+    use matrix_sdk::ruma::events::GlobalAccountDataEventType;
+    let next = crate::callrules::allow_list_with(&call_hosts_content(client).await, host, trust);
+    let raw_value = serde_json::value::to_raw_value(&next).map_err(|e| e.to_string())?;
+    let raw: matrix_sdk::ruma::serde::Raw<matrix_sdk::ruma::events::AnyGlobalAccountDataEventContent> =
+        matrix_sdk::ruma::serde::Raw::from_json(raw_value);
+    client
+        .account()
+        .set_account_data_raw(GlobalAccountDataEventType::from(CALL_HOSTS_TYPE), raw)
+        .await
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+/// The focus of the oldest live session that names one (callrules::running_session: created_ts, sender, device); an
+/// empty alias means the room id. No host policy: the join path uses [`focus_decision_for`].
 pub(crate) fn oldest_focus(sessions: &[crate::keyrules::LiveSession], room_id: &str) -> Option<CallFocus> {
-    let mut with: Vec<&crate::keyrules::LiveSession> = sessions.iter().filter(|s| s.focus.is_some()).collect();
-    with.sort_by_key(|s| s.created_ts); // stable, like the web's Array.prototype.sort
-    let (service_url, alias) = with.first()?.focus.clone()?;
+    let (service_url, alias) = crate::callrules::running_session(sessions)?.focus.clone()?;
     let alias = if alias.is_empty() { room_id.to_string() } else { alias };
     Some(CallFocus { service_url, alias })
 }
@@ -183,47 +227,136 @@ pub async fn call_member_devices(room: &Room) -> Vec<(String, String)> {
     out
 }
 
-/// Who may receive our media key right now (12.0.5, the web's `keyRecipients` + `membershipIn`): devices of live,
-/// well-formed call sessions whose user is JOINED to `room`, never our own device. The sessions are read first and
-/// the memberships LAST, all fresh from the local store in one pass (nothing cached across a network wait), so a
-/// leave / kick that synced before the pass is seen.
-///
-/// `load_members`: before that pass, if a candidate's membership is unknown and the member list isn't loaded, load
-/// it (a joined peer must not go keyless just because lazy-loading never sent us their `m.room.member`; the SDK
-/// dedups concurrent loads and skips it once synced). The final re-check before a send passes `false`: store reads
-/// only, no network.
-pub async fn key_recipient_devices(room: &Room, own_user: &str, own_device: &str, load_members: bool) -> Vec<(String, String)> {
-    if load_members && !room.are_members_synced() {
-        let sessions = live_sessions(room).await;
-        let mut unknown = false;
-        for s in candidates(&sessions, own_user, own_device) {
-            if membership_in(room, &s).await.is_none() {
-                unknown = true;
-                break;
-            }
-        }
-        if unknown {
-            if let Err(e) = room.sync_members().await {
-                eprintln!("[send-key-td] member list of {} not loaded: {e}", room.room_id());
-            }
-        }
-    }
-    let sessions = live_sessions(room).await;
-    let mut ms: std::collections::HashMap<String, Option<String>> = std::collections::HashMap::new();
-    for u in candidates(&sessions, own_user, own_device) {
-        let m = membership_in(room, &u).await;
-        ms.insert(u, m);
-    }
-    let of = |u: &str| ms.get(u).cloned().flatten();
-    crate::keyrules::key_recipients(&sessions, &of, own_user, own_device)
+/// What the media-key recipient rule saw (calls round, recipient rule v2).
+pub struct KeyRecipients {
+    /// `user|device`, sorted (callrules::key_recipients_v2)
+    pub ids: Vec<String>,
+    /// a candidate's room membership isn't in the store yet (lazy-loaded member list): it gets no key now; load the
+    /// members and look again (12.0.5 review item 3: unknown members never delay the known ones)
+    pub unknown_members: bool,
+    /// a device list couldn't be read: that user got nothing this round (fail closed) — look again in ~2 s
+    pub retry_soon: bool,
 }
 
-/// The distinct senders whose membership decides [`key_recipient_devices`]: those of well-formed sessions other than
-/// our own device (the only ones `key_recipients` asks about).
+/// Who may receive our media key right now (recipient rule v2, DESIGN §3.1): the web's rule (live, well-formed
+/// session; the user JOINED to `room`; not our own device) + the device is in its user's device list when the crypto
+/// store knows that list (a removed / logged-out device gets nothing) + it hasn't left the call server in this session
+/// (`sfu_gone`). Local store reads only, no network: callers run it right before every send.
+pub async fn key_recipients_now(room: &Room, own_user: &str, own_device: &str, sfu_gone: &[(String, u64)]) -> KeyRecipients {
+    let sessions = live_sessions(room).await;
+    let cands = candidates(&sessions, own_user, own_device);
+    let mut ms: std::collections::HashMap<String, Option<String>> = std::collections::HashMap::new();
+    let mut devices: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    let client = room.client();
+    let mut retry_soon = false;
+    let tracked = match client.encryption().tracked_users().await {
+        Ok(t) => Some(t),
+        Err(e) => {
+            eprintln!("[send-key-td] tracked users unreadable: {e} — no key sends this round");
+            retry_soon = true;
+            None
+        }
+    };
+    let rev_at: std::collections::HashMap<String, u64> = cands.iter().map(|u| (u.clone(), device_rev(u))).collect();
+    for u in &cands {
+        ms.insert(u.clone(), membership_in(room, u).await);
+        match tracked.as_ref() {
+            // a failed read fails CLOSED: an empty list for every candidate this round, never a stale one
+            None => {
+                devices.insert(u.clone(), Vec::new());
+            }
+            Some(t) => match known_devices(&client, u, t).await {
+                Ok(Some(list)) => {
+                    devices.insert(u.clone(), list);
+                }
+                Ok(None) => {}
+                Err(e) => {
+                    eprintln!("[send-key-td] device list of {u} unreadable: {e} — not keyed this round");
+                    devices.insert(u.clone(), Vec::new());
+                    retry_soon = true;
+                }
+            },
+        }
+    }
+    // a device update for a user while we read: that user's list is void this round (closed), read again in 2 s
+    for u in &cands {
+        if device_rev(u) != rev_at.get(u).copied().unwrap_or(0) {
+            eprintln!("[send-key-td] device list of {u} changed during the read — not keyed this round");
+            devices.insert(u.clone(), Vec::new());
+            retry_soon = true;
+        }
+    }
+    let unknown_members = ms.values().any(|m| m.is_none());
+    let of = |u: &str| ms.get(u).cloned().flatten();
+    KeyRecipients { ids: crate::callrules::key_recipients_v2(&sessions, &of, own_user, own_device, &devices, sfu_gone), unknown_members, retry_soon }
+}
+
+/// Load the room's member list when it isn't (the SDK dedups concurrent loads); true when it loaded something new.
+pub async fn load_members(room: &Room) -> bool {
+    if room.are_members_synced() {
+        return false;
+    }
+    match room.sync_members().await {
+        Ok(()) => true,
+        Err(e) => {
+            eprintln!("[send-key-td] member list of {} not loaded: {e}", room.room_id());
+            false
+        }
+    }
+}
+
+/// `user_id`'s devices as the crypto store knows them (deleted ones left out). The list is known when the crypto store
+/// tracks the user's devices — then an empty list is a real "no devices left" (the SQLite store drops deleted devices,
+/// so the last device's removal leaves nothing behind); `None` = untracked, unknown, excludes no one (and the
+/// announce's key query then fetches it).
+/// Err = the crypto store couldn't be read (the caller fails closed).
+async fn known_devices(client: &matrix_sdk::Client, user_id: &str, tracked: &std::collections::HashSet<matrix_sdk::ruma::OwnedUserId>) -> Result<Option<Vec<String>>, String> {
+    let Ok(uid) = matrix_sdk::ruma::UserId::parse(user_id) else { return Ok(None) };
+    let devs = client.encryption().get_user_devices(&uid).await.map_err(|e| e.to_string())?;
+    let mut any = false;
+    let mut out = Vec::new();
+    for d in devs.devices() {
+        any = true;
+        if !d.is_deleted() {
+            out.push(d.device_id().to_string());
+        }
+    }
+    // tracked alone doesn't mean fetched (the first query may still be pending): an empty list is authoritative only
+    // for a user whose devices this process has seen before (their last device was removed since)
+    let mut seen = DEVICES_SEEN.lock().unwrap();
+    if any {
+        seen.insert(user_id.to_string());
+    }
+    Ok((any || (tracked.contains(&uid) && seen.contains(user_id))).then_some(out))
+}
+
+/// Per-user device-list revision, bumped by the crypto store's device updates (call_ctl's devices stream). A read whose
+/// user's revision moved meanwhile is void for that user (fail closed, read again) — never a stale list.
+static DEVICE_REV: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<String, u64>>> =
+    std::sync::LazyLock::new(|| std::sync::Mutex::new(std::collections::HashMap::new()));
+
+pub(crate) fn bump_device_revs(users: &[String]) {
+    let mut m = DEVICE_REV.lock().unwrap();
+    for u in users {
+        *m.entry(u.clone()).or_insert(0) += 1;
+    }
+}
+
+fn device_rev(u: &str) -> u64 {
+    DEVICE_REV.lock().unwrap().get(u).copied().unwrap_or(0)
+}
+
+/// Users whose device list the crypto store has held at least one device for, this run (see [`known_devices`]).
+static DEVICES_SEEN: std::sync::LazyLock<std::sync::Mutex<std::collections::HashSet<String>>> =
+    std::sync::LazyLock::new(|| std::sync::Mutex::new(std::collections::HashSet::new()));
+
+/// The distinct senders whose membership decides the recipients: those of well-formed sessions other than our own
+/// device (the only ones `key_recipients` asks about). Deduped through a set (12.0.5 review: no quadratic scan).
 fn candidates(sessions: &[crate::keyrules::LiveSession], own_user: &str, own_device: &str) -> Vec<String> {
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     let mut out: Vec<String> = Vec::new();
     for s in sessions {
-        if s.well_formed && !s.device_id.is_empty() && !(s.sender == own_user && s.device_id == own_device) && !out.contains(&s.sender) {
+        if s.well_formed && !s.device_id.is_empty() && !(s.sender == own_user && s.device_id == own_device) && seen.insert(s.sender.as_str()) {
             out.push(s.sender.clone());
         }
     }
@@ -393,15 +526,6 @@ pub async fn focus_service_url(client: &matrix_sdk::Client) -> String {
     }
 }
 
-/// The focus a new call starts on (no member advertises one yet, so "Join call" can also begin a call): the server's
-/// call JWT service; `alias` is the room id (the LiveKit room name there).
-pub async fn default_focus(client: &matrix_sdk::Client, room: &Room) -> CallFocus {
-    CallFocus {
-        service_url: focus_service_url(client).await,
-        alias: room.room_id().to_string(),
-    }
-}
-
 /// The EC session-membership state key: `_@user:server_DEVICEID_m.call`.
 fn membership_state_key(user_id: &str, device_id: &str) -> String {
     format!("_{user_id}_{device_id}_m.call")
@@ -536,7 +660,8 @@ mod tests {
     use serde_json::json;
 
     /// 12.0.5: the focus of the OLDEST live session (the web's resolveFocus), not the first in store order; expired,
-    /// not-owned and focus-less sessions never pick it; an empty alias is the room id; ties keep store order.
+    /// not-owned and focus-less sessions never pick it; an empty alias is the room id; a created_ts tie goes to the
+    /// lower sender (calls round: a total order).
     #[test]
     fn resolve_focus_takes_the_oldest_live_session() {
         let room = "!call:a.test";

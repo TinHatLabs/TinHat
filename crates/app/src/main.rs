@@ -46,6 +46,7 @@ pub mod diagnostics; // opt-in, redacted, user-inspectable bug report (never aut
 pub mod logship; // opt-OUT scrubbed log upload + problem reports, to the user's OWN server (consent popup; Settings → Privacy)
 pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
+pub mod callrules; // the calls-round rules: call host policy, key recipients v2, rotate-on-leave (pure; = the web's features/calls/callrules.ts)
 pub mod key_intake; // every Olm-decrypted media key goes through keyrules before the keyring
 pub mod padrules; // Pad: the phone as a remote for my call — the pure rules (= the web's features/calls/pad/rules.ts; docs/PAD.md)
 pub mod pad_engine; // Pad: the receiver + controller state machines over the rules (no I/O, injected clocks)
@@ -68,6 +69,7 @@ pub mod notify; // OS desktop notifications (org.freedesktop.Notifications) for 
 pub mod joinsound; // per-user join sounds published over the soundboard bridge (QOL 1.5.2)
 pub mod livekit; // OpenID -> lk-jwt-service LiveKit token (used by stream)
 pub mod proxy; // the user's server's Tin Hat API client (gif/soundboard/watch — keys stay server-side; the base from its well-known)
+pub mod share_link; // 12.0.6: the links Tin Hat hands out (Copy link / Share / message links): the server's own web app, matrix.to for other servers; shared vectors with the web
 pub mod server_offer; // selfhost: what the user's server offers (dev.tinhat.server in its well-known): API base, features, recorder, call service
 pub mod trust_device; // 12.0.4: trust the phone's native device — Devices → "Trust…" (the web's features/native/trust.ts)
 pub mod start_over; // 12.0.1: "Lost your Security Key? Start over" — a new identity, backup and Security Key (password first)

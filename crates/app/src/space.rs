@@ -457,29 +457,9 @@ fn membership_str(state: RoomState) -> &'static str {
     }
 }
 
-/// `encodeURIComponent` (what Main.qml's roomInviteLink uses), so links match byte for byte.
-fn encode_component(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() * 3);
-    for b in s.bytes() {
-        let keep = b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'!' | b'~' | b'*' | b'\'' | b'(' | b')');
-        if keep {
-            out.push(b as char);
-        } else {
-            out.push_str(&format!("%{b:02X}"));
-        }
-    }
-    out
-}
-
-/// matrix.to permalink: the alias when published, else the id with a `via` hint.
+/// The space's shareable link (share_link.rs: this server's web app, matrix.to for another server's space).
 fn permalink(room_id: &str, alias: &str) -> String {
-    if !alias.is_empty() {
-        return format!("https://matrix.to/#/{}", encode_component(alias));
-    }
-    // a room id always carries its server; a malformed one gets the session's (never a built-in name)
-    let own = crate::session::server_name().unwrap_or_default();
-    let server = room_id.rsplit_once(':').map(|(_, s)| s.to_string()).unwrap_or(own);
-    format!("https://matrix.to/#/{}?via={server}", encode_component(room_id))
+    crate::share_link::share_link_now(room_id, alias, "")
 }
 
 fn join_rule_str(room: &Room) -> &'static str {
@@ -1379,10 +1359,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn permalink_matches_main_qml() {
-        // encodeURIComponent leaves `!` alone (Main.qml's roomInviteLink) — only `:` is escaped.
-        assert_eq!(permalink("!abc:example.com", ""), "https://matrix.to/#/!abc%3Aexample.com?via=example.com");
-        assert_eq!(permalink("!abc:example.com", "#lounge:example.com"), "https://matrix.to/#/%23lounge%3Aexample.com");
+    fn permalink_is_share_link() {
+        // the rule and its cases live in share_link.rs (shared vectors); here only that a space uses it
+        let i = crate::share_link::LinkInput { room: "!abc:example.com", own: "example.com", web: "https://chat.example.com", ..Default::default() };
+        assert_eq!(crate::share_link::share_link(&i), "https://chat.example.com/#/room/!abc%3Aexample.com");
     }
 
     #[test]

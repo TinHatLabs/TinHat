@@ -178,6 +178,11 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "serverWebUrl"]
         fn server_web_url(self: &LoginController) -> QString;
+        /// QML: login.shareLink(roomId, alias, eventId) — the link "Copy link" / Share hand out (12.0.6, share_link.rs):
+        /// this server's own web app (`<web base>/#/room/<alias or id>[/<event id>]`), matrix.to for another server's room.
+        #[qinvokable]
+        #[cxx_name = "shareLink"]
+        fn share_link(self: &LoginController, room_id: &QString, alias: &QString, event_id: &QString) -> QString;
         // QML: loginController.verify(securityKey) — cross-sign this device + restore
         // key backup using the user's Security Key, so E2EE rooms decrypt.
         #[qinvokable]
@@ -950,6 +955,11 @@ impl qobject::LoginController {
         QString::from(&crate::server_offer::gates_json())
     }
 
+    /// QML: login.shareLink(roomId, alias, eventId) — share_link.rs for the signed-in session.
+    pub fn share_link(&self, room_id: &QString, alias: &QString, event_id: &QString) -> QString {
+        QString::from(&crate::share_link::share_link_now(&room_id.to_string(), &alias.to_string(), &event_id.to_string()))
+    }
+
     /// QML: login.serverWebUrl() — `<homeserver origin>/` of this session; "" signed out.
     pub fn server_web_url(&self) -> QString {
         QString::from(&crate::session::server_origin().filter(|o| !o.is_empty()).map(|o| format!("{o}/")).unwrap_or_default())
@@ -1659,6 +1669,7 @@ impl qobject::LoginController {
                             }
                         }
                         crate::widgets_ctl::note_sync(&response); // widgets: call history + Up next follow the sync
+                        crate::call_ctl::rotation_on_sync(&response); // calls round M2: a member / device change wakes the key rotation
                         crate::note_ctl::on_sync(&response); // widgets W1: a shown space's Sticky note follows the sync
                         crate::guests_ctl::on_sync(&client, &response); // selfhost: the Guests room's on/off + who waits (docs/GUESTS.md)
                         // Feed to-device events (EC peers' media keys arrive here) to

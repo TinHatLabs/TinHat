@@ -769,6 +769,13 @@ Kirigami.ApplicationWindow {
         onTriggered: { console.log("[gpugate] ring probe: presenting a test incoming-call card"); incomingToast.present("!gpugate-ring:test", "Ring test", "jordan") }
     }
 
+    // Calls round M1: the call in this room runs on another server — ask before any token goes there
+    CallHostDialog {
+        id: callHostDialog
+        app: root
+        promptJson: String(callctl.callHostPrompt || "")
+    }
+
     // 10.0 incoming calls: the card over everything + the ring; Join/Switch opens the room and
     // hands the call controller the switch (leave-then-join when already in a call).
     IncomingCallToast {
@@ -1353,14 +1360,15 @@ Kirigami.ApplicationWindow {
     property string ctxRoomNotify: "all"   // "all" | "mentions" | "mute"
     property string ctxRoomAlias: ""
     property bool ctxRoomPublic: false
-    /// The best shareable link for a room. Prefers the published alias, which is
-    /// readable and resolvable anywhere; otherwise falls back to the room id WITH a via
-    /// hint, because a bare id leaves the receiving client with no server to ask.
+    /// The link "Copy link" / Share hand out for a room or space (12.0.6, share_link.rs; the web's roomInviteLink): this
+    /// server's own web app at `#/room/<alias or id>` (the alias when published, readable and resolvable anywhere),
+    /// matrix.to with a via hint for another server's room.
     function roomInviteLink(roomId, alias) {
-        if (alias && alias.length > 0)
-            return "https://matrix.to/#/" + encodeURIComponent(alias)
-        var server = roomId.indexOf(":") >= 0 ? roomId.split(":").pop() : root.myServer()
-        return "https://matrix.to/#/" + encodeURIComponent(roomId) + "?via=" + server
+        return String(login.shareLink(String(roomId || ""), String(alias || ""), ""))
+    }
+    /// A message's "Copy link": the same rule, the room id (never the alias) + the event id.
+    function messageLink(roomId, eventId) {
+        return String(login.shareLink(String(roomId || ""), "", String(eventId || "")))
     }
     // 10.1 (TH-SET-11 / TH-SET-03): a surface opened FROM Settings brings you back to the pane you left — settingsHandOff
     // (by the Settings window below); key backup set-up is its "backup" hand-off.

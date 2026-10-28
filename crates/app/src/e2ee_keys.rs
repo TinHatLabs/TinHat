@@ -36,7 +36,11 @@
 //! and rotates `(prev + 1) % 256` (element-call/src/e2ee/matrixKeyProvider.ts;
 //! matrix-js-sdk RTCEncryptionManager). We advance our OWN index every session (see
 //! [`advance_persisted_key_index`]) so a rejoin never collides with our previous key
-//! in a peer's per-(identity,index) tracking, and we cap at 255 slots because
+//! in a peer's per-(identity,index) tracking — and, since the calls round (M2, rotate on
+//! leave: callrules.rs Planner, call_ctl.rs rotation_driver), on every rotation inside a
+//! call too: a holder of our key leaves → after 3 s a new key at index+1 goes to the rest,
+//! and we encrypt with it 3 s later. Each `keys` object is still sent as its own event
+//! (current first, then the pending one). We cap at 255 slots because
 //! libwebrtc clamps its ring to MAX_KEYRING_SIZE=255 while bounds-checking against
 //! the unclamped option — an index-255 frame would read past the ring.
 

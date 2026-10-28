@@ -96,6 +96,8 @@ pub mod qobject {
         #[qproperty(QString, hear_json)] // QML: hearJson — 10.5 "can they hear me?" state (streamer hear.rs; "{}" outside a call)
         #[qproperty(QString, same_room_json)] // QML: sameRoomJson — 11.3 same room {linked,holder,live,ask,pending,spk,groups,rawOk} ("{}" outside a call)
         #[qproperty(bool, same_room_auto)] // QML: sameRoomAuto — 11.3: link up automatically with remembered people (default on, persisted)
+        #[qproperty(QString, call_host_prompt)] // QML: callHostPrompt — calls round M1: the "hosted elsewhere" sheet JSON {room,host,serviceUrl,advertiser,advertiserName,words} ("" = none)
+        #[qproperty(QString, call_hosts_json)] // QML: callHostsJson — Settings › Calls › "Call hosts you trust": JSON ["host[:port]", …]
         type CallController = super::CallControllerRust;
 
         #[qinvokable]
@@ -464,6 +466,23 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "applySameRoomAuto"]
         fn apply_same_room_auto(self: Pin<&mut CallController>, on: bool);
+        /// Calls round M1: the sheet's Join (`always` = "Always trust {host}": saved to account data first), then the
+        /// join runs again with that service approved for this call.
+        #[qinvokable]
+        #[cxx_name = "confirmCallHost"]
+        fn confirm_call_host(self: Pin<&mut CallController>, room_id: &QString, service_url: &QString, always: bool);
+        /// Calls round M1: the sheet's Cancel — nothing is requested, nothing is sent.
+        #[qinvokable]
+        #[cxx_name = "cancelCallHost"]
+        fn cancel_call_host(self: Pin<&mut CallController>);
+        /// Settings › Calls: re-read the trusted call hosts into callHostsJson.
+        #[qinvokable]
+        #[cxx_name = "refreshCallHosts"]
+        fn refresh_call_hosts(self: Pin<&mut CallController>);
+        /// Settings › Calls: stop trusting `host` (account data; callHostsJson follows).
+        #[qinvokable]
+        #[cxx_name = "removeCallHost"]
+        fn remove_call_host(self: Pin<&mut CallController>, host: &QString);
     }
 
     impl cxx_qt::Threading for CallController {}
@@ -471,6 +490,8 @@ pub mod qobject {
 
 #[derive(Default)]
 pub struct CallControllerRust {
+    call_host_prompt: QString, // calls round M1: the "hosted elsewhere" sheet ("" = none)
+    call_hosts_json: QString,  // calls round M1: the trusted call hosts (Settings › Calls)
     same_room_json: QString, // 11.3 same room (mirror of tinhat_streamer::same_room_json)
     same_room_auto: bool,    // 11.3 same room: auto-link preference
     in_call: bool,
@@ -1059,37 +1080,209 @@ pub async fn headless_avatar_test() -> bool {
     fails == 0
 }
 
-/// Our LiveKit media key (raw 16 bytes + index) for the active call, so peer-join events
-/// can re-announce it over to-device. Set in `do_join`, cleared on leave/exit.
-fn current_media_key() -> &'static std::sync::Mutex<Option<([u8; 16], u8)>> {
-    static K: OnceLock<std::sync::Mutex<Option<([u8; 16], u8)>>> = OnceLock::new();
+/// Our media keys for the active call (calls round M2): the key in use, the minted one waiting for its use time,
+/// the rotate-on-leave planner and the call-server departures it reads. `gen` = the join generation that minted
+/// them: the identity of the call — the loops that announce keys stop when it changes, not when a key changes
+/// (rotation swaps keys inside one call). Set in `do_join`, cleared on leave / exit / teardown.
+struct CallKeys {
+    gen: u64,
+    room: String,
+    cur: ([u8; 16], u8),
+    pending: Option<([u8; 16], u8)>,
+    planner: crate::callrules::Planner,
+    sfu_gone: crate::callrules::SfuGone,
+    /// per-identity counter of SFU joins / leaves, so a leave's (async) session lookup never lands after a later join
+    sfu_epoch: std::collections::HashMap<String, u64>,
+    /// our own SFU room is connected: SFU departures are only recorded then
+    connected: bool,
+    /// a member-list load is running for unknown members (once at a time)
+    loading_members: bool,
+    /// `cur` changed and the streamer hasn't confirmed encrypting with it yet (the driver retries)
+    switch_owed: bool,
+    /// per device, the newest key index whose send failed and is still owed (resent on the ladder)
+    resend: crate::callrules::ResendBook,
+}
+
+impl CallKeys {
+    /// What every ladder / steady / refresh / resume announce sends: current first, then the pending key.
+    fn announce_keys(&self) -> Vec<([u8; 16], u8)> {
+        let mut v = vec![self.cur];
+        v.extend(self.pending);
+        v
+    }
+    fn key_at(&self, index: u8) -> Option<([u8; 16], u8)> {
+        if self.cur.1 == index {
+            return Some(self.cur);
+        }
+        self.pending.filter(|p| p.1 == index)
+    }
+}
+
+fn call_keys() -> &'static std::sync::Mutex<Option<CallKeys>> {
+    static K: OnceLock<std::sync::Mutex<Option<CallKeys>>> = OnceLock::new();
     K.get_or_init(|| std::sync::Mutex::new(None))
 }
 
-/// Announce our media key over ENCRYPTED to-device to every OTHER live call-member device,
-/// so Element Call peers can decrypt our outgoing audio/video. Resolves each membership's
-/// crypto `Device` and hands them to [`crate::e2ee_keys::send_our_key_to_device`]. Logs the
-/// reachable/failed counts. Best-effort: a peer we can't resolve yet is retried when it
-/// raises `ParticipantJoined`.
+/// Wakes the rotation driver (a membership / member / device-list change, an SFU join or leave, our reconnect).
+fn rotation_wake() -> &'static tokio::sync::Notify {
+    static N: OnceLock<tokio::sync::Notify> = OnceLock::new();
+    N.get_or_init(tokio::sync::Notify::new)
+}
+
+/// The keys of the current call (`gen`, the announce list); None outside a call.
+fn current_keys() -> Option<(u64, Vec<([u8; 16], u8)>)> {
+    call_keys().lock().unwrap().as_ref().map(|k| (k.gen, k.announce_keys()))
+}
+
+/// The sync loop saw a change that can move the key recipients of `room_id` (an `m.call.member` / `m.room.member`
+/// state event there, or a device-list change of anyone): let the rotation driver look now instead of at its tick.
+pub(crate) fn rotation_poke(room_id: Option<&str>) {
+    let ours = call_keys().lock().unwrap().as_ref().map(|k| room_id.map(|r| r == k.room).unwrap_or(true)).unwrap_or(false);
+    if ours {
+        rotation_wake().notify_one();
+    }
+}
+
+/// The sync response touched the key recipients of our call: a call-member or room-member state change in the call
+/// room. (Device-list changes come through the crypto store's devices stream, see `rotation_driver`.) (Called from the sync loop: add_event_handler doesn't dispatch under sync_once.)
+pub(crate) fn rotation_on_sync(response: &matrix_sdk::sync::SyncResponse) {
+    let Some(room) = call_keys().lock().unwrap().as_ref().map(|k| k.room.clone()) else { return };
+    let Ok(rid) = matrix_sdk::ruma::RoomId::parse(room.as_str()) else { return };
+    let Some(up) = response.rooms.joined.get(&rid) else { return };
+    use matrix_sdk::sync::State;
+    let hit = |ty: Option<String>| matches!(ty.as_deref(), Some(crate::rtc::MEMBER_EVENT_TYPE) | Some("m.room.member"));
+    let state = match &up.state {
+        State::Before(e) | State::After(e) => e,
+    };
+    let touched = state.iter().any(|r| hit(r.get_field::<String>("type").ok().flatten()))
+        || up.timeline.events.iter().any(|ev| {
+            ev.raw().get_field::<String>("state_key").ok().flatten().is_some() && hit(ev.raw().get_field::<String>("type").ok().flatten())
+        });
+    if touched {
+        rotation_poke(Some(&room));
+    }
+}
+
+/// An SFU participant left (`left`) or joined our call room: keep the call-server departures (DESIGN §3.1) — only
+/// while our own room is connected — and wake the driver. Identities that aren't `@user:server:DEVICE` (hashed
+/// MSC4143 ones) are ignored. A leave looks the session's `created_ts` up in the store first (async); a join of the
+/// same identity meanwhile wins (epoch).
+fn rotation_sfu_event(room_id: &str, identity: &str, left: bool) {
+    let (epoch, gen) = {
+        let mut g = call_keys().lock().unwrap();
+        let Some(k) = g.as_mut().filter(|k| k.room == room_id && k.connected) else { return };
+        let gen = k.gen;
+        let e = k.sfu_epoch.entry(identity.to_string()).or_insert(0);
+        *e += 1;
+        let epoch = *e;
+        if !left {
+            k.sfu_gone.joined(identity);
+        }
+        (epoch, gen)
+    };
+    if !left {
+        rotation_wake().notify_one();
+        return;
+    }
+    let (rid, id) = (room_id.to_string(), identity.to_string());
+    crate::bridge::runtime().spawn(async move {
+        let Some(client) = crate::session::client() else { return };
+        let Some(room) = matrix_sdk::ruma::RoomId::parse(rid.as_str()).ok().and_then(|r| client.get_room(&r)) else { return };
+        let sessions = crate::rtc::live_sessions(&room).await;
+        {
+            let mut g = call_keys().lock().unwrap();
+            let Some(k) = g.as_mut().filter(|k| k.gen == gen && k.connected) else { return };
+            if k.sfu_epoch.get(&id) != Some(&epoch) {
+                return; // joined again meanwhile
+            }
+            k.sfu_gone.left(&id, &sessions);
+        }
+        rotation_wake().notify_one();
+    });
+}
+
+/// Our own SFU connection came (back): SFU departures start over (no false departures after a reconnect); while it
+/// is down, SFU joins / leaves aren't recorded.
+fn rotation_connected(room_id: &str, connected: bool) {
+    {
+        let mut g = call_keys().lock().unwrap();
+        let Some(k) = g.as_mut().filter(|k| k.room == room_id) else { return };
+        k.connected = connected;
+        if connected {
+            k.sfu_gone.clear();
+            k.sfu_epoch.clear();
+        }
+    }
+    if connected {
+        rotation_wake().notify_one();
+    }
+}
+
+fn sfu_gone_now() -> Vec<(String, u64)> {
+    call_keys().lock().unwrap().as_ref().map(|k| k.sfu_gone.entries().to_vec()).unwrap_or_default()
+}
+
+/// Send our media keys (`keys`: each its own `io.element.call.encryption_keys` event, current first — never an
+/// array) over ENCRYPTED to-device to the devices the recipient rule allows right now (`only`: further limited to
+/// these `user|device` ids — the planner's newcomers / a mint's recipients). Reports the ids that got every key and
+/// the ones whose send failed.
 ///
-/// 12.0.5 (the web's rule, `keys.ts` sendKeyToDevice): recipients are [`crate::rtc::key_recipient_devices`]
-/// (JOINED room members with a live, well-formed membership, not us) — a kicked / banned / departed user's
-/// lingering membership no longer gets our key — and the rule is re-checked right before the send, after the
-/// device lookups (which may wait on a key query), so a leave / kick that synced meanwhile is dropped. Every
-/// key send goes through here: join, ladder rungs, the 60 s steady loop, membership refresh, screen share.
+/// Recipient rule v2 (calls round, DESIGN §3.1; [`crate::rtc::key_recipients_now`]): the web's rule (live,
+/// well-formed membership; the user JOINED to the room; not this device) + the device still exists + it hasn't left
+/// the call server in this session. Every key send goes through here: join, the planner's newcomer / mint sends,
+/// ladder rungs, the 60 s steady loop, the membership refresh, the screen share.
+///
+/// The send boundary (12.0.5 review item 1): the devices are resolved first (that may wait on a key query), then
+/// each device is its own batch and the rule is re-read from the store right before that batch is dispatched
+/// ([`crate::callrules::dispatch_checked`]) — one batch per device AND key, so the pending key is checked again after
+/// the current one went out — and a leave / kick that syncs while earlier batches (and their retries) are in flight
+/// drops the later ones. What remains: the SDK's one-time-key claim and the one HTTP request of that
+/// batch run after its check (matrix-sdk 0.18 can't split them off); a leave that lands inside that window is
+/// covered by the rotation, which re-keys everyone else ~6 s later.
+///
+/// Unknown members (lazy-loaded member list, 12.0.5 review item 3): they get nothing now and never hold up the
+/// known peers; the member list loads in the background and the rotation driver keys them as newcomers.
 pub(crate) async fn announce_key_to_members(
     client: &matrix_sdk::Client,
     room: &matrix_sdk::Room,
     user_id: &str,
     device_id: &str,
-    key: [u8; 16],
-    index: u8,
-) {
+    keys: &[([u8; 16], u8)],
+    only: Option<&[String]>,
+    call_gen: Option<u64>,
+) -> AnnounceReport {
+    if keys.is_empty() {
+        return AnnounceReport { sent: vec![], failed: vec![] };
+    }
     let our_member_id = format!("{user_id}:{device_id}");
-    let mut targets: Vec<matrix_sdk::encryption::identities::Device> = Vec::new();
-    for (peer_user, peer_dev) in crate::rtc::key_recipient_devices(room, user_id, device_id, true).await {
-        if let Ok(uid) = matrix_sdk::ruma::UserId::parse(&peer_user) {
-            let did = matrix_sdk::ruma::OwnedDeviceId::from(peer_dev.as_str());
+    // the call these keys belong to (the caller's generation, else the current one, fixed BEFORE any await): a send
+    // that outlives its call stops
+    let gen_at_start = call_gen.or_else(|| current_keys().map(|(g, _)| g));
+    let r = crate::rtc::key_recipients_now(room, user_id, device_id, &sfu_gone_now()).await;
+    if r.unknown_members {
+        load_members_then_wake(room);
+    }
+    if r.retry_soon {
+        wake_in(std::time::Duration::from_secs(2));
+    }
+    let mut unresolved: Vec<String> = Vec::new();
+    let idx_all: Vec<u8> = keys.iter().map(|k| k.1).collect();
+    if r.retry_soon {
+        // planner recipients a failed / moved store read left out this round still owe these keys (Astra round 4)
+        if let (Some(o), Some(k)) = (only, call_keys().lock().unwrap().as_mut().filter(|k| Some(k.gen) == gen_at_start)) {
+            for id in o.iter().filter(|id| !r.ids.contains(id)) {
+                for i in &idx_all {
+                    k.resend.failed(id, *i);
+                }
+            }
+        }
+    }
+    let ids: Vec<String> = r.ids.into_iter().filter(|id| only.map(|o| o.contains(id)).unwrap_or(true)).collect();
+    let mut targets: Vec<(String, matrix_sdk::encryption::identities::Device)> = Vec::new();
+    for id in &ids {
+        let Some((peer_user, peer_dev)) = id.split_once('|') else { continue };
+        if let Ok(uid) = matrix_sdk::ruma::UserId::parse(peer_user) {
+            let did = matrix_sdk::ruma::OwnedDeviceId::from(peer_dev);
             let mut dev = client.encryption().get_device(&uid, &did).await.ok().flatten();
             if dev.is_none() {
                 // The device isn't in our local crypto store yet (e.g. a phone we haven't
@@ -1101,44 +1294,132 @@ pub(crate) async fn announce_key_to_members(
                 dev = client.encryption().get_device(&uid, &did).await.ok().flatten();
                 if dev.is_none() {
                     eprintln!("[send-key-td] device {peer_user}/{peer_dev} unresolved after key-query — skipping");
+                    unresolved.push(id.clone());
                 }
             }
             if let Some(dev) = dev {
-                targets.push(dev);
+                targets.push((id.clone(), dev));
             }
         }
     }
-    // Re-check right before sending (fresh store reads, no network): a recipient whose leave / kick synced during
-    // the device lookups must not get the key. (The SDK's encrypt-and-send still claims one-time keys for a NEW Olm
-    // session before encrypting; with matrix-sdk 0.18 that step can't be split off to re-check after it, as the web
-    // does after encrypting. Steady-state sends reuse the sessions, so that claim is a no-op.)
-    if !targets.is_empty() {
-        let still: std::collections::HashSet<(String, String)> =
-            crate::rtc::key_recipient_devices(room, user_id, device_id, false).await.into_iter().collect();
-        let before = targets.len();
-        targets.retain(|d| still.contains(&(d.user_id().to_string(), d.device_id().to_string())));
-        if targets.len() < before {
-            eprintln!("[send-key-td] {} recipient(s) left before sending — not sent", before - targets.len());
-        }
+    let rid = room.room_id().to_owned();
+    let idx: Vec<u8> = keys.iter().map(|k| k.1).collect();
+    // the web's noteHolders: everyone this send may reach holds the keys from now on — BEFORE the send, so a device
+    // that gets the key and leaves before the next look still rotates it
+    if let Some(k) = call_keys().lock().unwrap().as_mut().filter(|k| Some(k.gen) == gen_at_start) {
+        let ids: Vec<String> = targets.iter().map(|(id, _)| id.clone()).collect();
+        k.planner.note_holders(&ids, &idx);
     }
-    match crate::e2ee_keys::send_our_key_to_device(
-        client, room.room_id(), device_id, &our_member_id, &key, index, &targets,
+    let transient: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+    let transient_ref = &transient;
+    // one batch per (device, key), current key first: each re-checked right before its own send
+    let batches: Vec<(String, matrix_sdk::encryption::identities::Device, ([u8; 16], u8))> =
+        targets.iter().flat_map(|(id, dev)| keys.iter().map(move |k| (id.clone(), dev.clone(), *k))).collect();
+    let rep = crate::callrules::dispatch_checked(
+        batches,
+        |(id, _, (_, idx))| format!("{id}#{idx}"),
+        |tag| async move {
+            let id = tag.rsplit_once('#').map(|(i, _)| i.to_string()).unwrap_or_default();
+            let now = crate::rtc::key_recipients_now(room, user_id, device_id, &sfu_gone_now()).await;
+            // checked AFTER the read: the call this send belongs to must still be the current one
+            if current_keys().map(|(g, _)| g) != gen_at_start {
+                return false;
+            }
+            if now.ids.contains(&id) {
+                return true;
+            }
+            if now.retry_soon {
+                transient_ref.lock().unwrap().push(tag); // a store read failed: retryable, not a leave
+            }
+            false
+        },
+        |(_, dev, (key, index))| {
+            let (rid, member) = (rid.clone(), our_member_id.clone());
+            async move {
+                match crate::e2ee_keys::send_our_key_to_device(client, &rid, device_id, &member, &key, index, std::slice::from_ref(&dev)).await {
+                    Ok(failed) => failed.is_empty(),
+                    Err(e) => {
+                        eprintln!("[send-key-td] to-device key #{index} to {}/{} failed: {e}", dev.user_id(), dev.device_id());
+                        false
+                    }
+                }
+            }
+        },
     )
-    .await
-    {
-        Ok(failed) if failed.is_empty() => {
-            eprintln!("[send-key-td] announced media key to {} device(s) over to-device", targets.len())
+    .await;
+    let id_of = |tag: &String| tag.rsplit_once('#').map(|(i, _)| i.to_string()).unwrap_or_default();
+    // a device counts as keyed only when every key reached it
+    let mut sent: Vec<String> = Vec::new();
+    for (id, _) in &targets {
+        let all = idx.iter().all(|i| rep.sent.contains(&format!("{id}#{i}")));
+        if all && !sent.contains(id) {
+            sent.push(id.clone());
         }
-        Ok(failed) => eprintln!(
-            "[send-key-td] announced to {} device(s), {} FAILED: {failed:?}",
-            targets.len(),
-            failed.len()
-        ),
-        Err(e) => eprintln!("[send-key-td] to-device key announce failed: {e}"),
     }
+    let transient = transient.into_inner().unwrap();
+    // resend obligations, per index: a failed batch owes that key; a delivered one clears only that index or older
+    if let Some(k) = call_keys().lock().unwrap().as_mut().filter(|k| Some(k.gen) == gen_at_start) {
+        for tag in &rep.sent {
+            if let Some((id, i)) = tag.rsplit_once('#').and_then(|(id, i)| i.parse::<u8>().ok().map(|i| (id, i))) {
+                k.resend.delivered(id, i);
+            }
+        }
+        for tag in rep.failed.iter().chain(transient.iter()) {
+            if let Some((id, i)) = tag.rsplit_once('#').and_then(|(id, i)| i.parse::<u8>().ok().map(|i| (id, i))) {
+                k.resend.failed(id, i);
+            }
+        }
+        for id in &unresolved {
+            for i in &idx {
+                k.resend.failed(id, *i);
+            }
+        }
+    }
+    let mut dropped: Vec<String> = rep.dropped.iter().filter(|t| !transient.contains(t)).map(id_of).collect();
+    dropped.dedup();
+    let mut failed: Vec<String> = rep.failed.iter().chain(transient.iter()).map(id_of).collect();
+    failed.extend(unresolved);
+    failed.sort();
+    failed.dedup();
+    if !dropped.is_empty() {
+        eprintln!("[send-key-td] {} recipient(s) left before their send — not sent", dropped.len());
+    }
+    if failed.is_empty() {
+        eprintln!("[send-key-td] announced media key {idx:?} to {} device(s) over to-device", sent.len());
+    } else {
+        eprintln!("[send-key-td] announced {idx:?} to {} device(s), {} FAILED: {failed:?}", sent.len(), failed.len());
+    }
+    AnnounceReport { sent, failed }
 }
 
-/// Re-announce our media key to ALL current call-member devices, triggered when a peer
+/// What an announce did: devices that got every key / devices with a failed send (not the ones that left).
+pub(crate) struct AnnounceReport {
+    pub sent: Vec<String>,
+    pub failed: Vec<String>,
+}
+
+/// Load the call room's member list once in the background (a peer whose `m.room.member` lazy loading never sent us
+/// gets no key until we know they joined), then wake the rotation driver: its step keys them as newcomers.
+fn load_members_then_wake(room: &matrix_sdk::Room) {
+    {
+        let mut g = call_keys().lock().unwrap();
+        let Some(k) = g.as_mut().filter(|k| k.room == room.room_id().as_str() && !k.loading_members) else { return };
+        k.loading_members = true;
+    }
+    let room = room.clone();
+    crate::bridge::runtime().spawn(async move {
+        let loaded = crate::rtc::load_members(&room).await;
+        if let Some(k) = call_keys().lock().unwrap().as_mut().filter(|k| k.room == room.room_id().as_str()) {
+            k.loading_members = false;
+        }
+        if loaded {
+            eprintln!("[send-key-td] member list loaded — keying members that were unknown");
+            rotation_wake().notify_one();
+        }
+    });
+}
+
+/// Re-announce our media keys to ALL current call-member devices, triggered when a peer
 /// joins the SFU — essential when the peer joins AFTER us (the initial members-announce in
 /// `do_join` couldn't reach a peer that wasn't there yet). We re-announce to EVERYONE
 /// rather than invert the LiveKit identity, because that identity may be the colon form
@@ -1149,7 +1430,7 @@ async fn announce_key_to_peer(room_id: String, identity: String) {
     let Some(client) = crate::session::client() else { return };
     let Ok(rid) = matrix_sdk::ruma::RoomId::parse(&room_id) else { return };
     let Some(room) = client.get_room(&rid) else { return };
-    let Some((key, index)) = *current_media_key().lock().unwrap() else { return };
+    let Some((gen, _)) = current_keys() else { return };
     let our_device = client.device_id().map(|d| d.to_string()).unwrap_or_default();
     let our_user = client.user_id().map(|u| u.to_string()).unwrap_or_default();
     eprintln!("[send-key-td] peer {identity} joined — re-announcing key to call members");
@@ -1163,20 +1444,296 @@ async fn announce_key_to_peer(room_id: String, identity: String) {
         if delay_s > 0 {
             tokio::time::sleep(std::time::Duration::from_secs(delay_s)).await;
         }
-        // Stop if the call ended or the key changed while we waited.
+        // Stop if the call ended or another join owns the keys (calls round: keyed on the join generation — a
+        // rotation swaps the key inside the same call and the ladder must keep going, with the keys read afresh).
         if active_call_room().lock().unwrap().as_deref() != Some(room_id.as_str()) {
             return;
         }
-        if *current_media_key().lock().unwrap() != Some((key, index)) {
+        let Some((g, keys)) = current_keys() else { return };
+        if g != gen {
             return;
         }
         if i > 0 {
             eprintln!("[send-key-td] re-announce #{i} for {identity} (membership sync-lag cover)");
         }
-        announce_key_to_members(&client, &room, &our_user, &our_device, key, index).await;
+        announce_key_to_members(&client, &room, &our_user, &our_device, &keys, None, Some(gen)).await;
         // (The one-shot room-event mirror that used to follow the first rung was retired
         // on 2026-09-21 — see do_join. To-device is the whole transport.)
     }
+}
+
+/// The rotate-on-leave driver of one call (calls round M2, DESIGN §3.2–§3.5): looks at the recipient set R on every
+/// wake-up (membership / member / device-list change, SFU join or leave, our reconnect) and on a tick (1 s while a
+/// departure or a pending key exists, else 5 s), runs the planner and carries out its actions: newcomers get every
+/// key they need, a debounced departure mints index+1 for the rest, and that key goes into use 3 s later. Ends
+/// with the call (join generation). The server's kill switch (`call_key_rotation: false`) stops the minting.
+async fn rotation_driver(room: matrix_sdk::Room, my_gen: u64) {
+    let rid = room.room_id().to_string();
+    let Some(client) = crate::session::client() else { return };
+    let user = client.user_id().map(|u| u.to_string()).unwrap_or_default();
+    let device = client.device_id().map(|d| d.to_string()).unwrap_or_default();
+    let mut prev: Vec<String> = Vec::new();
+    let mut departed: Vec<String> = Vec::new();
+    // a removed / logged-out device of a holder: the crypto store's device updates wake us (ended with the driver)
+    struct AbortOnDrop(tokio::task::JoinHandle<()>);
+    impl Drop for AbortOnDrop {
+        fn drop(&mut self) {
+            self.0.abort();
+        }
+    }
+    let _devices = AbortOnDrop({
+        let c = client.clone();
+        crate::bridge::runtime().spawn(async move {
+            use futures_util::StreamExt;
+            let Ok(stream) = c.encryption().devices_stream().await else { return };
+            let mut stream = std::pin::pin!(stream);
+            while let Some(up) = stream.next().await {
+                let users: Vec<String> = up.new.keys().chain(up.changed.keys()).map(|u| u.to_string()).collect();
+                crate::rtc::bump_device_revs(&users);
+                rotation_wake().notify_one();
+            }
+        })
+    });
+    loop {
+        let tick = match call_keys().lock().unwrap().as_ref() {
+            Some(k) if k.gen == my_gen => if k.switch_owed { 1000 } else { k.planner.next_tick_ms() },
+            _ => return,
+        };
+        tokio::select! {
+            _ = rotation_wake().notified() => {}
+            _ = tokio::time::sleep(std::time::Duration::from_millis(tick)) => {}
+        }
+        if join_gen_stale(my_gen) || active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) {
+            return;
+        }
+        // the switch first: never behind the recipient read below (the mint's own timer normally fires it)
+        if !use_due(my_gen, &client, &room, &user, &device).await {
+            return;
+        }
+        let r = crate::rtc::key_recipients_now(&room, &user, &device, &sfu_gone_now()).await;
+        if r.unknown_members {
+            load_members_then_wake(&room);
+        }
+        if r.retry_soon {
+            wake_in(std::time::Duration::from_secs(2));
+        }
+        for id in prev.iter().filter(|p| !r.ids.contains(p)) {
+            eprintln!("[key-rotate] {id} no longer a key recipient");
+            if !departed.contains(id) {
+                departed.push(id.clone());
+            }
+        }
+        prev = r.ids.clone();
+        let rotate = !crate::server_offer::current().key_rotation_off;
+        // the planner's step, the mint's key and the switch's promotion happen under ONE lock (Astra round 4): no
+        // timer tick or second step can slip between "the planner moved" and "our keys follow it"
+        let work = {
+            let mut g = call_keys().lock().unwrap();
+            let Some(k) = g.as_mut().filter(|k| k.gen == my_gen) else { return };
+            k.planner.set_rotation(rotate);
+            let acts = k.planner.step(crate::rtc::now_ms_pub(), &r.ids);
+            let mut work: Vec<Work> = Vec::new();
+            for a in acts {
+                match a {
+                    crate::callrules::Action::Announce { keys, to } => {
+                        let ks: Vec<([u8; 16], u8)> = keys.iter().filter_map(|i| k.key_at(*i)).collect();
+                        work.push(Work::Newcomers(ks, to));
+                    }
+                    crate::callrules::Action::Mint { index, to } => {
+                        let persisted = crate::e2ee_keys::advance_persisted_key_index();
+                        if persisted != index {
+                            eprintln!("[key-rotate] persisted counter gave #{persisted}, the planner #{index} — using #{index}");
+                        }
+                        let (key, _) = crate::e2ee_keys::make_sender_key();
+                        k.pending = Some((key, index));
+                        let use_in = k.planner.use_at().unwrap_or(0).saturating_sub(crate::rtc::now_ms_pub());
+                        work.push(Work::Mint((key, index), to, use_in));
+                    }
+                    crate::callrules::Action::Use(index) => {
+                        if let Some(rec) = promote_locked(k, index) {
+                            work.push(Work::Recovered(rec));
+                        }
+                    }
+                }
+            }
+            work
+        };
+        for w in work {
+            match w {
+                Work::Newcomers(ks, to) => {
+                    // newcomers: sent off the driver's path, so a slow send never holds up a mint or a switch
+                    eprintln!("[key-rotate] newcomer(s) {to:?} get {:?}", ks.iter().map(|k| k.1).collect::<Vec<_>>());
+                    let (c, rm, u, d) = (client.clone(), room.clone(), user.clone(), device.clone());
+                    crate::bridge::runtime().spawn(async move {
+                        let rep = announce_key_to_members(&c, &rm, &u, &d, &ks, Some(&to), Some(my_gen)).await;
+                        if !rep.failed.is_empty() {
+                            schedule_resends(&c, &rm, &u, &d, my_gen, tokio::time::Instant::now());
+                        }
+                    });
+                }
+                Work::Mint((key, index), to, use_in) => {
+                    eprintln!("[key-rotate] mint #{index} → {} device(s) (left: {})", to.len(), if departed.is_empty() { "—".to_string() } else { departed.join(", ") });
+                    departed.clear();
+                    // the switch has its own timer (the web's Planner.tick): it fires at use time whatever the driver
+                    // and the sends are doing
+                    let use_at = tokio::time::Instant::now() + std::time::Duration::from_millis(use_in);
+                    {
+                        let (c, rm, u, d) = (client.clone(), room.clone(), user.clone(), device.clone());
+                        crate::bridge::runtime().spawn(async move {
+                            tokio::time::sleep_until(use_at).await;
+                            use_due(my_gen, &c, &rm, &u, &d).await;
+                        });
+                    }
+                    if !to.is_empty() {
+                        // awaited at most 2.5 s (the web's rule); the send itself carries on, and its failures go to
+                        // the resend ladder anchored at the switch
+                        let (c, rm, u, d) = (client.clone(), room.clone(), user.clone(), device.clone());
+                        let send = crate::bridge::runtime().spawn(async move {
+                            announce_key_to_members(&c, &rm, &u, &d, &[(key, index)], Some(&to), Some(my_gen)).await;
+                            schedule_resends(&c, &rm, &u, &d, my_gen, use_at);
+                        });
+                        if tokio::time::timeout(std::time::Duration::from_millis(2500), send).await.is_err() {
+                            eprintln!("[key-rotate] mint #{index}: the send is still running after 2.5 s — not waiting for it");
+                        }
+                    }
+                }
+                Work::Recovered(rec) => send_recovered(my_gen, rec, &client, &room, &user, &device),
+            }
+        }
+        // a switch that didn't take: retried every tick until the streamer confirms it (never silently left on the old key)
+        if !switch_sender(my_gen).await {
+            return;
+        }
+    }
+}
+
+/// Make the streamer encrypt with the key in use when a switch is owed. False = this call is over (stop the driver).
+/// Residual (as on the web): a failed SENDER install is retried every 1 s (driver tick), but media isn't stopped
+/// meanwhile — peers keep decrypting the old key until the switch takes.
+async fn switch_sender(my_gen: u64) -> bool {
+    if !call_keys().lock().unwrap().as_ref().map(|k| k.gen == my_gen && k.switch_owed).unwrap_or(false) {
+        return call_keys().lock().unwrap().as_ref().map(|k| k.gen == my_gen).unwrap_or(false);
+    }
+    let cell = current_call();
+    let guard = cell.lock().await;
+    // the session under the lock must still be this join's (a newer join bumps the generation first)
+    if join_gen_stale(my_gen) {
+        return false;
+    }
+    // read the key in use only NOW, under the session lock (switches serialise on it): a timer and the driver racing
+    // each install the latest key, never an older one over a newer (Astra round 4)
+    let owed = call_keys().lock().unwrap().as_ref().filter(|k| k.gen == my_gen && k.switch_owed).map(|k| k.cur);
+    let Some((key, index)) = owed else { return true };
+    match guard.as_ref().map(|c| c.set_own_key(key, index)) {
+        Some(Ok(())) => {
+            eprintln!("[key-rotate] use #{index}");
+            if let Some(k) = call_keys().lock().unwrap().as_mut().filter(|k| k.gen == my_gen && k.cur == (key, index)) {
+                k.switch_owed = false;
+            }
+        }
+        Some(Err(e)) => eprintln!("[key-rotate] use #{index} FAILED: {e:#} — retrying"),
+        None => eprintln!("[key-rotate] use #{index}: no call session right now — retrying"),
+    }
+    true
+}
+
+/// Wake the rotation driver after `d` (a failed store read is looked at again soon).
+fn wake_in(d: std::time::Duration) {
+    crate::bridge::runtime().spawn(async move {
+        tokio::time::sleep(d).await;
+        rotation_wake().notify_one();
+    });
+}
+
+/// What a planner step asks the driver to do outside the lock.
+enum Work {
+    Newcomers(Vec<([u8; 16], u8)>, Vec<String>),
+    /// the minted key, its recipients, ms until its use
+    Mint(([u8; 16], u8), Vec<String>, u64),
+    /// a key minted on the spot for a switch to an index we never minted (send it to R)
+    Recovered(([u8; 16], u8)),
+}
+
+/// The planner moved to `index` (under the caller's lock): our key in use follows it at once. The pending key of that
+/// index becomes current; if there is none (a mint that never completed), a key for `index` is minted here
+/// (recovery, web Astra round 4: never stay on the leaver's key) and returned so the caller sends it.
+fn promote_locked(k: &mut CallKeys, index: u8) -> Option<([u8; 16], u8)> {
+    match k.pending.take() {
+        Some(p) if p.1 == index => {
+            k.cur = p;
+            k.switch_owed = true;
+            None
+        }
+        other => {
+            k.pending = other.filter(|p| p.1 != index);
+            if k.cur.1 == index {
+                return None; // already ours
+            }
+            let (key, _) = crate::e2ee_keys::make_sender_key();
+            k.cur = (key, index);
+            k.switch_owed = true;
+            Some((key, index))
+        }
+    }
+}
+
+fn send_recovered(my_gen: u64, (key, index): ([u8; 16], u8), client: &matrix_sdk::Client, room: &matrix_sdk::Room, user: &str, device: &str) {
+    eprintln!("[key-rotate] key #{index} was never minted — minting it now");
+    let (c, rm, u, d) = (client.clone(), room.clone(), user.to_string(), device.to_string());
+    crate::bridge::runtime().spawn(async move {
+        announce_key_to_members(&c, &rm, &u, &d, &[(key, index)], None, Some(my_gen)).await;
+        schedule_resends(&c, &rm, &u, &d, my_gen, tokio::time::Instant::now());
+    });
+}
+
+/// The planner's own switch timer (= the web's `Planner.tick`): a pending key whose time has come goes into use now
+/// (tick + promotion under one lock), then the sender switch — also any switch still owed. False = this call is over.
+async fn use_due(my_gen: u64, client: &matrix_sdk::Client, room: &matrix_sdk::Room, user: &str, device: &str) -> bool {
+    let recovered = {
+        let mut g = call_keys().lock().unwrap();
+        let Some(k) = g.as_mut().filter(|k| k.gen == my_gen) else { return false };
+        let mut rec = Vec::new();
+        for a in k.planner.tick(crate::rtc::now_ms_pub()) {
+            if let crate::callrules::Action::Use(index) = a {
+                rec.extend(promote_locked(k, index));
+            }
+        }
+        rec
+    };
+    for r in recovered {
+        send_recovered(my_gen, r, client, room, user, device);
+    }
+    switch_sender(my_gen).await
+}
+
+/// The resend ladder (callrules::resend_plan / RESEND_AFTER_USE_MS: +2 s, +5 s, +10 s after `anchor` — the switch for
+/// a mint, else the failure; the coordinator's rule for both apps): each rung sends the keys of that moment to the
+/// devices still owed something in the call's ResendBook (obligations per index: an older key's late delivery never
+/// clears a newer one; a superseded key's obligation ends). The switch never waits for these; the 60 s steady announce
+/// is the backstop after the last rung.
+fn schedule_resends(client: &matrix_sdk::Client, room: &matrix_sdk::Room, user: &str, device: &str, my_gen: u64, anchor: tokio::time::Instant) {
+    let (c, rm, u, d) = (client.clone(), room.clone(), user.to_string(), device.to_string());
+    crate::bridge::runtime().spawn(async move {
+        for at in crate::callrules::RESEND_AFTER_USE_MS {
+            tokio::time::sleep_until(anchor + std::time::Duration::from_millis(at)).await;
+            if join_gen_stale(my_gen) {
+                return;
+            }
+            let (to, keys) = {
+                let mut g = call_keys().lock().unwrap();
+                let Some(k) = g.as_mut().filter(|k| k.gen == my_gen) else { return };
+                let keys = k.announce_keys();
+                let live: Vec<u8> = keys.iter().map(|x| x.1).collect();
+                k.resend.keep_only(&live);
+                (k.resend.to(), keys)
+            };
+            if to.is_empty() {
+                return;
+            }
+            eprintln!("[key-rotate] resend +{} s to {} device(s) whose key send failed", at / 1000, to.len());
+            announce_key_to_members(&c, &rm, &u, &d, &keys, Some(&to), Some(my_gen)).await;
+        }
+    });
 }
 
 /// The one active call, shared with async tasks (the QObject is `!Send` + lives on
@@ -1341,7 +1898,7 @@ fn join_gen_stale(my_gen: u64) -> bool {
 /// teardown_call_session can overlap). The `hangingUp` rejoin gate must stay closed until
 /// the LAST one finishes: each teardown clearing it unconditionally let the faster one
 /// re-open the gate while the slower was still about to null active_call_room/
-/// current_media_key — the exact E2EE-killing rejoin race the gate exists to prevent.
+/// call keys — the exact E2EE-killing rejoin race the gate exists to prevent.
 fn teardowns_in_flight() -> &'static std::sync::atomic::AtomicU64 {
     static N: OnceLock<std::sync::atomic::AtomicU64> = OnceLock::new();
     N.get_or_init(|| std::sync::atomic::AtomicU64::new(0))
@@ -1376,7 +1933,7 @@ fn rejoin_mic_muted() -> &'static std::sync::Mutex<Option<bool>> {
 /// `m.call.member` (peers keep seeing us), or stale registries that bleed into the next rejoin.
 /// `qt`: when present, `hangingUp` is cleared on the Qt object once teardown finishes —
 /// the disconnect path sets it (same gate as leave_call) so a rejoin can't interleave with
-/// this teardown; unguarded, the rejoin's freshly-set `active_call_room`/`current_media_key`
+/// this teardown; unguarded, the rejoin's freshly-set `active_call_room`/`call keys`
 /// got clobbered by the lines below, silently killing E2EE for the whole rejoined call.
 /// NOTE: callers must `teardowns_in_flight().fetch_add(1)` on the SPAWNING thread before
 /// spawning this — counting inside the task leaves a gap where another teardown's final
@@ -1407,7 +1964,7 @@ async fn teardown_call_session(
     };
     tokio::join!(close_fut, leave_fut);
     *active_call_room().lock().unwrap() = None;
-    *current_media_key().lock().unwrap() = None;
+    *call_keys().lock().unwrap() = None;
     video_registry().lock().unwrap().clear();
     eprintln!("[call] session torn down after disconnect");
     let last = teardowns_in_flight().fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1;
@@ -1864,6 +2421,7 @@ impl qobject::CallController {
                             }
                             CallEvent::ParticipantJoined { identity } => {
                                 if is_vod_bot(&identity) {
+                                    rotation_sfu_event(&room_id, &identity, false);
                                     // Indicator, not a person (0.8.8). STILL announce our media
                                     // key to it — that is how it can decrypt (and record) us.
                                     crate::bridge::runtime().spawn({
@@ -1875,6 +2433,7 @@ impl qobject::CallController {
                                     continue;
                                 }
                                 participants.insert(identity.clone());
+                                rotation_sfu_event(&room_id, &identity, false); // M2: back on the call server
                                 // RBAC (§5.4): if the call room's state says this person is
                                 // server-muted and I may moderate, re-apply it — the SFU forgot
                                 // their permission when they left. Once per identity per join.
@@ -1921,12 +2480,14 @@ impl qobject::CallController {
                             }
                             CallEvent::ParticipantLeft { identity } => {
                                 if is_vod_bot(&identity) {
+                                    rotation_sfu_event(&room_id, &identity, true); // recording off rotates (DESIGN §3.9)
                                     let _ = qt2.queue(|mut o| o.as_mut().set_rec_active(false));
                                     continue;
                                 }
                                 participants.remove(&identity);
                                 muted.remove(&identity);
                                 enforced.remove(&identity);
+                                rotation_sfu_event(&room_id, &identity, true); // M2: gone from the call server
                                 let json = tiles_json_enriched(&tiles, &participants, &muted);
                                 set_desired_tiles(&json);
                                 let id_sig = identity.clone();
@@ -2002,6 +2563,7 @@ impl qobject::CallController {
                                 let _ = qt2.queue(move |mut o| o.as_mut().set_removed_by(QString::from(&label)));
                             }
                             CallEvent::ConnectionState { reconnecting, disconnected, recoverable } => {
+                                rotation_connected(&room_id, !reconnecting && !disconnected); // M2: SFU departures restart
                                 if !reconnecting && !disconnected {
                                     // 10.5 (audio review #6): the SDK reports Reconnected even when
                                     // republishing our mic failed — look, and publish it again.
@@ -2090,7 +2652,7 @@ impl qobject::CallController {
                                         o.as_mut().set_connecting(false);
                                         // Gate rejoin until the teardown below completes (same
                                         // hangingUp gate as leave_call): a rejoin interleaved with
-                                        // teardown had its active_call_room/current_media_key
+                                        // teardown had its active_call_room/call keys
                                         // clobbered — E2EE silently dead for the rejoined call.
                                         o.as_mut().set_hanging_up(true);
                                         let removed = o.removed_by().to_string();
@@ -2175,6 +2737,30 @@ impl qobject::CallController {
                     if join_gen_stale(my_gen) {
                         return;
                     }
+                    // M1: the call runs on another server — no failure, the sheet asks the user (callHostPrompt).
+                    if let Some(prompt) = e.strip_prefix(HOST_ASK) {
+                        let prompt = prompt.to_string();
+                        let _ = qt.queue(move |mut o| {
+                            o.as_mut().set_connecting(false);
+                            o.as_mut().set_reconnecting(false);
+                            o.as_mut().set_call_failed(false);
+                            o.as_mut().set_status(QString::default());
+                            // self-test (the gates' native peer, TINHAT_GUI_AUTOJOIN): the lab answers the sheet
+                            if let Some(a) = gui_test_call_host_answer() {
+                                let v: serde_json::Value = serde_json::from_str(&prompt).unwrap_or_default();
+                                let (room, url) = (v["room"].as_str().unwrap_or("").to_string(), v["serviceUrl"].as_str().unwrap_or("").to_string());
+                                eprintln!("[call-host] self-test answer {a:?}");
+                                if a == "join" || a == "always" {
+                                    o.as_mut().confirm_call_host(&QString::from(&room), &QString::from(&url), a == "always");
+                                } else {
+                                    o.as_mut().cancel_call_host();
+                                }
+                                return;
+                            }
+                            o.as_mut().set_call_host_prompt(QString::from(&prompt));
+                        });
+                        return;
+                    }
                     let reason = join_fail_reason(&e);
                     let _ = qt.queue(move |mut o| {
                         o.as_mut().set_connecting(false);
@@ -2220,6 +2806,8 @@ impl qobject::CallController {
         // join_gen_stale and stands down instead of destroying whatever call state the
         // user moves to next (the zombie-call incident, see join_gen).
         join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        // M1: "Join" on the sheet lasts until the user leaves the call
+        host_approvals().lock().unwrap().clear();
         // A deliberate hang-up is not a failure: forget the health clock, any pending
         // auto-rejoin budget, and any un-consumed mute restore so the next call starts
         // with a clean slate.
@@ -2318,7 +2906,7 @@ impl qobject::CallController {
             tokio::join!(close_fut, leave_fut);
 
             *active_call_room().lock().unwrap() = None;
-            *current_media_key().lock().unwrap() = None;
+            *call_keys().lock().unwrap() = None;
             video_registry().lock().unwrap().clear();
             eprintln!("[call] hangup teardown complete — rejoin unblocked");
             // Clear hangingUp only when no OTHER teardown is still in flight (a terminal
@@ -2868,6 +3456,69 @@ impl qobject::CallController {
         set_same_room_auto_pref(on);
         tinhat_streamer::same_room_set_auto(on);
         self.as_mut().set_same_room_auto(on);
+    }
+
+    pub fn confirm_call_host(mut self: Pin<&mut Self>, room_id: &QString, service_url: &QString, always: bool) {
+        let (room, url) = (room_id.to_string(), service_url.to_string());
+        self.as_mut().set_call_host_prompt(QString::default());
+        let Ok(norm) = crate::callrules::normalize_focus_url(&url) else { return };
+        host_approvals().lock().unwrap().insert((room.clone(), norm.clone()));
+        let host = crate::callrules::host_of(&norm);
+        eprintln!("[call-host] user chose {} host={host}", if always { "always" } else { "join" });
+        if !always {
+            self.as_mut().join_call(&QString::from(&room));
+            return;
+        }
+        let qt = self.qt_thread();
+        let gen = join_gen().load(std::sync::atomic::Ordering::SeqCst); // a leave / join / cancel meanwhile voids this
+        crate::bridge::runtime().spawn(async move {
+            let mut hosts = None;
+            if let Some(c) = crate::session::client() {
+                if let Err(e) = crate::rtc::set_call_host(&c, &host, true).await {
+                    eprintln!("[call-host] couldn't save {host} as trusted: {e} — joining this once");
+                }
+                hosts = Some(serde_json::to_string(&crate::rtc::call_hosts(&c).await).unwrap_or_else(|_| "[]".into()));
+            }
+            let _ = qt.queue(move |mut o| {
+                if let Some(h) = hosts {
+                    o.as_mut().set_call_hosts_json(QString::from(&h));
+                }
+                if join_gen_stale(gen) {
+                    eprintln!("[call-host] the join was left or replaced while saving the host — not joining");
+                    return;
+                }
+                o.as_mut().join_call(&QString::from(&room));
+            });
+        });
+    }
+
+    pub fn cancel_call_host(mut self: Pin<&mut Self>) {
+        eprintln!("[call-host] user cancelled — nothing requested");
+        join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst); // voids an "Always trust" still saving
+        self.as_mut().set_call_host_prompt(QString::default());
+        *join_target().lock().unwrap() = None;
+    }
+
+    pub fn refresh_call_hosts(self: Pin<&mut Self>) {
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let Some(c) = crate::session::client() else { return };
+            let h = serde_json::to_string(&crate::rtc::call_hosts(&c).await).unwrap_or_else(|_| "[]".into());
+            let _ = qt.queue(move |mut o| o.as_mut().set_call_hosts_json(QString::from(&h)));
+        });
+    }
+
+    pub fn remove_call_host(self: Pin<&mut Self>, host: &QString) {
+        let host = host.to_string();
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let Some(c) = crate::session::client() else { return };
+            if let Err(e) = crate::rtc::set_call_host(&c, &host, false).await {
+                eprintln!("[call-host] couldn't remove {host}: {e}");
+            }
+            let h = serde_json::to_string(&crate::rtc::call_hosts(&c).await).unwrap_or_else(|_| "[]".into());
+            let _ = qt.queue(move |mut o| o.as_mut().set_call_hosts_json(QString::from(&h)));
+        });
     }
 
     pub fn fix_system_level(self: Pin<&mut Self>, output: bool) {
@@ -4072,7 +4723,7 @@ pub async fn leave_on_exit() {
     {
         eprintln!("[call] WARN: close() on exit exceeded 10s — quitting anyway");
     }
-    *current_media_key().lock().unwrap() = None;
+    *call_keys().lock().unwrap() = None;
     let rid_str = active_call_room().lock().unwrap().take();
     if let (Some(rid_str), Some(client)) = (rid_str, crate::session::client()) {
         if let Ok(rid) = matrix_sdk::ruma::RoomId::parse(&rid_str) {
@@ -4094,6 +4745,7 @@ pub async fn leave_on_exit() {
 /// shell when the sign-in screen comes back (Main.qml onMLoggedInChanged → leaveCall).
 pub async fn leave_for_sign_out() {
     join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    host_approvals().lock().unwrap().clear();
     *call_started().lock().unwrap() = None;
     auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
     *rejoin_mic_muted().lock().unwrap() = None;
@@ -4120,6 +4772,127 @@ fn join_fail_reason(raw: &str) -> String {
     }
 }
 
+/// Marks a join that stopped for the "hosted elsewhere" sheet (calls round M1): `do_join`'s error is this prefix +
+/// the prompt JSON; join_call turns it into `callHostPrompt` instead of a failure.
+const HOST_ASK: &str = "\u{1}call-host-ask\u{1}";
+
+/// The (room, call service) pairs the user said "Join" to on the sheet, for this call: auto-rejoin and resume reuse
+/// them; a different service (the running call moved while we were away) asks again. Cleared on a deliberate
+/// hang-up and at sign-out.
+fn host_approvals() -> &'static std::sync::Mutex<std::collections::HashSet<(String, String)>> {
+    static A: OnceLock<std::sync::Mutex<std::collections::HashSet<(String, String)>>> = OnceLock::new();
+    A.get_or_init(|| std::sync::Mutex::new(std::collections::HashSet::new()))
+}
+
+/// The call service a join may use under `d` (DESIGN §2.4): own / trusted / an approved ask → the focus;
+/// `Err(None)` = ask the user first; `Err(Some(text))` = refused (the call bar's words). Logs `[call-host]` lines the
+/// gates read.
+fn approve_focus(room_id: &str, d: &crate::callrules::FocusDecision) -> Result<crate::rtc::CallFocus, Option<String>> {
+    let adv = d.advertiser.as_deref().unwrap_or("");
+    let focus = || crate::rtc::CallFocus {
+        service_url: d.service_url.clone().unwrap_or_default(),
+        alias: d.alias.clone().unwrap_or_else(|| room_id.to_string()),
+    };
+    match d.decision {
+        "refuse" => {
+            let reason = d.reason.unwrap_or("bad-url");
+            eprintln!("[call-host] refuse reason={reason} advertiser={adv}");
+            Err(Some(crate::callrules::refusal_text(reason).to_string()))
+        }
+        "ask" => {
+            let url = d.service_url.clone().unwrap_or_default();
+            let host = d.host.clone().unwrap_or_default();
+            if host_approvals().lock().unwrap().contains(&(room_id.to_string(), url)) {
+                eprintln!("[call-host] approved for this call host={host} advertiser={adv}");
+                Ok(focus())
+            } else {
+                eprintln!("[call-host] ask host={host} advertiser={adv}");
+                Err(None)
+            }
+        }
+        other => {
+            if other == "trusted" {
+                eprintln!("[call-host] trusted host={} advertiser={adv}", d.host.as_deref().unwrap_or(""));
+            }
+            Ok(focus())
+        }
+    }
+}
+
+/// [`approve_focus`] for paths without a sheet (the standalone share): an unapproved foreign host is refused.
+pub(crate) fn approved_focus(room_id: &str, d: &crate::callrules::FocusDecision) -> Result<crate::rtc::CallFocus, String> {
+    approve_focus(room_id, &crate::callrules::apply_foreign_policy(d.clone()))
+        .map_err(|e| e.unwrap_or_else(|| "This call runs on another server — join it from the call bar first.".to_string()))
+}
+
+/// The sheet's JSON for `callHostPrompt`: `{room, host, serviceUrl, advertiser, advertiserName, words:{…}}`.
+async fn host_prompt_json(client: &matrix_sdk::Client, room: &matrix_sdk::Room, d: &crate::callrules::FocusDecision) -> String {
+    let adv = d.advertiser.clone().unwrap_or_default();
+    let mut name = String::new();
+    if let Ok(uid) = matrix_sdk::ruma::UserId::parse(adv.as_str()) {
+        if let Ok(Some(m)) = room.get_member_no_sync(&uid).await {
+            name = m.display_name().unwrap_or("").to_string();
+        }
+    }
+    let me = client.user_id().map(|u| u.to_string()).unwrap_or_default();
+    let host = d.host.clone().unwrap_or_default();
+    serde_json::json!({
+        "room": room.room_id().as_str(),
+        "host": host,
+        "serviceUrl": d.service_url.clone().unwrap_or_default(),
+        "advertiser": adv,
+        "advertiserName": name,
+        "words": crate::callrules::host_sheet_words(&host, &me, &name, &adv),
+    })
+    .to_string()
+}
+
+/// The lab's answer to the call-host sheet (`join` | `always` | anything else = cancel), read from
+/// `TINHAT_TEST_CALL_HOST` — ONLY in a `--features lab-call-host` build (build.rs refuses that feature in a release;
+/// without it the variable is never read and its name isn't in the binary). Always None in a normal build: the user
+/// answers the sheet.
+#[cfg(feature = "lab-call-host")]
+fn lab_call_host_answer() -> Option<String> {
+    std::env::var("TINHAT_TEST_CALL_HOST").ok().filter(|a| !a.is_empty())
+}
+#[cfg(not(feature = "lab-call-host"))]
+fn lab_call_host_answer() -> Option<String> {
+    None
+}
+
+/// Lab only: the GUI self-test (`TINHAT_GUI_AUTOJOIN` set) in a lab build answers the sheet ([`lab_call_host_answer`]).
+fn gui_test_call_host_answer() -> Option<String> {
+    let auto = std::env::var("TINHAT_GUI_AUTOJOIN").unwrap_or_default();
+    if auto.is_empty() {
+        return None;
+    }
+    lab_call_host_answer()
+}
+
+/// Lab only (`headless_join`, the gates' native peer): answer the sheet without a window in a lab build
+/// ([`lab_call_host_answer`]); a normal build cancels (nothing is requested).
+async fn headless_host_answer(client: &matrix_sdk::Client, room_id: &str, prompt: &str) -> bool {
+    let answer = lab_call_host_answer().unwrap_or_default();
+    let v: serde_json::Value = serde_json::from_str(prompt).unwrap_or_default();
+    let url = v["serviceUrl"].as_str().unwrap_or("").to_string();
+    let host = v["host"].as_str().unwrap_or("").to_string();
+    eprintln!("[call-host] headless answer {answer:?} host={host}");
+    match answer.as_str() {
+        "always" => {
+            if let Err(e) = crate::rtc::set_call_host(client, &host, true).await {
+                eprintln!("[call-host] couldn't save {host} as trusted: {e}");
+            }
+            host_approvals().lock().unwrap().insert((room_id.to_string(), url));
+            true
+        }
+        "join" => {
+            host_approvals().lock().unwrap().insert((room_id.to_string(), url));
+            true
+        }
+        _ => false,
+    }
+}
+
 async fn do_join(
     room_id: &str,
     start_muted: bool,
@@ -4135,16 +4908,21 @@ async fn do_join(
 
 
 
-    // Join the active call's focus if one exists; otherwise START a call on the server's own call service (its
-    // well-known; the homeserver's /livekit/jwt when it names none) — we become the first member. As Tin Hat Web's resolveFocus.
-    let focus = match crate::rtc::resolve_focus(&room).await.map_err(|e| format!("call lookup failed: {e}"))? {
-        Some(f) => f,
-        None => {
-            let f = crate::rtc::default_focus(&client, &room).await;
-            eprintln!("[call] no active call — starting one on the server's call service ({})", f.service_url);
-            f
-        }
+    // Calls round M1 (DESIGN §2): join the running call's service (the oldest live membership's) or START a call on
+    // our server's own service — but judge it first, before any token leaves: own / trusted go ahead, another host
+    // asks the user (the sheet; nothing is requested until they say Join), a bad address is refused. Never falls
+    // back to our own service for a running call (that would split it).
+    let decision = crate::callrules::apply_foreign_policy(
+        crate::rtc::focus_decision_for(&client, &room).await.map_err(|e| format!("call lookup failed: {e}"))?,
+    );
+    let focus = match approve_focus(room_id, &decision) {
+        Ok(f) => f,
+        Err(Some(refused)) => return Err(refused),
+        Err(None) => return Err(format!("{HOST_ASK}{}", host_prompt_json(&client, &room, &decision).await)),
     };
+    if !decision.call {
+        eprintln!("[call] no active call — starting one on the server's call service ({})", focus.service_url);
+    }
     // Calls are ALWAYS end-to-end encrypted. Guest calls (0.8.5) no longer
     // divert the call into an unencrypted named LiveKit room: a browser guest now gets
     // a temporary Matrix account and joins THIS call like anyone else, so there is no
@@ -4174,7 +4952,7 @@ async fn do_join(
     // Finding 5 checkpoints: `my_gen` is bumped by any later leave_call/join_call. From here
     // on every step that touches SHARED call state re-checks it first, so a superseded
     // attempt stands down instead of closing the newer call's session, republishing a
-    // stale membership, overwriting current_media_key or publishing its microphone.
+    // stale membership, overwriting call keys or publishing its microphone.
     if join_gen_stale(my_gen) {
         return Err("superseded while fetching the SFU config".to_string());
     }
@@ -4281,12 +5059,12 @@ async fn do_join(
                         // original to-device delivery and won't re-fire ParticipantJoined (they
                         // were already connected) can still decrypt us. Idempotent: same
                         // index+key, so already-keyed peers are unaffected.
-                        let cur = *current_media_key().lock().unwrap();
-                        if let Some((key, index)) = cur {
+                        if let Some((gen, keys)) = current_keys().filter(|(g, _)| *g == my_gen) {
+                            let _ = gen;
                             if let Some(c) = crate::session::client() {
                                 let uid = c.user_id().map(|u| u.to_string()).unwrap_or_default();
                                 let did = c.device_id().map(|d| d.to_string()).unwrap_or_default();
-                                announce_key_to_members(&c, &room, &uid, &did, key, index).await;
+                                announce_key_to_members(&c, &room, &uid, &did, &keys, None, Some(my_gen)).await;
                             }
                         }
                     }
@@ -4297,7 +5075,7 @@ async fn do_join(
     }
 
     // Superseded after our membership landed: don't mint/publish a key or set
-    // current_media_key (they would belong to the newer attempt). The membership in THIS
+    // the call keys (they would belong to the newer attempt). The membership in THIS
     // room is withdrawn only if the newer attempt is not (yet) claiming this room.
     if join_gen_stale(my_gen) {
         if active_call_room().lock().unwrap().as_deref() != Some(room_id) {
@@ -4325,9 +5103,38 @@ async fn do_join(
     crate::afk_ctl::clear_stale_away(&room).await;
     // Stash our key for peer-join re-announces, and announce it NOW over ENCRYPTED
     // to-device to peers already in the call (EC's ToDeviceKeyTransport ignores the room
-    // event above). A peer that joins LATER is covered by the ParticipantJoined re-announce.
-    *current_media_key().lock().unwrap() = Some((key, key_index));
-    announce_key_to_members(&client, &room, &user_id, &device_id, key, key_index).await;
+    // event above). A peer that joins LATER is covered by the ParticipantJoined re-announce
+    // and the rotation driver's newcomer sends. M2: the planner starts here with the set we key now.
+    {
+        let r = crate::rtc::key_recipients_now(&room, &user_id, &device_id, &[]).await;
+        // superseded during that read: the keys slot belongs to the newer join
+        if join_gen_stale(my_gen) {
+            if active_call_room().lock().unwrap().as_deref() != Some(room_id) {
+                withdraw_membership_best_effort(&room).await;
+            }
+            return Err("superseded before setting the call keys".to_string());
+        }
+        let (planner, _announce) = crate::callrules::Planner::start(key_index, crate::rtc::now_ms_pub(), &r.ids);
+        *call_keys().lock().unwrap() = Some(CallKeys {
+            gen: my_gen,
+            room: room_id.to_string(),
+            cur: (key, key_index),
+            pending: None,
+            planner,
+            sfu_gone: crate::callrules::SfuGone::default(),
+            sfu_epoch: std::collections::HashMap::new(),
+            connected: false,
+            loading_members: false,
+            switch_owed: false,
+            resend: crate::callrules::ResendBook::default(),
+        });
+    }
+    {
+        let rep = announce_key_to_members(&client, &room, &user_id, &device_id, &[(key, key_index)], None, Some(my_gen)).await;
+        if !rep.failed.is_empty() {
+            schedule_resends(&client, &room, &user_id, &device_id, my_gen, tokio::time::Instant::now());
+        }
+    }
 
     // (Any leftover session was closed at the top of do_join, BEFORE the membership
     // publish — see the comment there: closing it here would wipe the peer keys that
@@ -4420,6 +5227,9 @@ async fn do_join(
     // (Any leftover session was already closed BEFORE connect — see above.)
     *cell.lock().await = Some(call);
     *active_call_room().lock().unwrap() = Some(room_id.to_string()); // for leave-on-exit
+    // M2: our SFU room is up — call-server departures count from here; the rotation driver runs for this call
+    rotation_connected(room_id, true);
+    crate::bridge::runtime().spawn(rotation_driver(room.clone(), my_gen));
     // Steady key re-announce: every 60s, re-send our (unchanged) media key over encrypted
     // to-device to every live call-member device, and mirror it as a room event every 15th
     // tick (see below — the delivery-critical room mirrors are event-driven now, so this
@@ -4432,7 +5242,6 @@ async fn do_join(
     {
         let room = room.clone();
         let rid = room_id.to_string();
-        let our_key = (key, key_index);
         crate::bridge::runtime().spawn(async move {
             let mut tick: u64 = 0;
             loop {
@@ -4442,16 +5251,17 @@ async fn do_join(
                 {
                     break;
                 }
-                // A fast leave+rejoin of the SAME room mints a new key; the rejoin's own
-                // loop owns it from there — this stale loop must stand down, not race it.
-                if *current_media_key().lock().unwrap() != Some(our_key) {
+                // A fast leave+rejoin of the SAME room is a new join generation; the rejoin's own
+                // loop owns it from there — this stale loop must stand down, not race it. (Keyed on the
+                // generation, not the key: a rotation swaps the key inside this call; the keys are read afresh.)
+                if join_gen_stale(my_gen) {
                     break;
                 }
-                let (key, index) = our_key;
+                let Some((_, keys)) = current_keys().filter(|(g, _)| *g == my_gen) else { break };
                 let Some(c) = crate::session::client() else { break };
                 let uid = c.user_id().map(|u| u.to_string()).unwrap_or_default();
                 let did = c.device_id().map(|d| d.to_string()).unwrap_or_default();
-                announce_key_to_members(&c, &room, &uid, &did, key, index).await;
+                announce_key_to_members(&c, &room, &uid, &did, &keys, None, Some(my_gen)).await;
                 tick += 1;
                 // No room-event mirror any more (retired 2026-09-21, see do_join): the
                 // to-device re-announce above is the whole transport. Those mirrors landed
@@ -4471,7 +5281,6 @@ async fn do_join(
     // keep the garble from ever reaching peers; this heal is the backstop.
     {
         let rid = room_id.to_string();
-        let our_key = (key, key_index);
         crate::bridge::runtime().spawn(async move {
             // CALL-LIFETIME healer (was a two-shot at +3s/+8.5s): the feeder now flags
             // BOTH the join-time cold-node signature AND mid-call stalls (a primed
@@ -4514,7 +5323,7 @@ async fn do_join(
                 // gets its own healer, so this one must stand down rather than fight it
                 // (the room id alone is identical across a rejoin).
                 if active_call_room().lock().unwrap().as_deref() != Some(rid.as_str())
-                    || *current_media_key().lock().unwrap() != Some(our_key)
+                    || join_gen_stale(my_gen)
                     || current_call().lock().await.is_none()
                 {
                     break;
@@ -4545,7 +5354,7 @@ async fn do_join(
                     // (Astra) the look took a moment: act only if this is still the same call
                     let same_call = || {
                         active_call_room().lock().unwrap().as_deref() == Some(rid.as_str())
-                            && *current_media_key().lock().unwrap() == Some(our_key)
+                            && !join_gen_stale(my_gen)
                     };
                     if same_call() {
                         let cell = current_call();
@@ -4826,10 +5635,12 @@ pub async fn vod_join_until(room_id: &str, stop: std::sync::Arc<std::sync::atomi
                         eprintln!("[vod] SFU disconnected — ending recording session");
                         break;
                     }
-                    Ok(Some(CallEvent::ParticipantJoined { .. })) => {
+                    Ok(Some(CallEvent::ParticipantJoined { identity })) => {
                         live_peers += 1;
+                        rotation_sfu_event(room_id, &identity, false);
                     }
-                    Ok(Some(CallEvent::ParticipantLeft { .. })) => {
+                    Ok(Some(CallEvent::ParticipantLeft { identity })) => {
+                        rotation_sfu_event(room_id, &identity, true);
                         live_peers = live_peers.saturating_sub(1);
                         if live_peers == 0 {
                             empty_since = tokio::time::Instant::now();
@@ -4856,8 +5667,21 @@ pub async fn vod_join_until(room_id: &str, stop: std::sync::Arc<std::sync::atomi
 /// validates the decrypt path end-to-end without the QML render layer or a GUI click.
 /// Run via `TINHAT_AUTOJOIN=<room_id>`.
 pub async fn headless_join(room_id: &str, secs: u64) {
-    let my_gen = join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-    match do_join(room_id, false, my_gen).await {
+    let mut my_gen = join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+    let mut joined = do_join(room_id, false, my_gen).await;
+    // M1 in the lab: the gates answer the "hosted elsewhere" sheet through TINHAT_TEST_CALL_HOST
+    if let Err(prompt) = joined.as_ref().map(|_| ()).map_err(|e| e.strip_prefix(HOST_ASK).map(str::to_string)) {
+        if let (Some(prompt), Some(client)) = (prompt, crate::session::client()) {
+            if headless_host_answer(&client, room_id, &prompt).await {
+                my_gen = join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+                joined = do_join(room_id, false, my_gen).await;
+            } else {
+                eprintln!("[call-host] cancelled — not joining");
+            }
+        }
+    }
+    let _ = my_gen;
+    match joined {
         Ok(mut rx) => {
             eprintln!("[autojoin] joined {room_id}; draining events for {secs}s");
             crate::bridge::runtime().spawn(install_peer_keys_loop(room_id.to_string()));
@@ -4869,9 +5693,18 @@ pub async fn headless_join(room_id: &str, secs: u64) {
                     }
                     Ok(Some(CallEvent::VideoRemoved { id })) => eprintln!("[autojoin] video gone {id}"),
                     Ok(Some(CallEvent::ParticipantJoined { identity })) => {
-                        eprintln!("[autojoin] participant joined {identity}")
+                        eprintln!("[autojoin] participant joined {identity}");
+                        rotation_sfu_event(room_id, &identity, false);
+                        crate::bridge::runtime().spawn(announce_key_to_peer(room_id.to_string(), identity));
                     }
-                    Ok(Some(_)) => {} // participant-left / mute / connection-state — not needed here
+                    Ok(Some(CallEvent::ParticipantLeft { identity })) => {
+                        eprintln!("[autojoin] participant left {identity}");
+                        rotation_sfu_event(room_id, &identity, true);
+                    }
+                    Ok(Some(CallEvent::ConnectionState { reconnecting, disconnected, .. })) => {
+                        rotation_connected(room_id, !reconnecting && !disconnected);
+                    }
+                    Ok(Some(_)) => {} // mute etc. — not needed here
                     Ok(None) => break,
                     Err(_) => {} // 500ms tick — keep waiting
                 }
@@ -4978,6 +5811,24 @@ async fn uplink_probe() -> Option<f64> {
             eprintln!("[conntest] uplink probe failed: {e}");
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod call_host_tests {
+    use super::*;
+
+    /// Calls round M1: a normal (non-lab) build never answers the call-host sheet from the environment — with the lab
+    /// variables set, the sheet still asks and the headless path cancels.
+    #[cfg(not(feature = "lab-call-host"))]
+    #[test]
+    fn a_normal_build_ignores_the_lab_answer() {
+        std::env::set_var("TINHAT_TEST_CALL_HOST", "always");
+        std::env::set_var("TINHAT_GUI_AUTOJOIN", "!lab:a.test");
+        assert_eq!(lab_call_host_answer(), None);
+        assert_eq!(gui_test_call_host_answer(), None);
+        std::env::remove_var("TINHAT_TEST_CALL_HOST");
+        std::env::remove_var("TINHAT_GUI_AUTOJOIN");
     }
 }
 

@@ -55,8 +55,19 @@ fn check_update_trust_config() {
     }
 }
 
+/// Calls round M1: `--features lab-call-host` (the sheet answered by an environment variable, for the lab) never goes
+/// into a release.
+fn check_call_host_lab() {
+    let lab = std::env::var_os("CARGO_FEATURE_LAB_CALL_HOST").is_some();
+    let release = std::env::var("TINHAT_RELEASE_BUILD").map(|v| v.trim() == "1").unwrap_or(false);
+    if lab && release {
+        panic!("TINHAT_RELEASE_BUILD=1 with --features lab-call-host: a release never answers the call-host sheet by itself");
+    }
+}
+
 fn main() {
     check_update_trust_config();
+    check_call_host_lab();
     generate_th_qml();
 
     // Bake a short git hash so dev vs released builds are distinguishable (About sheet +
@@ -148,6 +159,7 @@ fn main() {
                 "qml/ConfirmDialog.qml",
                 "qml/TextViewerDialog.qml",   // launch-gate's web review #8: text-like attachments shown in the app
                 "qml/ChangePasswordDialog.qml",   // selfhost: Settings → Devices & security → Password (password.rs)
+                "qml/CallHostDialog.qml",     // calls round M1: "Join a call hosted elsewhere?" (call_ctl.rs callHostPrompt)
                 "qml/TrustDeviceDialog.qml",   // 12.0.4: Settings → Devices & security → the phone's "Trust…" (trust_device.rs)
                 "qml/SafetyHost.qml",   // account safety: the Ignore + Report dialogs (safety.rs)
                 "qml/DeleteAccountDialog.qml",   // account safety: Settings → Devices & security → Delete my account

@@ -125,6 +125,9 @@ pub struct ServerOffer {
     pub server: String,
     /// the Tin Hat API base it announces (no trailing slash); "" when it doesn't say
     pub api: String,
+    /// `web`: where its Tin Hat Web lives (server 0.3.5+; an https origin, as announced, trimmed); "" when it doesn't
+    /// say. share_link.rs `web_base` decides whether it counts (else the `api` origin).
+    pub web: String,
     /// only the features it announced as booleans
     pub features: BTreeMap<ServerFeature, bool>,
     /// the Memories recorder's account, as announced ("" when it doesn't say); `recorder()` applies the Memories rule
@@ -134,6 +137,9 @@ pub struct ServerOffer {
     /// `account.owner`: the server owner's account (a valid user id, else ""); safety.rs refuses "Delete my account"
     /// for it (Tin Hat Server: SERVER-SPEC.md of the account-safety round)
     pub owner: String,
+    /// `features.call_key_rotation === false` (calls round M2 kill switch, DESIGN §3.10): the calls don't mint new keys
+    /// on a leave. Not a `ServerFeature` (it gates no button); absent or anything else = rotation on.
+    pub key_rotation_off: bool,
 }
 
 /// No announcement (today's behaviour everywhere).
@@ -173,6 +179,7 @@ pub fn parse_offer(well_known: &Value) -> ServerOffer {
     let Some(t) = w.get(DISCOVERY_KEY).and_then(obj) else { return no_offer() };
     let server = t.get("server").and_then(Value::as_str).unwrap_or("").to_string();
     let api = t.get("api").and_then(Value::as_str).map(api_base_of).unwrap_or_default();
+    let web = t.get("web").and_then(Value::as_str).map(|w| w.trim().to_string()).unwrap_or_default();
     let mut features = BTreeMap::new();
     if let Some(f) = t.get("features").and_then(obj) {
         for k in SERVER_FEATURES {
@@ -190,7 +197,8 @@ pub fn parse_offer(well_known: &Value) -> ServerOffer {
         _ => PasswordReset::Email,
     };
     let owner = t.get("account").and_then(obj).and_then(|a| a.get("owner")).and_then(Value::as_str).filter(|o| is_mxid(o)).unwrap_or("").to_string();
-    ServerOffer { server, api, features, recorder, password_reset, owner }
+    let key_rotation_off = t.get("features").and_then(obj).and_then(|f| f.get("call_key_rotation")) == Some(&Value::Bool(false));
+    ServerOffer { server, api, web, features, recorder, password_reset, owner, key_rotation_off }
 }
 
 /// Is the feature on? Only an explicit `false` turns it off.
@@ -246,7 +254,13 @@ pub fn offer_to_json(o: &ServerOffer) -> Value {
     for (k, v) in &o.features {
         f.insert(k.name().to_string(), Value::Bool(*v));
     }
+    if o.key_rotation_off {
+        f.insert("call_key_rotation".to_string(), Value::Bool(false));
+    }
     let mut v = json!({ "server": o.server, "api": o.api, "features": f, "recorder": o.recorder });
+    if !o.web.is_empty() {
+        v["web"] = Value::String(o.web.clone());
+    }
     if o.password_reset == PasswordReset::Owner {
         v["account"] = json!({ "password_reset": PasswordReset::Owner.name() });
     }
@@ -893,6 +907,7 @@ mod tests {
             ServerOffer {
                 server: "0.2.21".into(),
                 api: "https://maplehouse.tinhat.me/api".into(),
+                web: "".into(),
                 features: feats(&[
                     (Calls, true),
                     (Soundboard, true),
@@ -910,6 +925,7 @@ mod tests {
                 recorder: "@recorder:maplehouse.tinhat.me".into(),
                 password_reset: PasswordReset::Email,
                 owner: "".into(),
+                key_rotation_off: false,
             }
         );
         for f in [Calls, Soundboard, Gifs, Games, Presence, Push, Memories, Reports, Guests] {
@@ -947,7 +963,7 @@ mod tests {
     #[test]
     fn only_booleans_count_unknown_keys_and_odd_values_are_ignored() {
         let o = parse_offer(&offer_with(json!({ "memories": "false", "soundboard": 0, "calls": null, "gifs": "no", "extra": true }), json!({ "server": 7, "api": null })));
-        assert_eq!(o, ServerOffer { server: "".into(), api: "".into(), features: BTreeMap::new(), recorder: "".into(), password_reset: PasswordReset::Email, owner: "".into() });
+        assert_eq!(o, ServerOffer { server: "".into(), api: "".into(), web: "".into(), features: BTreeMap::new(), recorder: "".into(), password_reset: PasswordReset::Email, owner: "".into(), key_rotation_off: false });
         for f in SERVER_FEATURES {
             assert!(feature_on(&o, f), "{}", f.name());
         }
@@ -980,6 +996,14 @@ mod tests {
     /// 2026-10-22: a server without email says its owner sets new passwords (password.rs; the web's offer.ts).
     #[test]
     fn the_account_password_reset_owner_or_the_email_form() {
+        // calls round M2 kill switch: only an explicit false; kept through the store's JSON
+        let off = parse_offer(&offer_with(json!({ "call_key_rotation": false }), json!({})));
+        assert!(off.key_rotation_off);
+        assert!(parse_offer(&json!({ DISCOVERY_KEY: offer_to_json(&off) })).key_rotation_off);
+        for v in [json!(true), json!("false"), json!(0), json!(null)] {
+            assert!(!parse_offer(&offer_with(json!({ "call_key_rotation": v }), json!({}))).key_rotation_off, "{v}");
+        }
+        assert!(!parse_offer(&announced()).key_rotation_off);
         let pr = |account: Value| parse_offer(&offer_with(json!({}), json!({ "account": account }))).password_reset;
         assert_eq!(pr(json!({ "password_reset": "owner" })), PasswordReset::Owner);
         // missing, another value, not a string, not an object = today's email form
@@ -1032,6 +1056,23 @@ mod tests {
         assert!(feature_on(&no_offer(), Memories));
         assert!(feature_on(&ServerOffer { features: feats(&[(Memories, true)]), ..no_offer() }, Memories));
         assert!(!feature_on(&ServerOffer { features: feats(&[(Memories, false)]), ..no_offer() }, Memories));
+    }
+
+    /// 12.0.6: `web` (server 0.3.5+, where its Tin Hat Web lives; share_link.rs) is kept as announced (trimmed), kept
+    /// by the cache, and a change of it is a change. The web's offer.test.ts "web: the web app's address".
+    #[test]
+    fn web_is_read_kept_and_compared() {
+        let wk = |w: Value| json!({ "dev.tinhat.server": { "server": "0.3.5", "api": "", "features": {}, "web": w } });
+        assert_eq!(parse_offer(&wk(json!(" https://chat.example.com "))).web, "https://chat.example.com");
+        assert_eq!(parse_offer(&wk(json!(7))).web, "");
+        assert_eq!(parse_offer(&wk(Value::Null)).web, "");
+        assert_eq!(parse_offer(&announced()).web, "");
+        let o = parse_offer(&wk(json!("https://chat.example.com")));
+        let kept = offer_to_json(&o);
+        assert_eq!(kept["web"], json!("https://chat.example.com"));
+        assert_eq!(parse_offer(&json!({ "dev.tinhat.server": kept })), o);
+        assert!(offer_to_json(&no_offer()).get("web").is_none());
+        assert!(!same_offer(&o, &ServerOffer { web: "".into(), ..o.clone() }));
     }
 
     #[test]

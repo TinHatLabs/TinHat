@@ -1,0 +1,918 @@
+{
+ "format": "tinhat-share-links-vectors",
+ "v": 1,
+ "note": "share_link.rs / links.ts (12.0.6): links = share_link(room, alias, event, own, web, api, wrap) → want; web_base(web, api) → want; parse = parse_join_link / linkTarget(input) → kind room|person|none, the room target + via (target null unless a room). Whitespace = JS \\s (trim), case = ASCII only. Desktop owns this file (crates/app/src/testvectors/share-links.json); Tin Hat Web keeps a byte copy (testvectors/share-links/vectors.json).",
+ "links": [
+  {
+   "name": "alias on our server, web app named by the well-known",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "room id (no alias) on our server",
+   "room": "!abc:example.com",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/!abc%3Aexample.com"
+  },
+  {
+   "name": "a message: room id + event id",
+   "room": "!abc:example.com",
+   "alias": "",
+   "event": "$ev1",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/!abc%3Aexample.com/%24ev1"
+  },
+  {
+   "name": "a message names the room id even when the room has an alias",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "$ev1",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/!abc%3Aexample.com/%24ev1"
+  },
+  {
+   "name": "web missing from the well-known: the api origin",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "web app on the server name itself",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://example.com/",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "web not https: the api origin",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "http://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "web with a path: the api origin",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com/app",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "web with user info: the api origin",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://me@chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "web in capitals: lower-cased host",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "HTTPS://Chat.Example.COM",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "web with a port",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com:8443",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com:8443/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "no web, no api (not a Tin Hat Server): matrix.to alias",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "",
+   "api": "",
+   "wrap": false,
+   "want": "https://matrix.to/#/%23guests%3Aexample.com"
+  },
+  {
+   "name": "no web, no api: matrix.to room id with via",
+   "room": "!abc:example.com",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "",
+   "api": "",
+   "wrap": false,
+   "want": "https://matrix.to/#/!abc%3Aexample.com?via=example.com"
+  },
+  {
+   "name": "no web, no api: matrix.to message",
+   "room": "!abc:example.com",
+   "alias": "",
+   "event": "$ev1",
+   "own": "example.com",
+   "web": "",
+   "api": "",
+   "wrap": false,
+   "want": "https://matrix.to/#/!abc%3Aexample.com/%24ev1?via=example.com"
+  },
+  {
+   "name": "federated alias keeps matrix.to",
+   "room": "!xyz:matrix.org",
+   "alias": "#lounge:matrix.org",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://matrix.to/#/%23lounge%3Amatrix.org"
+  },
+  {
+   "name": "federated room id keeps matrix.to with via",
+   "room": "!xyz:matrix.org",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://matrix.to/#/!xyz%3Amatrix.org?via=matrix.org"
+  },
+  {
+   "name": "federated message keeps matrix.to",
+   "room": "!xyz:matrix.org",
+   "alias": "",
+   "event": "$ev9",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://matrix.to/#/!xyz%3Amatrix.org/%24ev9?via=matrix.org"
+  },
+  {
+   "name": "our room with an alias on another server: matrix.to",
+   "room": "!abc:example.com",
+   "alias": "#lounge:matrix.org",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://matrix.to/#/%23lounge%3Amatrix.org"
+  },
+  {
+   "name": "a name.tinhat.me server",
+   "room": "!abc:crew.tinhat.me",
+   "alias": "#general:crew.tinhat.me",
+   "event": "",
+   "own": "crew.tinhat.me",
+   "web": "https://crew.tinhat.me",
+   "api": "https://crew.tinhat.me/api",
+   "wrap": false,
+   "want": "https://crew.tinhat.me/#/room/%23general%3Acrew.tinhat.me"
+  },
+  {
+   "name": "a name.tinhat.me server, wrap on: never wrapped (claimed directly)",
+   "room": "!abc:crew.tinhat.me",
+   "alias": "#general:crew.tinhat.me",
+   "event": "",
+   "own": "crew.tinhat.me",
+   "web": "https://crew.tinhat.me",
+   "api": "https://crew.tinhat.me/api",
+   "wrap": true,
+   "want": "https://crew.tinhat.me/#/room/%23general%3Acrew.tinhat.me"
+  },
+  {
+   "name": "a name.tinhat.me server without web, wrap on",
+   "room": "!abc:crew.tinhat.me",
+   "alias": "",
+   "event": "",
+   "own": "crew.tinhat.me",
+   "web": "",
+   "api": "https://crew.tinhat.me/api",
+   "wrap": true,
+   "want": "https://crew.tinhat.me/#/room/!abc%3Acrew.tinhat.me"
+  },
+  {
+   "name": "own domain, wrap on: tinhat.dev/open",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": true,
+   "want": "https://tinhat.dev/open#https://chat.example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "own domain, wrap off",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/%23guests%3Aexample.com"
+  },
+  {
+   "name": "own domain message, wrap on",
+   "room": "!abc:example.com",
+   "alias": "",
+   "event": "$ev1",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": true,
+   "want": "https://tinhat.dev/open#https://chat.example.com/#/room/!abc%3Aexample.com/%24ev1"
+  },
+  {
+   "name": "federated, wrap on: matrix.to, never wrapped",
+   "room": "!xyz:matrix.org",
+   "alias": "#lounge:matrix.org",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": true,
+   "want": "https://matrix.to/#/%23lounge%3Amatrix.org"
+  },
+  {
+   "name": "no web or api, wrap on: matrix.to, never wrapped",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "",
+   "api": "",
+   "wrap": true,
+   "want": "https://matrix.to/#/%23guests%3Aexample.com"
+  },
+  {
+   "name": "a host that only ends in tinhat.me is wrapped",
+   "room": "!abc:nottinhat.me",
+   "alias": "",
+   "event": "",
+   "own": "nottinhat.me",
+   "web": "https://nottinhat.me",
+   "api": "",
+   "wrap": true,
+   "want": "https://tinhat.dev/open#https://nottinhat.me/#/room/!abc%3Anottinhat.me"
+  },
+  {
+   "name": "plain-http home server (api origin), wrap on: not wrapped",
+   "room": "!abc:home.lan",
+   "alias": "#general:home.lan",
+   "event": "",
+   "own": "home.lan",
+   "web": "",
+   "api": "http://192.168.1.5:8080/api",
+   "wrap": true,
+   "want": "http://192.168.1.5:8080/#/room/%23general%3Ahome.lan"
+  },
+  {
+   "name": "room version 12 id (no server part) on our server",
+   "room": "!Opaque_Id-123",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/!Opaque_Id-123"
+  },
+  {
+   "name": "room version 12 id, no web app: matrix.to via our server",
+   "room": "!Opaque_Id-123",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "",
+   "api": "",
+   "wrap": false,
+   "want": "https://matrix.to/#/!Opaque_Id-123?via=example.com"
+  },
+  {
+   "name": "server name with a port",
+   "room": "!abc:example.com:8448",
+   "alias": "#a:example.com:8448",
+   "event": "",
+   "own": "example.com:8448",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/%23a%3Aexample.com%3A8448"
+  },
+  {
+   "name": "server name compared without case",
+   "room": "!abc:Example.COM",
+   "alias": "#a:Example.COM",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/%23a%3AExample.COM"
+  },
+  {
+   "name": "non-ASCII alias",
+   "room": "!abc:example.com",
+   "alias": "#café:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/%23caf%C3%A9%3Aexample.com"
+  },
+  {
+   "name": "event id with / + = (room version 3)",
+   "room": "!abc:example.com",
+   "alias": "",
+   "event": "$abc/def+g=",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/!abc%3Aexample.com/%24abc%2Fdef%2Bg%3D"
+  },
+  {
+   "name": "signed out (no own server): matrix.to",
+   "room": "!abc:example.com",
+   "alias": "#guests:example.com",
+   "event": "",
+   "own": "",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://matrix.to/#/%23guests%3Aexample.com"
+  },
+  {
+   "name": "no room id: nothing",
+   "room": "",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": ""
+  },
+  {
+   "name": "alias with a / in its local part",
+   "room": "!abc:example.com",
+   "alias": "#a/b:example.com",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/%23a%2Fb%3Aexample.com"
+  },
+  {
+   "name": "signed out, room version 12 id: matrix.to, no via",
+   "room": "!Opaque_Id-123",
+   "alias": "",
+   "event": "",
+   "own": "",
+   "web": "https://chat.example.com",
+   "api": "https://example.com/api",
+   "wrap": false,
+   "want": "https://matrix.to/#/!Opaque_Id-123"
+  },
+  {
+   "name": "U+FEFF around the room id is trimmed (JS trim)",
+   "room": "﻿!abc:example.com﻿",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/!abc%3Aexample.com"
+  },
+  {
+   "name": "non-ASCII case is not folded (Kelvin sign K)",
+   "room": "!abc:K.example",
+   "alias": "",
+   "event": "",
+   "own": "k.example",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://matrix.to/#/!abc%3A%E2%84%AA.example"
+  },
+  {
+   "name": "a server name that can't be a via hint gets none",
+   "room": "!r:good.example&via=evil.example",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://matrix.to/#/!r%3Agood.example%26via%3Devil.example"
+  },
+  {
+   "name": "IPv6 server name as a via hint",
+   "room": "!abc:[fd00::1]:8448",
+   "alias": "",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://matrix.to/#/!abc%3A%5Bfd00%3A%3A1%5D%3A8448?via=[fd00::1]:8448"
+  },
+  {
+   "name": "spaces around the parts are trimmed",
+   "room": " !abc:example.com ",
+   "alias": "  ",
+   "event": "",
+   "own": "example.com",
+   "web": "https://chat.example.com",
+   "api": "",
+   "wrap": false,
+   "want": "https://chat.example.com/#/room/!abc%3Aexample.com"
+  }
+ ],
+ "web_base": [
+  {
+   "web": "https://chat.example.com",
+   "api": "",
+   "want": "https://chat.example.com"
+  },
+  {
+   "web": "https://chat.example.com/",
+   "api": "",
+   "want": "https://chat.example.com"
+  },
+  {
+   "web": "HTTPS://Chat.Example.com",
+   "api": "",
+   "want": "https://chat.example.com"
+  },
+  {
+   "web": "https://chat.example.com:8443",
+   "api": "",
+   "want": "https://chat.example.com:8443"
+  },
+  {
+   "web": "  https://chat.example.com  ",
+   "api": "",
+   "want": "https://chat.example.com"
+  },
+  {
+   "web": "https://[fd00::1]",
+   "api": "",
+   "want": "https://[fd00::1]"
+  },
+  {
+   "web": "http://chat.example.com",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://chat.example.com/app",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://user@chat.example.com",
+   "api": "",
+   "want": ""
+  },
+  {
+   "web": "https://chat.example.com?x=1",
+   "api": "",
+   "want": ""
+  },
+  {
+   "web": "https://chat.example.com#x",
+   "api": "",
+   "want": ""
+  },
+  {
+   "web": "https://",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "chat.example.com",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "",
+   "api": "https://Example.com",
+   "want": "https://example.com"
+  },
+  {
+   "web": "",
+   "api": "http://192.168.1.5:8080/api",
+   "want": "http://192.168.1.5:8080"
+  },
+  {
+   "web": "",
+   "api": "ftp://example.com/api",
+   "want": ""
+  },
+  {
+   "web": "",
+   "api": "https://u:p@example.com/api",
+   "want": ""
+  },
+  {
+   "web": "",
+   "api": "/api",
+   "want": ""
+  },
+  {
+   "web": "",
+   "api": "",
+   "want": ""
+  },
+  {
+   "web": "https://[broken",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://example.com:abc",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://example.com:65536",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://example.com:0",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://example.com:443",
+   "api": "",
+   "want": "https://example.com:443"
+  },
+  {
+   "web": "https://[fd00::1]:8443",
+   "api": "",
+   "want": "https://[fd00::1]:8443"
+  },
+  {
+   "web": "https://fd00::1",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://exa mple.com",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://ex_ample.com",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "",
+   "api": "https://example.com:99999/api",
+   "want": ""
+  },
+  {
+   "web": "﻿https://chat.example.com",
+   "api": "",
+   "want": "https://chat.example.com"
+  },
+  {
+   "web": "https://Chat.Example.com",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[:]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[:::]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[1:2]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[::]",
+   "api": "",
+   "want": "https://[::]"
+  },
+  {
+   "web": "https://[1:2:3:4:5:6:7:8]",
+   "api": "",
+   "want": "https://[1:2:3:4:5:6:7:8]"
+  },
+  {
+   "web": "https://[1:2:3:4:5:6:7:8:9]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[1::2::3]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[12345::1]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[1:2:3:4:5:6:7::8]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  },
+  {
+   "web": "https://[fd00::1.2]",
+   "api": "https://example.com/api",
+   "want": "https://example.com"
+  }
+ ],
+ "parse": [
+  {
+   "input": "https://chat.example.com/#/room/%23guests%3Aexample.com",
+   "kind": "room",
+   "target": "#guests:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/!abc%3Aexample.com",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/!abc%3Aexample.com/%24ev1",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": []
+  },
+  {
+   "input": "https://tinhat.dev/open#https://chat.example.com/#/room/%23guests%3Aexample.com",
+   "kind": "room",
+   "target": "#guests:example.com",
+   "via": []
+  },
+  {
+   "input": "https://tinhat.dev/open#https://chat.example.com/#/room/!abc%3Aexample.com/%24ev1",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": []
+  },
+  {
+   "input": "https://crew.tinhat.me/#/room/%23general%3Acrew.tinhat.me",
+   "kind": "room",
+   "target": "#general:crew.tinhat.me",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/%23guests%3Aexample.com",
+   "kind": "room",
+   "target": "#guests:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/!abc%3Aexample.com?via=example.com",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": [
+    "example.com"
+   ]
+  },
+  {
+   "input": "https://matrix.to/#/!abc:example.com/$ev1?via=example.com",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": [
+    "example.com"
+   ]
+  },
+  {
+   "input": "https://matrix.to/#/!xyz%3Amatrix.org/%24ev9?via=matrix.org&via=example.com",
+   "kind": "room",
+   "target": "!xyz:matrix.org",
+   "via": [
+    "matrix.org",
+    "example.com"
+   ]
+  },
+  {
+   "input": "https://matrix.to/#/!abc%3Aexample.com%3A8448?via=example.com%3A8448",
+   "kind": "room",
+   "target": "!abc:example.com:8448",
+   "via": [
+    "example.com:8448"
+   ]
+  },
+  {
+   "input": "https://chat.example.com/#/room/#general:example.com",
+   "kind": "room",
+   "target": "#general:example.com",
+   "via": []
+  },
+  {
+   "input": "https://element.example.com/#/room/#general:example.com",
+   "kind": "room",
+   "target": "#general:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/!Opaque_Id-123",
+   "kind": "room",
+   "target": "!Opaque_Id-123",
+   "via": []
+  },
+  {
+   "input": "#general:example.com",
+   "kind": "room",
+   "target": "#general:example.com",
+   "via": []
+  },
+  {
+   "input": "  !abc:example.com  ",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/@blake:example.com",
+   "kind": "person",
+   "target": null,
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/user/%40blake%3Aexample.com",
+   "kind": "person",
+   "target": null,
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/%23caf%C3%A9%3Aexample.com",
+   "kind": "room",
+   "target": "#café:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/%23a%ZZb%3Aexample.com",
+   "kind": "room",
+   "target": "#a%ZZb:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/!abc%3Aexample.com?via=ex%ZZ",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": [
+    "ex%ZZ"
+   ]
+  },
+  {
+   "input": "https://chat.example.com/#/room/%23guests%3Aexample.com/",
+   "kind": "room",
+   "target": "#guests:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/%23a%2Fb%3Aexample.com",
+   "kind": "room",
+   "target": "#a/b:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/%23caf%C3%A9%3Aexample.com/%24%ZZ",
+   "kind": "room",
+   "target": "#café:example.com",
+   "via": []
+  },
+  {
+   "input": "#a/b:example.com",
+   "kind": "room",
+   "target": "#a/b:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/%21r%3Aexample.com%2F%24ev",
+   "kind": "room",
+   "target": "!r:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/%EF%BB%BF!r%3Aexample.com/$ev",
+   "kind": "room",
+   "target": "!r:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/!abc%3Aexample.com/%24abc%2Fdef%2Bg%3D",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": []
+  },
+  {
+   "input": "﻿https://chat.example.com/#/room/!abc%3Aexample.com﻿",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/!a%C2%85b",
+   "kind": "room",
+   "target": "!ab",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/!a%E2%80%A8b",
+   "kind": "none",
+   "target": null,
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/!abc%3Aexample.com?via=a.example&via=&via=b.example",
+   "kind": "room",
+   "target": "!abc:example.com",
+   "via": [
+    "a.example",
+    "b.example"
+   ]
+  },
+  {
+   "input": "#:example.com",
+   "kind": "none",
+   "target": null,
+   "via": []
+  },
+  {
+   "input": "hello",
+   "kind": "none",
+   "target": null,
+   "via": []
+  },
+  {
+   "input": "",
+   "kind": "none",
+   "target": null,
+   "via": []
+  }
+ ]
+}

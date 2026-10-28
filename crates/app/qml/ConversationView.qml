@@ -735,7 +735,7 @@ Item {
             visible: !conv.ctxMsgEcho
             height: visible ? implicitHeight : 0
             onTriggered: {
-                conv.copyText("https://matrix.to/#/" + conv.room.roomId + "/" + conv.ctxMsgId)
+                conv.copyText(conv.app.messageLink(conv.room.roomId, conv.ctxMsgId))   // 12.0.6: share_link.rs
                 conv._toast("Message link copied", "short")
             }
         }

@@ -141,13 +141,13 @@ async fn do_start_share(room_id: &str) -> Result<(streamer::E2eePublish, String)
     // (No sync here — the single background sync loop keeps call.member fresh.
     //  A concurrent sync_once would deadlock the crypto-store lock.)
 
-    // 1. Resolve the active call's real LiveKit focus (broker url + room alias).
-    let focus = crate::rtc::resolve_focus(&room)
-        .await
-        .map_err(|e| format!("call lookup failed: {e}"))?
-        .ok_or_else(|| {
-            "No active call in this room — start the call (web/phone) first, then share.".to_string()
-        })?;
+    // 1. Resolve the active call's real LiveKit focus (broker url + room alias) under the call host policy
+    //    (calls round M1): our own / a trusted service, or one the user already said Join to in the call bar.
+    let decision = crate::rtc::focus_decision_for(&client, &room).await.map_err(|e| format!("call lookup failed: {e}"))?;
+    if !decision.call {
+        return Err("No active call in this room — start the call (web/phone) first, then share.".to_string());
+    }
+    let focus = crate::call_ctl::approved_focus(room_id, &decision)?;
     eprintln!("[stream] focus resolved: alias={} url={}", focus.alias, focus.service_url);
 
     // 2. Mint a LiveKit publish token for that exact room (matches web/phone peers).
@@ -172,7 +172,7 @@ async fn do_start_share(room_id: &str) -> Result<(streamer::E2eePublish, String)
     // Encrypted to-device to every current call member — the same transport the call
     // path uses. The room-event broadcast this used to do was retired on 2026-09-21
     // (plaintext in unencrypted rooms; notification spam in encrypted ones).
-    crate::call_ctl::announce_key_to_members(&client, &room, &user_id, &device_id, key, key_index).await;
+    crate::call_ctl::announce_key_to_members(&client, &room, &user_id, &device_id, &[(key, key_index)], None, None).await;
     eprintln!("[stream] media key announced over to-device (identity={identity}, index={key_index})");
 
     // 5. KDE portal screen pick (on-screen; needs the user present).

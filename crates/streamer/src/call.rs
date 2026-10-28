@@ -7438,6 +7438,31 @@ impl CallSession {
         }
     }
 
+    /// Calls round M2 (rotate on leave): from the next frame, every local track encrypts with `key` at `index`. The
+    /// key goes into this call's keyring under our own identity, then the sender index moves: the vendored
+    /// `set_sender_key_index` re-points every live sender cryptor of the local participant (mic, camera, the share —
+    /// NVENC/AV1 or H.264 — and the soundboard/music track, which is the same participant) and every one created
+    /// later. The app calls this at the planner's `use`, after the key went out to the recipients; the old key stays
+    /// in the ring, so in-flight frames at the old index still decrypt. Refuses 255 (outside libwebrtc's ring) and a
+    /// keyring that isn't this session's.
+    pub fn set_own_key(&self, key: [u8; 16], index: u8) -> Result<()> {
+        if index == 255 {
+            anyhow::bail!("key index 255 is outside the keyring");
+        }
+        let kp = active_key_provider()
+            .lock()
+            .unwrap()
+            .as_ref()
+            .filter(|(gen, _)| *gen == self.keyring_gen)
+            .map(|(_, kp)| kp.clone());
+        let Some(kp) = kp else { anyhow::bail!("this call's keyring is not registered") };
+        let me = self.room.local_participant().identity();
+        kp.set_key(&me, index as i32, key.to_vec());
+        self.room.e2ee_manager().set_sender_key_index(&me, index as i32);
+        eprintln!("[key-rotate] own sender index → {index} ({})", me.0);
+        Ok(())
+    }
+
     /// Is our mic track published (RBAC: a server-muted join skips the publish, so the
     /// unmute path must PUBLISH rather than re-publish).
     pub fn has_mic(&self) -> bool {

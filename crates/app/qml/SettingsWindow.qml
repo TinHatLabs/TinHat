@@ -1871,6 +1871,52 @@ Window {
                             }
                         }
                     }
+                    // Calls round M1 (DESIGN §2.4): the call services of other servers the user chose "Always trust" for
+                    // (account data dev.tinhat.call_hosts, synced to their other devices; Tin Hat Web lists the same)
+                    SettingsSection {
+                        title: "Call hosts"
+                        SettingsRow {
+                            id: callHostsRow
+                            app: win.app
+                            anchorId: "calls.call-hosts"   // the Settings search lands here (settings_index.json)
+                            label: "Call hosts you trust"
+                            description: callHostsRow.hosts.length > 0
+                                         ? "Calls on these servers join without asking. Remove one and Tin Hat asks again next time."
+                                         : "None. When a call runs on another server, Tin Hat asks before joining; \"Always trust\" adds that server here."
+                            stacked: true
+                            readonly property var hosts: {
+                                try { var h = JSON.parse(String(win.app.callctl.callHostsJson || "[]")); return Array.isArray(h) ? h : [] } catch (e) { return [] }
+                            }
+                            Component.onCompleted: win.app.callctl.refreshCallHosts()
+                            onVisibleChanged: if (visible) win.app.callctl.refreshCallHosts()
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing
+                                visible: callHostsRow.hosts.length > 0
+                                Repeater {
+                                    model: callHostsRow.hosts
+                                    delegate: RowLayout {
+                                        required property string modelData
+                                        Layout.fillWidth: true
+                                        spacing: Kirigami.Units.largeSpacing
+                                        Controls.Label {
+                                            textFormat: Text.PlainText   // a host name from account data: never markup
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            color: Th.settingsRowLabelFg
+                                            text: modelData
+                                        }
+                                        ThButton {
+                                            app: win.app
+                                            text: "Remove"
+                                            Accessible.name: "Stop trusting " + modelData
+                                            onClicked: win.app.callctl.removeCallHost(modelData)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     SettingsSection {
                         title: "Camera"
                         SettingsRow {
