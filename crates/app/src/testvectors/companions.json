@@ -1,0 +1,694 @@
+{
+  "v": 1,
+  "about": "Tin Hat screen share P3: which call memberships are screen-share companions of a person's main call device (SCREEN-SHARE.md §4; the mobile core's rtc::companions plus three hardenings from the web/desktop review: the marker must come from the companion's LIVE session's own event (its state key), a companion naming two mains is none, and a main that is itself a companion folds nothing (no cycles or chains)). Byte-identical copies: web src/features/calls/testvectors/companions.json (the owner), desktop crates/app/src/testvectors/companions.json. Each case: events (call member state events), live ([sender, device, state_key] of the live sessions), want ([companion identity, main identity] pairs, sorted).",
+  "cases": [
+    {
+      "name": "the mobile core's case: only the same person's live main",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_MAIN",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "MAIN",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_PHONE",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "PHONE",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "MAIN"
+            }
+          }
+        },
+        {
+          "sender": "@ann:x",
+          "state_key": "_@ann:x_PHONE2",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "PHONE2",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "GONE"
+            }
+          }
+        },
+        {
+          "sender": "@eve:x",
+          "state_key": "_@eve:x_EVIL",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "EVIL",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "MAIN"
+            }
+          }
+        },
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B2",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "B2",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "companion_of": "B1"
+            }
+          }
+        },
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "B1",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "MAIN",
+          "_@sam:x_MAIN"
+        ],
+        [
+          "@sam:x",
+          "PHONE",
+          "_@sam:x_PHONE"
+        ],
+        [
+          "@ann:x",
+          "PHONE2",
+          "_@ann:x_PHONE2"
+        ],
+        [
+          "@eve:x",
+          "EVIL",
+          "_@eve:x_EVIL"
+        ],
+        [
+          "@bob:x",
+          "B1",
+          "_@bob:x_B1"
+        ],
+        [
+          "@bob:x",
+          "B2",
+          "_@bob:x_B2"
+        ]
+      ],
+      "want": [
+        [
+          "@sam:x:PHONE",
+          "@sam:x:MAIN"
+        ]
+      ]
+    },
+    {
+      "name": "the companion's own membership must be live too",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_MAIN",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "MAIN",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_PHONE",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "PHONE",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "MAIN"
+            }
+          }
+        },
+        {
+          "sender": "@ann:x",
+          "state_key": "_@ann:x_PHONE2",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "PHONE2",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "GONE"
+            }
+          }
+        },
+        {
+          "sender": "@eve:x",
+          "state_key": "_@eve:x_EVIL",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "EVIL",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "MAIN"
+            }
+          }
+        },
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B2",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "B2",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "companion_of": "B1"
+            }
+          }
+        },
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "B1",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "MAIN",
+          "_@sam:x_MAIN"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "the main gone → an orphan (ordinary participant)",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_MAIN",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "MAIN",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_PHONE",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "PHONE",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "MAIN"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "PHONE",
+          "_@sam:x_PHONE"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "companion_of its own device → not a companion",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "P"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "P",
+          "_@sam:x_P"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "role other than share → not a companion",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_MAIN",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "MAIN",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "viewer",
+              "companion_of": "MAIN"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "MAIN",
+          "_@sam:x_MAIN"
+        ],
+        [
+          "@sam:x",
+          "P",
+          "_@sam:x_P"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "companion_of not a string → not a companion",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_MAIN",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "MAIN",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": 7
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "MAIN",
+          "_@sam:x_MAIN"
+        ],
+        [
+          "@sam:x",
+          "P",
+          "_@sam:x_P"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "no client marker → not a companion",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P"
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "P",
+          "_@sam:x_P"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "two people, one companion each, sorted by companion identity",
+      "events": [
+        {
+          "sender": "@zed:x",
+          "state_key": "_@zed:x_Z1",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "Z1",
+            "dev.tinhat.client": {
+              "kind": "native"
+            }
+          }
+        },
+        {
+          "sender": "@zed:x",
+          "state_key": "_@zed:x_ZP",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "ZP",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "Z1"
+            }
+          }
+        },
+        {
+          "sender": "@amy:x",
+          "state_key": "_@amy:x_A1",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "A1",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@amy:x",
+          "state_key": "_@amy:x_AP",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "AP",
+            "dev.tinhat.client": {
+              "kind": "ios",
+              "role": "share",
+              "companion_of": "A1"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@zed:x",
+          "Z1",
+          "_@zed:x_Z1"
+        ],
+        [
+          "@zed:x",
+          "ZP",
+          "_@zed:x_ZP"
+        ],
+        [
+          "@amy:x",
+          "A1",
+          "_@amy:x_A1"
+        ],
+        [
+          "@amy:x",
+          "AP",
+          "_@amy:x_AP"
+        ]
+      ],
+      "want": [
+        [
+          "@amy:x:AP",
+          "@amy:x:A1"
+        ],
+        [
+          "@zed:x:ZP",
+          "@zed:x:Z1"
+        ]
+      ]
+    },
+    {
+      "name": "a chain: the companion of a companion folds nothing (only the first link counts)",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_MAIN",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "MAIN",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P1",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P1",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "MAIN"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P2",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P2",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "P1"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "MAIN",
+          "_@sam:x_MAIN"
+        ],
+        [
+          "@sam:x",
+          "P1",
+          "_@sam:x_P1"
+        ],
+        [
+          "@sam:x",
+          "P2",
+          "_@sam:x_P2"
+        ]
+      ],
+      "want": [
+        [
+          "@sam:x:P1",
+          "@sam:x:MAIN"
+        ]
+      ]
+    },
+    {
+      "name": "a cycle (A names B, B names A) folds nothing: nobody can hide both their tiles",
+      "events": [
+        {
+          "sender": "@eve:x",
+          "state_key": "_@eve:x_A",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "A",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "B"
+            }
+          }
+        },
+        {
+          "sender": "@eve:x",
+          "state_key": "_@eve:x_B",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "B",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "A"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@eve:x",
+          "A",
+          "_@eve:x_A"
+        ],
+        [
+          "@eve:x",
+          "B",
+          "_@eve:x_B"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "a marker from an old event of the device under another state key doesn't count (its live session is an ordinary one)",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_MAIN",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "MAIN",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_PHONE_old",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "PHONE",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "MAIN"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_PHONE",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "PHONE",
+            "dev.tinhat.client": {
+              "kind": "android"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "MAIN",
+          "_@sam:x_MAIN"
+        ],
+        [
+          "@sam:x",
+          "PHONE",
+          "_@sam:x_PHONE"
+        ]
+      ],
+      "want": []
+    },
+    {
+      "name": "a companion naming two mains is none",
+      "events": [
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_A",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "A",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_B",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "B",
+            "dev.tinhat.client": {
+              "kind": "web"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "A"
+            }
+          }
+        },
+        {
+          "sender": "@sam:x",
+          "state_key": "_@sam:x_P",
+          "origin_server_ts": 0,
+          "content": {
+            "device_id": "P",
+            "dev.tinhat.client": {
+              "kind": "android",
+              "role": "share",
+              "companion_of": "B"
+            }
+          }
+        }
+      ],
+      "live": [
+        [
+          "@sam:x",
+          "A",
+          "_@sam:x_A"
+        ],
+        [
+          "@sam:x",
+          "B",
+          "_@sam:x_B"
+        ],
+        [
+          "@sam:x",
+          "P",
+          "_@sam:x_P"
+        ]
+      ],
+      "want": []
+    }
+  ]
+}

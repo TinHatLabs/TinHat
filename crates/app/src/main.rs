@@ -9,6 +9,7 @@ pub mod activity; // "What we're playing" per-room activity (dev.tinhat.activity
 pub mod afk_ctl; // AfkController — #7 BRB/AFK presence in a call (Matrix reactions/state)
 pub mod assets; // bundled app assets (icon layers + chimes) -> runtime dir
 pub mod callwatch; // 10.0: incoming-call edges per sync -> LoginController signals
+pub mod ringglue; // DM ringing glue: dev.tinhat.call.decline → "<name> declined" / the card goes (RINGING.md §5)
 pub mod quietrules; // 10.3: account push rules that keep call joins / room housekeeping out of the unread counts
 pub mod gameservers_ctl; // 11.1: GameServersController — the Game servers widget's data (docs/GAMESERVERS.md)
 pub mod justme_ctl; // widgets W2: JustMeController — "Is it just me?" (WIDGETS.md §20)
@@ -46,6 +47,8 @@ pub mod diagnostics; // opt-in, redacted, user-inspectable bug report (never aut
 pub mod logship; // opt-OUT scrubbed log upload + problem reports, to the user's OWN server (consent popup; Settings → Privacy)
 pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
+pub mod left_words; // 12.1.1: the "already left" words of a kick / Disconnect / Mute (= the web's spaces/leftWords.ts)
+pub mod companions; // screen share P3: fold a phone's share-only companion into its person (= the web's features/calls/companions.ts)
 pub mod callrules; // the calls-round rules: call host policy, key recipients v2, rotate-on-leave (pure; = the web's features/calls/callrules.ts)
 pub mod key_intake; // every Olm-decrypted media key goes through keyrules before the keyring
 pub mod padrules; // Pad: the phone as a remote for my call — the pure rules (= the web's features/calls/pad/rules.ts; docs/PAD.md)
@@ -72,6 +75,9 @@ pub mod proxy; // the user's server's Tin Hat API client (gif/soundboard/watch �
 pub mod share_link; // 12.0.6: the links Tin Hat hands out (Copy link / Share / message links): the server's own web app, matrix.to for other servers; shared vectors with the web
 pub mod server_offer; // selfhost: what the user's server offers (dev.tinhat.server in its well-known): API base, features, recorder, call service
 pub mod trust_device; // 12.0.4: trust the phone's native device — Devices → "Trust…" (the web's features/native/trust.ts)
+pub mod restore_err; // 12.1.1 (desktop-gates-night): a saved session that does not open is never deleted on its own: newer store / keyring / unreadable, the card offers the way out
+pub mod replace_confirm; // 12.1.1 (polish-night): a sign-in that would replace a saved session asks first (same words as the web)
+pub mod login_swap; // 12.1.1 (login-order-night): a sign-in sets the saved store aside and deletes it only after the server said yes
 pub mod start_over; // 12.0.1: "Lost your Security Key? Start over" — a new identity, backup and Security Key (password first)
 pub mod safety; // account safety: ignore / report / delete my account (shared vectors with the web; docs/ACCOUNT-SAFETY.md)
 pub mod password; // selfhost: a forgotten password (the server's owner resets it: account.password_reset) and Change password (UIA)
@@ -83,6 +89,7 @@ pub mod session; // process-global logged-in Client, shared between controllers
 pub mod settings; // SettingsController — account profile / devices / security state
 pub mod settings_search; // the Settings window's search: the shared index + matcher (contract SETTINGS-WINDOW.md §4)
 pub mod signout; // 2026-10-20: what signing out forgets of the account on this device (as the web's doLogout)
+pub mod storekey; // M10 (sec-night 2026-10-27): the store passphrase in the OS keyring, behind TINHAT_STORE_KEYRING=1
 pub mod soundboard; // SoundboardController — room + personal sounds, web search (dev.tinhat.soundboard)
 pub mod status_ctl; // per-person "looking to play" status (dev.tinhat.userstatus)
 pub mod stream; // StreamController — NVENC screen-share publish into a call

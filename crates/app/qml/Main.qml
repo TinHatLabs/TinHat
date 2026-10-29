@@ -796,6 +796,9 @@ Kirigami.ApplicationWindow {
         target: login
         function onIncomingCall(roomId, roomName, who) { incomingToast.present(roomId, roomName, who) }
         function onIncomingCallEnded(roomId) { incomingToast.ended(roomId) }
+        // DM ringing (ringglue.rs): the person I'm calling declined — the words + the end tone (the web: the same)
+        // shownMs = ringglue.rs DECLINED_SHOWN_MS (= the web's); gates read the stderr line (tools/README-gates.md)
+        function onCallDeclined(roomId, text, shownMs) { core.notify(text, shownMs); root.playCallChime("leave") }
         // selfhost/firstrun §5: accepting a DM invite (room list or DM strip) opens that DM
         function onDmAccepted(roomId) { root.openRoomId(roomId) }
         function onToastAction(action) {
@@ -1485,6 +1488,15 @@ Kirigami.ApplicationWindow {
             visible: root.ctxRoomId === room.roomId && room.canChangePhoto
             height: visible ? implicitHeight : 0
             onTriggered: room.applyRoomPhoto("")
+        }
+        // the Guests room only: its guest link, right before the matrix.to invite link (the web's CopyLink.tsx row;
+        // guests_ctl.rs copyOffered = where the bar under the header offers Copy)
+        Controls.MenuItem {
+            text: LinkGate.plain(String(((root.mGuests || {}).words || {}).copy || "Copy guest link"))
+            icon.name: "link-symbolic"
+            visible: !!root.mGuests && root.mGuests.copyOffered === true && root.ctxRoomId.length > 0 && root.mGuests.room === root.ctxRoomId
+            height: visible ? implicitHeight : 0
+            onTriggered: guestsCtl.copyLink()
         }
         Controls.MenuItem {
             text: "Copy invite link"
@@ -3870,6 +3882,10 @@ Kirigami.ApplicationWindow {
                 homeserver: login.homeserver
                 movedNote: login.movedNote
                 movedTo: login.movedTo
+                restoreProblem: login.restoreProblem   // 12.1.1 (restore_err.rs): a kept session that didn't open
+                onRetryRestore: login.restore()
+                onStartFresh: login.startFresh()
+                onQuitApp: root.close()
                 resetStage: root.mResetStage
                 resetStatus: root.mResetStatus
                 resetMode: root.mResetMode
@@ -3890,6 +3906,9 @@ Kirigami.ApplicationWindow {
                         login.movedTo = ""
                     }
                 }
+                // 12.1.1 (replace_confirm.rs): a sign-in / new account that would replace a saved session asks first
+                hasSavedSession: function () { return login.hasSavedSession() }
+                replaceText: login.replaceSessionText()
                 onSubmit: (username, password) => { login.login(username, password) }
                 onResetRequested: (email) => { login.requestPasswordReset(email) }
                 onResetCompleted: (newPassword) => { login.completePasswordReset(newPassword) }

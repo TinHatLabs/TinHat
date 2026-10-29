@@ -80,9 +80,24 @@ pub async fn play_on_join(room_id: &str) {
         eprintln!("[joinsound] skipped: {why}");
         return;
     }
+    // sec-night 2026-10-27 (review low): the stored URL goes through the soundboard's one rule (M9, member-content.json
+    // `soundRoute`) like a soundboard press, never straight to GStreamer (any URI scheme it knows: file://, smb://, a
+    // stranger's host). The Settings picker only offers soundboard sounds, which all pass; Tin Hat Web does the same
+    // (shared/call.ts engineSoundUrl).
+    let play = crate::soundboard::playable_clip_url(&url).await;
+    if play.is_empty() {
+        eprintln!("[joinsound] skipped: not a sound this app plays (an upload on this server, myinstants, or another Tin Hat server's upload)");
+        return;
+    }
+    // resolving may have fetched a signed link: still in THIS room's call? (a soundboard press checks the same; a switch
+    // to another room's call meanwhile must not get this room's sound, which that room may have turned off: assembly-038)
+    if !crate::call_ctl::in_active_call().await || !crate::call_ctl::in_call_room(room_id) {
+        eprintln!("[joinsound] skipped: left the call (or moved to another room's call) while the sound's link was fetched");
+        return;
+    }
     *last_played().lock().unwrap() = Some(Instant::now());
     eprintln!("[joinsound] publishing join sound into {room_id}");
-    if let Err(e) = tinhat_streamer::play_url_in_call(&url).await {
+    if let Err(e) = tinhat_streamer::play_url_in_call(&play).await {
         eprintln!("[joinsound] publish failed: {e}");
         return;
     }
@@ -124,4 +139,20 @@ pub fn headless_test() -> bool {
     );
     eprintln!("[joinsound] VERDICT: {}", if fails == 0 { "PASS" } else { "FAIL" });
     fails == 0
+}
+
+#[cfg(test)]
+mod tests {
+    /// sec-night 2026-10-27: what a join sound may play is the soundboard's rule (`soundRoute`), nothing else.
+    #[test]
+    fn join_sound_plays_only_what_the_soundboard_plays() {
+        let base = "https://chat.example.net/api";
+        let play = |u: &str| crate::soundboard::clip_url_with(u, base);
+        assert_eq!(play("https://chat.example.net/api/soundboard/clip?id=0123abcd"), "https://chat.example.net/api/soundboard/clip?id=0123abcd");
+        assert!(play("https://www.myinstants.com/media/sounds/a.mp3").starts_with("https://chat.example.net/api/soundboard/clip?url="));
+        assert!(play("https://peer.example.org/api/soundboard/clip?id=1").starts_with("https://chat.example.net/api/soundboard/clip?url="));
+        for bad in ["file:///etc/passwd", "smb://host.example/share/a.mp3", "http://evil.example/a.mp3", "https://evil.example/a.mp3", "mxc://example.com/abc", "data:audio/mp3;base64,AA=="] {
+            assert_eq!(play(bad), "", "{bad} must not play");
+        }
+    }
 }

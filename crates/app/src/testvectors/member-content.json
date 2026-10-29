@@ -1,5 +1,5 @@
 {
- "about": "Shared rules for what another member's content may become in Tin Hat (security review 2026-10-26: H1, H2). Byte-identical copies: desktop crates/app/src/testvectors/member-content.json (replayed by richtext.rs, viewer.rs and tools/link-gate-test.mjs on LinkGate.qml), web src/features/chat/lib/testvectors/member-content.json. html: 'in' = a member's formatted_body; after sanitising, 'text' = the visible text (text nodes, entities decoded), 'hrefs' = every link's href (WHATWG-serialised, as new URL(x).href), 'absent' = substrings that must not survive (case-insensitive); 'qt' = the desktop's exact output (Qt rich text dialect: font->span, del/strike->s, details->div, summary->p>b). The rules: the Matrix tag subset; img -> its alt text (never loaded); script/style/iframe/svg/math/audio/video/mx-reply/... dropped with their contents; other tags keep their text; only href (links rule), ol start (digits), code class language-*, data-mx-color/color/data-mx-bg-color #hex (-> style), data-mx-spoiler survive; a link whose text names another host (the claims rule below) is followed by ' (<href host>)'; a link with a user name before the host is no link. links: the one link gate for everything the apps open (web: core/openlink.ts safeExternalUrl; desktop: richtext.rs link_verdict + LinkGate.qml): trim C0/space at both ends; a control character or DEL left inside -> bad-char; no 'scheme:' -> no-scheme; scheme not http/https/mailto/steam -> scheme; steam needs '//' and something after it (no space), and 'ask': 'steam' = it opens only after an 'Open in Steam?' confirmation (every other app scheme is refused); http(s) needs '//' and a host (a space in the host -> bad-char, a user name/password -> userinfo, none -> no-host); 'why' is the desktop's word (the web only checks 'open'); 'as' = what an allowed link opens (a mailto keeps only its subject, body and cc fields, names case-insensitive, no fragment). Cases where Qt and a browser parse differently (a backslash, 'https:host', 'https:///host') are not here: the desktop refuses them, the web normalises them with new URL. viewer: attachment mime (parameters dropped, case-insensitive) -> the extension it is opened as (null = Save as only); inline = decoded in the bubble. sniff: the bytes (hex, first bytes) are that extension's type. claims: the host a link's text claims — the note after a link and the question at the click, both apps. Only for an http(s) link with a host that is not matrix.to (a mention pill's text is a display name). Invisible characters (\\p{Cf}, \\p{Default_Ignorable_Code_Point}) are dropped; the text is split at white space; each word loses its leading and trailing characters that are not letters or digits (\\p{L}\\p{N}); a word claims a host when (a) it has a scheme ('://', http/https), starts with 'www.' or has a path ('/'), and its host (http://<word> unless it has a scheme) is dotted with a last label of >= 2 ASCII letters or xn--, or (b) it is a bare dotted name whose last label is a top-level domain in testvectors/tlds.txt (IANA's list, byte-identical in both repos, case-insensitive). Hosts compare lower-case without a trailing dot or a leading www.; the first claim other than the link's host counts; 'claim' = that host, null = none. claimExclude: as BARE dotted names (no scheme, no www., no '/') words whose last label is one of these do not claim (code-file names: README.md, main.py, lib.rs, run.sh); zip and mov still do. ownSounds: a stored sound URL is this server's own upload only as <base>/soundboard/clip?id=[A-Za-z0-9_-]{1,128} or <base>/soundboard/file/<one name: [A-Za-z0-9_-] then [A-Za-z0-9_.-], at most 128> (the base compared case-insensitively; anything else — another path, a query, %2e, %2f, %5c in any case — is not). soundRoute: how a stored sound URL plays, in this order: 'myinstants' (it starts with '/' or contains 'myinstants.com/') -> play = <base>/soundboard/clip?url=<pctEncode(url)> (RFC 3986 unreserved kept, every other byte %XX upper case); 'own' (the ownSounds shapes under <base>) -> play = the URL itself; 'foreign' (another Tin Hat server's upload: https://<host>[:443]/api/soundboard/clip?id=[A-Za-z0-9_-]{1,128} with no other query, or https://<host>[:443]/api/soundboard/file/<[A-Za-z0-9_-][A-Za-z0-9_.-]{0,127}>; the host a dotted DNS name other than <base>'s host, not an IP address; no user name, no other port, no fragment, no %2e/%2f/%5c in any case, no backslash or white space) -> play = <base>/soundboard/clip?url=<pctEncode(url)> (our own server fetches it; never directly); else 'refuse' (no play).",
+ "about": "Shared rules for what another member's content may become in Tin Hat (security review 2026-10-26: H1, H2). Byte-identical copies: desktop crates/app/src/testvectors/member-content.json (replayed by richtext.rs, viewer.rs and tools/link-gate-test.mjs on LinkGate.qml), web src/features/chat/lib/testvectors/member-content.json. html: 'in' = a member's formatted_body; after sanitising, 'text' = the visible text (text nodes, entities decoded), 'hrefs' = every link's href (WHATWG-serialised, as new URL(x).href), 'absent' = substrings that must not survive (case-insensitive); 'qt' = the desktop's exact output (Qt rich text dialect: font->span, del/strike->s, details->div, summary->p>b). The rules: the Matrix tag subset; img -> its alt text (never loaded); script/style/iframe/svg/math/audio/video/mx-reply/... dropped with their contents; other tags keep their text; only href (links rule), ol start (digits), code class language-*, data-mx-color/color/data-mx-bg-color #hex (-> style), data-mx-spoiler survive, except on and inside a kept link (no colours, no spoiler, a details is an open block; a body with a kept link loses its bidi embeddings/overrides/isolates, marks stay; the claim text breaks words at br/blocks/cells/sub/sup and trims alt: a link shows what the claims rule reads; assembly-038); a link whose text names another host (the claims rule below) is followed by ' (<href host>)'; a link with a user name before the host is no link. links: the one link gate for everything the apps open (web: core/openlink.ts safeExternalUrl; desktop: richtext.rs link_verdict + LinkGate.qml): trim C0/space at both ends; a control character or DEL left inside -> bad-char; no 'scheme:' -> no-scheme; scheme not http/https/mailto/steam -> scheme; steam needs '//' and something after it (no space), and 'ask': 'steam' = it opens only after an 'Open in Steam?' confirmation (every other app scheme is refused); http(s) needs '//' and a host (a space in the host -> bad-char, a user name/password -> userinfo, none -> no-host); 'why' is the desktop's word (the web only checks 'open'); 'as' = what an allowed link opens (a mailto keeps only its subject, body and cc fields, names case-insensitive, no fragment). Cases where Qt and a browser parse differently (a backslash, 'https:host', 'https:///host') are not here: the desktop refuses them, the web normalises them with new URL. viewer: attachment mime (parameters dropped, case-insensitive) -> the extension it is opened as (null = Save as only); inline = decoded in the bubble. sniff: the bytes (hex, first bytes) are that extension's type. claims: the host a link's text claims — the note after a link and the question at the click, both apps. Only for an http(s) link that is not a matrix.to user mention (https, host matrix.to, a fragment starting /@ or /%40 (any case) with at least one more character before any / ? #: a mention pill's text is a display name and its click opens the profile in-app); every other link to matrix.to (rooms, events) is checked like any link (sec-night 2026-10-27, assembly verify B). Invisible characters (\\p{Cf}, \\p{Default_Ignorable_Code_Point}) are dropped; the text is split at white space; each word loses its leading and trailing characters that are not letters or digits (\\p{L}\\p{N}); a word claims a host when (a) it has a scheme ('://', http/https), starts with 'www.' or has a path ('/', a '/' among the trimmed trailing characters counts: 'bank.md/' is explicit; sec-night 2026-10-27, assembly verify A), and its host (http://<word> unless it has a scheme) is dotted with a last label of >= 2 ASCII letters or xn--, or (b) it is a bare dotted name whose last label is a top-level domain in testvectors/tlds.txt (IANA's list, byte-identical in both repos, case-insensitive). Hosts compare lower-case without a trailing dot or a leading www.; the first claim other than the link's host counts; 'claim' = that host, null = none. claimExclude: as BARE dotted names (no scheme, no www., no '/') words whose last label is one of these do not claim (code-file names: README.md, main.py, lib.rs, run.sh); zip and mov still do. ownSounds: a stored sound URL is this server's own upload only as <base>/soundboard/clip?id=[A-Za-z0-9_-]{1,128} or <base>/soundboard/file/<one name: [A-Za-z0-9_-] then [A-Za-z0-9_.-], at most 128> (the base compared case-insensitively; anything else — another path, a query, %2e, %2f, %5c in any case — is not). soundRoute: how a stored sound URL plays, in this order: 'myinstants' (it starts with '/' or contains 'myinstants.com/') -> play = <base>/soundboard/clip?url=<pctEncode(url)> (RFC 3986 unreserved kept, every other byte %XX upper case); 'own' (the ownSounds shapes under <base>) -> play = the URL itself; 'foreign' (another Tin Hat server's upload: https://<host>[:443]/api/soundboard/clip?id=[A-Za-z0-9_-]{1,128} with no other query, or https://<host>[:443]/api/soundboard/file/<[A-Za-z0-9_-][A-Za-z0-9_.-]{0,127}>; the host a dotted DNS name other than <base>'s host, not an IP address; no user name, no other port, no fragment, no %2e/%2f/%5c in any case, no backslash or white space) -> play = <base>/soundboard/clip?url=<pctEncode(url)> (our own server fetches it; never directly); else 'refuse' (no play).",
  "html": [
   {
    "name": "markdown basics",
@@ -435,6 +435,171 @@
     "evil.example"
    ],
    "qt": "<a href=\"https://example.org/\">logo</a>"
+  },
+  {
+   "name": "member colours inside a link go (launch-gate D-c)",
+   "in": "<a href=\"https://evil.example/login\">paypal.com<span data-mx-color=\"#ffffff\" data-mx-bg-color=\"#ffffff\">x</span></a>",
+   "text": "paypal.comx",
+   "hrefs": [
+    "https://evil.example/login"
+   ],
+   "absent": [
+    "color"
+   ],
+   "qt": "<a href=\"https://evil.example/login\">paypal.com<span>x</span></a>"
+  },
+  {
+   "name": "a link's own colours go",
+   "in": "<a href=\"https://example.org/\" data-mx-color=\"#ffffff\" data-mx-bg-color=\"#ffffff\">example.org</a>",
+   "text": "example.org",
+   "hrefs": [
+    "https://example.org/"
+   ],
+   "absent": [
+    "color"
+   ],
+   "qt": "<a href=\"https://example.org/\">example.org</a>"
+  },
+  {
+   "name": "a font colour inside a link goes",
+   "in": "<a href=\"https://evil.example/\">paypal.com<font color=\"#ffffff\">x</font></a>",
+   "text": "paypal.comx",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "absent": [
+    "color"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.com<span>x</span></a>"
+  },
+  {
+   "name": "a spoiler inside a link is plain text",
+   "in": "<a href=\"https://evil.example/\">paypal.com<span data-mx-spoiler=\"\">x</span></a>",
+   "text": "paypal.comx",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "absent": [
+    "data-mx-spoiler"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.com<span>x</span></a>"
+  },
+  {
+   "name": "a bidi override in a link's text goes (shown in the order it is checked)",
+   "in": "<a href=\"https://evil.example/\">‮moc.lapyap</a>",
+   "text": "moc.lapyap",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "absent": [
+    "‮"
+   ],
+   "qt": "<a href=\"https://evil.example/\">moc.lapyap</a>"
+  },
+  {
+   "name": "bidi isolates around a named host: gone, and the host still claims",
+   "in": "<a href=\"https://evil.example/\">⁧paypal.com⁩</a>",
+   "text": "paypal.com (evil.example)",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "absent": [
+    "⁧",
+    "⁩"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.com</a> (evil.example)"
+  },
+  {
+   "name": "bidi controls in a body without a link stay",
+   "in": "<p>‮abc</p>",
+   "text": "‮abc",
+   "hrefs": [],
+   "qt": "<p>‮abc</p>"
+  },
+  {
+   "name": "colours inside an anchor that is no link stay",
+   "in": "<a href=\"javascript:alert(1)\"><span data-mx-color=\"#ff0000\">r</span></a>",
+   "text": "r",
+   "hrefs": [],
+   "absent": [
+    "javascript",
+    "<a"
+   ],
+   "qt": "<span style=\"color:#ff0000\">r</span>"
+  },
+  {
+   "name": "bidi overrides in an image's alt inside a link go",
+   "in": "<a href=\"https://evil.example/\"><img alt=\"‮moc.lapyap‬\"></a>",
+   "text": "moc.lapyap",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "absent": [
+    "‮",
+    "‬"
+   ],
+   "qt": "<a href=\"https://evil.example/\">moc.lapyap</a>"
+  },
+  {
+   "name": "a bidi override around a link goes (it reorders the link's text too)",
+   "in": "<p>‮<a href=\"https://evil.example/\">moc.lapyap</a>‬</p>",
+   "text": "moc.lapyap",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "absent": [
+    "‮",
+    "‬"
+   ],
+   "qt": "<p><a href=\"https://evil.example/\">moc.lapyap</a></p>"
+  },
+  {
+   "name": "a folded details inside a link is an open block, and its words are checked apart",
+   "in": "<a href=\"https://evil.example/\">paypal.com<details><summary></summary>x</details></a>",
+   "text": "paypal.comx (evil.example)",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "absent": [
+    "<details"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.com<div><p><b></b></p>x</div></a> (evil.example)"
+  },
+  {
+   "name": "a line break inside a link separates words for the claim",
+   "in": "<a href=\"https://evil.example/\">paypal.com<br>x</a>",
+   "text": "paypal.comx (evil.example)",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.com<br>x</a> (evil.example)"
+  },
+  {
+   "name": "a raised part inside a link separates words for the claim",
+   "in": "<a href=\"https://evil.example/\">paypal.com<sup>x</sup></a>",
+   "text": "paypal.comx (evil.example)",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.com<sup>x</sup></a> (evil.example)"
+  },
+  {
+   "name": "an image's alt is trimmed in both apps",
+   "in": "<a href=\"https://evil.example/\">paypal.com<img alt=\" x\"></a>",
+   "text": "paypal.comx",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.comx</a>"
+  },
+  {
+   "name": "an alt text starting with U+FEFF is trimmed the same way in both apps",
+   "in": "<a href=\"https://evil.example/\">paypal.com<img alt=\"﻿ x\"></a>",
+   "text": "paypal.comx",
+   "hrefs": [
+    "https://evil.example/"
+   ],
+   "qt": "<a href=\"https://evil.example/\">paypal.comx</a>"
   },
   {
    "name": "plain http link",
@@ -1654,6 +1819,66 @@
    "text": "docs.rs/serde",
    "href": "https://evil.example/login",
    "claim": "docs.rs"
+  },
+  {
+   "text": "bank.rs/",
+   "href": "https://evil.example/",
+   "claim": "bank.rs"
+  },
+  {
+   "text": "bank.md/",
+   "href": "https://evil.example/login",
+   "claim": "bank.md"
+  },
+  {
+   "text": "bank.example/",
+   "href": "https://evil.example/login",
+   "claim": "bank.example"
+  },
+  {
+   "text": "(bank.md/)",
+   "href": "https://evil.example/login",
+   "claim": "bank.md"
+  },
+  {
+   "text": "README.md",
+   "href": "https://evil.example/",
+   "claim": null
+  },
+  {
+   "text": "bank.example/login",
+   "href": "https://matrix.to/#/#lounge:example.org",
+   "claim": "bank.example"
+  },
+  {
+   "text": "paypal.com",
+   "href": "https://matrix.to/#/!room:example.org/$event",
+   "claim": "paypal.com"
+  },
+  {
+   "text": "paypal.com",
+   "href": "https://matrix.to/",
+   "claim": "paypal.com"
+  },
+  {
+   "text": "paypal.com",
+   "href": "https://matrix.to/#/@",
+   "claim": "paypal.com"
+  },
+  {
+   "text": "paypal.com",
+   "href": "https://matrix.to/#/@ana:example.org",
+   "claim": null
+  },
+  {
+   "text": "paypal.com",
+   "href": "https://matrix.to/#/%40ana%3Aexample.org",
+   "claim": null
+  },
+  {
+   "text": "paypal.com",
+   "href": "http://matrix.to/#/@ana:example.org",
+   "claim": "paypal.com"
   }
  ],
  "ownSounds": [

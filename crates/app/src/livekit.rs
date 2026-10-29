@@ -149,6 +149,7 @@ mod tests {
     /// OpenID proof isn't re-sent anywhere); a 2xx still answers.
     #[test]
     fn the_openid_post_never_follows_a_redirect() {
+        crate::proxy::test_tls_provider();
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
         let (elsewhere, elsewhere_hits) = mock("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}");
         let redirect: &'static str = Box::leak(

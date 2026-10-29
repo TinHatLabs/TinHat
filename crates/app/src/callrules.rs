@@ -460,6 +460,22 @@ impl Planner {
         self.pending.as_ref().map(|p| p.use_at)
     }
 
+    /// When a step mints for the current departure (its debounce ends; None = no departure, a key already pending, or
+    /// rotation off) = the web's `mintAt`. The driver sleeps to min(use_at, mint_at), the 1 s tick being the fallback.
+    pub fn mint_at(&self) -> Option<u64> {
+        self.depart_at.filter(|_| self.pending.is_none() && self.rotate).map(|t| t + DEBOUNCE_MS)
+    }
+
+    /// Milliseconds until the driver should look again at `now`: [`Planner::next_tick_ms`], or sooner when the use or
+    /// the mint is due before it (sec-night, 12.1.x).
+    pub fn next_wake_ms(&self, now: u64) -> u64 {
+        let due = [self.use_at(), self.mint_at()].into_iter().flatten().min();
+        match due {
+            Some(at) => at.saturating_sub(now).min(self.next_tick_ms()),
+            None => self.next_tick_ms(),
+        }
+    }
+
     /// Re-evaluate with the current recipient set R (sorted or not) at `now`.
     pub fn step(&mut self, now: u64, r: &[String]) -> Vec<Action> {
         let mut out = Vec::new();
@@ -876,6 +892,35 @@ mod tests {
         let to = vec!["@b:a|B".to_string(), "@c:a|C".to_string()];
         assert_eq!(resend_plan(&f, 7000), vec![(9000, to.clone()), (12000, to.clone()), (17000, to)]);
         assert!(resend_plan(&[], 7000).is_empty());
+    }
+
+    /// = the web's callrules.test.ts planner/due_times_tell_the_driver_when_to_wake (sec-night, 12.1.x).
+    #[test]
+    fn due_times_tell_the_driver_when_to_wake() {
+        let r = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let (mut p, _) = Planner::start(7, 0, &r(&["@b:a|B", "@c:a|C"]));
+        assert_eq!((p.use_at(), p.mint_at(), p.next_wake_ms(0)), (None, None, 5000));
+        p.step(1000, &r(&["@b:a|B"])); // C left: debounce from 1000
+        assert_eq!((p.mint_at(), p.use_at()), (Some(4000), None));
+        assert_eq!(p.next_wake_ms(1000), 1000);
+        assert_eq!(p.next_wake_ms(3500), 500, "wakes at the debounce end, not a tick later");
+        p.step(2500, &r(&["@b:a|B"]));
+        assert_eq!(p.mint_at(), Some(4000), "a later step doesn't move the deadline");
+        assert!(p.step(3999, &r(&["@b:a|B"])).is_empty());
+        assert_eq!(p.step(4000, &r(&["@b:a|B"])), vec![Action::Mint { index: 8, to: r(&["@b:a|B"]) }]);
+        assert_eq!((p.mint_at(), p.use_at()), (None, Some(7000)));
+        assert_eq!(p.next_wake_ms(6400), 600);
+        assert_eq!(p.next_wake_ms(7200), 0, "overdue = now");
+        assert_eq!(p.tick(7000), vec![Action::Use(8)]);
+        assert_eq!((p.use_at(), p.mint_at()), (None, None));
+        let (mut q, _) = Planner::start(7, 0, &r(&["@b:a|B", "@c:a|C"]));
+        q.step(1000, &r(&["@b:a|B"]));
+        q.step(2000, &r(&["@b:a|B", "@c:a|C"])); // back inside the debounce
+        assert_eq!(q.mint_at(), None);
+        let (mut off, _) = Planner::start(7, 0, &r(&["@b:a|B", "@c:a|C"]));
+        off.set_rotation(false);
+        off.step(1000, &r(&["@b:a|B"]));
+        assert_eq!(off.mint_at(), None, "rotation off: tracked, never due");
     }
 
     #[test]

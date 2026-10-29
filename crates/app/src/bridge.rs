@@ -58,6 +58,7 @@ pub mod qobject {
         #[qproperty(bool, key_first)] // QML: keyFirst — Secret Storage but no identity (a moved server): the Security Key first (moved.rs)
         #[qproperty(bool, first_device_pending)] // QML: firstDevicePending — F1: the new-account check/setup runs; the verify banner + sign-in prompt wait
         #[qproperty(bool, first_device)] //         QML: firstDevice — F2: recovery-done is the first device's new Security Key
+        #[qproperty(QString, restore_problem)] //   QML: restoreProblem — why the saved session didn't open (restore_err.rs: "newer" | "keyring" | "unreadable"; "" = none). Nothing was deleted; the card offers the way out
         #[qproperty(QString, server_offer_json)] // QML: serverOfferJson — selfhost: what the user's server offers {server, api, features, recorder} (server_offer.rs)
         #[qproperty(QString, rooms_json)] // QML: roomsJson — JSON [{id,name}]
         #[qproperty(QString, auto_join_room)] // QML: autoJoinRoom — self-test auto-join (env TINHAT_GUI_AUTOJOIN)
@@ -92,6 +93,9 @@ pub mod qobject {
         /// 10.0: that room's call ended (or everyone left) — toast and ring stop.
         #[qsignal]
         fn incoming_call_ended(self: Pin<&mut LoginController>, room_id: QString);
+        /// DM ringing (ringglue.rs, RINGING.md §5): the person I'm calling declined — `text` = "<name> declined".
+        #[qsignal]
+        fn call_declined(self: Pin<&mut LoginController>, room_id: QString, text: QString, shown_ms: i32);
         /// 10.0: the user clicked an action on a desktop notification ("join:<roomId>").
         #[qsignal]
         fn toast_action(self: Pin<&mut LoginController>, action: QString);
@@ -115,6 +119,20 @@ pub mod qobject {
         // QML: loginController.restore()  — try a saved session (call on startup)
         #[qinvokable]
         fn restore(self: Pin<&mut LoginController>);
+        /// QML: loginController.startFresh() — the person chose "Start fresh" on a session that didn't open (restore_err.rs):
+        /// forget the saved session here (the store goes with the next sign-in, as always). The only way it is forgotten.
+        #[qinvokable]
+        #[cxx_name = "startFresh"]
+        fn start_fresh(self: Pin<&mut LoginController>);
+        /// QML: loginController.hasSavedSession() — 12.1.1 (replace_confirm.rs): does this device hold a saved session a
+        /// sign-in would replace? Asked at the click, so it is always what is on disk.
+        #[qinvokable]
+        #[cxx_name = "hasSavedSession"]
+        fn has_saved_session(self: &LoginController) -> bool;
+        /// QML: loginController.replaceSessionText() — the question (replace_confirm::TEXT, the same words as the web)
+        #[qinvokable]
+        #[cxx_name = "replaceSessionText"]
+        fn replace_session_text(self: &LoginController) -> QString;
         // QML: loginController.logout()
         #[qinvokable]
         fn logout(self: Pin<&mut LoginController>);
@@ -338,6 +356,7 @@ pub struct LoginControllerRust {
     key_first: bool,
     first_device_pending: bool,
     first_device: bool,
+    restore_problem: QString,
     server_offer_json: QString,
     rooms_json: QString,
     auto_join_room: QString,
@@ -403,6 +422,7 @@ impl Default for LoginControllerRust {
             moved_to: QString::default(),
             key_first: false,
             first_device_pending: false,
+            restore_problem: QString::default(),
             first_device: false,
             server_offer_json: QString::from(&crate::server_offer::offer_json()),
             rooms_json: QString::default(),
@@ -596,6 +616,11 @@ fn read_saved_tour_seen() -> bool {
 /// it reuses the store for the same device.
 fn wipe_store() {
     let _ = std::fs::remove_dir_all(store_dir());
+    // M10: an encrypted store's marker goes with it, and its key leaves the keyring (in the background)
+    if let Some(id) = crate::storekey::forget_marker(&data_dir()) {
+        crate::storekey::delete_in_background(id);
+    }
+    crate::restore_err::forget_writer(&data_dir()); // a new store: no Tin Hat has opened it yet
 }
 
 /// This device's last server (`<config>/tinhat/ui-last-server`): the sign-in card's Server field starts there.
@@ -648,6 +673,8 @@ impl qobject::LoginController {
                 match result {
                     Ok((client, user_id)) => {
                         eprintln!("[login] success: {user_id}");
+                        crate::restore_err::note_writer(&data_dir(), env!("CARGO_PKG_VERSION"));
+                        qobject.as_mut().set_restore_problem(QString::default());
                         remember_server(&client);
                         crate::session::set_client(client.clone());
                         crate::logship::note_signed_in(&user_id); // whose log this run's is (logs never cross accounts)
@@ -746,21 +773,46 @@ impl qobject::LoginController {
 
     /// Try to restore a previously-saved session (call from QML on startup).
     pub fn restore(mut self: Pin<&mut Self>) {
-        if *self.busy() || *self.logged_in() || !session_file().exists() {
+        if *self.busy() || *self.logged_in() {
             return; // nothing to do; stay on the login screen quietly
         }
+        // login_swap.rs: a sign-in a crash interrupted is finished or undone before anything opens the store
+        match crate::login_swap::recover_on_start(&data_dir(), &store_dir()) {
+            crate::login_swap::Recovered::PutBack(keys) => keys.into_iter().for_each(forget_store_key),
+            crate::login_swap::Recovered::Removed(Some(k)) => forget_store_key(k),
+            crate::login_swap::Recovered::Busy => return, // a sign-in owns the store right now
+            crate::login_swap::Recovered::Failed(e) => {
+                // never open a store a half-finished swap still owns
+                self.as_mut().set_status(QString::from(&format!("Tin Hat couldn't finish an earlier sign-in on this computer ({e}). Nothing was deleted; close Tin Hat and open it again.")));
+                return;
+            }
+            _ => {}
+        }
+        if !session_file().exists() {
+            return;
+        }
         self.as_mut().set_busy(true);
+        self.as_mut().set_restore_problem(QString::default()); // Try again: the card's offer goes while it runs
         self.as_mut().set_status(QString::from("Restoring session…"));
         crate::boot::set_stage("Restoring your session", "", 55);
 
         let qt_thread = self.qt_thread();
         runtime().spawn(async move {
-            let result = do_restore().await;
+            // a failed restore is diagnosed here (restore_err.rs: reads the store's versions, never deletes anything)
+            let result = match do_restore().await {
+                Ok(v) => Ok(v),
+                Err(err) => {
+                    let problem = crate::restore_err::diagnose(&err, &data_dir(), &store_dir(), env!("CARGO_PKG_VERSION")).await;
+                    Err((err, problem))
+                }
+            };
             let _ = qt_thread.queue(move |mut qobject| {
                 qobject.as_mut().set_busy(false);
                 match result {
                     Ok((client, user_id)) => {
                         eprintln!("[restore] success: {user_id}");
+                        crate::restore_err::note_writer(&data_dir(), env!("CARGO_PKG_VERSION"));
+                        qobject.as_mut().set_restore_problem(QString::default());
                         crate::boot::set_stage("Loading your rooms", &user_id, 80);
                         crate::session::set_client(client.clone());
                         crate::logship::note_signed_in(&user_id); // whose log this run's is (logs never cross accounts)
@@ -780,18 +832,50 @@ impl qobject::LoginController {
                         qobject.as_mut().start_sync(); // the sole sync -> live updates
                         qobject.as_mut().set_up_first_device(); // F1: a brand-new account's first device verifies itself
                     }
-                    Err(err) => {
+                    Err((err, problem)) => {
                         eprintln!("[restore] failed: {err}");
+                        eprintln!("[restore] kept the saved session; the card offers: {}", problem.kind());
                         crate::boot::set_stage("Please sign in", "", 95);
-                        // Saved session is unusable — clear it so the user can log in fresh.
-                        let _ = std::fs::remove_file(session_file());
-                        // 10.1 (TH-FIRST-09): say why you are back on the sign-in card.
-                        qobject.as_mut().set_status(QString::from("Your saved session couldn't be restored — please sign in again."));
+                        // 12.1.1 (restore_err.rs): NOTHING is deleted here any more (it used to delete session.json for
+                        // every error: a downgrade, a keyring that didn't answer, a damaged file all meant a new
+                        // device). The card says which case it is (TH-FIRST-09) and offers the way out; only the
+                        // person's own Start fresh forgets the session.
+                        qobject.as_mut().set_status(QString::from(&problem.text()));
+                        qobject.as_mut().set_restore_problem(QString::from(problem.kind()));
                         qobject.as_mut().set_logged_in(false);
                     }
                 }
             });
         });
+    }
+
+    /// "Start fresh" on a session that didn't open: forget it (restore_err.rs). The store is wiped by the next sign-in.
+    pub fn start_fresh(mut self: Pin<&mut Self>) {
+        if *self.busy() || *self.logged_in() {
+            return;
+        }
+        // a session file that can't be removed stays on the card (it would come back at the next start)
+        match std::fs::remove_file(session_file()) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => {
+                eprintln!("[restore] start fresh: couldn't remove the saved session: {e}");
+                self.as_mut().set_status(QString::from(&format!("Tin Hat couldn't forget the saved session on this computer ({e}). Nothing else changed.")));
+                return;
+            }
+            _ => {}
+        }
+        crate::restore_err::forget_writer(&data_dir());
+        eprintln!("[restore] start fresh: the saved session is forgotten (the person's choice)");
+        self.as_mut().set_restore_problem(QString::default());
+        self.as_mut().set_status(QString::from("Sign in to set this computer up fresh."));
+    }
+
+    /// replace_confirm.rs: a saved session on disk (the sign-in would replace it).
+    pub fn has_saved_session(&self) -> bool {
+        session_file().exists()
+    }
+
+    pub fn replace_session_text(&self) -> QString {
+        QString::from(crate::replace_confirm::TEXT)
     }
 
     /// Sign out (QML: the menu's Sign out, Actions "app.signOut"): end_session, the server told.
@@ -862,6 +946,7 @@ impl qobject::LoginController {
         // of this session — notification levels, pending clicks, invites, call edges — acts for the next.
         crate::notify::forget_session();
         crate::callwatch::forget_session();
+        crate::ringglue::forget_session();
         crate::server_offer::forget(); // selfhost: the next account starts without this server's answer
         crate::logship::note_signed_out(); // this run's log is nobody's alone from here on
         // …nor what the app kept of the account beside the stores: the caches of its messages and media, its lists,
@@ -1839,6 +1924,19 @@ impl qobject::LoginController {
                                 }
                             });
                         }
+                        // DM ringing: a decline of my ring ("<name> declined") or of the ring on my other device (the card goes)
+                        let declines = crate::ringglue::on_sync(&client, &response).await;
+                        if !declines.is_empty() {
+                            let _ = qt.queue(move |mut o| {
+                                for h in declines {
+                                    if h.outcome == crate::ringglue::DeclineOutcome::Declined {
+                                        o.as_mut().call_declined(QString::from(&h.room_id), QString::from(&h.text), crate::ringglue::DECLINED_SHOWN_MS);
+                                    } else {
+                                        o.as_mut().incoming_call_ended(QString::from(&h.room_id));
+                                    }
+                                }
+                            });
+                        }
 
                         let json = rooms_json(&client).await;
                         let _ = qt.queue(move |mut o| {
@@ -1943,7 +2041,7 @@ async fn room_entry(
         // 9.3: Alt+Up/Down and Ctrl+K step through ROOMS — a space is a room in Matrix, but
         // opening one as a conversation shows an empty timeline.
         "space": room.is_space(),
-        "call": room.has_active_room_call(),
+        "call": crate::rtc::call_going_on(room).await,
         // 10.1 (TH-NOTIF-03): see nav.rs — muted = 0, mentions-only = highlights.
         "unread": if muted {
             0
@@ -2821,29 +2919,73 @@ async fn attach_to_space(client: &matrix_sdk::Client, space_id: &str, room_id: &
 }
 
 async fn do_login(server: &str, username: &str, password: &str) -> Result<(Client, String), String> {
-    // Fresh login = new device; start from a clean store so it can't collide with
-    // a previous device's account left behind in the sqlite store.
-    wipe_store();
-    let client = build_client(server.trim()).await?;
-
-    client
-        .matrix_auth()
-        .login_username(username, password)
-        .initial_device_display_name(device_display_name())
-        .await
-        .map_err(|e| friendly_login_error(&e.to_string()))?;
-
-    if let Some(session) = client.matrix_auth().session() {
-        if let Err(e) = save_session(&client, &session) {
-            eprintln!("[login] warning: could not save session: {e}");
+    // Fresh login = new device; it needs a clean store so it can't collide with a previous device's account left
+    // behind in the sqlite store. 12.1.1 (login_swap.rs): the saved session (store + session.json + its side files)
+    // is SET ASIDE in a journaled swap, and goes only once the server accepted the sign-in and the new session is
+    // saved; a wrong password, a network failure or a cancel puts it back exactly.
+    let begun = crate::login_swap::begin(&data_dir(), &store_dir())?;
+    let attempt = async {
+        let client = build_client(server.trim()).await?;
+        client
+            .matrix_auth()
+            .login_username(username, password)
+            .initial_device_display_name(device_display_name())
+            .await
+            .map_err(|e| friendly_login_error(&e.to_string()))?;
+        let session = client.matrix_auth().session().ok_or_else(|| "The server didn't hand out a session — try again.".to_string())?;
+        // a session that can't be saved is a failed sign-in (it would be gone at the next start)
+        save_session(&client, &session).map_err(|e| format!("Tin Hat couldn't save the new session ({e})."))?;
+        let user_id = client.user_id().map(|u| u.to_string()).unwrap_or_else(|| username.to_string());
+        Ok::<_, String>((client, user_id))
+    }
+    .await; // on an error the fresh client is dropped here, before its store is removed
+    match begun {
+        crate::login_swap::Begin::Fresh { stray_keys } => {
+            for k in stray_keys {
+                forget_store_key(k);
+            }
+            attempt
+        }
+        crate::login_swap::Begin::Aside(a, earlier_keys) => {
+            for k in earlier_keys {
+                forget_store_key(k);
+            }
+            let failed = match attempt {
+                Ok(v) => match crate::login_swap::commit(&a) {
+                    Ok(old_key) => {
+                        if let Some(k) = old_key {
+                            forget_store_key(k);
+                        }
+                        return Ok(v);
+                    }
+                    Err(e) => {
+                        drop(v); // the new client lets go of its store before the rollback removes it
+                        format!("The sign-in worked, but {e}.")
+                    }
+                },
+                Err(e) => e,
+            };
+            match crate::login_swap::put_back(&a) {
+                Ok(fresh_keys) => {
+                    for k in fresh_keys {
+                        forget_store_key(k);
+                    }
+                    Err(format!("{failed} Your saved session on this device is unchanged."))
+                }
+                Err(pe) => {
+                    eprintln!("[login] putting the saved session back failed: {pe}");
+                    Err(format!("{failed} ({pe}; Tin Hat finishes putting it back at the next start.)"))
+                }
+            }
         }
     }
+}
 
-    let user_id = client
-        .user_id()
-        .map(|u| u.to_string())
-        .unwrap_or_else(|| username.to_string());
-    Ok((client, user_id))
+/// A store keyring item (M10) that no store uses any more after a sign-in: forgotten in the background. Without M10
+/// (12.1.0's tree) there is no keyring item to forget.
+fn forget_store_key(id: String) {
+    eprintln!("[login] store key {id} is no longer used: removing it from the keyring");
+    crate::storekey::delete_in_background(id);
 }
 
 /// 10.4 (only the last blip is typed): the sign-in field shows a fixed "TH-" and people type
@@ -3124,7 +3266,8 @@ fn save_session(client: &Client, session: &MatrixSession) -> Result<(), String> 
 /// Build a client (with its persistent sqlite store) against the resolved homeserver.
 async fn build_client(server: &str) -> Result<Client, String> {
     let homeserver_url = resolve_homeserver(server).await?;
-    base_builder()?
+    let pass = store_passphrase().await?;
+    base_builder(pass.as_deref())?
         .homeserver_url(homeserver_url)
         .build()
         .await
@@ -3146,12 +3289,20 @@ async fn resolve_homeserver(server: &str) -> Result<String, String> {
     Ok(format!("https://{server}"))
 }
 
-/// A ClientBuilder with the persistent sqlite store attached.
-fn base_builder() -> Result<ClientBuilder, String> {
+/// M10 (storekey.rs): the store's passphrase — None for a plain store (the default), a new key for a fresh store when
+/// TINHAT_STORE_KEYRING=1, or the marked store's key from the keyring (an error that says what to do when it can't be
+/// read; nothing is deleted).
+async fn store_passphrase() -> Result<Option<String>, String> {
+    let keys = crate::storekey::os_keys();
+    crate::storekey::passphrase(&data_dir(), &store_dir(), crate::storekey::flag_on(), crate::storekey::supported(), &keys).await
+}
+
+/// A ClientBuilder with the persistent sqlite store attached (`pass` = M10's store passphrase, None = plain).
+fn base_builder(pass: Option<&str>) -> Result<ClientBuilder, String> {
     use matrix_sdk::encryption::{BackupDownloadStrategy, EncryptionSettings};
     std::fs::create_dir_all(data_dir()).map_err(|e| format!("data dir: {e}"))?;
     Ok(Client::builder()
-        .sqlite_store(store_dir(), None)
+        .sqlite_store(store_dir(), pass)
         // Pull megolm room keys from key backup when decryption fails, so encrypted
         // history decrypts once the device is verified (default = never download).
         .with_encryption_settings(EncryptionSettings {

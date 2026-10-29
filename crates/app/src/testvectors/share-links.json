@@ -840,6 +840,32 @@
    "via": []
   },
   {
+   "input": "https://chat.example.com/#/room/%23a%2F%24b%3Aexample.com",
+   "kind": "room",
+   "target": "#a/$b:example.com",
+   "via": []
+  },
+  {
+   "input": "https://chat.example.com/#/room/%23a%2F%24b%3Aexample.com/%24ev1",
+   "kind": "room",
+   "target": "#a/$b:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/#a/$b:example.com",
+   "kind": "room",
+   "target": "#a/$b:example.com",
+   "via": []
+  },
+  {
+   "input": "https://matrix.to/#/#a/$b:example.com/$ev1?via=example.com",
+   "kind": "room",
+   "target": "#a/$b:example.com",
+   "via": [
+    "example.com"
+   ]
+  },
+  {
    "input": "https://chat.example.com/#/room/%23caf%C3%A9%3Aexample.com/%24%ZZ",
    "kind": "room",
    "target": "#café:example.com",

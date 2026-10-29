@@ -3,7 +3,7 @@
 // crates/app/src/testvectors/member-content.json (section `links`, the same cases richtext.rs link_verdict and Tin Hat
 // Web replay), and checks that the attachment extensions it opens are viewer.rs's OPEN_EXTS.
 //   node --test tools/link-gate-test.mjs     (scripts/run-gates.sh runs it with the unit tests)
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 import assert from "node:assert/strict";
@@ -51,6 +51,12 @@ test("the hover hint names the real host", () => {
   assert.equal(describe("https://Example.ORG:8448/x"), "example.org:8448");
   assert.equal(describe("mailto:ana@example.org?subject=x"), "ana@example.org");
   assert.equal(describe("file:///etc/passwd"), "");
+});
+
+test("an attachment opens once: one onMediaOpenedChanged handler in the whole UI (the old double Open)", () => {
+  const dir = fileURLToPath(new URL("../crates/app/qml/", import.meta.url));
+  const hits = readdirSync(dir).filter((f) => f.endsWith(".qml")).flatMap((f) => (readFileSync(dir + f, "utf8").match(/function onMediaOpenedChanged\b/g) ?? []).map(() => f));
+  assert.deepEqual(hits, ["ConversationView.qml"]);
 });
 
 test("attachments: viewer.rs's extensions, file:// only", () => {

@@ -195,7 +195,7 @@ async fn own_read_ts(room: &matrix_sdk::Room) -> u64 {
     use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
     let mut best = 0u64;
     for ty in [ReceiptType::Read, ReceiptType::ReadPrivate] {
-        if let Ok(Some((_, r))) = room.load_user_receipt(ty, ReceiptThread::Unthreaded, room.own_user_id()).await {
+        if let Ok(Some((_, r))) = room.load_user_receipt(ty, &ReceiptThread::Unthreaded, room.own_user_id()).await {
             if let Some(ts) = r.ts {
                 best = best.max(u64::from(ts.get()));
             }

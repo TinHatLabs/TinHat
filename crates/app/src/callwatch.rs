@@ -122,6 +122,16 @@ pub fn forget_session() {
     }
 }
 
+/// My incoming card for `room_id` is up (ringglue.rs: a decline from my other device takes it down).
+pub fn card_up(room_id: &str) -> bool {
+    state().lock().unwrap().presented.contains(room_id)
+}
+
+/// The card went another way (ringglue.rs: declined on my other device).
+pub fn forget_card(room_id: &str) {
+    state().lock().unwrap().presented.remove(room_id);
+}
+
 pub struct Edge {
     pub room_id: String,
     pub room_name: String,

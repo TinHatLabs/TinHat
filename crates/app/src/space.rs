@@ -1055,8 +1055,9 @@ async fn do_membership(space_id: &str, mxid: &str, reason: &str, action: MemberA
     let cur = membership_of(&c.space, &uid).await;
     match action {
         MemberAction::Kick => {
-            if !matches!(cur, Some(MembershipState::Join) | Some(MembershipState::Invite)) {
-                return Err(format!("{name} isn't in the space"));
+            // (left_words.rs: they may have left while the confirmation was open)
+            if let Some(gone) = crate::left_words::gone_text(crate::left_words::LeftScope::Space, &name, cur.as_ref().map(|m| m.as_str()), false) {
+                return Err(gone);
             }
             c.space.kick_user(&uid, reason).await.map_err(|e| format!("Couldn't remove {name}: {e}"))?;
         }

@@ -1,6 +1,6 @@
 [package]
 name = "tinhat-app"
-version = "12.1.0"
+version = "12.1.1"
 edition.workspace = true
 license.workspace = true
 description = "Tin Hat native KDE/Kirigami app (Qt6/QML + Rust core via CXX-Qt)"
@@ -26,11 +26,11 @@ tinhat-actions = { path = "../actions" }
 # used to announce our LiveKit media key to Element Call peers over ENCRYPTED to-device —
 # the transport EC's ToDeviceKeyTransport listens on (a room event is ignored, so without
 # this the phone can't decrypt our outgoing audio/video).
-matrix-sdk = { version = "0.18", default-features = false, features = ["e2e-encryption", "bundled-sqlite", "markdown", "experimental-send-custom-to-device"] }
+matrix-sdk = { version = "0.19", default-features = false, features = ["e2e-encryption", "bundled-sqlite", "markdown", "experimental-send-custom-to-device"] }
 # matrix-sdk-base (already in the tree via matrix-sdk) — declared directly so the
 # desktop-notification preview can name `latest_event::LatestEventValue::Remote`
 # (the cached latest event matrix-sdk does NOT re-export at the top level).
-matrix-sdk-base = "0.18"
+matrix-sdk-base = "0.19"
 tokio = { version = "1", features = ["rt-multi-thread", "time", "fs", "sync"] }  # sync: soundboard.rs PlayGate (already on via matrix-sdk)
 # Bounded-concurrency inline-image resolves in the room loader (already in the
 # dependency tree via matrix-sdk).
@@ -39,6 +39,10 @@ serde = { version = "1", features = ["derive"] }
 # float_roundtrip: correctly rounded float parsing, as JavaScript's JSON.parse — the Pad rules (src/padrules.rs) must
 # read every number of a message exactly as Tin Hat Web does (the default parser may be one ULP off).
 serde_json = { version = "1", features = ["float_roundtrip"] }
+# M10 (storekey.rs: is the store ciphered?) + restore_err.rs (its schema versions): read-only looks into matrix-sdk's
+# stores; the same rusqlite as matrix-sdk-sqlite's (one bundled SQLite in the binary — keep the versions equal when
+# matrix-sdk moves)
+rusqlite = { version = "0.40", default-features = false }
 # Media core: NVENC capture/encode + LiveKit publish, and the KDE screencast portal.
 tinhat-streamer = { path = "../streamer" }
 # Element Call media-key (E2EE) exchange: random 16-byte keys + base64url(no-pad).
@@ -72,9 +76,9 @@ tracing-log = "0.2"
 # providers enabled rustls can't auto-select one and panics on TLS setup. We install
 # a process-default provider explicitly in main() to resolve the ambiguity.
 rustls = "0.23"
-# Pin: time 0.3.48/0.3.49 require time-macros 0.2.28/0.2.29 which aren't published
-# (index maxes at 0.2.27), so they're uninstallable. matrix-sdk-crypto allows ^0.3.47.
-time = "=0.3.47"
+# Was pinned =0.3.47 (time 0.3.48/0.3.49 needed unpublished time-macros); matrix-sdk-crypto 0.19 needs ^0.3.55,
+# which resolves cleanly (2026-10-27).
+time = "0.3.55"
 # Unix-only syscalls (dup2 stderr->logfile, flock single-instance): the call
 # sites are cfg(unix)-gated, so the dep is too (windows/PLATFORM_AUDIT.md §12).
 [target.'cfg(unix)'.dependencies]
@@ -101,6 +105,9 @@ tauri-winrt-notification = "0.7"
 # PLATFORM_AUDIT.md §6) behind the same notify() entry point.
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = { version = "5.16", default-features = false, features = ["tokio"] }
+# M10 (storekey.rs, sec-night 2026-10-27): the store passphrase in the Secret Service / the Flatpak secret portal.
+# Same zbus 5 + ashpd 0.13 as above; Rust crypto (no OpenSSL).
+oo7 = { version = "0.6", default-features = false, features = ["tokio", "native_crypto"] }
 
 [build-dependencies]
 # link_qt_object_files: required for a *binary* that registers a QML module,

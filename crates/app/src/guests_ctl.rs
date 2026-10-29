@@ -31,7 +31,7 @@ use cxx_qt_lib::QString;
 use serde_json::{json, Value};
 
 use crate::guests::{
-    arrivals, bar_plan, departures, is_guest_account, is_guests_room, is_waiter_id, local_role, merge_role, notice_text, pane_plan,
+    arrivals, bar_plan, copy_offered, departures, is_guest_account, is_guests_room, is_waiter_id, local_role, merge_role, notice_text, pane_plan,
     parse_doc, parse_guest_state, parse_waiting, waiting_rows, waiting_text, BarButton, GuestRoomState, GuestsDoc, PaneButton, Waiter,
     EXPLAIN, GUESTS_TYPE, WAITING_TYPE, WORDS,
 };
@@ -406,13 +406,15 @@ fn view_json(st: &Store, me: &str, offered: bool) -> Value {
         "room": room,
         "on": on,
         "bar": bar_json,
+        // the room menu's + header's "Copy guest link" (the web's CopyLink.tsx): where the bar offers Copy
+        "copyOffered": offered && !room.is_empty() && copy_offered(on, role),
         "rows": rows_json,
         "pane": pane_json,
         "link": doc.and_then(|d| d.link.clone()).unwrap_or_default(),
         "note": note,
         "noteError": doc.is_none() && st.loaded && !st.error.is_empty(),
         "busy": busy,
-        "words": { "pane": WORDS.pane, "section": SECTION, "explain": EXPLAIN, "letIn": WORDS.let_in, "turnAway": WORDS.turn_away, "link": LINK_LABEL },
+        "words": { "copy": WORDS.copy, "pane": WORDS.pane, "section": SECTION, "explain": EXPLAIN, "letIn": WORDS.let_in, "turnAway": WORDS.turn_away, "link": LINK_LABEL },
     })
 }
 

@@ -575,13 +575,88 @@ fn video_registry() -> &'static std::sync::Mutex<HashMap<String, usize>> {
 /// race was observed where a queued tile-create closure never ran), the next 120ms poll
 /// still publishes the correct tiles so the delegate appears and its attach Timer can
 /// lazily build the pipeline. Empty string = "not set / leave handles it".
-fn desired_video_tiles() -> &'static std::sync::Mutex<String> {
-    static D: OnceLock<std::sync::Mutex<String>> = OnceLock::new();
-    D.get_or_init(|| std::sync::Mutex::new(String::new()))
+fn desired_video_tiles() -> &'static std::sync::Mutex<DesiredTiles> {
+    static D: OnceLock<std::sync::Mutex<DesiredTiles>> = OnceLock::new();
+    D.get_or_init(|| std::sync::Mutex::new(DesiredTiles::default()))
 }
 
+/// The desired tiles + (screen share P3) what they were folded from: the unfolded tiles `tiles_json_enriched` built and
+/// the companion-pairs revision it folded them with. The 120 ms poll folds them again, under this same lock, whenever
+/// the pairs' revision moved on (so a rebuild that raced a pairs change, or an orphan's unfold, is corrected there).
+#[derive(Default)]
+struct DesiredTiles {
+    json: String,
+    raw: Option<Vec<serde_json::Value>>,
+    rev: u64,
+}
+
+/// Publish tiles that weren't built by `build_tiles` ("[]" at a leave): nothing to fold again.
 fn set_desired_tiles(json: &str) {
-    *desired_video_tiles().lock().unwrap() = json.to_string();
+    let mut d = desired_video_tiles().lock().unwrap();
+    d.json = json.to_string();
+    d.raw = None;
+}
+
+/// Publish a build of `build_tiles`: its JSON with the unfolded tiles + the pairs' revision it was folded with, so the
+/// poll can fold them again (screen share P3).
+fn publish_desired(b: BuiltTiles) {
+    let mut d = desired_video_tiles().lock().unwrap();
+    d.json = b.json;
+    d.raw = Some(b.raw);
+    d.rev = b.rev;
+}
+
+/// Screen share P3: the companion pairs of the call in `active_call_room()` (`rtc::call_companions`), as `(room id,
+/// revision, pairs)`, refreshed off the Qt thread with the names (each join), on every wake of the rotation driver
+/// (membership changes) and with the 5 s peer rescan. The revision goes up with every change (never 0).
+fn companion_pairs() -> &'static std::sync::Mutex<(String, u64, Vec<(String, String)>)> {
+    static P: OnceLock<std::sync::Mutex<(String, u64, Vec<(String, String)>)>> = OnceLock::new();
+    P.get_or_init(|| std::sync::Mutex::new((String::new(), 0, Vec::new())))
+}
+/// `(revision, pairs)` for the current call: `(0, [])` when the stored pairs were read for another room (or none yet).
+pub(crate) fn current_companion_pairs() -> (u64, Vec<(String, String)>) {
+    let cur = active_call_room().lock().unwrap().clone();
+    let p = companion_pairs().lock().unwrap();
+    if cur.as_deref() == Some(p.0.as_str()) { (p.1, p.2.clone()) } else { (0, Vec::new()) }
+}
+/// One build of the call's tiles: the folded JSON (what QML shows), the unfolded tiles and the companion-pairs revision
+/// they were folded with (screen share P3; `publish_desired` keeps all three together).
+struct BuiltTiles {
+    json: String,
+    raw: Vec<serde_json::Value>,
+    rev: u64,
+}
+/// Re-read the room's companions (only kept while that room is still the call's).
+async fn refresh_call_companions(room: &matrix_sdk::Room) {
+    let rid = room.room_id().to_string();
+    let pairs = crate::rtc::call_companions(room).await;
+    if active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) {
+        return; // the call moved on while we read
+    }
+    let mut cur = companion_pairs().lock().unwrap();
+    if cur.0 != rid || cur.2 != pairs {
+        eprintln!("[call] screen-share companions: {pairs:?}");
+        let rev = cur.1 + 1;
+        *cur = (rid, rev, pairs);
+    }
+}
+/// The 120 ms poll: the desired tiles, folded again first when the pairs' revision moved on since they were built
+/// (all under the desired-tiles lock, the pairs read inside it, so neither a rebuild publishing at the same moment nor
+/// a newer revision is overwritten with an older one). Lock order: desired → active call room → pairs (those two are
+/// only ever held for one statement elsewhere).
+fn desired_tiles_for_poll() -> String {
+    let mut d = desired_video_tiles().lock().unwrap();
+    let (rev, pairs) = current_companion_pairs();
+    if d.rev != rev {
+        if let Some(raw) = d.raw.clone() {
+            let folded = crate::companions::fold_tiles(raw, &pairs, &my_call_identity());
+            if let Ok(json) = serde_json::to_string(&folded) {
+                d.json = json;
+            }
+        }
+        d.rev = rev;
+    }
+    d.json.clone()
 }
 
 /// Whether the standalone mic monitor is currently WANTED (noise panel open). Set by
@@ -739,7 +814,7 @@ async fn compute_call_perms(room_id: &str) -> (String, bool) {
 }
 
 /// Our own LiveKit identity (`@user:server:DEVICE`), "" when not signed in.
-fn my_call_identity() -> String {
+pub(crate) fn my_call_identity() -> String {
     let Some(c) = crate::session::client() else { return String::new() };
     format!(
         "{}:{}",
@@ -873,6 +948,7 @@ async fn refresh_call_names(room_id: &str) {
     let Some(client) = crate::session::client() else { return };
     let Ok(rid) = matrix_sdk::ruma::RoomId::parse(room_id) else { return };
     let Some(room) = client.get_room(&rid) else { return };
+    refresh_call_companions(&room).await;
     if let Ok(members) = room.members_no_sync(matrix_sdk::RoomMemberships::ACTIVE).await {
         // Resolve avatars BEFORE taking the names lock: resolve_avatar awaits (cache
         // miss = a media fetch), and holding a std::sync Mutex across an await would
@@ -926,6 +1002,15 @@ fn tiles_json_enriched(
     participants: &std::collections::HashSet<String>,
     muted: &std::collections::HashSet<String>,
 ) -> String {
+    build_tiles(tiles, participants, muted).json
+}
+
+/// [`tiles_json_enriched`] with what the poll needs to fold the tiles again (publish with `publish_desired`).
+fn build_tiles(
+    tiles: &[(String, String, bool)],
+    participants: &std::collections::HashSet<String>,
+    muted: &std::collections::HashSet<String>,
+) -> BuiltTiles {
     use std::sync::atomic::Ordering;
     let mut arr: Vec<serde_json::Value> = Vec::new();
     if selfview_active().load(Ordering::Relaxed) {
@@ -965,7 +1050,12 @@ fn tiles_json_enriched(
             }));
         }
     }
-    serde_json::to_string(&arr).unwrap_or_else(|_| "[]".to_string())
+    // Screen share P3: a phone's share-only companion joins its person's tiles (no second avatar / name). The unfolded
+    // tiles + the pairs' revision go with the JSON to set_desired_tiles, so the poll can fold them again.
+    let (rev, pairs) = current_companion_pairs();
+    let folded = crate::companions::fold_tiles(arr.clone(), &pairs, &my_call_identity());
+    let json = serde_json::to_string(&folded).unwrap_or_else(|_| "[]".to_string());
+    BuiltTiles { json, raw: arr, rev }
 }
 
 /// Headless gate for QOL Phase 1.5.0 — proves a participant's real profile picture
@@ -1494,9 +1584,27 @@ async fn rotation_driver(room: matrix_sdk::Room, my_gen: u64) {
             }
         })
     });
+    // the due time the last immediate (0 ms) wake was for: still overdue at the next look → back to the tick's pace
+    let mut overdue_seen: Option<u64> = None;
     loop {
         let tick = match call_keys().lock().unwrap().as_ref() {
-            Some(k) if k.gen == my_gen => if k.switch_owed { 1000 } else { k.planner.next_tick_ms() },
+            // sleep to the planner's next due time (debounce end / use), the 1 s / 5 s tick as the fallback
+            Some(k) if k.gen == my_gen => {
+                if k.switch_owed {
+                    1000
+                } else {
+                    let now = crate::rtc::now_ms_pub();
+                    let due = [k.planner.use_at(), k.planner.mint_at()].into_iter().flatten().min();
+                    match due {
+                        Some(at) if at <= now && overdue_seen == Some(at) => k.planner.next_tick_ms(),
+                        Some(at) if at <= now => {
+                            overdue_seen = Some(at);
+                            0
+                        }
+                        _ => k.planner.next_wake_ms(now),
+                    }
+                }
+            }
             _ => return,
         };
         tokio::select! {
@@ -1506,6 +1614,7 @@ async fn rotation_driver(room: matrix_sdk::Room, my_gen: u64) {
         if join_gen_stale(my_gen) || active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) {
             return;
         }
+        refresh_call_companions(&room).await; // a membership change may fold / unfold a phone's share (P3)
         // the switch first: never behind the recipient read below (the mint's own timer normally fires it)
         if !use_due(my_gen, &client, &room, &user, &device).await {
             return;
@@ -1566,7 +1675,10 @@ async fn rotation_driver(room: matrix_sdk::Room, my_gen: u64) {
                     let (c, rm, u, d) = (client.clone(), room.clone(), user.clone(), device.clone());
                     crate::bridge::runtime().spawn(async move {
                         let rep = announce_key_to_members(&c, &rm, &u, &d, &ks, Some(&to), Some(my_gen)).await;
-                        if !rep.failed.is_empty() {
+                        // assembly-037 D2: a newcomer the announce's recipient read left out (retry_soon) is owed the
+                        // keys but isn't in rep.failed: arm the ladder whenever anything is owed, not only on a failure
+                        let owed = call_keys().lock().unwrap().as_ref().filter(|k| k.gen == my_gen).is_some_and(|k| !k.resend.to().is_empty());
+                        if !rep.failed.is_empty() || owed {
                             schedule_resends(&c, &rm, &u, &d, my_gen, tokio::time::Instant::now());
                         }
                     });
@@ -1789,6 +1901,11 @@ fn pending_switch() -> &'static std::sync::Mutex<Option<String>> {
 fn join_target() -> &'static std::sync::Mutex<Option<String>> {
     static T: std::sync::OnceLock<std::sync::Mutex<Option<String>>> = std::sync::OnceLock::new();
     T.get_or_init(|| std::sync::Mutex::new(None))
+}
+
+/// The call we are in is `room_id`'s (joined, not only joining).
+pub fn in_call_room(room_id: &str) -> bool {
+    active_call_room().lock().unwrap().as_deref() == Some(room_id)
 }
 
 pub fn is_our_call_room(room_id: &str) -> bool {
@@ -2293,7 +2410,7 @@ impl qobject::CallController {
                     let join_muted_by = tinhat_streamer::server_mute_info(&my_call_identity())
                         .map(|(by, name)| moderator_label(&by, &name));
                     let empty = std::collections::HashSet::new();
-                    set_desired_tiles(&tiles_json_enriched(&[], &empty, &empty));
+                    publish_desired(build_tiles(&[], &empty, &empty));
                     let _ = qt.queue(move |mut o| {
                         o.as_mut().set_connecting(false);
                         o.as_mut().set_in_call(true);
@@ -2378,9 +2495,10 @@ impl qobject::CallController {
                                     tiles.push((id.clone(), participant.clone(), is_screenshare));
                                 }
                                 participants.insert(participant.clone());
-                                let json = tiles_json_enriched(&tiles, &participants, &muted);
+                                let built = build_tiles(&tiles, &participants, &muted);
+                                let json = built.json.clone();
                                 tinhat_streamer::call::stash_pending_video_track(&id, track);
-                                set_desired_tiles(&json);
+                                publish_desired(built);
                                 eprintln!("[call] drain VideoAdded id={id} ss={is_screenshare} ({} tile(s))", tiles.len());
                                 let id2 = id.clone();
                                 if let Err(e) = qt2.queue(move |mut o| {
@@ -2401,9 +2519,10 @@ impl qobject::CallController {
                             }
                             CallEvent::VideoRemoved { id } => {
                                 tiles.retain(|(t, _, _)| t != &id);
-                                let json = tiles_json_enriched(&tiles, &participants, &muted);
+                                let built = build_tiles(&tiles, &participants, &muted);
+                                let json = built.json.clone();
                                 tinhat_streamer::call::drop_pending_video_track(&id);
-                                set_desired_tiles(&json);
+                                publish_desired(built);
                                 if let Err(e) = qt2.queue(move |mut o| {
                                     // Teardown ORDER matters (avoids a crash on leave): unbind the
                                     // qml6glsink widget while the QML item still exists, THEN abort
@@ -2470,8 +2589,9 @@ impl qobject::CallController {
                                         announce_key_to_peer(rid, id).await;
                                     }
                                 });
-                                let json = tiles_json_enriched(&tiles, &participants, &muted);
-                                set_desired_tiles(&json);
+                                let built = build_tiles(&tiles, &participants, &muted);
+                                let json = built.json.clone();
+                                publish_desired(built);
                                 let id_sig = identity.clone();
                                 let _ = qt2.queue(move |mut o| {
                                     o.as_mut().set_video_tiles(QString::from(&json));
@@ -2488,8 +2608,9 @@ impl qobject::CallController {
                                 muted.remove(&identity);
                                 enforced.remove(&identity);
                                 rotation_sfu_event(&room_id, &identity, true); // M2: gone from the call server
-                                let json = tiles_json_enriched(&tiles, &participants, &muted);
-                                set_desired_tiles(&json);
+                                let built = build_tiles(&tiles, &participants, &muted);
+                                let json = built.json.clone();
+                                publish_desired(built);
                                 let id_sig = identity.clone();
                                 let _ = qt2.queue(move |mut o| {
                                     o.as_mut().set_video_tiles(QString::from(&json));
@@ -2499,10 +2620,11 @@ impl qobject::CallController {
                             CallEvent::TrackMuteChanged { identity, category, muted: m } => {
                                 if category == "mic" {
                                     if m { muted.insert(identity); } else { muted.remove(&identity); }
-                                    let json = tiles_json_enriched(&tiles, &participants, &muted);
+                                    let built = build_tiles(&tiles, &participants, &muted);
+                                    let json = built.json.clone();
                                     // MUST also publish to desired_tiles, else the 120ms recovery
                                     // poll re-pushes the pre-mute JSON and the glyph flickers off.
-                                    set_desired_tiles(&json);
+                                    publish_desired(built);
                                     let _ = qt2.queue(move |mut o| o.as_mut().set_video_tiles(QString::from(&json)));
                                 }
                             }
@@ -2514,8 +2636,9 @@ impl qobject::CallController {
                                 // with the mute, so "live again" means a (re)publish.
                                 let mine = identity == my_identity;
                                 let label = moderator_label(&by, &by_name);
-                                let json = tiles_json_enriched(&tiles, &participants, &muted);
-                                set_desired_tiles(&json);
+                                let built = build_tiles(&tiles, &participants, &muted);
+                                let json = built.json.clone();
+                                publish_desired(built);
                                 eprintln!(
                                     "[moderation] {identity} server-{} by {label}{}",
                                     if m { "muted" } else { "unmuted" },
@@ -3577,7 +3700,7 @@ impl qobject::CallController {
     /// attach Timer appear and attach_video lazily builds the pipeline. Empty desired
     /// (no active call) is skipped so this never clobbers state outside a call.
     pub fn refresh_video_tiles(mut self: Pin<&mut Self>) {
-        let want = desired_video_tiles().lock().unwrap().clone();
+        let want = desired_tiles_for_poll(); // (screen share P3: folded again when the companions changed)
         if !want.is_empty() && self.video_tiles().to_string() != want {
             self.as_mut().set_video_tiles(QString::from(&want));
         }
@@ -3644,7 +3767,28 @@ impl qobject::CallController {
             return QString::from("You can't moderate calls in this space");
         }
         let Some(target) = tinhat_streamer::resolve_call_participant(target) else {
-            return QString::from("They're not in the call");
+            // Gone from the call server: say they left the room when that's why (left_words.rs; e.g. they went while
+            // the Disconnect confirmation was open) — the room's member store is async, so the answer comes as an error.
+            let mxid = mxid_of(target);
+            let room_id = self.room_id().to_string();
+            let qt = self.qt_thread();
+            crate::bridge::runtime().spawn(async move {
+                let mut text = "They're not in the call".to_string();
+                if let (Some(client), Ok(rid), Ok(uid)) =
+                    (crate::session::client(), matrix_sdk::ruma::RoomId::parse(&room_id), matrix_sdk::ruma::UserId::parse(&mxid))
+                {
+                    if let Some(room) = client.get_room(&rid) {
+                        if let Ok(Some(m)) = room.get_member_no_sync(&uid).await {
+                            let who = m.display_name().map(str::to_owned).unwrap_or_else(|| mxid.clone());
+                            if let Some(t) = crate::left_words::gone_text(crate::left_words::LeftScope::Call, &who, Some(m.membership().as_str()), false) {
+                                text = t;
+                            }
+                        }
+                    }
+                }
+                let _ = qt.queue(move |mut o| o.as_mut().report_error(&text));
+            });
+            return QString::from("");
         };
         let me_mxid = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
         if mxid_of(&target) == me_mxid {
@@ -3686,6 +3830,7 @@ impl qobject::CallController {
             let Some(client) = crate::session::client() else { return };
             let Ok(rid) = matrix_sdk::ruma::RoomId::parse(&room_id) else { return };
             let Some(room) = client.get_room(&rid) else { return };
+            refresh_call_companions(&room).await; // a companion's main came or went (fold / unfold)
             let others = crate::rtc::non_native_call_members(&room).await;
             let present = !others.is_empty();
             if !tinhat_streamer::call::set_browser_peers_present(present) {

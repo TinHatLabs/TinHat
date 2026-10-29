@@ -42,6 +42,12 @@ pub fn is_call_active(room: &Room) -> bool {
     room.has_active_room_call()
 }
 
+/// "A call is going on" for the UI (room list, room header): an active call with at least one participant still joined
+/// to the room ([`roster_counts`]): a kicked member's lingering membership alone isn't a call. Never waits on the network.
+pub async fn call_going_on(room: &Room) -> bool {
+    room.has_active_room_call() && !call_participants(room).await.is_empty()
+}
+
 /// The room's raw `org.matrix.msc3401.call.member` state events (local store), as the pure rules read them.
 async fn member_events(room: &Room) -> matrix_sdk::Result<Vec<serde_json::Value>> {
     let raws = room.get_state_events_static::<CallMemberEventContent>().await?;
@@ -108,7 +114,8 @@ pub(crate) fn oldest_focus(sessions: &[crate::keyrules::LiveSession], room_id: &
 
 /// User-ids currently joined to the room's MatrixRTC call (active room-scoped
 /// `m.call.member` memberships). Drives the Discord-style "who's in the call" avatar
-/// bubbles under a room in the nav. Deduped; reads the local store only.
+/// bubbles under a room in the nav. Deduped; reads the local store (a caller with no member event starts one
+/// background read, [`caller_membership`]).
 pub async fn call_participants(room: &Room) -> Vec<String> {
     // 0.8.23: read BOTH spellings raw. The typed ruma fetch resolved to the
     // msc3401 type only, so web / Element X peers (who write `m.call.member`) never showed
@@ -127,7 +134,73 @@ pub async fn call_participants(room: &Room) -> Vec<String> {
             }
         }
     }
-    call_member_users_from(&events, now_ms())
+    // Roster rule (guest-leave, 12.1): drop senders no longer joined to the room (kicked / left: they can't withdraw
+    // their membership any more, so it lingered until it expired, up to 4 h).
+    let mut out = Vec::new();
+    for u in call_member_users_from(&events, now_ms()) {
+        let ms = match matrix_sdk::ruma::UserId::parse(&u) {
+            Ok(id) => caller_membership(room, &id).await,
+            Err(_) => None,
+        };
+        if roster_counts(ms.as_deref()) {
+            out.push(u);
+        }
+    }
+    out
+}
+
+/// (session generation|room id|user id) → the membership a probe read (None = asked: pending, or no usable answer).
+fn probed() -> &'static std::sync::Mutex<std::collections::HashMap<String, Option<String>>> {
+    static P: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, Option<String>>>> = std::sync::OnceLock::new();
+    P.get_or_init(Default::default)
+}
+
+/// The room membership of a call member (guest-leave, 12.1; web memberprobe.ts): the member event in the store, else
+/// what ONE read of their `m.room.member` state said (per session, room and user; 404 = never a member = "leave").
+/// Lazy member loading never brings in who left, so a member removed before this session would otherwise stay unknown
+/// (counts) until their call membership expired. Never waits on the network: the read runs in the background and the
+/// next roster read (the room list re-reads every 3 s while a call shows) sees the answer. A later change comes
+/// through sync (the stored member event wins).
+async fn caller_membership(room: &Room, uid: &matrix_sdk::ruma::UserId) -> Option<String> {
+    if let Ok(Some(m)) = room.get_member_no_sync(uid).await {
+        return Some(m.membership().as_str().to_owned());
+    }
+    let key = format!("{}|{}|{}", crate::session::generation(), room.room_id(), uid);
+    {
+        let mut p = probed().lock().unwrap();
+        if let Some(v) = p.get(&key) {
+            return v.clone();
+        }
+        p.insert(key.clone(), None); // asked (one check-and-mark: never two reads)
+    }
+    let (room, uid) = (room.clone(), uid.to_owned());
+    tokio::spawn(async move {
+        use matrix_sdk::ruma::api::client::state::get_state_event_for_key;
+        use matrix_sdk::ruma::events::StateEventType;
+        let req = get_state_event_for_key::v3::Request::new(room.room_id().to_owned(), StateEventType::RoomMember, uid.to_string());
+        let got = match room.client().send(req).await {
+            Ok(r) => serde_json::from_str::<serde_json::Value>(r.event_or_content.get()).ok().and_then(|v| {
+                // content, or the full event when the server sends one
+                let c = v.get("content").cloned().unwrap_or(v);
+                c.get("membership").and_then(|m| m.as_str()).map(str::to_owned)
+            }),
+            Err(e) => match e.as_client_api_error() {
+                Some(api) if api.status_code.as_u16() == 404 => Some("leave".to_owned()), // never a member
+                _ => None,                                                                  // stays unknown (counts)
+            },
+        };
+        probed().lock().unwrap().insert(key, got);
+    });
+    None
+}
+
+/// Who shows "in the call" (rosters, the room-list strip, "a call is going on"): a call membership counts only while
+/// its sender's room membership is `join`. Someone kicked (a guest when the guest room is turned off) can't withdraw
+/// their own membership any more, so it would show them in the call until it expires (up to 4 h). Unknown (member not
+/// loaded) counts: better a stray bubble than a hidden peer. NOT for keys (key_recipient_devices: joined only) and not
+/// for the focus rule. Web: callrules.ts rosterCounts.
+pub(crate) fn roster_counts(membership: Option<&str>) -> bool {
+    matches!(membership, None | Some("") | Some("join"))
 }
 
 /// The users with a LIVE call membership among raw membership state events (either
@@ -378,6 +451,18 @@ pub async fn live_sessions(room: &Room) -> Vec<crate::keyrules::LiveSession> {
     };
     let events: Vec<serde_json::Value> = raws.iter().filter_map(|r| serde_json::to_value(r).ok()).collect();
     crate::keyrules::live_sessions_from(&events, now_ms())
+}
+
+/// Screen-share companions in the room's call (`crate::companions::companions` over the live sessions): `(companion
+/// identity, main identity)` pairs. Local store only.
+pub async fn call_companions(room: &Room) -> Vec<(String, String)> {
+    let Ok(raws) = room.get_state_events_static::<CallMemberEventContent>().await else {
+        return Vec::new();
+    };
+    let events: Vec<serde_json::Value> = raws.iter().filter_map(|r| serde_json::to_value(r).ok()).collect();
+    let live: Vec<(String, String, String)> =
+        crate::keyrules::live_sessions_from(&events, now_ms()).into_iter().map(|s| (s.sender, s.device_id, s.state_key)).collect();
+    crate::companions::companions(&events, &live)
 }
 
 /// LIVE call members that are NOT Tin Hat native clients — browser Element Call,
@@ -686,6 +771,18 @@ mod tests {
         let f = oldest_focus(&crate::keyrules::live_sessions_from(&evs, now), room).unwrap();
         assert_eq!((f.service_url.as_str(), f.alias.as_str()), ("https://old.test/livekit/jwt", room));
         assert!(oldest_focus(&crate::keyrules::live_sessions_from(&evs[1..4], now), room).is_none());
+    }
+
+    // Roster rule (guest-leave, 12.1): the same table as the web's callrules.test.ts (roster/…).
+    #[test]
+    fn roster_counts_table() {
+        let table: [(Option<&str>, bool); 8] = [
+            (None, true), (None, true), (Some(""), true), (Some("join"), true),
+            (Some("leave"), false), (Some("ban"), false), (Some("invite"), false), (Some("knock"), false),
+        ];
+        for (ms, want) in table {
+            assert_eq!(roster_counts(ms), want, "{ms:?}");
+        }
     }
 
     /// The strip must count BOTH membership spellings, both content formats, skip

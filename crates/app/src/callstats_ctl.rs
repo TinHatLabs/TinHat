@@ -102,11 +102,25 @@ impl qobject::CallStatsController {
         if !self.rust().active || self.window_state().to_string() == "hidden" {
             return; // nobody shows it / paused: nothing is drawn while hidden (resumes through the hook on show)
         }
-        let j = tinhat_streamer::callstats::snapshot_json();
+        let j = fold_snapshot(tinhat_streamer::callstats::snapshot_json());
         if self.json().to_string() != j {
             self.as_mut().set_json(QString::from(&j));
             let r = self.rev().wrapping_add(1);
             self.as_mut().set_rev(r);
         }
     }
+}
+
+/// Screen share P3 (the Android interop's b1 note): a phone's share-only companion is its person's sub-line, not a
+/// second person — the snapshot's `peers` folded with the call's companion pairs (companions.rs `fold_peers`, = the
+/// web's CallStats.tsx through `foldPeers`). Unchanged without companions (or JSON that isn't the snapshot's shape).
+fn fold_snapshot(j: String) -> String {
+    let (_, pairs) = crate::call_ctl::current_companion_pairs();
+    if pairs.is_empty() {
+        return j;
+    }
+    let Ok(mut v) = serde_json::from_str::<serde_json::Value>(&j) else { return j };
+    let Some(peers) = v.get("peers").and_then(|p| p.as_array()).cloned() else { return j };
+    v["peers"] = serde_json::Value::Array(crate::companions::fold_peers(peers, &pairs, &crate::call_ctl::my_call_identity()));
+    serde_json::to_string(&v).unwrap_or(j)
 }

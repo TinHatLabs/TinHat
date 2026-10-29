@@ -23,6 +23,8 @@ fn rt() -> &'static Runtime {
 }
 
 fn main() {
+    // the app's main() does the same before any client exists (matrix-sdk 0.19: no provider of its own)
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
     let guard_enabled = std::env::var_os("GUARD").is_some();
     // The fix under test: a runtime EnterGuard on this (non-runtime) thread.
     let _guard = guard_enabled.then(|| rt().enter());

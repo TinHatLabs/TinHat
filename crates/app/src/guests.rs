@@ -390,6 +390,12 @@ pub fn bar_plan(on: bool, role: GuestRole) -> Option<BarPlan> {
     })
 }
 
+/// "Copy guest link" in the Guests room's menu and header (launch-gate's guests QoL, 2026-10-27; the web's model.ts
+/// `copyOffered`): exactly when the bar offers Copy — the room is on and this user may see the link.
+pub fn copy_offered(on: bool, role: GuestRole) -> bool {
+    bar_plan(on, role).is_some_and(|b| b.buttons.contains(&BarButton::Copy))
+}
+
 /// The rows under the bar: everyone waiting, while the room is on, for those who may let them in.
 pub fn waiting_rows(on: bool, role: GuestRole, waiting: &[Waiter]) -> Vec<Waiter> {
     if on && !role.guest && role.can_admit {
@@ -779,6 +785,19 @@ mod tests {
         assert_eq!(merge_role(out, Some(DocRole { member: false, can_admit: false, can_manage: true })), role(false, false, false, true), "a server admin outside the room");
         assert_eq!(merge_role(MEMBER, Some(DocRole { member: false, can_admit: false, can_manage: false })), MEMBER, "sync is fresher than the doc's cache");
         assert_eq!(merge_role(role(true, true, false, false), Some(DocRole { member: true, can_admit: true, can_manage: true })), role(true, true, false, false));
+    }
+
+    /// = the web's model.test.ts "copyOffered: the room menu + header's Copy guest link = the bar's Copy"
+    #[test]
+    fn copy_offered_is_the_bars_copy() {
+        assert!(copy_offered(true, MANAGER));
+        assert!(copy_offered(true, MEMBER));
+        assert!(copy_offered(true, role(false, false, false, true)), "a server admin");
+        assert!(!copy_offered(false, MANAGER), "off: no link");
+        assert!(!copy_offered(false, MEMBER));
+        assert!(!copy_offered(true, GUEST), "guests never");
+        assert!(!copy_offered(true, OUTSIDER));
+        assert_eq!(WORDS.copy, "Copy guest link");
     }
 
     #[test]

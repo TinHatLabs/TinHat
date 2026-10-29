@@ -243,8 +243,8 @@ impl qobject::NavController {
                 let Some(id) = r.get("id").and_then(|i| i.as_str()).map(|s| s.to_string()) else { continue };
                 let Ok(rid) = matrix_sdk::ruma::RoomId::parse(&id) else { continue };
                 let Some(room) = client.get_room(&rid) else { continue };
-                let call = room.has_active_room_call();
-                let parts = if call { resolve_call_participants(&client, &room).await } else { Vec::new() };
+                let parts = if room.has_active_room_call() { resolve_call_participants(&client, &room).await } else { Vec::new() };
+                let call = !parts.is_empty(); // roster rule: a left member's lingering membership alone isn't a call
                 let parts_v = Value::Array(parts);
                 let same = r.get("participants").map(|p| p == &parts_v).unwrap_or(parts_v.as_array().map(|a| a.is_empty()).unwrap_or(true))
                     && r.get("call").and_then(|c| c.as_bool()) == Some(call);
@@ -357,6 +357,7 @@ async fn nav_room_entry(
     } else {
         Vec::new()
     };
+    let call = !participants.is_empty(); // roster rule: a left member's lingering membership alone isn't a call
     // "What we're playing" + per-person statuses — cheap LOCAL reads off already-synced
     // room state (no network). DMs stay clean: the fork gates both to non-DM rooms.
     let (activity, statuses) = if is_dm {
@@ -641,7 +642,7 @@ pub(crate) async fn dm_peer(room: &Room, membership: &str) -> (String, Option<ma
     if total != 2 {
         return (String::new(), None);
     }
-    let heroes = room.heroes();
+    let heroes = room.heroes().await; // matrix-sdk 0.19: async
     let mut others: Vec<OwnedUserId> = stored.into_iter().filter(|u| *u != own).collect();
     if others.len() != 1 {
         others = heroes.iter().map(|h| h.user_id.clone()).filter(|u| *u != own).collect();

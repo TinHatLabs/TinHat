@@ -337,7 +337,7 @@ pub(crate) fn make_private_dir(dir: &Path) -> std::io::Result<bool> {
 }
 
 /// Write `bytes` to `path` as a private file (Unix: created 0600 by the open itself, and an existing file narrowed to
-/// 0600 too — no window where the token sits at the default umask). Windows: a plain write (per-user folder).
+/// 0600 too — no window where the token sits at the default umask). Windows: a plain write (per-user folder), flushed.
 pub(crate) fn write_private_file(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     #[cfg(unix)]
     {
@@ -352,7 +352,13 @@ pub(crate) fn write_private_file(path: &Path, bytes: &[u8]) -> std::io::Result<(
     }
     #[cfg(not(unix))]
     {
-        std::fs::write(path, bytes)
+        // flushed like the Unix branch (assembly-038 review): a sign-in's commit (login_swap.rs) removes the old
+        // store's copy right after this, so the new session must be on disk first
+        use std::io::Write;
+        let mut f = std::fs::File::create(path)?;
+        f.write_all(bytes)?;
+        f.sync_all()?;
+        Ok(())
     }
 }
 

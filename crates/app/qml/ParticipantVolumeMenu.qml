@@ -30,6 +30,9 @@ ThMenu {
     readonly property bool inLiveCall: !!menu.app && (menu.app.mInCall === true || menu.app.fakeCall === true)
     readonly property bool canModerate: menu.inLiveCall && menu.app.mCanModerateCall === true
         && menu.mxid.length > 0 && menu.mxid !== menu.myMxid
+    // Mute / Disconnect act on the call server: only while they have a tile there (guest-leave, 12.1: someone kicked
+    // from the room has none to act on). Set as the menu opens.
+    property bool onCallServer: false
     // Who server-muted them ("" = nobody): by full identity when the caller knows it, else any device of the mxid.
     readonly property string srvMutedBy: (menu.app && menu.app.serverMutedByFor) ? String(menu.app.serverMutedByFor(menu.participant, menu.mxid)) : ""
     property string callSpaceId: ""    // the call room's space, looked up as the menu opens ("" = not in a space)
@@ -152,7 +155,7 @@ ThMenu {
         id: srvMuteItem
         text: menu.srvMutedBy.length > 0 ? "Unmute their mic for everyone" : "Mute their mic for everyone"
         icon.name: menu.srvMutedBy.length > 0 ? "audio-input-microphone-symbolic" : "microphone-sensitivity-muted-symbolic"
-        visible: menu.canModerate
+        visible: menu.canModerate && menu.onCallServer
         height: visible ? implicitHeight : 0
         Controls.ToolTip.text: menu.srvMutedBy.length > 0
             ? "Muted by " + menu.srvMutedBy + " — lets them talk again"
@@ -165,7 +168,7 @@ ThMenu {
         id: disconnectItem
         text: "Disconnect from the call…"
         icon.name: "call-stop-symbolic"
-        visible: menu.canModerate
+        visible: menu.canModerate && menu.onCallServer
         height: visible ? implicitHeight : 0
         onTriggered: disconnectConfirm.open()
     }
@@ -263,6 +266,7 @@ ThMenu {
     }
     // Seed all six from the saved prefs each time the menu opens.
     onAboutToShow: {
+        menu.onCallServer = !!menu.app && !!menu.app.identityForMxid && String(menu.app.identityForMxid(menu.mxid)).length > 0
         // RBAC: the call room's space decides whether "Kick / Ban from space" apply at all.
         menu.callSpaceId = (menu.app && menu.app.nav && menu.app.mCallRoomId && String(menu.app.mCallRoomId).length > 0)
             ? String(menu.app.nav.spaceOf(menu.app.mCallRoomId)) : ""

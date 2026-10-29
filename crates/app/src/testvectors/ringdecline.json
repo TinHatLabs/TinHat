@@ -1,0 +1,1589 @@
+{
+  "v": 1,
+  "declinedShownMs": 6000,
+  "about": "Tin Hat DM ringing (RINGING.md §5): what a dev.tinhat.call.decline {ring} room event means to this device. 'declined' = the room is a two-person room (dm), I am in (or joining) that room's call and the ring is one of MY call.member event ids: show the text and play the end tone; 'dismiss' = in a dm, MY other device declined the ring (one of the room's live call.member event ids from someone else) while my incoming card is up: the card and the ring go; 'none' = nothing. senderJoined = the decliner's room membership is join (someone who has left can't decline). rings: which call.member event ids own/live hold: the room's call.member state events that are live sessions (the shared live-session rule) of senders whose membership is exactly join, own = mine, live = others', in event order. A ring id is the core's call_decline_content rule: '$' + 1..254 more UTF-8 bytes, no control or white-space characters. Fresh = within 60 s of now either way. Byte-identical copies: web src/features/calls/testvectors/ringdecline.json (the owner), desktop crates/app/src/testvectors/ringdecline.json. Each case: event, ctx {me, dm, senderJoined, inCallHere, cardUp, ownRings, liveRings} at now, want. texts: [display name, the words shown]. declinedShownMs: how long the caller's '<name> declined' stays on screen (web toast, desktop passive notification); gates read the stable log line / DOM marker instead (tools README).",
+  "now": 1793174400000,
+  "cases": [
+    {
+      "name": "the callee declines my ring while I wait in the call → declined",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "declined"
+    },
+    {
+      "name": "a ring id that isn't one of my call memberships → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$other:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "I'm no longer in that room's call → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": false,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "older than 60 s → none (history, a late decryption)",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174339999,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "exactly 60 s old still counts",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174340000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "declined"
+    },
+    {
+      "name": "more than 60 s in the future → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174460001,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "no timestamp → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "another event type → none",
+      "event": {
+        "type": "dev.tinhat.call.declined",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "no sender → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "content not an object → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": "$ring1:x"
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "ring not a string → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": 7
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "7"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a ring id \"\" → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": ""
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          ""
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a ring id \"$\" → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a ring id \"abc\" → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "abc"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "abc"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a ring id \"$a b\" → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$a b"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$a b"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a ring id \"$a\\n\" → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$a\n"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$a\n"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a ring id \"$a\\u00a0b\" → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$a b"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$a b"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a ring id \"$xxxxxxxxxxxxxxxxxxxxxx → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "a 255-byte ring id is fine",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ],
+        "liveRings": []
+      },
+      "want": "declined"
+    },
+    {
+      "name": "255 UTF-8 bytes (127 × é) is fine",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+        ],
+        "liveRings": []
+      },
+      "want": "declined"
+    },
+    {
+      "name": "257 UTF-8 bytes (128 × é) → none (bytes, not UTF-16 units)",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "my other device declined the ring I'm being rung with → dismiss the card",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@me:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": false,
+        "cardUp": true,
+        "ownRings": [],
+        "liveRings": [
+          "$ring1:x"
+        ]
+      },
+      "want": "dismiss"
+    },
+    {
+      "name": "my own decline with no card up → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@me:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": false,
+        "cardUp": false,
+        "ownRings": [],
+        "liveRings": [
+          "$ring1:x"
+        ]
+      },
+      "want": "none"
+    },
+    {
+      "name": "my own decline of a ring that isn't the room's live call → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@me:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": false,
+        "cardUp": true,
+        "ownRings": [],
+        "liveRings": [
+          "$x:x"
+        ]
+      },
+      "want": "none"
+    },
+    {
+      "name": "my own decline never says 'declined' to me",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@me:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "someone else's decline never dismisses my card",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": false,
+        "cardUp": true,
+        "ownRings": [],
+        "liveRings": [
+          "$ring1:x"
+        ]
+      },
+      "want": "none"
+    },
+    {
+      "name": "not a two-person room (a group call never rings) → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": false,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "my own decline in a group room → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@me:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": false,
+        "senderJoined": true,
+        "inCallHere": false,
+        "cardUp": true,
+        "ownRings": [],
+        "liveRings": [
+          "$ring1:x"
+        ]
+      },
+      "want": "none"
+    },
+    {
+      "name": "the decliner has since left the room → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": false,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "my own decline with me not joined (stale state) → none",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@me:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": false,
+        "inCallHere": false,
+        "cardUp": true,
+        "ownRings": [],
+        "liveRings": [
+          "$ring1:x"
+        ]
+      },
+      "want": "none"
+    },
+    {
+      "name": "my phone's delayed decline names a departed caller's ring; Cat now calls → Cat's card stays",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@me:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$b1"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": false,
+        "cardUp": true,
+        "ownRings": [],
+        "liveRings": [
+          "$c1"
+        ]
+      },
+      "want": "none"
+    },
+    {
+      "name": "a decline naming my replaced membership's old id → none (only the current live set counts)",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$m_old"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$m_new"
+        ],
+        "liveRings": []
+      },
+      "want": "none"
+    },
+    {
+      "name": "extra content fields are ignored",
+      "event": {
+        "type": "dev.tinhat.call.decline",
+        "sender": "@bob:x",
+        "origin_server_ts": 1793174398000,
+        "content": {
+          "ring": "$ring1:x",
+          "reason": "busy"
+        }
+      },
+      "ctx": {
+        "me": "@me:x",
+        "dm": true,
+        "senderJoined": true,
+        "inCallHere": true,
+        "cardUp": false,
+        "ownRings": [
+          "$ring1:x"
+        ],
+        "liveRings": []
+      },
+      "want": "declined"
+    }
+  ],
+  "rings": [
+    {
+      "name": "mine → own, the joined caller's → live",
+      "events": [
+        {
+          "sender": "@me:x",
+          "state_key": "_@me:x_ME1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "ME1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$m1"
+        },
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [
+          "$m1"
+        ],
+        "live": [
+          "$b1"
+        ]
+      }
+    },
+    {
+      "name": "a caller who has left the room: not live (their ring can't be named)",
+      "events": [
+        {
+          "sender": "@me:x",
+          "state_key": "_@me:x_ME1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "ME1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$m1"
+        },
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "leave"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [
+          "$m1"
+        ],
+        "live": []
+      }
+    },
+    {
+      "name": "banned / invited / knocking → not live",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        },
+        {
+          "sender": "@cat:x",
+          "state_key": "_@cat:x_C1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "C1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$c1"
+        },
+        {
+          "sender": "@dan:x",
+          "state_key": "_@dan:x_D1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "D1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$d1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "ban",
+        "@cat:x": "invite",
+        "@dan:x": "knock"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "membership unknown → not live (rings: join only)",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "me not joined → my rings don't count either",
+      "events": [
+        {
+          "sender": "@me:x",
+          "state_key": "_@me:x_ME1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "ME1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$m1"
+        }
+      ],
+      "membership": {
+        "@me:x": "leave"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "an expired membership → not live",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793159999999,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793159999999,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "a tombstone (empty content) → not live",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {},
+          "event_id": "$b1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "a state key that isn't the sender's → not live",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@me:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "no event id → skipped",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          }
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "a departed caller's ring + a joined third member's: only the joined one's",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        },
+        {
+          "sender": "@cat:x",
+          "state_key": "_@cat:x_C1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "C1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$c1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "leave",
+        "@cat:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": [
+          "$c1"
+        ]
+      }
+    },
+    {
+      "name": "two devices of mine, both live",
+      "events": [
+        {
+          "sender": "@me:x",
+          "state_key": "_@me:x_ME1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "ME1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$m1"
+        },
+        {
+          "sender": "@me:x",
+          "state_key": "_@me:x_ME2_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "ME2",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$m2"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [
+          "$m1",
+          "$m2"
+        ],
+        "live": []
+      }
+    },
+    {
+      "name": "legacy memberships[]: an expired and a foreign-scope entry before a live one → live",
+      "events": [
+        {
+          "event_id": "$bl",
+          "sender": "@bob:x",
+          "state_key": "@bob:x",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "memberships": [
+              {
+                "application": "m.call",
+                "call_id": "",
+                "scope": "m.room",
+                "device_id": "B0",
+                "created_ts": 1793159999999,
+                "expires": 14400000
+              },
+              {
+                "application": "m.call",
+                "call_id": "",
+                "scope": "m.user",
+                "device_id": "B9",
+                "created_ts": 1793174395000,
+                "expires": 14400000
+              },
+              {
+                "application": "m.call",
+                "call_id": "",
+                "scope": "m.room",
+                "device_id": "B1",
+                "created_ts": 1793174395000,
+                "expires": 14400000
+              }
+            ]
+          }
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": [
+          "$bl"
+        ]
+      }
+    },
+    {
+      "name": "legacy memberships[]: every entry expired → not live",
+      "events": [
+        {
+          "event_id": "$bl",
+          "sender": "@bob:x",
+          "state_key": "@bob:x",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "memberships": [
+              {
+                "application": "m.call",
+                "call_id": "",
+                "scope": "m.room",
+                "device_id": "B0",
+                "created_ts": 1793159999999,
+                "expires": 14400000
+              },
+              {
+                "application": "m.call",
+                "call_id": "",
+                "scope": "m.room",
+                "device_id": "B1",
+                "created_ts": 1793154400000,
+                "expires": 14400000
+              }
+            ]
+          }
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "legacy memberships[] under another user's key → not live",
+      "events": [
+        {
+          "event_id": "$bl",
+          "sender": "@bob:x",
+          "state_key": "@me:x",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "memberships": [
+              {
+                "application": "m.call",
+                "call_id": "",
+                "scope": "m.room",
+                "device_id": "B1",
+                "created_ts": 1793174395000,
+                "expires": 14400000
+              }
+            ]
+          }
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "membership null or \"\" → not joined",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b1"
+        },
+        {
+          "sender": "@cat:x",
+          "state_key": "_@cat:x_C1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "C1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$c1"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": null,
+        "@cat:x": ""
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": []
+      }
+    },
+    {
+      "name": "a replaced membership: only the current event's id names the ring (the state holds one event per key)",
+      "events": [
+        {
+          "sender": "@bob:x",
+          "state_key": "_@bob:x_B1_m.call",
+          "origin_server_ts": 1793174395000,
+          "content": {
+            "application": "m.call",
+            "call_id": "",
+            "scope": "m.room",
+            "device_id": "B1",
+            "created_ts": 1793174395000,
+            "expires": 14400000,
+            "focus_active": {
+              "type": "livekit",
+              "focus_selection": "oldest_membership"
+            },
+            "foci_preferred": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://x/livekit/jwt",
+                "livekit_alias": "!dm:x"
+              }
+            ]
+          },
+          "event_id": "$b2"
+        }
+      ],
+      "membership": {
+        "@me:x": "join",
+        "@bob:x": "join"
+      },
+      "me": "@me:x",
+      "want": {
+        "own": [],
+        "live": [
+          "$b2"
+        ]
+      }
+    }
+  ],
+  "texts": [
+    [
+      "Sam",
+      "Sam declined"
+    ],
+    [
+      "  Sam  ",
+      "Sam declined"
+    ],
+    [
+      "",
+      "They declined"
+    ],
+    [
+      "   ",
+      "They declined"
+    ],
+    [
+      "Zoë 🎮",
+      "Zoë 🎮 declined"
+    ]
+  ]
+}

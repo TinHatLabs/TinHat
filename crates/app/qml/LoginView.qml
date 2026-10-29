@@ -32,6 +32,12 @@ Item {
     property string homeserver: ""
     // a server that moved to its own domain (moved.rs): "OLD says it moved to NEW…" (the field changes only on a click)
     property string movedNote: ""
+    // 12.1.1 (restore_err.rs): the saved session didn't open and was KEPT — "newer" (written by a newer Tin Hat: Quit /
+    // Start fresh), "keyring" (the keyring didn't answer: Try again), "unreadable" (Try again / Start fresh); "" = none.
+    property string restoreProblem: ""
+    signal retryRestore()
+    signal startFresh()
+    signal quitApp()
     property string movedTo: ""   // the address the note offers (bridge.rs check_moved); the field changes only on a click
     // "" idle | "sent" (link is in their inbox) | "done" (password changed)
     property string resetStage: ""
@@ -56,6 +62,12 @@ Item {
     signal homeserverEdited(string value)
     signal useMovedServer()   // the person accepted the moved server's new address (the note's link)
     signal submit(string username, string password)
+    // 12.1.1 (replace_confirm.rs): does this device hold a saved session a sign-in would replace? (the parent asks the
+    // controller at the click) and the question's words. A sign-in or a new account then asks first: Continue / Back.
+    property var hasSavedSession: function () { return false }
+    property string replaceText: "This replaces the saved session on this device. Continue?"
+    property bool confirmReplace: false
+    property string _pendingKind: ""   // "login" | "create": what Continue carries on with
 
     // 10.0.6: self-test sign-in (env TINHAT_GUI_LOGIN="user:password") — the headless gates run the
     // real sign-in form instead of needing a pre-signed profile (the Flatpak E2E gate on the Flatpak build machine).
@@ -83,7 +95,7 @@ Item {
             usernameField.text = loginView.autoLogin.substring(0, i)
             passwordField.text = loginView.autoLogin.substring(i + 1)
             console.log("[login] self-test sign-in as " + usernameField.text)
-            loginView.tryLogin()
+            loginView.tryLogin(true)   // the self-test hook is not a person: it never asks (replace_confirm::needed)
         }
     }
     signal resetRequested(string email)
@@ -640,6 +652,51 @@ Item {
                     }
                 }
 
+                // ---- 12.1.1: "This replaces the saved session on this device. Continue?" (replace_confirm.rs) ----
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    visible: loginView.confirmReplace && !loginView.busy
+                    text: loginView.replaceText
+                    color: Th.loginSubtitleFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    Accessible.role: Accessible.AlertMessage
+                }
+                RowLayout {
+                    visible: loginView.confirmReplace && !loginView.busy
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: Kirigami.Units.gridUnit
+                    Repeater {
+                        model: [["continue", "Continue"], ["back", "Back"]]
+                        delegate: Controls.Label {
+                            id: replLabel
+                            required property var modelData
+                            function act() { if (modelData[0] === "continue") loginView.replaceContinue(); else loginView.replaceBack() }
+                            textFormat: Text.PlainText
+                            text: modelData[1]
+                            color: (replArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.underline: replArea.containsMouse || activeFocus
+                            activeFocusOnTab: true
+                            Keys.onReturnPressed: replLabel.act()
+                            Keys.onEnterPressed: replLabel.act()
+                            Keys.onSpacePressed: replLabel.act()
+                            Keys.onEscapePressed: loginView.replaceBack()
+                            Accessible.role: Accessible.Button
+                            Accessible.name: modelData[1]
+                            Accessible.onPressAction: replLabel.act()
+                            MouseArea {
+                                id: replArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: replLabel.act()
+                            }
+                        }
+                    }
+                }
                 // ---- Status line ---------------------------------------------
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -651,8 +708,50 @@ Item {
                     // 10.1 (TH-FIRST-09 / TH-FIRST-20): only a FAILURE is red, from the app palette — "Signed out"
                     // and "sign in again" are information, not errors.
                     color: loginView.busy ? Th.loginHintFg
-                         : (/^(signed out|you were signed out|your saved session)/i.test(loginView.status) ? Th.loginHintFg : Th.loginErrorFg)
+                         : ((loginView.restoreProblem.length > 0 || /^(signed out|you were signed out|your saved session|sign in to set this computer up fresh)/i.test(loginView.status)) ? Th.loginHintFg : Th.loginErrorFg)
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+                // 12.1.1: the way out of a session that didn't open (restore_err.rs). Quiet links like "Use <server>" above;
+                // only Start fresh forgets the session, and only when the person picks it.
+                RowLayout {
+                    id: restoreActions
+                    visible: loginView.restoreProblem.length > 0 && !loginView.busy && !loginView.showReset && !loginView.showCreate
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: Kirigami.Units.gridUnit
+                    Repeater {
+                        model: loginView.restoreProblem === "newer" ? [["quit", "Quit"], ["fresh", "Start fresh"]]
+                             : loginView.restoreProblem === "keyring" ? [["retry", "Try again"]]
+                             : [["retry", "Try again"], ["fresh", "Start fresh"]]
+                        delegate: Controls.Label {
+                            id: actLabel
+                            required property var modelData
+                            function act() {
+                                if (modelData[0] === "retry") loginView.retryRestore()
+                                else if (modelData[0] === "fresh") loginView.startFresh()
+                                else loginView.quitApp()
+                            }
+                            textFormat: Text.PlainText
+                            text: modelData[1]
+                            color: (actArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.underline: actArea.containsMouse || activeFocus
+                            // a link that works from the keyboard too (Tab, Enter / Space) and for assistive tech
+                            activeFocusOnTab: true
+                            Keys.onReturnPressed: actLabel.act()
+                            Keys.onEnterPressed: actLabel.act()
+                            Keys.onSpacePressed: actLabel.act()
+                            Accessible.role: Accessible.Button
+                            Accessible.name: modelData[1]
+                            Accessible.onPressAction: actLabel.act()
+                            MouseArea {
+                                id: actArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: actLabel.act()
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -661,18 +760,43 @@ Item {
 
 
     // Submit helper — read both fields at call time (works regardless of bindings).
-    function tryLogin() {
-        if (usernameField.text.length > 0 && passwordField.text.length > 0 && !loginView.busy && loginView.homeserver.trim().length > 0)
+    function tryLogin(selfTest, confirmed) {
+        if (usernameField.text.length > 0 && passwordField.text.length > 0 && !loginView.busy && loginView.homeserver.trim().length > 0) {
+            // replace_confirm::needed(saved_session, self_test); `confirmed` = Continue on the question just asked
+            if (selfTest !== true && confirmed !== true && loginView.hasSavedSession()) { loginView._pendingKind = "login"; loginView.confirmReplace = true; return }
             loginView.submit(usernameField.text, passwordField.text)
+        }
     }
+    // Continue on the replace question: carry on with what was asked for, through the same checks. Any edit of a field
+    // or a switch of face withdraws the question (Connections below), so Continue always acts on what was asked about.
+    function replaceContinue() {
+        var kind = loginView._pendingKind
+        loginView.confirmReplace = false
+        loginView._pendingKind = ""
+        if (kind === "login" && !loginView.showReset && !loginView.showCreate) loginView.tryLogin(false, true)
+        else if (kind === "create" && loginView.showCreate) loginView.tryCreate(true)
+    }
+    Connections { target: usernameField; function onTextChanged() { loginView.replaceBack() } }
+    Connections { target: passwordField; function onTextChanged() { loginView.replaceBack() } }
+    Connections { target: homeserverField; function onTextChanged() { loginView.replaceBack() } }
+    Connections { target: inviteCodeField; function onTextChanged() { loginView.replaceBack() } }
+    Connections { target: newUserField; function onTextChanged() { loginView.replaceBack() } }
+    Connections { target: displayNameField; function onTextChanged() { loginView.replaceBack() } }
+    Connections { target: newPwField; function onTextChanged() { loginView.replaceBack() } }
+    Connections { target: newPw2Field; function onTextChanged() { loginView.replaceBack() } }
+    onShowResetChanged: loginView.replaceBack()
+    onShowCreateChanged: loginView.replaceBack()
+    function replaceBack() { loginView.confirmReplace = false; loginView._pendingKind = "" }
 
     // 10.4: the create face — everything filled in, passwords agree, not mid-request.
     readonly property bool createReady: !loginView.busy && loginView.homeserver.trim().length > 0
         && inviteCodeField.text.trim().length > 0 && newUserField.text.trim().length > 0
         && newPwField.text.length >= 8 && newPwField.text === newPw2Field.text
-    function tryCreate() {
-        if (loginView.createReady)
+    function tryCreate(confirmed) {
+        if (loginView.createReady) {
+            if (confirmed !== true && loginView.hasSavedSession()) { loginView._pendingKind = "create"; loginView.confirmReplace = true; return }
             loginView.createAccount(inviteCodeField.text.trim(), newUserField.text.trim(), newPwField.text, displayNameField.text.trim())
+        }
     }
     // Back to sign-in; the typed secrets go with it (same reason as leaveReset).
     function leaveCreate() {

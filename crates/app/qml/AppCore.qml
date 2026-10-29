@@ -1000,15 +1000,9 @@ Item {
             catch (e) { core.mResolvedMedia = ({}) }
         }
     }
-    // A resolved video/file/audio (room.openMedia) opens in the system handler —
-    // the file:// is the decrypted cache copy, so E2EE media plays like any local file.
-    // Security review 2026-10-26: only a viewer type whose bytes Rust checked (viewer.rs), through the one gate.
-    Connections {
-        target: room
-        function onMediaOpenedChanged() {
-            if (room.mediaOpened.length > 0) LinkGate.openMedia(room.mediaOpened)
-        }
-    }
+    // A resolved video/file/audio (room.openMedia) opens in the system handler from ConversationView's own handler
+    // only: the main view's controller is this `room`, so a second handler here opened every attachment twice (gate 6,
+    // the old double "Open"; sec-night 2026-10-27). tools/link-gate-test.mjs checks there is exactly one.
     Connections {
         target: settings
         function onBugReportStatusChanged() {
@@ -2296,7 +2290,8 @@ Item {
         id: steamConfirm
         property string url: ""
         dialogTitle: "Open in Steam?"
-        message: steamConfirm.url
+        // the web's words (core/linkgate.ts openMessageLink; gate 6 parity note, assembly verify L)
+        message: "This link opens the Steam app: " + steamConfirm.url
         confirmText: "Open"
         cancelText: "Cancel"
         onConfirmed: LinkGate.openAsked(steamConfirm.url)

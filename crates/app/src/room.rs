@@ -585,7 +585,7 @@ impl qobject::RoomController {
             {
                 use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
                 let marker = room
-                    .load_user_receipt(ReceiptType::Read, ReceiptThread::Unthreaded, room.own_user_id())
+                    .load_user_receipt(ReceiptType::Read, &ReceiptThread::Unthreaded, room.own_user_id())
                     .await
                     .ok()
                     .flatten()
@@ -2228,6 +2228,16 @@ async fn do_moderate(
 ) -> Result<(), String> {
     let room = room_by_id(room_id).await?;
     let uid = matrix_sdk::ruma::UserId::parse(user_id).map_err(|e| format!("bad user id: {e}"))?;
+    if matches!(action, ModAction::Kick) {
+        // a stale entry (kicked / left already, guest-leave 12.1): the server would only answer about permissions
+        // (left_words.rs: they left, or someone else removed them, while the confirmation was open)
+        if let Ok(Some(m)) = room.get_member_no_sync(&uid).await {
+            let who = m.display_name().map(str::to_owned).unwrap_or_else(|| user_id.to_owned());
+            if let Some(gone) = crate::left_words::gone_text(crate::left_words::LeftScope::Room, &who, Some(m.membership().as_str()), false) {
+                return Err(gone);
+            }
+        }
+    }
     match action {
         ModAction::Kick => room.kick_user(&uid, reason).await.map_err(|e| e.to_string())?,
         ModAction::Ban => room.ban_user(&uid, reason).await.map_err(|e| e.to_string())?,
@@ -3887,7 +3897,7 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
             .or_else(|| room.canonical_alias().map(|a| a.to_string()))
             .unwrap_or_else(|| room.room_id().to_string()),
     };
-    let call_active = crate::rtc::is_call_active(room);
+    let call_active = crate::rtc::call_going_on(room).await;
 
     // ---- Window sync (the only network part) ----
     // Warm path: one backward page from the tip, stopping at the newest KNOWN event
@@ -4563,7 +4573,7 @@ async fn attach_read_receipts(room: &Room, msgs: &mut [serde_json::Value]) {
             continue;
         };
         let readers = match room
-            .load_event_receipts(ReceiptType::Read, ReceiptThread::Unthreaded, &eid)
+            .load_event_receipts(ReceiptType::Read, &ReceiptThread::Unthreaded, &eid)
             .await
         {
             Ok(r) => r,
@@ -4893,6 +4903,30 @@ pub enum JoinTarget {
     Person(String),
 }
 
+/// `!room:server/$event` → the room: cut at the first `/$` whose head is a whole room (`!id:server`, `#alias:server` or
+/// a v12 `!opaque`). An alias may itself hold `/$` (`#a/$b:server`, legal): its `#a` is no room, so it stays whole
+/// (assembly-037 D3; the web's joinLink.ts cutAtEvent is the same rule).
+fn cut_at_event(t: &str) -> &str {
+    use crate::share_link::js_space;
+    if !(t.starts_with('!') || t.starts_with('#')) {
+        return t;
+    }
+    let mut from = 0;
+    while let Some(off) = t[from..].find("/$") {
+        let i = from + off;
+        if i > 0 {
+            let head = &t[..i];
+            let with_server = head[1..].split_once(':').is_some_and(|(l, r)| !l.is_empty() && !r.is_empty());
+            let v12 = head.starts_with('!') && head.len() > 1 && !head.contains(':') && !head.contains(js_space);
+            if with_server || v12 {
+                return head;
+            }
+        }
+        from = i + 1;
+    }
+    t
+}
+
 /// Parse anything a user might paste into "join with a link".
 pub fn parse_join_link(input: &str) -> Result<JoinTarget, String> {
     use crate::share_link::{js_space, js_trim};
@@ -4929,18 +4963,12 @@ pub fn parse_join_link(input: &str) -> Result<JoinTarget, String> {
     // (`$…`) ends the room part (`/` is legal in an alias: a bare `#a/b:server` stays whole). Cut before decoding, so an
     // encoded `%2F` inside an alias stays in it and a broken escape in the event part can't stop the room decoding …
     let sigil = |t: &str| t.starts_with('!') || t.starts_with('#');
-    let target = match target.split_once('/') {
-        Some((head, tail)) if !head.is_empty() && sigil(head) && tail.starts_with('$') => head,
-        _ => target,
-    };
+    let target = cut_at_event(target);
     // anything still encoded (a non-ASCII alias); a malformed escape keeps the text as it is (the web's decode)
     let target = crate::share_link::decode_component(target);
     let target = js_trim(&target);
     // … and again after it, for a link that encoded the `/$` too
-    let target = match target.find("/$") {
-        Some(i) if i > 0 && sigil(target) => &target[..i],
-        _ => target,
-    };
+    let target = cut_at_event(target);
 
     if target.starts_with('@') && target.contains(':') {
         return Ok(JoinTarget::Person(target.to_string()));

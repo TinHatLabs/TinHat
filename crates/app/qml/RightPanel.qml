@@ -26,10 +26,22 @@ Item {
     clip: true
     // 10.1 (TH-RP-08): plain text with URLs → rich text with anchors (escaped first). Security review 2026-10-26: quotes
     // too — a " in a link closed the href attribute; the anchors open through LinkGate.
+    // BEGIN linkify (tools/linkify-test.mjs; Tin Hat Web's spaces/linkify.ts is the same walk)
+    /// Topic / bio text → escaped HTML with http(s) links, trailing punctuation outside. URLs are found and trimmed in the
+    /// RAW text, then escaped (assembly verify C, sec-night 2026-10-27: trimming the escaped text cut the `;` off
+    /// `&quot;`). Clicks go through LinkGate like every link.
     function linkify(s) {
-        var t = String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\n/g, "<br>")
-        return t.replace(/(https?:\/\/[^\s<]+)/g, function (u) { var trail = /[.,;:!?)]+$/.exec(u); var core = trail ? u.slice(0, -trail[0].length) : u; return "<a href=\"" + core + "\">" + core + "</a>" + (trail ? trail[0] : "") })
+        var esc = function (x) { return x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") }
+        var escText = function (x) { return esc(x).replace(/\n/g, "<br>") }
+        var raw = String(s || ""), re = /https?:\/\/\S+/g, out = "", last = 0, m
+        while ((m = re.exec(raw)) !== null) {
+            var u = m[0], t = /[.,;:!?)]+$/.exec(u), trail = t ? t[0] : "", core = u.slice(0, u.length - trail.length)
+            out += escText(raw.slice(last, m.index)) + "<a href=\"" + esc(core) + "\">" + esc(core) + "</a>" + esc(trail)
+            last = m.index + u.length
+        }
+        return out + escText(raw.slice(last))
     }
+    // END linkify
     required property var app
     property var members: []
     property var summary: ({})

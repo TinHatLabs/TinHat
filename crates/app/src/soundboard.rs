@@ -815,7 +815,7 @@ pub fn clip_url_for(source_url: &str) -> String {
 
 /// The pure half of [`clip_url_for`]: `s` already re-homed, `base` = the server's API base ("" signed out). The myinstants
 /// and relative-path mapping is byte-identical with Tin Hat Web's clipUrlFor (shared/clip.ts).
-fn clip_url_with(s: &str, base: &str) -> String {
+pub(crate) fn clip_url_with(s: &str, base: &str) -> String {
     let s = s.trim();
     match sound_route(s, base) {
         // the server's clip cache: myinstants clips, and (decided 2026-10-26) another Tin Hat server's uploads — never

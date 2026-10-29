@@ -182,7 +182,7 @@ Window {
             if (!speakingOnly || selfSpeaking || selfLinger || warnLinger) {
                 out.push({ key: "__self", label: "You", speaking: selfSpeaking,
                            muted: app.mMicMuted, deafened: app.mDeafened, self: true,
-                           sharing: app.mCallSharing, more: false, warn: warnLinger })
+                           sharing: app.mCallSharing || (app.mVideoTiles || []).some(function(t) { return t.companionOf === "You" }), more: false, warn: warnLinger }) // (or our phone shares for us)
             }
 
             // --- remote pills (dedupe mVideoTiles by identity; skip the self-view entry) ---
@@ -191,7 +191,7 @@ Window {
             var tiles = app.mVideoTiles || []
             for (var i = 0; i < tiles.length; ++i) {
                 var t = tiles[i]
-                var p = t.participant || ""
+                var p = t.companionOf || t.participant || "" // a phone's companion share counts as its person's (screen share P3)
                 if (!p || p === "You" || t.id === "vid_selfview") continue
                 if (seen[p] === undefined) {
                     seen[p] = remotes.length

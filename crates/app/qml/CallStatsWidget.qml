@@ -124,21 +124,30 @@ Item {
         var chips = []
         if (main && main.c) chips.push(main.c)
         if (main && main.k !== "a" && main.res) chips.push(main.res)
-        return { id: p.id, cq: p.dot || null, cqRaw: p.cq || "", inc: inc, out: out, never: !p.outEver, spark: p.spark || [],
-                 chips: chips, incTracks: inT, outTracks: p.out && p.out.t ? p.out.t : [], worst: w.worstOf([inc.band, out.band, p.dot || null]) }
+        var v = { id: p.id, cq: p.dot || null, cqRaw: p.cq || "", inc: inc, out: out, never: !p.outEver, spark: p.spark || [],
+                 chips: chips, incTracks: inT, outTracks: p.out && p.out.t ? p.out.t : [], worst: w.worstOf([inc.band, out.band, p.dot || null]),
+                 ownShare: p.ownShare === true }
+        // screen share P3: their phone's share (callstats_ctl.rs fold_snapshot) — a sub-line of this row, its incoming
+        // lane counts for the row's band and the total (the web's PersonView.share)
+        if (p.share) { v.share = w.viewOf(p.share); v.worst = w.worstOf([v.worst, v.share.worst]) }   // (its connection, in + out)
+        return v
     }
     readonly property var rowViews: {
         if (w.sample) return w.sampleRows
         if (w.demoMs > 0) return w.demoRows
         if (!w.inCall) return []
-        return (w.snap.peers || []).map(function (p) { var v = w.viewOf(p); v.who = w.personOf(p.id); return v })
+        return (w.snap.peers || []).map(function (p) {
+            var v = w.viewOf(p); v.who = w.personOf(p.id)
+            if (v.ownShare) v.who = { mxid: v.who.mxid, name: "Your screen", avatar: v.who.avatar }   // our own phone's share
+            return v
+        })
     }
     // order + bands + summary: the shared callPeople (WIDGETS.md §10.6, people.rs — the web's CallStats.tsx): rows by
     // name (ASCII lower-case, the name, the id), each row's band, the FIRST row with the worst band
     readonly property var cp: {
         var none = { order: [], bands: [], summary: { kind: "alone" } }
         if (!w.wc) return none
-        var input = w.rowViews.map(function (v) { return { id: v.id, name: String(v.who && v.who.name ? v.who.name : ""), cq: v.cqRaw || null, inBand: v.inc.band || null, outBand: v.out.band || null } })
+        var input = w.rowViews.map(function (v) { return { id: v.id, name: String(v.who && v.who.name ? v.who.name : ""), cq: v.cqRaw || null, inBand: (v.share ? w.worstOf([v.inc.band, v.share.inc.band, v.share.cq, v.share.out.band]) : v.inc.band) || null, outBand: v.out.band || null } })
         try { return JSON.parse(String(w.wc.callPeople(JSON.stringify(input)))) } catch (e) { return none }
     }
     readonly property var rows: {
@@ -175,7 +184,7 @@ Item {
                      codec: String(top.encPick || "").replace(/ \(browser\)$/, ""), res: res, limit: lim }
         })
     }
-    readonly property real totalIn: w.sample ? 1498 : w.rows.reduce(function (a, r) { return a + r.inc.kbps }, 0)
+    readonly property real totalIn: w.sample ? 1498 : w.rows.reduce(function (a, r) { return a + r.inc.kbps + (r.share ? r.share.inc.kbps : 0) }, 0)
     readonly property real totalOut: w.sample ? 1260 : w.you.reduce(function (a, t) { return a + t.kbps }, 0)
 
     // ── the header: totals (open) / the one-line summary (folded, S) ──
@@ -291,7 +300,7 @@ Item {
         id: pr
         property var row
         readonly property bool open: details.opened && details.pid === pr.row.id
-        height: 58
+        height: pr.row.share ? 74 : 58   // (+ the share's sub-line, 16)
         radius: 8
         color: (prMa.containsMouse || pr.open) && !w.preview ? Th.widgetRowBgHover : "transparent"
         Behavior on color { enabled: !!w.hostRef && w.hostRef.dur > 0; ColorAnimation { duration: w.hostRef ? w.hostRef.dur : 0 } }
@@ -343,6 +352,32 @@ Item {
             arrow: "↑"
             lane: pr.row.out
             tip: pr.row.never ? "No report from their app yet" : "How " + pr.row.who.name + " gets you"
+        }
+        // screen share P3: their phone's share as a sub-line (y 56): "Screen" + its chips + its incoming lane
+        RowLayout {
+            visible: !!pr.row.share
+            x: 38; y: 56
+            width: parent.width - 38 - 6
+            height: 14
+            spacing: 4
+            Repeater {
+                model: pr.row.share ? ["Screen"].concat(pr.row.share.chips) : []
+                delegate: Rectangle {
+                    required property var modelData
+                    Layout.preferredHeight: 14
+                    Layout.preferredWidth: shT.implicitWidth + 10
+                    radius: 4
+                    color: Th.widgetChipBg
+                    WidgetText { id: shT; anchors.centerIn: parent; role: "chip"; text: String(modelData); color: Th.widgetChipFg }
+                }
+            }
+            Lane {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 12
+                arrow: "↓"
+                lane: pr.row.share ? pr.row.share.inc : ({ kbps: 0, band: null, fill: 0, none: true })
+                tip: pr.row.who.name + "'s screen, shared from their phone"
+            }
         }
         WidgetSparkline {
             x: parent.width - 6 - 48; y: 26

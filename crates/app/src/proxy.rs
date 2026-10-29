@@ -65,6 +65,13 @@ pub fn rebase_url(url: &str) -> String {
     rebase_onto(url, &b, &known_bases())
 }
 
+/// Unit tests never run main(), which installs the process's rustls provider (aws-lc-rs) before any client exists;
+/// matrix-sdk 0.19's reqwest 0.13 is built without one and panics on `Client::builder().build()` otherwise.
+#[cfg(test)]
+pub(crate) fn test_tls_provider() {
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+}
+
 #[cfg(test)]
 pub(crate) fn rebase_onto_for_tests(url: &str, base: &str, known: &[String]) -> String {
     rebase_onto(url, base, known)
@@ -274,6 +281,7 @@ mod tests {
     #[test]
     fn the_extras_carry_the_bearer() {
         use std::io::{Read, Write};
+        test_tls_provider();
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         let server = std::thread::spawn(move || {
@@ -318,6 +326,7 @@ mod tests {
     #[test]
     fn api_requests_carry_the_user_agent() {
         use std::io::{Read, Write};
+        test_tls_provider();
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         let server = std::thread::spawn(move || {

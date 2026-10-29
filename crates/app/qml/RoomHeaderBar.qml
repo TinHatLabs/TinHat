@@ -291,6 +291,17 @@ Item {
                 tip: headerBar.infoOpen ? "Close room info" : "Room info & members"
                 onClicked: headerBar.infoRequested()
             }
+            // the Guests room only: "Copy guest link" after the row (the web's CopyLink.tsx header button; guests_ctl.rs
+            // copyOffered = where the bar under the header offers Copy)
+            HeaderIconButton {
+                readonly property var g: headerBar.app && headerBar.app.mGuests ? headerBar.app.mGuests : ({})
+                Layout.row: 0; Layout.column: hrow.lastColumn + 1
+                visible: g.copyOffered === true && headerBar.roomId.length > 0 && g.room === headerBar.roomId
+                app: headerBar.app
+                iconName: "link-symbolic"
+                tip: String((g.words || {}).copy || "Copy guest link")
+                onClicked: headerBar.app.guestsCtl.copyLink()
+            }
             // the row's other buttons (added from the editor, or all of them in another look / size) and its dividers
             Repeater {
                 model: hrow.generics

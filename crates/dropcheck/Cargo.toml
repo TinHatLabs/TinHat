@@ -6,9 +6,11 @@ license.workspace = true
 description = "Regression check: dropping a matrix-sdk sqlite-store Client off-runtime aborts; the runtime EnterGuard (see app main.rs) prevents it."
 
 [dependencies]
-matrix-sdk = { version = "0.18", default-features = false, features = ["e2e-encryption", "bundled-sqlite"] }
+matrix-sdk = { version = "0.19", default-features = false, features = ["e2e-encryption", "bundled-sqlite"] }
 tokio = { version = "1", features = ["rt-multi-thread"] }
-time = "=0.3.47"
+time = "0.3.55"
+# matrix-sdk 0.19's reqwest is built without a rustls provider: install the app's (aws-lc-rs) first, as main() does
+rustls = "0.23"
 
 [[bin]]
 name = "tinhat-dropcheck"

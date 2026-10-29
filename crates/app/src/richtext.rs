@@ -95,7 +95,8 @@ fn is_void(tag: &str) -> bool {
 const HTML_NS: &str = "http://www.w3.org/1999/xhtml";
 
 enum Step {
-    Node(NodeRef, usize, bool),
+    /// node, depth, inside a spoiler, inside a kept link
+    Node(NodeRef, usize, bool, bool),
     Close(String),
 }
 
@@ -106,19 +107,23 @@ pub fn sanitize(html: &str) -> Option<String> {
         return None;
     }
     let doc = Html::parse(html);
+    // a body with a link the reader may follow loses its reordering bidi controls everywhere (text, alt text, spoiler
+    // reasons): an override before the link reorders its text as much as one inside it (assembly-038, D-c review)
+    let links = has_kept_link(&doc);
+    let strip = |t: &str| -> String { if links { t.chars().filter(|c| !is_bidi_control(*c)).collect() } else { t.to_string() } };
     let mut out = String::with_capacity(html.len() + 16);
     let mut stack: Vec<Step> = Vec::new();
-    push_children(&mut stack, doc.children(), 0, false);
+    push_children(&mut stack, doc.children(), 0, false, false);
     while let Some(step) = stack.pop() {
-        let (node, depth, in_spoiler) = match step {
+        let (node, depth, in_spoiler, in_link) = match step {
             Step::Close(s) => {
                 out.push_str(&s);
                 continue;
             }
-            Step::Node(n, d, sp) => (n, d, sp),
+            Step::Node(n, d, sp, l) => (n, d, sp, l),
         };
         match node.data() {
-            NodeData::Text(t) => esc_text(&mut out, &t.borrow()),
+            NodeData::Text(t) => esc_text(&mut out, &strip(&t.borrow())),
             NodeData::Element(el) => {
                 // svg, math and anything else outside HTML: gone with its contents (foreign content is where the
                 // parser differentials live)
@@ -137,23 +142,24 @@ pub fn sanitize(html: &str) -> Option<String> {
                     Rule::Drop => {}
                     Rule::Image => {
                         let alt = attr_of(el, "alt").unwrap_or_default();
-                        let alt: String = alt.trim().chars().take(MAX_ALT).collect();
-                        esc_text(&mut out, &alt);
+                        let alt: String = js_trim_alt(&alt).chars().take(MAX_ALT).collect();
+                        esc_text(&mut out, &strip(&alt));
                     }
-                    Rule::Transparent => push_children(&mut stack, node.children(), depth + 1, in_spoiler),
+                    Rule::Transparent => push_children(&mut stack, node.children(), depth + 1, in_spoiler, in_link),
                     Rule::Wrap(outer, inner) => {
                         out.push_str(&format!("<{outer}><{inner}>"));
                         stack.push(Step::Close(format!("</{inner}></{outer}>")));
-                        push_children(&mut stack, node.children(), depth + 1, in_spoiler);
+                        push_children(&mut stack, node.children(), depth + 1, in_spoiler, in_link);
                     }
-                    Rule::Keep(name) => match start_tag(name, el, &node) {
+                    Rule::Keep(name) => match start_tag(name, el, &node, links, in_link) {
                         // a link nobody may follow: its text, no anchor
-                        None => push_children(&mut stack, node.children(), depth + 1, in_spoiler),
+                        None => push_children(&mut stack, node.children(), depth + 1, in_spoiler, in_link),
                         Some((start, close, spoiler)) => {
                             out.push_str(&start);
                             if !is_void(name) {
                                 stack.push(Step::Close(close));
-                                push_children(&mut stack, node.children(), depth + 1, in_spoiler || spoiler);
+                                // inside a kept link from here down (assembly-038: carried, not re-derived per element)
+                                push_children(&mut stack, node.children(), depth + 1, in_spoiler || spoiler, in_link || name == "a");
                             }
                         }
                     },
@@ -168,9 +174,9 @@ pub fn sanitize(html: &str) -> Option<String> {
     Some(out)
 }
 
-fn push_children(stack: &mut Vec<Step>, children: ruma_html::Children, depth: usize, in_spoiler: bool) {
+fn push_children(stack: &mut Vec<Step>, children: ruma_html::Children, depth: usize, in_spoiler: bool, in_link: bool) {
     let kids: Vec<NodeRef> = children.collect();
-    stack.extend(kids.into_iter().rev().map(|n| Step::Node(n, depth, in_spoiler)));
+    stack.extend(kids.into_iter().rev().map(|n| Step::Node(n, depth, in_spoiler, in_link)));
 }
 
 fn attr_of(el: &ruma_html::ElementData, name: &str) -> Option<String> {
@@ -179,10 +185,12 @@ fn attr_of(el: &ruma_html::ElementData, name: &str) -> Option<String> {
 
 /// An allowed element's start tag (only the attributes the rules name, rewritten), its end tag (plus the real host
 /// after a link whose text names another), and whether it is a spoiler. `None`: an `<a>` without a link we allow.
-fn start_tag(name: &'static str, el: &ruma_html::ElementData, node: &NodeRef) -> Option<(String, String, bool)> {
+fn start_tag(name: &'static str, el: &ruma_html::ElementData, node: &NodeRef, links: bool, in_link: bool) -> Option<(String, String, bool)> {
     let mut start = format!("<{name}");
     let mut close = format!("</{name}>");
     let mut spoiler = false;
+    // a kept link and everything inside it: no member colours, no spoiler (`in_link` is carried down by sanitize)
+    let linked = name == "a" || in_link;
     match name {
         "a" => {
             let href = attr_of(el, "href").and_then(|h| safe_href(&h))?;
@@ -209,11 +217,12 @@ fn start_tag(name: &'static str, el: &ruma_html::ElementData, node: &NodeRef) ->
                 start.push_str(&format!(" class=\"{}\"", langs.join(" ")));
             }
         }
-        "span" => {
+        "span" if !linked => {
             if let Some(reason) = attr_of(el, "data-mx-spoiler") {
                 // the shape embeds::hide_spoilers reads: the attribute right after the tag name, nothing but text inside
                 spoiler = true;
                 start.push_str(" data-mx-spoiler");
+                let reason: String = if links { reason.chars().filter(|c| !is_bidi_control(*c)).collect() } else { reason };
                 if !reason.is_empty() {
                     start.push_str("=\"");
                     esc_attr(&mut start, &reason);
@@ -223,7 +232,7 @@ fn start_tag(name: &'static str, el: &ruma_html::ElementData, node: &NodeRef) ->
         }
         _ => {}
     }
-    if !spoiler {
+    if !spoiler && !linked {
         let mut style = Vec::new();
         if let Some(c) = attr_of(el, "data-mx-color").or_else(|| attr_of(el, "color")).filter(|c| is_hex_colour(c)) {
             style.push(format!("color:{}", c.to_ascii_lowercase()));
@@ -239,6 +248,39 @@ fn start_tag(name: &'static str, el: &ruma_html::ElementData, node: &NodeRef) ->
     Some((start, close, spoiler))
 }
 
+/// An alt text trimmed as JavaScript's String.trim does (Tin Hat Web): Unicode White_Space except U+0085, plus U+FEFF
+/// (assembly-038, D-c review round 2: a BOM before the alt made the two apps read different words).
+fn js_trim_alt(s: &str) -> &str {
+    s.trim_matches(|c: char| (c.is_whitespace() && c != '\u{85}') || c == '\u{FEFF}')
+}
+
+/// Does the body hold a link the reader may follow (an `<a>` whose href we keep)?
+fn has_kept_link(doc: &Html) -> bool {
+    let mut stack: Vec<NodeRef> = doc.children().collect();
+    while let Some(n) = stack.pop() {
+        if let Some(e) = n.as_element() {
+            if &*e.name.ns == HTML_NS && &*e.name.local == "a" && attr_of(e, "href").and_then(|h| safe_href(&h)).is_some() {
+                return true;
+            }
+        }
+        stack.extend(n.children());
+    }
+    false
+}
+
+/// Elements whose edges separate words in a link's claim text (a line break, a block, a cell, a raised or lowered part:
+/// `paypal.com<br>x` shows two words, so it is checked as two; the web's claims.ts claimText, the same list).
+const CLAIM_BREAKS: &[&str] = &[
+    "br", "hr", "p", "div", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "table", "thead", "tbody",
+    "tr", "th", "td", "caption", "pre", "details", "summary", "sub", "sup",
+];
+
+/// The bidi controls that reorder text (embeddings, overrides, isolates): dropped from a whole body that holds a kept link.
+/// The marks (U+200E, U+200F, U+061C) stay: they can't reorder letters (shared vector: a spoof note through U+200E).
+fn is_bidi_control(c: char) -> bool {
+    matches!(c, '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}')
+}
+
 fn has_link_ancestor(node: &NodeRef) -> bool {
     let mut cur = node.parent();
     while let Some(p) = cur {
@@ -250,28 +292,39 @@ fn has_link_ancestor(node: &NodeRef) -> bool {
     false
 }
 
-/// The visible text of an element (what the reader takes the link for): its text nodes, an image's alt.
+/// The visible text of an element (what the reader takes the link for): its text nodes, an image's alt; a space at each
+/// edge of a [`CLAIM_BREAKS`] element.
 fn text_of(node: &NodeRef) -> String {
     let mut s = String::new();
-    let mut stack: Vec<NodeRef> = node.children().collect();
+    // None = a word break
+    let mut stack: Vec<Option<NodeRef>> = node.children().map(Some).collect();
     stack.reverse();
-    while let Some(n) = stack.pop() {
+    while let Some(item) = stack.pop() {
+        let Some(n) = item else {
+            s.push(' ');
+            continue;
+        };
         match n.data() {
             NodeData::Text(t) => s.push_str(&t.borrow()),
             NodeData::Element(el) => {
                 if &*el.name.ns != HTML_NS {
                     continue;
                 }
+                let brk = CLAIM_BREAKS.contains(&&*el.name.local);
                 match rule_of(&el.name.local) {
                     Rule::Drop => {}
                     Rule::Image => {
                         let attrs = el.attrs.borrow();
                         if let Some(a) = attrs.iter().find(|a| &*a.name.local == "alt") {
-                            s.extend(a.value.trim().chars().take(MAX_ALT));
+                            s.extend(js_trim_alt(&a.value).chars().take(MAX_ALT));
                         }
                     }
                     _ => {
-                        let mut kids: Vec<NodeRef> = n.children().collect();
+                        if brk {
+                            s.push(' ');
+                            stack.push(None);
+                        }
+                        let mut kids: Vec<Option<NodeRef>> = n.children().map(Some).collect();
                         kids.reverse();
                         stack.extend(kids);
                     }
@@ -279,7 +332,9 @@ fn text_of(node: &NodeRef) -> String {
             }
             _ => {}
         }
-        if s.len() > 4096 {
+        // assembly-038 (review): no 4 KiB cut any more — padding (zero-width spaces) before the host could hide it from
+        // the claim check. The input is bounded (MAX_INPUT), and the web reads the whole text too.
+        if s.len() > MAX_INPUT {
             break;
         }
     }
@@ -450,15 +505,17 @@ fn spoof_host(href: &str, text: &str) -> Option<String> {
 
 /// `(claimed, real)`: the link's text names another host than the http(s) link `href` opens (shared rule,
 /// member-content.json `claims`; the note after a link and the click-time question, both apps). `real` = the link's
-/// host, lower case, without a trailing dot or a leading `www.`. A link to matrix.to (a mention pill: its text is a
-/// display name) never claims. The first claim (see [`word_host`]) other than `real` counts.
+/// host, lower case, without a trailing dot or a leading `www.`. A matrix.to USER mention (a pill: its text is a display
+/// name, its click opens the profile flyout — ChatBubble.qml mentionTarget) never claims; any other link to matrix.to
+/// (a room, an event) is checked like every link (sec-night 2026-10-27, assembly verify B). The first claim (see
+/// [`word_host`]) other than `real` counts.
 pub fn claim_for(href: &str, text: &str) -> Option<(String, String)> {
     let u = Url::parse(href).ok()?;
     if !matches!(u.scheme(), "http" | "https") {
         return None;
     }
     let real = norm_host(u.host_str()?);
-    if real == "matrix.to" {
+    if real == "matrix.to" && mention_href_re().is_match(href) {
         return None;
     }
     let t = invisible_re().replace_all(text, "");
@@ -468,8 +525,9 @@ pub fn claim_for(href: &str, text: &str) -> Option<(String, String)> {
 /// The host one word of a link's text claims (launch-gate's review, 2026-10-26: punctuation around a host hid it, and
 /// any dotted word — Node.js, package.json, Valheim.exe — counted). Leading and trailing characters that are not
 /// letters or digits go (`(bank.com)`, `bank.com!`, `'bank.com'`, `bank.com.`); then the word claims a host when
-///   - it has a scheme (`://`, http/https only), starts with `www.` or has a path (`/`), and its host is dotted with a
-///     last label of >= 2 ASCII letters or `xn--`; or
+///   - it has a scheme (`://`, http/https only), starts with `www.` or has a path (`/`; a `/` among the trimmed trailing
+///     characters counts too: `bank.md/` is explicit, sec-night 2026-10-27, assembly verify A), and its host is dotted
+///     with a last label of >= 2 ASCII letters or `xn--`; or
 ///   - it is a bare dotted name whose last label is a real top-level domain: testvectors/tlds.txt (IANA's list, shared
 ///     with the web) — js, json, exe, html are none.
 fn word_host(word: &str) -> Option<String> {
@@ -477,7 +535,8 @@ fn word_host(word: &str) -> Option<String> {
     if w.is_empty() {
         return None;
     }
-    let explicit = w.contains("://") || w.to_ascii_lowercase().starts_with("www.") || w.contains('/');
+    let trail = trail_re().find(word).map_or("", |m| m.as_str());
+    let explicit = w.contains("://") || w.to_ascii_lowercase().starts_with("www.") || w.contains('/') || trail.contains('/');
     let full = if w.contains("://") { w.to_string() } else { format!("http://{w}") };
     let u = Url::parse(&full).ok()?;
     if !matches!(u.scheme(), "http" | "https") {
@@ -507,6 +566,19 @@ pub const CODE_FILE_TLDS: &[&str] = &["md", "py", "rs", "sh", "pl"];
 fn edge_re() -> &'static regex::Regex {
     static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
     RE.get_or_init(|| regex::Regex::new(r"^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$").unwrap())
+}
+
+/// Trailing characters that are not letters or digits (`[^\p{L}\p{N}]+$`): a `/` there still makes the word explicit.
+fn trail_re() -> &'static regex::Regex {
+    static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    RE.get_or_init(|| regex::Regex::new(r"[^\p{L}\p{N}]+$").unwrap())
+}
+
+/// A matrix.to user mention href (ChatBubble.qml mentionTarget / the web's mention.ts, case-insensitive): the click
+/// opens the profile, never a browser.
+fn mention_href_re() -> &'static regex::Regex {
+    static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    RE.get_or_init(|| regex::Regex::new(r"(?i)^https://matrix\.to/#/(?:@|%40)[^/?#]+").unwrap())
 }
 
 /// The IANA top-level domains (testvectors/tlds.txt, shared with the web byte for byte), lower case.
@@ -861,6 +933,15 @@ mod tests {
         assert_eq!(sanitize(&s), None);
         assert_eq!(message_html(&s), "");
         assert_eq!(message_html(""), "");
+    }
+
+    /// assembly-038: padding before the named host can't push it out of the claim check (the web reads all the text)
+    #[test]
+    fn a_padded_link_text_still_names_its_host() {
+        let pad = "\u{200b}".repeat(4097);
+        let html = format!(r#"<a href="https://evil.example/login"><span>{pad}</span>paypal.com</a>"#);
+        let out = sanitize(&html).expect("rendered");
+        assert!(out.contains("(evil.example)"), "the real host is shown after the link: {}", &out[out.len().saturating_sub(200)..]);
     }
 
     /// Deep nesting: no stack overflow on a tokio-sized (2 MiB) stack, markup past MAX_DEPTH flattened, text kept.

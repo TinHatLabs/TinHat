@@ -499,7 +499,7 @@ async fn own_reaction_id(room: &Room, member_eid: &OwnedEventId) -> Option<Owned
             .and_then(|r| r.get("key"))
             .and_then(|k| k.as_str());
         if key == Some(ZZZ) {
-            return ev.event_id();
+            return ev.event_id().map(ToOwned::to_owned); // matrix-sdk 0.19: borrowed
         }
     }
     None
