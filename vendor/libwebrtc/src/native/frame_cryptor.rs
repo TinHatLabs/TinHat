@@ -48,6 +48,8 @@ pub struct KeyProviderOptions {
     pub failure_tolerance: i32,
     pub key_ring_size: i32,
     pub key_derivation_algorithm: KeyDerivationAlgorithm,
+    /// TINHAT PATCH: see webrtc-sys `KeyProviderOptions::discard_frame_when_cryptor_not_ready`.
+    pub discard_frame_when_cryptor_not_ready: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -110,6 +112,15 @@ impl KeyProvider {
 
     pub fn set_sif_trailer(&self, trailer: Vec<u8>) {
         self.sys_handle.set_sif_trailer(trailer);
+    }
+
+    /// TINHAT PATCH: (effective discard flag, length of the magic "unencrypted" trailer) as
+    /// libwebrtc's transformers read them.
+    pub fn effective_options(&self) -> (bool, usize) {
+        (
+            self.sys_handle.discard_frame_when_cryptor_not_ready(),
+            self.sys_handle.uncrypted_magic_bytes_len(),
+        )
     }
 }
 
@@ -295,6 +306,7 @@ impl From<KeyProviderOptions> for sys_fc::ffi::KeyProviderOptions {
             failure_tolerance: value.failure_tolerance,
             key_ring_size: value.key_ring_size,
             key_derivation_algorithm: value.key_derivation_algorithm.into(),
+            discard_frame_when_cryptor_not_ready: value.discard_frame_when_cryptor_not_ready,
         }
     }
 }

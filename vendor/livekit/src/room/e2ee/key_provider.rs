@@ -35,6 +35,9 @@ pub struct KeyProviderOptions {
     pub failure_tolerance: i32,
     pub key_ring_size: i32,
     pub key_derivation_algorithm: KeyDerivationAlgorithm,
+    /// TINHAT PATCH: drop frames that meet a disabled cryptor instead of passing them
+    /// through untransformed. Upstream default (false) kept here; Tin Hat sets true.
+    pub discard_frame_when_cryptor_not_ready: bool,
 }
 
 impl Default for KeyProviderOptions {
@@ -45,6 +48,7 @@ impl Default for KeyProviderOptions {
             failure_tolerance: DEFAULT_FAILURE_TOLERANCE,
             key_ring_size: DEFAULT_KEY_RING_SIZE,
             key_derivation_algorithm: DEFAULT_KEY_DERIVATION_ALGORITHM,
+            discard_frame_when_cryptor_not_ready: false,
         }
     }
 }
@@ -66,6 +70,7 @@ impl KeyProvider {
                 failure_tolerance: options.failure_tolerance,
                 key_ring_size: options.key_ring_size,
                 key_derivation_algorithm: options.key_derivation_algorithm,
+                discard_frame_when_cryptor_not_ready: options.discard_frame_when_cryptor_not_ready,
             }),
             latest_key_index: Arc::new(AtomicI32::new(0)),
         }
@@ -79,6 +84,7 @@ impl KeyProvider {
             failure_tolerance: options.failure_tolerance,
             key_ring_size: options.key_ring_size,
             key_derivation_algorithm: options.key_derivation_algorithm,
+            discard_frame_when_cryptor_not_ready: options.discard_frame_when_cryptor_not_ready,
         });
         handle.set_shared_key(0, shared_key);
         Self { handle, latest_key_index: Arc::new(AtomicI32::new(0)) }
@@ -112,6 +118,12 @@ impl KeyProvider {
 
     pub fn set_sif_trailer(&self, trailer: Vec<u8>) {
         self.handle.set_sif_trailer(trailer);
+    }
+
+    /// TINHAT PATCH: (discard_frame_when_cryptor_not_ready, magic-trailer length) as the native
+    /// transformers actually read them — what the tests assert, not the Rust-side options.
+    pub fn effective_options(&self) -> (bool, usize) {
+        self.handle.effective_options()
     }
 
     pub fn get_latest_key_index(&self) -> i32 {

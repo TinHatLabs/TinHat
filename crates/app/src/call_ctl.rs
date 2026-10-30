@@ -683,6 +683,12 @@ const SELFVIEW_ID: &str = "vid_selfview";
 /// Whether the local self-view tile is currently in the grid (so the drain loop's
 /// tile rebuild includes it). Set on JOIN — the tile is present for the whole call
 /// (avatar placeholder until the camera turns on) — and cleared on leave.
+/// 12.1.3: identities whose remote camera publication is muted (drawn as the avatar).
+fn muted_cameras() -> &'static std::sync::Mutex<std::collections::HashSet<String>> {
+    static M: std::sync::OnceLock<std::sync::Mutex<std::collections::HashSet<String>>> = std::sync::OnceLock::new();
+    M.get_or_init(Default::default)
+}
+
 fn selfview_active() -> &'static std::sync::atomic::AtomicBool {
     static A: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     &A
@@ -1022,9 +1028,16 @@ fn build_tiles(
             "serverMuted": sm, "serverMutedBy": sm_by,
         }));
     }
+    // 12.1.3: a MUTED camera is drawn as the avatar, never as its last frame. The camera tile STAYS in the model
+    // with `cameraMuted` (the tile paints the avatar over its video surface): dropping the row destroyed the delegate
+    // while its qml6glsink was still bound (VideoRemoved's predetach order exists to avoid exactly that crash).
+    let muted_cams = muted_cameras().lock().unwrap().clone();
     // identities that already have a CAMERA (non-screenshare) tile — no avatar tile for them.
-    let cam: std::collections::HashSet<&String> =
-        tiles.iter().filter(|(_, _, ss)| !ss).map(|(_, id, _)| id).collect();
+    let cam: std::collections::HashSet<&String> = tiles
+        .iter()
+        .filter(|(_, _, ss)| !ss)
+        .map(|(_, id, _)| id)
+        .collect();
     for (id, identity, ss) in tiles {
         let (rec_only, tuned_in) = tinhat_streamer::tile_recording_state(id);
         let (sm, sm_by) = server_mute_fields(identity);
@@ -1036,6 +1049,7 @@ fn build_tiles(
             "avatar": avatar_for(identity),
             "recordingOnly": rec_only, "tunedIn": tuned_in,
             "serverMuted": sm, "serverMutedBy": sm_by,
+            "cameraMuted": !ss && muted_cams.contains(identity),
         }));
     }
     for identity in participants {
@@ -1948,6 +1962,58 @@ impl Drop for JoiningMark {
     }
 }
 
+/// One membership write at a time (12.1.3): a join's publish (do_join, its background retry, the 30-min refresh) and an
+/// attempt's withdrawal of the SAME user+device state key must not interleave, or a late withdrawal lands after a newer
+/// same-room join's publish and that call goes on without a membership (no keys from peers).
+fn membership_write_lock() -> &'static tokio::sync::Mutex<()> {
+    static L: OnceLock<tokio::sync::Mutex<()>> = OnceLock::new();
+    L.get_or_init(|| tokio::sync::Mutex::new(()))
+}
+
+/// room id -> the join generation whose membership publish landed last (written under the membership write lock).
+fn membership_published() -> &'static std::sync::Mutex<std::collections::HashMap<String, u64>> {
+    static M: OnceLock<std::sync::Mutex<std::collections::HashMap<String, u64>>> = OnceLock::new();
+    M.get_or_init(Default::default)
+}
+
+/// Under the membership write lock: publish our membership for join `my_gen` and record it as this room's latest.
+/// `None` = not published because the attempt is already superseded (checked under the lock).
+async fn publish_membership_locked(room: &matrix_sdk::Room, svc: &str, my_gen: u64) -> Option<matrix_sdk::Result<()>> {
+    let _w = membership_write_lock().lock().await;
+    if join_gen_stale(my_gen) {
+        return None;
+    }
+    let r = crate::rtc::join_rtc_session(room, svc).await;
+    if r.is_ok() {
+        membership_published().lock().unwrap().insert(room.room_id().to_string(), my_gen);
+        // superseded WHILE the request ran (a leave's own, unlocked withdrawal may have landed before it): take it back
+        // now, still under the lock, so no newer join's publish can come in between
+        if join_gen_stale(my_gen) {
+            eprintln!("[call] join {my_gen}: superseded while publishing — withdrawing the membership again");
+            withdraw_membership_best_effort(room).await;
+        }
+    }
+    Some(r)
+}
+
+/// The claim rule (pure): join `my_gen` may withdraw the room's membership unless a NEWER join's publish landed there
+/// since (that membership is the newer call's). A newer join that hasn't published yet publishes after us (the lock).
+fn withdraw_allowed(my_gen: u64, last_published: Option<u64>) -> bool {
+    last_published.map(|g| g <= my_gen).unwrap_or(true)
+}
+
+/// Withdraw the membership join `my_gen` published, unless a newer join has published in this room since; under the
+/// membership write lock, so a newer join's publish always lands after this withdrawal, never before it.
+async fn withdraw_own_membership(room: &matrix_sdk::Room, my_gen: u64) {
+    let _w = membership_write_lock().lock().await;
+    let last = membership_published().lock().unwrap().get(room.room_id().as_str()).copied();
+    if withdraw_allowed(my_gen, last) {
+        withdraw_membership_best_effort(room).await;
+    } else {
+        eprintln!("[call] join {my_gen}: a newer join published in this room — its membership is left alone");
+    }
+}
+
 /// The call peers' media keys are accepted for (key_intake / keyrules rule 3), with its join generation:
 /// a join in progress (its room — peers start pushing keys the moment our membership lands, a moment
 /// before `active_call_room` is set — it is the newest intent, so it wins over a call being left), else
@@ -1975,9 +2041,11 @@ pub(crate) async fn republish_membership() {
     if active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) || join_gen_stale(my_gen) {
         return;
     }
-    match crate::rtc::join_rtc_session(&room, &svc).await {
-        Ok(()) => eprintln!("[call] membership re-published (Pad setting changed)"),
-        Err(e) => eprintln!("[call] membership re-publish failed: {e}"),
+    // the same path as every membership publish (lock, stale check under it, taken back if superseded meanwhile)
+    match publish_membership_locked(&room, &svc, my_gen).await {
+        Some(Ok(())) => eprintln!("[call] membership re-published (Pad setting changed)"),
+        Some(Err(e)) => eprintln!("[call] membership re-publish failed: {e}"),
+        None => {}
     }
 }
 
@@ -2618,6 +2686,21 @@ impl qobject::CallController {
                                 });
                             }
                             CallEvent::TrackMuteChanged { identity, category, muted: m } => {
+                                if category == "camera" {
+                                    // 12.1.3: a muted camera is drawn as the avatar, never frozen on its
+                                    // last frame (the SFU's blank frames are never played: they don't decrypt)
+                                    let changed = {
+                                        let mut set = muted_cameras().lock().unwrap();
+                                        if m { set.insert(identity.clone()) } else { set.remove(&identity) }
+                                    };
+                                    if changed {
+                                        eprintln!("[call] remote camera of {identity} {}", if m { "muted: avatar" } else { "unmuted: video" });
+                                        let built = build_tiles(&tiles, &participants, &muted);
+                                        let json = built.json.clone();
+                                        publish_desired(built);
+                                        let _ = qt2.queue(move |mut o| o.as_mut().set_video_tiles(QString::from(&json)));
+                                    }
+                                }
                                 if category == "mic" {
                                     if m { muted.insert(identity); } else { muted.remove(&identity); }
                                     let built = build_tiles(&tiles, &participants, &muted);
@@ -2972,6 +3055,7 @@ impl qobject::CallController {
         set_desired_tiles("[]"); // stop the poll from re-publishing stale tiles
         self.as_mut().set_video_tiles(QString::from("[]")); // QML destroys delegates last
         selfview_active().store(false, std::sync::atomic::Ordering::Relaxed);
+        muted_cameras().lock().unwrap().clear(); // 12.1.3: per call
         self.as_mut().set_camera_on(false);
         self.as_mut().set_music_playing(false); // CallSession::close tears the music track down
         let room_id = self.room_id().to_string();
@@ -4996,6 +5080,18 @@ async fn host_prompt_json(client: &matrix_sdk::Client, room: &matrix_sdk::Room, 
 /// `TINHAT_TEST_CALL_HOST` — ONLY in a `--features lab-call-host` build (build.rs refuses that feature in a release;
 /// without it the variable is never read and its name isn't in the binary). Always None in a normal build: the user
 /// answers the sheet.
+/// The echo-cancellation bench toggle (aec-first-join rig): the file whose appearance flips AEC off/on once, read from
+/// `TINHAT_BENCH_AEC_TOGGLE_FILE` — ONLY in a `--features bench-aec` build (build.rs refuses that feature in a release;
+/// without it the variable is never read and its name isn't in the binary).
+#[cfg(feature = "bench-aec")]
+fn bench_aec_toggle_file() -> Option<String> {
+    std::env::var("TINHAT_BENCH_AEC_TOGGLE_FILE").ok().filter(|s| !s.is_empty())
+}
+#[cfg(not(feature = "bench-aec"))]
+fn bench_aec_toggle_file() -> Option<String> {
+    None
+}
+
 #[cfg(feature = "lab-call-host")]
 fn lab_call_host_answer() -> Option<String> {
     std::env::var("TINHAT_TEST_CALL_HOST").ok().filter(|a| !a.is_empty())
@@ -5127,7 +5223,10 @@ async fn do_join(
             if backoff_ms > 0 {
                 tokio::time::sleep(std::time::Duration::from_millis(backoff_ms)).await;
             }
-            match crate::rtc::join_rtc_session(&room, &focus.service_url).await {
+            let Some(published) = publish_membership_locked(&room, &focus.service_url, my_gen).await else {
+                break; // superseded: the check below stands down
+            };
+            match published {
                 Ok(()) => {
                     mem_ok = true;
                     break;
@@ -5135,7 +5234,7 @@ async fn do_join(
                 Err(e) => eprintln!("[call] membership publish attempt {} failed: {e}", attempt + 1),
             }
         }
-        if !mem_ok {
+        if !mem_ok && !join_gen_stale(my_gen) {
             eprintln!("[call] membership NOT published after 3 attempts — peers can't key us; retrying in background");
             let room = room.clone();
             let svc = focus.service_url.clone();
@@ -5146,7 +5245,10 @@ async fn do_join(
                     if active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) {
                         break;
                     }
-                    match crate::rtc::join_rtc_session(&room, &svc).await {
+                    let Some(published) = publish_membership_locked(&room, &svc, my_gen).await else {
+                        break; // superseded
+                    };
+                    match published {
                         Ok(()) => {
                             // The call may have ENDED while that request was in flight —
                             // leave's withdrawal would then already have run, and this
@@ -5154,7 +5256,7 @@ async fn do_join(
                             // peers keep showing (and keying). Compensate immediately.
                             if active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) {
                                 eprintln!("[call] membership retry landed after the call ended — withdrawing");
-                                withdraw_membership_best_effort(&room).await;
+                                withdraw_own_membership(&room, my_gen).await;
                             } else {
                                 eprintln!("[call] membership published on background retry");
                             }
@@ -5165,6 +5267,15 @@ async fn do_join(
                 }
             });
         }
+    }
+    // Superseded (Hang Up, or a newer join) while the membership was being published: stand down
+    // BEFORE claiming active_call_room — the check further down compares against that value, so
+    // once we had written our own room there it could never withdraw, and a hang-up during the
+    // publish (which includes the power-level step and its echo wait, foreign-room round) left
+    // a 4h ghost membership. Withdrawn only if a newer attempt isn't claiming this room.
+    if join_gen_stale(my_gen) {
+        withdraw_own_membership(&room, my_gen).await;
+        return Err("superseded while publishing the membership".to_string());
     }
     // Our m.call.member is now (best-effort) PUBLISHED: record the room immediately so
     // leave_on_exit can withdraw it even if the app quits before this join finishes
@@ -5197,7 +5308,10 @@ async fn do_join(
                 if call_gone || room_switched || join_gen_stale(my_gen) {
                     break;
                 }
-                match crate::rtc::join_rtc_session(&room, &svc).await {
+                let Some(refreshed) = publish_membership_locked(&room, &svc, my_gen).await else {
+                    break; // superseded while waiting for the lock
+                };
+                match refreshed {
                     Ok(()) => {
                         eprintln!("[call] membership refreshed");
                         // Re-announce our (unchanged) media key too, so a peer who missed the
@@ -5223,9 +5337,7 @@ async fn do_join(
     // the call keys (they would belong to the newer attempt). The membership in THIS
     // room is withdrawn only if the newer attempt is not (yet) claiming this room.
     if join_gen_stale(my_gen) {
-        if active_call_room().lock().unwrap().as_deref() != Some(room_id) {
-            withdraw_membership_best_effort(&room).await;
-        }
+        withdraw_own_membership(&room, my_gen).await;
         return Err("superseded after publishing the membership".to_string());
     }
     let device_id = client.device_id().map(|d| d.to_string()).unwrap_or_default();
@@ -5254,9 +5366,7 @@ async fn do_join(
         let r = crate::rtc::key_recipients_now(&room, &user_id, &device_id, &[]).await;
         // superseded during that read: the keys slot belongs to the newer join
         if join_gen_stale(my_gen) {
-            if active_call_room().lock().unwrap().as_deref() != Some(room_id) {
-                withdraw_membership_best_effort(&room).await;
-            }
+            withdraw_own_membership(&room, my_gen).await;
             return Err("superseded before setting the call keys".to_string());
         }
         let (planner, _announce) = crate::callrules::Planner::start(key_index, crate::rtc::now_ms_pub(), &r.ids);
@@ -5307,7 +5417,7 @@ async fn do_join(
                 return Err(format!("connect (superseded): {e}"));
             }
             tinhat_streamer::abandon_partial_connect();
-            withdraw_membership_best_effort(&room).await;
+            withdraw_own_membership(&room, my_gen).await;
             *active_call_room().lock().unwrap() = None;
             return Err(format!("connect: {e}"));
         }
@@ -5317,7 +5427,7 @@ async fn do_join(
                 return Err("connect timed out (superseded)".to_string());
             }
             tinhat_streamer::abandon_partial_connect();
-            withdraw_membership_best_effort(&room).await;
+            withdraw_own_membership(&room, my_gen).await;
             *active_call_room().lock().unwrap() = None;
             return Err("connect timed out — the call may be stale, try again".to_string());
         }
@@ -5355,7 +5465,7 @@ async fn do_join(
         // Only clean the shared state if this attempt still owns it (see the connect
         // arms above). Closing OUR OWN session is always correct.
         if !join_gen_stale(my_gen) {
-            withdraw_membership_best_effort(&room).await;
+            withdraw_own_membership(&room, my_gen).await;
             *active_call_room().lock().unwrap() = None;
         }
         return Err(format!("mic: {e}"));
@@ -5462,6 +5572,11 @@ async fn do_join(
             let mut aec_retried = false;
             let mut last_ensure: Option<std::time::Instant> = None;
             tinhat_streamer::call::ec_rebind_reset(); // 10.5.2: the echo-reference follower is per call
+            // Bench hook (aec-first-join rig): once the file named by `TINHAT_BENCH_AEC_TOGGLE_FILE` appears,
+            // echo cancellation is flipped off and back on once, exactly as the Settings toggle does.
+            // `--features bench-aec` only (build.rs refuses it in a release): otherwise always None.
+            let bench_toggle_file = bench_aec_toggle_file();
+            let mut bench_toggled = false;
             loop {
                 tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                 // Same guards as the key loops: a fast leave+rejoin of the SAME room
@@ -5472,6 +5587,23 @@ async fn do_join(
                     || current_call().lock().await.is_none()
                 {
                     break;
+                }
+                if !bench_toggled && bench_toggle_file.as_deref().map(|f| std::path::Path::new(f).exists()).unwrap_or(false) {
+                    bench_toggled = true;
+                    let cell = current_call();
+                    let mut guard = cell.lock().await;
+                    // (Astra) only this healer's call: re-checked under the call lock
+                    let mine = active_call_room().lock().unwrap().as_deref() == Some(rid.as_str()) && !join_gen_stale(my_gen);
+                    if let Some(call) = guard.as_mut().filter(|_| mine) {
+                        for on in [false, true] {
+                            eprintln!("[bench] echo cancellation toggled {}", if on { "ON" } else { "OFF" });
+                            tinhat_streamer::set_aec_enabled(on);
+                            if let Err(e) = call.apply_aec() {
+                                eprintln!("[bench] apply_aec failed: {e}");
+                            }
+                        }
+                    }
+                    continue;
                 }
                 if tinhat_streamer::call::take_aec_fallback() && !aec_retried {
                     aec_retry_at =
@@ -5991,5 +6123,59 @@ mod recorder_tests {
         assert!(!recorder_identity("recorder", rec));
         // no recorder announced: nobody is one
         assert!(!recorder_identity("@recorder:example.com:ABC", None));
+    }
+}
+
+#[cfg(test)]
+mod muted_camera_tests {
+    use super::*;
+
+    /// 12.1.3 (cryptor-not-ready): the SFU's blank frames are never played (they don't decrypt), so a MUTED remote
+    /// camera must be drawn as the avatar, never frozen on its last frame; unmuting brings the video tile back.
+    #[test]
+    fn a_muted_camera_is_drawn_as_the_avatar() {
+        let who = "@ana:mute.test:DEV1".to_string();
+        let tiles = vec![("vid_TR_cam".to_string(), who.clone(), false), ("vid_TR_ss".to_string(), who.clone(), true)];
+        let participants: std::collections::HashSet<String> = [who.clone()].into_iter().collect();
+        let muted = std::collections::HashSet::new();
+        // (kind, id, cameraMuted) of this person's tiles
+        let rows = |b: &BuiltTiles| -> Vec<(String, String, bool)> {
+            let v: Vec<serde_json::Value> = serde_json::from_str(&b.json).unwrap();
+            v.iter()
+                .filter(|t| t["participant"] == who.as_str())
+                .map(|t| (t["kind"].as_str().unwrap().to_string(), t["id"].as_str().unwrap().to_string(), t["cameraMuted"] == true))
+                .collect()
+        };
+        muted_cameras().lock().unwrap().remove(&who);
+        let live = rows(&build_tiles(&tiles, &participants, &muted));
+        assert!(live.contains(&("video".into(), "vid_TR_cam".into(), false)), "camera on: video tile, {live:?}");
+        assert!(!live.iter().any(|r| r.0 == "avatar"), "camera on: no avatar tile, {live:?}");
+        muted_cameras().lock().unwrap().insert(who.clone());
+        let off = rows(&build_tiles(&tiles, &participants, &muted));
+        // the SAME tile (same id: the delegate and its bound video surface live on), drawn as the avatar
+        assert!(off.contains(&("video".into(), "vid_TR_cam".into(), true)), "camera muted: same tile, cameraMuted, {off:?}");
+        assert!(!off.iter().any(|r| r.0 == "avatar"), "camera muted: no second (avatar) tile, {off:?}");
+        assert!(off.contains(&("screenshare".into(), "vid_TR_ss".into(), false)), "a share is not a camera: {off:?}");
+        muted_cameras().lock().unwrap().remove(&who);
+        let back = rows(&build_tiles(&tiles, &participants, &muted));
+        assert!(back.contains(&("video".into(), "vid_TR_cam".into(), false)), "unmuted: video again, {back:?}");
+    }
+}
+
+#[cfg(test)]
+mod superseded_membership_tests {
+    use super::*;
+
+    /// 12.1.3: a join may withdraw the membership it published unless a NEWER join's publish has landed in that room
+    /// since (publishes and withdrawals take turns under the membership write lock).
+    #[test]
+    fn a_join_withdraws_only_what_no_newer_join_published() {
+        // nobody published here yet / we were the last to publish: withdraw
+        assert!(withdraw_allowed(5, None));
+        assert!(withdraw_allowed(5, Some(5)));
+        // an OLDER join's publish doesn't protect anything
+        assert!(withdraw_allowed(5, Some(3)));
+        // a newer join published in this room: leave it alone
+        assert!(!withdraw_allowed(5, Some(7)));
     }
 }

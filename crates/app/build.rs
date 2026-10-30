@@ -65,9 +65,20 @@ fn check_call_host_lab() {
     }
 }
 
+/// aec-first-join (2026-10-29): `--features bench-aec` (the echo-cancellation bench hooks, read from environment
+/// variables by the lab rigs) never goes into a release either.
+fn check_bench_aec() {
+    let bench = std::env::var_os("CARGO_FEATURE_BENCH_AEC").is_some();
+    let release = std::env::var("TINHAT_RELEASE_BUILD").map(|v| v.trim() == "1").unwrap_or(false);
+    if bench && release {
+        panic!("TINHAT_RELEASE_BUILD=1 with --features bench-aec: a release never carries the echo-cancellation bench hooks");
+    }
+}
+
 fn main() {
     check_update_trust_config();
     check_call_host_lab();
+    check_bench_aec();
     generate_th_qml();
 
     // Bake a short git hash so dev vs released builds are distinguishable (About sheet +

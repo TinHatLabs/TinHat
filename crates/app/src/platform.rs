@@ -472,9 +472,108 @@ pub(crate) fn hard_exit(code: i32) -> ! {
 }
 
 /// Early-startup hook: call once at the very top of `main()` (before gst::init and
-/// before QGuiApplication). Linux: nothing to do.
+/// before QGuiApplication). Linux: point GStreamer's CUDA filters at a bundled NVRTC (below).
 #[cfg(not(windows))]
-pub(crate) fn early_startup() {}
+pub(crate) fn early_startup() {
+    if std::path::Path::new("/.flatpak-info").exists() {
+        use_bundled_nvrtc(std::path::Path::new("/app/lib"));
+    }
+}
+
+/// 12.1.2: GPU scaling for shares in the Flatpak. The runtime's nvcodec plugin registers cudaupload/cudadownload, but
+/// its CUDA *filters* (cudaconvertscale) only when it can dlopen NVIDIA's runtime compiler, libnvrtc, which is part of
+/// the CUDA toolkit, not the driver, so no Flatpak runtime or GL extension carries it. Without it every Linux share took
+/// the CPU convert + lanczos path: 5K shares published 32-37 fps under a 60 cap while NVENC sat at 6-8 ms a frame
+/// (STREAM-QUALITY-FINDINGS.md). The manifest bundles the redistributable libnvrtc into /app/lib; this tells nvcodec
+/// where it is and gives GStreamer a registry file of its own, because the plugin's features are cached at scan time
+/// and the runtime's plugin file never changes, so the old cache (scanned without NVRTC) would be kept forever.
+#[cfg(not(windows))]
+fn use_bundled_nvrtc(lib_dir: &std::path::Path) {
+    // set_var is safe here: early_startup runs at the top of the synchronous main(), before any runtime, logger or
+    // worker thread exists (the Windows arm sets its GStreamer env at the same point).
+    if std::env::var_os("GST_CUDA_NVRTC_LIBNAME").is_some() {
+        return;
+    }
+    let Some(nvrtc) = bundled_nvrtc(lib_dir) else { return };
+    std::env::set_var("GST_CUDA_NVRTC_LIBNAME", &nvrtc);
+    // GST_REGISTRY_1_0 wins over GST_REGISTRY in GStreamer: a user who set either keeps theirs.
+    if std::env::var_os("GST_REGISTRY").is_none() && std::env::var_os("GST_REGISTRY_1_0").is_none() {
+        let cache = std::env::var_os("XDG_CACHE_HOME")
+            .map(std::path::PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".cache")));
+        if let Some(cache) = cache {
+            let reg = cache.join("gstreamer-1.0").join(nvrtc_registry_name(&nvrtc, nvidia_driver_version().as_deref()));
+            std::env::set_var("GST_REGISTRY", reg);
+        }
+    }
+}
+
+/// The registry file for a bundled NVRTC: keyed by the real library file (libnvrtc.so.12 -> libnvrtc.so.12.9.86, so
+/// a new NVRTC in an update rescans) and the NVIDIA driver version (nvcodec registers nothing CUDA without a driver and
+/// caches that, so installing or updating the driver must rescan too). Neither changes the runtime's plugin file,
+/// which is all GStreamer itself watches.
+#[cfg(not(windows))]
+fn nvrtc_registry_name(nvrtc: &std::path::Path, driver: Option<&str>) -> String {
+    let real = std::fs::canonicalize(nvrtc).unwrap_or_else(|_| nvrtc.to_path_buf());
+    let lib = real.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let drv: String = driver.unwrap_or("nodriver").chars().filter(|c| c.is_ascii_alphanumeric() || *c == '.').collect();
+    format!("registry.{lib}.nv-{drv}.{}.bin", std::env::consts::ARCH)
+}
+
+/// The loaded NVIDIA kernel driver's version ("595.45.04"), from /proc (visible inside the Flatpak); None without one.
+#[cfg(not(windows))]
+fn nvidia_driver_version() -> Option<String> {
+    let s = std::fs::read_to_string("/proc/driver/nvidia/version").ok()?;
+    // "NVRM version: NVIDIA UNIX x86_64 Kernel Module  595.45.04  <date>"
+    s.lines()
+        .next()?
+        .split_whitespace()
+        .find(|w| w.contains('.') && w.chars().all(|c| c.is_ascii_digit() || c == '.'))
+        .map(str::to_owned)
+}
+
+/// The bundled NVRTC library in `lib_dir`: `libnvrtc.so.<major>` resolving to a real file (the builtins library is not
+/// it); the highest major wins, compared as a number.
+#[cfg(not(windows))]
+fn bundled_nvrtc(lib_dir: &std::path::Path) -> Option<std::path::PathBuf> {
+    std::fs::read_dir(lib_dir)
+        .ok()?
+        .flatten()
+        .map(|e| e.path())
+        .filter_map(|p| {
+            let major: u32 = p.file_name()?.to_str()?.strip_prefix("libnvrtc.so.")?.parse().ok()?;
+            p.is_file().then_some((major, p)) // is_file follows the symlink: a dangling link or a directory is not it
+        })
+        .max_by_key(|(major, _)| *major)
+        .map(|(_, p)| p)
+}
+
+#[cfg(all(test, not(windows)))]
+mod nvrtc_tests {
+    #[test]
+    fn finds_the_bundled_nvrtc_not_the_builtins() {
+        let dir = std::env::temp_dir().join(format!("tinhat-nvrtc-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        assert_eq!(super::bundled_nvrtc(&dir), None);
+        for f in ["libnvrtc-builtins.so.12.9", "libnvrtc.so.12.9.86", "libnvrtc.so"] {
+            std::fs::write(dir.join(f), b"").unwrap();
+        }
+        assert_eq!(super::bundled_nvrtc(&dir), None, "only the soname form counts");
+        std::fs::write(dir.join("libnvrtc.so.9"), b"").unwrap();
+        std::fs::write(dir.join("libnvrtc.so.12.9.86"), b"x").unwrap();
+        std::os::unix::fs::symlink("libnvrtc.so.12.9.86", dir.join("libnvrtc.so.12")).unwrap();
+        std::os::unix::fs::symlink("missing", dir.join("libnvrtc.so.13")).unwrap();
+        // 12 beats 9 as a number (not as text); the dangling .13 does not count
+        assert_eq!(super::bundled_nvrtc(&dir), Some(dir.join("libnvrtc.so.12")));
+        // the registry follows the real file and the driver
+        let nvrtc = dir.join("libnvrtc.so.12");
+        let a = super::nvrtc_registry_name(&nvrtc, Some("595.45.04"));
+        assert!(a.starts_with("registry.libnvrtc.so.12.9.86.nv-595.45.04."), "{a}");
+        assert_ne!(a, super::nvrtc_registry_name(&nvrtc, None));
+        assert_ne!(a, super::nvrtc_registry_name(&nvrtc, Some("600.10")));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+}
 
 /// Windows: sweep updater leftovers (UPDATE_PATH.md §3.4) and, when running from the
 /// portable bundle, point GStreamer/QML at the bundled payload (PACKAGING.md §1).

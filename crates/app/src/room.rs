@@ -680,10 +680,11 @@ impl qobject::RoomController {
                         }
                     }
                     // If we're an admin here, make sure every Tin Hat member-state event type is
-                    // sendable by power-level-0 members (one idempotent power_levels write). This is
-                    // what lets standard friends use BRB / status / activity / watch party /
-                    // soundboard. No-op for non-admins and already-provisioned rooms.
-                    crate::appstate::provision_room(&room).await;
+                    // sendable by power-level-0 members (one power_levels write) — once per room per
+                    // session and only in my own server's rooms (the must-fix round,
+                    // MATRIX-FRONTEND-DESIGN.md B5 rule 1: this used to rewrite rooms on other servers
+                    // too). The web's ConversationView does the same.
+                    crate::appstate::provision_on_open(&room).await;
                 }
                 fail_streak = if failed { fail_streak.saturating_add(1) } else { 0 };
                 // Wait for the next reload-worthy update (see classify_update):
@@ -2249,8 +2250,20 @@ async fn do_moderate(
 async fn do_set_power(room_id: &str, user_id: &str, power: i32) -> Result<(), String> {
     let room = room_by_id(room_id).await?;
     let uid = matrix_sdk::ruma::UserId::parse(user_id).map_err(|e| format!("bad user id: {e}"))?;
-    let level = matrix_sdk::ruma::Int::from(power);
-    room.update_power_levels(vec![(&uid, level)]).await.map_err(|e| e.to_string())?;
+    // a person-chosen moderator action (allowed in any room); under the room's power-level lock, from the same
+    // up-to-date state and through the same echo wait as ensure_writable / the roles reconciler (the web's setMemberPower)
+    let lock = crate::appstate::power_level_lock(room_id);
+    let _held = lock.lock().await;
+    let mut pl = crate::appstate::power_levels_for_write(&room)
+        .await
+        .ok_or_else(|| "the room's power levels are still updating — try again in a moment".to_string())?;
+    if !pl.get("users").map(serde_json::Value::is_object).unwrap_or(false) {
+        pl["users"] = serde_json::json!({});
+    }
+    if let Some(users) = pl.get_mut("users").and_then(serde_json::Value::as_object_mut) {
+        users.insert(uid.to_string(), serde_json::Value::from(power));
+    }
+    crate::appstate::send_power_levels(&room, pl).await.map_err(|e| e.to_string())?;
     Ok(())
 }
 

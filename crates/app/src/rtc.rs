@@ -631,6 +631,9 @@ pub async fn join_rtc_session(room: &Room, service_url: &str) -> matrix_sdk::Res
     };
     let room_id = room.room_id().to_string();
     let state_key = membership_state_key(&user_id, &device_id);
+    // Joining is the use that needs members able to publish this: in my own server's rooms an admin lets
+    // them (once, logged; rooms are no longer provisioned on open — the must-fix round). A no-op after that.
+    crate::appstate::ensure_writable(room, crate::appstate::CALL_MEMBER_STATE_EVENTS).await;
     // REFRESH must keep the ORIGINAL created_ts: matrix-js-sdk's RTCEncryptionManager
     // treats a membership whose created_ts changed as leave+rejoin and ROTATES EVERY
     // WEB PEER'S media key — with the 30-min refresh timer that meant a synchronized

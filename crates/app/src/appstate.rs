@@ -80,15 +80,128 @@ pub async fn send_state(
     Ok(())
 }
 
-/// Best-effort: lower the required power level of each custom `event_type` to 0 so any
-/// member can use it. Only an admin (who can edit `m.room.power_levels`) succeeds;
-/// `M_FORBIDDEN` for everyone else is swallowed (the write that follows is attempted
-/// regardless — on the live deployment the PL is already 0).
+type Sets = std::sync::OnceLock<std::sync::Mutex<std::collections::HashSet<String>>>;
+/// `generation|user/device|room` → the types already lowered this session: the "one-time" of the must-fix round.
+static WRITABLE_DONE: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, Vec<String>>>> = std::sync::OnceLock::new();
+/// Rooms on another server already logged as left alone (one line per room per session).
+static FOREIGN_NOTED: Sets = std::sync::OnceLock::new();
+/// Rooms provisioned on open this session (once per room).
+static OPENED_ONCE: Sets = std::sync::OnceLock::new();
+/// One local power-level write per room at a time ([`power_level_lock`]).
+static PL_LOCKS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>> =
+    std::sync::OnceLock::new();
+
+/// true when `key` was new (and is now in the set)
+fn set_insert(set: &Sets, key: String) -> bool {
+    set.get_or_init(Default::default).lock().map(|mut s| s.insert(key)).unwrap_or(false)
+}
+
+fn session_key(room: &Room) -> String {
+    let device = room.client().device_id().map(|d| d.to_string()).unwrap_or_default();
+    format!("{}|{}/{device}|{}", crate::session::generation(), room.own_user_id(), room.room_id())
+}
+
+/// The room's power-level lock: every local `m.room.power_levels` writer (ensure_writable, the roles reconciler, a
+/// moderator's change) holds it across its read and its write, so none undoes another (the web's withPowerLevelLock).
+pub fn power_level_lock(room_id: &str) -> std::sync::Arc<tokio::sync::Mutex<()>> {
+    PL_LOCKS
+        .get_or_init(Default::default)
+        .lock()
+        .map(|mut m| m.entry(room_id.to_string()).or_default().clone())
+        .unwrap_or_default()
+}
+
+/// Per room: the id of our latest power-level write and how long we wait for it. Until the store shows that event (or
+/// the wait runs out), the store may be missing it. Set only after the server accepted the write (the web's pendingEcho).
+static PENDING_ECHO: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, (String, std::time::Instant)>>> =
+    std::sync::OnceLock::new();
+const ECHO_WAIT: std::time::Duration = std::time::Duration::from_secs(10);
+
+/// The room's power-level event as (event id, content), read once (one snapshot).
+async fn pl_event(room: &Room) -> Option<(String, Value)> {
+    let raw = room.get_state_event(StateEventType::RoomPowerLevels, "").await.ok()??;
+    let v = raw_to_value(&raw)?;
+    let id = v.get("event_id").and_then(Value::as_str).unwrap_or_default().to_string();
+    Some((id, v.get("content")?.clone()))
+}
+
+fn pending_get(rid: &str) -> Option<(String, std::time::Instant)> {
+    PENDING_ECHO.get_or_init(Default::default).lock().ok().and_then(|m| m.get(rid).cloned())
+}
+fn pending_clear(rid: &str) {
+    if let Ok(mut m) = PENDING_ECHO.get_or_init(Default::default).lock() {
+        m.remove(rid);
+    }
+}
+
+/// Write `m.room.power_levels` (under [`power_level_lock`]) and wait ≤ 10 s until the store shows this very event, so
+/// the next writer reads it rather than the state before it. A rejected write marks nothing. Every local power-level
+/// writer uses this (the web's sendPowerLevels).
+pub async fn send_power_levels(room: &Room, content: Value) -> matrix_sdk::Result<()> {
+    let rid = room.room_id().to_string();
+    let id = room.send_state_event_raw("m.room.power_levels", "", content).await?.event_id.to_string();
+    let until = std::time::Instant::now() + ECHO_WAIT;
+    if let Ok(mut m) = PENDING_ECHO.get_or_init(Default::default).lock() {
+        m.insert(rid.clone(), (id.clone(), until));
+    }
+    loop {
+        let now = pl_event(room).await.map(|(i, _)| i).unwrap_or_default();
+        if now == id {
+            pending_clear(&rid);
+            break;
+        }
+        if std::time::Instant::now() >= until {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+    }
+    Ok(())
+}
+
+/// The room's power levels as the next write must start from: the store's — or None while our latest write isn't in
+/// it yet (writing now could undo it; the caller skips this time). After the wait runs out the store is trusted. The
+/// web's powerLevelsForWrite.
+pub async fn power_levels_for_write(room: &Room) -> Option<Value> {
+    let (id, content) = pl_event(room).await?;
+    let rid = room.room_id().to_string();
+    if let Some((pending, until)) = pending_get(&rid) {
+        if id != pending && std::time::Instant::now() < until {
+            return None;
+        }
+        pending_clear(&rid);
+    }
+    Some(content)
+}
+
+/// Best-effort: lower the required power level of each Tin Hat type to 0 so any member can use it — the one write
+/// `foreign_room::pl_write_plan` (shared vectors with the web) allows. Called when a Tin Hat feature is used, on
+/// joining a call, on room open ([`provision_on_open`]) and for a room we just made. The must-fix round
+/// (MATRIX-FRONTEND-DESIGN.md B0/B5 rule 1; the web's ensureWritable is the same):
+/// - a room on another server is never written (its power levels stay as its owners set them; the feature works only
+///   as far as they allow) — logged once per room;
+/// - only dev.tinhat.* types and call membership, only while above 0, only when I may edit power levels (an
+///   unreadable power-level state = no);
+/// - each type lowered once per room per session, logged (a refusal isn't remembered: the next use asks again);
+/// - one write per room at a time, under the lock every local power-level writer shares, each waiting for its own
+///   echo ([`send_power_levels`]), so none starts from state an earlier one replaced.
 pub async fn ensure_writable(room: &Room, event_types: &[&str]) {
+    let rid = room.room_id().to_string();
+    let generation = crate::session::generation();
+    if !crate::foreign_room::managed_here(room).await {
+        if set_insert(&FOREIGN_NOTED, rid.clone()) {
+            eprintln!("[appstate] power levels left alone in {rid}: it lives on {}", crate::foreign_room::origin_here(room).await);
+        }
+        return;
+    }
+    let lock = power_level_lock(&rid);
+    let _held = lock.lock().await;
+    if generation != crate::session::generation() {
+        return; // queued for a session that has ended
+    }
     // RBAC (docs/RBAC.md §4): once the room's container has roles active, the reconciler owns
     // every `events[<type>]` it derives from the roles (`dev.tinhat.soundboard`,
-    // `dev.tinhat.record`, …). Lowering those to 0 here would fight it on every room
-    // open — skip them; the rest of the member-state template is still applied.
+    // `dev.tinhat.record`, …). Lowering those to 0 here would fight it — skip them; the rest
+    // of the member-state template is still applied.
     let managed = crate::roles_model::managed_event_types();
     let mut event_types: Vec<&str> = event_types.to_vec();
     if event_types.iter().any(|t| managed.contains(t)) {
@@ -97,36 +210,43 @@ pub async fn ensure_writable(room: &Room, event_types: &[&str]) {
             event_types.retain(|t| !managed.contains(t));
         }
     }
-    if event_types.is_empty() {
-        return;
-    }
-    let Some(mut pl) = get_state(room, "m.room.power_levels", "").await else {
-        return;
+    let create = crate::foreign_room::create_event(room).await.unwrap_or(Value::Null);
+    let pl = power_levels_for_write(room).await;
+    // Only an admin can edit `m.room.power_levels`; a standard (PL-0) member would just get a guaranteed 403.
+    let can_edit = match room.power_levels().await {
+        Ok(typed) => typed.user_can_send_state(room.own_user_id(), StateEventType::RoomPowerLevels),
+        Err(_) => false,
     };
-    let all_zero = event_types.iter().all(|t| {
-        pl.get("events").and_then(|e| e.get(*t)).and_then(|v| v.as_i64()) == Some(0)
-    });
-    if all_zero {
-        return;
-    }
-    // Only an admin can edit `m.room.power_levels`. A standard (PL-0) member would just get a
-    // guaranteed 403 + a noisy error log on every attempt, so skip the write silently for
-    // them — they rely on an admin having provisioned the room (see `provision_room`).
-    if let Ok(typed) = room.power_levels().await {
-        if !typed.user_can_send_state(room.own_user_id(), StateEventType::RoomPowerLevels) {
-            return;
+    let key = session_key(room);
+    let done: Vec<String> =
+        WRITABLE_DONE.get_or_init(Default::default).lock().ok().and_then(|m| m.get(&key).cloned()).unwrap_or_default();
+    let own = room.own_user_id().server_name().to_string();
+    let plan = crate::foreign_room::pl_write_plan(&create, &own, pl.as_ref(), &event_types, can_edit, &done);
+    let (true, Some(content)) = (plan.reason == "write", plan.content) else { return };
+    eprintln!("[appstate] power levels: letting members send {} in {rid}", plan.types.join(", "));
+    match send_power_levels(room, content).await {
+        Ok(()) => {
+            if let Ok(mut m) = WRITABLE_DONE.get_or_init(Default::default).lock() {
+                m.entry(key).or_default().extend(plan.types.iter().cloned());
+            }
         }
+        // a refusal isn't remembered: the next use asks again (the web's the same)
+        Err(e) => eprintln!("[appstate] ensure_writable {rid}: {e}"),
     }
-    if !pl.get("events").map(Value::is_object).unwrap_or(false) {
-        pl["events"] = serde_json::json!({});
-    }
-    if let Some(ev) = pl.get_mut("events").and_then(Value::as_object_mut) {
-        for t in &event_types {
-            ev.insert((*t).to_string(), Value::from(0));
-        }
-    }
-    let _ = room.send_state_event_raw("m.room.power_levels", "", pl).await;
 }
+
+/// Room open (room.rs; the web's ConversationView): provision once per room per session — my own server's rooms only
+/// ([`ensure_writable`] never writes a room on another server). What keeps PL-0 members able to call / use the extras
+/// in a room an admin opens, including types added in a later release.
+pub async fn provision_on_open(room: &Room) {
+    if set_insert(&OPENED_ONCE, session_key(room)) {
+        provision_room(room).await;
+    }
+}
+
+/// Call membership, both spellings (the web's CALL_MEMBER_STATE_EVENTS): what joining a call asks
+/// [`ensure_writable`] for.
+pub const CALL_MEMBER_STATE_EVENTS: &[&str] = &["org.matrix.msc3401.call.member", "m.call.member"];
 
 /// Every custom room-STATE event type Tin Hat writes that a standard (power-level 0)
 /// member must be able to send. Message events (`m.reaction`, chat, `dev.tinhat.game.code`,
@@ -188,10 +308,9 @@ pub async fn record_enabled(room: &Room) -> Option<Value> {
 }
 
 /// Admin-only, idempotent room provisioning: ensure EVERY Tin Hat member-state event
-/// type is sendable by power-level-0 members, in a single `m.room.power_levels` write. Call
-/// this on room open — it is a no-op for non-admins and for already-provisioned rooms. This
-/// is what makes all the "extras" (BRB, status, activity, watch party, soundboard) usable by
-/// standard members instead of only the room admin.
+/// type is sendable by power-level-0 members, in a single `m.room.power_levels` write (my own
+/// server's rooms only). For a room we just made ([`provision_new_room`]) and, once per room per
+/// session, on room open ([`provision_on_open`]).
 pub async fn provision_room(room: &Room) {
     ensure_writable(room, TINHAT_MEMBER_STATE_EVENTS).await;
 }

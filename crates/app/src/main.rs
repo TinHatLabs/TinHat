@@ -63,6 +63,7 @@ pub mod linkpreview; // OpenGraph link-preview cards via the homeserver's /media
 pub mod floating; // FloatingController — #6 floating chat-bubble registry + metadata
 pub mod gif; // GifController — in-chat Giphy picker (via the server's Tin Hat API)
 pub mod appstate; // shared custom room-state-event read/write/PL-lower helpers
+pub mod foreign_room; // must-fix round: rooms on another server: may Tin Hat change power levels? which via? (shared vectors with the web)
 pub mod nav; // NavController — corner-dock navigation (spaces -> rooms drill-down)
 pub mod presence; // 10.6: PresenceController — opt-in Online/Away/In a call + the desktop's "at the computer" pings (docs/REACH.md)
 pub mod presence_model; // 10.6: the pure presence rules (cadence, idle → state, share transitions, reader map, §3.4 consent)

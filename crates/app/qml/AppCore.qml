@@ -257,7 +257,8 @@ Item {
             recordingOnly: !!(t && t.recordingOnly),
             tunedIn: !!(t && t.tunedIn),
             vidW: (t && t.vidW) ? Number(t.vidW) : 0,
-            vidH: (t && t.vidH) ? Number(t.vidH) : 0
+            vidH: (t && t.vidH) ? Number(t.vidH) : 0,
+            cameraMuted: !!(t && t.cameraMuted)
         }
         r.raw = JSON.stringify(r)
         return r
@@ -617,6 +618,8 @@ Item {
     // controller so it can carry mute/volume/quality controls of its own.
     function openPip(tileId, participant, name, isShare) {
         if (_pips[tileId]) { _pips[tileId].raise(); _pips[tileId].requestActivate(); return }
+        // 12.1.3: a muted camera has no video to pop out (its tile shows the avatar)
+        if (callTiles.some(function(t) { return t.id === tileId && t.cameraMuted === true })) return
         var comp = Qt.createComponent("PipWindow.qml")
         if (comp.status !== Component.Ready) { console.warn("[pip] component:", comp.errorString()); return }
         var w = comp.createObject(core.shell, { ctl: callctl, audioPrefs: audioPrefsCtl, tileId: tileId,
@@ -683,9 +686,11 @@ Item {
         core._syncWatched()       // new share tiles start unwatched — push the truth now
         var keys = Object.keys(_pips)
         if (keys.length === 0) return
-        var ids = callTiles.map(function(t) { return t.id })
-        // A pinned tile that left the call must not keep an empty main area pinned.
-        if (core.pinnedTile.length > 0 && ids.indexOf(core.pinnedTile) === -1) core.pinnedTile = ""
+        // 12.1.3: a muted camera keeps its tile (drawn as the avatar) but its pop-out would sit on the last frame:
+        // it counts as gone for the PiP (closed), like a tile that left
+        var ids = callTiles.filter(function(t) { return t.cameraMuted !== true }).map(function(t) { return t.id })
+        // A pinned tile that left the call must not keep an empty main area pinned (a muted camera stays pinned).
+        if (core.pinnedTile.length > 0 && !callTiles.some(function(t) { return t.id === core.pinnedTile })) core.pinnedTile = ""
         for (var i = 0; i < keys.length; ++i) {
             if (ids.indexOf(keys[i]) < 0 && _pips[keys[i]])
                 _pips[keys[i]].close()   // -> its onClosing cleans _pips + destroys

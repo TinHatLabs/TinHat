@@ -28,6 +28,15 @@ bundle (libmpv and yt-dlp were dropped in 10.0).
 | libva / Mesa VA-API drivers | MIT |
 | glibc | LGPL-2.1 |
 
+## Flatpak bundle: NVIDIA NVRTC
+
+The Linux Flatpak carries NVIDIA's CUDA Runtime Compilation library, `libnvrtc.so.12` + `libnvrtc-builtins.so.12.9`
+(cuda_nvrtc 12.9.86, unmodified, from https://developer.download.nvidia.com/compute/cuda/redist/), so GStreamer's
+CUDA filters can scale screen shares on NVIDIA GPUs. It is proprietary NVIDIA software, redistributed under the CUDA
+Toolkit End User License Agreement (Attachment A lists it as distributable); the full agreement ships at
+`/app/share/licenses/nvrtc/LICENSE`. Tin Hat does not link it: GStreamer's nvcodec plugin loads it at runtime, and
+nvcodec only uses it on machines with an NVIDIA driver (elsewhere it registers no CUDA elements). Not part of the Windows or pacman builds.
+
 ## Windows bundle (windeployqt)
 
 The Windows zip and installer carry the Qt DLLs above (LGPL-3.0) plus the MSVC runtime

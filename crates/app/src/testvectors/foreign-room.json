@@ -1,0 +1,1070 @@
+{
+  "about": "Rooms that live on another server (share claude/tinhat-server/MATRIX-FRONTEND-DESIGN.md B0/B1/B5, the must-fix round). Owned by the web (src/core/matrix/foreign.ts); the desktop's crates/app/src/testvectors/foreign-room.json is a byte-identical copy (foreign_room.rs). serverPart: the server part of a user id, a pre-v12 room id or an alias, '' for a v12 opaque room id or anything that is not a valid server name (a bracketed IPv6 literal must be a real IPv6 address, as Rust's Ipv6Addr reads it; a port is 1-65535). origin: the server of the m.room.create sender, null when the create event is missing or has no valid sender. managed: Tin Hat may change this room's power levels only when the create sender AND every v12 additional_creators entry are on my own server (exact match); a missing create event, a missing own server or a malformed additional_creators means no. via: the servers a join asks through: the link's via, then the space child's via, then the server part of the target (never anything for a v12 opaque id), then hints (the inviter's or the child event sender's server); '' and invalid names dropped, duplicates dropped, at most 3 (matrix-js-sdk sends only 3). plan: the one power-level write ensureWritable / ensure_writable may make: none in a room that isn't managed (foreign: on open AND on call join); else each requested type that is Tin Hat's own (dev.tinhat.*) or call membership, not already done this session, whose effective level (events[t], else state_default, else 50; an integer string like \"50\" (no whitespace) counts as its number, as older room versions allow) is above 0, lowered to 0, and only when I may edit power levels.",
+  "serverPart": [
+    {
+      "id": "@alice:example.org",
+      "server": "example.org"
+    },
+    {
+      "id": "!abc123:example.org",
+      "server": "example.org"
+    },
+    {
+      "id": "#room:example.org:8448",
+      "server": "example.org:8448"
+    },
+    {
+      "id": "#a:b:matrix.org",
+      "server": ""
+    },
+    {
+      "id": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "server": ""
+    },
+    {
+      "id": "@alice:[2001:db8::1]:8448",
+      "server": "[2001:db8::1]:8448"
+    },
+    {
+      "id": "@alice:",
+      "server": ""
+    },
+    {
+      "id": "!:",
+      "server": ""
+    },
+    {
+      "id": "",
+      "server": ""
+    },
+    {
+      "id": "@alice:bad host",
+      "server": ""
+    },
+    {
+      "id": "@alice:example.org:99999999",
+      "server": ""
+    },
+    {
+      "id": "@a:[1]",
+      "server": ""
+    },
+    {
+      "id": "@a:a.org:99999",
+      "server": ""
+    },
+    {
+      "id": "@a:a.org:0",
+      "server": ""
+    },
+    {
+      "id": "@a:a.org:65535",
+      "server": "a.org:65535"
+    },
+    {
+      "id": "@a:[::1]",
+      "server": "[::1]"
+    },
+    {
+      "id": "@a:[:]",
+      "server": ""
+    },
+    {
+      "id": "@a:[:::]",
+      "server": ""
+    },
+    {
+      "id": "@a:[1:2]",
+      "server": ""
+    },
+    {
+      "id": "@a:[2001:db8::1]",
+      "server": "[2001:db8::1]"
+    },
+    {
+      "id": "@a:[::ffff:1.2.3.4]:8448",
+      "server": "[::ffff:1.2.3.4]:8448"
+    },
+    {
+      "id": "@a:[1:2:3:4:5:6:7:8]",
+      "server": "[1:2:3:4:5:6:7:8]"
+    },
+    {
+      "id": "@a:[1:2:3:4:5:6:7:8:9]",
+      "server": ""
+    },
+    {
+      "id": "@a:[1:2:3:4:5:6:7::8]",
+      "server": ""
+    },
+    {
+      "id": "@a:[::1.2.3.256]",
+      "server": ""
+    },
+    {
+      "id": "@a:[12345::]",
+      "server": ""
+    },
+    {
+      "id": "@a:[::]",
+      "server": "[::]"
+    }
+  ],
+  "origin": [
+    {
+      "name": "v10 room",
+      "create": {
+        "sender": "@alice:example.org",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "origin": "example.org"
+    },
+    {
+      "name": "v12 room with another creator",
+      "create": {
+        "sender": "@alice:example.org",
+        "content": {
+          "room_version": "12",
+          "additional_creators": [
+            "@bob:other.net"
+          ]
+        }
+      },
+      "origin": "example.org"
+    },
+    {
+      "name": "missing create",
+      "create": null,
+      "origin": null
+    },
+    {
+      "name": "empty create",
+      "create": {},
+      "origin": null
+    },
+    {
+      "name": "sender not a string",
+      "create": {
+        "sender": 7
+      },
+      "origin": null
+    },
+    {
+      "name": "sender not a user id",
+      "create": {
+        "sender": "nope"
+      },
+      "origin": null
+    },
+    {
+      "name": "sender with an invalid server",
+      "create": {
+        "sender": "@a:bad host"
+      },
+      "origin": null
+    }
+  ],
+  "managed": [
+    {
+      "name": "my own room",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "managed": true
+    },
+    {
+      "name": "a room on another server",
+      "own": "home.example",
+      "create": {
+        "sender": "@friend:friend.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "managed": false
+    },
+    {
+      "name": "a room on matrix.org",
+      "own": "home.example",
+      "create": {
+        "sender": "@someone:matrix.org",
+        "content": {}
+      },
+      "managed": false
+    },
+    {
+      "name": "missing create state",
+      "own": "home.example",
+      "create": null,
+      "managed": false
+    },
+    {
+      "name": "no own server",
+      "own": "",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {}
+      },
+      "managed": false
+    },
+    {
+      "name": "same host, other port",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example:8448",
+        "content": {}
+      },
+      "managed": false
+    },
+    {
+      "name": "a lookalike name",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:evil-home.example",
+        "content": {}
+      },
+      "managed": false
+    },
+    {
+      "name": "v12, every creator mine",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": [
+            "@member:home.example"
+          ]
+        }
+      },
+      "managed": true
+    },
+    {
+      "name": "v12, one creator elsewhere",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": [
+            "@member:home.example",
+            "@friend:friend.example"
+          ]
+        }
+      },
+      "managed": false
+    },
+    {
+      "name": "v12, empty additional_creators",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": []
+        }
+      },
+      "managed": true
+    },
+    {
+      "name": "additional_creators not a list",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "additional_creators": "@member:home.example"
+        }
+      },
+      "managed": false
+    },
+    {
+      "name": "additional_creators holds garbage",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "additional_creators": [
+            7
+          ]
+        }
+      },
+      "managed": false
+    },
+    {
+      "name": "content missing",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example"
+      },
+      "managed": true
+    }
+  ],
+  "via": [
+    {
+      "name": "v12 id, nothing known",
+      "target": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "linkVia": [],
+      "childVia": [],
+      "hints": [],
+      "via": []
+    },
+    {
+      "name": "v12 id from a link",
+      "target": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "linkVia": [
+        "example.org"
+      ],
+      "childVia": [],
+      "hints": [],
+      "via": [
+        "example.org"
+      ]
+    },
+    {
+      "name": "v12 id in a space",
+      "target": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "linkVia": [],
+      "childVia": [
+        "example.org",
+        "other.net"
+      ],
+      "hints": [
+        "third.io"
+      ],
+      "via": [
+        "example.org",
+        "other.net",
+        "third.io"
+      ]
+    },
+    {
+      "name": "v12 id, only the inviter",
+      "target": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "linkVia": [],
+      "childVia": [],
+      "hints": [
+        "friend.example"
+      ],
+      "via": [
+        "friend.example"
+      ]
+    },
+    {
+      "name": "pre-v12 id, nothing else",
+      "target": "!abc:home.org",
+      "linkVia": [],
+      "childVia": [],
+      "hints": [],
+      "via": [
+        "home.org"
+      ]
+    },
+    {
+      "name": "pre-v12 id, the space knows better",
+      "target": "!abc:gone.org",
+      "linkVia": [],
+      "childVia": [
+        "home.org"
+      ],
+      "hints": [],
+      "via": [
+        "home.org",
+        "gone.org"
+      ]
+    },
+    {
+      "name": "alias with a link via",
+      "target": "#general:home.org",
+      "linkVia": [
+        "mirror.net"
+      ],
+      "childVia": [],
+      "hints": [],
+      "via": [
+        "mirror.net",
+        "home.org"
+      ]
+    },
+    {
+      "name": "blanks, duplicates and garbage dropped",
+      "target": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "linkVia": [
+        "",
+        "a.org",
+        "a.org",
+        "bad host",
+        7,
+        null
+      ],
+      "childVia": [
+        "a.org",
+        ""
+      ],
+      "hints": [
+        ""
+      ],
+      "via": [
+        "a.org"
+      ]
+    },
+    {
+      "name": "at most three",
+      "target": "!x:s0.org",
+      "linkVia": [
+        "s1.org",
+        "s2.org",
+        "s3.org"
+      ],
+      "childVia": [
+        "s4.org",
+        "s5.org",
+        "s6.org"
+      ],
+      "hints": [],
+      "via": [
+        "s1.org",
+        "s2.org",
+        "s3.org"
+      ]
+    },
+    {
+      "name": "missing lists",
+      "target": "!abc:home.org",
+      "via": [
+        "home.org"
+      ]
+    },
+    {
+      "name": "invalid names don't take a slot",
+      "target": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "linkVia": [
+        "[1]",
+        "a.org:99999",
+        "bad host"
+      ],
+      "childVia": [
+        "good.org"
+      ],
+      "hints": [],
+      "via": [
+        "good.org"
+      ]
+    },
+    {
+      "name": "malformed IPv6 never takes a slot",
+      "target": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
+      "linkVia": [
+        "[:]",
+        "[:::]",
+        "[1:2]"
+      ],
+      "childVia": [
+        "good.org"
+      ],
+      "hints": [],
+      "via": [
+        "good.org"
+      ]
+    }
+  ],
+  "plan": [
+    {
+      "name": "foreign room, opened by an admin: no write",
+      "own": "home.example",
+      "create": {
+        "sender": "@friend:friend.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "users": {
+          "@owner:home.example": 100,
+          "@friend:friend.example": 100
+        },
+        "state_default": 50,
+        "events": {
+          "m.room.name": 50
+        }
+      },
+      "types": [
+        "dev.tinhat.afk",
+        "dev.tinhat.userstatus",
+        "dev.tinhat.activity",
+        "dev.tinhat.watchparty",
+        "dev.tinhat.watchparty.playback",
+        "dev.tinhat.watchparty.viewer",
+        "dev.tinhat.mediaparty.history",
+        "dev.tinhat.soundboard",
+        "dev.tinhat.clip",
+        "dev.tinhat.record",
+        "dev.tinhat.calendar.event",
+        "dev.tinhat.calendar.rsvp",
+        "dev.tinhat.calendar.game",
+        "dev.tinhat.games.prefs",
+        "dev.tinhat.games.spin",
+        "dev.tinhat.note",
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "foreign",
+      "lower": []
+    },
+    {
+      "name": "foreign room, an admin joins a call: no write",
+      "own": "home.example",
+      "create": {
+        "sender": "@friend:friend.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "users": {
+          "@owner:home.example": 100,
+          "@friend:friend.example": 100
+        },
+        "state_default": 50,
+        "events": {
+          "m.room.name": 50
+        }
+      },
+      "types": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "foreign",
+      "lower": []
+    },
+    {
+      "name": "v12 room with a creator elsewhere: no write",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": [
+            "@friend:friend.example"
+          ]
+        }
+      },
+      "pl": {
+        "users": {
+          "@owner:home.example": 100,
+          "@friend:friend.example": 100
+        },
+        "state_default": 50,
+        "events": {
+          "m.room.name": 50
+        }
+      },
+      "types": [
+        "dev.tinhat.afk",
+        "dev.tinhat.userstatus",
+        "dev.tinhat.activity",
+        "dev.tinhat.watchparty",
+        "dev.tinhat.watchparty.playback",
+        "dev.tinhat.watchparty.viewer",
+        "dev.tinhat.mediaparty.history",
+        "dev.tinhat.soundboard",
+        "dev.tinhat.clip",
+        "dev.tinhat.record",
+        "dev.tinhat.calendar.event",
+        "dev.tinhat.calendar.rsvp",
+        "dev.tinhat.calendar.game",
+        "dev.tinhat.games.prefs",
+        "dev.tinhat.games.spin",
+        "dev.tinhat.note",
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "foreign",
+      "lower": []
+    },
+    {
+      "name": "missing create state: no write",
+      "own": "home.example",
+      "create": null,
+      "pl": {
+        "users": {
+          "@owner:home.example": 100,
+          "@friend:friend.example": 100
+        },
+        "state_default": 50,
+        "events": {
+          "m.room.name": 50
+        }
+      },
+      "types": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "foreign",
+      "lower": []
+    },
+    {
+      "name": "my room, call join, state_default 50",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "users": {
+          "@owner:home.example": 100,
+          "@friend:friend.example": 100
+        },
+        "state_default": 50,
+        "events": {
+          "m.room.name": 50
+        }
+      },
+      "types": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "write",
+      "lower": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "events": {
+        "m.room.name": 50,
+        "org.matrix.msc3401.call.member": 0,
+        "m.call.member": 0
+      }
+    },
+    {
+      "name": "my room, already 0",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "state_default": 50,
+        "events": {
+          "org.matrix.msc3401.call.member": 0,
+          "m.call.member": 0
+        }
+      },
+      "types": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "nothing-to-do",
+      "lower": []
+    },
+    {
+      "name": "my room, I'm not an admin",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "users": {
+          "@owner:home.example": 100,
+          "@friend:friend.example": 100
+        },
+        "state_default": 50,
+        "events": {
+          "m.room.name": 50
+        }
+      },
+      "types": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": false,
+      "done": [],
+      "reason": "not-allowed",
+      "lower": []
+    },
+    {
+      "name": "Matrix types are never lowered",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "users": {
+          "@owner:home.example": 100,
+          "@friend:friend.example": 100
+        },
+        "state_default": 50,
+        "events": {
+          "m.room.name": 50
+        }
+      },
+      "types": [
+        "m.room.topic",
+        "m.room.power_levels",
+        "m.space.child"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "nothing-to-do",
+      "lower": []
+    },
+    {
+      "name": "a level below 0 is left alone",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "state_default": 50,
+        "events": {
+          "dev.tinhat.afk": -10
+        }
+      },
+      "types": [
+        "dev.tinhat.afk"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "nothing-to-do",
+      "lower": []
+    },
+    {
+      "name": "no override and state_default 0",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "state_default": 0
+      },
+      "types": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "nothing-to-do",
+      "lower": []
+    },
+    {
+      "name": "no state_default means 50",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {},
+      "types": [
+        "dev.tinhat.afk"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "write",
+      "lower": [
+        "dev.tinhat.afk"
+      ],
+      "events": {
+        "dev.tinhat.afk": 0
+      }
+    },
+    {
+      "name": "done this session: not again, even if raised since",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "state_default": 50,
+        "events": {
+          "dev.tinhat.afk": 50
+        }
+      },
+      "types": [
+        "dev.tinhat.afk",
+        "dev.tinhat.note"
+      ],
+      "canEdit": true,
+      "done": [
+        "dev.tinhat.afk"
+      ],
+      "reason": "write",
+      "lower": [
+        "dev.tinhat.note"
+      ],
+      "events": {
+        "dev.tinhat.afk": 50,
+        "dev.tinhat.note": 0
+      }
+    },
+    {
+      "name": "no power levels",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": null,
+      "types": [
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "no-power-levels",
+      "lower": []
+    },
+    {
+      "name": "duplicates and garbage in the request",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "state_default": 50
+      },
+      "types": [
+        "dev.tinhat.afk",
+        "m.room.name",
+        "dev.tinhat.afk",
+        7,
+        null
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "write",
+      "lower": [
+        "dev.tinhat.afk"
+      ],
+      "events": {
+        "dev.tinhat.afk": 0
+      }
+    },
+    {
+      "name": "my room opened by an admin: every member type",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "pl": {
+        "state_default": 50,
+        "events": {
+          "dev.tinhat.afk": 0
+        }
+      },
+      "types": [
+        "dev.tinhat.afk",
+        "dev.tinhat.userstatus",
+        "dev.tinhat.activity",
+        "dev.tinhat.watchparty",
+        "dev.tinhat.watchparty.playback",
+        "dev.tinhat.watchparty.viewer",
+        "dev.tinhat.mediaparty.history",
+        "dev.tinhat.soundboard",
+        "dev.tinhat.clip",
+        "dev.tinhat.record",
+        "dev.tinhat.calendar.event",
+        "dev.tinhat.calendar.rsvp",
+        "dev.tinhat.calendar.game",
+        "dev.tinhat.games.prefs",
+        "dev.tinhat.games.spin",
+        "dev.tinhat.note",
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "write",
+      "lower": [
+        "dev.tinhat.userstatus",
+        "dev.tinhat.activity",
+        "dev.tinhat.watchparty",
+        "dev.tinhat.watchparty.playback",
+        "dev.tinhat.watchparty.viewer",
+        "dev.tinhat.mediaparty.history",
+        "dev.tinhat.soundboard",
+        "dev.tinhat.clip",
+        "dev.tinhat.record",
+        "dev.tinhat.calendar.event",
+        "dev.tinhat.calendar.rsvp",
+        "dev.tinhat.calendar.game",
+        "dev.tinhat.games.prefs",
+        "dev.tinhat.games.spin",
+        "dev.tinhat.note",
+        "org.matrix.msc3401.call.member",
+        "m.call.member"
+      ]
+    },
+    {
+      "name": "string level below 0 is left alone",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "8"
+        }
+      },
+      "pl": {
+        "state_default": 50,
+        "events": {
+          "dev.tinhat.afk": "-10"
+        }
+      },
+      "types": [
+        "dev.tinhat.afk"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "nothing-to-do",
+      "lower": []
+    },
+    {
+      "name": "string level above 0 is lowered",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "8"
+        }
+      },
+      "pl": {
+        "state_default": 0,
+        "events": {
+          "dev.tinhat.afk": "50"
+        }
+      },
+      "types": [
+        "dev.tinhat.afk"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "write",
+      "lower": [
+        "dev.tinhat.afk"
+      ],
+      "events": {
+        "dev.tinhat.afk": 0
+      }
+    },
+    {
+      "name": "string state_default",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "8"
+        }
+      },
+      "pl": {
+        "state_default": "50"
+      },
+      "types": [
+        "dev.tinhat.afk"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "write",
+      "lower": [
+        "dev.tinhat.afk"
+      ],
+      "events": {
+        "dev.tinhat.afk": 0
+      }
+    },
+    {
+      "name": "a non-number level counts as missing",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "8"
+        }
+      },
+      "pl": {
+        "state_default": 0,
+        "events": {
+          "dev.tinhat.afk": "lots"
+        }
+      },
+      "types": [
+        "dev.tinhat.afk"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "nothing-to-do",
+      "lower": []
+    },
+    {
+      "name": "a string with whitespace counts as missing",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "8"
+        }
+      },
+      "pl": {
+        "state_default": 50,
+        "events": {
+          "dev.tinhat.afk": " -10"
+        }
+      },
+      "types": [
+        "dev.tinhat.afk"
+      ],
+      "canEdit": true,
+      "done": [],
+      "reason": "write",
+      "lower": [
+        "dev.tinhat.afk"
+      ],
+      "events": {
+        "dev.tinhat.afk": 0
+      }
+    }
+  ]
+}

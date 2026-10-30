@@ -118,6 +118,14 @@ class KeyProvider {
     impl_->SetSifTrailer(trailer_vec);
   }
 
+  // PATCH (Tin Hat): the EFFECTIVE native options (what the transformers read).
+  bool discard_frame_when_cryptor_not_ready() const {
+    return impl_->options().discard_frame_when_cryptor_not_ready;
+  }
+  size_t uncrypted_magic_bytes_len() const {
+    return impl_->options().uncrypted_magic_bytes.size();
+  }
+
   webrtc::scoped_refptr<webrtc::KeyProvider> rtc_key_provider() { return impl_; }
 
  private:

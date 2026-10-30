@@ -859,11 +859,23 @@ impl Ctx {
         }
         let (mut written, mut failed) = (0usize, 0usize);
         for (room, is_space) in targets {
-            let Some(cur) = crate::appstate::get_state(&room, "m.room.power_levels", "").await else {
+            // read + write under the room's power-level lock (shared with appstate::ensure_writable)
+            let lock = crate::appstate::power_level_lock(room.room_id().as_str());
+            let _held = lock.lock().await;
+            let Some(cur) = crate::appstate::power_levels_for_write(&room).await else {
+                if crate::appstate::get_state(&room, "m.room.power_levels", "").await.is_some() {
+                    failed += 1; // our last write hasn't come back yet
+                }
                 continue;
             };
             let next = roles_model::derive_power_levels(&cur, st, is_space);
             if next == cur {
+                continue;
+            }
+            // B0/B5: a room on another server keeps the power levels its owners set (the web's reconcile, the same rule)
+            if !crate::foreign_room::managed_here(&room).await {
+                eprintln!("[space] reconcile: {} lives on another server, its power levels are left alone", room.room_id());
+                failed += 1;
                 continue;
             }
             if !can_write_power_levels(&room).await {
@@ -871,8 +883,8 @@ impl Ctx {
                 failed += 1;
                 continue;
             }
-            match room.send_state_event_raw("m.room.power_levels", "", next).await {
-                Ok(_) => written += 1,
+            match crate::appstate::send_power_levels(&room, next).await {
+                Ok(()) => written += 1,
                 Err(e) => {
                     eprintln!("[space] reconcile {} failed: {e}", room.room_id());
                     failed += 1;

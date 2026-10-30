@@ -76,6 +76,13 @@ struct LocalInfo {
     all_participants_allowed: Mutex<bool>,
     track_permissions: Mutex<Vec<ParticipantTrackPermission>>,
     session: RwLock<Option<Weak<RoomSession>>>,
+    // TINHAT PATCH (12.1.3, C2b): track sids reserved by publishes in flight / unpublishes in
+    // progress (see SidReservations).
+    sid_reservations: Arc<SidReservations>,
+    // TINHAT PATCH (12.1.3, C2b): every publish / unpublish of ONE local track runs under that
+    // track's lock (keyed by its client id): same-track operations are serialized, different
+    // tracks stay concurrent (see TrackOpLocks).
+    track_ops: TrackOpLocks,
 }
 
 #[derive(Clone)]
@@ -132,6 +139,8 @@ impl LocalParticipant {
                 all_participants_allowed: Mutex::new(true),
                 track_permissions: Mutex::new(vec![]),
                 session: Default::default(),
+                sid_reservations: Default::default(),
+                track_ops: Default::default(),
             }),
         }
     }
@@ -148,7 +157,16 @@ impl LocalParticipant {
         self.inner.track_publications.read().clone()
     }
 
-    pub(crate) fn update_info(&self, info: proto::ParticipantInfo) {
+    pub(crate) fn update_info(&self, mut info: proto::ParticipantInfo) {
+        // TINHAT PATCH (12.1.3, C2b): our identity is pinned once known. Our sender cryptors are
+        // made for it and the app installs our media keys under it; a later signal message
+        // renaming us (a hostile SFU) would separate the senders from their keys. Keep ours.
+        let current = self.identity();
+        if !current.as_str().is_empty() && info.identity != current.as_str() {
+            log::error!("the SFU tried to change our identity {} -> {}: ignored", current.as_str(), info.identity);
+            eprintln!("[e2ee] the SFU tried to change our identity {} -> {}: ignored", current.as_str(), info.identity);
+            info.identity = current.as_str().to_owned();
+        }
         super::update_info(&self.inner, &Participant::Local(self.clone()), info);
     }
 
@@ -359,6 +377,16 @@ impl LocalParticipant {
     ) -> RoomResult<LocalTrackPublication> {
         let disable_red = self.local.encryption_type != EncryptionType::None || !options.red;
 
+        // TINHAT PATCH (12.1.3, C2b): this track's lock for the whole publish (no unpublish or
+        // other publish of the SAME track interleaves: it would swap the track's transceiver and
+        // let one teardown stop the other's sender / drop the other's cryptor), and one publication
+        // per local track (two senders on one client id: same hazard).
+        let cid = track.rtc_track().id();
+        let _track_op = self.local.track_ops.lock(&cid).await;
+        if self.track_publications().values().any(|p| p.track().map(|t| t.rtc_track().id()) == Some(cid.clone())) {
+            return Err(RoomError::TrackAlreadyPublished);
+        }
+
         let mut req = proto::AddTrackRequest {
             cid: track.rtc_track().id(),
             name: track.name(),
@@ -422,6 +450,27 @@ impl LocalParticipant {
             }
         }
         let track_info = self.inner.rtc_engine.add_track(req).await?;
+        // TINHAT PATCH (12.1.3, C2 — confidentiality): the SFU chooses the published track's sid,
+        // and that sid keys both the publication map and the E2EE manager's cryptor map, where an
+        // insert REPLACES. An answer reusing a sid that is already ours would displace the live
+        // track's sender cryptor; dropping it detaches the encryption transformer from a sender
+        // that keeps sending (unencrypted). Refuse before touching either map: the new track is
+        // not published (fail closed); nothing of the existing tracks changes.
+        // C2b: the check is ATOMIC with the inserts below: the sid is reserved (against our live
+        // tracks AND every other publish in flight / unpublish in progress) and the reservation is
+        // held until this publication and its cryptor are in their maps — two concurrent publishes
+        // (join: mic + camera + share; reconnect: the republish) answered with the same sid can't
+        // both pass. Released on any early return.
+        let _sid_reservation = match self.local.sid_reservations.reserve(&track_info.sid, || {
+            self.track_publications().keys().map(|sid| sid.as_str().to_owned()).collect::<Vec<_>>()
+        }) {
+            Ok(reservation) => reservation,
+            Err(why) => {
+                log::error!("{why}");
+                eprintln!("[e2ee] {why}");
+                return Err(RoomError::Internal(why));
+            }
+        };
         let publication = LocalTrackPublication::new(track_info.clone(), track.clone());
         track.update_info(track_info); // Update sid + source
 
@@ -619,6 +668,18 @@ impl LocalParticipant {
         sid: &TrackSid,
         // _stop_on_unpublish: bool,
     ) -> RoomResult<LocalTrackPublication> {
+        // C2b: run under the TRACK's lock (see publish_track), then make sure the publication at
+        // this sid is still that track before touching anything; an absent publication is a no-op.
+        let Some(cid) = self.get_track_publication(sid).and_then(|p| p.track()).map(|t| t.rtc_track().id()) else {
+            return Err(RoomError::Internal("track not found".to_string()));
+        };
+        let _track_op = self.local.track_ops.lock(&cid).await;
+        if self.get_track_publication(sid).and_then(|p| p.track()).map(|t| t.rtc_track().id()) != Some(cid) {
+            return Err(RoomError::Internal("track not found".to_string()));
+        }
+        // keep this sid reserved until its cryptor is gone, so a publish of ANOTHER track answered
+        // with the same sid meanwhile is refused (else this removal could drop THAT cryptor)
+        let _tombstone = self.local.sid_reservations.tombstone(sid.as_str());
         let publication = self.remove_publication(sid);
         if let Some(TrackPublication::Local(publication)) = publication {
             let track = publication.track().unwrap();
@@ -1034,5 +1095,109 @@ mod tests {
         };
 
         assert!(!needs_video_sender_transformer(&options, false));
+    }
+}
+
+/// TINHAT PATCH (12.1.3, C2): is the SFU's add_track answer acceptable? Its sid must be
+/// non-empty and not already one of our published tracks (see publish_track). Pure, so the app
+/// crate can test it.
+pub fn check_add_track_answer(
+    in_use: impl IntoIterator<Item = String>,
+    answered_sid: &str,
+) -> Result<(), String> {
+    if answered_sid.is_empty() {
+        return Err("the SFU answered add_track without a track sid: not publishing this track".into());
+    }
+    if in_use.into_iter().any(|sid| sid == answered_sid) {
+        return Err(format!(
+            "the SFU answered add_track with track sid {answered_sid}, which one of our live tracks already has: not publishing this track (its encryption would be displaced)"
+        ));
+    }
+    Ok(())
+}
+
+/// TINHAT PATCH (12.1.3, C2b): sids held by publishes in flight (from the add_track answer until
+/// the publication + its cryptor are inserted) and by unpublishes in progress. `reserve` checks an
+/// answered sid against them AND the live publications (read under the same lock) and reserves it
+/// in one step, so the check can't race the inserts. Held by RAII guards.
+#[derive(Default)]
+pub struct SidReservations {
+    // sid -> number of holders (a publish in flight and any number of unpublishes)
+    held: Mutex<HashMap<String, usize>>,
+}
+
+/// Releases its sid when dropped.
+pub struct SidReservation {
+    owner: Arc<SidReservations>,
+    sid: Option<String>,
+}
+
+impl Drop for SidReservation {
+    fn drop(&mut self) {
+        if let Some(sid) = self.sid.take() {
+            let mut held = self.owner.held.lock();
+            if let Some(n) = held.get_mut(&sid) {
+                *n -= 1;
+                if *n == 0 {
+                    held.remove(&sid);
+                }
+            }
+        }
+    }
+}
+
+impl SidReservations {
+    /// Reserve `answered_sid` for a publish, or refuse it (empty, live, or held). `live` is read
+    /// while the lock is held.
+    pub fn reserve<I: IntoIterator<Item = String>>(
+        self: &Arc<Self>,
+        answered_sid: &str,
+        live: impl FnOnce() -> I,
+    ) -> Result<SidReservation, String> {
+        let mut held = self.held.lock();
+        let in_flight = held.contains_key(answered_sid);
+        check_add_track_answer(live().into_iter().chain(in_flight.then(|| answered_sid.to_owned())), answered_sid)?;
+        held.insert(answered_sid.to_owned(), 1);
+        Ok(SidReservation { owner: self.clone(), sid: Some(answered_sid.to_owned()) })
+    }
+
+    /// Hold `sid` while it is being unpublished. Counted: it stays held until EVERY holder (the
+    /// publish that is still returning, overlapping unpublishes) has let go.
+    pub fn tombstone(self: &Arc<Self>, sid: &str) -> SidReservation {
+        *self.held.lock().entry(sid.to_owned()).or_insert(0) += 1;
+        SidReservation { owner: self.clone(), sid: Some(sid.to_owned()) }
+    }
+}
+
+/// TINHAT PATCH (12.1.3, C2b): one async lock per local track (its client id). Held across a whole
+/// publish_track / unpublish_track of that track, so they never interleave; different tracks run
+/// concurrently. Entries are dropped when no operation holds or waits for them.
+#[derive(Default)]
+pub struct TrackOpLocks {
+    locks: Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>,
+}
+
+/// Holds one track's lock; releases it (and forgets an unused entry) when dropped.
+pub struct TrackOpGuard<'a> {
+    owner: &'a TrackOpLocks,
+    cid: String,
+    guard: Option<tokio::sync::OwnedMutexGuard<()>>,
+}
+
+impl Drop for TrackOpGuard<'_> {
+    fn drop(&mut self) {
+        self.guard.take();
+        let mut locks = self.owner.locks.lock();
+        if locks.get(&self.cid).is_some_and(|l| Arc::strong_count(l) == 1) {
+            locks.remove(&self.cid);
+        }
+    }
+}
+
+impl TrackOpLocks {
+    pub async fn lock(&self, cid: &str) -> TrackOpGuard<'_> {
+        let lock = self.locks.lock().entry(cid.to_owned()).or_default().clone();
+        let guard = lock.lock_owned().await;
+        TrackOpGuard { owner: self, cid: cid.to_owned(), guard: Some(guard) }
     }
 }

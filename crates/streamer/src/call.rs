@@ -1715,6 +1715,46 @@ fn set_sink_target(el: &gst::Element, target: &str) {
     }
 }
 
+/// A flag that flips when the first buffer reaches `appsink` (install BEFORE the pipeline plays).
+fn first_frame_flag(appsink: &gstreamer_app::AppSink) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
+    let flowing = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    if let Some(pad) = appsink.static_pad("sink") {
+        let f = flowing.clone();
+        pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+            f.store(true, std::sync::atomic::Ordering::SeqCst);
+            gst::PadProbeReturn::Remove
+        });
+    }
+    flowing
+}
+
+/// Wait up to `ms` for [`first_frame_flag`] to flip, failing early on a bus error. Err = the reason (the caller stops
+/// the pipeline). pipewiresrc's keepalive resends the last frame every second, so a still screen passes too.
+fn wait_first_frame(pipeline: &gst::Pipeline, flowing: &std::sync::atomic::AtomicBool, ms: u64) -> std::result::Result<(), String> {
+    let bus = pipeline.bus();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_millis(ms);
+    while !flowing.load(std::sync::atomic::Ordering::SeqCst) {
+        if std::time::Instant::now() >= deadline {
+            return Err(format!("no frame in {} s", ms / 1000));
+        }
+        let err = bus.as_ref().and_then(|b| b.timed_pop_filtered(gst::ClockTime::from_mseconds(50), &[gst::MessageType::Error]));
+        if let Some(msg) = err {
+            return Err(match msg.view() {
+                gst::MessageView::Error(e) => format!("error: {} ({:?})", e.error(), e.debug()),
+                _ => "error".to_string(),
+            });
+        }
+    }
+    // a frame came through, but the pipeline may have failed right after it: a queued error still rejects it
+    if let Some(msg) = bus.as_ref().and_then(|b| b.pop_filtered(&[gst::MessageType::Error])) {
+        return Err(match msg.view() {
+            gst::MessageView::Error(e) => format!("error after the first frame: {} ({:?})", e.error(), e.debug()),
+            _ => "error".to_string(),
+        });
+    }
+    Ok(())
+}
+
 /// 10.0.6: a state change that can never wedge its caller. GStreamer runs the transition on the
 /// calling thread, and a PipeWire / PulseAudio element whose stream the server never starts (or
 /// never acknowledges a disconnect for) sits inside it for up to 30 s — the hang-up hang of
@@ -6653,6 +6693,15 @@ impl CallSession {
                             "[recv4-lkid] video TrackSubscribed LK_IDENTITY={:?} sid={} screenshare={is_screenshare} enc_type={:?} simulcast={}",
                             who, publication.sid().as_str(), publication.encryption_type(), publication.simulcasted()
                         );
+                        // 12.1.3: a camera's mute state from the start (a muted camera is drawn as the
+                        // avatar, never as its last frame: the SFU's blank frames are not played).
+                        if matches!(publication.source(), TrackSource::Camera) {
+                            let _ = tx.send(CallEvent::TrackMuteChanged {
+                                identity: who.clone(),
+                                category: "camera".into(),
+                                muted: publication.is_muted(),
+                            });
+                        }
                         // Retain the publication so the app can signal the SFU per tile
                         // (pause / layer selection), and apply the CURRENT policy to this
                         // late-subscribed track (a track arriving while minimized or under
@@ -6860,6 +6909,8 @@ impl CallSession {
                             eprintln!("[call] remote {category} track MUTED by {identity}");
                         }
                         crate::hear::note_track_muted(&identity, &category, true); // 10.5
+                        // 12.1.3: camera mutes get their own category (the tile shows the avatar)
+                        let category = if matches!(publication.source(), TrackSource::Camera) { "camera".to_string() } else { category };
                         let _ = tx.send(CallEvent::TrackMuteChanged { identity, category, muted: true });
                     }
                     RoomEvent::TrackUnmuted { participant, publication } => {
@@ -6869,6 +6920,7 @@ impl CallSession {
                             eprintln!("[call] remote {category} track UNMUTED by {identity}");
                         }
                         crate::hear::note_track_muted(&identity, &category, false); // 10.5
+                        let category = if matches!(publication.source(), TrackSource::Camera) { "camera".to_string() } else { category };
                         let _ = tx.send(CallEvent::TrackMuteChanged { identity, category, muted: false });
                     }
                     RoomEvent::ActiveSpeakersChanged { speakers } => {
@@ -7070,19 +7122,37 @@ impl CallSession {
             true
         };
         #[cfg(windows)]
-        let has_gpu_elements =
-            crate::lk_publish::cuda_scale_available() || crate::lk_publish::d3d11_scale_available();
+        let d3d11 = crate::lk_publish::d3d11_scale_available();
         #[cfg(not(windows))]
-        let has_gpu_elements = crate::lk_publish::cuda_scale_available();
-        let gpu_ok = gpu_pref_ok && has_gpu_elements && std::env::var_os("TINHAT_CAPTURE_CPU").is_none();
-        let want_gpu = screencast.size().is_some() && gpu_ok;
-        // No size known (KDE's portal gives none for a window and often none for a monitor; the stream probe
-        // failed on every share in the field logs) → the CUDA path that pins its output from the FIRST frame, instead of
-        // the CPU path that published 11–22 fps for a 3–5K source whatever the settings. Linux only: on Windows the
-        // picker always knows the size.
-        let want_gpu_learn = !want_gpu && gpu_ok && cfg!(not(windows)) && crate::lk_publish::cuda_scale_available();
+        let d3d11 = false;
+        let (mut want_gpu, want_gpu_learn) = crate::lk_publish::share_capture_plan(
+            screencast.size().is_some(),
+            gpu_pref_ok,
+            crate::lk_publish::cuda_scale_available(),
+            d3d11,
+            std::env::var_os("TINHAT_CAPTURE_CPU").is_some(),
+            cfg!(windows),
+        );
         // the quality box the real size is fitted into (Auto = the current rung; the raw 0x0 published 16x16)
         let (box_w, box_h) = crate::lk_publish::share_box(q);
+        let (mut tw, mut th) = (tw, th);
+
+        // 12.1.2 RC2: no size known → LEARN it with the first-frame CUDA pipeline, stop that, and start the very
+        // pipeline a re-publish uses (pre-sized, built with its final caps). RC1 kept the learning pipeline as the
+        // share: in the field test it ran 19-20 fps with the GPU pegged while the pre-sized one ran at the cap with the
+        // same game, source caps and call (the 12.1.2 RC1 field diagnosis, F2). The two differed only in the mid-stream
+        // output re-pin, so a fresh start now never keeps a renegotiated CUDA chain. The learning run still proves the
+        // compositor's frames import into CUDA (else: CPU path, as before).
+        if want_gpu_learn {
+            match Self::learn_share_size_gpu(screencast, box_w, box_h, fps) {
+                Ok((rw, rh)) => {
+                    (tw, th) = crate::lk_publish::fit_even(rw, rh, box_w, box_h);
+                    eprintln!("[call] screen-share: learned the source size {rw}x{rh} -> {tw}x{th}; starting the pre-sized GPU pipeline");
+                    want_gpu = true;
+                }
+                Err(why) => eprintln!("[call] GPU (CUDA) capture, size from the first frame: {why} — falling back to CPU"),
+            }
+        }
 
         if want_gpu {
             type Builder = fn(&ScreenCast, u32, u32, u32) -> Result<gst::Pipeline>;
@@ -7135,18 +7205,28 @@ impl CallSession {
                             .and_then(|s| s.downcast::<gstreamer_app::AppSink>().ok());
                         if let Some(appsink) = wired {
                             crate::lk_publish::wire_appsink_to_source(&appsink, source.clone());
+                            // RC2: accepted only once a frame has come through THIS pipeline (a PLAYING
+                            // state alone said nothing about import or negotiation failures downstream).
+                            let flowing = first_frame_flag(&appsink);
                             if set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "screen capture start") {
-                                // Confirm it actually NEGOTIATED (memory-import failures
-                                // surface only here); otherwise try the next candidate.
-                                match pipeline.state(gst::ClockTime::from_seconds(5)).0 {
-                                    Ok(_) => {
+                                // Windows keeps the negotiation check: d3d11screencapturesrc has no keepalive resend,
+                                // so a still desktop could deliver nothing within the wait.
+                                #[cfg(windows)]
+                                let started = {
+                                    let _ = &flowing;
+                                    pipeline.state(gst::ClockTime::from_seconds(5)).0.map(|_| ()).map_err(|e| format!("failed to negotiate ({e})"))
+                                };
+                                #[cfg(not(windows))]
+                                let started = wait_first_frame(&pipeline, &flowing, 4000);
+                                match started {
+                                    Ok(()) => {
                                         LAST_GOOD
                                             .store(idx, std::sync::atomic::Ordering::Relaxed);
                                         eprintln!("[call] screen-share capture: {label} path");
                                         return Ok(pipeline);
                                     }
-                                    Err(e) => eprintln!(
-                                        "[call] {label} capture failed to negotiate ({e}) — trying next"
+                                    Err(why) => eprintln!(
+                                        "[call] {label} capture: {why} — trying next"
                                     ),
                                 }
                             } else {
@@ -7159,13 +7239,6 @@ impl CallSession {
                 }
             }
             eprintln!("[call] no GPU capture candidate negotiated — falling back to CPU");
-        }
-
-        if want_gpu_learn {
-            match Self::start_share_capture_gpu_learn(screencast, box_w, box_h, fps, &source) {
-                Ok(pipeline) => return Ok(pipeline),
-                Err(why) => eprintln!("[call] GPU (CUDA) capture, size from the first frame: {why} — falling back to CPU"),
-            }
         }
 
         // CPU path: videoconvert + lanczos videoscale (threaded since 10.8), with the one-shot re-pin probe.
@@ -7184,57 +7257,40 @@ impl CallSession {
         Ok(pipeline)
     }
 
-    /// Start the CUDA capture whose output size comes from the first frame
-    /// ([`crate::lk_publish::build_capture_pipeline_cuda_learn`]) and commit to it only once a frame has come all the way
-    /// to the appsink within 4 s with no bus error — a DMABuf that will not import into CUDA fails exactly there, and the
-    /// caller then falls back to the CPU path as before. Err = the reason (the pipeline is already stopped).
-    fn start_share_capture_gpu_learn(
+    /// Learn a share's real source size with the first-frame CUDA capture
+    /// ([`crate::lk_publish::build_capture_pipeline_cuda_learn`]): run it until one frame has come all the way to the
+    /// appsink (within 4 s, no bus error — frames that will not import into CUDA fail exactly there), then STOP it. The
+    /// size is in the cast's memo afterwards, so the caller starts the pre-sized pipeline (the re-publish one) and a
+    /// later re-publish knows it too. The learning frames go nowhere (no source wired). Err = the reason; stopped.
+    fn learn_share_size_gpu(
         screencast: &ScreenCast,
         box_w: u32,
         box_h: u32,
         fps: u32,
-        source: &livekit::webrtc::video_source::native::NativeVideoSource,
-    ) -> std::result::Result<gst::Pipeline, String> {
+    ) -> std::result::Result<(u32, u32), String> {
         let pipeline = crate::lk_publish::build_capture_pipeline_cuda_learn(screencast, box_w, box_h, fps)
             .map_err(|e| format!("unavailable ({e})"))?;
+        // the pre-sized pipeline starts on the same portal stream next: give the learner's teardown time to finish
         let stop = |p: &gst::Pipeline| {
-            set_state_bounded(p.upcast_ref(), gst::State::Null, 1500, "screen capture");
+            if !set_state_bounded(p.upcast_ref(), gst::State::Null, 4000, "screen capture size probe stop") {
+                eprintln!("[call] screen-share: the size probe's teardown is still running; starting the next pipeline anyway (as a re-publish does)");
+            }
         };
         let Some(appsink) = pipeline.by_name("sink").and_then(|s| s.downcast::<gstreamer_app::AppSink>().ok()) else {
             return Err("no appsink".into());
         };
-        let flowing = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        if let Some(pad) = appsink.static_pad("sink") {
-            let f = flowing.clone();
-            pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
-                f.store(true, std::sync::atomic::Ordering::SeqCst);
-                gst::PadProbeReturn::Remove
-            });
-        }
-        crate::lk_publish::wire_appsink_to_source(&appsink, source.clone());
-        if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "screen capture start") {
+        let flowing = first_frame_flag(&appsink);
+        if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "screen capture size probe") {
             stop(&pipeline);
             return Err("did not start".into());
         }
-        let bus = pipeline.bus();
-        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(4000);
-        while !flowing.load(std::sync::atomic::Ordering::SeqCst) {
-            if std::time::Instant::now() >= deadline {
-                stop(&pipeline);
-                return Err("no frame in 4 s".into());
-            }
-            let err = bus.as_ref().and_then(|b| b.timed_pop_filtered(gst::ClockTime::from_mseconds(50), &[gst::MessageType::Error]));
-            if let Some(msg) = err {
-                let why = match msg.view() {
-                    gst::MessageView::Error(e) => format!("error: {} ({:?})", e.error(), e.debug()),
-                    _ => "error".to_string(),
-                };
-                stop(&pipeline);
-                return Err(why);
-            }
+        if let Err(why) = wait_first_frame(&pipeline, &flowing, 4000) {
+            stop(&pipeline);
+            return Err(why);
         }
-        eprintln!("[call] screen-share capture: GPU (CUDA) scale, size from the first frame path");
-        Ok(pipeline)
+        stop(&pipeline);
+        let learned = *screencast.size_memo().lock().unwrap_or_else(|e| e.into_inner());
+        learned.filter(|&(w, h)| w > 0 && h > 0).ok_or_else(|| "the first frame carried no size".to_string())
     }
 
     /// Bounded best-effort unpublish for "publish succeeded but capture failed" paths.
@@ -7359,7 +7415,10 @@ impl CallSession {
         let publication = publish_result.context("publish screenshare failed")?;
 
         let pipeline = match Self::start_share_capture(&screencast, q, tw, th, fps, source) {
-            Ok(p) => p,
+            Ok(p) => {
+                crate::lk_publish::install_cadence_probes(&p, fps, "share");
+                p
+            }
             Err(e) => {
                 self.unpublish_orphaned_track(publication.sid(), "screen-share").await;
                 return Err(e);
@@ -7554,7 +7613,10 @@ impl CallSession {
 
         // 4) Rebuild + start the capture pipeline against the EXISTING portal fd/node_id.
         let pipeline = match Self::start_share_capture(&screencast, q, tw, th, fps, source) {
-            Ok(p) => p,
+            Ok(p) => {
+                crate::lk_publish::install_cadence_probes(&p, fps, "share");
+                p
+            }
             Err(e) => {
                 self.unpublish_orphaned_track(publication.sid(), "screen-share restart").await;
                 return Err(e);
@@ -9696,6 +9758,80 @@ pub fn pw_snapshot(reason: &str) {
     });
 }
 
+/// `  123: …` / `  -5: …` object keys (bare numbers) -> `  "123": …`, line by line; everything else untouched.
+fn quote_bare_numeric_keys(json: &str) -> String {
+    let mut out = String::with_capacity(json.len() + 64);
+    for line in json.lines() {
+        let body = line.trim_start();
+        let indent = &line[..line.len() - body.len()];
+        let digits = body.strip_prefix('-').unwrap_or(body);
+        let n = digits.chars().take_while(|c| c.is_ascii_digit()).count();
+        let key_len = body.len() - digits.len() + n;
+        if n > 0 && body[key_len..].trim_start().starts_with(':') {
+            out.push_str(indent);
+            out.push('"');
+            out.push_str(&body[..key_len]);
+            out.push('"');
+            out.push_str(&body[key_len..]);
+        } else {
+            out.push_str(line);
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// pw-dump's output object by object: its top-level array holds one object per `  {` … `  }` block at two spaces
+/// of indent. Each block parses on its own (bare numeric keys quoted first); the ones that still don't are skipped.
+fn pw_dump_objects_lenient(text: &str) -> (Vec<serde_json::Value>, usize) {
+    let (mut objects, mut skipped, mut block): (Vec<serde_json::Value>, usize, Option<String>) = (Vec::new(), 0, None);
+    for line in text.lines() {
+        if line == "  {" {
+            block = Some(String::from("{\n"));
+            continue;
+        }
+        let Some(b) = block.as_mut() else { continue };
+        if line == "  }" || line == "  }," {
+            b.push('}');
+            let b = block.take().unwrap();
+            match serde_json::from_str(&b).or_else(|_| serde_json::from_str(&quote_bare_numeric_keys(&b))) {
+                Ok(v) => objects.push(v),
+                Err(_) => skipped += 1,
+            }
+        } else {
+            b.push_str(line);
+            b.push('\n');
+        }
+    }
+    (objects, skipped)
+}
+
+#[cfg(test)]
+mod pw_dump_tests {
+    /// A keyless value inside an object (what PipeWire 1.4's pw-dump can print for a param id it doesn't know)
+    /// spoils only its own object.
+    #[test]
+    fn one_bad_object_is_skipped_not_the_dump() {
+        let raw = "[\n  {\n    \"id\": 1,\n    \"type\": \"PipeWire:Interface:Client\"\n  },\n  {\n    \"id\": 2,\n    \"params\": {\n      [ { \"width\": 5120 } ]\n    }\n  },\n  {\n    \"id\": 3,\n    \"info\": {\n      131085: 4\n    }\n  }\n]";
+        assert!(serde_json::from_str::<serde_json::Value>(raw).is_err());
+        let (objs, skipped) = super::pw_dump_objects_lenient(raw);
+        assert_eq!(skipped, 1);
+        assert_eq!(objs.iter().map(|o| o["id"].as_i64().unwrap()).collect::<Vec<_>>(), vec![1, 3]);
+    }
+
+    #[test]
+    fn bare_numeric_keys_get_quoted_and_parse() {
+        let raw = "[\n  {\n    \"id\": 31,\n    \"params\": {\n      \"Format\": [ { \"width\": 5120 } ],\n      131085: 4,\n      -7 : [ 1, 2 ]\n    }\n  }\n]";
+        assert!(serde_json::from_str::<serde_json::Value>(raw).is_err());
+        let v: serde_json::Value = serde_json::from_str(&super::quote_bare_numeric_keys(raw)).unwrap();
+        assert_eq!(v[0]["params"]["131085"], 4);
+        assert_eq!(v[0]["params"]["-7"][1], 2);
+        // values that are numbers stay numbers, strings with colons stay as they are
+        let ok = "{\n  \"a\": 12,\n  \"b\": \"x: 1\"\n}";
+        assert_eq!(super::quote_bare_numeric_keys(ok).trim_end(), ok);
+    }
+}
+
 fn pw_snapshot_lines(reason: &str) -> Vec<String> {
     use serde_json::Value;
     let out = match std::process::Command::new("pw-dump").stderr(std::process::Stdio::null()).output() {
@@ -9705,7 +9841,21 @@ fn pw_snapshot_lines(reason: &str) -> Vec<String> {
     };
     let v: Value = match serde_json::from_slice(&out) {
         Ok(v) => v,
-        Err(e) => return vec![format!("{reason}: pw-dump output unreadable ({e})")],
+        // RC2 (rc-1212 F5): the sandbox's pw-dump (the runtime's PipeWire 1.4) against a newer daemon printed
+        // something that is not JSON ("key must be a string", a tester's host, every share). Parse pw-dump's top-level
+        // objects one by one and skip the unreadable ones, so one odd param costs one object, not the snapshot; and say
+        // what the bad line looked like (letters masked) so the next log pins the cause down.
+        Err(e) => {
+            let text = String::from_utf8_lossy(&out);
+            let line = text.lines().nth(e.line().saturating_sub(1)).unwrap_or("").trim().to_string();
+            let shape: String = line.chars().take(24).map(|c| if c.is_ascii_alphabetic() { 'a' } else { c }).collect();
+            let (objects, skipped) = pw_dump_objects_lenient(&text);
+            if objects.is_empty() {
+                return vec![format!("{reason}: pw-dump output unreadable ({e}; the line looks like `{shape}`)")];
+            }
+            eprintln!("[pw-snapshot] pw-dump output not valid JSON ({e}; the line looks like `{shape}`): read {} object(s), skipped {skipped}", objects.len());
+            Value::Array(objects)
+        }
     };
     let Some(arr) = v.as_array() else {
         return vec![format!("{reason}: pw-dump output is not a list")];
@@ -10174,6 +10324,190 @@ const EC_REF_WRAP_NS: u64 = 3_600_000_000_000;
 fn ec_ref_is_wrapped(end: u64, mic_now: u64) -> bool {
     end > mic_now.saturating_add(EC_REF_WRAP_NS)
 }
+/// 12.1.3: restarts of one reference branch per mic build before it is left as it is (the 10.5.3 behaviour).
+const EC_REF_REPAIR_MAX: u32 = 3;
+/// One branch's in-place repair (12.1.3, aec-first-join). Ownership and provenance are separate: `in_flight` is held by
+/// the worker until its state changes have finished; `await_stream` only says the restarted head's STREAM_START has not
+/// reached the probe yet (everything before it is the old head's: queued buffers, audioresample's drain tail).
+#[derive(Debug, Default)]
+struct EcRepair {
+    attempts: u32,
+    in_flight: bool,
+    await_stream: bool,
+    /// terminal: the restart could not be carried out; wrapped buffers stay out, good ones pass
+    unavailable: bool,
+    /// a restart completed (the source is PLAYING again)
+    restarted_ok: bool,
+    success_logged: bool,
+    failure_logged: bool,
+}
+#[derive(Debug, PartialEq, Eq)]
+enum EcRepairStep {
+    /// pass the buffer on
+    Accept,
+    /// drop it
+    Drop,
+    /// drop it and restart the branch's source
+    Repair,
+    /// out of attempts (or the repair is off): pass it on as before and report the wrap
+    GiveUp,
+}
+/// Pure: what to do with one reference buffer, given the branch's repair state.
+fn ec_ref_repair_step(wrapped: bool, enabled: bool, r: &EcRepair) -> EcRepairStep {
+    if r.in_flight || r.await_stream {
+        return EcRepairStep::Drop;
+    }
+    if r.unavailable {
+        return if wrapped { EcRepairStep::Drop } else { EcRepairStep::Accept };
+    }
+    if !wrapped {
+        return EcRepairStep::Accept;
+    }
+    if !enabled {
+        return EcRepairStep::GiveUp;
+    }
+    if r.attempts < EC_REF_REPAIR_MAX { EcRepairStep::Repair } else { EcRepairStep::GiveUp }
+}
+/// The repair is on by default; `TINHAT_EC_REF_REPAIR=0` turns it off (bench A/B). Read once per process.
+fn ec_ref_repair_enabled() -> bool {
+    static ON: OnceLock<bool> = OnceLock::new();
+    *ON.get_or_init(|| ec_ref_repair_opt_out(std::env::var("TINHAT_EC_REF_REPAIR").ok().as_deref()))
+}
+/// Pure: `TINHAT_EC_REF_REPAIR`'s value → repair? Only "0" turns it off.
+fn ec_ref_repair_opt_out(v: Option<&str>) -> bool {
+    v != Some("0")
+}
+/// Pure: the reference source feeding a probe (see [`ec_reference_chain`]): `tinhatecprobe<n>` → `tinhatecref`,
+/// `tinhatecprobe<n>x<i>` → `tinhatecref<i>`.
+fn ec_ref_src_name(probe: &str) -> String {
+    match probe.strip_prefix("tinhatecprobe").and_then(|r| r.split_once('x')) {
+        Some((_, i)) if !i.is_empty() && i.chars().all(|c| c.is_ascii_digit()) => format!("tinhatecref{i}"),
+        _ => "tinhatecref".to_string(),
+    }
+}
+/// Holds an element's GStreamer STATE_LOCK (the recursive mutex `gst_element_set_state` takes for a whole
+/// transition) until dropped, on the thread that took it (not `Send`: GLib forbids unlocking from another thread).
+/// gstreamer-rs 0.23 does not expose it.
+struct GstStateLock(gst::Element, std::marker::PhantomData<*const ()>);
+impl GstStateLock {
+    fn lock(el: &gst::Element) -> Self {
+        // SAFETY: `el` is a live GstElement (a strong ref is kept for the guard's lifetime); state_lock is its
+        // GRecMutex, initialised in gst_element_init and only ever used through g_rec_mutex_lock/unlock (the
+        // GST_STATE_LOCK macro does the same); addr_of_mut! avoids forming a Rust reference to it.
+        unsafe {
+            let raw: *mut gst::ffi::GstElement = glib::object::ObjectType::as_ptr(el);
+            glib::ffi::g_rec_mutex_lock(std::ptr::addr_of_mut!((*raw).state_lock));
+        }
+        GstStateLock(el.clone(), std::marker::PhantomData)
+    }
+}
+impl GstStateLock {
+    /// The element's target state (no gstreamer-rs 0.23 accessor). Stable while the guard is held: every
+    /// `gst_element_set_state` on it takes the STATE_LOCK first.
+    fn target_state(&self) -> gst::State {
+        // SAFETY: live element (strong ref); a plain enum field read; writers hold the STATE_LOCK, which we hold.
+        unsafe {
+            let raw: *mut gst::ffi::GstElement = glib::object::ObjectType::as_ptr(&self.0);
+            glib::translate::from_glib((*raw).target_state)
+        }
+    }
+}
+impl Drop for GstStateLock {
+    fn drop(&mut self) {
+        // SAFETY: locked in `lock` on this same thread (the guard is !Send); the strong ref keeps the element alive.
+        unsafe {
+            let raw: *mut gst::ffi::GstElement = glib::object::ObjectType::as_ptr(&self.0);
+            glib::ffi::g_rec_mutex_unlock(std::ptr::addr_of_mut!((*raw).state_lock));
+        }
+    }
+}
+/// Restart one reference source inside the running mic pipeline, on its own thread. The pipeline's STATE_LOCK is held
+/// for the whole operation and the source's state changes run synchronously under it, so a teardown of the pipeline
+/// (whose own transition takes that lock) either completes first, and nothing is done, or waits until the operation has
+/// finished; no part of the operation can outlive the lock. Nobody's caller blocks on this: every teardown path drives the
+/// pipeline through `set_state_bounded` (a detached thread), so a sound server that hangs a pulsesrc transition delays
+/// only that background thread, as it does today. (The mic bus' sync handler only logs and sets atomics; nothing that
+/// runs during a child's transition needs the pipeline's STATE_LOCK.)
+fn ec_ref_restart(pw: glib::WeakRef<gst::Pipeline>, src_name: String, ff: Arc<EcFifo>, gen: u64) {
+    use std::sync::atomic::Ordering;
+    std::thread::spawn(move || {
+        // terminal outcome, published by the worker itself (not by a buffer that may never come)
+        let give_up = |why: &str, notify: bool| {
+            {
+                let mut r = ff.repair.lock().unwrap();
+                r.unavailable = true;
+                r.await_stream = false;
+                r.in_flight = false;
+            }
+            if notify {
+                eprintln!("[aec] echo reference {src_name}: {why} — its stage runs without a reference");
+                if EC_FIFO_GEN.load(Ordering::Relaxed) == gen {
+                    EC_REF_WRAPPED_GEN.store(gen, Ordering::Relaxed); // the healer's opt-in rebuild reads it
+                }
+            }
+        };
+        // the pipeline must be steadily PLAYING; one still settling into it (the first wrapped buffer can come that
+        // early) is waited for, up to 3 s; one heading anywhere else is being retired: left alone
+        let mut held: Option<(gst::Pipeline, GstStateLock)> = None;
+        for _ in 0..30 {
+            let Some(p) = pw.upgrade() else { return give_up("the mic pipeline is gone", false) };
+            let lock = GstStateLock::lock(p.upcast_ref());
+            if EC_FIFO_GEN.load(Ordering::Relaxed) != gen || lock.target_state() != gst::State::Playing {
+                return give_up("the mic pipeline is being retired", false);
+            }
+            if p.current_state() == gst::State::Playing && p.pending_state() == gst::State::VoidPending {
+                held = Some((p, lock));
+                break;
+            }
+            drop(lock);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        let Some((p, _state)) = held else { return give_up("the mic pipeline did not settle", true) };
+        // bench (aec-first-join rig, `--features bench-aec` only — never in a release, see build.rs): hold the operation
+        // this long with the pipeline's STATE_LOCK taken, so a teardown (the off/on toggle) can be aimed into the window
+        #[cfg(feature = "bench-aec")]
+        if let Some(ms) = std::env::var("TINHAT_BENCH_EC_RESTART_DELAY_MS").ok().and_then(|v| v.parse::<u64>().ok()) {
+            eprintln!("[bench] holding the echo reference restart for {ms} ms");
+            std::thread::sleep(std::time::Duration::from_millis(ms));
+        }
+        let Some(src) = p.by_name(&src_name) else { return give_up("not found in the mic pipeline", true) };
+        let clock = p.clock();
+        if clock.is_some() && clock == src.provide_clock() {
+            // never the case for a wrapped head (only a SLAVED source runs the skew resync), but never stop the clock
+            return give_up("it provides the pipeline clock, not restarting it", true);
+        }
+        if src.set_state(gst::State::Null).is_err() {
+            return give_up("it did not stop", true);
+        }
+        if let Some(c) = &clock {
+            if src.set_clock(Some(c)).is_err() {
+                return give_up("it refused the pipeline clock", true);
+            }
+        }
+        if let Some(bt) = p.base_time() {
+            src.set_base_time(bt);
+        }
+        // await_stream BEFORE the start: the new head's STREAM_START can reach the probe at once
+        ff.repair.lock().unwrap().await_stream = true;
+        if src.set_state(gst::State::Playing).is_err() {
+            return give_up("it did not start again", true);
+        }
+        drop(_state); // the state changes are done; the wait below must not hold up a teardown
+        drop(p);
+        // the new head's stream has to reach the probe; a branch that never delivers it is a failure the healer hears of
+        for _ in 0..100 {
+            if !ff.repair.lock().unwrap().await_stream {
+                let mut r = ff.repair.lock().unwrap();
+                r.restarted_ok = true;
+                r.in_flight = false;
+                ff.holdoff.store(false, Ordering::Relaxed); // the restarted reference is flowing: pair with it again
+                return;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        give_up("its restarted stream never reached the echo probe", true);
+    });
+}
 /// Is the RUNNING mic build's reference in the wrapped state?
 fn ec_ref_wrapped_now() -> bool {
     use std::sync::atomic::Ordering;
@@ -10229,6 +10563,13 @@ pub(crate) struct EcFifo {
     o_last: std::sync::atomic::AtomicI64,
     o_min: std::sync::atomic::AtomicI64,
     o_max: std::sync::atomic::AtomicI64,
+    /// 12.1.3 (aec-first-join): the in-place restart of this branch's reference source after the skew-resync
+    /// underflow (see [`ec_ref_repair_step`]). A short mutex, never held across a GStreamer call.
+    repair: Mutex<EcRepair>,
+    /// set while this branch is being repaired (or could not be): the capture never waits for its reference then —
+    /// with several wrapped branches in series the first block's unprimed waits (250 ms each) overflowed the mic
+    /// source and forced a whole-mic heal (rig, 4 ticked outputs)
+    holdoff: std::sync::atomic::AtomicBool,
 }
 pub(crate) struct EcFifoSet {
     t0: std::time::Instant,
@@ -10289,6 +10630,8 @@ impl EcFifoSet {
                 o_last: AtomicI64::new(i64::MIN),
                 o_min: AtomicI64::new(i64::MAX),
                 o_max: AtomicI64::new(i64::MIN),
+                repair: Mutex::new(EcRepair::default()),
+                holdoff: AtomicBool::new(false),
             });
             stages.push((dsp.clone(), probe, f));
         }
@@ -10304,12 +10647,15 @@ impl EcFifoSet {
             fifos: stages.iter().map(|(_, _, f)| f.clone()).collect(),
         });
         let n_stages = stages.len();
+        let pipe_weak = pipeline.downgrade();
         for (k, (dsp, probe, f)) in stages.iter().enumerate() {
             let f = f.clone();
             // Reference IN: nothing before the mic's first block ever reaches the adapter.
             if let Some(pad) = probe.static_pad("sink") {
                 let ff = f.clone();
                 let ss = set.clone();
+                let src_name = ec_ref_src_name(probe.name().as_str());
+                let pw = pipe_weak.clone();
                 pad.add_probe(gst::PadProbeType::BUFFER, move |_pad, info| {
                     if let Some(gst::PadProbeData::Buffer(ref b)) = info.data {
                         let mic_first = ss.first_pts.load(Ordering::Relaxed);
@@ -10322,20 +10668,86 @@ impl EcFifoSet {
                             let first = mic_first - 1;
                             let cap = ss.last_cap_pts.load(Ordering::Relaxed);
                             let mic_now = if cap > 0 { cap - 1 } else { first };
-                            if ec_ref_is_wrapped(end, mic_now) && EC_REF_WRAPPED_GEN.swap(ss.gen, Ordering::Relaxed) != ss.gen {
-                                eprintln!(
-                                    "{}",
-                                    ec_wrap_log_line(
-                                        (end - first) / 86_400_000_000_000,
-                                        !cfg!(windows) && ec_underflow_rebuild_enabled()
-                                    )
-                                );
+                            let wrapped = ec_ref_is_wrapped(end, mic_now);
+                            // 12.1.3 (aec-first-join): AEC3 removes nothing with a wrapped head (measured: the far end hears
+                            // the echo at -5 dB on the rig vs -61 dB, and 0 dB in a field log); a mic rebuild only re-rolls
+                            // the dice (the off/on toggle). Restart just that source in place: in the running pipeline its
+                            // fresh first-buffer resync sees the pipeline's running time, which makes another underflow unlikely
+                            // (it is retried if it happens). Its buffers are dropped meanwhile (none is better than a wrong one;
+                            // the FIFO never holds the mic for a reference that has stopped arriving, and a silence read leaves
+                            // no backlog debt).
+                            let (step, attempt, log_line) = {
+                                let mut r = ff.repair.lock().unwrap();
+                                let step = ec_ref_repair_step(wrapped, ec_ref_repair_enabled(), &r);
+                                let mut log_line = false;
+                                match step {
+                                    EcRepairStep::Repair => {
+                                        ff.holdoff.store(true, Ordering::Relaxed);
+                                        r.in_flight = true;
+                                        r.restarted_ok = false;
+                                        r.attempts += 1;
+                                    }
+                                    EcRepairStep::Accept if r.restarted_ok && !r.unavailable && !r.success_logged => {
+                                        r.success_logged = true;
+                                        log_line = true;
+                                    }
+                                    EcRepairStep::GiveUp if !r.failure_logged => {
+                                        r.failure_logged = true;
+                                        log_line = true;
+                                    }
+                                    _ => {}
+                                }
+                                (step, r.attempts, log_line)
+                            };
+                            match step {
+                                EcRepairStep::Accept => {
+                                    if log_line {
+                                        eprintln!("[aec] echo reference {src_name} back in step with the mic after the restart");
+                                    }
+                                }
+                                EcRepairStep::Drop => return gst::PadProbeReturn::Drop,
+                                EcRepairStep::Repair => {
+                                    eprintln!(
+                                        "[aec] echo reference {src_name} started {} days ahead of the mic (GStreamer skew resync \
+                                         underflow) — restarting it in place (attempt {attempt}/{EC_REF_REPAIR_MAX})",
+                                        (end - first) / 86_400_000_000_000
+                                    );
+                                    ec_ref_restart(pw.clone(), src_name.clone(), ff.clone(), ss.gen);
+                                    return gst::PadProbeReturn::Drop;
+                                }
+                                EcRepairStep::GiveUp => {
+                                    // operational state first, whatever was logged before: the healer's opt-in rebuild reads it
+                                    EC_REF_WRAPPED_GEN.store(ss.gen, Ordering::Relaxed);
+                                    if log_line {
+                                        eprintln!(
+                                            "{}",
+                                            ec_wrap_log_line(
+                                                (end - first) / 86_400_000_000_000,
+                                                !cfg!(windows) && ec_underflow_rebuild_enabled()
+                                            )
+                                        );
+                                    }
+                                }
                             }
                             // (a buffer more than 5 s away is another clock domain — pair as is)
                             if end <= first && first - end < 5_000_000_000 {
                                 ff.old_drops.fetch_add(1, Ordering::Relaxed);
                                 return gst::PadProbeReturn::Drop;
                             }
+                        }
+                    }
+                    gst::PadProbeReturn::Ok
+                });
+            }
+            // 12.1.3: buffers between a restart and the new head's STREAM_START are the old head's (still in the
+            // branch queue, or audioresample's drain tail): dropped. Provenance by the stream, not by the clock.
+            if let Some(pad) = probe.static_pad("sink") {
+                let ff = f.clone();
+                pad.add_probe(gst::PadProbeType::EVENT_DOWNSTREAM, move |_pad, info| {
+                    if let Some(gst::PadProbeData::Event(ref ev)) = info.data {
+                        if ev.type_() == gst::EventType::StreamStart {
+                            // provenance only: the operation itself stays owned by its worker (in_flight) until done
+                            ff.repair.lock().unwrap().await_stream = false;
                         }
                     }
                     gst::PadProbeReturn::Ok
@@ -10376,7 +10788,7 @@ impl EcFifoSet {
                                 ss.first_pts.store(p + 1, Ordering::Relaxed);
                             }
                         }
-                        if ff.backlog.load(Ordering::Relaxed) < EC_BLOCK {
+                        if ff.backlog.load(Ordering::Relaxed) < EC_BLOCK && !ff.holdoff.load(Ordering::Relaxed) {
                             let now = ss.t0.elapsed().as_nanos() as u64;
                             let last = ff.last_ref_ns.load(Ordering::Relaxed);
                             let primed = ff.primed.load(Ordering::Relaxed);
@@ -13518,6 +13930,59 @@ Sink Input #302\n\tSink: 14925\n\tProperties:\n\t\ttinhat.role = \"call-playback
         EC_FIFO_GEN.fetch_add(1, Ordering::Relaxed); // a new build attaches
         assert!(!ec_ref_wrapped_now(), "the old build's flag does not carry over");
         EC_REF_WRAPPED_GEN.store(0, Ordering::Relaxed);
+    }
+
+    /// 12.1.3 (aec-first-join): a reference head that started in the skew-resync underflow is restarted in place
+    /// (dropped meanwhile), at most EC_REF_REPAIR_MAX times per build, then left as before and reported.
+    #[test]
+    fn ec_ref_repair_steps() {
+        use EcRepairStep::*;
+        let st = |f: &dyn Fn(&mut EcRepair)| {
+            let mut r = EcRepair::default();
+            f(&mut r);
+            r
+        };
+        let idle = EcRepair::default();
+        assert_eq!(ec_ref_repair_step(false, true, &idle), Accept, "in step: pass it on");
+        assert_eq!(ec_ref_repair_step(true, true, &idle), Repair, "first wrapped buffer: restart");
+        let fl = st(&|r| { r.in_flight = true; r.attempts = 1; });
+        assert_eq!(ec_ref_repair_step(true, true, &fl), Drop, "a restart in flight: drop, no second restart");
+        assert_eq!(ec_ref_repair_step(false, true, &fl), Drop, "anything while in flight is the old head's");
+        let aw = st(&|r| { r.await_stream = true; r.attempts = 1; });
+        assert_eq!(ec_ref_repair_step(false, true, &aw), Drop, "before the new STREAM_START: the old head's (audioresample's tail)");
+        // STREAM_START seen but the worker not done yet: still owned, still dropped (no second repair can start)
+        let seen = st(&|r| { r.in_flight = true; r.attempts = 1; });
+        assert_eq!(ec_ref_repair_step(true, true, &seen), Drop);
+        let again = st(&|r| { r.attempts = 1; r.restarted_ok = true; });
+        assert_eq!(ec_ref_repair_step(true, true, &again), Repair, "the new head wrapped too: retry");
+        let spent = st(&|r| r.attempts = EC_REF_REPAIR_MAX);
+        assert_eq!(ec_ref_repair_step(true, true, &spent), GiveUp, "out of attempts");
+        assert_eq!(ec_ref_repair_step(true, false, &idle), GiveUp, "repair off: the 10.5.3 behaviour");
+        let un = st(&|r| { r.unavailable = true; r.attempts = 1; });
+        assert_eq!(ec_ref_repair_step(true, true, &un), Drop, "restart impossible: a wrong reference stays out");
+        assert_eq!(ec_ref_repair_step(false, true, &un), Accept, "…a good one still passes");
+        assert!(ec_ref_repair_opt_out(None) && ec_ref_repair_opt_out(Some("1")) && ec_ref_repair_opt_out(Some("")));
+        assert!(!ec_ref_repair_opt_out(Some("0")), "only 0 turns it off");
+    }
+
+    /// The probe → source mapping the repair uses must match the names ec_reference_chain gives every branch.
+    #[test]
+    fn ec_ref_src_names_match_the_chain() {
+        assert_eq!(ec_ref_src_name("tinhatecprobe7"), "tinhatecref");
+        assert_eq!(ec_ref_src_name("tinhatecprobe7x1"), "tinhatecref1");
+        assert_eq!(ec_ref_src_name("tinhatecprobe12x9"), "tinhatecref9");
+        for n in [1usize, 4] {
+            let outs: Vec<String> = (0..n).map(|i| format!("out{i}")).collect();
+            let chain = ec_reference_chain(&outs);
+            for seg in chain.split("async=false") {
+                let src = seg.split("name=").nth(1).map(|r| r.split(|c: char| c == ' ' || c == '"').next().unwrap_or("").to_string());
+                let probe = seg.split("webrtcechoprobe name=").nth(1).map(|r| r.split(' ').next().unwrap_or("").to_string());
+                if let (Some(src), Some(probe)) = (src, probe) {
+                    assert_eq!(ec_ref_src_name(&probe), src, "chain segment {seg}");
+                }
+            }
+            assert_eq!(chain.matches("webrtcechoprobe name=").count(), n);
+        }
     }
 
     /// 10.5.3: the underflow-triggered mic rebuild is opt-in. Default OFF (the 10.5.2 sandbox gate: the rebuild gave

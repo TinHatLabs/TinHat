@@ -559,9 +559,13 @@ impl Room {
         .await?;
         let rtc_engine = Arc::new(rtc_engine);
 
-        if let Some(key_provider) = e2ee_manager.key_provider() {
-            key_provider.set_sif_trailer(join_response.sif_trailer);
-        }
+        // TINHAT PATCH (12.1.3, never play what doesn't decrypt): upstream installed the SFU's SIF
+        // trailer as libwebrtc's `uncrypted_magic_bytes`, and decryptFrame forwards ANY frame ending
+        // in it to the decoder (trailer stripped) before any key/IV check — a hostile SFU (or foreign
+        // call host) could append it to its own media and have that played as any participant. Not
+        // installed: the SFU's blank frames now fail decryption and are dropped (a muted camera is
+        // drawn as the avatar from the track mute events instead). The web worker drops them too.
+        let _ = &join_response.sif_trailer;
 
         let pi = join_response.participant.unwrap();
         let pi_kind = pi.kind().into();
@@ -1682,7 +1686,9 @@ impl RoomSession {
                 let mut set = tokio::task::JoinSet::new();
 
                 for (_, publication) in published_tracks {
-                    let track = publication.track().unwrap();
+                    // TINHAT PATCH (C2b, Astra round 5): an unpublish may have finished since the
+                    // snapshot (its track is gone): skip it instead of panicking the republish.
+                    let Some(track) = publication.track() else { continue };
 
                     let lp = session.local_participant.clone();
                     let republish_session = session.clone();
@@ -1696,7 +1702,18 @@ impl RoomSession {
                         // object and update it in place.
                         let previous_sid = publication.sid();
                         let _ = lp.unpublish_track(&previous_sid).await;
-                        match lp.publish_track(track.clone(), publication.publish_options()).await {
+                        // TINHAT PATCH (C2b): publish/unpublish of one track are serialized by its
+                        // lock; a publication of this track that another operation just completed
+                        // answers TrackAlreadyPublished — retry briefly instead of losing the track.
+                        let mut result = lp.publish_track(track.clone(), publication.publish_options()).await;
+                        for _ in 0..10 {
+                            if !matches!(result, Err(RoomError::TrackAlreadyPublished)) {
+                                break;
+                            }
+                            livekit_runtime::sleep(std::time::Duration::from_millis(200)).await;
+                            result = lp.publish_track(track.clone(), publication.publish_options()).await;
+                        }
+                        match result {
                             Ok(new_publication) => {
                                 republish_session.dispatcher.dispatch(
                                     &RoomEvent::LocalTrackRepublished {

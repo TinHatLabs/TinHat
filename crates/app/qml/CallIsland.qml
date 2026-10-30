@@ -838,7 +838,7 @@ ColumnLayout {
                     var t = tiles[i]
                     if (!t) continue
                     if (t.id === "vid_selfview") selfIdx = i
-                    else if (hid.indexOf(t.id) === -1 && t.kind !== "avatar") others++
+                    else if (hid.indexOf(t.id) === -1 && t.kind !== "avatar" && t.cameraMuted !== true) others++
                 }
                 var pip = island.app.selfPipEffective && !afk && selfIdx >= 0 && others > 0   // 10.1 (TH-CALL-24)
                 var out = weightedLayoutInner(W, H, tiles, afk, pip ? hid.concat(["vid_selfview"]) : hidden, mode, pinned, sideFrac)
@@ -882,7 +882,7 @@ ColumnLayout {
                     if (!t || hid.indexOf(t.id) !== -1) continue
                     all.push(i)
                     if (pinned && t.id === pinned) pinIdx = i
-                    if (t.kind === "avatar") avatars.push(i)
+                    if (t.kind === "avatar" || t.cameraMuted === true) avatars.push(i)   // 12.1.3: a muted camera lays out as its avatar
                     else if (t.kind === "screenshare" || t.screenshare === true) shares.push(i)
                     else cams.push(i)
                 }
@@ -1005,8 +1005,8 @@ ColumnLayout {
                 // Hidden tiles take no space, so the compact height must not
                 // reserve rows for them either.
                 var shownTiles = island.app.callTiles.filter(function(t){ return t && !island.app.isTileHidden(t.id) })
-                var primTiles = island.app.mLocalAfk ? 1 : shownTiles.filter(function(t){ return t.kind !== "avatar" }).length
-                var hasAvatar = !island.app.mLocalAfk && shownTiles.some(function(t){ return t.kind === "avatar" })
+                var primTiles = island.app.mLocalAfk ? 1 : shownTiles.filter(function(t){ return t.kind !== "avatar" && t.cameraMuted !== true }).length
+                var hasAvatar = !island.app.mLocalAfk && shownTiles.some(function(t){ return t.kind === "avatar" || t.cameraMuted === true })
                 var rows = Math.max(1, Math.ceil(Math.max(1, primTiles) / c))
                 var h = rows * Math.round(w * 9 / 16) + (rows - 1) * spacing
                 if (hasAvatar) h += spacing + Math.max(96, Math.min(160, Math.round(w * 9 / 16 * 0.5)))
@@ -1291,6 +1291,26 @@ ColumnLayout {
                             // the LiveKit identity's device part, so the tile matches their chat colour (§6).
                             seed: Seeds.avatarSeed(tile.modelData.participant === "You" ? island.app.mUserId
                                                    : tile.modelData.participant)
+                        }
+                    }
+
+                    // 12.1.3: a remote camera that is MUTED keeps its tile (and its bound video surface, z 0) and is
+                    // drawn as the person's avatar above it: never a frozen last frame, never a delegate destroyed
+                    // under a live sink. Below the name strip (z 3) and the controls.
+                    Rectangle {
+                        anchors.fill: parent
+                        z: 1
+                        radius: island.app.radius
+                        color: Th.tileBg
+                        clip: true
+                        visible: tile.modelData.cameraMuted === true && tile.modelData.screenshare !== true
+                        Avatar {
+                            app: island.app
+                            anchors.centerIn: parent
+                            size: Math.max(56, Math.min(320, Math.round(Math.min(tile.height * 0.55, tile.width * 0.42))))
+                            imageSource: tile.modelData.avatar || ""
+                            name: (tile.modelData.name && tile.modelData.name.length > 0) ? tile.modelData.name : tile.modelData.participant
+                            seed: Seeds.avatarSeed(tile.modelData.participant)
                         }
                     }
 
@@ -1768,7 +1788,7 @@ ColumnLayout {
                         anchors.right: parent.right
                         anchors.margins: 6
                         z: 5
-                        visible: !tile.isSelf && !app.fakeCall && tile.width > 80 && tile.height > 60
+                        visible: !tile.isSelf && !app.fakeCall && tile.width > 80 && tile.height > 60 && tile.modelData.cameraMuted !== true
                         opacity: app.callChromeShown ? ((tileHover.hovered || hovered) ? 1.0 : 0.5) : 0.0
                         enabled: app.callChromeShown
                         Behavior on opacity { NumberAnimation { duration: island.app.dur } }

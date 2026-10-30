@@ -1122,10 +1122,14 @@ async fn invited_space_member_count(client: &Client, space: &Room) -> u64 {
             return n;
         }
     }
-    let via: Vec<matrix_sdk::ruma::OwnedServerName> = id
-        .rsplit_once(':')
-        .and_then(|(_, s)| matrix_sdk::ruma::ServerName::parse(s).ok())
+    // B1 pick_via: the room id's own server (pre-v12), else whoever invited me, else my own server — a v12 id
+    // carries none (the web's invitedMemberCount asks the same)
+    let inviter = crate::foreign_room::inviter_server_here(space).await;
+    let own = space.own_user_id().server_name().to_string();
+    let via: Vec<matrix_sdk::ruma::OwnedServerName> = crate::foreign_room::pick_via(&id, &[], &[], &[&inviter, &own])
         .into_iter()
+        .take(1)
+        .filter_map(|s| matrix_sdk::ruma::ServerName::parse(s).ok())
         .collect();
     let target: &matrix_sdk::ruma::RoomOrAliasId = space.room_id().into();
     let n = match client.get_room_preview(target, via).await {

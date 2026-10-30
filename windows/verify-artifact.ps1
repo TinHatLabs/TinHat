@@ -167,6 +167,16 @@ if ($exeText.Contains("TINHAT_TEST_CALL_HOST")) {
 } else {
     "verify ok: no lab call-host answer (TINHAT_TEST_CALL_HOST absent)"
 }
+# aec-first-join (2026-10-29): the echo-cancellation bench hooks (--features bench-aec, lab rigs only) are never read
+# by a release build, so their names are never in a publishable exe.
+foreach ($hook in @("TINHAT_BENCH_AEC_TOGGLE_FILE", "TINHAT_BENCH_EC_RESTART_DELAY_MS")) {
+    if ($exeText.Contains($hook)) {
+        "verify FAIL: $hook present - a LAB build (--features bench-aec) with the echo-cancellation bench hooks"
+        $fail++
+    } else {
+        "verify ok: no bench hook $hook"
+    }
+}
 # Every start position (a lookahead: overlapping candidates too, so one "RW..." can't hide the next), and an ordinal,
 # case-sensitive set: base64 is case-sensitive, PowerShell's @{} and -ne are not (Astra, 12.0.3 train).
 $keys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)

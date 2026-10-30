@@ -45,3 +45,9 @@ path = "src/bin/codecprobe.rs"
 [[bin]]
 name = "captest"
 path = "src/bin/captest.rs"
+
+[features]
+# aec-first-join (2026-10-29): the echo-cancellation BENCH hooks (TINHAT_BENCH_EC_RESTART_DELAY_MS here; the app's
+# bench-aec adds TINHAT_BENCH_AEC_TOGGLE_FILE). Lab rigs only: build.rs refuses it with TINHAT_RELEASE_BUILD=1, and
+# without it the variables are never read and their names are not in the binary.
+bench-aec = []

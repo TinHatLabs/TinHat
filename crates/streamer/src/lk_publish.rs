@@ -679,6 +679,11 @@ impl E2eePublish {
 /// Build the E2EE KeyProvider that matches Element Call's deployed config: per
 /// participant (not shared), HKDF derivation, salt "LKFrameEncryptionKey".
 pub(crate) fn matrix_key_provider() -> KeyProvider {
+    KeyProvider::new(matrix_key_provider_options())
+}
+
+/// The options behind [`matrix_key_provider`] (split out so the unit tests can pin them).
+pub(crate) fn matrix_key_provider_options() -> KeyProviderOptions {
     let mut opts = KeyProviderOptions::default(); // salt already "LKFrameEncryptionKey"
     opts.key_derivation_algorithm = KeyDerivationAlgorithm::HKDF; // EC uses HKDF (livekit default is PBKDF2)
     // element-call's index space is % 256, but libwebrtc's ParticipantKeyHandler clamps
@@ -687,7 +692,150 @@ pub(crate) fn matrix_key_provider() -> KeyProvider {
     // past the ring (OOB/abort). 255 turns that frame into a clean kMissingKey drop
     // instead; install_peer_key_at refuses index 255 with a log for the same reason.
     opts.key_ring_size = 255;
-    KeyProvider::new(opts)
+    // A frame that meets a cryptor which isn't enabled (just attached, or already disabled at
+    // teardown while its receiver lives on) is DROPPED, never passed through: upstream's
+    // default forwards it untransformed, i.e. ciphertext straight into the decoder (black
+    // frames; a hardware decoder fed garbage) and, on the send side, an unencrypted frame to
+    // the SFU. Missing keys were already a drop; this closes the disabled-cryptor path too.
+    // The web's livekit-client worker drops in the same window (state unknown → drop).
+    opts.discard_frame_when_cryptor_not_ready = true;
+    opts
+}
+
+#[cfg(test)]
+mod key_provider_tests {
+    use super::*;
+
+    #[test]
+    fn frames_meeting_a_cryptor_that_is_not_ready_are_dropped() {
+        let o = matrix_key_provider_options();
+        assert!(o.discard_frame_when_cryptor_not_ready, "never pass a frame through a disabled cryptor");
+        assert!(!KeyProviderOptions::default().discard_frame_when_cryptor_not_ready, "vendored default stays upstream's");
+    }
+
+    /// The EFFECTIVE native values (libwebrtc's own options, read back): the copy constructor in
+    /// libwebrtc drops the discard flag, so the Rust option alone proved nothing (it was
+    /// uninitialized native memory on every build up to 12.1.2); and no magic "unencrypted"
+    /// trailer is installed, so nothing bypasses decryption.
+    #[test]
+    fn the_native_key_provider_really_discards_and_has_no_bypass_trailer() {
+        let (discard, magic_len) = matrix_key_provider().effective_options();
+        assert!(discard, "libwebrtc must see discard_frame_when_cryptor_not_ready = true");
+        assert_eq!(magic_len, 0, "no SIF / magic trailer may be installed");
+    }
+
+    /// 12.1.3 C2: an add_track answer whose sid is already one of our live tracks (or empty) is
+    /// refused before the publication/cryptor maps are touched (a replaced sender cryptor would
+    /// detach encryption from a track that keeps sending).
+    #[test]
+    fn a_colliding_add_track_answer_is_refused() {
+        use livekit::participant::check_add_track_answer;
+        let live = || vec!["TR_mic".to_string(), "TR_cam".to_string()];
+        assert!(check_add_track_answer(live(), "TR_share").is_ok());
+        assert!(check_add_track_answer(live(), "TR_mic").is_err(), "a sid already in use");
+        assert!(check_add_track_answer(live(), "TR_cam").is_err(), "a sid already in use");
+        assert!(check_add_track_answer(live(), "").is_err(), "an empty sid");
+        assert!(check_add_track_answer(Vec::<String>::new(), "TR_first").is_ok());
+    }
+
+    /// 12.1.3 C2b: the sid check is atomic with the inserts — concurrent publishes answered with the
+    /// same sid (join: mic + camera + share; reconnect: the republish) get exactly ONE reservation;
+    /// a held or live sid is refused; a released reservation frees the sid; an unpublish in
+    /// progress (tombstone) refuses a publish answered with its sid.
+    #[test]
+    fn concurrent_publishes_answered_with_one_sid_get_one_reservation() {
+        use livekit::participant::SidReservations;
+        use std::sync::{Arc, Barrier, Mutex};
+        let res = Arc::new(SidReservations::default());
+        let live: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec!["TR_mic".into()]));
+        for round in 0..50 {
+            let sid = format!("TR_dup{round}");
+            let gate = Arc::new(Barrier::new(8));
+            let handles: Vec<_> = (0..8)
+                .map(|_| {
+                    let (res, live, gate, sid) = (res.clone(), live.clone(), gate.clone(), sid.clone());
+                    std::thread::spawn(move || {
+                        gate.wait();
+                        res.reserve(&sid, || live.lock().unwrap().clone()).ok().map(|g| {
+                            // the publication "is inserted" while the reservation is held
+                            live.lock().unwrap().push(sid.clone());
+                            drop(g);
+                        })
+                    })
+                })
+                .collect(); // all 8 spawned before any join (the barrier needs them all)
+            let wins: Vec<_> = handles.into_iter().map(|t| t.join().unwrap()).filter(|w| w.is_some()).collect();
+            assert_eq!(wins.len(), 1, "round {round}: exactly one publish may take the sid");
+        }
+        // live and held sids are refused; a dropped reservation frees its sid
+        assert!(res.reserve("TR_mic", || live.lock().unwrap().clone()).is_err());
+        let held = res.reserve("TR_new", || Vec::<String>::new()).unwrap();
+        assert!(res.reserve("TR_new", || Vec::<String>::new()).is_err(), "held by a publish in flight");
+        drop(held);
+        assert!(res.reserve("TR_new", || Vec::<String>::new()).is_ok(), "released");
+        // an unpublish in progress holds its sid
+        let tomb = res.tombstone("TR_gone");
+        assert!(res.reserve("TR_gone", || Vec::<String>::new()).is_err(), "unpublish in progress");
+        drop(tomb);
+        assert!(res.reserve("TR_gone", || Vec::<String>::new()).is_ok());
+        assert!(res.reserve("", || Vec::<String>::new()).is_err(), "empty sid");
+        // Astra's schedule: publish A still holds S when unpublish A takes its tombstone; A's
+        // reservation goes first — S must stay held until the unpublish is done too (counted).
+        let a = res.reserve("TR_S", || Vec::<String>::new()).unwrap();
+        let unpub = res.tombstone("TR_S");
+        drop(a);
+        assert!(res.reserve("TR_S", || Vec::<String>::new()).is_err(), "still being unpublished");
+        let unpub2 = res.tombstone("TR_S"); // an overlapping second unpublish
+        drop(unpub);
+        assert!(res.reserve("TR_S", || Vec::<String>::new()).is_err(), "the second unpublish still holds it");
+        drop(unpub2);
+        assert!(res.reserve("TR_S", || Vec::<String>::new()).is_ok(), "free once every holder let go");
+    }
+
+    /// 12.1.3 C2b: every publish / unpublish of ONE local track runs under that track's lock —
+    /// operations on the same track never interleave (assembly-039's / Astra's same-track teardown
+    /// schedules), different tracks run concurrently, and an unused entry is forgotten.
+    #[test]
+    fn same_track_operations_are_serialized_other_tracks_are_not() {
+        use livekit::participant::TrackOpLocks;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+        let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(4).build().unwrap();
+        rt.block_on(async {
+            let locks = Arc::new(TrackOpLocks::default());
+            let inside = Arc::new(AtomicUsize::new(0));
+            let max_same = Arc::new(AtomicUsize::new(0));
+            let mut tasks = Vec::new();
+            for _ in 0..16 {
+                let (locks, inside, max_same) = (locks.clone(), inside.clone(), max_same.clone());
+                tasks.push(tokio::spawn(async move {
+                    let _g = locks.lock("cid-T").await; // a publish or an unpublish of track T
+                    let now = inside.fetch_add(1, Ordering::SeqCst) + 1;
+                    max_same.fetch_max(now, Ordering::SeqCst);
+                    std::thread::sleep(std::time::Duration::from_millis(5)); // the operation's work (awaits in the real one)
+                    tokio::task::yield_now().await;
+                    inside.fetch_sub(1, Ordering::SeqCst);
+                }));
+            }
+            for t in tasks {
+                t.await.unwrap();
+            }
+            assert_eq!(max_same.load(Ordering::SeqCst), 1, "two operations of the same track interleaved");
+            // other tracks are not held up by T
+            let _t = locks.lock("cid-T").await;
+            let _u = locks.lock("cid-U").await; // would hang here if T's lock blocked other tracks
+        });
+    }
+
+    #[test]
+    fn matrix_key_provider_keeps_the_element_call_contract() {
+        let o = matrix_key_provider_options();
+        assert_eq!(o.ratchet_salt, b"LKFrameEncryptionKey".to_vec());
+        assert_eq!(o.key_ring_size, 255);
+        assert!(matches!(o.key_derivation_algorithm, KeyDerivationAlgorithm::HKDF));
+        // and the provider builds with them (the options cross the FFI into libwebrtc)
+        let _ = matrix_key_provider();
+    }
 }
 
 /// Connect to the SFU with E2EE, set our media key, and publish a hardware-encoded
@@ -896,6 +1044,26 @@ pub(crate) fn cuda_scale_available() -> bool {
     })
 }
 
+/// Which capture path a share tries, as (GPU with a known size, GPU learning the size from the first frame); neither =
+/// the CPU convert + lanczos path. `cuda` = the CUDA filters are registered (an NVIDIA driver AND NVRTC; a bundled
+/// libnvrtc alone registers nothing on a machine without NVIDIA, so such a machine stays on the CPU path), `d3d11` =
+/// the Windows D3D11 scaler. No size known (KDE's portal gives none for a window and often none for a monitor) → the
+/// CUDA path that pins its output from the FIRST frame; Linux only, on Windows the picker always knows the size.
+pub(crate) fn share_capture_plan(
+    size_known: bool,
+    gpu_pref_ok: bool,
+    cuda: bool,
+    d3d11: bool,
+    force_cpu: bool,
+    windows: bool,
+) -> (bool, bool) {
+    let has_gpu_elements = cuda || (windows && d3d11);
+    let gpu_ok = gpu_pref_ok && has_gpu_elements && !force_cpu;
+    let want_gpu = size_known && gpu_ok;
+    let want_gpu_learn = !want_gpu && gpu_ok && !windows && cuda;
+    (want_gpu, want_gpu_learn)
+}
+
 /// GPU capture path: scale + convert on the NVIDIA GPU, download only the finished frame.
 /// Requires a KNOWN output size (so no mid-flight caps re-pin is needed) — callers use it only
 /// when the portal reported the source size (monitor shares, i.e. the expensive case). Falls
@@ -917,18 +1085,24 @@ pub(crate) fn build_capture_pipeline_cuda(
         let _ = paced;
         screencast.src_fragment()
     };
-    let desc = format!(
-        "{src} ! \
-         videorate drop-only=true ! video/x-raw(ANY),framerate={fps}/1 ! \
-         cudaupload ! cudaconvertscale ! \
-         video/x-raw(memory:CUDAMemory),format=I420,width={out_w},height={out_h},pixel-aspect-ratio=1/1 ! \
-         cudadownload ! \
-         queue max-size-buffers=4 leaky=downstream ! \
-         appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
-    );
+    let desc = cuda_presized_desc(&src, out_w, out_h, fps);
     gst::parse::launch(&desc)?
         .downcast::<gst::Pipeline>()
         .map_err(|_| anyhow::anyhow!("cuda capture: parsed element is not a Pipeline"))
+}
+
+/// The launch line of [`build_capture_pipeline_cuda`] (the pre-sized GPU capture: its output caps are final at build
+/// time, so nothing renegotiates mid-stream) for a source head; the share-start gate feeds it a videotestsrc.
+pub(crate) fn cuda_presized_desc(src: &str, out_w: u32, out_h: u32, fps: u32) -> String {
+    format!(
+        "{src} ! \
+         videorate drop-only=true ! video/x-raw(ANY),framerate={fps}/1 ! \
+         cudaupload ! cudaconvertscale name=vscale ! \
+         video/x-raw(memory:CUDAMemory),format=I420,width={out_w},height={out_h},pixel-aspect-ratio=1/1 ! \
+         cudadownload ! \
+         queue name=outq max-size-buffers=4 leaky=downstream ! \
+         appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
+    )
 }
 
 /// The GPU (CUDA) capture for a source whose size nobody told us (KDE's portal gives none for a window share,
@@ -961,7 +1135,7 @@ pub(crate) fn cuda_learn_desc(src: &str, fps: u32) -> String {
          cudaupload ! cudaconvertscale name=vscale ! \
          capsfilter name=outcaps caps=video/x-raw(memory:CUDAMemory),format=I420 ! \
          cudadownload ! \
-         queue max-size-buffers=4 leaky=downstream ! \
+         queue name=outq max-size-buffers=4 leaky=downstream ! \
          appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
     )
 }
@@ -1056,9 +1230,9 @@ pub(crate) fn build_capture_pipeline_d3d11(
     let desc = format!(
         "{src} ! \
          videorate drop-only=true ! video/x-raw(ANY),framerate={fps}/1 ! \
-         d3d11convert add-borders=false ! \
+         d3d11convert name=vscale add-borders=false ! \
          {tail} ! \
-         queue max-size-buffers=4 leaky=downstream ! \
+         queue name=outq max-size-buffers=4 leaky=downstream ! \
          appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
     );
     gst::parse::launch(&desc)?
@@ -1127,9 +1301,207 @@ pub(crate) fn build_capture_pipeline(screencast: &ScreenCast, max_w: u32, max_h:
 /// Threads for the CPU path's full-resolution convert + lanczos scale. Both elements ran on ONE thread
 /// (GStreamer's default n-threads=1): 16 ms per 3245x2067 frame on the rig, i.e. the stream's frame rate was capped by one
 /// core while the rest idled. Half the cores, at most 4 (measured on the rig: 21 → 10 ms per frame with 4).
+/// 12.1.2: at most 8. The field ceiling is a share while a GAME loads every core: builder with all 24 threads busy,
+/// 5120x2160 -> 3408x1440 ran 44 fps on 4 threads and 55 on 8 (-> 2560x1072: 61 -> 72), and a tester's 5K shares sat at
+/// 32-37 fps on the 4-thread path (STREAM-QUALITY-FINDINGS.md). The threads only work while a frame is scaling.
 pub(crate) fn cpu_capture_threads() -> u32 {
-    let n = std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(2);
-    (n / 2).clamp(1, 4)
+    cpu_capture_threads_for(std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(2))
+}
+
+pub(crate) fn cpu_capture_threads_for(cores: u32) -> u32 {
+    (cores / 2).clamp(1, 8)
+}
+
+/// 12.1.2: where a share's frames go missing, said every 5 s while it runs. A 60 fps cap that publishes 35 fps used to
+/// leave nothing to tell the compositor's delivery from the scaler from the encoder (the field logs only had "fed N
+/// frames"). Counts buffers at the capture source's pad, at the scaler's input (after the rate cap) and at the appsink;
+/// times the scaler (in -> out) and the whole synchronous capture chain (source pad -> the output queue: rate cap,
+/// upload, scale, download, which all run on the source's streaming thread, so a slow chain holds the source back);
+/// then names the stage that set the rate. RC2: the chain timing exists because RC1's first-start path read
+/// "source 19 fps" and blamed the compositor while its own CUDA chain was what held pipewiresrc back
+/// (the 12.1.2 RC1 field diagnosis, F6). Probes only count; the reporter holds a weak ref and ends with the pipeline.
+pub(crate) fn install_cadence_probes(pipeline: &gst::Pipeline, cap_fps: u32, path: &'static str) {
+    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+    use std::sync::{Arc, Mutex};
+    #[derive(Default)]
+    struct Counts {
+        src: AtomicU64,
+        scale_in: AtomicU64,
+        out: AtomicU64,
+        scale_sum_us: AtomicU64,
+        scale_max_us: AtomicU64,
+        scale_n: AtomicU64,
+        chain_sum_us: AtomicU64,
+        chain_max_us: AtomicU64,
+        chain_n: AtomicU64,
+    }
+    let c = Arc::new(Counts::default());
+    // a stopwatch started at one pad and read at a later pad on the SAME streaming thread
+    let timed = |c: &Arc<Counts>, start: &gst::Pad, end: &gst::Pad, which: fn(&Counts) -> (&AtomicU64, &AtomicU64, &AtomicU64)| {
+        let t0: Arc<Mutex<Option<std::time::Instant>>> = Arc::new(Mutex::new(None));
+        {
+            let t0 = t0.clone();
+            start.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+                if let Ok(mut t) = t0.lock() {
+                    *t = Some(std::time::Instant::now());
+                }
+                gst::PadProbeReturn::Ok
+            });
+        }
+        let c = c.clone();
+        end.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+            if let Some(t) = t0.lock().ok().and_then(|mut t| t.take()) {
+                let us = t.elapsed().as_micros() as u64;
+                let (sum, max, n) = which(&c);
+                sum.fetch_add(us, Relaxed);
+                max.fetch_max(us, Relaxed);
+                n.fetch_add(1, Relaxed);
+            }
+            gst::PadProbeReturn::Ok
+        });
+    };
+    let src_pad = pipeline.iterate_sources().into_iter().flatten().next().and_then(|e| e.static_pad("src"));
+    if let Some(pad) = &src_pad {
+        let c = c.clone();
+        pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+            c.src.fetch_add(1, Relaxed);
+            gst::PadProbeReturn::Ok
+        });
+    }
+    let vscale = pipeline.by_name("vscale");
+    let (scale_in_pad, scale_out_pad) = (
+        vscale.as_ref().and_then(|v| v.static_pad("sink")),
+        vscale.as_ref().and_then(|v| v.static_pad("src")),
+    );
+    if let Some(pad) = &scale_in_pad {
+        let c = c.clone();
+        pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+            c.scale_in.fetch_add(1, Relaxed);
+            gst::PadProbeReturn::Ok
+        });
+    }
+    if let (Some(i), Some(o)) = (&scale_in_pad, &scale_out_pad) {
+        timed(&c, i, o, |c| (&c.scale_sum_us, &c.scale_max_us, &c.scale_n));
+    }
+    let outq_in = pipeline.by_name("outq").and_then(|q| q.static_pad("sink"));
+    if let (Some(s), Some(q)) = (&src_pad, &outq_in) {
+        timed(&c, s, q, |c| (&c.chain_sum_us, &c.chain_max_us, &c.chain_n));
+    }
+    if let Some(pad) = pipeline.by_name("sink").and_then(|s| s.static_pad("sink")) {
+        let c = c.clone();
+        pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+            c.out.fetch_add(1, Relaxed);
+            gst::PadProbeReturn::Ok
+        });
+    }
+    let (has_scaler, has_chain) = (scale_in_pad.is_some() && scale_out_pad.is_some(), src_pad.is_some() && outq_in.is_some());
+    if !has_scaler || !has_chain {
+        eprintln!("[lk/cadence] {path}: not measured here: {}{}", if has_scaler { "" } else { "scaler " }, if has_chain { "" } else { "capture chain" });
+    }
+    let weak = pipeline.downgrade();
+    let src_pad = src_pad.map(|p| p.downgrade());
+    let _ = std::thread::Builder::new().name("share-cadence".into()).spawn(move || {
+        let period = std::time::Duration::from_secs(5);
+        let mut caps_seen = false;
+        let mut window = std::time::Instant::now();
+        let all = |c: &Counts| {
+            [&c.src, &c.scale_in, &c.out, &c.scale_sum_us, &c.scale_max_us, &c.scale_n, &c.chain_sum_us, &c.chain_max_us, &c.chain_n]
+                .map(|a| a.swap(0, Relaxed))
+        };
+        loop {
+            std::thread::sleep(period);
+            let Some(p) = weak.upgrade() else { return };
+            let state = p.current_state();
+            drop(p);
+            if state != gst::State::Playing {
+                if state == gst::State::Null {
+                    return;
+                }
+                // paused/ready: start a fresh window when it plays again
+                all(&c);
+                window = std::time::Instant::now();
+                continue;
+            }
+            let secs = window.elapsed().as_secs_f64().max(0.001);
+            window = std::time::Instant::now();
+            let [src, scale_in, out, s_sum, s_max, s_n, c_sum, c_max, c_n] = all(&c);
+            let m = Cadence {
+                chain_measured: has_chain,
+                cap: cap_fps as f64,
+                src: src as f64 / secs,
+                out: out as f64 / secs,
+                scale_ms: if s_n > 0 { s_sum as f64 / s_n as f64 / 1000.0 } else { 0.0 },
+                chain_ms: if c_n > 0 { c_sum as f64 / c_n as f64 / 1000.0 } else { 0.0 },
+                chain_busy: c_sum as f64 / 1e6 / secs,
+            };
+            if !caps_seen {
+                if let Some(caps) = src_pad.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.current_caps()) {
+                    eprintln!("[lk/cadence] {} source caps: {caps}", utc_hms());
+                    caps_seen = true;
+                }
+            }
+            let scaler = if has_scaler {
+                format!("scaler {:.1} ({:.1} ms, max {:.1})", scale_in as f64 / secs, m.scale_ms, s_max as f64 / 1000.0)
+            } else {
+                "scaler n/a".to_string()
+            };
+            let chain = if has_chain {
+                format!("capture chain {:.1} ms/frame (max {:.1}), busy {:.0} %", m.chain_ms, c_max as f64 / 1000.0, m.chain_busy * 100.0)
+            } else {
+                "capture chain n/a".to_string()
+            };
+            eprintln!(
+                "[lk/cadence] {} {path}: source {:.1} fps -> {scaler} -> appsink {:.1} (cap {cap_fps}); {chain} — {}",
+                utc_hms(),
+                m.src,
+                m.out,
+                cadence_verdict(&m)
+            );
+        }
+    });
+}
+
+/// One [lk/cadence] window: rates per second, mean milliseconds per frame, and the share of wall time the source's
+/// streaming thread spent pushing frames through the synchronous capture chain (0..1).
+/// The timing sums, maxima and counts are swapped out one by one, so a frame on a window's edge can land half in
+/// each window: the figures are approximate at the edges, which is fine for a 5 s log line.
+#[derive(Clone, Copy, Debug, Default)]
+pub(crate) struct Cadence {
+    /// the source pad and the output queue were both found (else nothing is attributed to the source)
+    pub chain_measured: bool,
+    pub cap: f64,
+    pub src: f64,
+    pub out: f64,
+    pub scale_ms: f64,
+    pub chain_ms: f64,
+    pub chain_busy: f64,
+}
+
+/// The stage that set a share's rate, in words (the [lk/cadence] line's tail). Order matters: a busy chain explains a
+/// low source count (the source can only push the next frame when the chain returns), so it is checked first. The
+/// chain time covers the source pad to the output queue only (not allocation before the pad, nor work on frames the
+/// rate cap dropped), so a low source rate with a quiet chain is reported as unexplained by it, not proven to be the
+/// compositor.
+pub(crate) fn cadence_verdict(m: &Cadence) -> &'static str {
+    if m.src < 0.5 && m.out < 0.5 {
+        "no frames"
+    } else if m.out >= m.cap * 0.9 {
+        "at the cap (within 10 %)"
+    } else if m.chain_busy > 0.7 || (m.scale_ms > 0.0 && m.scale_ms * m.out > 800.0) {
+        "the capture pipeline (upload/scale/download) is the ceiling"
+    } else if !m.chain_measured {
+        "below the cap; this pipeline's stages are not measured"
+    } else if m.src < m.cap * 0.9 && m.out >= m.src * 0.9 {
+        "few buffers at the source pad, not explained by the measured chain (pipewiresrc/compositor, or work outside it)"
+    } else {
+        "frames lost between the source and the appsink"
+    }
+}
+
+/// Wall-clock UTC "HH:MM:SSZ" for log lines that phases get correlated by (the log has no timestamps otherwise).
+fn utc_hms() -> String {
+    let s = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0) % 86_400;
+    format!("{:02}:{:02}:{:02}Z", s / 3600, s / 60 % 60, s % 60)
 }
 
 /// The CPU path's convert + scale: ONE `videoconvertscale` pass (GStreamer 1.22+) where it exists. The old pair
@@ -1159,7 +1531,7 @@ pub(crate) fn cpu_capture_desc(src: &str, download: &str, fps: u32, threads: u32
          video/x-raw(ANY),framerate={fps}/1 ! \
          {download}{convert_scale} ! \
          capsfilter name=outcaps caps=video/x-raw,format=I420 ! \
-         queue max-size-buffers=4 leaky=downstream ! \
+         queue name=outq max-size-buffers=4 leaky=downstream ! \
          appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
     )
 }
@@ -1755,5 +2127,309 @@ mod share_capture_tests {
         assert_eq!(memo, Some((3245, 2067)));
         eprintln!("cuda capture: {n} frames in 2 s");
         assert!(n > 0);
+    }
+
+    /// No NVIDIA (no CUDA filters, bundled NVRTC or not) → the CPU path on Linux whatever the size; with CUDA → GPU.
+    #[test]
+    fn share_capture_plan_without_nvidia_is_the_cpu_path() {
+        // Linux, no CUDA filters: neither GPU variant, size known or not
+        assert_eq!(share_capture_plan(true, true, false, false, false, false), (false, false));
+        assert_eq!(share_capture_plan(false, true, false, false, false, false), (false, false));
+        // Linux with CUDA: GPU when the size is known, GPU-learn when not
+        assert_eq!(share_capture_plan(true, true, true, false, false, false), (true, false));
+        assert_eq!(share_capture_plan(false, true, true, false, false, false), (false, true));
+        // TINHAT_CAPTURE_CPU wins
+        assert_eq!(share_capture_plan(true, true, true, false, true, false), (false, false));
+        // Windows: D3D11 alone is a GPU path; never the learn variant; the d3d11 flag means nothing on Linux
+        assert_eq!(share_capture_plan(true, true, false, true, false, true), (true, false));
+        assert_eq!(share_capture_plan(true, true, false, true, false, false), (false, false));
+        assert_eq!(share_capture_plan(true, false, true, true, false, true), (false, false));
+    }
+
+    /// RC2: a first start that learned the size builds its pipeline with fit_even(learned, box) — the very dims a
+    /// re-publish gets from publish_target(Some(learned)), so the two starts run the same launch line.
+    #[test]
+    fn first_start_dims_equal_republish_dims() {
+        for (bw, bh) in [(1280, 720), (1920, 1080), (2560, 1440), (3840, 2160)] {
+            let q = ShareQuality { max_w: bw, max_h: bh, ..ShareQuality::default() };
+            for src in [(5120, 2160), (3840, 2160), (3233, 2150), (2560, 1440), (1920, 1080)] {
+                let (w, h, _, _) = publish_target(Some(src), q);
+                assert_eq!(fit_even(src.0, src.1, share_box(q).0, share_box(q).1), (w, h), "{src:?} in {bw}x{bh}");
+            }
+        }
+    }
+
+    /// RC2 share-START gate (the 12.1.2 RC1 field diagnosis, F2): under load, a share started cold with no known size
+    /// must run like a re-publish. Cold starts from a live 5120x2160 BGRA source at 90 fps (KWin's shm frames
+    /// stand-in, PTS restamped on arrival like pipewiresrc's), 1440p box, cap 60, each measured at the appsink over a
+    /// fixed window after a 3 s warm-up, in the order C, B, C, A:
+    ///   C = the re-publish (the pre-sized pipeline straight away)
+    ///   B = RC2's first start (learn the size, stop and drop that pipeline, start the pre-sized one)
+    ///   A = RC1's first start (the first-frame "learn" pipeline kept as the share; reported, not asserted)
+    /// Pass: every run got frames with the expected output caps and no bus error, B >= 90 % of mean(C), and in CUDA
+    /// mode B and C each >= 90 % of the cap (the 60 fps claim). CUDA mode = the real launch lines + parallel 8K CUDA
+    /// scale pipelines as GPU load; elsewhere the software stand-in under one spinning thread per core. This is a
+    /// pipeline-level gate: the portal, start_share_capture's candidate handling and a cold process are the release candidate's field test.
+    /// Opt-in: TINHAT_SHARE_START_GATE=1 [TINHAT_GATE_SECS=15] [TINHAT_GATE_GPU_LOAD=4] [TINHAT_GATE_REQUIRE_CUDA=1].
+    #[test]
+    fn share_start_gate() {
+        if std::env::var_os("TINHAT_SHARE_START_GATE").is_none() {
+            eprintln!("skipping: TINHAT_SHARE_START_GATE not set");
+            return;
+        }
+        let _ = gst::init();
+        let secs: f64 = std::env::var("TINHAT_GATE_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(15.0);
+        assert!(secs.is_finite() && (3.0..=600.0).contains(&secs), "TINHAT_GATE_SECS out of range: {secs}");
+        let gpu_load_n: usize = std::env::var("TINHAT_GATE_GPU_LOAD").ok().map(|v| v.parse().expect("TINHAT_GATE_GPU_LOAD")).unwrap_or(4);
+        assert!((1..=32).contains(&gpu_load_n), "TINHAT_GATE_GPU_LOAD out of range");
+        let require_cuda = std::env::var_os("TINHAT_GATE_REQUIRE_CUDA").is_some();
+
+        // a pipeline that must stay healthy: Err on a bus error
+        let bus_error = |p: &gst::Pipeline| -> Option<String> {
+            let msg = p.bus()?.pop_filtered(&[gst::MessageType::Error])?;
+            match msg.view() {
+                gst::MessageView::Error(e) => Some(format!("{} ({:?})", e.error(), e.debug())),
+                _ => None,
+            }
+        };
+        let launch = |d: &str| gst::parse::launch(d).unwrap_or_else(|e| panic!("{e}: {d}")).downcast::<gst::Pipeline>().unwrap();
+
+        // CUDA mode only when a CUDA chain really RUNS here: a registry scanned on another machine can list the
+        // elements without a GPU (a build container without a GPU).
+        let cuda = cuda_scale_available()
+            && gst::parse::launch(
+                "videotestsrc num-buffers=1 ! video/x-raw,format=BGRA,width=64,height=64 ! cudaupload ! cudaconvertscale ! \
+                 video/x-raw(memory:CUDAMemory),format=I420,width=32,height=32 ! cudadownload ! fakesink",
+            )
+            .ok()
+            .and_then(|p| p.downcast::<gst::Pipeline>().ok())
+            .is_some_and(|p| {
+                let ok = p.set_state(gst::State::Playing).is_ok()
+                    && p.bus()
+                        .and_then(|b| b.timed_pop_filtered(gst::ClockTime::from_seconds(3), &[gst::MessageType::Eos, gst::MessageType::Error]))
+                        .is_some_and(|m| matches!(m.view(), gst::MessageView::Eos(_)));
+                let _ = p.set_state(gst::State::Null);
+                ok
+            });
+        assert!(cuda || !require_cuda, "TINHAT_GATE_REQUIRE_CUDA: no working CUDA chain here");
+
+        let src = "videotestsrc name=gatesrc is-live=true pattern=solid-color ! video/x-raw,format=BGRA,width=5120,height=2160,framerate=90/1";
+        let (box_w, box_h, fps) = (2560u32, 1440u32, 60u32);
+        let emulate = |d: String| -> String {
+            if cuda {
+                d
+            } else {
+                d.replace("cudaupload ! cudaconvertscale name=vscale", &format!("videoconvertscale method=lanczos add-borders=false n-threads={} name=vscale", cpu_capture_threads()))
+                    .replace("(memory:CUDAMemory)", "")
+                    .replace("cudadownload ! ", "")
+            }
+        };
+        let feature = if cuda { Some("memory:CUDAMemory") } else { None };
+        let learn_desc = emulate(cuda_learn_desc(src, fps));
+        let sink_of = |p: &gst::Pipeline| p.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        // pipewiresrc stamps buffers on arrival; videotestsrc keeps its nominal 90 fps stamps even when it falls
+        // behind, and the rate cap would then drop a third of what arrives. Restamp PTS to the running time.
+        let restamp = |p: &gst::Pipeline| {
+            let pad = p.by_name("gatesrc").and_then(|s| s.static_pad("src")).unwrap();
+            let weak = p.downgrade();
+            pad.add_probe(gst::PadProbeType::BUFFER, move |_, info| {
+                let now = weak.upgrade().and_then(|p| p.current_running_time());
+                if let (Some(now), Some(gst::PadProbeData::Buffer(buf))) = (now, info.data.as_mut()) {
+                    buf.make_mut().set_pts(now);
+                }
+                gst::PadProbeReturn::Ok
+            });
+        };
+        // (fps over the fixed window, the first sample's size)
+        let measure = |p: gst::Pipeline, label: &'static str| -> (f64, Option<(u32, u32)>) {
+            restamp(&p);
+            install_cadence_probes(&p, fps, label);
+            let sink = sink_of(&p);
+            p.set_state(gst::State::Playing).unwrap();
+            let t0 = std::time::Instant::now();
+            let (mut n, mut size) = (0u32, None);
+            while t0.elapsed().as_secs_f64() < 3.0 + secs {
+                if let Some(sample) = sink.try_pull_sample(gst::ClockTime::from_mseconds(200)) {
+                    if size.is_none() {
+                        size = sample.caps().and_then(|c| gstreamer_video::VideoInfo::from_caps(c).ok()).map(|i| (i.width(), i.height()));
+                    }
+                    if t0.elapsed().as_secs_f64() >= 3.0 {
+                        n += 1;
+                    }
+                }
+                if let Some(e) = bus_error(&p) {
+                    panic!("{label}: bus error {e}");
+                }
+            }
+            let _ = p.set_state(gst::State::Null);
+            (n as f64 / secs, size)
+        };
+
+        // the load, stopped by a guard (also on a panic)
+        struct Load {
+            stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+            threads: Vec<std::thread::JoinHandle<()>>,
+            pipelines: Vec<gst::Pipeline>,
+        }
+        impl Drop for Load {
+            fn drop(&mut self) {
+                self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                for t in self.threads.drain(..) {
+                    let _ = t.join();
+                }
+                for p in &self.pipelines {
+                    let _ = p.set_state(gst::State::Null);
+                }
+            }
+        }
+        let mut load = Load { stop: Default::default(), threads: Vec::new(), pipelines: Vec::new() };
+        if cuda {
+            for _ in 0..gpu_load_n {
+                let p = launch(
+                    "videotestsrc pattern=solid-color ! video/x-raw,format=BGRA,width=7680,height=4320 ! cudaupload ! \
+                     cudaconvertscale ! video/x-raw(memory:CUDAMemory),format=I420,width=3840,height=2160 ! fakesink sync=false",
+                );
+                p.set_state(gst::State::Playing).unwrap();
+                load.pipelines.push(p);
+            }
+        } else {
+            for _ in 0..std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4) {
+                let stop = load.stop.clone();
+                load.threads.push(std::thread::spawn(move || {
+                    let mut x = 0u64;
+                    while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                        x = std::hint::black_box(x.wrapping_mul(6364136223846793005).wrapping_add(1));
+                    }
+                }));
+            }
+        }
+        // the load must hold for every measured run, not just at the start
+        let load_ok = |load: &Load, when: &str| {
+            for p in &load.pipelines {
+                if let Some(e) = bus_error(p) {
+                    panic!("the GPU load pipeline failed {when}: {e}");
+                }
+                assert_eq!(p.current_state(), gst::State::Playing, "the GPU load pipeline stopped {when}");
+            }
+        };
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        load_ok(&load, "before the runs");
+
+        let presized = |(rw, rh): (u32, u32)| {
+            let (ow, oh) = fit_even(rw, rh, box_w, box_h);
+            launch(&emulate(cuda_presized_desc(src, ow, oh, fps)))
+        };
+        let (fps_c1, size_c1) = measure(presized((5120, 2160)), "gate C re-publish");
+        load_ok(&load, "during C1");
+
+        // B: RC2's first start: learn (first frame), stop AND drop the learner, then the pre-sized pipeline
+        let t0 = std::time::Instant::now();
+        let learned = {
+            let memo: std::sync::Arc<std::sync::Mutex<Option<(u32, u32)>>> = Default::default();
+            let learner = launch(&learn_desc);
+            restamp(&learner);
+            install_first_frame_repin(&learner, box_w, box_h, feature, memo.clone(), "gate");
+            let sink = sink_of(&learner);
+            learner.set_state(gst::State::Playing).unwrap();
+            while sink.try_pull_sample(gst::ClockTime::from_mseconds(200)).is_none() {
+                assert!(t0.elapsed().as_secs() < 4, "the learning pipeline gave no frame in 4 s");
+                assert!(bus_error(&learner).is_none(), "the learning pipeline failed");
+            }
+            let _ = learner.set_state(gst::State::Null);
+            let learned = memo.lock().unwrap().expect("the first frame carried no size");
+            learned
+        };
+        let learn_ms = t0.elapsed().as_millis();
+        let (fps_b, size_b) = measure(presized(learned), "gate B rc2-first-start");
+        load_ok(&load, "during B");
+
+        let (fps_c2, size_c2) = measure(presized((5120, 2160)), "gate C re-publish");
+        load_ok(&load, "during C2");
+        let fps_c = (fps_c1 + fps_c2) / 2.0;
+
+        let a = launch(&learn_desc);
+        install_first_frame_repin(&a, box_w, box_h, feature, Default::default(), "gate");
+        let (fps_a, _) = measure(a, "gate A rc1-first-start");
+        load_ok(&load, "during A");
+        drop(load);
+
+        let mode = if cuda { "GPU (CUDA)" } else { "CPU (software stand-in, no CUDA here)" };
+        eprintln!(
+            "[gate] share start under {mode} load: A rc1-first-start {fps_a:.1} fps | B rc2-first-start {fps_b:.1} fps \
+             (learned {}x{} in {learn_ms} ms) | C re-publish {fps_c:.1} fps ({fps_c1:.1} / {fps_c2:.1}) (cap {fps}, {secs} s windows)",
+            learned.0, learned.1
+        );
+        assert_eq!(learned, (5120, 2160));
+        for (label, size) in [("B", size_b), ("C1", size_c1), ("C2", size_c2)] {
+            assert_eq!(size, Some((3408, 1440)), "{label}: output caps");
+        }
+        assert!(fps_b > 0.0 && fps_c1 > 0.0 && fps_c2 > 0.0, "a run got no frames");
+        assert!(fps_b >= fps_c * 0.9, "first start {fps_b:.1} fps vs re-publish {fps_c:.1} fps");
+        if cuda {
+            let floor = fps as f64 * 0.9;
+            assert!(fps_b >= floor && fps_c >= floor, "the 60 fps claim: B {fps_b:.1} / C {fps_c:.1} below {floor}");
+        }
+    }
+
+    /// Half the cores, 1..=8 (12.1.2: was at most 4).
+    #[test]
+    fn cpu_capture_threads_scale_to_eight() {
+        assert_eq!(cpu_capture_threads_for(1), 1);
+        assert_eq!(cpu_capture_threads_for(8), 4);
+        assert_eq!(cpu_capture_threads_for(16), 8);
+        assert_eq!(cpu_capture_threads_for(32), 8);
+    }
+
+    /// The [lk/cadence] verdicts, from the field numbers (a 12.1.0 field log: cap 60, ~36 fps out; RC1 first-start: 19 fps).
+    #[test]
+    fn cadence_verdict_names_the_stage() {
+        let m = |src, out, scale_ms, chain_ms: f64, busy| Cadence { chain_measured: true, cap: 60.0, src, out, scale_ms, chain_ms, chain_busy: busy };
+        assert_eq!(cadence_verdict(&m(100.0, 59.0, 3.0, 4.0, 0.3)), "at the cap (within 10 %)");
+        assert_eq!(cadence_verdict(&m(0.0, 0.0, 0.0, 0.0, 0.0)), "no frames");
+        assert_eq!(cadence_verdict(&Cadence { chain_measured: false, ..m(36.0, 36.0, 0.0, 0.0, 0.0) }), "below the cap; this pipeline's stages are not measured");
+        // RC1 P1: source 19, chain busy most of the time -> the pipeline, NOT the compositor
+        assert_eq!(cadence_verdict(&m(19.5, 19.5, 2.0, 48.0, 0.94)), "the capture pipeline (upload/scale/download) is the ceiling");
+        // 12.1.0 CPU path: 36 fps x 25 ms in the scaler
+        assert_eq!(cadence_verdict(&m(36.0, 36.0, 25.0, 0.0, 0.0)), "the capture pipeline (upload/scale/download) is the ceiling");
+        // chain mostly idle, few buffers: the source
+        assert!(cadence_verdict(&m(36.0, 36.0, 5.0, 6.0, 0.22)).starts_with("few buffers at the source pad"));
+        assert_eq!(cadence_verdict(&m(60.0, 30.0, 5.0, 6.0, 0.36)), "frames lost between the source and the appsink");
+    }
+
+    /// Pacing proof for the CPU path: a LIVE 5120x2160 BGRx source at 60 fps through the real launch line (cap 60,
+    /// 3408x1440 box like the field test's 1440p share) with the cadence probes installed. Always: frames flow. With
+    /// TINHAT_PERF_TESTS=1 (an idle machine with >= 8 cores, release build): >= 54 fps at the appsink.
+    #[test]
+    fn cpu_capture_keeps_60_from_a_5k_source() {
+        let _ = gst::init();
+        let src = "videotestsrc is-live=true pattern=solid-color ! video/x-raw,format=BGRx,width=5120,height=2160,framerate=60/1";
+        let desc = cpu_capture_desc(src, "", 60, cpu_capture_threads());
+        let Ok(pipeline) = gst::parse::launch(&desc).map(|p| p.downcast::<gst::Pipeline>().unwrap()) else {
+            eprintln!("skipping: the CPU capture pipeline cannot run here");
+            return;
+        };
+        install_first_frame_repin(&pipeline, 3408, 1440, None, Default::default(), "test");
+        install_cadence_probes(&pipeline, 60, "test CPU");
+        let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        pipeline.set_state(gst::State::Playing).unwrap();
+        let (mut n, mut warm) = (0u32, None);
+        let t0 = std::time::Instant::now();
+        while t0.elapsed().as_secs_f64() < 7.0 {
+            if sink.try_pull_sample(gst::ClockTime::from_mseconds(200)).is_none() {
+                continue;
+            }
+            // count from 1 s in: the first second is negotiation + the re-pin
+            if t0.elapsed().as_secs_f64() >= 1.0 {
+                warm.get_or_insert_with(std::time::Instant::now);
+                n += 1;
+            }
+        }
+        let fps = n as f64 / warm.map(|w| w.elapsed().as_secs_f64()).unwrap_or(1.0);
+        let _ = pipeline.set_state(gst::State::Null);
+        eprintln!("cpu capture 5120x2160 -> 3408x1440 ({} threads): {fps:.1} fps", cpu_capture_threads());
+        assert!(n > 0, "no frames");
+        if std::env::var_os("TINHAT_PERF_TESTS").is_some() {
+            assert!(fps >= 54.0, "{fps:.1} fps");
+        }
     }
 }

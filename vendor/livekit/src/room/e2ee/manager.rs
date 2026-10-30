@@ -54,7 +54,14 @@ struct ManagerInner {
     options: Option<E2eeOptions>, // If Some, it means the e2ee was initialized
     enabled: bool,                // Used to enable/disable e2ee
     dc_encryption_enabled: bool,
-    frame_cryptors: HashMap<(ParticipantIdentity, TrackSid), FrameCryptor>,
+    frame_cryptors: HashMap<(ParticipantIdentity, TrackSid), FrameCryptor>, // RECEIVERS (remote tracks)
+    // TINHAT PATCH (12.1.3, C2b): our SENDER cryptors live apart from the receivers (a forged remote
+    // participant with our identity + sid can't displace or remove them), each bound to its
+    // track's client id (removed only by the unpublish of THAT track). A sender cryptor is never
+    // dropped while its sender may still send: one that would be replaced is RETIRED (kept alive
+    // until cleanup) — dropping it detaches encryption (video then goes out unencrypted).
+    sender_cryptors: HashMap<(ParticipantIdentity, TrackSid), (String, FrameCryptor)>,
+    retired_senders: Vec<FrameCryptor>,
     data_packet_cryptor: Option<DataPacketCryptor>,
     // TINHAT PATCH: the key index OUR sender cryptors encrypt with. FrameCryptors are
     // created with index 0 and nothing upstream ever set it, so a local key installed
@@ -85,6 +92,8 @@ impl E2eeManager {
                 dc_encryption_enabled: options.is_some() && with_dc_encryption,
                 options,
                 frame_cryptors: HashMap::new(),
+                sender_cryptors: HashMap::new(),
+                retired_senders: Vec::new(),
                 data_packet_cryptor,
                 sender_key_index: 0,
             })),
@@ -96,22 +105,32 @@ impl E2eeManager {
     /// ones that already exist and any created by future publishes/reconnects. Must match
     /// the index the local key was installed under in the KeyProvider (and the index
     /// announced to peers), or peers install a key the frames never reference.
-    pub fn set_sender_key_index(&self, local_identity: &ParticipantIdentity, index: i32) {
+    pub fn set_sender_key_index(&self, _local_identity: &ParticipantIdentity, index: i32) {
         let mut inner = self.inner.lock();
         inner.sender_key_index = index;
-        for ((identity, _), cryptor) in inner.frame_cryptors.iter() {
-            if identity == local_identity {
-                cryptor.set_key_index(index);
-            }
+        // C2b: every sender cryptor is ours (separate map), retired ones included
+        for (_, cryptor) in inner.sender_cryptors.values() {
+            cryptor.set_key_index(index);
+        }
+        for cryptor in inner.retired_senders.iter() {
+            cryptor.set_key_index(index);
         }
     }
 
     pub(crate) fn cleanup(&self) {
-        let mut inner = self.inner.lock();
-        for cryptor in inner.frame_cryptors.values() {
+        // the room closed its PeerConnections first (no sender sends any more); drop outside the lock
+        let (receivers, senders, retired) = {
+            let mut inner = self.inner.lock();
+            (
+                std::mem::take(&mut inner.frame_cryptors),
+                std::mem::take(&mut inner.sender_cryptors),
+                std::mem::take(&mut inner.retired_senders),
+            )
+        };
+        for cryptor in receivers.values().chain(senders.values().map(|(_, c)| c)).chain(retired.iter()) {
             cryptor.set_enabled(false);
         }
-        inner.frame_cryptors.clear();
+        drop((receivers, senders, retired));
     }
 
     /// Register to e2ee state changes
@@ -163,8 +182,25 @@ impl E2eeManager {
             }
         }
 
-        if !self.initialized() || publication.encryption_type() == EncryptionType::None {
+        if !self.initialized() {
             return;
+        }
+        // TINHAT PATCH (never-trust-NONE): the advertised encryption type comes from the SFU
+        // (TrackInfo), so skipping the cryptor for a publication that claims "none" would let a
+        // hostile call host play its own media as this participant. In an E2EE room every remote
+        // publication gets a cryptor; frames that don't decrypt are dropped (the key provider's
+        // discard_frame_when_cryptor_not_ready + missing-key/IV checks), never played.
+        if publication.encryption_type() == EncryptionType::None {
+            log::warn!(
+                "remote track {} from {} is advertised as UNENCRYPTED: attaching a cryptor anyway (not played unless it decrypts)",
+                publication.sid(),
+                identity,
+            );
+            eprintln!(
+                "[e2ee] {} track {} is advertised as UNENCRYPTED: not played (Tin Hat plays only end-to-end encrypted media)",
+                identity,
+                publication.sid()
+            );
         }
 
         let frame_cryptor = self.setup_rtp_receiver(&identity, receiver);
@@ -206,8 +242,23 @@ impl E2eeManager {
             None
         };
 
-        if !self.initialized() || publication.encryption_type() == EncryptionType::None {
+        if !self.initialized() {
             return;
+        }
+        // TINHAT PATCH (12.1.3, confidentiality): the local publication's encryption type is the
+        // SFU's echo (the add_track answer / later track updates). Upstream skipped the sender
+        // cryptor when it said NONE, so a hostile SFU (or foreign call host) could have our media
+        // sent UNENCRYPTED. Whether we encrypt is OUR room's E2EE setting (initialized), never the
+        // SFU's answer.
+        if publication.encryption_type() == EncryptionType::None {
+            log::warn!(
+                "the SFU reports our track {} as UNENCRYPTED: encrypting it anyway",
+                publication.sid()
+            );
+            eprintln!(
+                "[e2ee] the SFU reports our track {} as UNENCRYPTED: encrypting it anyway (our E2EE setting decides)",
+                publication.sid()
+            );
         }
 
         let frame_cryptor = self.setup_rtp_sender(&identity, sender);
@@ -216,8 +267,20 @@ impl E2eeManager {
         }
         self.setup_cryptor(&frame_cryptor);
 
+        // C2b: into the SENDER map, bound to this track's client id; never drop a displaced one
+        let cid = track.rtc_track().id();
         let mut inner = self.inner.lock();
-        inner.frame_cryptors.insert((identity, publication.sid()), frame_cryptor.clone());
+        // the CURRENT state under the lock: a key rotation / enable change during construction
+        // would otherwise be missed (this cryptor wasn't in the map yet)
+        frame_cryptor.set_enabled(inner.enabled);
+        frame_cryptor.set_key_index(inner.sender_key_index);
+        if let Some((old_cid, old)) =
+            inner.sender_cryptors.insert((identity, publication.sid()), (cid.clone(), frame_cryptor))
+        {
+            log::warn!("sender cryptor of track {} ({old_cid}) would be replaced by {cid}: retired, kept alive", publication.sid());
+            eprintln!("[e2ee] sender cryptor of track {} ({old_cid}) would be replaced by {cid}: retired, kept alive", publication.sid());
+            inner.retired_senders.push(old);
+        }
     }
 
     fn setup_cryptor(&self, frame_cryptor: &FrameCryptor) {
@@ -235,7 +298,22 @@ impl E2eeManager {
         publication: LocalTrackPublication,
         participant: LocalParticipant,
     ) {
-        self.remove_frame_cryptor(participant.identity(), publication.sid());
+        // C2b: remove the SENDER cryptor only if it belongs to THIS track (its client id): a key
+        // reused meanwhile by another track's cryptor is left alone.
+        let cid = publication.track().map(|t| t.rtc_track().id());
+        let key = (participant.identity(), publication.sid());
+        let removed = {
+            let mut inner = self.inner.lock();
+            match inner.sender_cryptors.get(&key) {
+                Some((c, _)) if Some(c) == cid.as_ref() => inner.sender_cryptors.remove(&key),
+                Some((c, _)) => {
+                    log::warn!("unpublish of {} ({cid:?}): its key holds another track's cryptor ({c}), left alone", key.1);
+                    None
+                }
+                None => None,
+            }
+        };
+        drop(removed); // outside the lock; this track's transceiver was stopped before this callback
     }
 
     /// Called by the room
@@ -249,7 +327,12 @@ impl E2eeManager {
     }
 
     pub fn frame_cryptors(&self) -> HashMap<(ParticipantIdentity, TrackSid), FrameCryptor> {
-        self.inner.lock().frame_cryptors.clone()
+        let inner = self.inner.lock();
+        let mut all = inner.frame_cryptors.clone();
+        for (key, (_, cryptor)) in inner.sender_cryptors.iter() {
+            all.insert(key.clone(), cryptor.clone());
+        }
+        all
     }
 
     pub fn enabled(&self) -> bool {
@@ -268,6 +351,12 @@ impl E2eeManager {
 
         inner.enabled = enabled;
         for (_, cryptor) in inner.frame_cryptors.iter() {
+            cryptor.set_enabled(enabled);
+        }
+        for (_, cryptor) in inner.sender_cryptors.values() {
+            cryptor.set_enabled(enabled);
+        }
+        for cryptor in inner.retired_senders.iter() {
             cryptor.set_enabled(enabled);
         }
     }
@@ -297,11 +386,10 @@ impl E2eeManager {
             options.key_provider.handle.clone(),
             sender,
         );
+        // TINHAT PATCH: encrypt at the app-selected index (default 0 = upstream behavior) — set
+        // BEFORE enabling (C2b, Astra round 3); the insertion re-applies both under the lock.
+        frame_cryptor.set_key_index(inner.sender_key_index);
         frame_cryptor.set_enabled(inner.enabled);
-        // TINHAT PATCH: encrypt at the app-selected index (default 0 = upstream behavior).
-        if inner.sender_key_index != 0 {
-            frame_cryptor.set_key_index(inner.sender_key_index);
-        }
         frame_cryptor
     }
 

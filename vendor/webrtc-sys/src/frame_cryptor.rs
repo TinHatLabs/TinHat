@@ -27,6 +27,10 @@ pub mod ffi {
         pub failure_tolerance: i32,
         pub key_ring_size: i32,
         pub key_derivation_algorithm: KeyDerivationAlgorithm,
+        /// TINHAT PATCH: libwebrtc's KeyProviderOptions.discard_frame_when_cryptor_not_ready.
+        /// true = a frame meeting a DISABLED cryptor (or an empty frame) is dropped instead
+        /// of passed through untransformed (raw to the decoder / unencrypted to the SFU).
+        pub discard_frame_when_cryptor_not_ready: bool,
     }
 
     #[derive(Debug)]
@@ -76,6 +80,10 @@ pub mod ffi {
         pub fn get_shared_key(self: &KeyProvider, key_index: i32) -> Result<Vec<u8>>;
 
         pub fn set_sif_trailer(&self, trailer: Vec<u8>);
+
+        /// TINHAT PATCH: the effective native option values (read back from libwebrtc).
+        pub fn discard_frame_when_cryptor_not_ready(self: &KeyProvider) -> bool;
+        pub fn uncrypted_magic_bytes_len(self: &KeyProvider) -> usize;
 
         pub fn set_key(
             self: &KeyProvider,
@@ -267,6 +275,7 @@ mod tests {
             failure_tolerance: -1,
             key_ring_size: 16,
             key_derivation_algorithm: ffi::KeyDerivationAlgorithm::HKDF,
+            discard_frame_when_cryptor_not_ready: true,
         };
 
         let key_provider = ffi::new_key_provider(options);

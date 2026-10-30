@@ -117,8 +117,18 @@ KeyProvider::KeyProvider(KeyProviderOptions options) {
   rtc_options.key_derivation_algorithm =
       KeyDerivationAlgorithmToFrameCryptorKeyDerivationAlgorithm(
           options.key_derivation_algorithm);
+  // PATCH (Tin Hat): drop, never pass through, frames that meet a disabled cryptor.
+  rtc_options.discard_frame_when_cryptor_not_ready =
+      options.discard_frame_when_cryptor_not_ready;
   impl_ =
       new webrtc::RefCountedObject<webrtc::DefaultKeyProviderImpl>(rtc_options);
+  // PATCH (Tin Hat): libwebrtc's KeyProviderOptions copy constructor omits
+  // discard_frame_when_cryptor_not_ready, and DefaultKeyProviderImpl copies the
+  // options by value, so the provider's own member was left UNINITIALIZED (on every
+  // build). Write it into the provider's options_ (options() returns that member by
+  // reference); read back by discard_frame_when_cryptor_not_ready() below.
+  impl_->options().discard_frame_when_cryptor_not_ready =
+      options.discard_frame_when_cryptor_not_ready;
 }
 
 FrameCryptor::FrameCryptor(

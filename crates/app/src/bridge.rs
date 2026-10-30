@@ -1504,7 +1504,7 @@ impl qobject::LoginController {
         let qt = self.qt_thread();
         runtime().spawn(async move {
             let msg = match matrix_sdk::ruma::RoomId::parse(&rid) {
-                Ok(id) => match client.join_room_by_id(&id).await {
+                Ok(id) => match join_with_via(&client, &id, &rid).await {
                     Ok(room) => {
                         eprintln!("[rooms] joined {}", room.room_id());
                         String::new()
@@ -1549,7 +1549,22 @@ impl qobject::LoginController {
                 Ok(target) => {
                     // `via` hints matter for a room whose server we do not federate with
                     // directly; without them a perfectly good invite link can 404.
-                    let servers: Vec<matrix_sdk::ruma::OwnedServerName> = via
+                    // B1 pick_via: the link's own via, then the id's / alias's server part (none for a v12 opaque id)
+                    // for a room id also what my spaces and my invite know (the same collector as join_with_via)
+                    let refs: Vec<&str> = via.iter().map(String::as_str).collect();
+                    let (child_via, mut hints) = if id.starts_with('!') {
+                        crate::foreign_room::child_via_for(&client, &id).await
+                    } else {
+                        (Vec::new(), Vec::new())
+                    };
+                    if let (true, Ok(rid)) = (id.starts_with('!'), matrix_sdk::ruma::RoomId::parse(&id)) {
+                        if let Some(r) = client.get_room(&rid) {
+                            hints.push(crate::foreign_room::inviter_server_here(&r).await);
+                        }
+                    }
+                    let child_refs: Vec<&str> = child_via.iter().map(String::as_str).collect();
+                    let hint_refs: Vec<&str> = hints.iter().map(String::as_str).collect();
+                    let servers: Vec<matrix_sdk::ruma::OwnedServerName> = crate::foreign_room::pick_via(&id, &refs, &child_refs, &hint_refs)
                         .iter()
                         .filter_map(|v| matrix_sdk::ruma::ServerName::parse(v).ok())
                         .collect();
@@ -2890,6 +2905,30 @@ pub(crate) async fn do_create_room(
     Ok(id)
 }
 
+/// Join a room we're not in by id (the hierarchy's "not joined" rows), asking the servers B1's pick_via names: the
+/// space child's via (and who added it), my inviter's server; never a server read off a v12 opaque id (this join used
+/// to pass none at all; the web's joinRoom asks the same servers).
+async fn join_with_via(
+    client: &matrix_sdk::Client,
+    id: &matrix_sdk::ruma::RoomId,
+    rid: &str,
+) -> matrix_sdk::Result<matrix_sdk::Room> {
+    let (child_via, senders) = crate::foreign_room::child_via_for(client, rid).await;
+    let inviter = match client.get_room(id) {
+        Some(r) => crate::foreign_room::inviter_server_here(&r).await,
+        None => String::new(),
+    };
+    let mut hints: Vec<&str> = senders.iter().map(String::as_str).collect();
+    hints.push(&inviter);
+    let refs: Vec<&str> = child_via.iter().map(String::as_str).collect();
+    let servers: Vec<matrix_sdk::ruma::OwnedServerName> = crate::foreign_room::pick_via(rid, &[], &refs, &hints)
+        .iter()
+        .filter_map(|v| matrix_sdk::ruma::ServerName::parse(v).ok())
+        .collect();
+    eprintln!("[rooms] join {rid} via {servers:?}");
+    client.join_room_by_id_or_alias(id.into(), &servers).await
+}
+
 /// Put a freshly-created room inside a space: `m.space.child` on the space (what makes
 /// it list there) plus `m.space.parent` on the room (what lets the room name its own
 /// parent). Both are needed — the restricted join rule is checked against the parent.
@@ -2901,7 +2940,9 @@ async fn attach_to_space(client: &matrix_sdk::Client, space_id: &str, room_id: &
         eprintln!("[create] bad ids for space attach: {space_id} / {room_id}");
         return;
     };
-    let server = rid.server_name().map(|s| s.to_string()).unwrap_or_default();
+    // a v12 room id names no server: then my own (I just made the room and I'm in it) — never "" (the v12 bug)
+    let own = client.user_id().map(|u| u.server_name().to_string()).unwrap_or_default();
+    let server = rid.server_name().map(|s| s.to_string()).unwrap_or_else(|| own.clone());
     if let Some(space) = client.get_room(&sid) {
         let content = serde_json::json!({ "via": [server], "suggested": false });
         if let Err(e) = space.send_state_event_raw("m.space.child", room_id, content).await {
@@ -2909,7 +2950,7 @@ async fn attach_to_space(client: &matrix_sdk::Client, space_id: &str, room_id: &
         }
     }
     if let Some(room) = client.get_room(&rid) {
-        let sserver = sid.server_name().map(|s| s.to_string()).unwrap_or_default();
+        let sserver = sid.server_name().map(|s| s.to_string()).unwrap_or_else(|| own.clone());
         let content = serde_json::json!({ "via": [sserver], "canonical": true });
         if let Err(e) = room.send_state_event_raw("m.space.parent", space_id, content).await {
             eprintln!("[create] m.space.parent failed: {e}");
