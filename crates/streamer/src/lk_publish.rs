@@ -1498,10 +1498,12 @@ pub(crate) fn cadence_verdict(m: &Cadence) -> &'static str {
     }
 }
 
-/// Wall-clock UTC "HH:MM:SSZ" for log lines that phases get correlated by (the log has no timestamps otherwise).
+/// Wall-clock UTC "HHhMMmSSsZ" for log lines that phases get correlated by (the log has no timestamps otherwise).
 fn utc_hms() -> String {
     let s = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0) % 86_400;
-    format!("{:02}:{:02}:{:02}Z", s / 3600, s / 60 % 60, s % 60)
+    // 12.1.4: "19h47m24sZ", not "19:47:24Z" — the shipped log's IP scrubber (app logship.rs) reads hex groups joined
+    // by ':' as an IPv6 address and turned every 12.1.3 stamp into "[ip]24Z".
+    format!("{:02}h{:02}m{:02}sZ", s / 3600, s / 60 % 60, s % 60)
 }
 
 /// The CPU path's convert + scale: ONE `videoconvertscale` pass (GStreamer 1.22+) where it exists. The old pair
@@ -1660,19 +1662,20 @@ pub(crate) fn wire_appsink_to_source_ext(
     if arrival_ts_mode {
         eprintln!("[lk] TINHAT_CAPTURE_ARRIVAL_TS=1 — stamping frames on arrival (pre-0.8.1 behaviour)");
     }
-    // (first capture PTS in us, wall clock in us at that moment)
-    let pts_base: std::sync::Arc<std::sync::Mutex<Option<(i64, i64)>>> =
-        std::sync::Arc::new(std::sync::Mutex::new(None));
-    let last_ts_us = std::sync::Arc::new(std::sync::atomic::AtomicI64::new(0));
+    // the capture -> wall mapping (re-bases on a backwards or far jump: see CaptureClock)
+    let clock: std::sync::Arc<std::sync::Mutex<CaptureClock>> = Default::default();
     // Rolling evidence for the next "it is still jittery" report: how far apart the
     // CAPTURE clock and the ARRIVAL clock drift. Big numbers here mean the capture chain
     // is being starved, and say so without needing a profiler on the user's machine.
     let jitter_sum_us = std::sync::Arc::new(std::sync::atomic::AtomicI64::new(0));
     let jitter_max_us = std::sync::Arc::new(std::sync::atomic::AtomicI64::new(0));
+    let jitter_n = std::sync::Arc::new(std::sync::atomic::AtomicI64::new(0));
+    // wall µs of the last [lk/pacing] report, for the delivered rate
+    let report_at = std::sync::Arc::new(std::sync::atomic::AtomicI64::new(0));
     let prev_arrival_us = std::sync::Arc::new(std::sync::atomic::AtomicI64::new(0));
     let prev_pts_us = std::sync::Arc::new(std::sync::atomic::AtomicI64::new(0));
-    let (pts_base_cb, last_ts_cb) = (pts_base.clone(), last_ts_us.clone());
-    let (jsum_cb, jmax_cb) = (jitter_sum_us.clone(), jitter_max_us.clone());
+    let (clock_cb, clock_rep) = (clock.clone(), clock.clone());
+    let (jsum_cb, jmax_cb, jn_cb, report_cb) = (jitter_sum_us.clone(), jitter_max_us.clone(), jitter_n.clone(), report_at.clone());
     let (parr_cb, ppts_cb) = (prev_arrival_us.clone(), prev_pts_us.clone());
 
     let last_cb = last.clone();
@@ -1737,40 +1740,44 @@ pub(crate) fn wire_appsink_to_source_ext(
                     }
                 }
 
-                // Capture-clock timestamp (see tinhat-capture-pts-v1 above). Falls back to
-                // 0 (= SDK stamps on arrival) when the source gives us no PTS.
-                let now_us = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .map(|d| d.as_micros() as i64)
-                    .unwrap_or(0);
-                let pts_us = buffer.pts().map(|t| t.useconds() as i64);
-                let stamp_us = if arrival_ts_mode {
-                    0
-                } else if let Some(pts) = pts_us {
-                    let ts = rebase_capture_ts(pts, now_us, &pts_base_cb, &last_ts_cb);
-
-                    // Measure how badly delivery is clumping vs the capture cadence.
+                // Capture-clock timestamp (see tinhat-capture-pts-v1 above and CaptureClock). Falls back to
+                // 0 (= SDK stamps on arrival) when the source gives us no PTS. Arrival is on a monotonic clock.
+                let now_us = mono_epoch_us();
+                // u64 ns -> i64 µs without a wrap (u64::MAX ns / 1000 fits an i64)
+                let pts_us = buffer.pts().map(|t| (t.nseconds() / 1000) as i64);
+                // Stamp AND submit under the clock's lock: the keepalive repeater stamps from the same clock, and
+                // the order libwebrtc sees must be the order the stamps were handed out.
+                let mut clock = clock_cb.lock().unwrap_or_else(|e| e.into_inner());
+                let (stamp_us, rebased) = match pts_us {
+                    _ if arrival_ts_mode => (0, None),
+                    Some(pts) => clock.stamp(pts, now_us),
+                    // no PTS: still this clock's timeline (the SDK's own clock would be a second one)
+                    None => (clock.stamp_no_pts(now_us), None),
+                };
+                if let Some(jump_ms) = rebased {
+                    // said at once (the 150-frame report would hide WHEN); a storm is summarised there
+                    if clock.stats.rebased_back + clock.stats.rebased_jump <= 3 {
+                        eprintln!(
+                            "[lk/pacing] capture PTS {} by {} ms between two frames — re-based the frame timeline (no frame dropped)",
+                            if jump_ms < 0 { "went back" } else { "jumped ahead" },
+                            jump_ms.abs()
+                        );
+                    }
+                }
+                if let (Some(pts), false) = (pts_us, arrival_ts_mode) {
+                    // Measure how badly delivery is clumping vs the capture cadence (signed; a pair across a
+                    // re-base or a reset is not a skew sample).
                     let pa = parr_cb.swap(now_us, std::sync::atomic::Ordering::Relaxed);
                     let pp = ppts_cb.swap(pts, std::sync::atomic::Ordering::Relaxed);
-                    if pa != 0 && pp != 0 {
-                        let skew = ((now_us - pa) - (pts - pp)).abs();
-                        jsum_cb.fetch_add(skew, std::sync::atomic::Ordering::Relaxed);
-                        jmax_cb.fetch_max(skew, std::sync::atomic::Ordering::Relaxed);
+                    if pa != 0 && rebased.is_none() {
+                        if let Some(skew) = delivery_skew_us(pa, now_us, pp, pts) {
+                            jsum_cb.fetch_add(skew, std::sync::atomic::Ordering::Relaxed);
+                            jmax_cb.fetch_max(skew, std::sync::atomic::Ordering::Relaxed);
+                            jn_cb.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        }
                     }
-                    ts
-                } else {
-                    0
-                };
-                if n > 0 && n % 150 == 0 {
-                    let sum = jsum_cb.swap(0, std::sync::atomic::Ordering::Relaxed);
-                    let max = jmax_cb.swap(0, std::sync::atomic::Ordering::Relaxed);
-                    eprintln!(
-                        "[lk/pacing] last 150 frames: mean delivery-vs-capture skew {:.1}ms, worst {:.1}ms",
-                        sum as f64 / 150.0 / 1000.0,
-                        max as f64 / 1000.0
-                    );
                 }
-
+                let report = if n > 0 && n % 150 == 0 { Some(clock.take_stats()) } else { None };
                 let frame = VideoFrame {
                     rotation: VideoRotation::VideoRotation0,
                     timestamp_us: stamp_us,
@@ -1778,6 +1785,34 @@ pub(crate) fn wire_appsink_to_source_ext(
                     buffer: dst,
                 };
                 source.capture_frame(&frame);
+                drop(clock);
+                if let Some(st) = report {
+                    let sum = jsum_cb.swap(0, std::sync::atomic::Ordering::Relaxed);
+                    let max = jmax_cb.swap(0, std::sync::atomic::Ordering::Relaxed);
+                    let cnt = jn_cb.swap(0, std::sync::atomic::Ordering::Relaxed);
+                    let since = report_cb.swap(now_us, std::sync::atomic::Ordering::Relaxed);
+                    let rate = if since > 0 && now_us > since { format!("{:.1} fps", 150.0 * 1e6 / (now_us - since) as f64) } else { "-".into() };
+                    let fixes = if st == ClockStats::default() {
+                        "timeline clean".to_string()
+                    } else {
+                        format!(
+                            "timeline: re-based {} (PTS went back {}, jumped ahead {}; last {} ms), re-anchored {}, nudged {}, keepalive repeats {}, no PTS {}",
+                            st.rebased_back + st.rebased_jump,
+                            st.rebased_back,
+                            st.rebased_jump,
+                            st.last_jump_ms.map(|j| j.to_string()).unwrap_or_else(|| "-".into()),
+                            st.reanchored,
+                            st.nudged,
+                            st.repeats,
+                            st.no_pts
+                        )
+                    };
+                    eprintln!(
+                        "[lk/pacing] last 150 frames: mean delivery-vs-capture skew {:.1}ms, worst {:.1}ms; {rate} to the encoder; {fixes}",
+                        if cnt > 0 { sum as f64 / cnt as f64 / 1000.0 } else { 0.0 },
+                        max as f64 / 1000.0
+                    );
+                }
                 Ok(gst::FlowSuccess::Ok)
             })
             .build(),
@@ -1829,13 +1864,19 @@ pub(crate) fn wire_appsink_to_source_ext(
                 cp(&pu, du, su, (h as usize + 1) / 2);
                 cp(&pv, dv, sv, (h as usize + 1) / 2);
             }
+            // 12.1.4: stamped by the feeder's own clock (never before the last capture stamp) and submitted under
+            // its lock, so a repeat can't land out of order with a resuming capture. The SDK's own clock (stamp 0)
+            // is a different timeline. Arrival-time mode keeps 0, like its captures.
+            let mut clock = clock_rep.lock().unwrap_or_else(|e| e.into_inner());
+            let ts = if arrival_ts_mode { 0 } else { clock.stamp_repeat(mono_epoch_us()) };
             let frame = VideoFrame {
                 rotation: VideoRotation::VideoRotation0,
-                timestamp_us: 0, // SDK stamps it with the capture clock (see native/video_source.rs)
+                timestamp_us: ts,
                 frame_metadata: None,
                 buffer: dst,
             };
             source_rep.capture_frame(&frame);
+            drop(clock);
             repeats += 1;
             // Neutral wording — this repeater is wired to BOTH the camera and the
             // screen publish ("screen static" on a frozen camera misled 2026-08-20
@@ -1888,34 +1929,190 @@ fn copy_i420(
     }
 }
 
-/// Re-base a capture PTS onto the wall clock of the first frame, keeping the result
-/// strictly increasing. See `tinhat-capture-pts-v1` in `start_e2ee_screenshare`.
+/// The capture clock of a share/camera feeder: maps a capture PTS onto the epoch WebRTC expects (micros since the UNIX
+/// epoch) so the SPACING comes from the capture timeline (which `videorate` has already snapped to a fixed-fps grid)
+/// while the EPOCH comes from the clock. Delivery jitter (frames landing in clumps because a game is monopolising the
+/// GPU) then no longer reaches the encoder's timeline. See `tinhat-capture-pts-v1`.
 ///
-/// The point is that the SPACING comes from the capture clock (which `videorate` has
-/// already snapped to a fixed-fps grid) while the EPOCH comes from the wall clock (which
-/// is what WebRTC expects). Delivery jitter — frames landing in clumps because a game is
-/// monopolising the GPU — then no longer reaches the encoder's timeline.
-fn rebase_capture_ts(
-    pts_us: i64,
-    now_us: i64,
-    base: &std::sync::Mutex<Option<(i64, i64)>>,
-    last: &std::sync::atomic::AtomicI64,
-) -> i64 {
-    let mut guard = base.lock().unwrap();
-    let (first_pts, first_wall) = *guard.get_or_insert((pts_us, now_us));
-    let want = first_wall + (pts_us - first_pts);
-    // Never go backwards: WebRTC discards a frame whose capture time regressed, so a
-    // non-monotonic rebase would turn jitter into dropped frames.
-    let prev = last.load(std::sync::atomic::Ordering::Relaxed);
-    let ts = if want <= prev { prev + 1 } else { want };
-    last.store(ts, std::sync::atomic::Ordering::Relaxed);
-    ts
+/// 12.1.4 (BUG-20261030 finding 1): it RE-BASES instead of clinging to a broken mapping. 12.1.3 kept the result
+/// strictly increasing by stamping `prev + 1 µs` whenever the mapping said "earlier". After a capture hiccup one frame
+/// carried a wrapped PTS (a slightly negative running time read as u64 nanoseconds: ~584 years ahead); it became
+/// `prev`, and every later frame was stamped 1 µs after it, for the rest of the session; libwebrtc then encoded about
+/// half the frames: "the share settles back to ~30 fps".
+///
+/// A DISCONTINUITY is judged from the PTS step against the arrival step, both from this feeder (arrival = a monotonic
+/// clock anchored once to the epoch, so wall-clock steps and drift can't trigger it): the PTS went back by more than
+/// `BACK_TOL_US`, or moved forward `JUMP_US` more than real time did. A discontinuity starts a new mapping one frame
+/// step after the previous stamp. A frame that merely maps to before the previous stamp (keepalive repeats or a
+/// drained backlog ran ahead) is re-anchored after it once (more than `BACK_TOL_US` behind) or nudged by 1 µs
+/// (within it). Nothing is dropped; every correction is counted by reason. Stamps never decrease, including the
+/// keepalive's ([`Self::stamp_repeat`]).
+#[derive(Debug, Default)]
+pub(crate) struct CaptureClock {
+    /// (capture PTS µs, stamp µs) the mapping is anchored at
+    base: Option<(i64, i64)>,
+    /// the previous capture frame's (PTS µs, arrival µs)
+    prev: Option<(i64, i64)>,
+    /// the last stamp handed out (µs since the epoch); 0 = none yet
+    last: i64,
+    /// the last plausible stamp-to-stamp spacing (µs), the step a re-base continues with
+    step: i64,
+    pub stats: ClockStats,
+}
+
+/// What the capture clock had to correct since the last report (see [`CaptureClock::take_stats`]).
+#[derive(Debug, Default, Clone, PartialEq)]
+pub(crate) struct ClockStats {
+    /// re-based: the capture PTS went back (a capture restart or a reset clock)
+    pub rebased_back: u64,
+    /// re-based: the capture PTS jumped forward far more than time passed (a wrapped PTS, a clock change)
+    pub rebased_jump: u64,
+    /// re-anchored: the frame mapped to well before the previous stamp (repeats or a backlog ran ahead)
+    pub reanchored: u64,
+    /// a tiny regression (within the tolerance) nudged to 1 µs after the previous stamp
+    pub nudged: u64,
+    /// keepalive repeats stamped
+    pub repeats: u64,
+    /// capture frames that came without a PTS (stamped on arrival, by this clock)
+    pub no_pts: u64,
+    /// the PTS step of the last re-base in ms (signed: negative = went back)
+    pub last_jump_ms: Option<i64>,
+}
+
+impl CaptureClock {
+    /// The PTS may run ahead of real time by this much between two frames before it counts as a jump.
+    pub(crate) const JUMP_US: i64 = 1_000_000;
+    /// A backwards step up to this much is jitter; beyond it the capture clock restarted.
+    pub(crate) const BACK_TOL_US: i64 = 50_000;
+    const DEFAULT_STEP_US: i64 = 16_667;
+
+    /// The stamp for a capture frame with PTS `pts_us` that arrived at `now_us` (monotonic, epoch-anchored); and the
+    /// PTS step in ms when this frame re-based the mapping.
+    pub(crate) fn stamp(&mut self, pts_us: i64, now_us: i64) -> (i64, Option<i64>) {
+        #[cfg(test)]
+        if LEGACY_RULE_FOR_LAB.load(std::sync::atomic::Ordering::SeqCst) {
+            // 12.1.3's rule, for the lab's side-by-side run only
+            let (p0, w0) = *self.base.get_or_insert((pts_us, now_us));
+            let want = w0.saturating_add(pts_us.saturating_sub(p0));
+            let ts = if want <= self.last { self.last.saturating_add(1) } else { want };
+            self.last = ts;
+            return (ts, None);
+        }
+        let prev = self.prev.replace((pts_us, now_us));
+        let Some((base_pts, base_ts)) = self.base else {
+            self.base = Some((pts_us, now_us.max(self.next_after_last())));
+            let ts = self.base.unwrap().1;
+            return (self.advance(ts), None);
+        };
+        if let Some((ppts, parr)) = prev {
+            let dp = pts_us.saturating_sub(ppts);
+            let da = now_us.saturating_sub(parr).max(0);
+            if dp < -Self::BACK_TOL_US || dp > da.saturating_add(Self::JUMP_US) {
+                if dp < 0 {
+                    self.stats.rebased_back += 1;
+                } else {
+                    self.stats.rebased_jump += 1;
+                }
+                let jump_ms = dp / 1000;
+                self.stats.last_jump_ms = Some(jump_ms);
+                let ts = now_us.max(self.next_after_last());
+                self.base = Some((pts_us, ts));
+                return (self.advance(ts), Some(jump_ms));
+            }
+        }
+        let want = base_ts.saturating_add(pts_us.saturating_sub(base_pts));
+        if self.last != 0 && want <= self.last {
+            if self.last.saturating_sub(want) > Self::BACK_TOL_US {
+                self.stats.reanchored += 1;
+                let ts = self.next_after_last();
+                self.base = Some((pts_us, ts));
+                return (self.advance(ts), None);
+            }
+            self.stats.nudged += 1;
+            return (self.advance(self.last.saturating_add(1)), None);
+        }
+        (self.advance(want), None)
+    }
+
+    /// The stamp for a keepalive repeat at `now_us`: the clock's time, never before the previous stamp.
+    pub(crate) fn stamp_repeat(&mut self, now_us: i64) -> i64 {
+        self.stats.repeats += 1;
+        self.stamp_arrival(now_us)
+    }
+
+    /// The stamp for a capture frame that came without a PTS: its arrival, never before the previous stamp.
+    pub(crate) fn stamp_no_pts(&mut self, now_us: i64) -> i64 {
+        self.stats.no_pts += 1;
+        self.stamp_arrival(now_us)
+    }
+
+    fn stamp_arrival(&mut self, now_us: i64) -> i64 {
+        let ts = now_us.max(self.last.saturating_add(1_000));
+        self.last = ts;
+        ts
+    }
+
+    fn next_after_last(&self) -> i64 {
+        if self.last == 0 {
+            return 0;
+        }
+        self.last.saturating_add(if self.step > 0 { self.step } else { Self::DEFAULT_STEP_US })
+    }
+
+    fn advance(&mut self, ts: i64) -> i64 {
+        if self.last != 0 {
+            let d = ts.saturating_sub(self.last);
+            if (1_000..=100_000).contains(&d) {
+                self.step = d;
+            }
+        }
+        self.last = ts;
+        ts
+    }
+
+    /// The counters since the last call (they reset).
+    pub(crate) fn take_stats(&mut self) -> ClockStats {
+        std::mem::take(&mut self.stats)
+    }
+}
+
+/// The lab case runs 12.1.3's stamping rule through the same feeder and SDK path for comparison.
+#[cfg(test)]
+pub(crate) static LEGACY_RULE_FOR_LAB: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Micros since the UNIX epoch on a MONOTONIC clock: the epoch read once per process, then `Instant` (a wall-clock
+/// step, e.g. NTP, can't move capture stamps).
+pub(crate) fn mono_epoch_us() -> i64 {
+    static ANCHOR: std::sync::OnceLock<(std::time::Instant, i64)> = std::sync::OnceLock::new();
+    let (t0, e0) = *ANCHOR.get_or_init(|| {
+        let e = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_micros() as i64).unwrap_or(0);
+        (std::time::Instant::now(), e)
+    });
+    e0.saturating_add(t0.elapsed().as_micros() as i64)
+}
+
+/// The pre-12.1.4 helper's shape (kept for the tests that describe the mapping): one shared clock behind a mutex.
+#[cfg(test)]
+fn rebase_capture_ts(pts_us: i64, now_us: i64, clock: &std::sync::Mutex<CaptureClock>) -> i64 {
+    clock.lock().unwrap().stamp(pts_us, now_us).0
+}
+
+/// One delivery-vs-capture skew sample: how much more (or less) wall time passed between two deliveries than capture
+/// time between their PTS. Signed maths throughout; None when the pair spans a re-base or the PTS step is not a
+/// plausible frame step (a reset or a wrapped PTS would otherwise print a nonsense skew).
+pub(crate) fn delivery_skew_us(prev_arrival: i64, arrival: i64, prev_pts: i64, pts: i64) -> Option<i64> {
+    let dp = pts.checked_sub(prev_pts)?;
+    let da = arrival.checked_sub(prev_arrival)?;
+    if !(0..=CaptureClock::JUMP_US).contains(&dp) || !(0..=CaptureClock::JUMP_US).contains(&da) {
+        return None;
+    }
+    Some((da - dp).abs())
 }
 
 #[cfg(test)]
 mod pacing_tests {
-    use super::rebase_capture_ts;
-    use std::sync::{atomic::AtomicI64, Mutex};
+    use super::{delivery_skew_us, rebase_capture_ts, CaptureClock, ClockStats};
+    use std::sync::Mutex;
 
     /// The reported bug in miniature: a 30fps capture whose frames are DELIVERED in
     /// clumps (the GPU is busy) must still leave the encoder on an even 33.3ms cadence.
@@ -1923,8 +2120,7 @@ mod pacing_tests {
     /// which is the judder.
     #[test]
     fn clumped_delivery_still_yields_an_even_capture_cadence() {
-        let base = Mutex::new(None);
-        let last = AtomicI64::new(0);
+        let clock = Mutex::new(CaptureClock::default());
         const STEP: i64 = 33_333; // 30fps
         let wall0 = 1_700_000_000_000_000i64;
 
@@ -1934,7 +2130,7 @@ mod pacing_tests {
         let mut out = Vec::new();
         for (i, off) in delivery_offsets.iter().enumerate() {
             let pts = i as i64 * STEP;
-            out.push(rebase_capture_ts(pts, wall0 + off, &base, &last));
+            out.push(rebase_capture_ts(pts, wall0 + off, &clock));
         }
 
         for w in out.windows(2) {
@@ -1955,16 +2151,134 @@ mod pacing_tests {
     /// glitch into a freeze.
     #[test]
     fn timestamps_never_regress() {
-        let base = Mutex::new(None);
-        let last = AtomicI64::new(0);
+        let clock = Mutex::new(CaptureClock::default());
         let wall0 = 1_700_000_000_000_000i64;
-        let a = rebase_capture_ts(100_000, wall0, &base, &last);
-        let b = rebase_capture_ts(133_333, wall0 + 33_000, &base, &last);
-        let c = rebase_capture_ts(0, wall0 + 66_000, &base, &last); // PTS jumped back
-        let d = rebase_capture_ts(33_333, wall0 + 99_000, &base, &last);
+        let a = rebase_capture_ts(100_000, wall0, &clock);
+        let b = rebase_capture_ts(133_333, wall0 + 33_000, &clock);
+        let c = rebase_capture_ts(0, wall0 + 66_000, &clock); // PTS jumped back
+        let d = rebase_capture_ts(33_333, wall0 + 99_000, &clock);
         assert!(b > a, "normal progression");
         assert!(c > b, "a backwards PTS must still move the stamp forward");
         assert!(d > c, "and recovery must keep moving forward");
+        // 12.1.4: and recovery keeps the real spacing, not 1 µs steps
+        assert_eq!(d - c, 33_333, "after the jump back the capture spacing continues");
+    }
+
+    const F60: i64 = 16_667;
+    const WALL0: i64 = 1_790_000_000_000_000;
+    /// A wrapped PTS: a running time of -9.3 s read as u64 nanoseconds, in µs (a 12.1.3 field log: the skew line
+    /// printed 18446734725993 ms).
+    const WRAPPED_US: i64 = ((u64::MAX - 9_300_000_000) / 1000) as i64;
+
+    /// What 12.1.3 did: never go backwards by stamping prev + 1 µs (kept here to show the failure).
+    fn old_rule(pts: i64, now: i64, base: &mut Option<(i64, i64)>, last: &mut i64) -> i64 {
+        let (p0, w0) = *base.get_or_insert((pts, now));
+        let want = w0 + (pts - p0);
+        let ts = if want <= *last { *last + 1 } else { want };
+        *last = ts;
+        ts
+    }
+
+    /// BUG-20261030 finding 1 in miniature: 60 fps, ONE frame with a wrapped PTS, then normal frames again.
+    #[test]
+    fn a_wrapped_pts_does_not_poison_the_timeline() {
+        let frames: Vec<(i64, i64)> = (0..240i64)
+            .map(|i| {
+                let pts = if i == 120 { WRAPPED_US } else { i * F60 };
+                (pts, WALL0 + i * F60 + 300) // delivered 0.3 ms after capture
+            })
+            .collect();
+        let mut clock = CaptureClock::default();
+        let new: Vec<i64> = frames.iter().map(|&(p, w)| clock.stamp(p, w).0).collect();
+        let (mut base, mut last) = (None, 0i64);
+        let old: Vec<i64> = frames.iter().map(|&(p, w)| old_rule(p, w, &mut base, &mut last)).collect();
+
+        assert!(new.windows(2).all(|w| w[1] > w[0]), "strictly increasing");
+        // after the bad frame: real 60 fps spacing again, and the stamps stay near the wall clock
+        for w in new[122..].windows(2) {
+            assert_eq!(w[1] - w[0], F60);
+        }
+        let (_, wall_last) = frames[239];
+        assert!((new[239] - wall_last).abs() < 100_000, "stamp {} vs wall {wall_last}", new[239]);
+        let st = clock.take_stats();
+        assert_eq!((st.rebased_jump, st.rebased_back), (1, 1), "{st:?}");
+        // 12.1.3's rule: 1 µs apart for the rest of the session (what libwebrtc's frame-rate limiter then halved)
+        assert!(old[122..].windows(2).all(|w| w[1] - w[0] == 1), "the old rule stamped 1 µs steps");
+        assert!(old[239] - wall_last > 1_000_000_000_000, "and centuries ahead of the wall clock");
+    }
+
+    /// A PTS reset (the capture restarted its clock at 0) mid-share: one re-base, spacing kept.
+    #[test]
+    fn a_pts_reset_rebases_once_and_keeps_the_spacing() {
+        let mut clock = CaptureClock::default();
+        let mut out = Vec::new();
+        for i in 0..200i64 {
+            let pts = if i < 100 { 5_000_000 + i * F60 } else { (i - 100) * F60 };
+            out.push(clock.stamp(pts, WALL0 + i * F60).0);
+        }
+        assert!(out.windows(2).all(|w| w[1] - w[0] == F60), "even spacing straight through the reset");
+        let st = clock.take_stats();
+        assert_eq!((st.rebased_back, st.rebased_jump, st.nudged), (1, 0, 0), "{st:?}");
+        assert_eq!(st.last_jump_ms, Some(-6_650)); // 5 s of PTS + the 99 frames already mapped
+        assert_eq!(clock.take_stats(), ClockStats::default(), "counters reset after a report");
+    }
+
+    /// Jitter backwards within the tolerance is nudged, not re-based; a far forward jump re-bases.
+    #[test]
+    fn small_regressions_nudge_far_jumps_rebase() {
+        let mut clock = CaptureClock::default();
+        let a = clock.stamp(1_000_000, WALL0).0;
+        let b = clock.stamp(1_000_000 - 10_000, WALL0 + F60).0; // 10 ms back: jitter
+        assert_eq!(b, a + 1);
+        let c = clock.stamp(1_000_000 + 5_000_000, WALL0 + 2 * F60).0; // 5 s ahead of the wall clock
+        assert!(c > b && c - b < 100_000, "re-based next to the previous stamp, not 5 s ahead");
+        let st = clock.take_stats();
+        assert_eq!((st.nudged, st.rebased_jump, st.rebased_back), (1, 1, 0), "{st:?}");
+    }
+
+    /// Astra (12.1.4 review): a drained backlog (frames delivered 2 s late, then in a burst) must not re-base over and
+    /// over; it re-anchors at most once and the spacing stays the capture spacing.
+    #[test]
+    fn a_drained_backlog_does_not_rebase_in_a_loop() {
+        let mut clock = CaptureClock::default();
+        let mut out = Vec::new();
+        for i in 0..300i64 {
+            // frames 100..220 arrive in a burst 2 s late, 1 ms apart; the rest on time
+            let now = if (100..220).contains(&i) { WALL0 + 100 * F60 + 2_000_000 + (i - 100) * 1_000 } else { WALL0 + i * F60 + 2_000_000 };
+            out.push(clock.stamp(i * F60, now).0);
+        }
+        assert!(out.windows(2).all(|w| w[1] > w[0]));
+        let st = clock.take_stats();
+        assert_eq!(st.rebased_back + st.rebased_jump, 0, "{st:?}");
+        assert!(st.reanchored <= 1, "{st:?}");
+        assert_eq!(out[299] - out[298], F60);
+    }
+
+    /// Keepalive repeats come from the same clock: never before the last capture stamp, and a capture that resumes
+    /// after them stays after them.
+    #[test]
+    fn repeats_and_resumed_captures_stay_in_order() {
+        let mut clock = CaptureClock::default();
+        let a = clock.stamp(0, WALL0).0;
+        let b = clock.stamp(F60, WALL0 + F60).0;
+        let r1 = clock.stamp_repeat(WALL0 + 300_000);
+        let r2 = clock.stamp_repeat(WALL0 + 400_000);
+        // the screen moves again: its PTS (running time) advanced with real time
+        let c = clock.stamp(450_000, WALL0 + 450_000).0;
+        let d = clock.stamp(450_000 + F60, WALL0 + 450_000 + F60).0;
+        assert!(a < b && b < r1 && r1 < r2 && r2 < c && c < d, "{a} {b} {r1} {r2} {c} {d}");
+        assert_eq!(d - c, F60);
+        assert_eq!(clock.take_stats().repeats, 2);
+    }
+
+    /// The skew sample is signed maths and skips pairs that are not a frame step.
+    #[test]
+    fn skew_is_signed_and_skips_resets() {
+        assert_eq!(delivery_skew_us(0, 20_000, 0, F60), Some(20_000 - F60));
+        assert_eq!(delivery_skew_us(0, 10_000, 0, F60), Some(F60 - 10_000));
+        assert_eq!(delivery_skew_us(0, F60, 5_000_000, 0), None, "PTS went back");
+        assert_eq!(delivery_skew_us(0, F60, 0, WRAPPED_US), None, "wrapped PTS");
+        assert_eq!(delivery_skew_us(i64::MIN, 0, 0, F60), None, "no overflow");
     }
 }
 
@@ -2431,5 +2745,128 @@ mod share_capture_tests {
         if std::env::var_os("TINHAT_PERF_TESTS").is_some() {
             assert!(fps >= 54.0, "{fps:.1} fps");
         }
+    }
+}
+
+/// 12.1.4 lab case (BUG-20261030 finding 1): a live 60 fps source through the REAL share feeder
+/// (`wire_appsink_to_source`) into a real `NativeVideoSource`, with a sink on its track recording the timestamps the
+/// SDK hands on. Mid-share it injects ONE wrapped PTS (frame 120: a running time of -9.3 s read as u64 ns, as in
+/// the field log) and later a PTS reset to 0 (frame 300: a capture restart). Run twice through the identical path: with
+/// 12.1.3's stamping rule (test-only switch) and with 12.1.4's. Proves for 12.1.4: every delivered frame reaches the
+/// track, timestamps strictly increase, and keep the 60 fps spacing after both events; and shows what 12.1.3's rule
+/// turned the same events into at the same point. What libwebrtc's encoder then drops is NOT modelled here: the field
+/// log (encoder fed ~half) and a real share are that evidence. Opt-in, run alone: TINHAT_PACING_LAB=1, filter
+/// `pacing_lab` (the legacy switch is process-wide).
+#[cfg(test)]
+mod pacing_lab {
+    use super::*;
+    use futures_util::StreamExt;
+    use livekit::webrtc::video_stream::native::NativeVideoStream;
+    use std::sync::{Arc, Mutex};
+
+    /// (frames delivered to the appsink, timestamps the track sink received)
+    fn run(legacy: bool) -> (usize, Vec<i64>) {
+        LEGACY_RULE_FOR_LAB.store(legacy, std::sync::atomic::Ordering::SeqCst);
+        let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+        let _guard = rt.enter();
+        let source = NativeVideoSource::new(VideoResolution { width: 320, height: 240 }, true);
+        let track = LocalVideoTrack::create_video_track("pacing-lab", RtcVideoSource::Native(source.clone()));
+        let received: Arc<Mutex<Vec<i64>>> = Default::default();
+        // the sink is attached HERE, before anything plays (no startup frames missed)
+        let mut stream = NativeVideoStream::new(track.rtc_track());
+        {
+            let rx = received.clone();
+            rt.spawn(async move {
+                while let Some(frame) = stream.next().await {
+                    rx.lock().unwrap().push(frame.timestamp_us);
+                }
+            });
+        }
+        let pipeline = gst::parse::launch(
+            "videotestsrc is-live=true pattern=ball ! video/x-raw,format=I420,width=320,height=240,framerate=60/1 ! \
+             identity name=inj ! appsink name=sink emit-signals=false max-buffers=8 drop=false sync=false",
+        )
+        .unwrap()
+        .downcast::<gst::Pipeline>()
+        .unwrap();
+        let n_in = Arc::new(std::sync::atomic::AtomicU64::new(0));
+        let reset_at: Arc<Mutex<Option<u64>>> = Default::default();
+        {
+            let (n_in, reset_at) = (n_in.clone(), reset_at.clone());
+            pipeline.by_name("inj").unwrap().static_pad("src").unwrap().add_probe(gst::PadProbeType::BUFFER, move |_, info| {
+                let n = n_in.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                if let Some(gst::PadProbeData::Buffer(buf)) = info.data.as_mut() {
+                    let pts = buf.pts().map(|t| t.nseconds()).unwrap_or(0);
+                    let new = if n == 120 {
+                        Some(u64::MAX - 9_300_000_000)
+                    } else if n >= 300 {
+                        let base = *reset_at.lock().unwrap().get_or_insert(pts);
+                        Some(pts - base)
+                    } else {
+                        None
+                    };
+                    if let Some(v) = new {
+                        buf.make_mut().set_pts(gst::ClockTime::from_nseconds(v));
+                    }
+                }
+                gst::PadProbeReturn::Ok
+            });
+        }
+        let delivered = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        {
+            let delivered = delivered.clone();
+            sink.static_pad("sink").unwrap().add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+                delivered.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                gst::PadProbeReturn::Ok
+            });
+        }
+        wire_appsink_to_source(&sink, source.clone());
+        pipeline.set_state(gst::State::Playing).unwrap();
+        std::thread::sleep(std::time::Duration::from_secs(9));
+        let _ = pipeline.set_state(gst::State::Null);
+        // drain the sink (the keepalive repeater ends with the pipeline's appsink)
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        LEGACY_RULE_FOR_LAB.store(false, std::sync::atomic::Ordering::SeqCst);
+        let got = received.lock().unwrap().clone();
+        (delivered.load(std::sync::atomic::Ordering::SeqCst), got)
+    }
+
+    /// (median step µs, smallest step µs, steps under 1 ms) from frame 130 on (after both events)
+    fn after_events(v: &[i64]) -> (i64, i64, usize, usize) {
+        let tail = &v[130.min(v.len())..];
+        let mut d: Vec<i64> = tail.windows(2).map(|w| w[1] - w[0]).collect();
+        d.sort();
+        let tiny = d.iter().filter(|&&x| x < 1_000).count();
+        (d[d.len() / 2], d[0], tiny, d.len())
+    }
+
+    #[test]
+    fn pts_jumps_mid_share_keep_every_frame_and_the_spacing() {
+        if std::env::var_os("TINHAT_PACING_LAB").is_none() {
+            eprintln!("skipping: TINHAT_PACING_LAB not set");
+            return;
+        }
+        let _ = gst::init();
+        let (d_old, old) = run(true);
+        let (d_new, new) = run(false);
+        let (med_old, min_old, tiny_old, n_old) = after_events(&old);
+        let (med_new, min_new, tiny_new, n_new) = after_events(&new);
+        let regress = |v: &[i64]| v.windows(2).filter(|w| w[1] <= w[0]).count();
+        eprintln!("[pacing-lab] wrapped PTS injected at frame 120, PTS reset to 0 at frame 300; 9 s at 60 fps, both runs through the same feeder + SDK path");
+        eprintln!(
+            "[pacing-lab] 12.1.3 rule: delivered {d_old}, the track got {}; after the events: median step {:.3} ms, smallest {:.3} ms, {tiny_old}/{n_old} steps under 1 ms, {} non-increasing",
+            old.len(), med_old as f64 / 1000.0, min_old as f64 / 1000.0, regress(&old)
+        );
+        eprintln!(
+            "[pacing-lab] 12.1.4 rule: delivered {d_new}, the track got {}; after the events: median step {:.3} ms, smallest {:.3} ms, {tiny_new}/{n_new} steps under 1 ms, {} non-increasing",
+            new.len(), med_new as f64 / 1000.0, min_new as f64 / 1000.0, regress(&new)
+        );
+        assert!(d_new > 450, "only {d_new} frames delivered");
+        assert!(new.len() + 2 >= d_new, "the track got {} of {d_new} delivered frames", new.len());
+        assert_eq!(regress(&new), 0, "timestamps handed on must strictly increase");
+        assert!((15_000..=18_500).contains(&med_new), "median step {med_new} µs after the events");
+        assert!(tiny_new <= 2, "{tiny_new} sub-millisecond steps after the events");
+        assert!(med_old < 15_000 || tiny_old > n_old / 2, "the comparison run should show 12.1.3's collapse");
     }
 }

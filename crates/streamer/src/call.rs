@@ -760,6 +760,9 @@ fn spawn_publish_stats_task(
         let mut auto_last_refit: Option<std::time::Instant> = None;
         let mut stats_errs: u32 = 0;
         let mut codec_checked = false;
+        // 12.1.4: per stats id, the frame counter at the previous tick (track input, and each encoded stream), for
+        // the [lk/input] line
+        let mut prev_frames: HashMap<String, u64> = HashMap::new();
         loop {
             tokio::time::sleep(std::time::Duration::from_secs(3)).await;
             if stop.load(std::sync::atomic::Ordering::Relaxed) {
@@ -788,6 +791,50 @@ fn spawn_publish_stats_task(
             // into a just-cleared registry ~3s into the NEXT call).
             if stop.load(std::sync::atomic::Ordering::Relaxed) || !i_own() {
                 break;
+            }
+            // 12.1.4 (BUG-20261030 finding 1): what libwebrtc itself dropped. The share fed ~60 fps into the track
+            // while NVENC encoded ~30, and nothing said which side dropped them: track input vs encoded per tick.
+            // Deltas per stats id (a counter that went DOWN = a replaced/reset stream: that interval is skipped); with
+            // simulcast each encoded layer is its own number. "not encoded" = libwebrtc dropped them or they are still
+            // queued at the tick (a few frames).
+            if kind == "screen" {
+                let mut now_frames: HashMap<String, u64> = HashMap::new();
+                for st in &stats {
+                    match st {
+                        RtcStats::MediaSource(m) if m.source.kind == "video" => {
+                            now_frames.insert(format!("in:{}", m.rtc.id), m.video.frames as u64);
+                        }
+                        RtcStats::OutboundRtp(o) => {
+                            now_frames.insert(format!("enc:{}", o.rtc.id), o.outbound.frames_encoded as u64);
+                        }
+                        _ => {}
+                    }
+                }
+                let mut reset = false;
+                let mut delta = |key: &str| -> Option<u64> {
+                    let (now, before) = (*now_frames.get(key)?, *prev_frames.get(key)?);
+                    if now < before {
+                        reset = true;
+                    }
+                    Some(now.saturating_sub(before))
+                };
+                let input: Vec<u64> = now_frames.keys().filter(|k| k.starts_with("in:")).cloned().collect::<Vec<_>>().iter().filter_map(|k| delta(k)).collect();
+                let layers: Vec<u64> = now_frames.keys().filter(|k| k.starts_with("enc:")).cloned().collect::<Vec<_>>().iter().filter_map(|k| delta(k)).collect();
+                // a stream that appeared or went away (a replaced layer/track) makes the totals incomparable: skip
+                let same_streams = now_frames.len() == prev_frames.len() && now_frames.keys().all(|k| prev_frames.contains_key(k));
+                if !reset && same_streams && !input.is_empty() && !layers.is_empty() {
+                    let di: u64 = input.iter().sum();
+                    let top = layers.iter().copied().max().unwrap_or(0);
+                    if di > 0 {
+                        eprintln!(
+                            "[lk/input] screen: {di} frames into libwebrtc, {top} encoded ({} layer{}) since the last tick: {} not encoded",
+                            layers.len(),
+                            if layers.len() == 1 { "" } else { "s, the fullest one counted" },
+                            di.saturating_sub(top)
+                        );
+                    }
+                }
+                prev_frames = now_frames;
             }
             // Receiver reports keyed by ssrc.
             let mut rr: HashMap<u32, (f64, f64, f64, u64)> = HashMap::new();
@@ -7639,6 +7686,11 @@ impl CallSession {
             bus_stop.clone(),
         );
         eprintln!("[call] screen-share re-published with new quality");
+        // 12.1.4: the same PipeWire snapshot a fresh share gets, so a first start and a re-publish can be compared
+        std::thread::spawn(|| {
+            std::thread::sleep(std::time::Duration::from_secs(3));
+            pw_snapshot("share re-published");
+        });
         clear_republished_sid("screen"); // fresh publish: the cached sid is current again
         self.screenshare = Some((pipeline, screencast, publication.sid(), bus_stop));
         self.announce_recording_only().await;
@@ -9758,6 +9810,50 @@ pub fn pw_snapshot(reason: &str) {
     });
 }
 
+/// One line per video stream node in a pw-dump: name, class, state, the negotiated Format (size, framerate,
+/// max framerate, DMA-BUF modifier or "absent") and Buffers (count x size). Only nodes in `named` (ours) print their
+/// name, like the audio lines: another application's stream name stays out of the log (its id and the link lines say
+/// which node is the share's peer).
+fn video_node_lines(arr: &[serde_json::Value], named: &std::collections::HashSet<u64>) -> Vec<String> {
+    use serde_json::Value;
+    let s = |v: &Value| match v {
+        Value::String(x) => x.clone(),
+        Value::Null => "-".into(),
+        other => other.to_string(),
+    };
+    let frac = |v: &Value| match (v["num"].as_i64(), v["denom"].as_i64()) {
+        (Some(n), Some(d)) if d != 0 => format!("{:.1}", n as f64 / d as f64),
+        _ => s(v),
+    };
+    let mut out = Vec::new();
+    for o in arr {
+        if s(&o["type"]) != "PipeWire:Interface:Node" {
+            continue;
+        }
+        let props = &o["info"]["props"];
+        let class = s(&props["media.class"]);
+        if !class.starts_with("Stream/") || !class.ends_with("/Video") {
+            continue;
+        }
+        let f = &o["info"]["params"]["Format"][0];
+        let b = &o["info"]["params"]["Buffers"][0];
+        let size = format!("{}x{}", s(&f["size"]["width"]), s(&f["size"]["height"]));
+        let modifier = if f["modifier"].is_null() { "absent".to_string() } else { s(&f["modifier"]) };
+        let id = o["id"].as_u64().unwrap_or(0);
+        let name = if named.contains(&id) { s(&props["node.name"]) } else { "-".to_string() };
+        out.push(format!(
+            "  video node {id} {name:?} {class} state={} format={} {size} rate={} max={} modifier={modifier} buffers={} x {}",
+            s(&o["info"]["state"]),
+            s(&f["format"]),
+            frac(&f["framerate"]),
+            frac(&f["maxFramerate"]),
+            s(&b["buffers"]),
+            s(&b["size"]),
+        ));
+    }
+    out
+}
+
 /// `  123: …` / `  -5: …` object keys (bare numbers) -> `  "123": …`, line by line; everything else untouched.
 fn quote_bare_numeric_keys(json: &str) -> String {
     let mut out = String::with_capacity(json.len() + 64);
@@ -9808,6 +9904,28 @@ fn pw_dump_objects_lenient(text: &str) -> (Vec<serde_json::Value>, usize) {
 
 #[cfg(test)]
 mod pw_dump_tests {
+    #[test]
+    fn video_nodes_say_format_and_buffers() {
+        let dump: serde_json::Value = serde_json::from_str(r#"[
+          {"id": 90, "type": "PipeWire:Interface:Node", "info": {"state": "running",
+            "props": {"media.class": "Stream/Input/Video", "node.name": "tinhat"},
+            "params": {"Format": [{"format": "BGRA", "size": {"width": 5120, "height": 2160},
+                                   "framerate": {"num": 0, "denom": 1}, "maxFramerate": {"num": 165058, "denom": 1000}}],
+                       "Buffers": [{"buffers": 4, "size": 44236800}]}}},
+          {"id": 91, "type": "PipeWire:Interface:Node", "info": {"props": {"media.class": "Stream/Output/Audio"}}}
+        ]"#).unwrap();
+        let ours: std::collections::HashSet<u64> = [90].into_iter().collect();
+        let lines = super::video_node_lines(dump.as_array().unwrap(), &ours);
+        assert_eq!(lines.len(), 1);
+        assert_eq!(
+            lines[0],
+            "  video node 90 \"tinhat\" Stream/Input/Video state=running format=BGRA 5120x2160 rate=0.0 max=165.1 modifier=absent buffers=4 x 44236800"
+        );
+        // another application's stream: listed, but without its name
+        let lines = super::video_node_lines(dump.as_array().unwrap(), &Default::default());
+        assert!(lines[0].starts_with("  video node 90 \"-\" Stream/Input/Video"), "{}", lines[0]);
+    }
+
     /// A keyless value inside an object (what PipeWire 1.4's pw-dump can print for a param id it doesn't know)
     /// spoils only its own object.
     #[test]
@@ -9951,6 +10069,10 @@ fn pw_snapshot_lines(reason: &str) -> Vec<String> {
             if flags.is_empty() { String::new() } else { format!("  <-- {}", flags.join(", ")) }
         ));
     }
+    // 12.1.4: the video streams too (the share's portal stream and its peer). A first start that got half the source
+    // rate of a re-publish of the same share (BUG-20261030 finding 2) had identical caps; this says what PipeWire
+    // actually negotiated for each: size, rates, DMA-BUF modifier or shm, and the buffer count.
+    lines.extend(video_node_lines(arr, &my_nodes));
     let mut links: std::collections::BTreeMap<String, usize> = Default::default();
     let mut linked: std::collections::HashSet<u64> = Default::default();
     for o in arr {

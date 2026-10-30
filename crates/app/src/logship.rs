@@ -425,6 +425,14 @@ pub fn ship_previous_session_log(user: &str) {
 mod tests {
     use super::*;
 
+    /// 12.1.4: the share cadence stamp survives the scrub (12.1.3's "19:47:24Z" came out as "[ip]24Z").
+    #[test]
+    fn cadence_stamp_is_not_an_ip() {
+        let line = "[lk/cadence] 19h47m24sZ share: source 60.0 fps";
+        assert_eq!(scrub(line).trim_end(), line);
+        assert!(scrub("[lk/cadence] 19:47:24Z share").contains("[ip]"), "the old format really was eaten");
+    }
+
     #[test]
     fn a_previous_log_goes_only_to_the_account_it_belongs_to() {
         assert!(prev_log_is("@ana:a.example", "@ana:a.example"));
