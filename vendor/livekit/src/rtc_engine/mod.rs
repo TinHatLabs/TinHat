@@ -26,6 +26,10 @@ use tokio::sync::{
 };
 
 pub use self::rtc_session::{SessionStats, INITIAL_BUFFERED_AMOUNT_LOW_THRESHOLD};
+pub(crate) use self::peer_transport::SendGateGuard;
+/// TINHAT PATCH (12.1.5): the offer side of the send gate, public for the app's unit tests only.
+#[doc(hidden)]
+pub use self::peer_transport::{take_offer_gate, SEND_GATE_WAIT};
 use crate::prelude::ParticipantIdentity;
 use crate::{
     id::ParticipantSid,
@@ -348,7 +352,7 @@ impl RtcEngine {
         track: LocalTrack,
         options: TrackPublishOptions,
         encodings: Vec<RtpEncodingParameters>,
-    ) -> EngineResult<RtpTransceiver> {
+    ) -> EngineResult<(RtpTransceiver, SendGateGuard)> {
         // When creating a new RtpSender, make sure we're always using the latest session
         let (session, _r_lock) = {
             let (handle, _r_lock) = self.inner.wait_reconnection().await?;

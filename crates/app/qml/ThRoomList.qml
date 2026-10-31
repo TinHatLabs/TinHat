@@ -38,6 +38,7 @@ Item {
     signal bugReportRequested()               // open the in-app bug-report dialog
     signal messageUser(string mxid)           // start (or re-open) a DM with someone
     signal joinRequested(string roomId, string roomName)  // tapped a room you're not in
+    signal roomCallRequested(string roomId)               // 12.1.5: double-clicked a joined room → its call (call.join)
     signal spaceSettingsRequested(string key)             // RBAC §7.1: the header gear → Space settings
     signal privacySettingsRequested()                     // 10.6 (REACH §2.7): the status popover's "Privacy settings…"
     signal profileSettingsRequested()                     // 2026-09-29: the status popover's "Profile settings…"

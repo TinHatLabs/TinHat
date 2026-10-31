@@ -44,6 +44,13 @@ impl RtpReceiver {
     pub fn parameters(&self) -> RtpParameters {
         self.handle.parameters()
     }
+
+    /// TINHAT PATCH (early receiver attach): identifies the native receiver object (stable and
+    /// unique while a reference to it is held, e.g. by a FrameCryptor attached to it). Unlike the
+    /// receiver's track id, it is not chosen by the remote description.
+    pub fn native_key(&self) -> usize {
+        self.handle.native_key()
+    }
 }
 
 impl Debug for RtpReceiver {

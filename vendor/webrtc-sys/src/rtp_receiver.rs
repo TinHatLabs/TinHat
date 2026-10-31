@@ -47,6 +47,9 @@ pub mod ffi {
         fn streams(self: &RtpReceiver) -> Vec<MediaStreamPtr>;
         fn media_type(self: &RtpReceiver) -> MediaType;
         fn id(self: &RtpReceiver) -> String;
+        // TINHAT PATCH (early receiver attach): the address of the native receiver (stable while
+        // a reference to it is held; unlike id(), not chosen by the remote SDP)
+        fn native_key(self: &RtpReceiver) -> usize;
         fn get_parameters(self: &RtpReceiver) -> RtpParameters;
         fn set_jitter_buffer_minimum_delay(self: &RtpReceiver, is_some: bool, delay_seconds: f64);
 

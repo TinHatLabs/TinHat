@@ -724,6 +724,35 @@ mod key_provider_tests {
         assert_eq!(magic_len, 0, "no SIF / magic trailer may be installed");
     }
 
+    /// 12.1.5 early receiver attach: receiver cryptors are keyed by the NATIVE receiver object
+    /// (the receiver track id is the remote SDP's choice and may repeat). The key must be the
+    /// same whichever wrapper asks (on_track's transceiver vs. the track's at TrackSubscribed)
+    /// and differ between receivers.
+    #[test]
+    fn a_receiver_has_one_native_key_whichever_wrapper_asks() {
+        use livekit::webrtc::{
+            peer_connection_factory::{PeerConnectionFactory, RtcConfiguration},
+            rtp_transceiver::{RtpTransceiverDirection, RtpTransceiverInit},
+            MediaType,
+        };
+        let factory = PeerConnectionFactory::default();
+        let pc = factory.create_peer_connection(RtcConfiguration::default()).expect("pc");
+        let init = || RtpTransceiverInit {
+            direction: RtpTransceiverDirection::RecvOnly,
+            stream_ids: vec![],
+            send_encodings: vec![],
+        };
+        let a = pc.add_transceiver_for_media(MediaType::Video, init()).expect("video transceiver");
+        let b = pc.add_transceiver_for_media(MediaType::Audio, init()).expect("audio transceiver");
+        let ka = a.receiver().native_key();
+        assert_ne!(ka, 0);
+        assert_eq!(ka, a.receiver().native_key(), "same receiver, new wrapper, same key");
+        let listed: Vec<usize> = pc.transceivers().iter().map(|t| t.receiver().native_key()).collect();
+        assert!(listed.contains(&ka), "the PeerConnection's own transceiver list gives the same key");
+        assert_ne!(ka, b.receiver().native_key(), "two receivers, two keys");
+        pc.close();
+    }
+
     /// 12.1.3 C2: an add_track answer whose sid is already one of our live tracks (or empty) is
     /// refused before the publication/cryptor maps are touched (a replaced sender cryptor would
     /// detach encryption from a track that keeps sending).
@@ -2868,5 +2897,117 @@ mod pacing_lab {
         assert!((15_000..=18_500).contains(&med_new), "median step {med_new} µs after the events");
         assert!(tiny_new <= 2, "{tiny_new} sub-millisecond steps after the events");
         assert!(med_old < 15_000 || tiny_old > n_old / 2, "the comparison run should show 12.1.3's collapse");
+    }
+}
+
+#[cfg(test)]
+mod send_gate_tests {
+    //! 12.1.5 (assembly-041): the vendored livekit's send gate that keeps offers back while a new sender has
+    //! no cryptor yet (peer_transport.rs `send_gate`, rtc_session.rs `create_sender`,
+    //! local_participant.rs `publish_track`).
+    use livekit::rtc_engine::take_offer_gate;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use tokio::sync::RwLock as AsyncRwLock;
+
+    fn rt() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap()
+    }
+
+    #[test]
+    fn an_offer_waits_for_a_publish_still_attaching_and_is_skipped_on_expiry() {
+        rt().block_on(async {
+            let gate = Arc::new(AsyncRwLock::new(()));
+            let held = gate.clone().read_owned().await; // a publish between add_transceiver and its attach
+            assert!(take_offer_gate(&gate, Duration::from_millis(30)).await.is_none(), "no offer while a sender has no cryptor");
+            drop(held); // attached
+            assert!(take_offer_gate(&gate, Duration::from_millis(30)).await.is_some(), "the offer goes once attached");
+        });
+    }
+
+    #[test]
+    fn a_publish_waits_while_an_offer_is_being_created_then_goes() {
+        rt().block_on(async {
+            let gate = Arc::new(AsyncRwLock::new(()));
+            let offer = take_offer_gate(&gate, Duration::from_millis(30)).await.expect("free gate");
+            // a sender added now would be in neither this offer nor (without the gate) safe from the next one
+            assert!(tokio::time::timeout(Duration::from_millis(30), gate.clone().read_owned()).await.is_err());
+            drop(offer); // the offer is the local description now
+            assert!(tokio::time::timeout(Duration::from_millis(30), gate.clone().read_owned()).await.is_ok());
+        });
+    }
+
+    #[test]
+    fn two_publishes_hold_the_gate_together_and_the_offer_waits_for_both() {
+        rt().block_on(async {
+            let gate = Arc::new(AsyncRwLock::new(()));
+            let a = gate.clone().read_owned().await;
+            let b = gate.clone().read_owned().await; // a full reconnect republishes concurrently
+            drop(a);
+            assert!(take_offer_gate(&gate, Duration::from_millis(30)).await.is_none());
+            drop(b);
+            assert!(take_offer_gate(&gate, Duration::from_millis(30)).await.is_some());
+        });
+    }
+
+    fn region<'a>(src: &'a str, from: &str, to: &str) -> &'a str {
+        let i = src.find(from).unwrap_or_else(|| panic!("missing {from:?}"));
+        let j = i + src[i..].find(to).unwrap_or_else(|| panic!("missing {to:?} after {from:?}"));
+        &src[i..j]
+    }
+
+    #[test]
+    fn the_held_region_never_awaits_and_negotiation_comes_after_the_attach() {
+        // the publish's hold must never wait on the offer path or the transport lock: no .await while held
+        let lp = include_str!("../../../vendor/livekit/src/room/participant/local_participant.rs");
+        let held = region(lp, "let (transceiver, send_gate) =", "send_gate.commit();");
+        let after_create = &held[held.find(".await?;").expect("create_sender awaited") + ".await?;".len()..];
+        assert!(!after_create.contains(".await"), "publish_track awaits while holding the send gate");
+        assert!(after_create.contains("local_track_published(self.clone(), publication.clone())"), "the attach hook runs under the gate");
+        assert!(!after_create.contains("publisher_negotiation_needed"), "negotiation requested before the attach");
+        let tail = region(lp, "send_gate.commit();", "Ok(publication)");
+        assert!(tail.contains("publisher_negotiation_needed()"), "the negotiation request (and retry) after the attach");
+
+        let rs = include_str!("../../../vendor/livekit/src/rtc_engine/rtc_session.rs");
+        let held = region(rs, "let mut gate = self.publisher_pc.hold_send_gate().await;", "Ok((transceiver, gate))");
+        assert!(!held[held.find(";").unwrap()..].contains(".await"), "create_sender awaits while holding the send gate");
+        assert!(held.contains("add_transceiver(track.rtc_track(), init)"), "the transceiver is added under the gate");
+        assert!(held.contains("let _ = transceiver.stop();"), "a sender returned without a handle is stopped (fail closed)");
+
+        let pt = include_str!("../../../vendor/livekit/src/rtc_engine/peer_transport.rs");
+        let offer = region(pt, "pub async fn create_and_send_offer", "set_local_description(offer.clone())");
+        let g = offer.find("take_offer_gate(&self.send_gate, SEND_GATE_WAIT)").expect("the offer takes the gate");
+        let l = offer.find("self.inner.lock().await").expect("the transport lock");
+        assert!(g < l, "the offer takes the send gate before the transport lock");
+
+        // fail closed: the guard is armed with the new transceiver at once and stops it unless committed
+        assert!(rs.contains("self.publisher_pc.peer_connection().add_transceiver(track.rtc_track(), init)?;\n        gate.arm(transceiver.clone());"),
+            "the guard is armed right after add_transceiver");
+        let guard_drop = region(pt, "impl Drop for SendGateGuard", "pub const SEND_GATE_HELD");
+        assert!(guard_drop.contains("if !self.committed") && guard_drop.contains("t.stop()"), "an uncommitted guard stops its sender");
+        // the answer path releases the transport lock before it renegotiates (the offer takes the gate, then that lock)
+        let answer = region(pt, "pub async fn set_remote_description", "Ok(())\n    }");
+        let d = answer.find("drop(inner);").expect("the transport lock released");
+        let o = answer.find("self.create_and_send_offer(").expect("the renegotiation offer");
+        assert!(d < o, "renegotiation offer made while holding the transport lock");
+        // a held-back offer is retried on both negotiation paths
+        let fast = region(rs, "async fn execute_negotiation_with_retry", "fn debounce_negotiation");
+        assert!(fast.contains("is_send_gate_held(&err)") && fast.contains("NegotiationState::PendingRetry;"), "the fast path retries a held-back offer");
+        assert!(fast.contains("*state = NegotiationState::Idle;\n                    self.negotiation_queue.task_running.store(false"), "the worker's exit is atomic with Idle");
+        // every held-back offer (debounced, fast, the answer path's renegotiation) asks the session again
+        assert!(offer.contains("self.on_offer_held.lock().as_ref()"), "a held-back offer calls the re-ask hook");
+        let hook = region(rs, "is asked for again,", "// Start session tasks");
+        assert!(hook.contains("inner.publisher_negotiation_needed()") && hook.contains("Arc::downgrade(&inner)"), "the hook asks the session's own negotiation path");
+        // a debouncer that has fired refuses call() at once, so a request made while (or after) it offers starts a new one
+        let db = include_str!("../../../vendor/livekit/src/utils/debouncer.rs");
+        let fired = region(db, "_ = livekit_runtime::sleep(duration) => {", "break;");
+        assert!(fired.find("rx.close();").expect("rx closed") < fired.find("future.await;").expect("the future"),
+            "the debouncer must stop taking requests before its future runs");
+        // the re-ask is coalesced and skipped for a closed session; a closed session's fast worker stops
+        assert!(hook.contains("held_retry_scheduled.swap(true") && hook.contains("held_retry_scheduled.store(false"), "re-asks are coalesced");
+        assert!(fast.contains("if self.closed.load(Ordering::Acquire) {"), "a closed session's worker stops");
+        // the fast path goes only through the state-locked queue
+        let need = region(rs, "fn publisher_negotiation_needed(self: &Arc<Self>)", "fn queue_negotiation");
+        assert!(!need.contains("NegotiationState::PendingRetry"), "an unlocked PendingRetry write is back");
     }
 }

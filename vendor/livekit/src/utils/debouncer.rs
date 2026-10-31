@@ -52,6 +52,10 @@ async fn debounce_task<F>(
             _ = &mut cancel_rx => break,
             _ = rx.recv() => continue,
             _ = livekit_runtime::sleep(duration) => {
+                // TINHAT PATCH (12.1.5): stop taking requests BEFORE the future runs: a call() made while it
+                // runs (or after) then fails, and the caller starts a new debouncer, so no request is
+                // swallowed by one that has already fired (upstream kept the receiver open until the end)
+                rx.close();
                 future.await;
                 break;
             }

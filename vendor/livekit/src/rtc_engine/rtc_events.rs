@@ -18,6 +18,7 @@ use tokio::sync::mpsc;
 
 use super::peer_transport::PeerTransport;
 use crate::{
+    e2ee::manager::E2eeManager,
     rtc_engine::{
         peer_transport::OnOfferCreated,
         rtc_session::{LOSSY_DC_LABEL, RELIABLE_DC_LABEL},
@@ -110,8 +111,20 @@ fn on_data_channel(
     })
 }
 
-fn on_track(target: proto::SignalTarget, emitter: RtcEmitter) -> rtc::peer_connection::OnTrack {
+fn on_track(
+    target: proto::SignalTarget,
+    emitter: RtcEmitter,
+    e2ee: Option<E2eeManager>,
+) -> rtc::peer_connection::OnTrack {
     Box::new(move |event| {
+        // TINHAT PATCH (early receiver attach): this runs synchronously on libwebrtc's signaling
+        // thread inside SetRemoteDescription, long before the room's async TrackSubscribed. Attach
+        // the receiver's FrameCryptor here (earlier protection, not a proven first-frame boundary:
+        // libwebrtc sets up the media channel before it calls OnTrack; see
+        // E2eeManager::early_attach_receiver).
+        if let (Some(e2ee), Some(stream)) = (e2ee.as_ref(), event.streams.first()) {
+            e2ee.early_attach_receiver(&stream.id(), event.transceiver.receiver());
+        }
         let _ = emitter.send(RtcEvent::Track {
             streams: event.streams,
             track: event.track,
@@ -130,7 +143,11 @@ fn on_ice_candidate_error(
     })
 }
 
-pub fn forward_pc_events(transport: &mut PeerTransport, rtc_emitter: RtcEmitter) {
+pub fn forward_pc_events(
+    transport: &mut PeerTransport,
+    rtc_emitter: RtcEmitter,
+    e2ee: Option<E2eeManager>,
+) {
     let signal_target = transport.signal_target();
     transport
         .peer_connection()
@@ -140,7 +157,7 @@ pub fn forward_pc_events(transport: &mut PeerTransport, rtc_emitter: RtcEmitter)
         .peer_connection()
         .on_data_channel(Some(on_data_channel(signal_target, rtc_emitter.clone())));
 
-    transport.peer_connection().on_track(Some(on_track(signal_target, rtc_emitter.clone())));
+    transport.peer_connection().on_track(Some(on_track(signal_target, rtc_emitter.clone(), e2ee)));
 
     transport.peer_connection().on_connection_state_change(Some(on_connection_state_change(
         signal_target,

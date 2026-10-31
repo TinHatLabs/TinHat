@@ -4269,6 +4269,13 @@ Kirigami.ApplicationWindow {
         onRoomContext: (roomId) => root.openRoomContext(roomId)
         onMessageUser: (mxid) => login.createDm(mxid)
         onJoinRequested: (roomId, roomName) => root.askJoinRoom(roomId, roomName)
+        // 12.1.5 (2026-10-30): a double-clicked room joins its call — the call.join action, the call button's own
+        // path (its gates; leave-then-join when in another call; every consent sheet inside CallController.joinCall).
+        // The click before it already opened the room; this only makes sure it is the one on screen.
+        onRoomCallRequested: (roomId) => {
+            if (room.roomId !== roomId || root.roomShown === false) { root.openRoomId(roomId); if (root.navInDrawer) cornerNav.close() }
+            console.log("[nav] double-click call.join " + roomId + " -> " + root.actions.run("call.join", { source: "host", target: { room: roomId } }))
+        }
         myMxid: login.userId
         onAcceptInvite: (roomId) => login.acceptInvite(roomId)
         onDeclineInvite: login.rejectInvite(roomId)

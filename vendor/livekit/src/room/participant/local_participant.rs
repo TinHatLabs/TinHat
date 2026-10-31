@@ -477,7 +477,12 @@ impl LocalParticipant {
         // set track for publication to listen mute/unmute events
         publication.set_track(Some(track.clone().into()));
 
-        let transceiver =
+        // TINHAT PATCH (12.1.5, confidentiality — assembly-041): `send_gate` keeps every offer of this
+        // connection back until this sender's cryptor is attached (the local_track_published hook
+        // below); nothing between here and that hook awaits. It used to be possible, on a FULL
+        // reconnect (all tracks republished at once while capture runs), for another track's offer to
+        // carry this sender before its cryptor was attached: media sent without E2EE.
+        let (transceiver, send_gate) =
             self.inner.rtc_engine.create_sender(track.clone(), options.clone(), encodings).await?;
 
         track.set_transceiver(Some(transceiver));
@@ -507,15 +512,18 @@ impl LocalParticipant {
             }
         }
 
-        self.inner.rtc_engine.publisher_negotiation_needed();
-
         publication.update_publish_options(options);
         self.add_publication(TrackPublication::Local(publication.clone()));
 
         if let Some(local_track_published) = self.local.events.local_track_published.lock().as_ref()
         {
-            local_track_published(self.clone(), publication.clone());
+            local_track_published(self.clone(), publication.clone()); // the room attaches the sender cryptor here
         }
+        // TINHAT PATCH (12.1.5): the cryptor is attached: offers may carry this sender now, and our
+        // own negotiation request comes only after it (it is also the retry of an offer skipped
+        // while the gate was held).
+        send_gate.commit();
+        self.inner.rtc_engine.publisher_negotiation_needed();
         track.enable();
 
         Ok(publication)

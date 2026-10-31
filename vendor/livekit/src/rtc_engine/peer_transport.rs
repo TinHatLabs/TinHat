@@ -21,6 +21,7 @@ use libwebrtc::prelude::*;
 use livekit_protocol as proto;
 use parking_lot::Mutex;
 use tokio::sync::Mutex as AsyncMutex;
+use tokio::sync::{OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock as AsyncRwLock};
 
 use super::EngineResult;
 
@@ -41,6 +42,73 @@ pub struct PeerTransport {
     peer_connection: PeerConnection,
     on_offer_handler: Mutex<Option<OnOfferCreated>>,
     inner: Arc<AsyncMutex<TransportInner>>,
+    // TINHAT PATCH (12.1.5, confidentiality — the reconnect republish race, assembly-041): a new sender is
+    // added to this connection and gets its E2EE sender cryptor a moment later (the room's
+    // local_track_published hook). No offer may be created in between: an offer that carries the new
+    // m-line lets the sender go live before its cryptor is attached, and on a FULL reconnect every
+    // track is republished at once (a JoinSet) while capture keeps running, so another track's offer
+    // could carry it. A publish holds this gate SHARED from just before add_transceiver until the
+    // cryptor is attached (synchronous code only: it never waits on the offer path or the transport
+    // lock); every offer takes it EXCLUSIVELY before anything else. See SendGateGuard.
+    send_gate: Arc<AsyncRwLock<()>>,
+    // TINHAT PATCH (12.1.5): asked when an offer was held back by the send gate (the session asks for a
+    // negotiation again through its own queue/debouncer: every offer path, the answer path's included)
+    on_offer_held: Mutex<Option<Box<dyn Fn() + Send + Sync>>>,
+}
+
+/// TINHAT PATCH (12.1.5): held by a publish from just before its transceiver is added until its
+/// sender cryptor is attached (`commit()` by `LocalParticipant::publish_track` right after the room's
+/// local_track_published hook). While any is held, `create_and_send_offer` waits (bounded).
+/// Fail closed: a guard dropped WITHOUT `commit()` (an error or an unwind between add_transceiver and
+/// the attach) stops its transceiver, so no sender without a cryptor stays in the connection.
+pub struct SendGateGuard {
+    _guard: OwnedRwLockReadGuard<()>,
+    transceiver: Option<RtpTransceiver>,
+    committed: bool,
+}
+
+impl SendGateGuard {
+    /// The sender this hold covers (stopped if the guard goes without `commit()`).
+    pub(crate) fn arm(&mut self, transceiver: RtpTransceiver) {
+        self.transceiver = Some(transceiver);
+    }
+
+    /// The sender's cryptor is attached: offers may carry it now.
+    pub(crate) fn commit(mut self) {
+        self.committed = true;
+    }
+}
+
+impl Drop for SendGateGuard {
+    fn drop(&mut self) {
+        if !self.committed {
+            if let Some(t) = self.transceiver.take() {
+                log::error!("a new sender went without its cryptor: stopped");
+                eprintln!("[e2ee] a new sender went without its cryptor attached: stopped (fail closed)");
+                let _ = t.stop();
+            }
+        }
+    }
+}
+
+/// The error of an offer skipped because publishes still held the send gate (callers retry).
+pub const SEND_GATE_HELD: &str = "offer held back: a new sender's cryptor isn't attached yet";
+
+pub(crate) fn is_send_gate_held(e: &super::EngineError) -> bool {
+    matches!(e, super::EngineError::Internal(m) if m == SEND_GATE_HELD)
+}
+
+/// How long an offer waits for publishes still attaching their cryptor. The holders run synchronous
+/// code only, so this is a safety net: on expiry the offer is SKIPPED (never sent without the
+/// cryptor) and the publish's own negotiation request, made after its attach, sends the next one.
+pub const SEND_GATE_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// The offer's exclusive hold of the send gate, or None when publishes still held it after `wait`.
+pub async fn take_offer_gate(
+    gate: &Arc<AsyncRwLock<()>>,
+    wait: std::time::Duration,
+) -> Option<OwnedRwLockWriteGuard<()>> {
+    tokio::time::timeout(wait, gate.clone().write_owned()).await.ok()
 }
 
 impl Debug for PeerTransport {
@@ -59,6 +127,8 @@ impl PeerTransport {
             signal_target,
             peer_connection,
             on_offer_handler: Mutex::new(None),
+            send_gate: Arc::new(AsyncRwLock::new(())),
+            on_offer_held: Mutex::new(None),
             inner: Arc::new(AsyncMutex::new(TransportInner {
                 pending_candidates: Vec::default(),
                 renegotiate: false,
@@ -68,6 +138,12 @@ impl PeerTransport {
                 pending_initial_offer: None,
             })),
         }
+    }
+
+    /// TINHAT PATCH (12.1.5): the shared hold of a publish on this connection (see `send_gate`).
+    /// Waits only while an offer is being created (create_offer .. set_local_description).
+    pub async fn hold_send_gate(&self) -> SendGateGuard {
+        SendGateGuard { _guard: self.send_gate.clone().read_owned().await, transceiver: None, committed: false }
     }
 
     pub fn is_connected(&self) -> bool {
@@ -80,6 +156,11 @@ impl PeerTransport {
 
     pub fn signal_target(&self) -> proto::SignalTarget {
         self.signal_target
+    }
+
+    /// TINHAT PATCH (12.1.5): what to do when an offer was held back by the send gate.
+    pub fn on_offer_held(&self, handler: Option<Box<dyn Fn() + Send + Sync>>) {
+        *self.on_offer_held.lock() = handler;
     }
 
     pub fn on_offer(&self, handler: Option<OnOfferCreated>) {
@@ -125,8 +206,12 @@ impl PeerTransport {
 
         inner.restarting_ice = false;
 
-        if inner.renegotiate {
-            inner.renegotiate = false;
+        // TINHAT PATCH (12.1.5): the transport lock is released BEFORE the renegotiation offer, which
+        // takes the send gate and then this lock itself (upstream re-locked the held tokio mutex here:
+        // a deadlock whenever an offer was asked for while the previous one waited for its answer).
+        let renegotiate = std::mem::take(&mut inner.renegotiate);
+        drop(inner);
+        if renegotiate {
             self.create_and_send_offer(OfferOptions::default()).await?;
         }
 
@@ -365,6 +450,19 @@ impl PeerTransport {
     }
 
     pub async fn create_and_send_offer(&self, options: OfferOptions) -> EngineResult<()> {
+        // TINHAT PATCH (12.1.5): no offer while a new sender has no cryptor yet (send_gate); held
+        // until the offer is the local description, so a sender added after it isn't in it.
+        let _send_gate = match take_offer_gate(&self.send_gate, SEND_GATE_WAIT).await {
+            Some(g) => g,
+            None => {
+                log::error!("offer skipped: a new track's encryption wasn't attached within {:?}", SEND_GATE_WAIT);
+                eprintln!("[e2ee] offer skipped: a new track's encryption wasn't attached within {:?} (it negotiates once attached)", SEND_GATE_WAIT);
+                if let Some(again) = self.on_offer_held.lock().as_ref() {
+                    again(); // the session asks for the offer again (never an offer from here)
+                }
+                return Err(super::EngineError::Internal(SEND_GATE_HELD.into()));
+            }
+        };
         let mut inner = self.inner.lock().await;
         if options.ice_restart {
             inner.restarting_ice = true;
@@ -652,3 +750,4 @@ a=fmtp:111 minptime=10;stereo=1\n";
         assert_eq!(out.matches("stereo=1").count(), 1);
     }
 }
+

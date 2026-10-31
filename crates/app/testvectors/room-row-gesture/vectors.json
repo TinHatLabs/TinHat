@@ -1,0 +1,20 @@
+{
+ "format": "tinhat-room-row-gesture-vectors",
+ "v": 1,
+ "note": "rowGesture({gesture, membership, touch, armed}): a room-list row's left click and double-click (web src/features/nav/rowGesture.ts, desktop crates/app/qml/RoomsIsland.qml rowGesture); 'call' = the call.join action for the row's room; armed = the double-click's first click landed on this row while it was a joined room",
+ "cases": [
+  {"gesture": "click", "membership": "join", "touch": false, "want": "open"},
+  {"gesture": "click", "membership": "join", "touch": true, "want": "open"},
+  {"gesture": "click", "membership": "none", "touch": false, "want": "askJoin"},
+  {"gesture": "click", "membership": "invite", "touch": false, "want": "nothing"},
+  {"gesture": "dblclick", "membership": "join", "touch": false, "armed": true, "want": "call"},
+  {"gesture": "dblclick", "membership": "join", "touch": false, "armed": false, "want": "nothing"},
+  {"gesture": "dblclick", "membership": "join", "touch": true, "armed": true, "want": "nothing"},
+  {"gesture": "dblclick", "membership": "invite", "touch": false, "armed": true, "want": "nothing"},
+  {"gesture": "dblclick", "membership": "none", "touch": false, "armed": true, "want": "nothing"},
+  {"gesture": "dblclick", "membership": "invite", "touch": false, "armed": false, "want": "nothing"},
+  {"gesture": "dblclick", "membership": "leave", "touch": false, "armed": true, "want": "nothing"},
+  {"gesture": "dblclick", "membership": "", "touch": false, "armed": true, "want": "nothing"},
+  {"gesture": "tripleclick", "membership": "join", "touch": false, "armed": true, "want": "nothing"}
+ ]
+}

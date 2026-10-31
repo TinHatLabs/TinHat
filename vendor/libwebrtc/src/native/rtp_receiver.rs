@@ -78,4 +78,9 @@ impl RtpReceiver {
     pub fn parameters(&self) -> RtpParameters {
         self.sys_handle.get_parameters().into()
     }
+
+    // TINHAT PATCH (early receiver attach)
+    pub fn native_key(&self) -> usize {
+        self.sys_handle.native_key()
+    }
 }

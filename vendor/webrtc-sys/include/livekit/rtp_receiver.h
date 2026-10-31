@@ -54,6 +54,8 @@ class RtpReceiver {
 
   MediaType media_type() const;
   rust::String id() const;
+  // TINHAT PATCH (early receiver attach): see rtp_receiver.rs
+  size_t native_key() const;
 
   RtpParameters get_parameters() const;
 

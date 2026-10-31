@@ -19,6 +19,39 @@ ColumnLayout {
     required property var roomModelRef   // a ThRoomList's `roomModel`, passed in (never the same name: it would shadow the id)
     required property var sharedVolMenuRef   // a ThRoomList's `sharedVolMenu`, passed in (never the same name: it would shadow the id)
 
+    // 12.1.5 (2026-10-30): what a click and a double-click on a room row do — the web's src/features/nav/rowGesture.ts,
+    // the same rule; tools/room-row-gesture-test.mjs runs this code (between the markers) on the shared vectors
+    // (crates/app/testvectors/room-row-gesture/vectors.json = a byte copy of the web's).
+    //   click     joined → "open" · listed, not joined → "askJoin" (the join dialog) · invite → "nothing" (Accept/Decline)
+    //   dblclick  joined + armed (its first click landed on this row while it was joined) → "call" (the call.join action,
+    //             the call button's path) · anything else → "nothing": the first click already did what a click does, and a
+    //             double-click never joins a call in a room not opened/accepted (nor one that started on Accept)
+    // BEGIN pure
+    function rowGesture(i) {
+        var joined = i.membership === "join"
+        if (i.gesture === "click") return i.membership === "none" ? "askJoin" : (i.membership === "invite" ? "nothing" : "open")
+        if (i.gesture === "dblclick") return (joined && !i.touch && i.armed === true) ? "call" : "nothing"
+        return "nothing"
+    }
+    // END pure
+    // The one armed row for the whole list (Astra 2026-10-30, second pass): set by a joined row's own left click, cleared
+    // by any other row's click and by a press on a control in the list (the header buttons, the filter, Accept / Decline,
+    // the now-playing pencil / editor / clear) — Qt pairs two presses by time and distance, not by item, so an arm kept
+    // per row could be paired with a press that began somewhere else.
+    property string armedRoom: ""
+    property double armedAt: 0
+    function disarm() { island.armedRoom = ""; island.armedAt = 0; island.clearPending() }
+    // 12.1.5 (assembly review): Qt emits doubleClicked on the second PRESS. That press only marks what its release does:
+    // "call" (the join) or "click" (a double-click that doesn't join is an ordinary click, as on the web: the row opens).
+    // The release runs it over the same row; a cancel (the list took the press for a drag/flick) drops it.
+    // Bound to the PRESS that set it (pressSeq: every row press counts): a release only runs what its own press marked,
+    // so a pending action left over (the delegate's room replaced by a model refresh mid-press) never fires later.
+    property string pendingRoom: ""
+    property string pendingWhat: ""
+    property int pendingSeq: -1
+    property int pressSeq: 0
+    function clearPending() { island.pendingRoom = ""; island.pendingWhat = ""; island.pendingSeq = -1 }
+
     // ── header: active space name ───────────────────────────────────────
     Item {
         Layout.fillWidth: true
@@ -47,6 +80,7 @@ ColumnLayout {
             iconName: "list-add-symbolic"
             iconSize: 16
             tip: island.panelRef.activeIsRealSpace ? "New DM or room" : "New DM"
+            onPressed: island.disarm()
             onClicked: island.panelRef.newMenuRequested(headerAdd)
         }
         // RBAC §7.1: the active space's settings — a gear that fades in on hover (real, joined spaces).
@@ -63,6 +97,7 @@ ColumnLayout {
             iconName: "configure-symbolic"
             iconSize: 16
             tip: "Space settings  (Ctrl+Shift+,)"
+            onPressed: island.disarm()
             onClicked: island.panelRef.spaceSettingsRequested(island.panelRef.activeSpaceKey)
         }
         Kirigami.Separator { anchors.bottom: parent.bottom; width: parent.width; height: 1 }
@@ -80,6 +115,7 @@ ColumnLayout {
     // ── filter ──────────────────────────────────────────────────────────
     Kirigami.SearchField {
         id: filterField
+        onPressed: island.disarm()
         Layout.fillWidth: true
         Layout.margins: Kirigami.Units.smallSpacing
         visible: !island.panelRef.activeInvited   // nothing to filter until you join
@@ -112,6 +148,9 @@ ColumnLayout {
     Connections {
         target: island.panelRef
         function on_ModelRevChanged() { island._tryReveal() }
+        // 12.1.5 (assembly review): another room on screen (keyboard Alt+Up/Down, Ctrl+K, a notification…) disarms;
+        // the armed room's own click opening it does not
+        function onCurrentRoomIdChanged() { if (island.panelRef.currentRoomId !== island.armedRoom) island.disarm(); island.clearPending() }
     }
     Timer { id: revealGiveUp; interval: 3000; onTriggered: island._revealId = "" }
 
@@ -148,6 +187,10 @@ ColumnLayout {
             // space. Never a private one — the hierarchy call filters those out.
             readonly property bool notJoined: room.membership === "none"
             readonly property bool unjoined: isInvite || notJoined
+            // the row's membership for rowGesture (nav.rs always sets it; a row without one never joins a call)
+            readonly property string membershipKey: String(room.membership || "")
+            // 12.1.5: a touch tap arrives as a synthesized mouse event — it never arms or joins
+            function fromTouch(m) { return m.source !== undefined && m.source !== Qt.MouseEventNotSynthesized }
             readonly property bool selected: room.id === island.panelRef.currentRoomId
             // The room we are IN shows the live SFU roster (instant); the others
             // show membership state, refreshed on join/leave edges + a 3 s in-call ticker.
@@ -214,11 +257,45 @@ ColumnLayout {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onClicked: (m) => {
-                    if (m.button === Qt.RightButton) island.panelRef.roomContext(row.room.id)
-                    else if (row.notJoined) island.panelRef.joinRequested(row.room.id, row.room.name)
-                    else if (!row.isInvite) island.panelRef.roomActivated(row.room.id)
+                // a left click on the row; mayArm = false for the second click of a pair (it never arms, as on the web)
+                function rowClick(m, mayArm) {
+                    // this row's own left click arms a double-click only while it is a joined room (never a touch tap)
+                    if (mayArm && row.membershipKey === "join" && !row.fromTouch(m)) { island.armedRoom = row.room.id; island.armedAt = Date.now() }
+                    else island.disarm()
+                    var g = island.rowGesture({ gesture: "click", membership: row.membershipKey })
+                    if (g === "askJoin") island.panelRef.joinRequested(row.room.id, row.room.name)
+                    else if (g === "open") island.panelRef.roomActivated(row.room.id)
                 }
+                onPressed: island.pressSeq++
+                onClicked: (m) => {
+                    if (m.button === Qt.RightButton) { island.disarm(); island.panelRef.roomContext(row.room.id); return }
+                    rowMa.rowClick(m, true)
+                }
+                // 12.1.5: the second press inside the platform's double-click interval (QStyleHints) — the first click
+                // has already opened the room (never delayed); two slow clicks stay two clicks. Joined rooms only.
+                // Armed = this row's own first click, the last press in the list, within the interval (a double-click that
+                // began on Accept or anywhere else arrives here disarmed: Qt pairs the presses by time, not by item).
+                // The second press only marks what its release does (island.pendingRoom): Qt suppresses the pair's second
+                // clicked() once doubleClicked is handled, so the release runs the ordinary click itself when it doesn't join.
+                onDoubleClicked: (m) => {
+                    var age = Date.now() - island.armedAt
+                    var armed = island.armedRoom === row.room.id && island.armedAt > 0 && age >= 0 && age <= Qt.styleHints.mouseDoubleClickInterval
+                    island.disarm()
+                    island.clearPending()
+                    if (m.button !== Qt.LeftButton) return
+                    island.pendingWhat = island.rowGesture({ gesture: "dblclick", membership: row.membershipKey, touch: row.fromTouch(m), armed: armed }) === "call" ? "call" : "click"
+                    island.pendingRoom = row.room.id
+                    island.pendingSeq = island.pressSeq   // this press (onPressed ran first)
+                }
+                onReleased: (m) => {
+                    if (island.pendingRoom === "" || island.pendingRoom !== row.room.id || island.pendingSeq !== island.pressSeq) { island.clearPending(); return }
+                    var what = island.pendingWhat
+                    island.clearPending()
+                    if (m.button !== Qt.LeftButton || !rowMa.containsMouse) return   // released elsewhere: nothing, like a click
+                    if (what === "call") island.panelRef.roomCallRequested(row.room.id)
+                    else rowMa.rowClick(m, false)
+                }
+                onCanceled: if (island.pendingRoom === row.room.id) island.clearPending()
             }
             // 10.6 (REACH §2.6 item 2): a DM row with no secondary line carries the state here.
             Controls.ToolTip.text: row.pres ? island.panelRef._tipSafe(String(row.room.name || "") + " · " + String(row.pres.label || "")
@@ -307,6 +384,7 @@ ColumnLayout {
                     app: island.panelRef._a
                     text: "Accept"
                     implicitHeight: 26
+                    onPressed: island.disarm()
                     onClicked: island.panelRef.acceptInvite(row.room.id)
                 }
                 ThToolButton {
@@ -314,6 +392,7 @@ ColumnLayout {
                     app: island.panelRef._a
                     iconName: "dialog-close-symbolic"
                     tip: "Decline invite"
+                    onPressed: island.disarm()
                     onClicked: island.panelRef.declineInvite(row.room.id)
                 }
                 // unread badge
@@ -387,6 +466,7 @@ ColumnLayout {
                     Controls.ToolTip.text: "Edit now playing"
                     Controls.ToolTip.visible: hovered
                     Controls.ToolTip.delay: 400
+                    onPressed: island.disarm()
                     onClicked: { island.panelRef.editingRoomId = row.room.id; activityField.forceActiveFocus() }
                 }
             }
@@ -408,6 +488,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: row.activityGame
                     placeholderText: "What are you playing?"
+                    onPressed: island.disarm()
                     font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
                     onAccepted: { island.panelRef.setActivity(text.trim()); island.panelRef.editingRoomId = ""; focus = false }
                 }
@@ -416,6 +497,7 @@ ColumnLayout {
                     Controls.ToolTip.text: "Clear now playing"
                     Controls.ToolTip.visible: hovered
                     Controls.ToolTip.delay: 400
+                    onPressed: island.disarm()
                     onClicked: { activityField.text = ""; island.panelRef.setActivity(""); island.panelRef.editingRoomId = "" }
                 }
             }

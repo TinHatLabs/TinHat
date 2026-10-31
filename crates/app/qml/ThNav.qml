@@ -20,6 +20,7 @@ RowLayout {
     signal roomContext(string roomId)
     signal messageUser(string mxid)
     signal joinRequested(string roomId, string roomName)
+    signal roomCallRequested(string roomId)   // 12.1.5: a double-clicked room row → the room's call (Main.qml: call.join)
     property string myMxid: ""
     signal acceptInvite(string roomId)
     signal declineInvite(string roomId)
@@ -85,6 +86,7 @@ RowLayout {
         onRoomContext: (roomId) => nav.roomContext(roomId)
         onMessageUser: (mxid) => nav.messageUser(mxid)
         onJoinRequested: (roomId, roomName) => nav.joinRequested(roomId, roomName)
+        onRoomCallRequested: (roomId) => nav.roomCallRequested(roomId)
         myMxid: nav.myMxid
         onAcceptInvite: (roomId) => nav.acceptInvite(roomId)
         onDeclineInvite: (roomId) => nav.declineInvite(roomId)

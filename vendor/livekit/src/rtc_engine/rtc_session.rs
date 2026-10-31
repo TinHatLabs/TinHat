@@ -56,7 +56,7 @@ use crate::{
     room::{e2ee::manager::E2eeManager, DisconnectReason},
     rtc_engine::{
         lk_runtime::LkRuntime,
-        peer_transport::PeerTransport,
+        peer_transport::{PeerTransport, SendGateGuard},
         rtc_events::{RtcEvent, RtcEvents},
     },
     track::LocalTrack,
@@ -417,6 +417,7 @@ struct SessionInner {
 
     options: EngineOptions,
     negotiation_debouncer: Mutex<Option<Debouncer>>,
+    held_retry_scheduled: AtomicBool, // TINHAT PATCH (12.1.5): one re-ask at a time after a held-back offer
     negotiation_queue: NegotiationQueue,
 
     pending_requests: Mutex<HashMap<u32, oneshot::Sender<proto::RequestResponse>>>,
@@ -572,9 +573,17 @@ impl RtcSession {
         };
 
         // Forward events received inside the signaling thread to our rtc channel
-        rtc_events::forward_pc_events(&mut publisher_pc, rtc_emitter.clone());
+        // TINHAT PATCH (early receiver attach): the participants of the join response are known
+        // before the subscriber offer announces their tracks.
+        if let Some(e2ee) = e2ee_manager.as_ref() {
+            e2ee.reset_session(); // a full restart reuses the manager: start from THIS join
+            e2ee.note_participants(join_response.other_participants.iter().map(|p| {
+                (p.sid.as_str(), p.identity.as_str(), false)
+            }));
+        }
+        rtc_events::forward_pc_events(&mut publisher_pc, rtc_emitter.clone(), e2ee_manager.clone());
         if let Some(ref mut sub_pc) = subscriber_pc {
-            rtc_events::forward_pc_events(sub_pc, rtc_emitter.clone());
+            rtc_events::forward_pc_events(sub_pc, rtc_emitter.clone(), e2ee_manager.clone());
         }
         rtc_events::forward_dc_events(&mut lossy_dc, DataPacketKind::Lossy, rtc_emitter.clone());
         rtc_events::forward_dc_events(&mut reliable_dc, DataPacketKind::Reliable, rtc_emitter);
@@ -620,6 +629,7 @@ impl RtcSession {
             emitter,
             options,
             negotiation_debouncer: Default::default(),
+            held_retry_scheduled: AtomicBool::new(false),
             negotiation_queue: NegotiationQueue::new(),
             pending_requests: Default::default(),
             e2ee_manager,
@@ -645,6 +655,29 @@ impl RtcSession {
                 if !inner.closed.load(Ordering::Acquire) && inner.publisher_pc.is_connected() {
                     log::error!("publisher data channel '{}' closed unexpectedly", label);
                 }
+            })));
+        }
+
+        // TINHAT PATCH (12.1.5): an offer held back by the send gate (peer_transport.rs) is asked for again,
+        // shortly, through the session's own negotiation path, whichever path's offer it was
+        {
+            let weak_inner = Arc::downgrade(&inner);
+            inner.publisher_pc.on_offer_held(Some(Box::new(move || {
+                let Some(inner) = weak_inner.upgrade() else { return };
+                // coalesced: one re-ask pending at a time, however many offers were held back
+                if inner.closed.load(Ordering::Acquire) || inner.held_retry_scheduled.swap(true, Ordering::AcqRel) {
+                    return;
+                }
+                let weak_inner = Arc::downgrade(&inner);
+                livekit_runtime::spawn(async move {
+                    livekit_runtime::sleep(Duration::from_millis(250)).await;
+                    if let Some(inner) = weak_inner.upgrade() {
+                        inner.held_retry_scheduled.store(false, Ordering::Release);
+                        if !inner.closed.load(Ordering::Acquire) {
+                            inner.publisher_negotiation_needed();
+                        }
+                    }
+                });
             })));
         }
 
@@ -756,7 +789,7 @@ impl RtcSession {
         track: LocalTrack,
         options: TrackPublishOptions,
         encodings: Vec<RtpEncodingParameters>,
-    ) -> EngineResult<RtpTransceiver> {
+    ) -> EngineResult<(RtpTransceiver, SendGateGuard)> {
         self.inner.create_sender(track, options, encodings).await
     }
 
@@ -1362,6 +1395,16 @@ impl SessionInner {
                 );
             }
             proto::signal_response::Message::Update(mut update) => {
+                // TINHAT PATCH (early receiver attach): note sid -> identity BEFORE a later offer.
+                if let Some(e2ee) = self.e2ee_manager.as_ref() {
+                    e2ee.note_participants(update.participants.iter().map(|p| {
+                        (
+                            p.sid.as_str(),
+                            p.identity.as_str(),
+                            p.state == proto::participant_info::State::Disconnected as i32,
+                        )
+                    }));
+                }
                 let local_participant_identity = self.participant_info.identity.as_str().into();
                 if let Ok(event) = dt::remote::event_from_participant_update(
                     &mut update,
@@ -1808,7 +1851,7 @@ impl SessionInner {
         track: LocalTrack,
         options: TrackPublishOptions,
         encodings: Vec<RtpEncodingParameters>,
-    ) -> EngineResult<RtpTransceiver> {
+    ) -> EngineResult<(RtpTransceiver, SendGateGuard)> {
         // If video track, derive "ultimate" bitrate from encodings and stash it for offer munging.
         // Must be done before encodings is moved into RtpTransceiverInit.
         if track.kind() == TrackKind::Video {
@@ -1825,8 +1868,12 @@ impl SessionInner {
             send_encodings: encodings,
         };
 
+        // TINHAT PATCH (12.1.5): the send gate is held from here until the caller has attached the
+        // sender cryptor (peer_transport.rs send_gate). Nothing below awaits.
+        let mut gate = self.publisher_pc.hold_send_gate().await;
         let transceiver =
             self.publisher_pc.peer_connection().add_transceiver(track.rtc_track(), init)?;
+        gate.arm(transceiver.clone()); // stopped unless the caller commits after attaching the cryptor
 
         if track.kind() == TrackKind::Video {
             transceiver.sender().set_video_encoder_backend(options.video_encoder);
@@ -1871,10 +1918,15 @@ impl SessionInner {
             // each step the requested codec).
             matched.append(&mut unmatched);
 
-            transceiver.set_codec_preferences(matched)?;
+            // TINHAT PATCH (12.1.5): fail closed — a sender we return no handle for never gets a
+            // cryptor, so it must not stay in the connection (a later offer would carry it)
+            if let Err(e) = transceiver.set_codec_preferences(matched) {
+                let _ = transceiver.stop();
+                return Err(e.into());
+            }
         }
 
-        Ok(transceiver)
+        Ok((transceiver, gate))
     }
 
     /// Called when the SignalClient or one of the PeerConnection has lost the connection
@@ -2177,12 +2229,9 @@ impl SessionInner {
         log::debug!("publisher_negotiation_needed: fast_publish={}", fast_publish);
 
         if fast_publish {
-            if self.negotiation_queue.waiting_for_answer.load(Ordering::Acquire) {
-                log::debug!("already waiting for answer, marking for retry");
-                let mut state = self.negotiation_queue.state.lock();
-                *state = NegotiationState::PendingRetry;
-                return;
-            }
+            // TINHAT PATCH (12.1.5): only through the state-locked queue (a worker waiting for its answer is
+            // InProgress there, so this marks PendingRetry under the lock). The unlocked waiting_for_answer
+            // check here could write PendingRetry after the worker had gone Idle: no worker left to run it.
             self.queue_negotiation();
         } else {
             self.debounce_negotiation();
@@ -2206,8 +2255,10 @@ impl SessionInner {
 
                 let session = self.clone();
                 livekit_runtime::spawn(async move {
+                    // TINHAT PATCH (12.1.5): task_running is cleared inside the loop's exit, under the
+                    // state lock, with Idle: a request arriving in between used to see Idle + running,
+                    // mark PendingRetry and return, with no task left to run it.
                     session.execute_negotiation_with_retry().await;
-                    session.negotiation_queue.task_running.store(false, Ordering::Release);
                 });
             }
             NegotiationState::InProgress => {
@@ -2222,6 +2273,14 @@ impl SessionInner {
 
     async fn execute_negotiation_with_retry(self: &Arc<Self>) {
         loop {
+            // TINHAT PATCH (12.1.5): a closed session's worker stops (a held-back offer's retries would
+            // otherwise keep an old session's worker alive after a full reconnect)
+            if self.closed.load(Ordering::Acquire) {
+                let mut state = self.negotiation_queue.state.lock();
+                *state = NegotiationState::Idle;
+                self.negotiation_queue.task_running.store(false, Ordering::Release); // under the lock
+                break;
+            }
             log::debug!("negotiating the publisher (fast mode)");
 
             self.negotiation_queue.waiting_for_answer.store(true, Ordering::Release);
@@ -2230,6 +2289,10 @@ impl SessionInner {
             {
                 log::error!("failed to negotiate the publisher: {:?}", err);
                 self.negotiation_queue.waiting_for_answer.store(false, Ordering::Release);
+                // TINHAT PATCH (12.1.5): an offer held back by the send gate is tried again
+                if super::peer_transport::is_send_gate_held(&err) {
+                    *self.negotiation_queue.state.lock() = NegotiationState::PendingRetry;
+                }
             } else {
                 log::debug!("offer sent, waiting for answer...");
 
@@ -2258,6 +2321,7 @@ impl SessionInner {
                 _ => {
                     log::debug!("negotiation completed");
                     *state = NegotiationState::Idle;
+                    self.negotiation_queue.task_running.store(false, Ordering::Release); // under the lock
                     break;
                 }
             }
@@ -2268,6 +2332,7 @@ impl SessionInner {
         let mut debouncer = self.negotiation_debouncer.lock();
 
         // call() returns an error if the debouncer has finished
+        // (TINHAT PATCH 12.1.5: a debouncer that has fired refuses call() at once, utils/debouncer.rs)
         if debouncer.is_none() || debouncer.as_ref().unwrap().call().is_err() {
             let session = self.clone();
 

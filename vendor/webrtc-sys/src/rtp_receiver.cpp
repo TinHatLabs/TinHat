@@ -68,6 +68,12 @@ rust::String RtpReceiver::id() const {
   return receiver_->id();
 }
 
+// TINHAT PATCH (early receiver attach): identifies the native receiver (proxy) object itself;
+// the same pointer whichever wrapper asked (RtpTransceiver::receiver() returns receivers_[0]).
+size_t RtpReceiver::native_key() const {
+  return reinterpret_cast<size_t>(receiver_.get());
+}
+
 RtpParameters RtpReceiver::get_parameters() const {
   return to_rust_rtp_parameters(receiver_->GetParameters());
 }
