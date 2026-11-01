@@ -1,0 +1,450 @@
+{
+  "doc": {
+    "author": "Tin Hat",
+    "format": "tinhat-theme",
+    "id": "oled-glass",
+    "name": "OLED glass",
+    "names": "hash-hsl",
+    "roles": {
+      "accent.base": "#1e6a76",
+      "accent.bright": "#3cbad0",
+      "accent.dim": "alpha(accent.base, 0.18)",
+      "accent.glow": "alpha(accent.base, 0.35)",
+      "badge.bg": "accent.base",
+      "badge.mention": "state.danger",
+      "border.focus": "accent.bright",
+      "border.strong": "mix(surface.window, text.primary, 0.2)",
+      "border.subtle": "#222222",
+      "call.muted": "state.dangerBright",
+      "call.speaking": "state.success",
+      "mention.bg": "alpha(state.warning, 0.1)",
+      "mention.edge": "state.warning",
+      "name.1": "#e09085",
+      "name.10": "#85e0c5",
+      "name.11": "#85e0d4",
+      "name.12": "#85dce0",
+      "name.2": "#e09a85",
+      "name.3": "#e0a585",
+      "name.4": "#e0b085",
+      "name.5": "#e0ba85",
+      "name.6": "#e0c485",
+      "name.7": "#e0ce85",
+      "name.8": "#e0d985",
+      "name.9": "#dde085",
+      "presence.away": "#faa81a",
+      "presence.busy": "#ed4245",
+      "presence.incall": "#3ba55c",
+      "presence.offline": "#95a5a6",
+      "presence.online": "#3ba55c",
+      "scrim": "alpha(#000000, 0.3)",
+      "shadow": "#000000",
+      "state.aside": "#e8b923",
+      "state.danger": "#c74848",
+      "state.dangerBright": "#ff6b6b",
+      "state.info": "#4da3ff",
+      "state.success": "#3ad07a",
+      "state.warning": "#e0a020",
+      "surface.hover": "lighter(surface.island, 1.18)",
+      "surface.island": "#0a0a0a",
+      "surface.overlay": "surface.island",
+      "surface.pressed": "surface.raised",
+      "surface.raised": "#1a1a1a/0.8",
+      "surface.selected": "accent.dim",
+      "surface.sunken": "surface.window",
+      "surface.window": "#000000",
+      "text.disabled": "text.secondary",
+      "text.link": "accent.bright",
+      "text.muted": "alpha(text.secondary, 0.7)",
+      "text.onAccent": "#ffffff",
+      "text.primary": "#e0e0e0",
+      "text.secondary": "#aaaaaa"
+    },
+    "tokens": {
+      "button.danger.fg": "#ffffff",
+      "calendar.day.today.fg": "#ffffff",
+      "callbar.bg": "#000000/0.5",
+      "callbar.chevron.bg": "#1a1a1f/0.96",
+      "callbar.mobile.bg": "#000000/0.6",
+      "dialog.button.danger.fg": "#ffffff",
+      "dm.more.fg": "#ffffff",
+      "dock.handle.icon": "#ffffff",
+      "icon.scheme.neutral": "#f67400",
+      "rail.nav.icon.lit": "#3cbad0",
+      "rail.nav.icon.lit.active": "#3cbad0",
+      "reel.checkbox.fg": "#ffffff",
+      "slider.handle.border.disabled": "#b1b1b1",
+      "slider.track": "#b1b1b1",
+      "toggle.handle.border.disabled": "#b1b1b1",
+      "toggle.track": "#b1b1b1",
+      "window.titlebar.close.fg.hover": "#ffffff"
+    },
+    "v": 1,
+    "variant": "dark"
+  },
+  "expect": {
+    "groups": [
+      {
+        "id": "backgrounds",
+        "label": "Backgrounds",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#0a0a0a",
+            "follow": [],
+            "id": "surface.island",
+            "label": "Islands",
+            "sources": [
+              "surface.island"
+            ],
+            "usedBy": [
+              "header.bottom.bg",
+              "island.bg.header",
+              "island.bg.panel",
+              "island.bg.rooms",
+              "panel.bg",
+              "rooms.bg",
+              "surface.hover",
+              "surface.island",
+              "surface.overlay"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#000000",
+            "follow": [],
+            "id": "surface.window",
+            "label": "Window background",
+            "sources": [
+              "surface.window"
+            ],
+            "usedBy": [
+              "border.strong",
+              "island.bg.call",
+              "island.bg.dms",
+              "island.bg.nav",
+              "island.bg.spaces",
+              "island.bg.timeline",
+              "island.bg.widgets",
+              "rail.bg",
+              "rail.nav.icon",
+              "stage.bg",
+              "surface.sunken",
+              "surface.window",
+              "timeline.bg",
+              "toast.bg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#1a1a1a/0.8",
+            "follow": [],
+            "id": "surface.raised",
+            "label": "Raised surfaces",
+            "sources": [
+              "surface.raised"
+            ],
+            "usedBy": [
+              "account.bg",
+              "composer.bg",
+              "island.bg.account",
+              "island.bg.buttons",
+              "island.bg.composer",
+              "settings.inviteCode.row.bg",
+              "surface.pressed",
+              "surface.raised",
+              "tooltip.bg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#222222",
+            "follow": [],
+            "id": "border.subtle",
+            "label": "Subtle borders",
+            "sources": [
+              "border.subtle"
+            ],
+            "usedBy": [
+              "border.subtle",
+              "island.border"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "text",
+        "label": "Text",
+        "swatches": [
+          {
+            "alsoIn": [
+              "backgrounds"
+            ],
+            "colour": "#e0e0e0",
+            "follow": [],
+            "id": "text.primary",
+            "label": "Text",
+            "sources": [
+              "text.primary"
+            ],
+            "usedBy": [
+              "border.strong",
+              "composer.fg",
+              "rail.nav.icon",
+              "text.primary",
+              "toast.fg",
+              "tooltip.fg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#aaaaaa",
+            "follow": [],
+            "id": "text.secondary",
+            "label": "Secondary text",
+            "sources": [
+              "text.secondary"
+            ],
+            "usedBy": [
+              "text.disabled",
+              "text.muted",
+              "text.secondary"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#ffffff",
+            "follow": [],
+            "id": "text.onAccent",
+            "label": "Text on accent",
+            "sources": [
+              "text.onAccent"
+            ],
+            "usedBy": [
+              "rail.nav.icon",
+              "text.onAccent"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "accent",
+        "label": "Accent",
+        "swatches": [
+          {
+            "alsoIn": [
+              "backgrounds",
+              "status"
+            ],
+            "colour": "#1e6a76",
+            "follow": [],
+            "id": "accent.base",
+            "label": "Accent",
+            "sources": [
+              "accent.base"
+            ],
+            "usedBy": [
+              "accent.base",
+              "accent.dim",
+              "accent.glow",
+              "badge.bg",
+              "rail.nav.bg",
+              "rail.nav.bg.active",
+              "rail.nav.icon",
+              "surface.selected"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#3cbad0",
+            "follow": [
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active"
+            ],
+            "id": "accent.bright",
+            "label": "Bright accent",
+            "sources": [
+              "accent.bright"
+            ],
+            "usedBy": [
+              "accent.bright",
+              "border.focus",
+              "calendar.day.today.bg",
+              "icon.highlight",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "text.link"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#c74848",
+            "follow": [],
+            "id": "state.danger",
+            "label": "Danger",
+            "sources": [
+              "state.danger"
+            ],
+            "usedBy": [
+              "badge.mention",
+              "button.danger.bg",
+              "state.danger"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#ff6b6b",
+            "follow": [],
+            "id": "state.dangerBright",
+            "label": "Bright danger",
+            "sources": [
+              "state.dangerBright"
+            ],
+            "usedBy": [
+              "call.muted",
+              "state.dangerBright"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#e0a020",
+            "follow": [],
+            "id": "state.warning",
+            "label": "Warning",
+            "sources": [
+              "state.warning"
+            ],
+            "usedBy": [
+              "mention.bg",
+              "mention.edge",
+              "state.warning"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#3ad07a",
+            "follow": [],
+            "id": "state.success",
+            "label": "Success",
+            "sources": [
+              "state.success"
+            ],
+            "usedBy": [
+              "call.speaking",
+              "state.success"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#4da3ff",
+            "follow": [],
+            "id": "state.info",
+            "label": "Information",
+            "sources": [
+              "state.info"
+            ],
+            "usedBy": [
+              "state.info"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#e8b923",
+            "follow": [],
+            "id": "state.aside",
+            "label": "Aside",
+            "sources": [
+              "state.aside"
+            ],
+            "usedBy": [
+              "state.aside"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "people",
+        "label": "People",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#3ba55c",
+            "follow": [],
+            "id": "presence.online",
+            "label": "Online",
+            "sources": [
+              "presence.online",
+              "presence.incall"
+            ],
+            "usedBy": [
+              "presence.incall",
+              "presence.online"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#faa81a",
+            "follow": [],
+            "id": "presence.away",
+            "label": "Away",
+            "sources": [
+              "presence.away"
+            ],
+            "usedBy": [
+              "presence.away"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#ed4245",
+            "follow": [],
+            "id": "presence.busy",
+            "label": "Busy",
+            "sources": [
+              "presence.busy"
+            ],
+            "usedBy": [
+              "presence.busy"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#95a5a6",
+            "follow": [],
+            "id": "presence.offline",
+            "label": "Offline",
+            "sources": [
+              "presence.offline"
+            ],
+            "usedBy": [
+              "presence.offline"
+            ]
+          }
+        ]
+      }
+    ],
+    "handSet": [
+      "button.danger.fg",
+      "calendar.day.today.fg",
+      "callbar.bg",
+      "callbar.chevron.bg",
+      "callbar.mobile.bg",
+      "dialog.button.danger.fg",
+      "dm.more.fg",
+      "dock.handle.icon",
+      "icon.scheme.neutral",
+      "reel.checkbox.fg",
+      "slider.handle.border.disabled",
+      "slider.track",
+      "toggle.handle.border.disabled",
+      "toggle.track",
+      "window.titlebar.close.fg.hover"
+    ]
+  },
+  "kind": "palette"
+}

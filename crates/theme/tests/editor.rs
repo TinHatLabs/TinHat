@@ -87,6 +87,57 @@ fn hits_json(v: &[PickHit]) -> Value {
     Value::Array(v.iter().map(PickHit::to_json).collect())
 }
 
+/// compat vectors: every JSON path whose value differs, "/"-joined, sorted; arrays of equal length go by index (the
+/// reference's `changedPaths`, gen-editor-vectors.mjs / editor.test.ts).
+fn changed_paths(a: Option<&Value>, b: Option<&Value>, at: &str, out: &mut Vec<String>) {
+    let join = |k: &str| if at.is_empty() { k.to_string() } else { format!("{at}/{k}") };
+    match (a, b) {
+        (Some(Value::Object(x)), Some(Value::Object(y))) => {
+            let mut keys: Vec<&String> = x.keys().chain(y.keys()).collect();
+            keys.sort();
+            keys.dedup();
+            for k in keys {
+                changed_paths(x.get(k), y.get(k), &join(k), out);
+            }
+        }
+        (Some(Value::Array(x)), Some(Value::Array(y))) if x.len() == y.len() => {
+            for i in 0..x.len() {
+                changed_paths(Some(&x[i]), Some(&y[i]), &join(&i.to_string()), out);
+            }
+        }
+        (Some(x), Some(y)) => {
+            if canon_json(x) != canon_json(y) {
+                out.push(at.to_string());
+            }
+        }
+        (None, None) => {}
+        _ => out.push(at.to_string()),
+    }
+}
+
+fn changed(a: &Value, b: &Value) -> Vec<String> {
+    let mut out = Vec::new();
+    changed_paths(Some(a), Some(b), "", &mut out);
+    out.sort();
+    out
+}
+
+/// The reference's `compatOut`: open the 12.1.5 file (Simple's view, Advanced's counts), one edit, Save (mine).
+fn compat_out(saved: &str, op: &Value, spec: &TokensSpec) -> Value {
+    let doc = parse_json(saved).expect("the 12.1.5 file is JSON");
+    let mut s = open_session(obj(&doc));
+    let open = json!({ "dirty": is_dirty(&s), "exportText": export_text(&s.doc) });
+    let simple = tinhat_theme::palette::palette_view(&s.doc, spec).to_json();
+    let advanced = json!(tinhat_theme::palette::usage_counts(&s.doc, spec));
+    let (result, dirty) = match session_edit(&mut s, op, spec, None) {
+        Ok(r) => (r.as_str().to_string(), is_dirty(&s)),
+        Err(e) => (e, false),
+    };
+    let after = Value::Object(save_doc(&s.doc, SaveTarget::Mine(doc["id"].as_str().expect("id")), |_| true));
+    let edit = json!({ "result": result, "dirty": dirty, "changed": changed(&doc, &after), "exportText": export_text(obj(&after)) });
+    json!({ "open": open, "simple": simple, "advanced": advanced, "edit": edit })
+}
+
 /// The vector with its `expect` recomputed by the port (the reference's `rebuild`, kind for kind).
 fn rebuild(v: &Value, spec: &TokensSpec) -> Value {
     let mut out = v.clone();
@@ -96,6 +147,9 @@ fn rebuild(v: &Value, spec: &TokensSpec) -> Value {
             Err(error) => json!({ "ok": false, "error": error }),
         },
         "opacity" => json!({ "opacity": island_opacity(&v["doc"], spec) }),
+        "palette" => tinhat_theme::palette::palette_view(obj(&v["doc"]), spec).to_json(),
+        "usage" => json!({ "counts": tinhat_theme::palette::usage_counts(obj(&v["doc"]), spec) }),
+        "compat" => compat_out(v["saved"].as_str().expect("saved"), &v["op"], spec),
         "session" => {
             let mut s = open_session(obj(&v["doc"]));
             let mut log: Vec<String> = Vec::new();
@@ -462,6 +516,68 @@ fn a_session_edit_that_is_refused_changes_nothing() {
     assert_eq!(session_redo(&mut s).as_str(), "noop");
     assert_eq!(session_reset(&mut s).as_str(), "noop");
     assert_eq!(s, before);
+}
+
+/// The launch-gate check for 12.1.6: a custom theme saved by 12.1.5 opens unchanged in Simple and in Advanced, and
+/// saving it from Simple after one swatch edit keeps every Advanced-only / hand-set value byte for byte (editor.test.ts,
+/// same name).
+#[test]
+fn compat_a_1215_custom_theme_opens_unchanged_one_simple_swatch_edit_changes_only_that_colours_sources() {
+    let files: Vec<_> = sorted_files(&vec_dir().join("editor"))
+        .into_iter()
+        .filter(|f| f.file_name().unwrap().to_string_lossy().starts_with("compat-"))
+        .collect();
+    assert!(files.len() >= 4, "compat vectors present");
+    let slot = |id: &str| -> String {
+        let ansi = id.strip_prefix('c').and_then(|n| n.parse::<u8>().ok()).filter(|n| *n <= 15 && id.len() <= 3);
+        if let Some(n) = ansi {
+            format!("palette/ansi/{n}")
+        } else if ["bg", "fg", "cursor", "selectionBg", "selectionFg"].contains(&id) {
+            format!("palette/{id}")
+        } else if id == "accent" {
+            "accent".into()
+        } else {
+            format!("roles/{id}")
+        }
+    };
+    let strs = |v: &Value| -> Vec<String> { v.as_array().expect("a list").iter().map(|s| s.as_str().expect("a string").to_string()).collect() };
+    for f in &files {
+        let name = f.file_name().unwrap().to_string_lossy().to_string();
+        let v = read_json(f);
+        let x = &v["expect"];
+        let saved = v["saved"].as_str().expect("saved");
+        assert_eq!(x["open"]["exportText"].as_str(), Some(saved), "{name}: opened = saved");
+        assert_eq!(x["open"]["dirty"], json!(false), "{name}");
+        let sw = x["simple"]["groups"]
+            .as_array()
+            .expect("groups")
+            .iter()
+            .flat_map(|g| g["swatches"].as_array().expect("swatches").iter())
+            .find(|s| s["id"] == v["op"]["id"])
+            .unwrap_or_else(|| panic!("{name}: the edited swatch is shown in Simple"));
+        let mut allowed: Vec<String> = strs(&sw["sources"]).iter().map(|s| slot(s)).collect();
+        allowed.extend(strs(&sw["follow"]).iter().map(|t| format!("tokens/{t}")));
+        assert_eq!(x["edit"]["result"], json!("edited"), "{name}");
+        assert_eq!(x["edit"]["dirty"], json!(true), "{name}");
+        let ch = strs(&x["edit"]["changed"]);
+        assert!(!ch.is_empty(), "{name}");
+        for p in &ch {
+            assert!(allowed.contains(p), "{name}: {p} changed but is not a source/follower of {}", v["op"]["id"]);
+        }
+        for h in strs(&x["simple"]["handSet"]) {
+            assert!(!ch.contains(&format!("tokens/{h}")) && !ch.contains(&format!("roles/{h}")), "{name}: hand-set {h} kept");
+        }
+        let before = parse_json(saved).expect("saved");
+        let after = parse_json(x["edit"]["exportText"].as_str().expect("exportText")).expect("saved result");
+        assert_eq!(after["id"], before["id"], "{name}");
+        assert_eq!(after.get("variant"), before.get("variant"), "{name}: variant kept");
+        assert_eq!(changed(&before, &after), ch, "{name}");
+        for p in &ch {
+            let get = |d: &Value| p.split('/').fold(Some(d.clone()), |o, k| o.and_then(|o| o.get(k).or_else(|| k.parse::<usize>().ok().and_then(|i| o.get(i))).cloned()));
+            let alpha = |c: Option<Value>| c.and_then(|c| c.as_str().and_then(|s| s.find('/').map(|i| s[i..].to_string()))).unwrap_or_default();
+            assert_eq!(alpha(get(&after)), alpha(get(&before)), "{name}: {p} keeps its alpha");
+        }
+    }
 }
 
 #[test]

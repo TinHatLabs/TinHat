@@ -1,6 +1,6 @@
 [package]
 name = "tinhat-app"
-version = "12.1.5"
+version = "12.1.6"
 edition.workspace = true
 license.workspace = true
 description = "Tin Hat native KDE/Kirigami app (Qt6/QML + Rust core via CXX-Qt)"
@@ -93,7 +93,10 @@ libc = "0.2"
 gstreamer = "0.23"
 gstreamer-app = "0.23"
 gstreamer-video = "0.23"
-zip = { version = "2", default-features = false, features = ["deflate"] }
+# 9.0.5 (2026-10-31, Dependabot: zip cloaking / symlink / AES-HMAC advisories in 2.4.2): reading only, deflate through
+# flate2's pure-Rust miniz_oxide backend (the one zip 2's "deflate" used); safe_unzip.rs does the extracting.
+zip = { version = "9.0.5", default-features = false, features = ["deflate-flate2"] }
+flate2 = { version = "1.1", default-features = false, features = ["rust_backend"] }
 # WinRT toast transport for notify.rs (the Windows twin of the zbus/freedesktop
 # path below — PLATFORM_AUDIT.md §6).
 tauri-winrt-notification = "0.7"
@@ -108,6 +111,11 @@ zbus = { version = "5.16", default-features = false, features = ["tokio"] }
 # M10 (storekey.rs, sec-night 2026-10-27): the store passphrase in the Secret Service / the Flatpak secret portal.
 # Same zbus 5 + ashpd 0.13 as above; Rust crypto (no OpenSSL).
 oo7 = { version = "0.6", default-features = false, features = ["tokio", "native_crypto"] }
+
+# safe_unzip.rs's tests run on every platform (the module itself is Windows + tests only); the same zip as above.
+[dev-dependencies]
+zip = { version = "9.0.5", default-features = false, features = ["deflate-flate2"] }
+flate2 = { version = "1.1", default-features = false, features = ["rust_backend"] }
 
 [build-dependencies]
 # link_qt_object_files: required for a *binary* that registers a QML module,

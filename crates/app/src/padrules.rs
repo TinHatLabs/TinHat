@@ -39,6 +39,12 @@ pub const MAX_URL: usize = 2_048;
 pub const MAX_NAME: usize = 64;
 pub const MAX_EMOJI: usize = 16;
 pub const MAX_HINT: usize = 200;
+/// A Media Party title (call.party.title, next[].title).
+pub const MAX_TITLE: usize = 200;
+/// call.party.next
+pub const MAX_NEXT: usize = 5;
+/// A Media Party position / duration in seconds (24 h).
+pub const MAX_POS: i64 = 86_400;
 pub const MAX_BUCKETS: usize = 16;
 /// A bucket idle this long is full again (16 tokens at 8/s, busy allowed): forgetting it changes nothing.
 pub const BUCKET_IDLE_MS: i64 = 2_000;
@@ -55,7 +61,23 @@ pub const PAD_CAP: &str = "pad1";
 pub const PAD_CMD: &str = "dev.tinhat.pad.cmd";
 pub const PAD_STATE: &str = "dev.tinhat.pad.state";
 /// The ops a v1 receiver runs (the state's `ops`; the controller shows only listed controls).
-pub const PAD_OPS: [&str; 8] = ["sound.play", "sound.stop", "mic", "deafen", "brb", "vol", "vol.reset", "leave"];
+pub const PAD_OPS: [&str; 14] = [
+    "sound.play",
+    "sound.stop",
+    "mic",
+    "deafen",
+    "brb",
+    "vol",
+    "vol.reset",
+    "leave",
+    // 2026-10-31 (QOL, additive): a search result played on the receiver, and its Media Party
+    "sound.play.web",
+    "party.join",
+    "party.play",
+    "party.seek",
+    "party.next",
+    "party.add",
+];
 pub const PAD_CATS: [&str; 3] = ["mic", "screenshare", "music"];
 pub const PAD_MIC: [&str; 4] = ["on", "muted", "server", "ptt"];
 
@@ -133,6 +155,45 @@ pub fn valid_why(s: &str) -> bool {
     s.len() <= 32 && s.bytes().all(|b| b.is_ascii_lowercase() || b == b'-')
 }
 /// A user id: "@local:server", printable ASCII, no ":" in the localpart, at most 255 characters.
+/// Printable ASCII only, 0–`max` characters (`call.party.url`, the url of a party op).
+fn printable_ascii(s: &str, max: usize) -> bool {
+    s.len() <= max && s.bytes().all(|b| (0x21..=0x7e).contains(&b))
+}
+
+/// A search result the receiver may play (`sound.play.web`): exactly a myinstants sound file,
+/// `https://[www.]myinstants.com/media/sounds/<file>` with `<file>` = 1–200 of [A-Za-z0-9_.-] ending in .mp3 / .ogg /
+/// .wav / .m4a / .opus, never a `..`; nothing after it (no query, no fragment). That is what both apps' search returns
+/// (`MYINSTANTS_BASE` + `mp3Path`); the receiver still plays it through its own server's clip cache.
+pub fn web_sound_ok(url: &str) -> bool {
+    let file = url
+        .strip_prefix("https://www.myinstants.com/media/sounds/")
+        .or_else(|| url.strip_prefix("https://myinstants.com/media/sounds/"));
+    let Some(file) = file else { return false };
+    let n = file.chars().count();
+    (1..=200).contains(&n)
+        && file.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'.' || b == b'-')
+        && !file.contains("..")
+        && [".mp3", ".ogg", ".wav", ".m4a", ".opus"].iter().any(|e| file.ends_with(e))
+}
+
+const PARTY_HOSTS: [&str; 7] = ["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be", "open.spotify.com", "music.apple.com"];
+/// A link a Pad may add to the receiver's Media Party (`party.add`): `https://` + exactly one of PARTY_HOSTS (ASCII,
+/// case-insensitive), then nothing or a path / query starting with `/` or `?`; no user info, no port, no backslash,
+/// white space or control character; 1–2048 code points. Direct media files and other sites are not accepted from a
+/// Pad (the receiver's player would fetch them); the receiver's own link rules (`parse_media_link`) still decide after.
+pub fn party_link_ok(url: &str) -> bool {
+    if url.is_empty() || !printable_ascii(url, MAX_URL) || url.contains('\\') {
+        return false;
+    }
+    let Some(rest) = url.get(..8).filter(|p| p.eq_ignore_ascii_case("https://")).map(|_| &url[8..]) else { return false };
+    let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    if rest[end..].starts_with('#') {
+        return false;
+    }
+    let host = rest[..end].to_ascii_lowercase();
+    !host.is_empty() && PARTY_HOSTS.contains(&host.as_str())
+}
+
 pub fn valid_user(s: &str) -> bool {
     let b = s.as_bytes();
     if b.len() > 255 || b.first() != Some(&b'@') || !b.iter().all(|c| (0x21..=0x7e).contains(c)) {
@@ -446,6 +507,12 @@ pub enum PadCmd {
     Vol { user: String, cat: &'static str, level: Option<f64>, muted: Option<bool>, live: bool },
     VolReset { user: String },
     Leave,
+    SoundPlayWeb { url: String, name: String, emoji: String },
+    PartyJoin,
+    PartyPlay { url: String, playing: bool },
+    PartySeek { url: String, pos: i64 },
+    PartyNext { url: String },
+    PartyAdd { url: String, now: bool },
 }
 
 impl PadCmd {
@@ -462,6 +529,12 @@ impl PadCmd {
             PadCmd::Vol { .. } => "vol",
             PadCmd::VolReset { .. } => "vol.reset",
             PadCmd::Leave => "leave",
+            PadCmd::SoundPlayWeb { .. } => "sound.play.web",
+            PadCmd::PartyJoin => "party.join",
+            PadCmd::PartyPlay { .. } => "party.play",
+            PadCmd::PartySeek { .. } => "party.seek",
+            PadCmd::PartyNext { .. } => "party.next",
+            PadCmd::PartyAdd { .. } => "party.add",
         }
     }
     /// The parsed command as JSON (`{op, …fields}`, the web's PadCmd object) — what the executor hands to QML.
@@ -498,7 +571,27 @@ impl PadCmd {
             PadCmd::VolReset { user } => {
                 m.insert("user".into(), Value::from(user.as_str()));
             }
-            PadCmd::Close | PadCmd::SoundStop | PadCmd::Leave => {}
+            PadCmd::SoundPlayWeb { url, name, emoji } => {
+                m.insert("url".into(), Value::from(url.as_str()));
+                m.insert("name".into(), Value::from(name.as_str()));
+                m.insert("emoji".into(), Value::from(emoji.as_str()));
+            }
+            PadCmd::PartyPlay { url, playing } => {
+                m.insert("url".into(), Value::from(url.as_str()));
+                m.insert("playing".into(), Value::from(*playing));
+            }
+            PadCmd::PartySeek { url, pos } => {
+                m.insert("url".into(), Value::from(url.as_str()));
+                m.insert("pos".into(), Value::from(*pos));
+            }
+            PadCmd::PartyNext { url } => {
+                m.insert("url".into(), Value::from(url.as_str()));
+            }
+            PadCmd::PartyAdd { url, now } => {
+                m.insert("url".into(), Value::from(url.as_str()));
+                m.insert("now".into(), Value::from(*now));
+            }
+            PadCmd::Close | PadCmd::SoundStop | PadCmd::Leave | PadCmd::PartyJoin => {}
         }
         Value::Object(m)
     }
@@ -574,8 +667,41 @@ fn parse_cmd(c: &Map<String, Value>) -> Option<PadCmd> {
             let user = c.get("user")?.as_str()?;
             valid_user(user).then(|| PadCmd::VolReset { user: user.to_string() })
         }
+        "sound.play.web" => {
+            let url = c.get("url")?.as_str()?;
+            let name = match c.get("name") {
+                None => "",
+                Some(v) => v.as_str()?,
+            };
+            let emoji = match c.get("emoji") {
+                None => "",
+                Some(v) => v.as_str()?,
+            };
+            (web_sound_ok(url) && cp_len(name) <= MAX_NAME && cp_len(emoji) <= MAX_EMOJI)
+                .then(|| PadCmd::SoundPlayWeb { url: url.to_string(), name: name.to_string(), emoji: emoji.to_string() })
+        }
+        "party.join" => Some(PadCmd::PartyJoin),
+        "party.play" => Some(PadCmd::PartyPlay { url: party_url_of(c)?, playing: boolean("playing")? }),
+        "party.seek" => {
+            let url = party_url_of(c)?;
+            let pos = uint(c.get("pos")).filter(|p| *p <= MAX_POS)?;
+            Some(PadCmd::PartySeek { url, pos })
+        }
+        "party.next" => Some(PadCmd::PartyNext { url: party_url_of(c)? }),
+        "party.add" => {
+            let url = c.get("url")?.as_str()?;
+            party_link_ok(url).then_some(())?;
+            Some(PadCmd::PartyAdd { url: url.to_string(), now: boolean("now")? })
+        }
         _ => None,
     }
+}
+
+/// `url` of a party op: the playing url the controller saw ("" = nothing playing): 0–2048 printable ASCII
+/// characters, the same shape as `call.party.url`.
+fn party_url_of(c: &Map<String, Value>) -> Option<String> {
+    let u = c.get("url")?.as_str()?;
+    printable_ascii(u, MAX_URL).then(|| u.to_string())
 }
 
 /// The receiver's own state the gates read (the same flags its own buttons see).
@@ -608,11 +734,26 @@ pub struct PadSounds {
     /// this device's Recent list
     pub recent: Vec<String>,
 }
+/// The receiver's Media Party in its CALL room (its own engine's flags; None = no party in that room).
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(default)]
+pub struct PadParty {
+    /// this device joined the party
+    #[serde(rename = "in")]
+    pub in_party: bool,
+    /// its own `canControl` (in the party and no host, or the host is me)
+    pub host: bool,
+    /// the playing url ("" = nothing playing)
+    pub url: String,
+    pub playing: bool,
+}
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct PadCtx {
     /// Settings → Calls → Pad on this receiver
     pub pad_on: bool,
+    /// the call room's Media Party (None = none; 12.1.x glue never sets it)
+    pub party: Option<PadParty>,
     /// the call this device is in, None = not in a call
     pub call: Option<PadCall>,
     /// bare user ids of the people in the call with me (not me)
@@ -801,6 +942,47 @@ pub fn check_pad_message(t: &mut PadSessions, typ: &str, content: &Value, f: &Pa
             ok(true, cmd, Vec::new())
         }
         PadCmd::SoundStop | PadCmd::Leave => ok(true, cmd, Vec::new()),
+        PadCmd::SoundPlayWeb { .. } => {
+            if !me.sound_role {
+                return refuse("off-role");
+            }
+            if me.server_muted {
+                return refuse("server-muted");
+            }
+            ok(true, cmd, Vec::new())
+        }
+        PadCmd::PartyJoin => match &ctx.party {
+            None => refuse("no-party"),
+            Some(pt) => {
+                let run = !pt.in_party;
+                ok(run, cmd, Vec::new())
+            }
+        },
+        PadCmd::PartyAdd { now, .. } => match &ctx.party {
+            Some(pt) if pt.in_party => {
+                if *now && !pt.host {
+                    return refuse("not-host");
+                }
+                ok(true, cmd, Vec::new())
+            }
+            _ => refuse("no-party"),
+        },
+        PadCmd::PartyPlay { url, .. } | PadCmd::PartySeek { url, .. } | PadCmd::PartyNext { url } => match &ctx.party {
+            Some(pt) if pt.in_party => {
+                if !pt.host {
+                    return refuse("not-host");
+                }
+                if *url != pt.url {
+                    return refuse("party-changed");
+                }
+                let run = match &cmd {
+                    PadCmd::PartyPlay { playing, .. } => *playing != pt.playing,
+                    _ => true,
+                };
+                ok(run, cmd, Vec::new())
+            }
+            _ => refuse("no-party"),
+        },
         PadCmd::Open { .. } | PadCmd::Ping { .. } | PadCmd::Close => unreachable!("handled above"),
     }
 }
@@ -864,6 +1046,9 @@ pub fn build_state(input: &Value) -> (Value, usize) {
         e.insert("talk".into(), Value::from(is_true(p.get("talk"))));
         e.insert("micOff".into(), Value::from(is_true(p.get("micOff"))));
         e.insert("away".into(), Value::from(is_true(p.get("away"))));
+        if is_true(p.get("share")) {
+            e.insert("share".into(), Value::from(true)); // additive (2026-10-31): only when sharing
+        }
         let vi = obj(p.get("vol")).unwrap_or(&empty);
         let mu = obj(p.get("muted")).unwrap_or(&empty);
         let mut vol = Map::new();
@@ -923,32 +1108,102 @@ pub fn build_state(input: &Value) -> (Value, usize) {
     gate.insert("hint".into(), Value::from(cp_trunc(str_of(gi.get("hint")), MAX_HINT)));
     me.insert("gate".into(), Value::Object(gate));
     let mut more = valid - people.len();
+    let party_in = obj(ci.get("party"));
+    let mut next: Vec<Value> = Vec::new();
+    for n in party_in.and_then(|p| p.get("next")).and_then(|x| x.as_array()).map(|a| a.as_slice()).unwrap_or(&[]) {
+        if next.len() >= MAX_NEXT {
+            break;
+        }
+        let Some(n) = n.as_object() else { continue };
+        let mut e = Map::new();
+        e.insert("title".into(), Value::from(cp_trunc(str_of(n.get("title")), MAX_TITLE)));
+        next.push(Value::Object(e));
+    }
+    let with_party = party_in.is_some();
+    let party_of = |next: &[Value]| -> Value {
+        let pi = party_in.unwrap_or(&empty);
+        let mut m = Map::new();
+        m.insert("in".into(), Value::from(is_true(pi.get("in"))));
+        m.insert("host".into(), Value::from(is_true(pi.get("host"))));
+        let url = str_of(pi.get("url"));
+        m.insert("url".into(), Value::from(if printable_ascii(url, MAX_URL) { url } else { "" }));
+        m.insert("title".into(), Value::from(cp_trunc(str_of(pi.get("title")), MAX_TITLE)));
+        m.insert("playing".into(), Value::from(is_true(pi.get("playing"))));
+        m.insert("pos".into(), Value::from(uint(pi.get("pos")).map(|x| x.min(MAX_POS)).unwrap_or(0)));
+        m.insert("at".into(), Value::from(uint(pi.get("at")).unwrap_or(0)));
+        m.insert("dur".into(), Value::from(uint(pi.get("dur")).map(|x| x.min(MAX_POS)).unwrap_or(0)));
+        m.insert("next".into(), Value::Array(next.to_vec()));
+        // call.party.add: the outcome of one session's latest party.add (left out unless well-formed)
+        if let Some(a) = obj(pi.get("add")) {
+            let sid = str_of(a.get("sid"));
+            if let (true, Some(re), Some(ok)) = (valid_sid(sid), uint(a.get("re")), a.get("ok").and_then(|x| x.as_bool())) {
+                let mut am = Map::new();
+                am.insert("sid".into(), Value::from(sid));
+                am.insert("re".into(), Value::from(re));
+                am.insert("ok".into(), Value::from(ok));
+                m.insert("add".into(), Value::Object(am));
+            }
+        }
+        Value::Object(m)
+    };
 
-    let assemble = |people: &[Value], recent: &[Value], more: usize| -> Value {
+    // the last two cuts (a pathological sound url / hint): the party block always stays
+    let mut keep_sound = true;
+    let mut keep_hint = true;
+    let assemble = |people: &[Value], recent: &[Value], more: usize, next: &[Value], with_party: bool, keep_sound: bool, keep_hint: bool| -> Value {
         let mut call = Map::new();
         let (room, gen) = (str_of(ci.get("room")), str_of(ci.get("gen")));
         call.insert("room".into(), Value::from(if valid_room(room) { room } else { "" }));
         call.insert("gen".into(), Value::from(if valid_id(gen) { gen } else { "" }));
         call.insert("since".into(), Value::from(uint(ci.get("since")).unwrap_or(0)));
-        call.insert("me".into(), Value::Object(me.clone()));
+        let mut me2 = me.clone();
+        if !keep_sound {
+            me2.insert("sound".into(), Value::Null);
+        }
+        if !keep_hint {
+            if let Some(g) = me2.get_mut("gate").and_then(|g| g.as_object_mut()) {
+                g.insert("hint".into(), Value::from(""));
+            }
+        }
+        call.insert("me".into(), Value::Object(me2));
         call.insert("people".into(), Value::Array(people.to_vec()));
         call.insert("more".into(), Value::from(more));
         call.insert("recent".into(), Value::Array(recent.to_vec()));
+        if with_party {
+            call.insert("party".into(), party_of(next));
+        }
         let mut o = out.clone();
         o.insert("call".into(), Value::Object(call));
         Value::Object(o)
     };
-    let mut v = assemble(&people, &recent, more);
+    let mut v = assemble(&people, &recent, more, &next, with_party, keep_sound, keep_hint);
     let mut bytes = json_len(&v);
     while bytes > MAX_STATE_BYTES && !recent.is_empty() {
         recent.pop();
-        v = assemble(&people, &recent, more);
+        v = assemble(&people, &recent, more, &next, with_party, keep_sound, keep_hint);
+        bytes = json_len(&v);
+    }
+    while bytes > MAX_STATE_BYTES && with_party && !next.is_empty() {
+        next.pop();
+        v = assemble(&people, &recent, more, &next, with_party, keep_sound, keep_hint);
         bytes = json_len(&v);
     }
     while bytes > MAX_STATE_BYTES && !people.is_empty() {
         people.pop();
         more += 1;
-        v = assemble(&people, &recent, more);
+        v = assemble(&people, &recent, more, &next, with_party, keep_sound, keep_hint);
+        bytes = json_len(&v);
+    }
+    // still over (only a pathological sound url / hint can get here): the party block always stays — the playing
+    // sound's url goes first, then the hint (with both gone the rest is bounded well under 16 KiB)
+    if bytes > MAX_STATE_BYTES && me.get("sound").map(|x| !x.is_null()).unwrap_or(false) {
+        keep_sound = false;
+        v = assemble(&people, &recent, more, &next, with_party, keep_sound, keep_hint);
+        bytes = json_len(&v);
+    }
+    if bytes > MAX_STATE_BYTES {
+        keep_hint = false;
+        v = assemble(&people, &recent, more, &next, with_party, keep_sound, keep_hint);
         bytes = json_len(&v);
     }
     (v, bytes)
@@ -1008,6 +1263,9 @@ fn valid_state_body(c: &Map<String, Value>) -> bool {
         if !p.get("u").and_then(|x| x.as_str()).map(valid_user).unwrap_or(false) || !["talk", "micOff", "away"].iter().all(|k| is_bool(p, k)) {
             return false;
         }
+        if p.get("share").map(|v| !v.is_boolean()).unwrap_or(false) {
+            return false;
+        }
         if let Some(vol) = p.get("vol") {
             let Some(vol) = vol.as_object() else { return false };
             if !vol.iter().all(|(k, v)| PAD_CATS.contains(&k.as_str()) && level(Some(v)).is_some()) {
@@ -1025,11 +1283,45 @@ fn valid_state_body(c: &Map<String, Value>) -> bool {
     if recent.len() > MAX_RECENT {
         return false;
     }
-    recent.iter().all(|r| {
+    let recent_ok = recent.iter().all(|r| {
         r.as_object()
             .map(|r| str_max(r.get("name"), MAX_NAME, false) && str_max(r.get("url"), MAX_URL, true) && str_max(r.get("emoji"), MAX_EMOJI, false))
             .unwrap_or(false)
-    })
+    });
+    recent_ok && call.get("party").map(valid_party).unwrap_or(true)
+}
+
+fn valid_party(pt: &Value) -> bool {
+    let pt = match pt {
+        Value::Null => return true,
+        Value::Object(m) => m,
+        _ => return false,
+    };
+    let is_bool = |k: &str| pt.get(k).map(|v| v.is_boolean()).unwrap_or(false);
+    let bounded = |k: &str| uint(pt.get(k)).map(|x| x <= MAX_POS).unwrap_or(false);
+    ["in", "host", "playing"].iter().all(|k| is_bool(k))
+        && pt.get("url").and_then(|u| u.as_str()).map(|u| printable_ascii(u, MAX_URL)).unwrap_or(false)
+        && pt.get("title").and_then(|t| t.as_str()).map(|t| cp_len(t) <= MAX_TITLE).unwrap_or(false)
+        && bounded("pos")
+        && bounded("dur")
+        && uint(pt.get("at")).is_some()
+        && pt
+            .get("next")
+            .and_then(|n| n.as_array())
+            .map(|n| {
+                n.len() <= MAX_NEXT
+                    && n.iter().all(|e| e.as_object().and_then(|e| e.get("title")).and_then(|t| t.as_str()).map(|t| cp_len(t) <= MAX_TITLE).unwrap_or(false))
+            })
+            .unwrap_or(false)
+        && match pt.get("add") {
+            None | Some(Value::Null) => true,
+            Some(Value::Object(a)) => {
+                a.get("sid").and_then(|x| x.as_str()).map(valid_sid).unwrap_or(false)
+                    && uint(a.get("re")).is_some()
+                    && a.get("ok").map(|x| x.is_boolean()).unwrap_or(false)
+            }
+            Some(_) => false,
+        }
 }
 
 /// The controller's decision about one `dev.tinhat.pad.state`: trust rules 1–4, from the device this session was
@@ -1153,7 +1445,7 @@ pub fn pad_targets(me: &str, my_device: &str, now: i64, self_verified: bool, tru
 
 // ---- the words ---------------------------------------------------------------------------------------------
 
-const WHY_TEXT: [(&str, &str); 16] = [
+const WHY_TEXT: [(&str, &str); 21] = [
     ("off", "Pad is turned off on {device} (Settings → Calls)."),
     ("not-in-call", "{device} isn't in a call any more."),
     ("other-call", "{device} switched calls."),
@@ -1170,6 +1462,11 @@ const WHY_TEXT: [(&str, &str); 16] = [
     ("unverified", "Verify this device to use Pad."),
     ("untrusted", "Verify {device} to use Pad."),
     ("unreachable", "Not reaching {device}"),
+    ("no-party", "There's no Media Party in this call's room on {device}."),
+    ("not-host", "Only the Media Party host can do that."),
+    ("party-changed", "What's playing on {device} changed — try again."),
+    ("bad-link", "{device} couldn't add that link."),
+    ("old-op", "Update Tin Hat on {device} to use that."),
 ];
 /// For `mic`, `server-muted` is the call's existing lock notice.
 const MIC_SERVER_MUTED: &str = "A moderator muted your mic for everyone — ask them to unmute you";
@@ -1270,7 +1567,7 @@ mod tests {
     fn padrules_constants() {
         let v = vectors();
         let c = &v["const"];
-        let ints: [(&str, i64); 19] = [
+        let ints: [(&str, i64); 22] = [
             ("v", PAD_V),
             ("leaseMs", LEASE_MS),
             ("maxSessions", MAX_SESSIONS as i64),
@@ -1286,6 +1583,9 @@ mod tests {
             ("maxName", MAX_NAME as i64),
             ("maxEmoji", MAX_EMOJI as i64),
             ("maxHint", MAX_HINT as i64),
+            ("maxTitle", MAX_TITLE as i64),
+            ("maxNext", MAX_NEXT as i64),
+            ("maxPos", MAX_POS),
             ("bucketIdleMs", BUCKET_IDLE_MS),
             ("spentMs", SPENT_MS),
             ("maxSpent", MAX_SPENT as i64),
@@ -1299,7 +1599,7 @@ mod tests {
         assert_eq!(c["maxBuckets"].as_i64(), Some(MAX_BUCKETS as i64));
         assert_eq!(c["membershipExpiresMs"].as_i64(), Some(MEMBERSHIP_EXPIRES_MS));
         assert_eq!(MEMBERSHIP_EXPIRES_MS as u64, crate::keyrules::MEMBERSHIP_EXPIRES_MS);
-        assert_eq!(c.as_object().unwrap().len(), 23, "every constant is checked");
+        assert_eq!(c.as_object().unwrap().len(), 26, "every constant is checked");
         assert_eq!(v["names"], json!({"cap": PAD_CAP, "cmd": PAD_CMD, "state": PAD_STATE}));
         assert_eq!(v["ops"], json!(PAD_OPS));
         assert_eq!(v["cats"], json!(PAD_CATS));
@@ -1429,6 +1729,38 @@ mod tests {
         for c in v["sounds"].as_array().unwrap() {
             let s: PadSounds = serde_json::from_value(merge(&v["defaults"]["ctx"]["sounds"], c.get("sounds"))).unwrap();
             assert_eq!(sound_allowed(c["url"].as_str().unwrap(), c["room"].as_str().unwrap(), &s), c["expect"].as_bool().unwrap(), "sound: {}", c["name"]);
+        }
+    }
+
+    #[test]
+    fn padrules_qol_party_survives_the_budget() {
+        // the web's rules.test.ts hand case: a pathological sound url + hint + a party of quotes / control characters
+        let v = vectors();
+        let mut inp = v["state"][1]["input"].clone();
+        inp["call"]["me"]["sound"] = json!("\u{1}".repeat(2048));
+        inp["call"]["me"]["gate"]["hint"] = json!("\u{1}".repeat(200));
+        inp["call"]["party"] = json!({"in": true, "host": true, "url": "\"".repeat(2048), "title": "\u{1}".repeat(200), "playing": true,
+                                      "pos": 1, "at": 1, "dur": 2, "next": [{"title": "\u{1}".repeat(200)}]});
+        let (st, bytes) = build_state(&inp);
+        assert!(bytes <= MAX_STATE_BYTES, "{bytes}");
+        assert_eq!(st["call"]["party"]["url"].as_str().map(|u| u.len()), Some(2048), "the party block stays, its url whole");
+        assert!(st["call"]["me"]["sound"].is_null(), "the playing sound's url goes first");
+    }
+
+    #[test]
+    fn padrules_links() {
+        let v = vectors();
+        let cases = v["links"].as_array().unwrap();
+        assert!(cases.len() >= 40);
+        for c in cases {
+            // a non-string url is never ok (the web's typeof check); Rust's fns take &str
+            let got = match (c["fn"].as_str().unwrap(), c["url"].as_str()) {
+                (_, None) => false,
+                ("webSoundOk", Some(u)) => web_sound_ok(u),
+                ("partyLinkOk", Some(u)) => party_link_ok(u),
+                (other, _) => panic!("unknown fn {other}"),
+            };
+            assert_eq!(got, c["expect"].as_bool().unwrap(), "link: {}: {}", c["fn"], c["name"]);
         }
     }
 

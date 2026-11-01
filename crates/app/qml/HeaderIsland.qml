@@ -89,7 +89,7 @@ ColumnLayout {
         // camera / share / hang-up live on the in-call control bar, and verify /
         // refresh / devices live in the Settings ▾ menu — so those signal handlers
         // were removed as dead code (RoomHeaderBar no longer has those buttons).
-        onCallToggled: app.callctl.joinCall(app.room.roomId)
+        onCallToggled: app.callctl.joinCallPressed(app.room.roomId)
         infoOpen: island.rightPanelRef.opened
         onInfoRequested: island.rightPanelRef.opened ? island.rightPanelRef.close() : island.rightPanelRef.open()
         // Settings ▾ — refresh the device lists, then open the consolidated menu.
@@ -253,7 +253,7 @@ ColumnLayout {
                 text: app.mConnecting ? "Joining…" : "Join"
                 busy: app.mConnecting   // 10.1 (TH-MOTION-05): the header's call button already did this
                 enabled: !app.mConnecting
-                onClicked: app.callctl.joinCall(app.room.roomId)
+                onClicked: app.callctl.joinCallPressed(app.room.roomId)
             }
         }
     }

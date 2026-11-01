@@ -473,6 +473,51 @@ Kirigami.ApplicationWindow {
     function setCallBarPinned(on) { core.setCallBarPinned(on) }
     property alias callLayout: core.callLayout
     property alias pinnedTile: core.pinnedTile
+    // Pad QOL (2026-10-31): a share full screen (CallIsland's ⛶): the call stage pinned to it, filling an OS
+    // full-screen window; Esc, the button, the share ending or the call ending put the window back as it was
+    property alias shareFullscreen: core.shareFullscreen
+    function enterShareFullscreen(tileId) {
+        if (core.shareFullscreen.length === 0) {
+            core._fsPrevVisibility = root.visibility
+            core._fsPrevMaximized = root.callMaximized
+            core._fsPrevPinned = root.pinnedTile
+        }
+        core.shareFullscreen = String(tileId)
+        root.pinnedTile = String(tileId)
+        root.callMaximized = true
+        root.showFullScreen()
+    }
+    // keepWindow: the OS changed the window itself (minimised, hidden, its own full-screen exit) — put the call layout
+    // back but leave the window as the OS put it (review pass 2)
+    function leaveShareFullscreen(keepWindow) {
+        if (core.shareFullscreen.length === 0) return
+        core.shareFullscreen = ""
+        root.pinnedTile = core._fsPrevPinned
+        root.callMaximized = core._fsPrevMaximized
+        if (keepWindow === true) return
+        // put the window back exactly as it was (review #13: one already full screen stays full screen)
+        if (core._fsPrevVisibility === Window.FullScreen) root.showFullScreen()
+        else if (core._fsPrevVisibility === Window.Maximized) root.showMaximized()
+        else root.showNormal()
+    }
+    Shortcut { sequence: "Esc"; enabled: core.shareFullscreen.length > 0; onActivated: root.leaveShareFullscreen() }
+    // Pad QOL: this computer's Media Party window on `room`'s party (the call bar's Join + open; another room's party:
+    // switch) — the Pad window's "Watch on this computer"
+    function openWatchPartyFor(partyRoom) {
+        var pr = String(partyRoom || "")
+        if (pr.length === 0) return
+        if (watchCtl.inParty && String(watchCtl.roomId) !== pr) watchCtl.leaveParty()
+        if (!watchCtl.inParty || String(watchCtl.roomId) !== pr) watchCtl.joinParty(pr)
+        if (watchPartyWindow.openOrRaise) watchPartyWindow.openOrRaise(); else watchPartyWindow.show()
+    }
+    Connections {
+        target: callctl
+        function onInCallChanged() { if (!callctl.inCall) root.leaveShareFullscreen() }
+        function onVideoTilesChanged() {
+            if (core.shareFullscreen.length === 0) return
+            if (String(callctl.videoTiles).indexOf("\"" + core.shareFullscreen + "\"") === -1) root.leaveShareFullscreen()
+        }
+    }
     property alias callSideFrac: core.callSideFrac
     property alias callAnimate: core.callAnimate
     property alias mMembers: core.mMembers
@@ -650,6 +695,29 @@ Kirigami.ApplicationWindow {
     property alias _calAutoOpened: core._calAutoOpened
     property alias mIconPack: core.mIconPack
     property alias mReducedMotion: core.mReducedMotion
+    // 2026-10-31 App size (docs/UI-ZOOM.md; ui_scale.rs): this device's size in percent, 70–200 in steps of 10, on top
+    // of the OS scaling. settings.applyUiScale stores it and changes Qt's scale factor for every window at once (crisp:
+    // everything is drawn again at the new resolution). Ctrl+= / Ctrl++ / Ctrl+- / Ctrl+0 (the Shortcuts below, the
+    // actions app.zoom.*) and Settings → Appearance → Size (the slider) both go through setUiScale.
+    property int uiScale: settings.uiScalePercent()
+    readonly property bool uiScaleLiveCapable: settings.uiScaleLiveCapable()   // false: a restart-only build (Settings says so)
+    property bool uiScalePending: settings.uiScalePending(uiScale)   // true: this Qt can't change it live, it applies at the next start
+    function setUiScale(p) {
+        var n = settings.uiScaleNormalize(p)
+        if (n === root.uiScale) return
+        root.uiScale = n            // first, so a nested request (a handler during the change) compares with the new size
+        settings.applyUiScale(n)
+        root.uiScalePending = settings.uiScalePending(n)
+    }
+    /** A key press (or the palette): dir > 0 bigger, < 0 smaller, 0 = 100 %; the toast says the size. */
+    function zoomStep(dir) {
+        var prev = root.uiScale
+        root.setUiScale(settings.uiScaleStep(prev, dir))
+        var t = settings.uiScaleToast(root.uiScale, prev, dir)
+        // in the Settings window its own toast strip (the main window may be behind it); else the main window's
+        if (settingsWindow.visible && settingsWindow.active) settingsWindow.toast(t, 1800)
+        else zoomToast.show(t)
+    }
     property alias _iconPackRaw: core._iconPackRaw
     property alias _galleryOpened: core._galleryOpened
     property alias appIconUrl: core.appIconUrl
@@ -883,7 +951,11 @@ Kirigami.ApplicationWindow {
     function senderColor(mxid) { return core.senderColor(mxid) }
     function dayLabel(ms) { return core.dayLabel(ms) }
     function sameDay(a, b) { return core.sameDay(a, b) }
-    onVisibilityChanged: root._applyVisibilityPause()   // Window signal; the work lives in the core
+    onVisibilityChanged: {
+        root._applyVisibilityPause()   // Window signal; the work lives in the core
+        // Pad QOL: the OS took the window out of full screen (its own key / gesture): a share's full screen is over too
+        if (core.shareFullscreen.length > 0 && root.visibility !== Window.FullScreen) root.leaveShareFullscreen(true)
+    }
     title: "Tin Hat"
     // 0.8.24: hidden until the session is restored and the rooms are in (or there is no
     // session) — the StartupWindow narrates the wait; _bootReveal() shows us + closes it.
@@ -2247,6 +2319,11 @@ Kirigami.ApplicationWindow {
     // 11.0 (ACTIONS.md §8): every default key below is `actionsHost.keysFor(<its action>)` — Ctrl+, … while this device
     // keeps it for that action (Settings → Shortcuts may move it or give it to another action)
     Shortcut { sequences: actionsHost.keysFor("app.settings.open"); context: Qt.ApplicationShortcut; enabled: root.mLoggedIn; onActivated: settingsWindow.open() }
+    // 2026-10-31 App size (ACTIONS.md example 15, docs/UI-ZOOM.md): from every Tin Hat window, signed in or not, also
+    // while typing (none of these keys types); a held key repeats
+    Shortcut { sequences: actionsHost.keysFor("app.zoom.in"); context: Qt.ApplicationShortcut; onActivated: root.zoomStep(1) }
+    Shortcut { sequences: actionsHost.keysFor("app.zoom.out"); context: Qt.ApplicationShortcut; onActivated: root.zoomStep(-1) }
+    Shortcut { sequences: actionsHost.keysFor("app.zoom.reset"); context: Qt.ApplicationShortcut; onActivated: root.zoomStep(0) }
     // 10.1 (TH-CALL-16): Escape leaves "fill the app"; F11 toggles it.
     Shortcut {
         sequence: "Escape"
@@ -2297,6 +2374,7 @@ Kirigami.ApplicationWindow {
             function realColours() { return core._thColours }
         }
     }
+    ZoomToast { id: zoomToast; parent: Controls.Overlay.overlay; z: 902 }   // window-wide, above popups too
     ThemeTryBar {
         z: 901
         app: root
@@ -2356,7 +2434,7 @@ Kirigami.ApplicationWindow {
         settings.applyPref("soundboard-recent", JSON.stringify(next))
     }
     // Pad (docs/PAD.md): the receiver's executor + snapshot, and the Pad window (this device driving another of mine).
-    PadHost { id: padHost; app: root }
+    PadHost { id: padHost; app: root; watchPartyWindowRef: watchPartyWindow }
     PadWindow { id: padWindow; app: root }
     SoundboardPopover {
         id: soundboardPanel
@@ -2893,7 +2971,7 @@ Kirigami.ApplicationWindow {
             if (login.loggedIn && login.autoJoinRoom.length > 0) {
                 done = true
                 root.openRoomId(login.autoJoinRoom)
-                callctl.joinCall(login.autoJoinRoom)
+                callctl.joinCallPressed(login.autoJoinRoom)
                 // Test hook: also publish the camera a moment after the call connects.
                 if (login.autoCam) autoCamTimer.start()
                 if (login.autoMute) autoMuteTimer.start()
@@ -3681,8 +3759,32 @@ Kirigami.ApplicationWindow {
                 v[cs[k]] = { level: parseFloat(audioPrefsCtl.volumeFor(String(s.user), cs[k])), muted: audioPrefsCtl.mutedFor(String(s.user), cs[k]) }
             r = { verified: login.verified, inCall: root.mInCall, room: root.mCallRoomId, micMuted: callctl.micMuted, ptt: callctl.pushToTalk,
                   serverMuted: callctl.serverMuted, deaf: callctl.deafened, brb: !!afkCtl && afkCtl.localAfk === true,
-                  playing: soundboardPanel ? String(soundboardPanel.playingUrl || "") : "", chips: root.mPadChips, padOn: padCtl.padOn, vol: v }
+                  playing: soundboardPanel ? String(soundboardPanel.playingUrl || "") : "", chips: root.mPadChips, padOn: padCtl.padOn, vol: v,
+                  watching: callctl.watching === true, noCapture: callctl.noCapture === true, recent: (root.mSbRecent || []).map(function (x) { return String(x.url || "") }) }
         }
+        // Pad QOL (2026-10-31): the Media Party and Watch by the same calls as their buttons (lab gates only)
+        else if (s.do === "party-join") { watchCtl.joinParty(String(s.room || root.mCallRoomId)); r = "joined" }
+        else if (s.do === "party-enqueue") { watchCtl.enqueue(String(s.url), String(s.title || "")); r = "queued" }
+        else if (s.do === "party-play-url") { watchCtl.playUrl(String(s.url)); r = "playing" }
+        else if (s.do === "party-leave") { watchCtl.leaveParty(); r = "left" }
+        else if (s.do === "party") {
+            var pq = {}, pp = {}
+            try { pq = JSON.parse(String(watchCtl.partyJson || "{}")) } catch (e1) {}
+            try { pp = JSON.parse(String(watchCtl.playbackJson || "{}")) } catch (e2) {}
+            r = { inParty: watchCtl.inParty === true, room: String(watchCtl.roomId), queue: (pq.queue || []).length, url: String(pp.url || ""), playing: pp.playing === true || pp.playing === "true", pos: Number(pp.positionSecs || 0) }
+        }
+        else if (s.do === "watch") { callctl.watchCall(String(s.room || "")); r = "watching " + String(s.room || "") }
+        else if (s.do === "watch-talk") { callctl.watchTalk(s.on === true); r = "talk " + (s.on === true) }
+        else if (s.do === "watch-hear") { callctl.watchHear(s.on === true); r = "hear " + (s.on === true) }
+        else if (s.do === "leave-call") { callctl.leaveCall(); r = "left" }
+        // assembly-042 (the watch bar resets on every way out; lab gates only): the presses a normal call makes
+        else if (s.do === "join-pressed") { callctl.joinCallPressed(String(s.room || "")); r = "join " + String(s.room || "") }
+        else if (s.do === "switch") { callctl.switchCall(String(s.room || "")); r = "switch " + String(s.room || "") }
+        else if (s.do === "share") { callctl.shareScreen(); r = "share" }
+        else if (s.do === "share-stop") { callctl.stopScreen(); r = "share-stop" }
+        else if (s.do === "camera") { callctl.toggleCamera(); r = "camera" }
+        else if (s.do === "sound") { soundboardCtl.playSound(String(s.room || root.mCallRoomId), String(s.url || "")); r = "sound" }
+        else if (s.do === "status") { r = { status: String(callctl.status), error: String(callctl.lastError || ""), sharing: callctl.sharing === true, camera: callctl.cameraOn === true, watching: callctl.watching === true, noCapture: callctl.noCapture === true, inCall: root.mInCall, room: root.mCallRoomId } }
         else r = padWindow.drive(s)
         console.log("[paddrive] #" + n + " " + s.do + " -> " + (typeof r === "object" ? JSON.stringify(r) : String(r)) + " t=" + Date.now())
     }
@@ -3951,7 +4053,12 @@ Kirigami.ApplicationWindow {
                 anchors.fill: parent
                 anchors.topMargin: editModeObj.open ? 52 : 0
                 layoutCtl: layoutCtl
-                formJson: layoutStoreObj.formJson   // 11.0: what this device renders (LayoutStore: the synced layout, the reset override, the pref form, Classic) — edit mode's working copy while editing
+                // 11.0: what this device renders (LayoutStore: the synced layout, the reset override, the pref form, Classic) — edit
+                // mode's working copy while editing; an open drawer's float over it (feat/editmode-buttons-drawers)
+                formJson: root.dockFormJson
+                catchOutside: root.drawerRef.length > 0 && !editModeObj.open
+                catchZ: 9.5 + root.drawerFloatIndex   // above every other float, under the drawer's (z 10 + its index)
+                onOutsidePressed: root.closeDrawer()
                 view: root.dockView
                 shape: root.dockShape
                 unitPm: Math.round(Kirigami.Units.gridUnit * 1000 / 18)   // layout lengths scale with gridUnit (18 = 1000)
@@ -4193,7 +4300,19 @@ Kirigami.ApplicationWindow {
                 // a floating island is as wide as they are) through `extra.w`, the height through the content.
                 Repeater {
                     model: layoutStoreObj.buttonIslands
-                    delegate: Island {
+                    delegate: buttonIslandDelegate
+                }
+                // assembly-042: a button island tucked into a drawer is hidden, so it isn't in buttonIslands (placed
+                // islands only); while its drawer is open it gets its own delegate here (the web's Shell renders the drawer
+                // form's islands alike). A separate Repeater: opening a drawer never rebuilds the placed button islands.
+                Repeater {
+                    model: (root.drawerRef.indexOf("buttons:") === 0 && layoutStoreObj.buttonIslands.indexOf(root.drawerRef) < 0)
+                        ? [root.drawerRef] : []
+                    delegate: buttonIslandDelegate
+                }
+                Component {
+                    id: buttonIslandDelegate
+                    Island {
                         id: bIsland
                         required property string modelData
                         ref: modelData
@@ -4346,6 +4465,48 @@ Kirigami.ApplicationWindow {
     }
     readonly property alias editMode: editModeObj
     /** Edit layout (Ctrl+E, the ☰ menu, a gap's menu, Settings → Appearance → Layout): open — or, open, Done. */
+    // feat/editmode-buttons-drawers (EDITMODE-UI §7.3): an open drawer = layout.drawer.toggle's island rendered in a float
+    // beside its button: the dock host draws drawerForm(the store's form) — the layout session's rule, the web's too —
+    // never saved. Edit mode, Escape, a press outside it and its button again close it.
+    property string drawerRef: ""
+    property var drawerBtn: null          // the button's rect in layout units, dock-host coordinates
+    readonly property string dockFormJson: {
+        var f = layoutStoreObj.formJson
+        if (root.drawerRef.length === 0 || editModeObj.open || !root.drawerBtn) return f
+        var k = 1000 / Math.max(1, dockHost.unitPm)
+        try {
+            var r = JSON.parse(String(layoutCtl.drawerForm(f, root.drawerRef, JSON.stringify(root.drawerBtn),
+                                                           Math.round(dockHost.width * k), Math.round(dockHost.height * k))))
+            if (r.ok) return JSON.stringify(r.form)
+            console.log("[drawer] " + root.drawerRef + " can't open: " + r.error)
+        } catch (e) {}
+        Qt.callLater(root.closeDrawer)
+        return f
+    }
+    // the drawer's float comes after the layout's own floats: z 10 + this (LAYOUT.md §7.10)
+    readonly property int drawerFloatIndex: {
+        try { var f = JSON.parse(layoutStoreObj.formJson); return (f.floats || []).length } catch (e) { return 0 }
+    }
+    // an open drawer closes when what it was opened from changes: the layout (a sync, an edit, a restore), the room
+    // (picked in a Rooms drawer), the window size (its button moved)
+    Connections { target: layoutStoreObj; function onFormJsonChanged() { root.closeDrawer() } }
+    Connections { target: room; function onRoomIdChanged() { root.closeDrawer() } }
+    Connections { target: dockHost; function onWidthChanged() { root.closeDrawer() } function onHeightChanged() { root.closeDrawer() } }
+    function closeDrawer() { if (root.drawerRef.length > 0) console.log("[drawer] close " + root.drawerRef); root.drawerRef = ""; root.drawerBtn = null }
+    function toggleDrawer(ref, anchor) {
+        if (editModeObj.open) return      // edit mode shows every island where it is; no drawers there
+        if (!ref || root.drawerRef === ref) { root.closeDrawer(); return }
+        var k = 1000 / Math.max(1, dockHost.unitPm)
+        var b = { x: 0, y: 0, w: 0, h: 0 }
+        if (anchor) {
+            var p = anchor.mapToItem(dockHost, 0, 0)
+            b = { x: Math.round(p.x * k), y: Math.round(p.y * k), w: Math.round(anchor.width * k), h: Math.round(anchor.height * k) }
+        }
+        root.drawerBtn = b
+        root.drawerRef = ref
+        console.log("[drawer] open " + ref + " at " + JSON.stringify(b))
+    }
+    Connections { target: editModeObj; function onOpenChanged() { if (editModeObj.open) root.closeDrawer() } }
     function openEditLayout(fromSettings) {
         if (fromSettings) settingsWindow.close()
         if (!root.mLoggedIn) return
@@ -4428,6 +4589,7 @@ Kirigami.ApplicationWindow {
     // layout document. RowModel.qml reads the rows through `layoutStore`.
     LayoutStore { id: layoutStoreObj; app: root; layoutCtl: layoutCtl; editMode: editModeObj }
     readonly property alias layoutStore: layoutStoreObj
+    readonly property var layoutController: layoutCtl   // the engine for other components (ActionsHost: drawer subjects)
     property bool roomShown: false   // a room is open: openRoomId shows it; sign-out / leaving the open room close it
     // the view state (device-local, §6.8): corner mode = the `nav_mode` pref (read through here until C9 stores it in the
     // view state), the drawer open while its panel is on screen (open, or fading out), "fill the app" = the call maximised
@@ -4529,6 +4691,7 @@ Kirigami.ApplicationWindow {
     function thForward() { return false }
     // Escape's layout steps (§2.8 6-7), after popups, the composer and "fill the app" had theirs.
     function thEscapeLayout() {
+        if (root.drawerRef.length > 0) { root.closeDrawer(); return true }
         if (root.roomInfoPanel && root.roomInfoPanel.opened && !root.roomInfoPanel.docked) { root.roomInfoPanel.close(); return true }
         if (cornerNav.visible && cornerNav.opened && !cornerNav.pinned) { cornerNav.close(); return true }
         return false

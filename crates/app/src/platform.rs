@@ -1115,9 +1115,9 @@ pub(crate) fn install_update_zip(zip_bytes: &[u8], expected_version: &str) -> Re
     }
     let stage_bundle = staging.join("current");
     std::fs::create_dir_all(&stage_bundle).map_err(|e| format!("mkdir staging: {e}"))?;
-    let cursor = std::io::Cursor::new(zip_bytes);
-    let mut archive = zip::ZipArchive::new(cursor).map_err(|e| format!("open zip: {e}"))?;
-    archive.extract(&stage_bundle).map_err(|e| format!("unzip: {e}"))?;
+    // safe_unzip: plain files and folders strictly inside staging only, headers checked, one entry per path (the bytes
+    // are already the signed feed's, but the unzip doesn't rely on that). A refusal leaves `current` untouched.
+    crate::safe_unzip::extract_zip(std::io::Cursor::new(zip_bytes), &stage_bundle).map_err(|e| format!("unzip: {e}"))?;
 
     // Tolerate a zip whose top level is a single wrapper dir (PACKAGING §7 zips the
     // folder; UPDATE_PATH §1 zips the contents — accept both shapes).

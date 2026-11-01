@@ -31,6 +31,7 @@ pub mod theme_ctl; // themes (C1): ThemeController — the engine → the Th sin
 pub mod theme_editor; // 11.0 step 5: ThemeEditorController — the theme editor, share cards, the Pick tool
 pub mod theme_lib; // themes (1b): the built-in theme library (contract themes-library.json, embedded)
 pub mod theme_store; // themes (1b): your own + kept themes, the account theme, this device's choice (THEMES-SYNC.md)
+pub mod ui_scale; // 2026-10-31 App size: Ctrl+= / Ctrl+- / Ctrl+0 + Settings → Appearance → Size (docs/UI-ZOOM.md; ui_scale_bridge.cpp)
 pub mod callstats_ctl; // widgets (step 2): CallStatsController — the Call stats widget's live data (streamer callstats.rs)
 pub mod widgets_ctl; // widgets (step 2): WidgetsController — call history, Up next's events, the shared formatters
 pub mod mentions_ctl; // widgets W1: MentionsController — this device's list of recent highlights (Mentions widget)
@@ -69,6 +70,8 @@ pub mod presence; // 10.6: PresenceController — opt-in Online/Away/In a call +
 pub mod presence_model; // 10.6: the pure presence rules (cadence, idle → state, share transitions, reader map, §3.4 consent)
 pub mod pipvideo; // PipVideoItem — PiP pop-out CPU video surface (no GstGL; NVIDIA-safe)
 pub mod platform; // OS-specific glue: data paths, file:// URLs, bundle env, Windows update swap
+#[cfg(any(windows, test))]
+pub(crate) mod safe_unzip; // 2026-10-31: the self-updater's unzip — only plain files strictly inside the target (zip 9.0.5)
 pub mod notify; // OS desktop notifications (org.freedesktop.Notifications) for new highlights
 pub mod joinsound; // per-user join sounds published over the soundboard bridge (QOL 1.5.2)
 pub mod livekit; // OpenID -> lk-jwt-service LiveKit token (used by stream)
@@ -1701,7 +1704,11 @@ fn main() {
         webengine::init();
     }
 
+    // App size (docs/UI-ZOOM.md): where the live path is missing, the stored size goes in through QT_SCALE_FACTOR here
+    ui_scale::preinit();
     let mut app = QGuiApplication::new();
+    // … else it is set now, before the first window (the startup window) exists
+    ui_scale::apply_startup();
 
     // Now that the QPA platform is resolved, pin GstGL to match Qt's GL context
     // (EGL/GLES2 on Wayland, GLX/desktop-GL on xcb). Must run before any call builds a

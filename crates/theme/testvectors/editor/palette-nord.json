@@ -1,0 +1,332 @@
+{
+  "doc": {
+    "format": "tinhat-theme",
+    "id": "nord",
+    "name": "Nord",
+    "palette": {
+      "ansi": [
+        "#3b4252",
+        "#bf616a",
+        "#a3be8c",
+        "#ebcb8b",
+        "#81a1c1",
+        "#b48ead",
+        "#88c0d0",
+        "#e5e9f0",
+        "#596377",
+        "#bf616a",
+        "#a3be8c",
+        "#ebcb8b",
+        "#81a1c1",
+        "#b48ead",
+        "#8fbcbb",
+        "#eceff4"
+      ],
+      "bg": "#2e3440",
+      "cursor": "#eceff4",
+      "fg": "#d8dee9",
+      "selectionBg": "#eceff4",
+      "selectionFg": "#4c566a"
+    },
+    "source": "iterm2-color-schemes@595c7fe2d836",
+    "v": 1
+  },
+  "expect": {
+    "groups": [
+      {
+        "id": "backgrounds",
+        "label": "Backgrounds",
+        "swatches": [
+          {
+            "alsoIn": [
+              "text",
+              "people"
+            ],
+            "colour": "#2e3440",
+            "follow": [],
+            "id": "bg",
+            "label": "Background",
+            "sources": [
+              "bg"
+            ],
+            "usedBy": [
+              "account.bg",
+              "border.strong",
+              "border.subtle",
+              "button.danger.fg",
+              "calendar.day.today.fg",
+              "composer.bg",
+              "header.bottom.bg",
+              "island.bg.account",
+              "island.bg.buttons",
+              "island.bg.call",
+              "island.bg.composer",
+              "island.bg.dms",
+              "island.bg.header",
+              "island.bg.nav",
+              "island.bg.panel",
+              "island.bg.rooms",
+              "island.bg.spaces",
+              "island.bg.timeline",
+              "island.bg.widgets",
+              "island.border",
+              "panel.bg",
+              "presence.offline",
+              "rail.bg",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "rooms.bg",
+              "settings.inviteCode.row.bg",
+              "stage.bg",
+              "surface.hover",
+              "surface.island",
+              "surface.overlay",
+              "surface.pressed",
+              "surface.raised",
+              "surface.selected",
+              "surface.sunken",
+              "surface.window",
+              "text.disabled",
+              "text.muted",
+              "text.onAccent",
+              "text.secondary",
+              "timeline.bg",
+              "toast.bg",
+              "tooltip.bg"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "text",
+        "label": "Text",
+        "swatches": [
+          {
+            "alsoIn": [
+              "backgrounds",
+              "people"
+            ],
+            "colour": "#d8dee9",
+            "follow": [],
+            "id": "fg",
+            "label": "Text",
+            "sources": [
+              "fg"
+            ],
+            "usedBy": [
+              "account.bg",
+              "border.strong",
+              "border.subtle",
+              "button.danger.fg",
+              "calendar.day.today.fg",
+              "composer.bg",
+              "composer.fg",
+              "island.bg.account",
+              "island.bg.buttons",
+              "island.bg.composer",
+              "island.border",
+              "presence.offline",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "settings.inviteCode.row.bg",
+              "surface.hover",
+              "surface.overlay",
+              "surface.pressed",
+              "surface.raised",
+              "text.disabled",
+              "text.muted",
+              "text.onAccent",
+              "text.primary",
+              "text.secondary",
+              "toast.fg",
+              "tooltip.bg",
+              "tooltip.fg"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "accent",
+        "label": "Accent",
+        "swatches": [
+          {
+            "alsoIn": [
+              "backgrounds",
+              "text",
+              "status",
+              "people"
+            ],
+            "colour": "#81a1c1",
+            "follow": [],
+            "id": "c4",
+            "label": "Blue",
+            "sources": [
+              "c4",
+              "c12"
+            ],
+            "usedBy": [
+              "accent.base",
+              "accent.bright",
+              "accent.dim",
+              "accent.glow",
+              "badge.bg",
+              "border.focus",
+              "button.danger.fg",
+              "calendar.day.today.bg",
+              "calendar.day.today.fg",
+              "icon.highlight",
+              "name.10",
+              "name.4",
+              "presence.incall",
+              "rail.nav.bg",
+              "rail.nav.bg.active",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "surface.selected",
+              "text.link",
+              "text.onAccent"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "swatches": [
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#bf616a",
+            "follow": [],
+            "id": "c1",
+            "label": "Red",
+            "sources": [
+              "c1",
+              "c9"
+            ],
+            "usedBy": [
+              "badge.mention",
+              "button.danger.bg",
+              "button.danger.fg",
+              "call.muted",
+              "name.1",
+              "name.7",
+              "presence.busy",
+              "state.danger",
+              "state.dangerBright"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#ebcb8b",
+            "follow": [],
+            "id": "c3",
+            "label": "Yellow",
+            "sources": [
+              "c3",
+              "c11"
+            ],
+            "usedBy": [
+              "mention.bg",
+              "mention.edge",
+              "name.3",
+              "name.9",
+              "presence.away",
+              "state.aside",
+              "state.warning"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#a3be8c",
+            "follow": [],
+            "id": "c2",
+            "label": "Green",
+            "sources": [
+              "c2"
+            ],
+            "usedBy": [
+              "call.speaking",
+              "name.2",
+              "presence.online",
+              "state.success"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#88c0d0",
+            "follow": [],
+            "id": "c6",
+            "label": "Cyan",
+            "sources": [
+              "c6"
+            ],
+            "usedBy": [
+              "name.6",
+              "state.info"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "people",
+        "label": "People",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#b48ead",
+            "follow": [],
+            "id": "c5",
+            "label": "Magenta",
+            "sources": [
+              "c5",
+              "c13"
+            ],
+            "usedBy": [
+              "name.11",
+              "name.5"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#a3be8c",
+            "follow": [],
+            "id": "c10",
+            "label": "Bright green",
+            "sources": [
+              "c10"
+            ],
+            "usedBy": [
+              "name.8"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#8fbcbb",
+            "follow": [],
+            "id": "c14",
+            "label": "Bright cyan",
+            "sources": [
+              "c14"
+            ],
+            "usedBy": [
+              "name.12"
+            ]
+          }
+        ]
+      }
+    ],
+    "handSet": []
+  },
+  "kind": "palette"
+}

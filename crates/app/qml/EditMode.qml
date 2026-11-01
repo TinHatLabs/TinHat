@@ -166,6 +166,22 @@ QtObject {
         if (r.ok && r.ref && em.app && em.app.actions)
             Qt.callLater(function () { em.app.actions.openRowEditor({ island: r.ref, row: "main", form: "desktop", title: em.islandName(r.ref) }) })
     }
+    // Add button (EDITMODE-UI §7.2): a new button island holding one action of the catalogue, with its look
+    function newActionButton(item, look) {
+        if (!em.open || em.readOnly) return
+        var r = em._report(em.layoutCtl.editNewActionButton(JSON.stringify(item), look), "new button " + (item && item.a ? item.a : "?"))
+        if (!r.ok && r.error === "too-many") em.toast("You can have 8 button islands.", 3000)
+    }
+    // Add drawer (§7.3): the island goes into a drawer that a new button opens (layout.drawer.toggle)
+    function newDrawer(ref, icon) {
+        if (!em.open || em.readOnly) return
+        var r = em._report(em.layoutCtl.editNewDrawer(ref, icon || ""), "new drawer " + ref)
+        if (!r.ok && r.error === "too-many") em.toast("You can have 8 button islands.", 3000)
+    }
+    // the islands that may go into a drawer (placed or hidden), for the Add drawer panel
+    function drawerTargets() {
+        try { return JSON.parse(String(em.layoutCtl.drawerTargets(em.formJson))) } catch (e) { return [] }
+    }
     function removeButtonIsland(ref) { if (em.open && !em.readOnly) em._report(em.layoutCtl.editRemoveButtonIsland(ref), "remove " + ref) }
     /** Add widget (§7): the widget gallery; a hidden widgets island comes back first (one undo step). */
     function addWidget() {

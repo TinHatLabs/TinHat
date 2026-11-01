@@ -79,6 +79,8 @@ pub mod qobject {
         #[qproperty(QString, publish_stats)] // QML: publishStats — outgoing stream health JSON [{kind,enc,w,h,fps,sendKbps,qlim,lossPct,...}]
         #[qproperty(bool, hanging_up)] // QML: hangingUp — leave teardown in progress; block rejoin until done
         #[qproperty(bool, deafened)] // QML: deafened — all incoming call audio muted (output deafen)
+        #[qproperty(bool, watching)] // QML: watching — Pad QOL: joined to WATCH (no mic captured until Talk here)
+        #[qproperty(bool, no_capture)] // QML: noCapture — watching and the mic not chosen yet (the streamer refuses capture)
         #[qproperty(bool, reconnecting)] // QML: reconnecting — SFU connection dropped, auto-reconnecting
         #[qproperty(bool, call_failed)] // QML: callFailed — call ended unexpectedly (terminal disconnect)
         #[qproperty(QString, fail_reason)] // QML: failReason — 10.1: plain-English reason a JOIN failed ("" for a mid-call drop)
@@ -102,8 +104,25 @@ pub mod qobject {
 
         #[qinvokable]
         fn join_call(self: Pin<&mut CallController>, room_id: &QString);
+        /// QML: callctl.joinCallPressed(roomId) — a Join PRESS (header, call island, palette, Pad bar, auto-join at
+        /// sign-in): always a normal join. assembly-042: a watch intent left by a watch call that ended without a leave
+        /// (kicked, the call ended, the rejoin gave up) must never turn the next press into a watch join. Internal
+        /// rejoins (a drop, a switch, the call-host sheet's go-ahead) keep calling join_call and stay watch joins.
+        #[qinvokable]
+        fn join_call_pressed(self: Pin<&mut CallController>, room_id: &QString);
         #[qinvokable]
         fn leave_call(self: Pin<&mut CallController>);
+        /// QML: callctl.watchCall(roomId) — Pad QOL: join to WATCH (a normal, visible join; no microphone captured,
+        /// deafened before connect, camera off). Every rejoin of that room stays a watch join until a leave / Talk here.
+        #[qinvokable]
+        fn watch_call(self: Pin<&mut CallController>, room_id: &QString);
+        /// QML: callctl.watchTalk(on) — watching: talk from this device (captures + publishes the mic, hearing on too)
+        /// or stop talking (mutes it). Only ever this device's own press.
+        #[qinvokable]
+        fn watch_talk(self: Pin<&mut CallController>, on: bool);
+        /// QML: callctl.watchHear(on) — watching: hear the call here or not (off also mutes the mic if talking).
+        #[qinvokable]
+        fn watch_hear(self: Pin<&mut CallController>, on: bool);
         /// QML: callctl.switchCall(roomId) — 10.0: leave the current call (if any) and join
         /// `roomId` the moment the teardown completes; joins directly when not in a call.
         #[qinvokable]
@@ -544,6 +563,8 @@ pub struct CallControllerRust {
     publish_stats: QString, // outgoing stream health JSON (see streamer publish_stats_json)
     hanging_up: bool,      // leave teardown in progress; rejoin blocked until done
     deafened: bool,        // all incoming call audio muted (output deafen)
+    watching: bool,        // Pad QOL: joined to watch
+    no_capture: bool,      // Pad QOL: watching, mic not chosen (tinhat_streamer::capture_barred)
     reconnecting: bool,    // SFU connection dropped, auto-reconnecting
     call_failed: bool,     // call ended unexpectedly (terminal disconnect)
     fail_reason: QString,  // 10.1 (TH-CALL-03): why the last join failed, for the banner
@@ -2107,6 +2128,27 @@ const MAX_AUTO_REJOINS: u32 = 2;
 
 /// Pre-drop mic mute, set by the auto-rejoin path and consumed by the next join — a
 /// muted user must never be silently rejoined with a HOT mic.
+/// Pad QOL: the room this device WATCHES (None = none): every (re)join of it — the auto-rejoin after a drop — is a
+/// watch join too, so a drop never brings the mic back. Cleared by leave_call and watch_talk(true).
+fn watch_intent() -> &'static std::sync::Mutex<Option<String>> {
+    static W: std::sync::OnceLock<std::sync::Mutex<Option<String>>> = std::sync::OnceLock::new();
+    W.get_or_init(|| std::sync::Mutex::new(None))
+}
+/// Pad QOL: this device only watches its call (a Pad receiver is off then; rtc.rs leaves `pad1` out).
+/// Watching (assembly-042 review): this device captures and publishes nothing (camera, screen, music, sounds,
+/// the join sound) until Talk here; Talk is the one way out of watch mode. Same rule and hint as the web.
+pub const WATCH_HINT: &str = "You're watching — tap Talk first";
+/// 12.1.6: Watch (join from the Pad without a microphone) is switched off until 12.1.7; the QML hides its entry.
+pub const WATCH_AVAILABLE: bool = false;
+pub const WATCH_OFF_NOTE: &str = "Watching from here isn't available yet — it comes in a later update";
+pub fn watch_refuses() -> bool {
+    tinhat_streamer::capture_barred()
+}
+pub fn watching_now() -> bool {
+    tinhat_streamer::capture_barred() || WATCHING.load(std::sync::atomic::Ordering::SeqCst)
+}
+static WATCHING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 fn rejoin_mic_muted() -> &'static std::sync::Mutex<Option<bool>> {
     static M: OnceLock<std::sync::Mutex<Option<bool>>> = OnceLock::new();
     M.get_or_init(|| std::sync::Mutex::new(None))
@@ -2206,6 +2248,7 @@ impl qobject::CallController {
         // CallSession::close() finishes leaves TWO live participants under our identity
         // (user:device) and the SFU wedges the new join in "connecting" forever.
         if *self.in_call() || *self.connecting() || *self.hanging_up() {
+            eprintln!("[call] join refused: in_call={} connecting={} hanging_up={}", *self.in_call(), *self.connecting(), *self.hanging_up());
             return;
         }
         let room_id = room_id.to_string();
@@ -2233,6 +2276,22 @@ impl qobject::CallController {
         let ptt_muted = Self::ptt_target_muted(*self.push_to_talk(), *self.ptt_speaking(), false);
         if ptt_muted {
             self.as_mut().set_mic_muted(true);
+        }
+        // Pad QOL: a watch join (watch_call, or any rejoin of the watched room): capture barred + deafened BEFORE
+        // connect, so nothing is captured and every remote track subscribed during connect starts cut
+        let watch = watch_intent().lock().unwrap().as_deref() == Some(room_id.as_str());
+        if !watch {
+            *watch_intent().lock().unwrap() = None;
+        }
+        tinhat_streamer::set_capture_barred(watch);
+        WATCHING.store(watch, std::sync::atomic::Ordering::SeqCst);
+        self.as_mut().set_watching(watch);
+        self.as_mut().set_no_capture(watch);
+        if watch {
+            self.as_mut().set_mic_muted(true);
+            tinhat_streamer::set_deafened(true);
+            self.as_mut().set_deafened(true);
+            eprintln!("[call] joining {room_id} to WATCH (no mic, deafened)");
         }
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
@@ -2443,7 +2502,8 @@ impl qobject::CallController {
                     *call_started().lock().unwrap() = Some(std::time::Instant::now());
                     // Our join sound, published into the call we just joined (QOL 1.5.2).
                     // Detached: a slow or missing sound must never delay being IN the call.
-                    {
+                    // Watching publishes nothing: no join sound either (assembly-042 review).
+                    if !WATCHING.load(std::sync::atomic::Ordering::SeqCst) {
                         let rid = room_id.clone();
                         tokio::spawn(async move { crate::joinsound::play_on_join(&rid).await });
                     }
@@ -2989,6 +3049,11 @@ impl qobject::CallController {
         if target.is_empty() {
             return;
         }
+        // a switch is a press too: the room it joins is joined normally (assembly-042; the call it leaves ends anyway).
+        // Not a "switch" into the call already up: a live watch keeps its intent.
+        if !in_call_room(&target) {
+            *watch_intent().lock().unwrap() = None;
+        }
         if !*self.in_call() && !*self.connecting() && !*self.hanging_up() {
             self.as_mut().join_call(room_id);
             return;
@@ -3020,6 +3085,12 @@ impl qobject::CallController {
         *call_started().lock().unwrap() = None;
         auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
         *rejoin_mic_muted().lock().unwrap() = None;
+        // Pad QOL: an explicit leave ends watching (the next Join is a full one)
+        *watch_intent().lock().unwrap() = None;
+        tinhat_streamer::set_capture_barred(false);
+        WATCHING.store(false, std::sync::atomic::Ordering::SeqCst);
+        self.as_mut().set_watching(false);
+        self.as_mut().set_no_capture(false);
         self.as_mut().set_in_call(false);
         self.as_mut().set_sharing(false);
         self.as_mut().set_connecting(false);
@@ -3479,6 +3550,10 @@ impl qobject::CallController {
         let url = url.to_string();
         if !*self.in_call() || url.trim().is_empty() {
             self.as_mut().set_status(QString::from("Join a call to play music"));
+            return;
+        }
+        if watch_refuses() {
+            self.as_mut().set_status(QString::from(WATCH_HINT));
             return;
         }
         self.as_mut().set_music_playing(true);
@@ -4143,6 +4218,10 @@ impl qobject::CallController {
             self.as_mut().set_status(QString::from("Pick an audio source to share"));
             return;
         }
+        if watch_refuses() {
+            self.as_mut().set_status(QString::from(WATCH_HINT));
+            return;
+        }
         self.as_mut().set_music_playing(true);
         self.as_mut().set_status(QString::from("Sharing audio…"));
         let arg = if node.is_empty() { None } else { Some(node) };
@@ -4254,6 +4333,10 @@ impl qobject::CallController {
         if !*self.in_call() || *self.sharing() {
             return;
         }
+        if watch_refuses() {
+            self.as_mut().set_status(QString::from(WATCH_HINT));
+            return;
+        }
         self.as_mut().set_status(QString::from("Preparing screen share…"));
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
@@ -4314,6 +4397,10 @@ impl qobject::CallController {
         #[cfg(windows)]
         {
             if !*self.in_call() || *self.sharing() {
+                return;
+            }
+            if watch_refuses() {
+                self.as_mut().set_status(QString::from(WATCH_HINT));
                 return;
             }
             let kind = kind.to_string();
@@ -4516,7 +4603,101 @@ impl qobject::CallController {
         self.force_mic_muted(target);
     }
 
+    pub fn join_call_pressed(mut self: Pin<&mut Self>, room_id: &QString) {
+        // (not while a call is up or connecting: a press then joins nothing, and a live watch keeps its intent)
+        if !*self.in_call() && !*self.connecting() {
+            *watch_intent().lock().unwrap() = None;
+        }
+        self.join_call(room_id);
+    }
+
+    pub fn watch_call(mut self: Pin<&mut Self>, room_id: &QString) {
+        // 12.1.6: Watch is OFF (assembly-042 release review: rejoin paths could still capture the microphone of a
+        // watching device; share claude/tinhat-pad/WATCH-1217.md). The op is refused; it returns in 12.1.7.
+        if !WATCH_AVAILABLE {
+            eprintln!("[call] watch refused: not available in this version");
+            self.as_mut().set_status(QString::from(WATCH_OFF_NOTE));
+            return;
+        }
+        let room = room_id.to_string();
+        if room.is_empty() || *self.in_call() || *self.connecting() || *self.hanging_up() {
+            eprintln!(
+                "[call] watch {room:?} refused: in_call={} connecting={} hanging_up={}",
+                *self.in_call(),
+                *self.connecting(),
+                *self.hanging_up()
+            );
+            return;
+        }
+        *watch_intent().lock().unwrap() = Some(room);
+        self.as_mut().join_call(room_id);
+    }
+
+    pub fn watch_talk(mut self: Pin<&mut Self>, on: bool) {
+        if !*self.watching() {
+            return;
+        }
+        if !on {
+            self.as_mut().force_mic_muted(true);
+            return;
+        }
+        // review #2: a moderator's mute holds here as on the mic button (nothing changes, the lock notice says why)
+        if *self.server_muted() {
+            let by = self.server_muted_by().to_string();
+            let by = if by.is_empty() { "A moderator".to_string() } else { by };
+            self.as_mut().set_status(QString::from(&format!("{by} muted your mic for everyone — ask them to unmute you")));
+            return;
+        }
+        // chose to talk: capture allowed from now on, hearing too; a rejoin after a drop is a normal one now
+        *watch_intent().lock().unwrap() = None;
+        tinhat_streamer::set_capture_barred(false);
+        self.as_mut().set_no_capture(false);
+        self.as_mut().apply_deafen(false);
+        self.as_mut().set_mic_muted(false);
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let cell = current_call();
+            let mut guard = cell.lock().await;
+            let Some(call) = guard.as_mut() else { return }; // still connecting: do_join publishes it (no longer barred)
+            // re-checked when the publish really starts: barred again (a leave / a new watch join), a moderator's mute
+            // meanwhile → nothing (review pass 2 #2)
+            if tinhat_streamer::capture_barred() || tinhat_streamer::i_am_server_muted() {
+                eprintln!("[call] watching: Talk here — the mic is not started (barred / server-muted meanwhile)");
+                return;
+            }
+            let r = if call.has_mic() {
+                call.set_mic_muted(false);
+                Ok(())
+            } else {
+                call.publish_mic_muted(false).await
+            };
+            if let Err(e) = r {
+                eprintln!("[call] watching: Talk here could not start the mic: {e}");
+                let _ = qt.queue(move |mut o| {
+                    o.as_mut().set_mic_muted(true);
+                    o.as_mut().set_status(QString::from(&format!("Couldn't start your mic — {e}")));
+                });
+            }
+        });
+    }
+
+    pub fn watch_hear(mut self: Pin<&mut Self>, on: bool) {
+        if !*self.watching() {
+            return;
+        }
+        if !on && !*self.no_capture() {
+            self.as_mut().force_mic_muted(true);
+        }
+        self.as_mut().apply_deafen(!on);
+    }
+
     pub fn toggle_mic(mut self: Pin<&mut Self>) {
+        // Pad QOL (review #1): watching with no mic chosen — the mic button (and every shortcut calling it) never opens
+        // the mic; only "Talk here" does
+        if *self.no_capture() && (*self.in_call() || *self.connecting()) {
+            self.as_mut().set_status(QString::from("You're watching — use Talk here to talk from this device"));
+            return;
+        }
         // RBAC: a server mute locks the button — say why instead of flipping a mic the
         // SFU won't take anyway.
         if *self.server_muted() {
@@ -4567,6 +4748,10 @@ impl qobject::CallController {
             return;
         }
         let turning_on = !*self.camera_on();
+        if turning_on && watch_refuses() {
+            self.as_mut().set_status(QString::from(WATCH_HINT));
+            return;
+        }
         self.as_mut().set_camera_on(turning_on);
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
@@ -6177,5 +6362,79 @@ mod superseded_membership_tests {
         assert!(withdraw_allowed(5, Some(3)));
         // a newer join published in this room: leave it alone
         assert!(!withdraw_allowed(5, Some(7)));
+    }
+}
+
+#[cfg(test)]
+mod watch_publish_tests {
+    //! assembly-042 review (launch-gate): a watching device captures and publishes nothing until Talk here. Each
+    //! publish entry point refuses while capture is barred; the join sound is skipped. Wiring test (the entry points
+    //! are Qt-bound or need a live call): every one of them checks the guard before it starts anything.
+    fn body_of(src: &str, sig: &str) -> String {
+        let at = src.find(sig).unwrap_or_else(|| panic!("{sig} not found"));
+        src[at..].chars().take(2400).collect()
+    }
+    #[test]
+    fn every_publish_entry_refuses_while_watching() {
+        let ctl = include_str!("call_ctl.rs");
+        for sig in ["pub fn share_screen(", "pub fn share_screen_source(", "pub fn toggle_camera(", "pub fn start_music(", "pub fn start_music_source("] {
+            let b = body_of(ctl, sig);
+            let guard = b.find("watch_refuses()").unwrap_or_else(|| panic!("{sig}: no watch guard"));
+            let spawn = b.find("runtime().spawn").unwrap_or(usize::MAX);
+            assert!(guard < spawn, "{sig}: the guard must come before anything starts");
+            assert!(b[guard..].contains("WATCH_HINT"), "{sig}: the refusal says tap Talk first");
+        }
+        let sb = include_str!("soundboard.rs");
+        let g = sb.find("crate::call_ctl::watch_refuses()").expect("soundboard: no watch guard");
+        assert!(g < sb.find("tinhat_streamer::play_url_in_call(&url)").unwrap(), "soundboard: guard before the publish");
+        let js = include_str!("joinsound.rs");
+        let g = js.find("crate::call_ctl::watching_now()").expect("joinsound: no watching check");
+        assert!(g < js.find("tinhat_streamer::play_url_in_call(&play)").unwrap(), "joinsound: skipped before the publish");
+        let b = body_of(ctl, "// Our join sound, published into the call we just joined");
+        assert!(b.contains("if !WATCHING.load("), "the join path skips the join sound while watching");
+        assert_eq!(super::WATCH_HINT, "You're watching — tap Talk first");
+        // the backstop under them (a request queued or picked before Watch began): every streamer publish entry
+        let st = include_str!("../../streamer/src/call.rs");
+        for sig in ["async fn publish_aux(", "async fn publish_aux_pipewire(", "pub async fn publish_screenshare(", "pub async fn publish_camera("] {
+            let b = body_of(st, sig);
+            assert!(b.contains("if capture_barred() {"), "{sig}: no capture-bar backstop");
+        }
+    }
+    #[test]
+    fn a_join_press_is_always_a_normal_join() {
+        // every user-facing Join goes through join_call_pressed (clears a stale watch intent); internal rejoins don't
+        for (f, src) in [
+            ("HeaderIsland.qml", include_str!("../qml/HeaderIsland.qml")),
+            ("CallIsland.qml", include_str!("../qml/CallIsland.qml")),
+            ("ActionsHost.qml", include_str!("../qml/ActionsHost.qml")),
+            ("PadBar.qml", include_str!("../qml/PadBar.qml")),
+            ("Main.qml", include_str!("../qml/Main.qml")),
+        ] {
+            assert!(!src.contains("callctl.joinCall("), "{f}: a Join press must call joinCallPressed");
+        }
+        let ctl = include_str!("call_ctl.rs");
+        let b = body_of(ctl, "pub fn join_call_pressed(");
+        assert!(b.find("*watch_intent().lock().unwrap() = None").unwrap() < b.find("self.join_call(room_id)").unwrap());
+        let sw = body_of(ctl, "pub fn switch_call(");
+        assert!(sw.contains("if !in_call_room(&target) {") && sw.contains("*watch_intent().lock().unwrap() = None"));
+    }
+    #[test]
+    fn watch_is_off_in_12_1_6() {
+        // launch-gate's stop rule (assembly-042): Watch is unreachable until 12.1.7 — the op refuses before anything
+        // else, and the Pad window hides its strip
+        assert!(!super::WATCH_AVAILABLE);
+        let ctl = include_str!("call_ctl.rs");
+        let b = body_of(ctl, "pub fn watch_call(");
+        let off = b.find("if !WATCH_AVAILABLE {").expect("watch_call checks WATCH_AVAILABLE");
+        assert!(off < b.find("watch_intent()").unwrap() && b[off..].contains("WATCH_OFF_NOTE"));
+        let pw = include_str!("../qml/PadWindow.qml");
+        assert!(pw.contains("readonly property bool watchAvailable: false") && pw.contains("visible: watchAvailable && !pad.watchingHere"));
+    }
+    #[test]
+    fn watch_refuses_follows_the_capture_bar() {
+        tinhat_streamer::set_capture_barred(true);
+        assert!(super::watch_refuses());
+        tinhat_streamer::set_capture_barred(false);
+        assert!(!super::watch_refuses());
     }
 }

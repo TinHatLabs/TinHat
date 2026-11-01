@@ -1,0 +1,431 @@
+{
+  "expect": {
+    "advanced": {
+      "accent.base": 12,
+      "accent.bright": 8,
+      "accent.dim": 0,
+      "accent.glow": 0,
+      "badge.bg": 0,
+      "badge.mention": 0,
+      "bg": 36,
+      "border.focus": 0,
+      "border.strong": 0,
+      "border.subtle": 1,
+      "c0": 0,
+      "c1": 6,
+      "c10": 1,
+      "c11": 2,
+      "c12": 1,
+      "c13": 1,
+      "c14": 10,
+      "c15": 0,
+      "c2": 4,
+      "c3": 5,
+      "c4": 2,
+      "c5": 1,
+      "c6": 14,
+      "c7": 0,
+      "c8": 0,
+      "c9": 3,
+      "call.muted": 0,
+      "call.speaking": 0,
+      "cursor": 0,
+      "fg": 19,
+      "mention.bg": 0,
+      "mention.edge": 0,
+      "name.1": 0,
+      "name.10": 0,
+      "name.11": 0,
+      "name.12": 0,
+      "name.2": 0,
+      "name.3": 0,
+      "name.4": 0,
+      "name.5": 0,
+      "name.6": 0,
+      "name.7": 0,
+      "name.8": 0,
+      "name.9": 0,
+      "presence.away": 0,
+      "presence.busy": 0,
+      "presence.incall": 0,
+      "presence.offline": 0,
+      "presence.online": 0,
+      "scrim": 0,
+      "selectionBg": 0,
+      "selectionFg": 0,
+      "shadow": 1,
+      "state.aside": 0,
+      "state.danger": 3,
+      "state.dangerBright": 1,
+      "state.info": 0,
+      "state.success": 1,
+      "state.warning": 2,
+      "surface.hover": 0,
+      "surface.island": 7,
+      "surface.overlay": 0,
+      "surface.pressed": 0,
+      "surface.raised": 5,
+      "surface.selected": 0,
+      "surface.sunken": 0,
+      "surface.window": 14,
+      "text.disabled": 0,
+      "text.link": 0,
+      "text.muted": 1,
+      "text.onAccent": 5,
+      "text.primary": 6,
+      "text.secondary": 0
+    },
+    "edit": {
+      "changed": [
+        "roles/surface.raised"
+      ],
+      "dirty": true,
+      "exportText": "{\n  \"accent\": \"c6\",\n  \"format\": \"tinhat-theme\",\n  \"id\": \"nord-warmer\",\n  \"name\": \"Nord, warmer\",\n  \"palette\": {\n    \"ansi\": [\n      \"#3b4252\",\n      \"#bf616a\",\n      \"#a3be8c\",\n      \"#f0c070\",\n      \"#81a1c1\",\n      \"#b48ead\",\n      \"#88c0d0\",\n      \"#e5e9f0\",\n      \"#596377\",\n      \"#bf616a\",\n      \"#a3be8c\",\n      \"#ebcb8b\",\n      \"#81a1c1\",\n      \"#b48ead\",\n      \"#8fbcbb\",\n      \"#eceff4\"\n    ],\n    \"bg\": \"#2e3440\",\n    \"cursor\": \"#eceff4\",\n    \"fg\": \"#d8dee9\",\n    \"selectionBg\": \"#eceff4\",\n    \"selectionFg\": \"#4c566a\"\n  },\n  \"roles\": {\n    \"state.info\": \"c4\",\n    \"surface.raised\": \"#434c5e/0.9\"\n  },\n  \"shape\": {\n    \"radius\": 10\n  },\n  \"source\": \"iterm2-color-schemes@595c7fe2d836\",\n  \"tokens\": {\n    \"composer.bg\": \"#2e3440/0.8\",\n    \"toast.fg\": \"#88c0d0\",\n    \"tooltip.bg\": \"mix(surface.island, text.primary, 0.12)\"\n  },\n  \"v\": 1\n}\n",
+      "result": "edited"
+    },
+    "open": {
+      "dirty": false,
+      "exportText": "{\n  \"accent\": \"c6\",\n  \"format\": \"tinhat-theme\",\n  \"id\": \"nord-warmer\",\n  \"name\": \"Nord, warmer\",\n  \"palette\": {\n    \"ansi\": [\n      \"#3b4252\",\n      \"#bf616a\",\n      \"#a3be8c\",\n      \"#f0c070\",\n      \"#81a1c1\",\n      \"#b48ead\",\n      \"#88c0d0\",\n      \"#e5e9f0\",\n      \"#596377\",\n      \"#bf616a\",\n      \"#a3be8c\",\n      \"#ebcb8b\",\n      \"#81a1c1\",\n      \"#b48ead\",\n      \"#8fbcbb\",\n      \"#eceff4\"\n    ],\n    \"bg\": \"#2e3440\",\n    \"cursor\": \"#eceff4\",\n    \"fg\": \"#d8dee9\",\n    \"selectionBg\": \"#eceff4\",\n    \"selectionFg\": \"#4c566a\"\n  },\n  \"roles\": {\n    \"state.info\": \"c4\",\n    \"surface.raised\": \"#3b4252/0.9\"\n  },\n  \"shape\": {\n    \"radius\": 10\n  },\n  \"source\": \"iterm2-color-schemes@595c7fe2d836\",\n  \"tokens\": {\n    \"composer.bg\": \"#2e3440/0.8\",\n    \"toast.fg\": \"#88c0d0\",\n    \"tooltip.bg\": \"mix(surface.island, text.primary, 0.12)\"\n  },\n  \"v\": 1\n}\n"
+    },
+    "simple": {
+      "groups": [
+        {
+          "id": "backgrounds",
+          "label": "Backgrounds",
+          "swatches": [
+            {
+              "alsoIn": [
+                "text",
+                "people"
+              ],
+              "colour": "#2e3440",
+              "follow": [],
+              "id": "bg",
+              "label": "Background",
+              "sources": [
+                "bg"
+              ],
+              "usedBy": [
+                "border.strong",
+                "border.subtle",
+                "button.danger.fg",
+                "calendar.day.today.fg",
+                "header.bottom.bg",
+                "island.bg.call",
+                "island.bg.dms",
+                "island.bg.header",
+                "island.bg.nav",
+                "island.bg.panel",
+                "island.bg.rooms",
+                "island.bg.spaces",
+                "island.bg.timeline",
+                "island.bg.widgets",
+                "island.border",
+                "panel.bg",
+                "presence.offline",
+                "rail.bg",
+                "rail.nav.icon",
+                "rail.nav.icon.lit",
+                "rail.nav.icon.lit.active",
+                "rooms.bg",
+                "stage.bg",
+                "surface.hover",
+                "surface.island",
+                "surface.pressed",
+                "surface.selected",
+                "surface.sunken",
+                "surface.window",
+                "text.disabled",
+                "text.muted",
+                "text.onAccent",
+                "text.secondary",
+                "timeline.bg",
+                "toast.bg",
+                "tooltip.bg"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#3b4252/0.9",
+              "follow": [],
+              "id": "surface.raised",
+              "label": "Raised surfaces",
+              "sources": [
+                "surface.raised"
+              ],
+              "usedBy": [
+                "account.bg",
+                "island.bg.account",
+                "island.bg.buttons",
+                "settings.inviteCode.row.bg",
+                "surface.overlay",
+                "surface.raised"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "text",
+          "label": "Text",
+          "swatches": [
+            {
+              "alsoIn": [
+                "backgrounds",
+                "people"
+              ],
+              "colour": "#d8dee9",
+              "follow": [],
+              "id": "fg",
+              "label": "Text",
+              "sources": [
+                "fg"
+              ],
+              "usedBy": [
+                "border.strong",
+                "border.subtle",
+                "button.danger.fg",
+                "calendar.day.today.fg",
+                "composer.fg",
+                "island.border",
+                "presence.offline",
+                "rail.nav.icon",
+                "rail.nav.icon.lit",
+                "rail.nav.icon.lit.active",
+                "surface.hover",
+                "surface.pressed",
+                "text.disabled",
+                "text.muted",
+                "text.onAccent",
+                "text.primary",
+                "text.secondary",
+                "tooltip.bg",
+                "tooltip.fg"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "accent",
+          "label": "Accent",
+          "swatches": [
+            {
+              "alsoIn": [
+                "backgrounds",
+                "text",
+                "status",
+                "people"
+              ],
+              "colour": "#88c0d0",
+              "follow": [
+                "toast.fg"
+              ],
+              "id": "c6",
+              "label": "Cyan",
+              "sources": [
+                "c6"
+              ],
+              "usedBy": [
+                "accent.base",
+                "accent.dim",
+                "accent.glow",
+                "badge.bg",
+                "button.danger.fg",
+                "calendar.day.today.fg",
+                "name.6",
+                "rail.nav.bg",
+                "rail.nav.bg.active",
+                "rail.nav.icon",
+                "rail.nav.icon.lit",
+                "rail.nav.icon.lit.active",
+                "surface.selected",
+                "text.onAccent",
+                "toast.fg"
+              ]
+            },
+            {
+              "alsoIn": [
+                "people"
+              ],
+              "colour": "#8fbcbb",
+              "follow": [],
+              "id": "c14",
+              "label": "Bright cyan",
+              "sources": [
+                "c14"
+              ],
+              "usedBy": [
+                "accent.bright",
+                "border.focus",
+                "calendar.day.today.bg",
+                "calendar.day.today.fg",
+                "icon.highlight",
+                "name.12",
+                "presence.incall",
+                "rail.nav.icon.lit",
+                "rail.nav.icon.lit.active",
+                "text.link"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "status",
+          "label": "Status",
+          "swatches": [
+            {
+              "alsoIn": [
+                "people"
+              ],
+              "colour": "#bf616a",
+              "follow": [],
+              "id": "c1",
+              "label": "Red",
+              "sources": [
+                "c1",
+                "c9"
+              ],
+              "usedBy": [
+                "badge.mention",
+                "button.danger.bg",
+                "button.danger.fg",
+                "call.muted",
+                "name.1",
+                "name.7",
+                "presence.busy",
+                "state.danger",
+                "state.dangerBright"
+              ]
+            },
+            {
+              "alsoIn": [
+                "people"
+              ],
+              "colour": "#f0c070",
+              "follow": [],
+              "id": "c3",
+              "label": "Yellow",
+              "sources": [
+                "c3"
+              ],
+              "usedBy": [
+                "mention.bg",
+                "mention.edge",
+                "name.3",
+                "presence.away",
+                "state.warning"
+              ]
+            },
+            {
+              "alsoIn": [
+                "people"
+              ],
+              "colour": "#a3be8c",
+              "follow": [],
+              "id": "c2",
+              "label": "Green",
+              "sources": [
+                "c2"
+              ],
+              "usedBy": [
+                "call.speaking",
+                "name.2",
+                "presence.online",
+                "state.success"
+              ]
+            },
+            {
+              "alsoIn": [
+                "people"
+              ],
+              "colour": "#81a1c1",
+              "follow": [],
+              "id": "c4",
+              "label": "Blue",
+              "sources": [
+                "c4"
+              ],
+              "usedBy": [
+                "name.4",
+                "state.info"
+              ]
+            },
+            {
+              "alsoIn": [
+                "people"
+              ],
+              "colour": "#ebcb8b",
+              "follow": [],
+              "id": "c11",
+              "label": "Bright yellow",
+              "sources": [
+                "c11"
+              ],
+              "usedBy": [
+                "name.9",
+                "state.aside"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "people",
+          "label": "People",
+          "swatches": [
+            {
+              "alsoIn": [],
+              "colour": "#b48ead",
+              "follow": [],
+              "id": "c5",
+              "label": "Magenta",
+              "sources": [
+                "c5",
+                "c13"
+              ],
+              "usedBy": [
+                "name.11",
+                "name.5"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#a3be8c",
+              "follow": [],
+              "id": "c10",
+              "label": "Bright green",
+              "sources": [
+                "c10"
+              ],
+              "usedBy": [
+                "name.8"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#81a1c1",
+              "follow": [],
+              "id": "c12",
+              "label": "Bright blue",
+              "sources": [
+                "c12"
+              ],
+              "usedBy": [
+                "name.10"
+              ]
+            }
+          ]
+        }
+      ],
+      "handSet": [
+        "composer.bg"
+      ]
+    }
+  },
+  "file": "nord-copy.tinhat-theme.json",
+  "kind": "compat",
+  "op": {
+    "id": "surface.raised",
+    "op": "swatch",
+    "value": "#434c5e"
+  },
+  "saved": "{\n  \"accent\": \"c6\",\n  \"format\": \"tinhat-theme\",\n  \"id\": \"nord-warmer\",\n  \"name\": \"Nord, warmer\",\n  \"palette\": {\n    \"ansi\": [\n      \"#3b4252\",\n      \"#bf616a\",\n      \"#a3be8c\",\n      \"#f0c070\",\n      \"#81a1c1\",\n      \"#b48ead\",\n      \"#88c0d0\",\n      \"#e5e9f0\",\n      \"#596377\",\n      \"#bf616a\",\n      \"#a3be8c\",\n      \"#ebcb8b\",\n      \"#81a1c1\",\n      \"#b48ead\",\n      \"#8fbcbb\",\n      \"#eceff4\"\n    ],\n    \"bg\": \"#2e3440\",\n    \"cursor\": \"#eceff4\",\n    \"fg\": \"#d8dee9\",\n    \"selectionBg\": \"#eceff4\",\n    \"selectionFg\": \"#4c566a\"\n  },\n  \"roles\": {\n    \"state.info\": \"c4\",\n    \"surface.raised\": \"#3b4252/0.9\"\n  },\n  \"shape\": {\n    \"radius\": 10\n  },\n  \"source\": \"iterm2-color-schemes@595c7fe2d836\",\n  \"tokens\": {\n    \"composer.bg\": \"#2e3440/0.8\",\n    \"toast.fg\": \"#88c0d0\",\n    \"tooltip.bg\": \"mix(surface.island, text.primary, 0.12)\"\n  },\n  \"v\": 1\n}\n"
+}

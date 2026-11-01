@@ -646,7 +646,7 @@ ColumnLayout {
                     // would just no-op confusingly. Re-enables within seconds.
                     enabled: !app.mHangingUp
                     text: app.mHangingUp ? "Cleaning up…" : (app.mCallFailReason.length > 0 ? "Try again" : "Rejoin")
-                    onClicked: app.callctl.joinCall(app.room.roomId)
+                    onClicked: app.callctl.joinCallPressed(app.room.roomId)
                 }
             }
         }
@@ -1804,6 +1804,32 @@ ColumnLayout {
                         }
                         tip: "Pop out into its own window"
                         onClicked: app.openPip(tile.modelData.id, tile.modelData.participant, tile.modelData.name || "", tile.modelData.screenshare === true)
+                    }
+                    // Pad QOL (2026-10-31): Full screen for a share — the call stage pinned to it in an OS full-screen window
+                    // (the web's share tile ⛶; Esc / this button / leaving the call goes back)
+                    ThToolButton {
+                        anchors.top: parent.top
+                        anchors.right: parent.right
+                        anchors.margins: 6
+                        anchors.rightMargin: 210
+                        z: 5
+                        visible: !tile.isSelf && !app.fakeCall && tile.modelData.screenshare === true && tile.width > 370 && tile.height > 60
+                        opacity: app.callChromeShown ? ((tileHover.hovered || hovered) ? 1.0 : 0.5) : 0.0
+                        enabled: app.callChromeShown
+                        Behavior on opacity { NumberAnimation { duration: island.app.dur } }
+                        implicitWidth: 28
+                        implicitHeight: 28
+                        app: island.app
+                        readonly property bool on: app.shareFullscreen === tile.modelData.id
+                        iconName: on ? "view-restore-symbolic" : "view-fullscreen-symbolic"
+                        iconSize: 16
+                        iconColor: Th.tileButtonIcon
+                        background: Rectangle {
+                            radius: 6
+                            color: parent.hovered ? Th.tileButtonBgHover : Th.tileButtonBg
+                        }
+                        tip: on ? "Leave full screen" : "Full screen"
+                        onClicked: on ? app.leaveShareFullscreen() : app.enterShareFullscreen(tile.modelData.id)
                     }
                     // 10.1 (TH-FLOAT-04): the per-person menu (volume, pull aside…) with a VISIBLE
                     // handle — a right-click-only menu was the discoverability bug.

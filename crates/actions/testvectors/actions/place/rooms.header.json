@@ -417,6 +417,51 @@
     },
     {
       "expect": {
+        "item": {
+          "a": "app.zoom.in"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.in"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.zoom.in"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.zoom.out"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.out"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.zoom.out"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.zoom.reset"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.reset"
+        },
+        "row": "rooms.header"
+      },
+      "name": "app.zoom.reset"
+    },
+    {
+      "expect": {
         "error": "context",
         "ok": false
       },
@@ -1773,6 +1818,21 @@
         "row": "rooms.header"
       },
       "name": "invites.revoke"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle"
+        },
+        "row": "rooms.header"
+      },
+      "name": "layout.drawer.toggle"
     },
     {
       "expect": {

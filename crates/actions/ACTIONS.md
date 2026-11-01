@@ -600,6 +600,11 @@ default rows placeable, every icon (and the placeholder's) in both packs. Warnin
     or this device is in that call itself → unavailable (`when`: dimmed in a row and in Ctrl+K); a stored room target
     reads "Pad — Valheim"; Ctrl+K "remote" finds it by its keyword; assignable (Settings → Shortcuts, Calls, no
     default key). Running it = the Pad button beside Join (a greyed Pad shows its one line).
+15. **App size** (`app.zoom.in` / `app.zoom.out` / `app.zoom.reset`, desktop only, group app, no `when`):
+    "Make everything bigger" `zoom-in-symbolic` (Ctrl+= and Ctrl++), "Make everything smaller" (Ctrl+-),
+    "Reset the app size" (Ctrl+0), scope `app`, typing on; always available (at the end of the range the host
+    answers with its toast); Ctrl+K "zoom" finds all three; assignable. The web's `defaultBindings` has none of
+    them and its Settings → Shortcuts does not list them (the browser zooms the page with the same keys).
 
 ## 14. Running actions (per app; informative, parity required)
 
@@ -690,3 +695,8 @@ and Settings → Calls → "Keep call buttons visible". `prefs.callBarPinned` is
 in both apps (like `call-collapsed`: "1" = on, anything else — absent — off; default off, so nothing changes until
 someone pins it). Hidden on phones (`requires: not ui.phone`): the phone call screen never hides its bar by itself (a
 tap shows / hides it). A pinned bar draws nothing while it sits there (GPU.md: no animation, no timer of its own).
+
+**2026-10-31: App size (desktop).** Ctrl+= / Ctrl++ / Ctrl+- / Ctrl+0 scale the whole desktop app, 70–200 % in
+10 % steps, kept per device (the device pref `ui-scale`; Settings → Appearance → Size has the same value as a slider).
+The actions are desktop-only: Tin Hat Web never takes those keys, so the browser's own zoom does the same job there
+(web docs/WEB-EXCEPTIONS.md); its Settings → Appearance → Size row says so.

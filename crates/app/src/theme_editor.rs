@@ -10,8 +10,9 @@
 //!
 //! `stateJson` = `{open, doc, base, target: "mine"|"new", baseName, canUndo, canRedo, dirty, hasPalette, variant,
 //! adjusted, roles, tokens (canonical colours), look, shape, opacity, accentNow, accentChips: [{value, colour, label}],
-//! issues: [{fg, bg, ratio, need, line}], fixes: [{op, line}]}` (issues = what the edits broke, §13.5; fixes: one per
-//! colour, roles first).
+//! issues: [{fg, bg, ratio, need, line}], fixes: [{op, line}], palette: tinhat_theme::palette's view (Simple's groups),
+//! usage: {role / slot id: n} (Advanced's "used by")}` (issues = what the edits broke, §13.5; fixes: one per colour,
+//! roles first).
 
 use core::pin::Pin;
 use std::collections::BTreeMap;
@@ -292,6 +293,9 @@ impl ThemeEditorRust {
             "accentChips": accent_chips(&s.doc),
             "issues": issues.iter().map(|i| { let mut v = i.to_json(); v["line"] = json!(issue_line(i)); v }).collect::<Vec<_>>(),
             "fixes": fixes.into_iter().map(|(_, v)| v).collect::<Vec<_>>(),
+            // THEME-SIMPLE (2026-10-31): Simple's palette groups + Advanced's "used by" (tinhat_theme::palette)
+            "palette": tinhat_theme::palette::palette_view(&s.doc, app_tokens()).to_json(),
+            "usage": json!(tinhat_theme::palette::usage_counts(&s.doc, app_tokens())),
         })
     }
 }

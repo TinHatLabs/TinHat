@@ -2,9 +2,11 @@
 // numbers): a 52 px strip above the dock host (the host is that much shorter while editing, so the bar never covers an
 // island's handle), the 44 px bar centred in it. Editing: ‹name› · Undo · Redo · Presets ▾ · Add island ▾ · Add widget ·
 // Reset · Cancel · Done. Its panels (the presets with their static schematic thumbnails, the hidden-islands drawer,
-// the discard confirm) are drawn here too, over the host — plain items, not popups, so a row of the drawer can be
+// the discard confirm) are drawn here too, over the host (in panelLayer, which covers the shell body: see there) — plain items, not popups, so a row of the drawer can be
 // dragged into the layout with the same press. The session's keys live here: Ctrl+Z · Ctrl+Shift+Z / Ctrl+Y ·
 // Ctrl+Enter (Ctrl+E is Main.qml's). Exists only while editing (a Loader in Main.qml).
+// feat/editmode-buttons-drawers (EDITMODE-UI §7.2, §7.3): Add button ▾ (one action of the catalogue in a new button
+// island, with its look) and Add drawer ▾ (an island goes into a drawer that a new button opens) — the web's Toolbar.tsx.
 import QtQuick
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
@@ -23,9 +25,18 @@ Item {
     readonly property real hostW: tb.host ? tb.host.width : tb.width
     readonly property bool labels: tb.hostW >= 980
     readonly property bool nameChip: tb.hostW >= 760
-    property string panel: ""              // "" | "presets" | "add" | "confirm"
+    property string panel: ""              // "" | "presets" | "add" | "button" | "drawer" | "confirm"
+    property string btnLook: "iconLabel"   // Add button: the new button's look (icon | iconLabel | label)
+    property string btnQuery: ""           // Add button: the search
+    property string drawerIcon: "drawer"   // Add drawer: the button's icon (the action's icon param)
     function closePanels() { tb.panel = "" }
-    onPanelChanged: if (tb.panel === "presets") presetsPanel.refresh()
+    onPanelChanged: {
+        if (tb.panel === "presets") presetsPanel.refresh()
+        // an open panel takes the keyboard (Escape closes it, Tab walks it); closed, the edit layer gets it back — not
+        // the composer or whatever had it before (their own Escape would win)
+        if (tb.panel.length > 0) panelLayer.forceActiveFocus()
+        else if (panelLayer.activeFocus && tb.editLayer) tb.editLayer.forceActiveFocus()
+    }
 
     function focusFirst() { if (tb.em.readOnly) doneBtn.forceActiveFocus(Qt.TabFocusReason); else undoBtn.forceActiveFocus(Qt.TabFocusReason) }
     function focusLast() { doneBtn.forceActiveFocus(Qt.TabFocusReason) }
@@ -33,6 +44,9 @@ Item {
     Shortcut { sequence: "Ctrl+Z"; enabled: tb.em.open; onActivated: tb.em.undo() }
     Shortcut { sequences: ["Ctrl+Shift+Z", "Ctrl+Y"]; enabled: tb.em.open; onActivated: tb.em.redo() }
     Shortcut { sequences: ["Ctrl+Return", "Ctrl+Enter"]; enabled: tb.em.open; onActivated: tb.em.done() }
+    // Escape closes an open panel (the web's popovers: closeOnEscape); with none open it is the layer's (Esc never
+    // leaves edit mode)
+    Shortcut { sequence: "Escape"; enabled: tb.panel.length > 0; onActivated: tb.closePanels() }
 
     component TBtn: Rectangle {
         id: b
@@ -205,6 +219,20 @@ Item {
                 iconName: "list-add-symbolic"; label: "Add widget"; showLabel: tb.labels
                 onClicked: { tb.closePanels(); tb.em.addWidget() }
             }
+            TBtn {
+                id: buttonBtn
+                objectName: "editTool:add-button"
+                visible: !tb.em.readOnly
+                iconName: "media-playback-start-symbolic"; label: "Add button"; showLabel: tb.labels
+                onClicked: { tb.btnQuery = ""; tb.panel = tb.panel === "button" ? "" : "button" }
+            }
+            TBtn {
+                id: drawerBtn
+                objectName: "editTool:add-drawer"
+                visible: !tb.em.readOnly
+                iconName: "sidebar-expand-left-symbolic"; label: "Add drawer"; showLabel: tb.labels
+                onClicked: tb.panel = tb.panel === "drawer" ? "" : "drawer"
+            }
             Sep { visible: !tb.em.readOnly }
             TBtn {
                 visible: !tb.em.readOnly
@@ -235,16 +263,35 @@ Item {
     }
 
     // ---- panels (over the host) ----
+    // The panels live in panelLayer, an empty item over the whole shell body (like the outside-click catcher), never
+    // inside this 52 px strip. Qt 6.11's hit test skips an item's whole subtree for a point outside the item once it
+    // has cached "every child is inside my bounds" (QQuickItemPrivate::eventHandlingChildrenWithinBounds), and that
+    // cache is never reset: the toolbar Loader caches it while still empty (before edit mode opens), so panels drawn
+    // below the strip as children of tb got no hover and no click (Presets / Add island did nothing; 12.1.x Flatpak).
+    // Rule: an interactive item must sit inside its parent's box all the way up (the panels are sized to fit the body).
+    FocusScope {
+        id: panelLayer
+        objectName: "editPanelLayer"
+        Keys.onEscapePressed: (event) => { tb.closePanels(); event.accepted = true }
+        parent: tb.overlay ? tb.overlay : tb
+        anchors.fill: parent
+        z: 101
+        visible: tb.visible && tb.overlay !== null   // never inside the 52 px strip (the bug), follows the toolbar
+        enabled: tb.enabled
+    }
     component Panel: Rectangle {
+        parent: panelLayer
         radius: 10
         color: Th.surfaceOverlay
         border.width: 1
         border.color: Th.borderStrong
         z: 100
     }
+    // the height left under y inside the body: no panel reaches past panelLayer's edge (Qt's cache again, one level up)
+    function _room(y) { return Math.max(80, panelLayer.height - y - 8) }
     function _below(btn, w) {
-        var p = btn.mapToItem(tb, 0, btn.height)
-        return { x: Math.max(8, Math.min(p.x, tb.width - w - 8)), y: p.y + 6 }
+        var p = btn.mapToItem(panelLayer, 0, btn.height)
+        return { x: Math.max(8, Math.min(p.x, panelLayer.width - w - 8)), y: p.y + 6 }
     }
 
     // Presets ▾ (EDITMODE-UI §8): 360 wide, padding 4, one 72 px row per preset with its static schematic (96 × 60,
@@ -254,11 +301,11 @@ Item {
         id: presetsPanel
         objectName: "editPanel:presets"
         visible: tb.panel === "presets"
-        width: 360
+        width: Math.min(360, panelLayer.width - 16)
         readonly property var pos: tb.panel === "presets" ? tb._below(presetsBtn, width) : ({ x: 0, y: 0 })
         x: pos.x
         y: pos.y
-        height: presetCol.implicitHeight + 8
+        height: Math.min(presetCol.implicitHeight + 8, tb._room(y))
         readonly property var presets: [
             { id: "classic", name: "Classic", line: "Spaces and rooms on the left, the room on the right." },
             { id: "compact", name: "Compact", line: "Tighter gaps and a narrower room list." },
@@ -290,84 +337,90 @@ Item {
             }
             presetsPanel.thumbs = out
         }
-        Column {
-            id: presetCol
-            x: 4
-            y: 4
-            width: parent.width - 8
-            Repeater {
-                model: presetsPanel.presets
-                delegate: Rectangle {
-                    id: prow
-                    required property var modelData
-                    objectName: "editPreset:" + modelData.id
-                    width: presetCol.width
-                    height: 72
-                    radius: 8
-                    color: pma.containsMouse ? Th.surfaceHover : "transparent"
-                    Rectangle {   // the schematic
-                        id: thumb
-                        x: 6
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 96
-                        height: 60
-                        radius: 4
-                        color: Th.editmodePresetBg
-                        clip: true
-                        Repeater {
-                            model: presetsPanel.thumbs[prow.modelData.id] || []
-                            delegate: Rectangle {
-                                required property var modelData
-                                x: modelData.x; y: modelData.y; width: modelData.w; height: modelData.h
-                                radius: 2
-                                color: modelData.main ? Th.editmodePresetMain : Th.editmodePresetIsland
+        Flickable {   // a short window: the list scrolls inside the body (never past its edge: see panelLayer)
+            anchors.fill: parent
+            anchors.margins: 4
+            contentHeight: presetCol.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: contentHeight > height
+            Column {
+                id: presetCol
+                width: parent.width
+                Repeater {
+                    model: presetsPanel.presets
+                    delegate: Rectangle {
+                        id: prow
+                        required property var modelData
+                        objectName: "editPreset:" + modelData.id
+                        width: presetCol.width
+                        height: 72
+                        radius: 8
+                        color: pma.containsMouse ? Th.surfaceHover : "transparent"
+                        Rectangle {   // the schematic
+                            id: thumb
+                            x: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 96
+                            height: 60
+                            radius: 4
+                            color: Th.editmodePresetBg
+                            clip: true
+                            Repeater {
+                                model: presetsPanel.thumbs[prow.modelData.id] || []
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    x: modelData.x; y: modelData.y; width: modelData.w; height: modelData.h
+                                    radius: 2
+                                    color: modelData.main ? Th.editmodePresetMain : Th.editmodePresetIsland
+                                }
                             }
                         }
+                        Column {
+                            anchors.left: thumb.right
+                            anchors.leftMargin: 10
+                            anchors.right: check.left
+                            anchors.rightMargin: 4
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: prow.modelData.name }
+                            Text { textFormat: Text.PlainText; width: parent.width; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: prow.modelData.line }
+                        }
+                        Kirigami.Icon {
+                            id: check
+                            anchors.right: parent.right
+                            anchors.rightMargin: 4
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 16; height: 16
+                            source: "checkmark-symbolic"
+                            color: Th.accentBright
+                            isMask: true
+                            opacity: tb.em.currentPreset === prow.modelData.id ? 1 : 0
+                        }
+                        MouseArea {
+                            id: pma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: { tb.closePanels(); tb.em.preset(prow.modelData.id) }
+                        }
                     }
+                }
+                Rectangle {
+                    visible: tb.em.formJson !== tb.em.startJson
+                    width: presetCol.width
+                    height: visible ? 44 : 0
+                    radius: 8
+                    color: prevMa.containsMouse ? Th.surfaceHover : "transparent"
+                    Kirigami.Icon { x: 10; anchors.verticalCenter: parent.verticalCenter; width: 16; height: 16; source: "edit-undo-symbolic"; color: Th.textPrimary; isMask: true }
                     Column {
-                        anchors.left: thumb.right
-                        anchors.leftMargin: 10
-                        anchors.right: check.left
-                        anchors.rightMargin: 4
+                        x: 36
+                        width: parent.width - 42
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2
-                        Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: prow.modelData.name }
-                        Text { textFormat: Text.PlainText; width: parent.width; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: prow.modelData.line }
+                        Text { font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: "Previous" }
+                        Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: "What you had when you opened edit mode." }
                     }
-                    Kirigami.Icon {
-                        id: check
-                        anchors.right: parent.right
-                        anchors.rightMargin: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 16; height: 16
-                        source: "checkmark-symbolic"
-                        color: Th.accentBright
-                        isMask: true
-                        opacity: tb.em.currentPreset === prow.modelData.id ? 1 : 0
-                    }
-                    MouseArea {
-                        id: pma
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: { tb.closePanels(); tb.em.preset(prow.modelData.id) }
-                    }
+                    MouseArea { id: prevMa; anchors.fill: parent; hoverEnabled: true; onClicked: { tb.closePanels(); tb.em.preset("previous") } }
                 }
-            }
-            Rectangle {
-                visible: tb.em.formJson !== tb.em.startJson
-                width: presetCol.width
-                height: visible ? 44 : 0
-                radius: 8
-                color: prevMa.containsMouse ? Th.surfaceHover : "transparent"
-                Kirigami.Icon { x: 10; anchors.verticalCenter: parent.verticalCenter; width: 16; height: 16; source: "edit-undo-symbolic"; color: Th.textPrimary; isMask: true }
-                Column {
-                    x: 36
-                    width: parent.width - 42
-                    anchors.verticalCenter: parent.verticalCenter
-                    Text { font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: "Previous" }
-                    Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: "What you had when you opened edit mode." }
-                }
-                MouseArea { id: prevMa; anchors.fill: parent; hoverEnabled: true; onClicked: { tb.closePanels(); tb.em.preset("previous") } }
             }
         }
     }
@@ -379,11 +432,11 @@ Item {
         objectName: "editPanel:add"
         visible: tb.panel === "add"
         opacity: tb.em.dragRef.length > 0 ? 0 : 1      // a row being dragged: the panel steps aside, the press lives on
-        width: 320
+        width: Math.min(320, panelLayer.width - 16)
         readonly property var pos: tb.panel === "add" ? tb._below(addBtn, width) : ({ x: 0, y: 0 })
         x: pos.x
         y: pos.y
-        height: Math.min(addCol.implicitHeight + 12, (tb.overlay ? tb.overlay.height : 600) * 0.6)
+        height: Math.min(addCol.implicitHeight + 12, panelLayer.height * 0.6, tb._room(y))
         Flickable {
             anchors.fill: parent
             anchors.margins: 6
@@ -477,6 +530,251 @@ Item {
         }
     }
 
+    // Add button ▾ (EDITMODE-UI §7.2): the look of the new button, a search, and every action that may go into your own
+    // button islands (ACTIONS.md §9.6, the row kind buttons.main) by group; a row = a new button island holding it
+    Panel {
+        id: buttonPanel
+        objectName: "editPanel:button"
+        visible: tb.panel === "button"
+        width: Math.min(340, panelLayer.width - 16)
+        readonly property var pos: tb.panel === "button" ? tb._below(buttonBtn, width) : ({ x: 0, y: 0 })
+        x: pos.x
+        y: pos.y
+        height: Math.min(btnHead.implicitHeight + 8 + 6 + btnCol.implicitHeight + 12, 560, tb._room(y))
+        readonly property var groups: {
+            if (tb.panel !== "button") return []
+            var app = tb.em.app
+            if (!app || !app.actionsCtl || !app.actions) return []
+            try { return JSON.parse(String(app.actionsCtl.drawer("buttons.main", app.actions.snapshotJson))).groups || [] } catch (e) { return [] }
+        }
+        readonly property var rows: {
+            var q = tb.btnQuery.trim().toLowerCase(), out = []
+            for (var g = 0; g < buttonPanel.groups.length; g++) {
+                var gr = buttonPanel.groups[g], items = []
+                for (var i = 0; i < gr.items.length; i++) {
+                    if (gr.items[i].a === "layout.drawer.toggle") continue   // Add drawer places it (with its island)
+                    if (q.length === 0 || String(gr.items[i].label).toLowerCase().indexOf(q) >= 0) items.push(gr.items[i])
+                }
+                if (items.length === 0) continue
+                out.push({ head: true, label: gr.label })
+                for (var k = 0; k < items.length; k++) out.push({ head: false, item: items[k] })
+            }
+            return out
+        }
+        Column {
+            id: btnHead
+            x: 8; y: 8
+            width: parent.width - 16
+            spacing: 8
+            Row {
+                spacing: 4
+                Text { anchors.verticalCenter: parent.verticalCenter; rightPadding: 4; font.pixelSize: 12; color: Th.textSecondary; text: "Look" }
+                Repeater {
+                    model: [{ id: "icon", label: "Icon" }, { id: "iconLabel", label: "Icon and label" }, { id: "label", label: "Label" }]
+                    delegate: Rectangle {
+                        required property var modelData
+                        objectName: "editLook:" + modelData.id
+                        height: 26
+                        width: lookText.implicitWidth + 16
+                        radius: 6
+                        color: tb.btnLook === modelData.id ? Th.accentBase : (lookMa.containsMouse ? Th.surfaceHover : "transparent")
+                        border.width: 1
+                        border.color: tb.btnLook === modelData.id ? Th.accentBase : Th.borderStrong
+                        Text { id: lookText; anchors.centerIn: parent; font.pixelSize: 12; color: tb.btnLook === parent.modelData.id ? Th.textOnAccent : Th.textPrimary; text: parent.modelData.label; textFormat: Text.PlainText }
+                        MouseArea { id: lookMa; anchors.fill: parent; hoverEnabled: true; onClicked: tb.btnLook = parent.modelData.id }
+                        activeFocusOnTab: true
+                        Keys.onReturnPressed: tb.btnLook = modelData.id
+                        Keys.onSpacePressed: tb.btnLook = modelData.id
+                        Accessible.role: Accessible.RadioButton
+                        Accessible.name: modelData.label
+                        Accessible.checked: tb.btnLook === modelData.id
+                        Rectangle { anchors.fill: parent; anchors.margins: -3; radius: 8; color: "transparent"; border.width: 2; border.color: Th.borderFocus; visible: parent.activeFocus }
+                    }
+                }
+            }
+            Controls.TextField {
+                id: btnSearch
+                objectName: "editButtonSearch"
+                width: parent.width
+                placeholderText: "Search actions…"
+                text: tb.btnQuery
+                onTextEdited: tb.btnQuery = text
+            }
+        }
+        Flickable {
+            anchors.top: btnHead.bottom
+            anchors.topMargin: 6
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: 4
+            contentHeight: btnCol.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: contentHeight > height
+            Column {
+                id: btnCol
+                width: parent.width
+                Text {
+                    visible: buttonPanel.rows.length === 0
+                    width: parent.width
+                    padding: 10
+                    wrapMode: Text.Wrap
+                    font.pixelSize: 12
+                    color: Th.textSecondary
+                    text: "No action matches."
+                }
+                Repeater {
+                    model: buttonPanel.rows
+                    delegate: Rectangle {
+                        id: brow
+                        required property var modelData
+                        objectName: modelData.head ? "editButtonGroup:" + modelData.label : "editButtonAction:" + modelData.item.a
+                        width: btnCol.width
+                        height: modelData.head ? 26 : 32
+                        radius: 6
+                        color: !modelData.head && bMa.containsMouse ? Th.surfaceHover : "transparent"
+                        Text {
+                            visible: brow.modelData.head
+                            x: 8
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 4
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            font.capitalization: Font.AllUppercase
+                            color: Th.textSecondary
+                            text: brow.modelData.head ? brow.modelData.label : ""
+                            textFormat: Text.PlainText
+                        }
+                        Kirigami.Icon {
+                            visible: !brow.modelData.head
+                            x: 10; anchors.verticalCenter: parent.verticalCenter; width: 16; height: 16
+                            source: !brow.modelData.head && brow.modelData.item.icon ? brow.modelData.item.icon : ""
+                            color: Th.textPrimary; isMask: true
+                        }
+                        Text {
+                            visible: !brow.modelData.head
+                            x: 34
+                            width: parent.width - 42
+                            anchors.verticalCenter: parent.verticalCenter
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                            font.pixelSize: 13
+                            color: Th.textPrimary
+                            text: brow.modelData.head ? "" : brow.modelData.item.label
+                        }
+                        activeFocusOnTab: !modelData.head
+                        Accessible.role: Accessible.Button
+                        Accessible.name: modelData.head ? "" : modelData.item.label
+                        function activate() { var em = tb.em, a = brow.modelData.item.a, look = tb.btnLook, t = tb; em.newActionButton({ a: a }, look); t.closePanels() }
+                        Keys.onReturnPressed: if (!modelData.head) brow.activate()
+                        Keys.onSpacePressed: if (!modelData.head) brow.activate()
+                        Rectangle { anchors.fill: parent; radius: 6; color: "transparent"; border.width: 2; border.color: Th.borderFocus; visible: parent.activeFocus }
+                        MouseArea {
+                            id: bMa
+                            enabled: !brow.modelData.head
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            // act first: closing the panel empties this list and destroys this delegate (and its scope)
+                            onClicked: brow.activate()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Add drawer ▾ (EDITMODE-UI §7.3): the drawer button's icon, then the island to put in it (placed ones are hidden by
+    // it; the room, the call and room info can't go into a drawer)
+    Panel {
+        id: drawerPanel
+        objectName: "editPanel:drawer"
+        visible: tb.panel === "drawer"
+        width: Math.min(320, panelLayer.width - 16)
+        readonly property var pos: tb.panel === "drawer" ? tb._below(drawerBtn, width) : ({ x: 0, y: 0 })
+        x: pos.x
+        y: pos.y
+        readonly property var targets: tb.panel === "drawer" ? tb.em.drawerTargets() : []
+        readonly property var icons: [
+            { id: "drawer", icon: "sidebar-expand-left-symbolic" }, { id: "star", icon: "starred-symbolic" },
+            { id: "music", icon: "emblem-music-symbolic" }, { id: "games", icon: "applications-games-symbolic" },
+            { id: "people", icon: "system-users-symbolic" }, { id: "chat", icon: "dialog-messages-symbolic" },
+            { id: "calendar", icon: "view-calendar-symbolic" }, { id: "grid", icon: "view-grid-symbolic" },
+            { id: "info", icon: "documentinfo-symbolic" }, { id: "pin", icon: "pin-symbolic" }
+        ]
+        height: Math.min(drawerCol.implicitHeight + 16, tb._room(y))
+        Flickable {
+            anchors.fill: parent
+            anchors.margins: 8
+            contentHeight: drawerCol.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: contentHeight > height
+            Column {
+                id: drawerCol
+                width: parent.width
+                spacing: 6
+                Text { width: parent.width; wrapMode: Text.Wrap; font.pixelSize: 12; color: Th.textSecondary; text: "A button opens the island in a drawer under it. Pick its icon, then the island." }
+                Flow {
+                    width: parent.width
+                    spacing: 4
+                    Repeater {
+                        model: drawerPanel.icons
+                        delegate: Rectangle {
+                            required property var modelData
+                            objectName: "editDrawerIcon:" + modelData.id
+                            width: 28; height: 28; radius: 6
+                            color: tb.drawerIcon === modelData.id ? Th.accentBase : (icMa.containsMouse ? Th.surfaceHover : "transparent")
+                            border.width: 1
+                            border.color: tb.drawerIcon === modelData.id ? Th.accentBase : Th.borderStrong
+                            Kirigami.Icon { anchors.centerIn: parent; width: 16; height: 16; source: parent.modelData.icon; isMask: true
+                                            color: tb.drawerIcon === parent.modelData.id ? Th.textOnAccent : Th.textPrimary }
+                            MouseArea { id: icMa; anchors.fill: parent; hoverEnabled: true; onClicked: tb.drawerIcon = parent.modelData.id }
+                            activeFocusOnTab: true
+                            Keys.onReturnPressed: tb.drawerIcon = modelData.id
+                            Keys.onSpacePressed: tb.drawerIcon = modelData.id
+                            Accessible.checked: tb.drawerIcon === modelData.id
+                            Rectangle { anchors.fill: parent; anchors.margins: -3; radius: 8; color: "transparent"; border.width: 2; border.color: Th.borderFocus; visible: parent.activeFocus }
+                            Accessible.role: Accessible.RadioButton
+                            Accessible.name: parent ? modelData.id : ""
+                        }
+                    }
+                }
+                Repeater {
+                    model: drawerPanel.targets
+                    delegate: Rectangle {
+                        id: drow
+                        required property string modelData
+                        readonly property var t: tb.em.textOf(modelData)
+                        readonly property bool isHidden: tb.em.hidden.indexOf(modelData) >= 0
+                        objectName: "editDrawerTarget:" + modelData
+                        width: drawerCol.width
+                        height: 44
+                        radius: 8
+                        color: dMa.containsMouse ? Th.surfaceHover : "transparent"
+                        Kirigami.Icon { x: 10; anchors.verticalCenter: parent.verticalCenter; width: 20; height: 20; source: drow.t.icon; color: Th.textPrimary; isMask: true }
+                        Column {
+                            x: 40
+                            width: parent.width - 48
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: drow.t.name }
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary
+                                   text: drow.isHidden ? "Hidden now — a drawer brings it back" : "Moves into the drawer" }
+                        }
+                        function activate() { var em = tb.em, r = drow.modelData, ic = tb.drawerIcon, t = tb; em.newDrawer(r, ic); t.closePanels() }
+                        activeFocusOnTab: true
+                        Keys.onReturnPressed: drow.activate()
+                        Keys.onSpacePressed: drow.activate()
+                        Accessible.role: Accessible.Button
+                        Accessible.name: t.name
+                        Rectangle { anchors.fill: parent; radius: 8; color: "transparent"; border.width: 2; border.color: Th.borderFocus; visible: parent.activeFocus }
+                        MouseArea { id: dMa; anchors.fill: parent; hoverEnabled: true; onClicked: drow.activate() }
+                    }
+                }
+            }
+        }
+    }
+
     // Cancel with changes: "Discard your layout changes?" — Keep editing / Discard (danger)
     Panel {
         id: confirmPanel
@@ -484,9 +782,9 @@ Item {
         visible: tb.panel === "confirm"
         width: confirmCol.implicitWidth + 24
         height: confirmCol.implicitHeight + 20
-        readonly property var pos: tb.panel === "confirm" ? cancelBtn.mapToItem(tb, cancelBtn.width, cancelBtn.height) : ({ x: 0, y: 0 })
-        x: Math.max(8, Math.min(pos.x - width, tb.width - width - 8))
-        y: pos.y + 6
+        readonly property var pos: tb.panel === "confirm" ? cancelBtn.mapToItem(panelLayer, cancelBtn.width, cancelBtn.height) : ({ x: 0, y: 0 })
+        x: Math.max(8, Math.min(pos.x - width, panelLayer.width - width - 8))
+        y: Math.max(8, Math.min(pos.y + 6, panelLayer.height - height - 8))
         Column {
             id: confirmCol
             x: 12

@@ -134,6 +134,27 @@ pub mod qobject {
         fn apply_pref(self: Pin<&mut SettingsController>, key: &QString, value: &QString);
         #[qinvokable]
         fn pref(self: &SettingsController, key: &QString) -> QString;
+        /// App size (2026-10-31, docs/UI-ZOOM.md; ui_scale.rs): this device's stored size in percent (70–200).
+        #[qinvokable]
+        fn ui_scale_percent(self: &SettingsController) -> i32;
+        /// One key press from `cur`: `dir` > 0 bigger, < 0 smaller, 0 = 100 %.
+        #[qinvokable]
+        fn ui_scale_step(self: &SettingsController, cur: i32, dir: i32) -> i32;
+        /// Any value → a size in range, on a 10 % step.
+        #[qinvokable]
+        fn ui_scale_normalize(self: &SettingsController, p: i32) -> i32;
+        /// Store the size and apply it to every window now. true = changed live, false = at the next start.
+        #[qinvokable]
+        fn apply_ui_scale(self: Pin<&mut SettingsController>, p: i32) -> bool;
+        /// Can the size change while Tin Hat runs here? (false: a restart-only build / Qt — Settings says so)
+        #[qinvokable]
+        fn ui_scale_live_capable(self: &SettingsController) -> bool;
+        /// Is this size waiting for a restart (no live change here, and not the size this run started with)?
+        #[qinvokable]
+        fn ui_scale_pending(self: &SettingsController, p: i32) -> bool;
+        /// The toast after a key press ("App size 120% · Ctrl+0 resets").
+        #[qinvokable]
+        fn ui_scale_toast(self: &SettingsController, p: i32, prev: i32, dir: i32) -> QString;
         /// QML: settings.refreshCallTileView() — mirror the persisted tile view memory.
         #[qinvokable]
         fn refresh_call_tile_view(self: Pin<&mut SettingsController>);
@@ -534,6 +555,34 @@ impl qobject::SettingsController {
     pub fn pref(&self, key: &QString) -> QString {
         let k: String = key.to_string().chars().filter(|c| c.is_ascii_alphanumeric() || *c == '-').take(40).collect();
         QString::from(&overlay_pref_read(&format!("ui-{k}")).unwrap_or_default())
+    }
+
+    pub fn ui_scale_percent(&self) -> i32 {
+        crate::ui_scale::stored()
+    }
+
+    pub fn ui_scale_step(&self, cur: i32, dir: i32) -> i32 {
+        crate::ui_scale::step(cur, dir)
+    }
+
+    pub fn ui_scale_normalize(&self, p: i32) -> i32 {
+        crate::ui_scale::normalize(p)
+    }
+
+    pub fn apply_ui_scale(self: Pin<&mut Self>, p: i32) -> bool {
+        crate::ui_scale::set(p).1
+    }
+
+    pub fn ui_scale_live_capable(&self) -> bool {
+        crate::ui_scale::live_capable()
+    }
+
+    pub fn ui_scale_pending(&self, p: i32) -> bool {
+        crate::ui_scale::pending(p)
+    }
+
+    pub fn ui_scale_toast(&self, p: i32, prev: i32, dir: i32) -> QString {
+        QString::from(&crate::ui_scale::toast(p, prev, dir, crate::ui_scale::pending(p)))
     }
 
     /// Settings window search (SETTINGS-WINDOW.md §4): the shared matcher over the embedded index.

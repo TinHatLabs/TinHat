@@ -72,7 +72,7 @@ Rectangle {
                 text: bar.app.mConnecting ? "Joining…" : "Join"
                 busy: bar.app.mConnecting
                 enabled: !bar.app.mConnecting
-                onClicked: if (bar.entry) bar.app.callctl.joinCall(bar.entry.room)
+                onClicked: if (bar.entry) bar.app.callctl.joinCallPressed(bar.entry.room)
             }
         }
     }

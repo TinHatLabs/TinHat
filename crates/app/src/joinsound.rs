@@ -95,6 +95,10 @@ pub async fn play_on_join(room_id: &str) {
         eprintln!("[joinsound] skipped: left the call (or moved to another room's call) while the sound's link was fetched");
         return;
     }
+    if crate::call_ctl::watching_now() {
+        eprintln!("[joinsound] skipped: watching (a watcher publishes nothing)");
+        return;
+    }
     *last_played().lock().unwrap() = Some(Instant::now());
     eprintln!("[joinsound] publishing join sound into {room_id}");
     if let Err(e) = tinhat_streamer::play_url_in_call(&play).await {

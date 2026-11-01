@@ -379,10 +379,13 @@ impl qobject::UpdateController {
                         // self-lock is fixed in early_startup; what remains is genuinely
                         // another holder (AV scan, second copy) — say so instead of
                         // looping the banner with no explanation.
+                        // Anything else (a refused or broken download, a bundle the unzip won't take): say so and give the
+                        // manual way, so a bad update never leaves an install with no way forward (deps round 2026-10-31).
                         let hint = if e.contains("os error 32") {
                             " — another program is holding the app folder (antivirus? a second copy?). Try again in a minute."
+                                .to_string()
                         } else {
-                            ""
+                            format!(" — or {}", manual_update_hint(portable_run()))
                         };
                         o.as_mut().set_status(QString::from(&format!("Update failed: {e}{hint}")));
                     }

@@ -417,6 +417,51 @@
     },
     {
       "expect": {
+        "item": {
+          "a": "app.zoom.in"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.in"
+        },
+        "row": "call.tile"
+      },
+      "name": "app.zoom.in"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.zoom.out"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.out"
+        },
+        "row": "call.tile"
+      },
+      "name": "app.zoom.out"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "app.zoom.reset"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.reset"
+        },
+        "row": "call.tile"
+      },
+      "name": "app.zoom.reset"
+    },
+    {
+      "expect": {
         "error": "context",
         "ok": false
       },
@@ -1779,6 +1824,21 @@
         "row": "call.tile"
       },
       "name": "invites.revoke"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle"
+        },
+        "row": "call.tile"
+      },
+      "name": "layout.drawer.toggle"
     },
     {
       "expect": {

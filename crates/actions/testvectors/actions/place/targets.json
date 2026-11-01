@@ -1219,6 +1219,54 @@
     },
     {
       "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.in",
+          "target": {
+            "room": "!room:example.com"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "app.zoom.in: target on a targetless action"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.out",
+          "target": {
+            "room": "!room:example.com"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "app.zoom.out: target on a targetless action"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "app.zoom.reset",
+          "target": {
+            "room": "!room:example.com"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "app.zoom.reset: target on a targetless action"
+    },
+    {
+      "expect": {
         "error": "context",
         "ok": false
       },
@@ -5776,6 +5824,333 @@
         "row": "buttons.main"
       },
       "name": "invites.revoke: not an object"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {}
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: the known subject"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle"
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {}
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "island",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "island": 7
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: a number"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "calendar"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "calendar"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=calendar"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "chat"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "chat"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=chat"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "drawer"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "drawer"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=drawer"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "games"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "games"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=games"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "grid"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "grid"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=grid"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "info"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "info"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=info"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "music"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "music"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=music"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "people"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "people"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=people"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "pin"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "pin"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=pin"
+    },
+    {
+      "expect": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "star"
+          }
+        },
+        "ok": true
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "star"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon=star"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "icon",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "icon": "zz"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: param icon invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "zzz": "1"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": {
+            "a1": "1",
+            "a2": "2",
+            "a3": "3",
+            "a4": "4",
+            "a5": "5"
+          }
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "item": {
+          "a": "layout.drawer.toggle",
+          "target": "x"
+        },
+        "row": "buttons.main"
+      },
+      "name": "layout.drawer.toggle: not an object"
     },
     {
       "expect": {

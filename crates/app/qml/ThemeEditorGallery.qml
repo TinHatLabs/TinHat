@@ -113,6 +113,15 @@ Controls.ApplicationWindow {
     // ---- the states (the web's editor-shots.mjs STATES, same ids) ------------------------------------------------------
     readonly property var states: [
         { id: "editor-simple-nord", theme: "nord" },
+        // THEME-SIMPLE (2026-10-31): Simple = the palette (the web's palette-* states)
+        { id: "palette-goose", theme: "goose" },
+        { id: "palette-oled", theme: "oled" },
+        { id: "palette-goose-moved", theme: "goose", ops: [{ op: "group", id: "backgrounds", value: "#0a1a2a" }, { op: "group", id: "accent", value: "#2f6fd6" }] },
+        { id: "palette-popover-lead", theme: "goose", step: "simple:lead:backgrounds" },
+        { id: "palette-popover-member", theme: "goose", step: "simple:swatch:surface.raised" },
+        { id: "palette-more-people", theme: "goose", step: "simple:more" },
+        { id: "palette-advanced-hints", theme: "goose", mode: "advanced", query: "surface" },
+        { id: "palette-handset", theme: "goose", step: "simple:handset" },
         { id: "editor-simple-oled", theme: "oled" },
         { id: "editor-simple-latte", theme: "catppuccin-latte" },
         { id: "editor-simple-edited", theme: "nord", ops: [{ op: "accent", value: "c5" }, { op: "font", slot: "ui", value: "Inter" }, { op: "shape", key: "radius", value: 16 }, { op: "opacity", value: 85 }] },
@@ -197,6 +206,7 @@ Controls.ApplicationWindow {
         var st = win.states[win.idx]
         var s = st.step || ""
         if (s === "popover-background") themeEditor.testOpenPopover("background", "")
+        else if (s.indexOf("simple:") === 0) themeEditor.testSimple(s.substring(7))
         else if (s.indexOf("popover-row:") === 0) { var p = s.split(":"); themeEditor.testOpenPopover(p[1], p[2]) }
         else if (s === "more") themeEditor.testOpenMore()
         else if (s === "close") themeEditor.cancel(false)

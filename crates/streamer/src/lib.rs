@@ -105,6 +105,8 @@ pub use hear::{fix_system_level as hear_fix_system_level, request_heal as hear_r
 // 11.3 same room: the app's invokables + the UI snapshot + the remembered pairs store.
 pub use sameroom::{answer_ask as same_room_answer, cancel_ask as same_room_cancel, auto_link as same_room_auto, forget_pair as same_room_forget_pair, link_with as same_room_link, pairs_json as same_room_pairs_json, set_auto as same_room_set_auto, set_hear_through as same_room_hear_through, set_store_path as same_room_set_store_path, state_json as same_room_json, unlink as same_room_unlink};
 pub use call::{mic_capture_down, mic_wanted};
+// Pad QOL (2026-10-31): watching — no microphone captured until this device's own "Talk here"
+pub use call::{capture_barred, set_capture_barred};
 // 0.8.33: the speaker outputs summed into the echo reference (empty = Tin Hat's own output).
 pub use aec::{ref_outputs as aec_ref_outputs, set_ref_outputs as set_aec_ref_outputs};
 // Abandoned-connect cleanup (do_join timeout path) — see call.rs::abandon_partial_connect.

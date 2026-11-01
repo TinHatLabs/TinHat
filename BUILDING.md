@@ -28,6 +28,11 @@ A release binary shouldn't carry the build machine's paths (Rust panic locations
 build from a neutral folder with a neutral `CARGO_HOME` (e.g. `C:\tinhat\src`, `C:\cargo`). Don't use the `RUSTFLAGS`
 variable for this: it replaces the repository's own rustflags.
 
+**Windows release gate (every release):** the candidate must update itself: `windows\update-swap-gate.ps1` (a lab build
+of the candidate → the same build as the next version, on a local feed signed by `scripts/update-swap-feed.sh`) must
+print PASS, and `TINHAT_SAFE_UNZIP_BUNDLE=<the final win64 zip> cargo test --release -p tinhat-app
+safe_unzip::tests::real_bundle -- --ignored` must pass (it fails once the bundle uses half of an unzip limit).
+
 ## Flatpak
 
 App id `dev.tinhat.TinHat`. The manifest builds everything offline from vendored sources; it isn't in this

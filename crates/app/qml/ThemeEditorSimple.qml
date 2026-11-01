@@ -1,5 +1,6 @@
 // ThemeEditorSimple.qml — the theme editor's Simple mode (THEMES-UI.md §13.7; the web's Simple.tsx): Name + Author,
-// Colours (the background swatch, the accent chips + Custom…, the adjusted note, the readability warnings with Fix),
+// Colours (THEME-SIMPLE 2026-10-31: the palette groups of tinhat_theme::palette, the accent quick picks, "set by hand",
+// the adjusted note, the readability warnings with Fix),
 // Text (three fonts from the allowed lists, the text size), Density, Islands (radius, gap, margin, border, shadow,
 // transparency). Rows: a 112 px label column (settings.label.fg), then the control, 8 apart; sections 16 apart. Every
 // value is read from the working document (panel.st: look, shape, opacity, accentNow, accentChips, issues, fixes);
@@ -25,10 +26,39 @@ Item {
     readonly property string monoFamily: Th.fontMono   // the code font (type.code, else the platform monospace)
     // the accent chips as text: an edit that leaves them as they were keeps the chips (and a chip's keyboard focus)
     readonly property string chipsKey: JSON.stringify(simple.st.accentChips || [])
+    // THEME-SIMPLE: the palette view (stateJson.palette), People folded away until asked for
+    readonly property var groups: simple.st.palette ? simple.st.palette.groups : []
+    readonly property var handSet: simple.st.palette ? simple.st.palette.handSet : []
+    readonly property bool hasPeople: simple.groups.some(g => g.id === "people" && g.swatches.length > 0)
+    property bool more: false
+    readonly property var groupLabels: ({ backgrounds: "Backgrounds", text: "Text", accent: "Accent", status: "Status", people: "People" })
+    function groupLabel(id) { return simple.groupLabels[id] || id }
+    /// How many OTHER colours follow a swatch (its own roles left out: Advanced's "used by" count; the web's usedCount).
+    function usedCount(sw) { return sw.usedBy.length - sw.sources.filter(x => x.indexOf(".") >= 0).length }
+    /// A swatch's tooltip (the web's swatchTip): its label (+ merged sources), the colour, what it reaches.
+    function swatchTip(sw, lead, members) {
+        var more = sw.sources.length > 1 ? " +" + (sw.sources.length - 1) + " more" : ""
+        var n = simple.usedCount(sw)
+        var used = n === 1 ? "used by 1 colour" : "used by " + n + " colours"
+        var also = sw.alsoIn.length ? " · also changes " + sw.alsoIn.map(simple.groupLabel).join(", ") : ""
+        var group = lead ? " · moves the " + members + " colours of its group" : ""
+        return sw.label + more + " · " + String(sw.colour).substring(0, 7) + " · " + used + also + group
+    }
 
     function edit(op, g) { return simple.panel.edit(op, g || 0) }
     /// the review harness: the background / accent popover as a click opens it
-    function openPopover(kind) { if (kind === "background") popover.openFor({ kind: "background" }, bgSwatch); else popover.openFor({ kind: "accent" }, customChip) }
+    function openPopover(kind) {
+        // the review harness: a Simple swatch ("lead:<group>" / "swatch:<source>") as a click opens it
+        var gs = simple.groups
+        for (var i = 0; i < gs.length; i++) {
+            for (var j = 0; j < gs[i].swatches.length; j++) {
+                var sw = gs[i].swatches[j], lead = j === 0 && gs[i].swatches.length > 1
+                if (kind === "lead:" + gs[i].id && j === 0 || kind === "swatch:" + sw.id)
+                    return popover.openFor({ kind: "swatch", id: sw.id, group: gs[i].id, whole: lead, label: sw.label }, simple,
+                                           { lead: lead, members: gs[i].swatches.length, usedBy: simple.usedCount(sw), alsoIn: sw.alsoIn.map(simple.groupLabel) })
+            }
+        }
+    }
     function closePopover() { popover.close() }
     function fontIndex(list, v) { return Math.max(0, v ? list.indexOf(v) : 0) }
     function chipOn(c) {
@@ -156,44 +186,98 @@ Item {
                 Layout.fillWidth: true
                 spacing: 8
                 SectionLabel { app: simple.app; text: "Colours" }
-                FieldRow {
-                    label: "Background"
-                    Controls.AbstractButton {
-                        id: bgSwatch
-                        implicitWidth: 28; implicitHeight: 28
-                        padding: 0
-                        focusPolicy: Qt.StrongFocus
-                        Accessible.name: "Background colour"
-                        onClicked: popover.openFor({ kind: "background" }, bgSwatch)
-                        background: Item {}
-                        contentItem: Item {
-                            ThemeEditorSwatch {
-                                anchors.fill: parent
-                                radius: 6
-                                colour: ThemeEditorLib.qmlColour(simple.st.roles ? simple.st.roles["surface.island"] : "")
-                            }
-                            Rectangle {
-                                anchors.fill: parent; anchors.margins: -3
-                                radius: 9; color: "transparent"
-                                visible: bgSwatch.visualFocus
-                                border.width: 2; border.color: Th.settingsThemeCardBorderFocus
+                HintLabel {
+                    app: simple.app
+                    Layout.fillWidth: true
+                    text: "Change a colour and everything made from it follows. The large swatch moves its whole group."
+                }
+                // THEME-SIMPLE (2026-10-31): the palette groups (tinhat_theme::palette; the web's Simple.tsx): a label,
+                // the lead swatch 36 (a link badge: it moves its group), the others 24
+                Repeater {
+                    model: simple.groups
+                    delegate: RowLayout {
+                        id: grp
+                        required property var modelData
+                        visible: grp.modelData.swatches.length > 0 && (grp.modelData.id !== "people" || simple.more)
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 40
+                        spacing: 8
+                        Accessible.role: Accessible.Grouping
+                        Accessible.name: grp.modelData.label
+                        Controls.Label {
+                            Layout.preferredWidth: 112
+                            Layout.alignment: Qt.AlignVCenter
+                            text: grp.modelData.label
+                            textFormat: Text.PlainText
+                            color: Th.settingsLabelFg
+                            elide: Text.ElideRight
+                        }
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 6
+                            Repeater {
+                                model: grp.modelData.swatches
+                                delegate: Controls.AbstractButton {
+                                    id: swb
+                                    required property var modelData
+                                    required property int index
+                                    readonly property bool lead: swb.index === 0 && grp.modelData.swatches.length > 1
+                                    readonly property string tip: simple.swatchTip(swb.modelData, swb.lead, grp.modelData.swatches.length)
+                                    width: swb.lead ? 40 : 24; height: swb.lead ? 36 : 24
+                                    y: swb.lead ? 0 : 6
+                                    padding: 0
+                                    hoverEnabled: true
+                                    focusPolicy: Qt.StrongFocus
+                                    Accessible.name: swb.tip
+                                    Controls.ToolTip.text: swb.tip
+                                    Controls.ToolTip.visible: swb.hovered
+                                    Controls.ToolTip.delay: 600
+                                    onClicked: popover.openFor({ kind: "swatch", id: swb.modelData.id, group: grp.modelData.id, whole: swb.lead, label: swb.modelData.label }, swb,
+                                                               { lead: swb.lead, members: grp.modelData.swatches.length, usedBy: simple.usedCount(swb.modelData),
+                                                                 alsoIn: swb.modelData.alsoIn.map(simple.groupLabel) })
+                                    background: Item {}
+                                    contentItem: Item {
+                                        ThemeEditorSwatch {
+                                            width: swb.lead ? 36 : 24; height: swb.lead ? 36 : 24
+                                            radius: swb.lead ? 8 : 6
+                                            colour: ThemeEditorLib.qmlColour(swb.modelData.colour)
+                                            ringWidth: popover.opened && popover.target0.kind === "swatch" && popover.target0.id === swb.modelData.id ? 2 : 1
+                                            ringColour: ringWidth === 2 ? Th.settingsFg : Th.settingsThemeEditorSwatchBorder
+                                        }
+                                        Rectangle {
+                                            visible: swb.lead
+                                            x: 36 - 12; y: 36 - 12
+                                            width: 16; height: 16; radius: 8
+                                            color: Th.settingsThemeEditorBg
+                                            border.width: 1; border.color: Th.settingsThemeEditorSwatchBorder
+                                            Kirigami.Icon {
+                                                anchors.centerIn: parent
+                                                width: 12; height: 12
+                                                source: "link-symbolic"
+                                                color: Th.settingsFg
+                                                isMask: true
+                                            }
+                                        }
+                                        Rectangle {
+                                            width: swb.lead ? 36 : 24; height: swb.lead ? 36 : 24
+                                            anchors.margins: -3
+                                            radius: swb.lead ? 11 : 9; color: "transparent"
+                                            visible: swb.visualFocus
+                                            border.width: 2; border.color: Th.settingsThemeCardBorderFocus
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                    Controls.Label {
-                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                        Layout.fillWidth: true
-                        text: simple.st.roles ? String(simple.st.roles["surface.island"]) : ""
-                        color: Th.settingsFg
-                        font.family: simple.monoFamily
-                    }
                 }
                 FieldRow {
-                    label: "Accent"
+                    label: "Quick picks"
                     Flow {
                         Layout.fillWidth: true
                         spacing: 6
                         Accessible.role: Accessible.RadioButton
+                        Accessible.name: "Accent quick picks"
                         Repeater {
                             model: JSON.parse(simple.chipsKey)
                             delegate: Controls.AbstractButton {
@@ -237,45 +321,38 @@ Item {
                                 background: Item {}
                             }
                         }
-                        // Custom…: the colour popover for any accent (a dashed ring, the color-picker glyph)
-                        Controls.AbstractButton {
-                            id: customChip
-                            width: 24; height: 24
-                            padding: 0
-                            hoverEnabled: true
-                            focusPolicy: Qt.StrongFocus
-                            Accessible.name: "Custom accent colour"
-                            Controls.ToolTip.text: "Custom…"
-                            Controls.ToolTip.visible: customChip.hovered
-                            Controls.ToolTip.delay: 600
-                            onClicked: popover.openFor({ kind: "accent" }, customChip)
-                            background: Rectangle {
-                                radius: 12
-                                color: customChip.hovered ? Th.settingsThemeEditorRowBgHover : "transparent"
-                                border.width: customChip.visualFocus ? 2 : 0
-                                border.color: Th.settingsThemeCardBorderFocus
-                            }
-                            contentItem: Item {
-                                Canvas {
-                                    id: dash
-                                    anchors.fill: parent
-                                    readonly property color ink: Th.settingsThemeEditorSwatchBorder
-                                    onInkChanged: requestPaint()
-                                    onPaint: {
-                                        var c = getContext("2d"); c.reset(); c.clearRect(0, 0, width, height)
-                                        c.strokeStyle = dash.ink; c.lineWidth = 1; c.setLineDash([2, 2])
-                                        c.beginPath(); c.arc(width / 2, height / 2, width / 2 - 0.5, 0, 2 * Math.PI); c.stroke()
-                                    }
-                                }
-                                Kirigami.Icon {
-                                    anchors.centerIn: parent
-                                    width: 14; height: 14
-                                    source: "color-picker"
-                                    color: Th.settingsFg
-                                    isMask: true
-                                }
-                            }
-                        }
+                    }
+                }
+                ThButton {
+                    app: simple.app
+                    visible: simple.hasPeople
+                    flat: true
+                    text: simple.more ? "Fewer colours" : "More colours (people)"
+                    onClicked: simple.more = !simple.more
+                }
+                RowLayout {
+                    visible: simple.handSet.length > 0
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Kirigami.Icon {
+                        Layout.preferredWidth: 16; Layout.preferredHeight: 16
+                        source: "help-about-symbolic"
+                        color: Th.settingsThemeNoteIcon
+                        isMask: true
+                    }
+                    Controls.Label {
+                        textFormat: Text.PlainText
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        text: simple.handSet.length === 1 ? "1 colour is set by hand and doesn't follow these."
+                                                          : simple.handSet.length + " colours are set by hand and don't follow these."
+                        color: Th.settingsThemeNoteFg
+                    }
+                    ThButton {
+                        app: simple.app
+                        flat: true
+                        text: "Show in Advanced"
+                        onClicked: { simple.panel.query = ""; simple.panel.changedOnly = false; simple.panel.onlyIds = simple.handSet; simple.panel.mode = "advanced" }
                     }
                 }
                 // the palette theme's own readability adjustments (§3.2's note)

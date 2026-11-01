@@ -5998,6 +5998,11 @@ async fn publish_aux(kind: AuxKind, url: &str) -> Result<()> {
     let slot = kind.track_name();
     let gate = aux_publish_gate(slot);
     let _one_at_a_time = gate.lock().await;
+    // a watching device publishes nothing until Talk here (assembly-042): the backstop under every entry point's guard,
+    // checked after waiting for the slot (a request queued before Watch began must not publish into the watch call)
+    if capture_barred() {
+        anyhow::bail!("You're watching — tap Talk first");
+    }
     // Stop-then-play: drop any current publish in this slot before starting a new one.
     teardown_aux(slot);
 
@@ -6065,6 +6070,11 @@ async fn publish_aux_pipewire(kind: AuxKind, node: &str) -> Result<()> {
     let slot = kind.track_name();
     let gate = aux_publish_gate(slot);
     let _one_at_a_time = gate.lock().await;
+    // a watching device publishes nothing until Talk here (assembly-042): the backstop under every entry point's guard,
+    // checked after waiting for the slot (a request queued before Watch began must not publish into the watch call)
+    if capture_barred() {
+        anyhow::bail!("You're watching — tap Talk first");
+    }
     teardown_aux(slot);
 
     let participant = aux_participant()
@@ -7401,6 +7411,12 @@ impl CallSession {
         if self.screenshare.is_some() {
             return Ok(());
         }
+        // a watching device publishes nothing until Talk here (assembly-042): the backstop under every entry point's guard,
+        // checked after waiting for the slot (a request queued before Watch began must not publish into the watch call)
+        if capture_barred() {
+            screencast.close().await; // the portal session ends now (no lingering share indicator)
+            anyhow::bail!("You're watching — tap Talk first");
+        }
         // Publish at the source's REAL aspect ratio (fit into the quality box) so an
         // ultrawide isn't squished into 16:9; honour the user's quality/fps/bitrate.
         let q = crate::lk_publish::share_quality();
@@ -7714,6 +7730,11 @@ impl CallSession {
         if self.camera.is_some() {
             return Ok(0);
         }
+        // a watching device publishes nothing until Talk here (assembly-042): the backstop under every entry point's guard,
+        // checked after waiting for the slot (a request queued before Watch began must not publish into the watch call)
+        if capture_barred() {
+            anyhow::bail!("You're watching — tap Talk first");
+        }
         if device.is_some() {
             set_camera_target(device.clone());
         }
@@ -8002,6 +8023,10 @@ impl CallSession {
     /// ever transmits in the gap between publish and a post-hoc mute. Without this, re-publishing
     /// while muted (an AGC/NS toggle during BRB/mute) leaked a sub-second of live mic to peers.
     pub async fn publish_mic_muted(&mut self, start_muted: bool) -> Result<()> {
+        if capture_barred() {
+            eprintln!("[call] watching — no microphone captured (Talk here turns it on)");
+            return Ok(());
+        }
         reset_dsp_stage_block(); // 0.8.28: the WebRTC-stage ladder is per call
         if self.mic.is_some() {
             return Ok(());
@@ -9654,6 +9679,20 @@ fn mic_wanted_flag() -> &'static std::sync::atomic::AtomicBool {
 }
 pub fn mic_wanted() -> bool {
     mic_wanted_flag().load(std::sync::atomic::Ordering::Relaxed)
+}
+/// Pad QOL (2026-10-31): this device joined to WATCH — no microphone is captured at all until its own "Talk here"
+/// clears this. `publish_mic_muted` is the only way a capture starts (republish / ensure need a published mic and
+/// `mic_wanted`), so refusing there keeps the mic closed across a server unmute, a reconnect, a device change and the
+/// mic healer.
+fn capture_barred_flag() -> &'static std::sync::atomic::AtomicBool {
+    static F: OnceLock<std::sync::atomic::AtomicBool> = OnceLock::new();
+    F.get_or_init(|| std::sync::atomic::AtomicBool::new(false))
+}
+pub fn set_capture_barred(on: bool) {
+    capture_barred_flag().store(on, std::sync::atomic::Ordering::SeqCst);
+}
+pub fn capture_barred() -> bool {
+    capture_barred_flag().load(std::sync::atomic::Ordering::SeqCst)
 }
 /// 10.5 (audio review #2c): the capture is DOWN — a rebuild retired the old capture and every
 /// chain after it failed. Nothing is left to re-raise the unhealthy flag, so the healer must not

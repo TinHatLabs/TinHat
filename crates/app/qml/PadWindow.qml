@@ -9,6 +9,10 @@
 //   sounds   "Soundboard — plays on {device}, into the call": Favourites (the Soundboard pad's list, starred order),
 //            This room, Recent on {device}; the playing one glows (a tap stops it); the role line when roles turned it off
 //   people   "In the call · n": talking ring, mic-off, 💤, their non-default volumes; a click → their three volumes
+// QOL (2026-10-31; the web's PadExtras.tsx, same order and words): my row headed "On {device}" · Watch ("{name} is
+// sharing · Watch" → this computer joins to watch: no mic, sound off; "This computer": Hear here · Talk here · Stop
+// watching) · the soundboard gains the web search under Favourites (a result plays on {device}: sound.play.web; ☆ adds
+// it to my board) · Media Party (the call room's on {device}: ▶/⏸ −10 s +10 s ⏭, Up next, Add a link; party.*)
 // No call to show (connecting / not reaching / it ended): one centred state instead, with Try again / Take it back / Close.
 // Presses are optimistic: the control moves at once with a thin ring in the focus colour until the receiver answers.
 // The soundboard window's place and size (680 wide at most, 120 px above the window's bottom). Colours: Pad's own pad.*
@@ -178,6 +182,102 @@ Controls.Popup {
     function pressBrb() { return pad.send("brb", !pad.brb, { op: "brb", on: !pad.brb }) }
     function pressStop() { return pad.send("sound", "", { op: "sound.stop" }) }
     function confirmLeave() { return pad.send("", true, { op: "leave" }) }
+
+    // ── Pad QOL (2026-10-31) ──
+    // search: this device's own soundboard search (its server, its bearer); only myinstants sound files are offered
+    // (padrules web_sound_ok: the same rule the receiver applies)
+    function webSoundOk(u) {
+        var m = /^https:\/\/(?:www\.)?myinstants\.com\/media\/sounds\/([A-Za-z0-9_.-]{1,200})$/.exec(String(u))
+        return !!m && m[1].indexOf("..") === -1 && /\.(?:mp3|ogg|wav|m4a|opus)$/.test(m[1])
+    }
+    property string webQuery: ""
+    property var starred: ({})
+    readonly property var webResults: {
+        if (pad.webQuery.trim().length < 2 || !pad.app.soundboardCtl) return []
+        var r = []
+        try { r = JSON.parse(String(pad.app.soundboardCtl.searchResultsJson || "[]")) } catch (e) { r = [] }
+        var out = []
+        for (var i = 0; i < r.length && out.length < 24; i++) {
+            var u = String((r[i] && (r[i].url || r[i].sourceUrl)) || "")
+            if (pad.webSoundOk(u)) out.push({ name: String(r[i].name || "Sound"), url: u, emoji: "" })
+        }
+        return out
+    }
+    readonly property var favUrls: {
+        var m = {}, l = pad.app.mPersonalSounds || []
+        for (var i = 0; i < l.length; i++) if (l[i] && l[i].sourceUrl) m[String(l[i].sourceUrl)] = true
+        return m
+    }
+    readonly property bool webUsable: pad.live && pad.gateOk && pad.has("sound.play.web")
+    function tapWeb(url, name) {
+        if (!pad.live) return 0
+        if (url === pad.playing) return pad.send("sound", "", { op: "sound.stop" })
+        // cut by code points like the web (UTF-16 substring could split an emoji into a lone surrogate — review #12)
+        return pad.send("sound", url, { op: "sound.play.web", url: url, name: Array.from(String(name || "Sound")).slice(0, 64).join("") })
+    }
+    function starWeb(name, url) {
+        var o = {}; for (var k in pad.starred) o[k] = true; o[url] = true; pad.starred = o
+        pad.app.soundboardCtl.addPersonalSound(String(name || "Sound"), String(url), "", 0)
+    }
+    // watch: this computer joins the call to WATCH (a normal, visible join: no microphone captured, sound off)
+    readonly property bool watchingHere: !!pad.app.callctl && pad.app.callctl.watching === true && String(pad.app.callctl.roomId) === pad.roomId
+                                         && (pad.app.callctl.inCall === true || pad.app.callctl.connecting === true)
+    readonly property bool inOtherCall: !!pad.app.callctl && (pad.app.callctl.inCall === true || pad.app.callctl.connecting === true) && !pad.watchingHere
+    readonly property var sharers: {
+        var l = pad.view ? pad.view.people : [], out = []
+        for (var i = 0; i < l.length; i++) if (l[i] && l[i].share === true) out.push(l[i].u)
+        return out
+    }
+    // Media Party: the receiver's call room's; the position carried forward from the state (the web's partyView)
+    readonly property var party: pad.view && pad.view.party ? pad.view.party : null
+    property double partySeenAt: 0
+    property double partyNow: Date.now()
+    onPartyChanged: pad.partySeenAt = Date.now()
+    function partyPos() {
+        var p = pad.party
+        if (!p) return 0
+        var playing = pad.opt("party:play", p.playing === true)
+        var rt = pad.st ? Number(pad.st.rt || 0) : 0, at = Number(p.at || 0)
+        var ahead = p.playing === true && at > 0 && rt > at ? Math.min(86400, (rt - at) / 1000) : 0
+        var x = Number(p.pos || 0) + ahead + (playing && pad.partyNow > pad.partySeenAt ? (pad.partyNow - pad.partySeenAt) / 1000 : 0)
+        var seekTo = pad.opt("party:pos", -1)
+        if (seekTo >= 0) x = seekTo
+        return p.dur > 0 ? Math.min(p.dur, x) : x
+    }
+    function fmt(secs) {
+        var t = Math.max(0, Math.floor(secs)), h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60
+        return (h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s
+    }
+    function partyLinkOk(u) {
+        u = String(u)
+        if (u.length === 0 || u.length > 2048 || !/^[\x21-\x7E]+$/.test(u)) return false
+        var m = /^https:\/\/([^\/?#]+)(?:[\/?].*)?$/i.exec(u)
+        return !!m && ["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be", "open.spotify.com", "music.apple.com"].indexOf(m[1].toLowerCase()) !== -1
+    }
+    readonly property bool partyDrive: pad.live && !!pad.party && pad.party.host === true && pad.has("party.play")
+    function partyPlay(on) { return pad.send("party:play", on, { op: "party.play", url: String(pad.party.url), playing: on }) }
+    function partySeek(x) { var v = Math.max(0, Math.min(86400, Math.floor(x))); pad.partySeenAt = Date.now(); return pad.send("party:pos", v, { op: "party.seek", url: String(pad.party.url), pos: v }) }
+    function partyNext() { return pad.send("", true, { op: "party.next", url: String(pad.party.url) }) }
+    // this computer's own Media Party window on the call room's party (the call bar's Join + open)
+    function watchPartyHere() { pad.app.openWatchPartyFor(pad.roomId) }
+    function partyAdd(u, now) { return pad.send("", true, { op: "party.add", url: String(u), now: now }) }
+    Timer { interval: 1000; repeat: true; running: pad.opened && !!pad.party && pad.party.playing === true; onTriggered: pad.partyNow = Date.now() }
+    // a link this session asked {device}'s party to add couldn't be added: its answer was the acceptance, call.party.add
+    // the outcome (the web's controller does the same; said once per seq)
+    // (deduplicated by "sid:seq" — an outcome that arrives out of order is still said once; review pass 2)
+    property var addSeen: ({})
+    readonly property var partyAddOutcome: pad.party && pad.party.add ? pad.party.add : null
+    onPartyAddOutcomeChanged: {
+        var a = pad.partyAddOutcome
+        if (!a || !pad.mine || String(a.sid) !== String(pad.remote.sid || "")) return
+        var k = String(a.sid) + ":" + Number(a.re)
+        if (pad.addSeen[k]) return
+        var o = {}, keys = Object.keys(pad.addSeen).slice(-63)
+        for (var i = 0; i < keys.length; i++) o[keys[i]] = true
+        o[k] = true
+        pad.addSeen = o
+        if (a.ok !== true) pad.say("bad-link", "party.add")
+    }
 
     background: Rectangle {
         color: Th.padPanelBg
@@ -403,6 +503,14 @@ Controls.Popup {
                 readonly property int count: pad.view ? pad.view.people.length + (pad.view.more || 0) : 0
 
                 // ---- my row: the call bar's buttons in the call bar's frame ----
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    Layout.leftMargin: 18; Layout.topMargin: 4
+                    text: "On " + pad.deviceName
+                    color: Th.soundboardSectionHintFg
+                    font.bold: true
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.topMargin: 4
@@ -475,6 +583,89 @@ Controls.Popup {
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
 
+                // ---- Watch (only while someone shares, or while this computer watches) ----
+                Rectangle {
+                    // 12.1.6: Watch is off (call_ctl.rs WATCH_AVAILABLE; back in 12.1.7) — the strip stays hidden
+                    readonly property bool watchAvailable: false
+                    visible: watchAvailable && !pad.watchingHere && pad.sharers.length > 0
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.topMargin: 6
+                    implicitHeight: watchCol.implicitHeight + 20
+                    radius: 12
+                    color: Th.padListBarBg
+                    border.width: 1
+                    border.color: Th.padListBarBorder
+                    ColumnLayout {
+                        id: watchCol
+                        anchors.fill: parent; anchors.margins: 10
+                        spacing: 4
+                        RowLayout {
+                            spacing: 10
+                            ThIcon { app: pad.app; name: "video-display-symbolic"; color: Th.padListBarFg; isMask: true; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Controls.Label {
+                                textFormat: Text.PlainText
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                font.weight: Font.DemiBold
+                                color: Th.padListBarFg
+                                text: pad.sharers.length > 1 ? pad.personName(pad.sharers[0]) + " and " + (pad.sharers.length - 1) + " more are sharing"
+                                                             : (pad.sharers.length ? pad.personName(pad.sharers[0]) + " is sharing" : "")
+                            }
+                            ThButton { app: pad.app; text: "Watch"; enabled: !pad.inOtherCall; onClicked: pad.app.callctl.watchCall(pad.roomId) }
+                        }
+                        Controls.Label {
+                            textFormat: Text.PlainText
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Th.soundboardSectionHintFg
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            text: pad.inOtherCall ? "Leave your call on this computer first." : "Joins on this computer to watch — muted, sound off. Everyone sees you joined."
+                        }
+                    }
+                }
+                SectionHead {
+                    visible: pad.watchingHere
+                    Layout.topMargin: 8
+                    title: pad.app.callctl && pad.app.callctl.inCall !== true ? "Joining to watch…" : "Watching"
+                    hint: pad.sharers.length === 0 ? "nobody is sharing right now" : "the share is on the call screen"
+                }
+                Rectangle {
+                    visible: pad.watchingHere
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 14; Layout.rightMargin: 14
+                    implicitHeight: phoneRow.implicitHeight + 20
+                    radius: 16
+                    color: Th.padMyRowBg
+                    border.width: 1
+                    border.color: Th.padMyRowBorder
+                    Flow {
+                        id: phoneRow
+                        anchors.fill: parent; anchors.margins: 10
+                        spacing: 14
+                        Controls.Label { textFormat: Text.PlainText; width: phoneRow.width; text: "This computer"; color: Th.soundboardSectionHintFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                        ThSwitch {
+                            text: "Hear here"
+                            checked: !!pad.app.callctl && pad.app.callctl.deafened !== true
+                            onToggled: pad.app.callctl.watchHear(checked)
+                        }
+                        ThSwitch {
+                            readonly property bool talking: !!pad.app.callctl && pad.app.callctl.noCapture !== true && pad.app.callctl.micMuted !== true
+                            text: talking ? "Talk here · live" : "Talk here"
+                            checked: talking
+                            onToggled: pad.app.callctl.watchTalk(checked)
+                        }
+                        ThButton { app: pad.app; text: "Stop watching"; onClicked: pad.app.callctl.leaveCall() }
+                    }
+                }
+                Controls.Label {
+                    visible: pad.watchingHere
+                    textFormat: Text.PlainText
+                    Layout.leftMargin: 18
+                    text: "Mute, deafen and Leave above are " + pad.deviceName + "'s."
+                    color: Th.soundboardSectionHintFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+
                 // ---- the soundboard ----
                 SectionHead { title: "Soundboard"; hint: "plays on " + pad.deviceName + ", into the call"; Layout.topMargin: 8 }
                 SubHead { title: "Favourites" }
@@ -482,8 +673,91 @@ Controls.Popup {
                 Controls.Label {
                     visible: pad.favourites.length === 0
                     Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16
-                    text: "Star sounds in the soundboard to pin them here."
+                    textFormat: Text.StyledText
+                    text: "Star sounds in the soundboard to pin them here, or <a href=\"search\">search sounds</a>."
+                    linkColor: Th.soundboardSectionFg
+                    onLinkActivated: webField.forceActiveFocus()
                     color: Th.soundboardEmptyFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+                // the web search (this computer's own search; a result plays on {device}, ☆ adds it to my board)
+                Kirigami.SearchField {
+                    id: webField
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.topMargin: 2
+                    placeholderText: "Search sounds on the web…"
+                    onTextChanged: { pad.webQuery = text; if (pad.app.soundboardCtl) pad.app.soundboardCtl.search(text.trim().length >= 2 ? text.trim() : "") }
+                }
+                SectionHead {
+                    visible: pad.webQuery.trim().length >= 2
+                    title: "From the web" + (pad.webResults.length ? " · " + pad.webResults.length : "")
+                    hint: pad.app.soundboardCtl && pad.app.soundboardCtl.searching ? "searching…"
+                        : (pad.has("sound.play.web") ? "tap plays on " + pad.deviceName + " · ☆ adds to your board" : "☆ adds it to your board")
+                }
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    visible: pad.webQuery.trim().length >= 2 && pad.live && !pad.has("sound.play.web")
+                    Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16
+                    wrapMode: Text.WordWrap
+                    text: pad.why("old-op", "") + " To play a result there now, ☆ it first."
+                    color: Th.soundboardEmptyFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    visible: pad.webQuery.trim().length >= 2 && !!pad.app.soundboardCtl && !pad.app.soundboardCtl.searching && pad.webResults.length === 0
+                    Layout.leftMargin: 16
+                    text: "No sounds found for “" + pad.webQuery.trim() + "”."
+                    color: Th.soundboardEmptyFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+                GridLayout {
+                    id: webGrid
+                    visible: pad.webResults.length > 0
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 14; Layout.rightMargin: 14
+                    columns: 4
+                    columnSpacing: 8
+                    rowSpacing: 8
+                    Repeater {
+                        model: pad.webResults
+                        delegate: Item {
+                            id: wc
+                            required property var modelData
+                            readonly property bool fav: !!pad.favUrls[modelData.url] || !!pad.starred[modelData.url]
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 120
+                            Layout.maximumWidth: Math.max(60, (pad.width - 28 - webGrid.columnSpacing * (webGrid.columns - 1)) / webGrid.columns)
+                            implicitHeight: wb.implicitHeight
+                            PadSoundButton {
+                                id: wb
+                                anchors.left: parent.left; anchors.right: parent.right
+                                name: String(wc.modelData.name || "Sound")
+                                emoji: ""
+                                playing: wc.modelData.url === pad.playing
+                                pending: playing && pad.pendingKey("sound")
+                                enabled: pad.webUsable
+                                onClicked: pad.tapWeb(wc.modelData.url, wc.modelData.name)
+                            }
+                            ThToolButton {
+                                anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 2
+                                app: pad.app
+                                iconName: wc.fav ? "starred-symbolic" : "non-starred-symbolic"
+                                iconColor: wc.fav ? Th.soundboardSectionFg : Th.soundboardSectionHintFg
+                                iconSize: 16
+                                enabled: !wc.fav
+                                tip: wc.fav ? "On your board" : "Add to your board"
+                                onClicked: pad.starWeb(wc.modelData.name, wc.modelData.url)
+                            }
+                        }
+                    }
+                }
+                Controls.Label {
+                    visible: pad.webQuery.trim().length >= 2
+                    Layout.leftMargin: 16
+                    textFormat: Text.PlainText
+                    text: "web results by myinstants"
+                    color: Th.soundboardFooterFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
                 SubHead { visible: pad.roomSounds.length > 0; title: "This room" }
@@ -498,6 +772,124 @@ Controls.Popup {
                     color: Th.soundboardStatusFgError
                     wrapMode: Text.WordWrap
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+
+                // ---- Media Party (the call room's, on {device}) ----
+                SectionHead { visible: !!pad.party; Layout.topMargin: 8; title: "Media Party"; hint: pad.party && pad.party.in !== true ? "on in this room" : "on " + pad.deviceName }
+                RowLayout {
+                    visible: !!pad.party && pad.party.in !== true
+                    Layout.leftMargin: 16
+                    spacing: 8
+                    ThButton { app: pad.app; text: "Join on " + pad.deviceName; enabled: pad.live && pad.has("party.join"); onClicked: pad.send("party:in", true, { op: "party.join" }) }
+                    ThButton { app: pad.app; text: "Watch on this computer"; onClicked: pad.watchPartyHere() }
+                }
+                ThButton {
+                    visible: !!pad.party && pad.party.in === true
+                    Layout.leftMargin: 16
+                    app: pad.app
+                    text: "Watch on this computer"
+                    onClicked: pad.watchPartyHere()
+                }
+                ColumnLayout {
+                    visible: !!pad.party && pad.party.in === true
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 16; Layout.rightMargin: 16
+                    spacing: 6
+                    Controls.Label {
+                        textFormat: Text.PlainText
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        font.weight: Font.DemiBold
+                        color: Th.soundboardSectionFg
+                        text: pad.party ? (String(pad.party.url).length ? (String(pad.party.title || "").length ? String(pad.party.title) : String(pad.party.url)) : "Nothing playing") : ""
+                    }
+                    RowLayout {
+                        visible: !!pad.party && String(pad.party.url).length > 0
+                        Layout.fillWidth: true
+                        spacing: 8
+                        Controls.Label { textFormat: Text.PlainText; text: pad.fmt(pad.partyPos()); color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                        Rectangle {
+                            Layout.fillWidth: true; implicitHeight: 4; radius: 2
+                            color: Th.padMyRowBorder
+                            Rectangle {
+                                height: parent.height; radius: 2
+                                width: pad.party && pad.party.dur > 0 ? parent.width * Math.min(1, pad.partyPos() / pad.party.dur) : 0
+                                color: Th.padPersonRingSpeaking
+                            }
+                        }
+                        Controls.Label { textFormat: Text.PlainText; text: pad.party && pad.party.dur > 0 ? pad.fmt(pad.party.dur) : "--:--"; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                    }
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: 12
+                        readonly property bool hasUrl: !!pad.party && String(pad.party.url).length > 0
+                        ThToolButton { app: pad.app; label: "−10 s"; tip: "Back 10 s"; enabled: pad.partyDrive && parent.hasUrl; onClicked: pad.partySeek(pad.partyPos() - 10) }
+                        ThToolButton {
+                            app: pad.app
+                            readonly property bool on: pad.opt("party:play", !!pad.party && pad.party.playing === true)
+                            iconName: on ? "media-playback-pause" : "media-playback-start"
+                            tip: on ? "Pause" : "Play"
+                            enabled: pad.partyDrive && parent.hasUrl
+                            onClicked: pad.partyPlay(!on)
+                        }
+                        ThToolButton { app: pad.app; label: "+10 s"; tip: "Forward 10 s"; enabled: pad.partyDrive && parent.hasUrl; onClicked: pad.partySeek(pad.party.dur > 0 ? Math.min(pad.party.dur, pad.partyPos() + 10) : pad.partyPos() + 10) }
+                        ThToolButton { app: pad.app; iconName: "media-skip-forward"; tip: "Play next in queue"; enabled: pad.partyDrive && !!pad.party && pad.party.next.length > 0; onClicked: pad.partyNext() }
+                    }
+                    Controls.Label {
+                        textFormat: Text.PlainText
+                        visible: !!pad.party && pad.party.host !== true
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: pad.why("not-host", "") + " You can still add links."
+                        color: Th.soundboardEmptyFg
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    }
+                    SubHead { visible: !!pad.party && pad.party.next.length > 0; title: "Up next"; Layout.leftMargin: 0 }
+                    Repeater {
+                        model: pad.party ? pad.party.next : []
+                        delegate: Controls.Label {
+                            required property var modelData
+                            required property int index
+                            textFormat: Text.PlainText
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            text: (index + 1) + ". " + String(modelData.title || "")
+                            color: Th.soundboardSectionFg
+                        }
+                    }
+                    RowLayout {
+                        visible: pad.live && pad.has("party.add")
+                        Layout.fillWidth: true
+                        spacing: 8
+                        ThTextField {
+                            id: linkField
+                            Layout.fillWidth: true
+                            placeholderText: "Add a link (YouTube, Spotify…)"
+                            onAccepted: addBtn.clicked()
+                        }
+                        ThButton {
+                            id: addBtn
+                            app: pad.app
+                            text: "Add"
+                            enabled: linkField.text.trim().length > 0
+                            onClicked: { if (!pad.partyLinkOk(linkField.text.trim())) { linkErr.visible = true; return } linkErr.visible = false; if (pad.partyAdd(linkField.text.trim(), false) > 0) linkField.text = "" }
+                        }
+                        ThButton {
+                            app: pad.app
+                            visible: !!pad.party && pad.party.host === true
+                            text: "Play now"
+                            enabled: linkField.text.trim().length > 0
+                            onClicked: { if (!pad.partyLinkOk(linkField.text.trim())) { linkErr.visible = true; return } linkErr.visible = false; if (pad.partyAdd(linkField.text.trim(), true) > 0) linkField.text = "" }
+                        }
+                    }
+                    Controls.Label {
+                        id: linkErr
+                        visible: false
+                        textFormat: Text.PlainText
+                        text: "Paste a YouTube, YouTube Music, Spotify or Apple Music link."
+                        color: Th.soundboardStatusFgError
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    }
                 }
 
                 // ---- people ----
@@ -785,13 +1177,22 @@ Controls.Popup {
         if (d === "chooser") { if (!chooser.several) return "inert"; deviceMenu.popup(chooser, 0, chooser.height + 4); return "menu open" }
         if (d === "pick") { deviceMenu.close(); pad.openFor(pad.roomId, String(s.device || "")); return "opening " + String(s.device || "") }
         if (d === "close") { pad.close(); return "closed" }
+        // Pad QOL: the web search, Watch and the Media Party card (the same functions as their controls)
+        if (d === "web-search") { webField.text = String(s.q || ""); return "searching " + webField.text }
+        if (d === "web-results") return { n: pad.webResults.length, urls: pad.webResults.map(function (x) { return x.url }), searching: !!pad.app.soundboardCtl && pad.app.soundboardCtl.searching === true }
+        if (d === "web-tap") { var w = pad.webResults[Number(s.i || 0)]; return w && pad.webUsable ? pad.tapWeb(w.url, w.name) : "inert" }
+        if (d === "web-star") { var w2 = pad.webResults[Number(s.i || 0)]; if (!w2) return "inert"; pad.starWeb(w2.name, w2.url); return "starred " + w2.url }
+        if (d === "pad-watch") { if (pad.sharers.length === 0 || pad.inOtherCall) return "inert"; pad.app.callctl.watchCall(pad.roomId); return "watching " + pad.roomId }
+        if (d === "party-play") return pad.partyDrive ? pad.partyPlay(!pad.opt("party:play", pad.party.playing === true)) : "inert"
+        if (d === "party-next") return pad.partyDrive && pad.party.next.length > 0 ? pad.partyNext() : "inert"
         if (d === "view") return {
             opened: pad.opened, link: pad.link, device: pad.deviceName, room: pad.roomId, targets: pad.targets.length,
             mic: pad.mic, micCaption: pad.micCaption, micUsable: pad.micUsable, pttLine: pad.mic === "ptt" ? pad.why("ptt", "mic") : "",
             deaf: pad.deaf, brb: pad.brb, playing: pad.playing, gateOk: pad.gateOk,
             roleLine: !!pad.me && !pad.gateOk ? (pad.me.gate && String(pad.me.gate.hint || "").length > 0 ? String(pad.me.gate.hint) : pad.why("off-role", "")) : "",
             notice: pad.noticeText, people: pad.view ? pad.view.people : [], pending: Object.keys(pad.optimistic),
-            favourites: pad.favourites.length, roomSounds: pad.roomSounds.length, recent: pad.recent.length }
+            favourites: pad.favourites.length, roomSounds: pad.roomSounds.length, recent: pad.recent.length,
+            sharers: pad.sharers, watchingHere: pad.watchingHere, party: pad.party, ops: pad.ops }
         return "unknown step"
     }
 

@@ -1235,6 +1235,11 @@ Item {
     // and the animation toggle. See videoGrid.weightedLayout for what each preset does.
     property string callLayout: "auto"     // "auto" | "gallery" | "speaker" | "sidebar"
     property string pinnedTile: ""         // tile id forced into the main area ("" = none)
+    // Pad QOL (2026-10-31): the share shown full screen ("" = none) and what to put back after
+    property string shareFullscreen: ""
+    property int _fsPrevVisibility: 0
+    property bool _fsPrevMaximized: false
+    property string _fsPrevPinned: ""
     property real callSideFrac: 0.28       // side column's share of the grid width (seam drag)
     // 9.3.1: the seam between the call and the chat (Legacy). callPaneFrac = the call panel's
     // share of the page height once the divider has been dragged (-1 = never: the grid keeps its

@@ -419,6 +419,61 @@
           },
           {
             "confirm": null,
+            "contexts": [],
+            "danger": false,
+            "group": "app",
+            "hold": false,
+            "icon": "zoom-in-symbolic",
+            "id": "app.zoom.in",
+            "keys": [
+              "Ctrl+=",
+              "Ctrl++"
+            ],
+            "label": "Make everything bigger",
+            "palette": true,
+            "pending": null,
+            "placeable": true,
+            "target": null,
+            "toggle": null
+          },
+          {
+            "confirm": null,
+            "contexts": [],
+            "danger": false,
+            "group": "app",
+            "hold": false,
+            "icon": "zoom-out-symbolic",
+            "id": "app.zoom.out",
+            "keys": [
+              "Ctrl+-"
+            ],
+            "label": "Make everything smaller",
+            "palette": true,
+            "pending": null,
+            "placeable": true,
+            "target": null,
+            "toggle": null
+          },
+          {
+            "confirm": null,
+            "contexts": [],
+            "danger": false,
+            "group": "app",
+            "hold": false,
+            "icon": "zoom-original-symbolic",
+            "id": "app.zoom.reset",
+            "keys": [
+              "Ctrl+0"
+            ],
+            "label": "Reset the app size",
+            "palette": true,
+            "pending": null,
+            "placeable": true,
+            "target": null,
+            "toggle": null
+          },
+          {
+            "confirm": null,
             "contexts": [
               "window:calendar"
             ],
@@ -2007,6 +2062,22 @@
             "placeable": false,
             "target": "inviteCode",
             "toggle": null
+          },
+          {
+            "confirm": null,
+            "contexts": [],
+            "danger": false,
+            "group": "you",
+            "hold": false,
+            "icon": "sidebar-expand-left-symbolic",
+            "id": "layout.drawer.toggle",
+            "keys": [],
+            "label": "Open a drawer",
+            "palette": false,
+            "pending": null,
+            "placeable": true,
+            "target": "island",
+            "toggle": "layout.drawerOpen"
           },
           {
             "confirm": null,
@@ -6568,6 +6639,22 @@
             "placeable": false,
             "target": "inviteCode",
             "toggle": null
+          },
+          {
+            "confirm": null,
+            "contexts": [],
+            "danger": false,
+            "group": "you",
+            "hold": false,
+            "icon": "sidebar-expand-left-symbolic",
+            "id": "layout.drawer.toggle",
+            "keys": [],
+            "label": "Open a drawer",
+            "palette": false,
+            "pending": null,
+            "placeable": true,
+            "target": "island",
+            "toggle": "layout.drawerOpen"
           },
           {
             "confirm": null,

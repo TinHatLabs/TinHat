@@ -16,7 +16,22 @@ Controls.Popup {
     id: pop
     property var app: null
     property var panel: null
-    property var target: ({ kind: "background" })
+    property var target0: ({ kind: "background" })
+    /// a lead swatch moves its whole group unless "Just this colour" is picked (THEME-SIMPLE §7; kept for the session:
+    /// the panel's swatchWhole)
+    readonly property bool whole: pop.panel ? pop.panel.swatchWhole : true
+    readonly property var groupLabels: ({ backgrounds: "Backgrounds", text: "Text", accent: "Accent", status: "Status", people: "People" })
+    /// Simple swatches: {lead, members, usedBy, alsoIn}, live from the state (null for the other targets)
+    readonly property var swatch: {
+        if (pop.target0.kind !== "swatch") return null
+        var i = ThemeEditorLib.swatchInfo(pop.st, pop.target0.group, pop.target0.id, pop.whole)
+        if (!i) return null
+        i.alsoIn = i.alsoIn.map(g => pop.groupLabels[g] || g)
+        return i
+    }
+    readonly property var target: pop.target0.kind === "swatch"
+        ? ({ kind: "swatch", id: pop.target0.id, group: pop.target0.group, label: pop.target0.label, whole: !!(pop.swatch && pop.swatch.lead) && pop.whole })
+        : pop.target0
     readonly property string targetKey: ThemeEditorLib.targetKey(pop.target)
     property Item anchorItem: null
 
@@ -52,8 +67,8 @@ Controls.Popup {
 
     /// Open for `t` next to `item` (THEMES-UI §13.9: left of it, top-aligned, 8 apart; flipped right when there is no
     /// room; kept 6 inside the window).
-    function openFor(t, item) {
-        pop.target = t
+    function openFor(t, item, info) {
+        pop.target0 = t
         pop.anchorItem = item
         pop.exprOpen = false
         pop.error = ""
@@ -170,6 +185,34 @@ Controls.Popup {
                 font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 elide: Text.ElideRight
             }
+        }
+        // ---- Simple: what a lead changes, what a swatch reaches (THEME-SIMPLE §4 / §7)
+        ColumnLayout {
+            Layout.preferredWidth: 256
+            visible: !!(pop.swatch && pop.swatch.lead)
+            spacing: 2
+            Accessible.role: Accessible.Grouping
+            Accessible.name: "What to change"
+            ThRadioButton {
+                text: pop.swatch ? "Whole group (moves " + pop.swatch.members + " colours)" : ""
+                checked: pop.whole
+                onToggled: if (checked) pop.panel.swatchWhole = true
+            }
+            ThRadioButton {
+                text: "Just this colour"
+                checked: !pop.whole
+                onToggled: if (checked) pop.panel.swatchWhole = false
+            }
+        }
+        Controls.Label {
+            textFormat: Text.PlainText
+            Layout.preferredWidth: 256
+            visible: !!pop.swatch
+            wrapMode: Text.Wrap
+            text: !pop.swatch ? "" : (pop.swatch.usedBy === 1 ? "Used by 1 colour" : "Used by " + pop.swatch.usedBy + " colours")
+                  + (pop.swatch.alsoIn.length > 0 ? " · also changes " + pop.swatch.alsoIn.join(", ") : "")
+            color: Th.settingsHintFg
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
 
         // ---- the colour field: saturation → right, value → up (content colours: white → the hue, then transparent →

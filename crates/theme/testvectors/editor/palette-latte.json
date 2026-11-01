@@ -1,0 +1,405 @@
+{
+  "doc": {
+    "format": "tinhat-theme",
+    "id": "catppuccin-latte",
+    "name": "Catppuccin Latte",
+    "palette": {
+      "ansi": [
+        "#bcc0cc",
+        "#d20f39",
+        "#40a02b",
+        "#df8e1d",
+        "#1e66f5",
+        "#ea76cb",
+        "#179299",
+        "#5c5f77",
+        "#acb0be",
+        "#e7103f",
+        "#46b02f",
+        "#e49931",
+        "#3878f6",
+        "#ef95d7",
+        "#19a1a8",
+        "#6c6f85"
+      ],
+      "bg": "#eff1f5",
+      "cursor": "#dc8a78",
+      "fg": "#4c4f69",
+      "selectionBg": "#dc8a78",
+      "selectionFg": "#eff1f5"
+    },
+    "source": "iterm2-color-schemes@595c7fe2d836",
+    "v": 1
+  },
+  "expect": {
+    "groups": [
+      {
+        "id": "backgrounds",
+        "label": "Backgrounds",
+        "swatches": [
+          {
+            "alsoIn": [
+              "text",
+              "people"
+            ],
+            "colour": "#eff1f5",
+            "follow": [],
+            "id": "bg",
+            "label": "Background",
+            "sources": [
+              "bg"
+            ],
+            "usedBy": [
+              "account.bg",
+              "border.strong",
+              "border.subtle",
+              "button.danger.fg",
+              "calendar.day.today.fg",
+              "composer.bg",
+              "header.bottom.bg",
+              "island.bg.account",
+              "island.bg.buttons",
+              "island.bg.call",
+              "island.bg.composer",
+              "island.bg.dms",
+              "island.bg.header",
+              "island.bg.nav",
+              "island.bg.panel",
+              "island.bg.rooms",
+              "island.bg.spaces",
+              "island.bg.timeline",
+              "island.bg.widgets",
+              "island.border",
+              "panel.bg",
+              "presence.offline",
+              "rail.bg",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "rooms.bg",
+              "settings.inviteCode.row.bg",
+              "stage.bg",
+              "surface.hover",
+              "surface.island",
+              "surface.overlay",
+              "surface.pressed",
+              "surface.raised",
+              "surface.sunken",
+              "surface.window",
+              "text.disabled",
+              "text.muted",
+              "text.onAccent",
+              "text.secondary",
+              "timeline.bg",
+              "toast.bg",
+              "tooltip.bg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#dc8a78",
+            "follow": [],
+            "id": "selectionBg",
+            "label": "Selection",
+            "sources": [
+              "selectionBg"
+            ],
+            "usedBy": [
+              "surface.selected"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "text",
+        "label": "Text",
+        "swatches": [
+          {
+            "alsoIn": [
+              "backgrounds",
+              "people"
+            ],
+            "colour": "#4c4f69",
+            "follow": [],
+            "id": "fg",
+            "label": "Text",
+            "sources": [
+              "fg"
+            ],
+            "usedBy": [
+              "border.strong",
+              "border.subtle",
+              "button.danger.fg",
+              "calendar.day.today.fg",
+              "composer.fg",
+              "island.bg.call",
+              "island.bg.dms",
+              "island.bg.nav",
+              "island.bg.spaces",
+              "island.bg.timeline",
+              "island.bg.widgets",
+              "island.border",
+              "presence.offline",
+              "rail.bg",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "stage.bg",
+              "surface.hover",
+              "surface.pressed",
+              "surface.sunken",
+              "surface.window",
+              "text.disabled",
+              "text.muted",
+              "text.onAccent",
+              "text.primary",
+              "text.secondary",
+              "timeline.bg",
+              "toast.bg",
+              "toast.fg",
+              "tooltip.fg"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "accent",
+        "label": "Accent",
+        "swatches": [
+          {
+            "alsoIn": [
+              "text",
+              "status",
+              "people"
+            ],
+            "colour": "#dc8a78",
+            "follow": [],
+            "id": "cursor",
+            "label": "Cursor",
+            "sources": [
+              "cursor"
+            ],
+            "usedBy": [
+              "accent.base",
+              "accent.bright",
+              "accent.dim",
+              "accent.glow",
+              "badge.bg",
+              "border.focus",
+              "button.danger.fg",
+              "calendar.day.today.bg",
+              "calendar.day.today.fg",
+              "icon.highlight",
+              "presence.incall",
+              "rail.nav.bg",
+              "rail.nav.bg.active",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "text.link",
+              "text.onAccent"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "swatches": [
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#d20f39",
+            "follow": [],
+            "id": "c1",
+            "label": "Red",
+            "sources": [
+              "c1"
+            ],
+            "usedBy": [
+              "badge.mention",
+              "button.danger.bg",
+              "button.danger.fg",
+              "name.1",
+              "presence.busy",
+              "state.danger"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#e7103f",
+            "follow": [],
+            "id": "c9",
+            "label": "Bright red",
+            "sources": [
+              "c9"
+            ],
+            "usedBy": [
+              "call.muted",
+              "name.7",
+              "state.dangerBright"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#df8e1d",
+            "follow": [],
+            "id": "c3",
+            "label": "Yellow",
+            "sources": [
+              "c3"
+            ],
+            "usedBy": [
+              "mention.bg",
+              "mention.edge",
+              "name.3",
+              "presence.away",
+              "state.warning"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#40a02b",
+            "follow": [],
+            "id": "c2",
+            "label": "Green",
+            "sources": [
+              "c2"
+            ],
+            "usedBy": [
+              "call.speaking",
+              "name.2",
+              "presence.online",
+              "state.success"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#179299",
+            "follow": [],
+            "id": "c6",
+            "label": "Cyan",
+            "sources": [
+              "c6"
+            ],
+            "usedBy": [
+              "name.6",
+              "state.info"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#e49931",
+            "follow": [],
+            "id": "c11",
+            "label": "Bright yellow",
+            "sources": [
+              "c11"
+            ],
+            "usedBy": [
+              "name.9",
+              "state.aside"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "people",
+        "label": "People",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#1e66f5",
+            "follow": [],
+            "id": "c4",
+            "label": "Blue",
+            "sources": [
+              "c4"
+            ],
+            "usedBy": [
+              "name.4"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#ea76cb",
+            "follow": [],
+            "id": "c5",
+            "label": "Magenta",
+            "sources": [
+              "c5"
+            ],
+            "usedBy": [
+              "name.5"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#46b02f",
+            "follow": [],
+            "id": "c10",
+            "label": "Bright green",
+            "sources": [
+              "c10"
+            ],
+            "usedBy": [
+              "name.8"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#3878f6",
+            "follow": [],
+            "id": "c12",
+            "label": "Bright blue",
+            "sources": [
+              "c12"
+            ],
+            "usedBy": [
+              "name.10"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#ef95d7",
+            "follow": [],
+            "id": "c13",
+            "label": "Bright magenta",
+            "sources": [
+              "c13"
+            ],
+            "usedBy": [
+              "name.11"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#19a1a8",
+            "follow": [],
+            "id": "c14",
+            "label": "Bright cyan",
+            "sources": [
+              "c14"
+            ],
+            "usedBy": [
+              "name.12"
+            ]
+          }
+        ]
+      }
+    ],
+    "handSet": []
+  },
+  "kind": "palette"
+}

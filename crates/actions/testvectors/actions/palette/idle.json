@@ -685,6 +685,34 @@
             "target": null
           },
           {
+            "a": "app.zoom.in",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+=",
+            "icon": "zoom-in-symbolic",
+            "id": "app.zoom.in",
+            "kind": "action",
+            "label": "Make everything bigger",
+            "pick": false,
+            "score": 50,
+            "target": null
+          },
+          {
+            "a": "app.zoom.out",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+-",
+            "icon": "zoom-out-symbolic",
+            "id": "app.zoom.out",
+            "kind": "action",
+            "label": "Make everything smaller",
+            "pick": false,
+            "score": 50,
+            "target": null
+          },
+          {
             "a": "app.logship.toggle",
             "active": false,
             "emoji": null,
@@ -856,7 +884,7 @@
         "mode": "all",
         "query": "g",
         "stage": null,
-        "total": 27
+        "total": 29
       },
       "input": {
         "app": "desktop",
@@ -21159,6 +21187,34 @@
             "target": null
           },
           {
+            "a": "app.zoom.in",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+=",
+            "icon": "zoom-in-symbolic",
+            "id": "app.zoom.in",
+            "kind": "action",
+            "label": "Make everything bigger",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": "app.zoom.out",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+-",
+            "icon": "zoom-out-symbolic",
+            "id": "app.zoom.out",
+            "kind": "action",
+            "label": "Make everything smaller",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
             "a": "app.gifAutoplay.toggle",
             "active": false,
             "emoji": null,
@@ -21196,6 +21252,20 @@
             "id": "app.rooms.refresh",
             "kind": "action",
             "label": "Refresh rooms",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": "app.zoom.reset",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+0",
+            "icon": "zoom-original-symbolic",
+            "id": "app.zoom.reset",
+            "kind": "action",
+            "label": "Reset the app size",
             "pick": false,
             "score": 0,
             "target": null
@@ -21703,54 +21773,12 @@
             "pick": false,
             "score": 0,
             "target": null
-          },
-          {
-            "a": "sound.stop",
-            "active": null,
-            "emoji": null,
-            "enabled": false,
-            "hint": null,
-            "icon": "media-playback-stop",
-            "id": "sound.stop",
-            "kind": "action",
-            "label": "Stop the sound (for everyone)",
-            "pick": false,
-            "score": 0,
-            "target": null
-          },
-          {
-            "a": "room.info.edit",
-            "active": null,
-            "emoji": null,
-            "enabled": false,
-            "hint": null,
-            "icon": "document-edit-symbolic",
-            "id": "room.info.edit",
-            "kind": "action",
-            "label": "Edit room info",
-            "pick": false,
-            "score": 0,
-            "target": null
-          },
-          {
-            "a": "room.markRead",
-            "active": null,
-            "emoji": null,
-            "enabled": false,
-            "hint": null,
-            "icon": "checkmark-symbolic",
-            "id": "room.markRead",
-            "kind": "action",
-            "label": "Mark as read",
-            "pick": false,
-            "score": 0,
-            "target": null
           }
         ],
         "mode": "action",
         "query": "",
         "stage": null,
-        "total": 104
+        "total": 107
       },
       "input": {
         "app": "desktop",
@@ -22754,6 +22782,48 @@
             "target": null
           },
           {
+            "a": "app.zoom.in",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+=",
+            "icon": "zoom-in-symbolic",
+            "id": "app.zoom.in",
+            "kind": "action",
+            "label": "Make everything bigger",
+            "pick": false,
+            "score": 40,
+            "target": null
+          },
+          {
+            "a": "app.zoom.out",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+-",
+            "icon": "zoom-out-symbolic",
+            "id": "app.zoom.out",
+            "kind": "action",
+            "label": "Make everything smaller",
+            "pick": false,
+            "score": 40,
+            "target": null
+          },
+          {
+            "a": "app.zoom.reset",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+0",
+            "icon": "zoom-original-symbolic",
+            "id": "app.zoom.reset",
+            "kind": "action",
+            "label": "Reset the app size",
+            "pick": false,
+            "score": 40,
+            "target": null
+          },
+          {
             "a": "call.layout.set",
             "active": false,
             "emoji": null,
@@ -22827,7 +22897,7 @@
         "mode": "action",
         "query": "cal",
         "stage": null,
-        "total": 13
+        "total": 16
       },
       "input": {
         "app": "desktop",
@@ -26216,6 +26286,48 @@
             "target": null
           },
           {
+            "a": "app.zoom.in",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+=",
+            "icon": "zoom-in-symbolic",
+            "id": "app.zoom.in",
+            "kind": "action",
+            "label": "Make everything bigger",
+            "pick": false,
+            "score": 40,
+            "target": null
+          },
+          {
+            "a": "app.zoom.out",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+-",
+            "icon": "zoom-out-symbolic",
+            "id": "app.zoom.out",
+            "kind": "action",
+            "label": "Make everything smaller",
+            "pick": false,
+            "score": 40,
+            "target": null
+          },
+          {
+            "a": "app.zoom.reset",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+0",
+            "icon": "zoom-original-symbolic",
+            "id": "app.zoom.reset",
+            "kind": "action",
+            "label": "Reset the app size",
+            "pick": false,
+            "score": 40,
+            "target": null
+          },
+          {
             "a": "call.layout.set",
             "active": false,
             "emoji": null,
@@ -26289,7 +26401,7 @@
         "mode": "action",
         "query": "cal",
         "stage": null,
-        "total": 13
+        "total": 16
       },
       "input": {
         "app": "desktop",
@@ -27387,6 +27499,34 @@
             "target": null
           },
           {
+            "a": "app.zoom.in",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+=",
+            "icon": "zoom-in-symbolic",
+            "id": "app.zoom.in",
+            "kind": "action",
+            "label": "Make everything bigger",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": "app.zoom.out",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+-",
+            "icon": "zoom-out-symbolic",
+            "id": "app.zoom.out",
+            "kind": "action",
+            "label": "Make everything smaller",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
             "a": "app.gifAutoplay.toggle",
             "active": false,
             "emoji": null,
@@ -27424,6 +27564,20 @@
             "id": "app.rooms.refresh",
             "kind": "action",
             "label": "Refresh rooms",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": "app.zoom.reset",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": "Ctrl+0",
+            "icon": "zoom-original-symbolic",
+            "id": "app.zoom.reset",
+            "kind": "action",
+            "label": "Reset the app size",
             "pick": false,
             "score": 0,
             "target": null
@@ -27931,54 +28085,12 @@
             "pick": false,
             "score": 0,
             "target": null
-          },
-          {
-            "a": "sound.stop",
-            "active": null,
-            "emoji": null,
-            "enabled": false,
-            "hint": null,
-            "icon": "media-playback-stop",
-            "id": "sound.stop",
-            "kind": "action",
-            "label": "Stop the sound (for everyone)",
-            "pick": false,
-            "score": 0,
-            "target": null
-          },
-          {
-            "a": "room.info.edit",
-            "active": null,
-            "emoji": null,
-            "enabled": false,
-            "hint": null,
-            "icon": "document-edit-symbolic",
-            "id": "room.info.edit",
-            "kind": "action",
-            "label": "Edit room info",
-            "pick": false,
-            "score": 0,
-            "target": null
-          },
-          {
-            "a": "room.markRead",
-            "active": null,
-            "emoji": null,
-            "enabled": false,
-            "hint": null,
-            "icon": "checkmark-symbolic",
-            "id": "room.markRead",
-            "kind": "action",
-            "label": "Mark as read",
-            "pick": false,
-            "score": 0,
-            "target": null
           }
         ],
         "mode": "action",
         "query": "",
         "stage": null,
-        "total": 104
+        "total": 107
       },
       "input": {
         "app": "desktop",

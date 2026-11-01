@@ -197,14 +197,28 @@ Item {
         var themes = {}, themeOrder = []
         var tl = host._themeList
         for (var t = 0; t < tl.length; t++) { if (themes[tl[t].id] === undefined) { themes[tl[t].id] = { name: String(tl[t].name || tl[t].id), values: {} }; themeOrder.push(tl[t].id) } }
+        // islands (layout.drawer.toggle's subjects): the ones a drawer may hold, by name; the pick list = the hidden ones
+        var islands = {}, hiddenIslands = []
+        if (app.layoutStore && app.layoutController) {
+            var lf = String(app.layoutStore.formJson || "")
+            var dt = [], hr = []
+            try { dt = JSON.parse(String(app.layoutController.drawerTargets(lf))); hr = JSON.parse(String(app.layoutController.hiddenRefs(lf))) } catch (e) {}
+            for (var d = 0; d < dt.length; d++) {
+                var em = app.layoutStore.editMode   // EditMode.islandName: every kind's name ("Rooms", "Button island 2")
+                islands[dt[d]] = { name: String(em ? em.islandName(dt[d]) : dt[d]), values: {} }
+                if (hr.indexOf(dt[d]) >= 0) hiddenIslands.push(dt[d])
+            }
+        }
+        values["layout.drawerOpen"] = String(app.drawerRef || "")
         var active = String(app.mNavActiveSpace || "")
         return {
             values: values,
             current: host.currentRoomId.length > 0 ? { room: host.currentRoomId, activeSpace: active.indexOf("!") === 0 ? active : undefined }
                                                    : (active.indexOf("!") === 0 ? { activeSpace: active } : {}),
-            subjects: { room: rooms, space: spaces, person: person, sound: sounds, device: devices, audioSource: sources, theme: themes },
+            subjects: { room: rooms, space: spaces, person: person, sound: sounds, device: devices, audioSource: sources, theme: themes,
+                        island: islands },
             lists: { room: order, space: spaceOrder, sound: soundOrder, inputs: inputs, outputs: outputs, cameras: cameras,
-                     audioSources: sourceOrder, theme: themeOrder }
+                     audioSources: sourceOrder, theme: themeOrder, island: hiddenIslands }
         }
     }
     // the theme list (an invokable of the theme controller — not reactive: re-read on its state revision)
@@ -311,7 +325,7 @@ Item {
     /** The actions with a Shortcut item of their own in Main.qml (their keys come from keysFor). */
     readonly property var ownShortcutActions: ["app.settings.open", "call.fill.toggle", "nav.quickSwitcher.open", "call.mic.toggle",
         "call.deafen.toggle", "soundboard.open", "calendar.open", "space.settings.open", "nav.room.previous", "nav.room.next",
-        "nav.unread.previous", "nav.unread.next", "layout.edit"]
+        "nav.unread.previous", "nav.unread.next", "layout.edit", "app.zoom.in", "app.zoom.out", "app.zoom.reset"]
     /** A person's keys for every other action (they get a Shortcut below). */
     readonly property var userShortcuts: {
         var out = [], bs = host.effectiveKeys.bindings || []
@@ -476,7 +490,9 @@ Item {
         switch (id) {
         // ---- app ----
         case "app.about": ui.settingsSheet.openAt("about"); return true   // Settings → About & help (SETTINGS-WINDOW.md §5)
-        case "layout.edit": app.openEditLayout(false); return true   // 11.0 edit mode: open — or, editing, Done (EDITMODE-UI §1)
+        case "layout.edit": app.openEditLayout(false); return true
+        // a drawer's button (feat/editmode-buttons-drawers, EDITMODE-UI §7.3): its island in a drawer under it, or closed
+        case "layout.drawer.toggle": if (ctx.subject) app.toggleDrawer(ctx.subject, ctx.anchor); else app.closeDrawer(); return true   // 11.0 edit mode: open — or, editing, Done (EDITMODE-UI §1)
         case "app.bugReport": if (!ui.bugReportDialog.keepNote) ui.bugReportDialog.clearForm(); ui.bugReportDialog.open(); return true
         case "app.iconGallery": ui.iconGallery.openOrRaise(); return true
         case "app.install": ui.installDialog.open(); return true
@@ -509,6 +525,10 @@ Item {
             else app.updater.checkForUpdates()
             return true
         case "app.verify": ui.verifySheet.open(); return true
+        // 2026-10-31 App size (docs/UI-ZOOM.md): the same path as Ctrl+= / Ctrl+- / Ctrl+0 (Main.qml zoomStep)
+        case "app.zoom.in": app.zoomStep(1); return true
+        case "app.zoom.out": app.zoomStep(-1); return true
+        case "app.zoom.reset": app.zoomStep(0); return true
         // ---- calendar ----
         case "calendar.event.new": app.openCalendarNew(); return true
         case "calendar.open":
@@ -554,7 +574,7 @@ Item {
         case "call.input.set": app.callctl.setInput(ctx.subject || ""); return true
         case "call.join":
             r = host._room(ctx)
-            if (r.length > 0) { if (app.mInCall && app.mCallRoomId !== r) app.callctl.switchCall(r); else app.callctl.joinCall(r) }
+            if (r.length > 0) { if (app.mInCall && app.mCallRoomId !== r) app.callctl.switchCall(r); else app.callctl.joinCallPressed(r) }
             return true
         // 12.0.2 Pad (docs/PAD.md): the Pad button beside Join for the target room's call (Main.qml openPad: a greyed Pad
         // shows its one line instead)

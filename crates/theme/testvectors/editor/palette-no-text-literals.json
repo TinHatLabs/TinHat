@@ -1,0 +1,419 @@
+{
+  "doc": {
+    "author": "Tin Hat",
+    "format": "tinhat-theme",
+    "id": "goose-no-text",
+    "name": "No text",
+    "names": "hash-hsl",
+    "roles": {
+      "accent.base": "#b0508c",
+      "accent.bright": "#e87cc0",
+      "accent.dim": "alpha(accent.base, 0.18)",
+      "accent.glow": "alpha(accent.base, 0.35)",
+      "badge.bg": "accent.base",
+      "badge.mention": "state.danger",
+      "border.focus": "accent.bright",
+      "border.strong": "mix(surface.window, text.primary, 0.2)",
+      "border.subtle": "#4a2050",
+      "call.muted": "state.dangerBright",
+      "call.speaking": "state.success",
+      "mention.bg": "alpha(state.warning, 0.1)",
+      "mention.edge": "state.warning",
+      "name.1": "#e09085",
+      "name.10": "#85e0c5",
+      "name.11": "#85e0d4",
+      "name.12": "#85dce0",
+      "name.2": "#e09a85",
+      "name.3": "#e0a585",
+      "name.4": "#e0b085",
+      "name.5": "#e0ba85",
+      "name.6": "#e0c485",
+      "name.7": "#e0ce85",
+      "name.8": "#e0d985",
+      "name.9": "#dde085",
+      "presence.away": "#faa81a",
+      "presence.busy": "#ed4245",
+      "presence.incall": "#3ba55c",
+      "presence.offline": "#95a5a6",
+      "presence.online": "#3ba55c",
+      "scrim": "alpha(#000000, 0.3)",
+      "shadow": "#000000",
+      "state.aside": "#e8b923",
+      "state.danger": "#d1506e",
+      "state.dangerBright": "#ff7c9c",
+      "state.info": "#8fa6ff",
+      "state.success": "#58c88a",
+      "state.warning": "#dfa44c",
+      "surface.hover": "lighter(surface.island, 1.18)",
+      "surface.island": "#2a1030",
+      "surface.overlay": "surface.island",
+      "surface.pressed": "surface.raised",
+      "surface.raised": "#351540",
+      "surface.selected": "accent.dim",
+      "surface.sunken": "surface.window",
+      "surface.window": "#1a0a1a",
+      "text.disabled": "text.secondary",
+      "text.link": "accent.bright",
+      "text.muted": "alpha(text.secondary, 0.7)",
+      "text.onAccent": "text.primary",
+      "text.primary": "lighter(accent.bright, 1.6)",
+      "text.secondary": "mix(text.primary, surface.island, 0.3)"
+    },
+    "sounds": "goose",
+    "tokens": {
+      "button.danger.fg": "#ffffff",
+      "calendar.day.today.fg": "#ffffff",
+      "callbar.bg": "#000000/0.5",
+      "callbar.chevron.bg": "#1a1a1f/0.96",
+      "callbar.mobile.bg": "#000000/0.6",
+      "dialog.button.danger.fg": "#ffffff",
+      "dm.more.fg": "#ffffff",
+      "dock.handle.icon": "#ffffff",
+      "icon.scheme.neutral": "#f67400",
+      "rail.nav.icon.lit": "#e87cc0",
+      "rail.nav.icon.lit.active": "#e87cc0",
+      "reel.checkbox.fg": "#ffffff",
+      "slider.handle.border.disabled": "#e995e9",
+      "slider.track": "#e995e9",
+      "toggle.handle.border.disabled": "#e995e9",
+      "toggle.track": "#e995e9",
+      "window.titlebar.close.fg.hover": "#ffffff"
+    },
+    "v": 1,
+    "variant": "dark"
+  },
+  "expect": {
+    "groups": [
+      {
+        "id": "backgrounds",
+        "label": "Backgrounds",
+        "swatches": [
+          {
+            "alsoIn": [
+              "text"
+            ],
+            "colour": "#2a1030",
+            "follow": [],
+            "id": "surface.island",
+            "label": "Islands",
+            "sources": [
+              "surface.island"
+            ],
+            "usedBy": [
+              "header.bottom.bg",
+              "island.bg.header",
+              "island.bg.panel",
+              "island.bg.rooms",
+              "panel.bg",
+              "rooms.bg",
+              "surface.hover",
+              "surface.island",
+              "surface.overlay",
+              "text.disabled",
+              "text.muted",
+              "text.secondary"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#1a0a1a",
+            "follow": [],
+            "id": "surface.window",
+            "label": "Window background",
+            "sources": [
+              "surface.window"
+            ],
+            "usedBy": [
+              "border.strong",
+              "island.bg.call",
+              "island.bg.dms",
+              "island.bg.nav",
+              "island.bg.spaces",
+              "island.bg.timeline",
+              "island.bg.widgets",
+              "rail.bg",
+              "rail.nav.icon",
+              "stage.bg",
+              "surface.sunken",
+              "surface.window",
+              "timeline.bg",
+              "toast.bg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#351540",
+            "follow": [],
+            "id": "surface.raised",
+            "label": "Raised surfaces",
+            "sources": [
+              "surface.raised"
+            ],
+            "usedBy": [
+              "account.bg",
+              "composer.bg",
+              "island.bg.account",
+              "island.bg.buttons",
+              "island.bg.composer",
+              "settings.inviteCode.row.bg",
+              "surface.pressed",
+              "surface.raised",
+              "tooltip.bg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#4a2050",
+            "follow": [],
+            "id": "border.subtle",
+            "label": "Subtle borders",
+            "sources": [
+              "border.subtle"
+            ],
+            "usedBy": [
+              "border.subtle",
+              "island.border"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "text",
+        "label": "Text",
+        "swatches": []
+      },
+      {
+        "id": "accent",
+        "label": "Accent",
+        "swatches": [
+          {
+            "alsoIn": [
+              "backgrounds",
+              "status"
+            ],
+            "colour": "#b0508c",
+            "follow": [],
+            "id": "accent.base",
+            "label": "Accent",
+            "sources": [
+              "accent.base"
+            ],
+            "usedBy": [
+              "accent.base",
+              "accent.dim",
+              "accent.glow",
+              "badge.bg",
+              "rail.nav.bg",
+              "rail.nav.bg.active",
+              "rail.nav.icon",
+              "surface.selected"
+            ]
+          },
+          {
+            "alsoIn": [
+              "backgrounds",
+              "text"
+            ],
+            "colour": "#e87cc0",
+            "follow": [
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active"
+            ],
+            "id": "accent.bright",
+            "label": "Bright accent",
+            "sources": [
+              "accent.bright"
+            ],
+            "usedBy": [
+              "accent.bright",
+              "border.focus",
+              "border.strong",
+              "calendar.day.today.bg",
+              "composer.fg",
+              "icon.highlight",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "text.disabled",
+              "text.link",
+              "text.muted",
+              "text.onAccent",
+              "text.primary",
+              "text.secondary",
+              "toast.fg",
+              "tooltip.fg"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#d1506e",
+            "follow": [],
+            "id": "state.danger",
+            "label": "Danger",
+            "sources": [
+              "state.danger"
+            ],
+            "usedBy": [
+              "badge.mention",
+              "button.danger.bg",
+              "state.danger"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#ff7c9c",
+            "follow": [],
+            "id": "state.dangerBright",
+            "label": "Bright danger",
+            "sources": [
+              "state.dangerBright"
+            ],
+            "usedBy": [
+              "call.muted",
+              "state.dangerBright"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#dfa44c",
+            "follow": [],
+            "id": "state.warning",
+            "label": "Warning",
+            "sources": [
+              "state.warning"
+            ],
+            "usedBy": [
+              "mention.bg",
+              "mention.edge",
+              "state.warning"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#58c88a",
+            "follow": [],
+            "id": "state.success",
+            "label": "Success",
+            "sources": [
+              "state.success"
+            ],
+            "usedBy": [
+              "call.speaking",
+              "state.success"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#8fa6ff",
+            "follow": [],
+            "id": "state.info",
+            "label": "Information",
+            "sources": [
+              "state.info"
+            ],
+            "usedBy": [
+              "state.info"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#e8b923",
+            "follow": [],
+            "id": "state.aside",
+            "label": "Aside",
+            "sources": [
+              "state.aside"
+            ],
+            "usedBy": [
+              "state.aside"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "people",
+        "label": "People",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#3ba55c",
+            "follow": [],
+            "id": "presence.online",
+            "label": "Online",
+            "sources": [
+              "presence.online",
+              "presence.incall"
+            ],
+            "usedBy": [
+              "presence.incall",
+              "presence.online"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#faa81a",
+            "follow": [],
+            "id": "presence.away",
+            "label": "Away",
+            "sources": [
+              "presence.away"
+            ],
+            "usedBy": [
+              "presence.away"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#ed4245",
+            "follow": [],
+            "id": "presence.busy",
+            "label": "Busy",
+            "sources": [
+              "presence.busy"
+            ],
+            "usedBy": [
+              "presence.busy"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#95a5a6",
+            "follow": [],
+            "id": "presence.offline",
+            "label": "Offline",
+            "sources": [
+              "presence.offline"
+            ],
+            "usedBy": [
+              "presence.offline"
+            ]
+          }
+        ]
+      }
+    ],
+    "handSet": [
+      "button.danger.fg",
+      "calendar.day.today.fg",
+      "callbar.bg",
+      "callbar.chevron.bg",
+      "callbar.mobile.bg",
+      "dialog.button.danger.fg",
+      "dm.more.fg",
+      "dock.handle.icon",
+      "icon.scheme.neutral",
+      "reel.checkbox.fg",
+      "slider.handle.border.disabled",
+      "slider.track",
+      "toggle.handle.border.disabled",
+      "toggle.track",
+      "window.titlebar.close.fg.hover"
+    ]
+  },
+  "kind": "palette"
+}

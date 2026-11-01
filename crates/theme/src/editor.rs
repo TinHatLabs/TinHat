@@ -25,7 +25,8 @@ use crate::json::{number_value, parse_json};
 use crate::limits::{code_points, take_code_points};
 use crate::literal::{format_colour, parse_literal, Colour};
 use crate::look::{is_allowed_font, Density, FONT_SLOTS, SHADOW_BOUNDS, SIZE_BOUNDS};
-use crate::maths::luminance;
+use crate::maths::{luminance, to_oklab};
+use crate::palette::{palette_view, shift_colour, Swatch, PALETTE_GROUPS};
 use crate::ops::{cr, guard_all_c, guard_c};
 use crate::roles::{guard_of, is_role, GUARDS, GUARD_SURFACES, PALETTE_SLOTS};
 use crate::shape::SHAPE_BOUNDS;
@@ -253,6 +254,64 @@ fn ansi_index(slot: &str) -> Option<usize> {
         [b'c', d @ b'0'..=b'9'] => Some((d - b'0') as usize),
         [b'c', b'1', d @ b'0'..=b'5'] => Some(10 + (d - b'0') as usize),
         _ => None,
+    }
+}
+
+/// Simple (palette.rs): write one swatch's new colour into each of its sources and the token overrides that follow
+/// it — the RGB of `c`, each target's own alpha kept. Literals only, in fields every app reads.
+fn write_swatch(d: &mut JObj, sw: &Swatch, c: Colour) {
+    let put = |old: Option<&Value>| -> Value {
+        let k = old.and_then(Value::as_str).and_then(parse_literal).map_or(10000, |o| o.k);
+        Value::String(format_colour(Colour { r: c.r, g: c.g, b: c.b, k }))
+    };
+    for src in &sw.sources {
+        if src == "accent" {
+            let v = put(d.get("accent"));
+            d.insert("accent".into(), v);
+        } else if PALETTE_SLOTS.contains(&src.as_str()) {
+            let pal = ensure(d, "palette");
+            if let Some(n) = ansi_index(src) {
+                if let Some(Value::Array(ansi)) = pal.get_mut("ansi") {
+                    let v = put(ansi.get(n));
+                    ansi[n] = v;
+                }
+            } else {
+                let v = put(pal.get(src));
+                pal.insert(src.clone(), v);
+            }
+        } else {
+            let roles = ensure(d, "roles");
+            let v = put(roles.get(src));
+            roles.insert(src.clone(), v);
+        }
+    }
+    if let Some(Value::Object(t)) = d.get_mut("tokens") {
+        for id in &sw.follow {
+            let v = put(t.get(id));
+            t.insert(id.clone(), v);
+        }
+    }
+}
+
+/// After a Simple edit of Backgrounds or Text on a roles-only theme that names its variant: the variant follows the
+/// island against the text (as the `background` op does).
+fn follow_variant(d: &mut JObj, group: &str) -> Result<(), Fail> {
+    if has_palette(d) || !d.contains_key("variant") || (group != "backgrounds" && group != "text") {
+        return Ok(());
+    }
+    let r = resolve_or_fail(d, &TokensSpec::empty())?;
+    let dark = luminance(role_colour(&r, "surface.island")) < luminance(role_colour(&r, "text.primary"));
+    d.insert("variant".into(), Value::String(if dark { "dark" } else { "light" }.into()));
+    Ok(())
+}
+
+fn simple_colour(value: Option<&Value>) -> Result<Colour, Fail> {
+    if !matches!(value, Some(Value::String(_))) {
+        return fail("bad-op");
+    }
+    match opaque_literal(value) {
+        Some(c) => Ok(c),
+        None => fail("bad-colour"),
     }
 }
 
@@ -513,6 +572,41 @@ fn apply_op(d: &mut JObj, op: &JObj, spec: &TokensSpec) -> Result<(), Fail> {
             }
             Ok(())
         }
+        "swatch" => {
+            let Some(Value::String(id)) = op.get("id") else { return fail("bad-op") };
+            let c = simple_colour(value)?;
+            resolve_or_fail(d, &no_tokens)?;
+            let view = palette_view(d, &no_tokens);
+            for g in &view.groups {
+                if let Some(sw) = g.swatches.iter().find(|x| x.sources.contains(id)) {
+                    write_swatch(d, sw, c);
+                    return follow_variant(d, &g.id);
+                }
+            }
+            fail("unknown-swatch")
+        }
+        "group" => {
+            let Some(Value::String(id)) = op.get("id") else { return fail("bad-op") };
+            if !PALETTE_GROUPS.iter().any(|g| g.id == id) {
+                return fail("unknown-group");
+            }
+            let c = simple_colour(value)?;
+            resolve_or_fail(d, &no_tokens)?;
+            let view = palette_view(d, &no_tokens);
+            let g = view.groups.iter().find(|x| &x.id == id).expect("every group is in the view");
+            if g.swatches.is_empty() {
+                return fail("empty-group");
+            }
+            let lead = parse_literal(&g.swatches[0].colour).expect("canonical");
+            let (p, q) = (to_oklab(lead), to_oklab(c));
+            let same = lead.r == c.r && lead.g == c.g && lead.b == c.b;
+            let (dl, da, db) = if same { (0.0, 0.0, 0.0) } else { (q.l - p.l, q.a - p.a, q.b - p.b) };
+            for (i, sw) in g.swatches.iter().enumerate() {
+                let to = if i == 0 { c } else { shift_colour(parse_literal(&sw.colour).expect("canonical"), dl, da, db) };
+                write_swatch(d, sw, to);
+            }
+            follow_variant(d, id)
+        }
         _ => fail("bad-op"),
     }
 }
@@ -677,13 +771,17 @@ pub fn session_edit(
     spec: &TokensSpec,
     gesture: Option<i64>,
 ) -> Result<StepResult, String> {
-    let r = apply_edit(&Value::Object(s.doc.clone()), op, spec)?;
     let key = op.as_object().map(op_key).unwrap_or_default();
+    let coalesce =
+        gesture.is_some() && s.gesture == gesture && s.last_key.as_deref() == Some(key.as_str()) && !s.past.is_empty();
+    // Simple's palette edits continue a drag from the document before the gesture: swatch membership, the lead and
+    // the old colours are read there, so a drag cannot capture a swatch it passes and never drifts (THEME-SIMPLE §7)
+    let from_start = coalesce && matches!(op.get("op").and_then(Value::as_str), Some("swatch" | "group"));
+    let from = if from_start { s.past.last().expect("coalesce needs a past") } else { &s.doc };
+    let r = apply_edit(&Value::Object(from.clone()), op, spec)?;
     if canon_obj(&r.doc) == canon_obj(&s.doc) {
         return Ok(StepResult::Noop);
     }
-    let coalesce =
-        gesture.is_some() && s.gesture == gesture && s.last_key.as_deref() == Some(key.as_str()) && !s.past.is_empty();
     let old = std::mem::replace(&mut s.doc, r.doc);
     if !coalesce {
         push_capped(&mut s.past, old);

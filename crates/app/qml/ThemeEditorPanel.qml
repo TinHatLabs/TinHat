@@ -37,13 +37,15 @@ FocusScope {
     property string mode: "simple"          // "simple" | "advanced"
     property string query: ""
     property bool changedOnly: false
+    property bool swatchWhole: true         // Simple: a lead swatch moves its whole group (kept for the session)
+    property var onlyIds: null              // Advanced: only these ids (Simple's "set by hand" link), null = all
     property var openGroups: ({})
     property var picked: null               // the Pick tool's last result [{id, kind}] ("Picked"), null = none
     property bool pickArmed: false
     property string saveError: ""
     onShownChanged: {
         if (panel.shown) {
-            panel.query = ""; panel.changedOnly = false; panel.openGroups = ({}); panel.picked = null
+            panel.query = ""; panel.changedOnly = false; panel.onlyIds = null; panel.openGroups = ({}); panel.picked = null
             panel.pickArmed = false; panel.saveError = ""
             panel.forceActiveFocus()
         } else {
@@ -99,8 +101,14 @@ FocusScope {
 
     // ---- the review harness's hooks (ThemeEditorGallery.qml: the web's editor-shots clicks)
     function testOpenPopover(kind, id) {
-        if (kind === "background" || kind === "accent") simpleMode.openPopover(kind)
+        if (kind === "background") simpleMode.openPopover("lead:backgrounds")
         else advancedMode.openRowPopover(kind, id)
+    }
+    /// THEME-SIMPLE: "lead:<group>" / "swatch:<source>" (that swatch's popover), "more" (People), "handset" (the link)
+    function testSimple(what) {
+        if (what === "more") simpleMode.more = true
+        else if (what === "handset") { panel.query = ""; panel.changedOnly = false; panel.onlyIds = simpleMode.handSet; panel.mode = "advanced" }
+        else simpleMode.openPopover(what)
     }
     function testOpenMore() { moreMenu.popup(moreBtn, 0, moreBtn.height) }
     function testPickHover(x, y) { pickOverlay.testHover(x, y) }

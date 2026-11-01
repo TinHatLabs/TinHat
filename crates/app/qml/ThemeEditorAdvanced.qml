@@ -49,10 +49,34 @@ Item {
     // not on the document (an edit repaints the rows' swatches in place instead of rebuilding the list); with Changed on
     // it follows the document too.
     readonly property bool ready: adv.st.open === true
+    // "where is this used" (THEME-SIMPLE §4; the web's rowHint): roles / slots → `id · used by ‹n› · Simple: ‹group›`,
+    // tokens Simple can't reach → `id · set by hand`
+    readonly property var simpleOf: {
+        var m = {}, gs = adv.st.palette ? adv.st.palette.groups : []
+        for (var i = 0; i < gs.length; i++)
+            for (var j = 0; j < gs[i].swatches.length; j++)
+                for (var k = 0; k < gs[i].swatches[j].sources.length; k++) m[gs[i].swatches[j].sources[k]] = gs[i].label
+        return m
+    }
+    function rowHint(r) {
+        var parts = [r.id], u = adv.st.usage || {}, hs = adv.st.palette ? adv.st.palette.handSet : []
+        if (r.kind !== "token" && u[r.id] !== undefined) parts.push(u[r.id] === 1 ? "used by 1" : "used by " + u[r.id])
+        if (adv.simpleOf[r.id] !== undefined) parts.push("Simple: " + adv.simpleOf[r.id])
+        if (hs.indexOf(r.id) >= 0) parts.push("set by hand")
+        return parts.join(" · ")
+    }
     readonly property var items: {
         if (!adv.ready || !adv.ctl || !adv.panel) return []
         var q = adv.panel.query
         var shown = q.trim().length > 0 ? JSON.parse(adv.ctl.searchJson(adv.hasPal, q)) : adv.all.groups
+        if (adv.panel.onlyIds) {
+            var only = adv.panel.onlyIds, o = []
+            for (var oi = 0; oi < shown.length; oi++) {
+                var orows = shown[oi].rows.filter(function (r) { return only.indexOf(r.id) >= 0 })
+                if (orows.length > 0) o.push({ id: shown[oi].id, section: shown[oi].section, label: shown[oi].label, rows: orows })
+            }
+            shown = o
+        }
         if (adv.panel.changedOnly) {
             var d = adv.doc, b = adv.base, f = []
             for (var i = 0; i < shown.length; i++) {
@@ -73,7 +97,7 @@ Item {
             allGroups.push({ g: { id: "picked", section: "Picked", label: "Picked", rows: prow }, badges: pb })
         }
         for (var j = 0; j < shown.length; j++) allGroups.push({ g: shown[j], badges: null })
-        var forceOpen = q.trim().length > 0 || adv.panel.changedOnly
+        var forceOpen = q.trim().length > 0 || adv.panel.changedOnly || !!adv.panel.onlyIds
         var list = [], section = ""
         for (var k = 0; k < allGroups.length; k++) {
             var g = allGroups[k].g
@@ -145,6 +169,17 @@ Item {
                 Accessible.name: "Search colours"
                 text: adv.panel ? adv.panel.query : ""
                 onTextChanged: if (adv.panel && adv.panel.query !== text) adv.panel.query = text
+            }
+            Controls.ToolButton {
+                visible: !!(adv.panel && adv.panel.onlyIds)
+                text: "Set by hand ✕"
+                display: Controls.AbstractButton.TextOnly
+                checkable: true
+                checked: true
+                Controls.ToolTip.text: "Show every colour again"
+                Controls.ToolTip.visible: hovered
+                Controls.ToolTip.delay: 600
+                onClicked: adv.panel.onlyIds = null
             }
             Controls.ToolButton {
                 text: "Changed"
@@ -289,7 +324,7 @@ Item {
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
-                                text: rowBtn.row ? rowBtn.row.id : ""
+                                text: rowBtn.row ? adv.rowHint(rowBtn.row) : ""
                                 color: Th.settingsHintFg
                                 font.family: adv.monoFamily
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
@@ -347,7 +382,7 @@ Item {
                 wrapMode: Text.Wrap
                 visible: adv.items.length === 0
                 text: adv.panel && adv.panel.query.trim().length > 0 ? "No colours match “" + adv.panel.query.trim() + "”."
-                      : (adv.panel && adv.panel.changedOnly ? "Nothing changed yet." : "Loading the colours…")
+                      : (adv.panel && adv.panel.onlyIds ? "Nothing is set by hand." : (adv.panel && adv.panel.changedOnly ? "Nothing changed yet." : "Loading the colours…"))
                 color: Th.settingsHintFg
             }
         }

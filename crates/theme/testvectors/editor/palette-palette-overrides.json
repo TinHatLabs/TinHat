@@ -1,0 +1,425 @@
+{
+  "doc": {
+    "accent": "#d65d0e",
+    "format": "tinhat-theme",
+    "id": "gruv-ov",
+    "name": "Gruv overrides",
+    "palette": {
+      "ansi": [
+        "#282828",
+        "#cc241d",
+        "#98971a",
+        "#d79921",
+        "#458588",
+        "#b16286",
+        "#689d6a",
+        "#a89984",
+        "#928374",
+        "#fb4934",
+        "#b8bb26",
+        "#fabd2f",
+        "#83a598",
+        "#d3869b",
+        "#8ec07c",
+        "#ebdbb2"
+      ],
+      "bg": "#282828",
+      "cursor": "#ebdbb2",
+      "fg": "#ebdbb2",
+      "selectionBg": "#665c54",
+      "selectionFg": "#ebdbb2"
+    },
+    "roles": {
+      "presence.away": "#3c3836",
+      "state.info": "c4",
+      "surface.raised": "#3c3836",
+      "text.muted": "alpha(#ffffff, 0.5)"
+    },
+    "source": "iterm2-color-schemes@595c7fe2d836",
+    "tokens": {
+      "toast.bg": "#d65d0e"
+    },
+    "v": 1
+  },
+  "expect": {
+    "groups": [
+      {
+        "id": "backgrounds",
+        "label": "Backgrounds",
+        "swatches": [
+          {
+            "alsoIn": [
+              "text"
+            ],
+            "colour": "#282828",
+            "follow": [],
+            "id": "bg",
+            "label": "Background",
+            "sources": [
+              "bg"
+            ],
+            "usedBy": [
+              "border.strong",
+              "border.subtle",
+              "button.danger.fg",
+              "calendar.day.today.fg",
+              "header.bottom.bg",
+              "island.bg.call",
+              "island.bg.dms",
+              "island.bg.header",
+              "island.bg.nav",
+              "island.bg.panel",
+              "island.bg.rooms",
+              "island.bg.spaces",
+              "island.bg.timeline",
+              "island.bg.widgets",
+              "island.border",
+              "panel.bg",
+              "rail.bg",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "rooms.bg",
+              "stage.bg",
+              "surface.hover",
+              "surface.island",
+              "surface.pressed",
+              "surface.sunken",
+              "surface.window",
+              "text.disabled",
+              "text.onAccent",
+              "text.secondary",
+              "timeline.bg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#3c3836",
+            "follow": [],
+            "id": "surface.raised",
+            "label": "Raised surfaces",
+            "sources": [
+              "surface.raised"
+            ],
+            "usedBy": [
+              "account.bg",
+              "composer.bg",
+              "island.bg.account",
+              "island.bg.buttons",
+              "island.bg.composer",
+              "settings.inviteCode.row.bg",
+              "surface.overlay",
+              "surface.raised",
+              "tooltip.bg"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#665c54",
+            "follow": [],
+            "id": "selectionBg",
+            "label": "Selection",
+            "sources": [
+              "selectionBg"
+            ],
+            "usedBy": [
+              "surface.selected"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "text",
+        "label": "Text",
+        "swatches": [
+          {
+            "alsoIn": [
+              "backgrounds"
+            ],
+            "colour": "#ebdbb2",
+            "follow": [],
+            "id": "fg",
+            "label": "Text",
+            "sources": [
+              "fg"
+            ],
+            "usedBy": [
+              "border.strong",
+              "border.subtle",
+              "button.danger.fg",
+              "calendar.day.today.fg",
+              "composer.fg",
+              "island.border",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "surface.hover",
+              "surface.pressed",
+              "text.disabled",
+              "text.onAccent",
+              "text.primary",
+              "text.secondary",
+              "toast.fg",
+              "tooltip.fg"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "accent",
+        "label": "Accent",
+        "swatches": [
+          {
+            "alsoIn": [
+              "text",
+              "status",
+              "people"
+            ],
+            "colour": "#d65d0e",
+            "follow": [
+              "toast.bg"
+            ],
+            "id": "accent",
+            "label": "Accent",
+            "sources": [
+              "accent"
+            ],
+            "usedBy": [
+              "accent.base",
+              "accent.bright",
+              "accent.dim",
+              "accent.glow",
+              "badge.bg",
+              "border.focus",
+              "button.danger.fg",
+              "calendar.day.today.bg",
+              "calendar.day.today.fg",
+              "icon.highlight",
+              "presence.incall",
+              "rail.nav.bg",
+              "rail.nav.bg.active",
+              "rail.nav.icon",
+              "rail.nav.icon.lit",
+              "rail.nav.icon.lit.active",
+              "text.link",
+              "text.onAccent",
+              "toast.bg"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "swatches": [
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#cc241d",
+            "follow": [],
+            "id": "c1",
+            "label": "Red",
+            "sources": [
+              "c1"
+            ],
+            "usedBy": [
+              "badge.mention",
+              "button.danger.bg",
+              "button.danger.fg",
+              "name.1",
+              "presence.busy",
+              "state.danger"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#fb4934",
+            "follow": [],
+            "id": "c9",
+            "label": "Bright red",
+            "sources": [
+              "c9"
+            ],
+            "usedBy": [
+              "call.muted",
+              "name.7",
+              "state.dangerBright"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#d79921",
+            "follow": [],
+            "id": "c3",
+            "label": "Yellow",
+            "sources": [
+              "c3"
+            ],
+            "usedBy": [
+              "mention.bg",
+              "mention.edge",
+              "name.3",
+              "state.warning"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#98971a",
+            "follow": [],
+            "id": "c2",
+            "label": "Green",
+            "sources": [
+              "c2"
+            ],
+            "usedBy": [
+              "call.speaking",
+              "name.2",
+              "presence.online",
+              "state.success"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#458588",
+            "follow": [],
+            "id": "c4",
+            "label": "Blue",
+            "sources": [
+              "c4"
+            ],
+            "usedBy": [
+              "name.4",
+              "state.info"
+            ]
+          },
+          {
+            "alsoIn": [
+              "people"
+            ],
+            "colour": "#fabd2f",
+            "follow": [],
+            "id": "c11",
+            "label": "Bright yellow",
+            "sources": [
+              "c11"
+            ],
+            "usedBy": [
+              "name.9",
+              "state.aside"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "people",
+        "label": "People",
+        "swatches": [
+          {
+            "alsoIn": [],
+            "colour": "#3c3836",
+            "follow": [],
+            "id": "presence.away",
+            "label": "Away",
+            "sources": [
+              "presence.away"
+            ],
+            "usedBy": [
+              "presence.away"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#b16286",
+            "follow": [],
+            "id": "c5",
+            "label": "Magenta",
+            "sources": [
+              "c5"
+            ],
+            "usedBy": [
+              "name.5"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#689d6a",
+            "follow": [],
+            "id": "c6",
+            "label": "Cyan",
+            "sources": [
+              "c6"
+            ],
+            "usedBy": [
+              "name.6"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#b8bb26",
+            "follow": [],
+            "id": "c10",
+            "label": "Bright green",
+            "sources": [
+              "c10"
+            ],
+            "usedBy": [
+              "name.8"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#83a598",
+            "follow": [],
+            "id": "c12",
+            "label": "Bright blue",
+            "sources": [
+              "c12"
+            ],
+            "usedBy": [
+              "name.10"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#d3869b",
+            "follow": [],
+            "id": "c13",
+            "label": "Bright magenta",
+            "sources": [
+              "c13"
+            ],
+            "usedBy": [
+              "name.11"
+            ]
+          },
+          {
+            "alsoIn": [],
+            "colour": "#8ec07c",
+            "follow": [],
+            "id": "c14",
+            "label": "Bright cyan",
+            "sources": [
+              "c14"
+            ],
+            "usedBy": [
+              "name.12"
+            ]
+          }
+        ]
+      }
+    ],
+    "handSet": [
+      "text.muted"
+    ]
+  },
+  "kind": "palette"
+}

@@ -498,8 +498,13 @@ fn btn_refs_in(form: &J) -> Vec<String> {
 }
 
 /// A new empty button island `buttons:b<n>` (the smallest free n), placed by its registry home (the bottom edge), with
-/// an empty main row: (form, ref) or the error ("too-many" at 8 placed).
+/// A new empty button island `buttons:b<n>` (the smallest free n), placed by its registry home (the bottom edge).
 pub fn new_button_island(form: &J) -> Result<(J, String), String> {
+    new_button_island_with(form, mk(vec![("items", J::arr(vec![]))]))
+}
+
+/// A new button island whose `main` row is `row` (new_button_island, Add button, Add drawer).
+fn new_button_island_with(form: &J, row: J) -> Result<(J, String), String> {
     if placed_refs(form).iter().filter(|r| r.starts_with("buttons:")).count() >= 8 {
         return Err("too-many".into());
     }
@@ -517,11 +522,176 @@ pub fn new_button_island(form: &J) -> Result<(J, String), String> {
         OpResult::Ok { form, .. } => form,
         OpResult::Err(e) => return Err(e),
     };
-    let rows = mk(vec![("main", mk(vec![("items", J::arr(vec![]))]))]);
+    let rows = mk(vec![("main", row)]);
     match apply_op(&restored, Some(&op(vec![("op", J::s("setOpt")), ("ref", J::s(&r)), ("key", J::s("rows")), ("value", rows)])), None) {
         OpResult::Ok { form, .. } => Ok((form, r)),
         OpResult::Err(e) => Err(e),
     }
+}
+
+// ---- buttons and drawers (EDITMODE-UI §7.2, §7.3; feat/editmode-buttons-drawers; the web's session.ts, line for line) --
+// Add button = a new button island holding ONE action from the catalogue. Add drawer = the island goes into `hidden` and
+// a new one-button island runs `layout.drawer.toggle` on it; opening the drawer renders drawer_form (the island in a
+// float under its button) — a transient form, never saved. The layout format is unchanged: a Tin Hat that does not know
+// the action draws the button as "Needs a newer Tin Hat" and lists the island among the hidden ones.
+
+/// The action a drawer's button runs (ACTIONS.md: target {island, icon?}).
+pub const DRAWER_ACTION: &str = "layout.drawer.toggle";
+/// The drawer button's icons (the action's `icon` param values, code-point order).
+pub const DRAWER_ICONS: [&str; 10] = ["calendar", "chat", "drawer", "games", "grid", "info", "music", "people", "pin", "star"];
+/// Kinds an island in a drawer may have: hideable, floatable, and the same anywhere (not the room group, the call or
+/// room info).
+pub const DRAWER_KINDS: [&str; 7] = ["nav", "dms", "spaces", "rooms", "widgets", "account", "buttons"];
+/// The gap between a drawer's button and its panel (layout units).
+pub const DRAWER_GAP: i64 = 4;
+/// drawer_form's numbers are clamped to ±DRAWER_SPAN first (the same domain in TypeScript, which also truncates).
+pub const DRAWER_SPAN: i64 = 65536;
+
+fn placed_buttons(form: &J) -> usize {
+    placed_refs(form).iter().filter(|r| r.starts_with("buttons:")).count()
+}
+const LOOKS: [&str; 3] = ["icon", "iconLabel", "label"];
+
+fn item_id_ok(a: &str) -> bool {
+    let b = a.as_bytes();
+    !b.is_empty()
+        && b.len() <= 64
+        && b[0].is_ascii_lowercase()
+        && b[1..].iter().all(|c| c.is_ascii_alphanumeric() || *c == b'.')
+}
+
+/// A new button island holding one action: `item` = a row item ({a, target?}), `look` icon | iconLabel | label.
+pub fn new_action_button(form: &J, item: &J, look: &str) -> Result<(J, String), String> {
+    let ok = item.is_obj() && item.get("a").and_then(|a| a.as_str().map(|s| item_id_ok(&s))).unwrap_or(false);
+    if !ok {
+        return Err("bad-item".into());
+    }
+    if !LOOKS.contains(&look) {
+        return Err("bad-look".into());
+    }
+    new_button_island_with(form, mk(vec![("look", J::s(look)), ("items", J::arr(vec![item.deep()]))]))
+}
+
+/// Whether a button island holds a drawer's button (any row): it can't go into a drawer (it would lock itself away).
+fn holds_drawer_button(form: &J, r: &str) -> bool {
+    let Some(rows) = form.get("opts").and_then(|o| o.get(r)).and_then(|o| o.get("rows")).filter(J::is_obj) else { return false };
+    rows.keys().iter().any(|k| {
+        rows.get(k).and_then(|row| row.get("items")).is_some_and(|items| {
+            items.items().iter().any(|it| it.is_obj() && it.is("a", DRAWER_ACTION))
+        })
+    })
+}
+
+/// The islands that may go into a drawer: placed or hidden, of a DRAWER_KINDS kind, not a drawer's own button island;
+/// kind order, then code-point order.
+pub fn drawer_targets(form: &J) -> Vec<String> {
+    let mut seen: Vec<String> = Vec::new();
+    for r in placed_refs(form).into_iter().chain(hidden_refs(form)) {
+        if !seen.contains(&r) {
+            seen.push(r);
+        }
+    }
+    let rank = |r: &str| DRAWER_KINDS.iter().position(|k| *k == kind_of(r));
+    let mut out: Vec<String> =
+        seen.into_iter().filter(|r| rank(r).is_some() && (r.starts_with("buttons:") || r.as_str() == kind_of(r)) && !holds_drawer_button(form, r)).collect();
+    out.sort_by(|a, b| rank(a).cmp(&rank(b)).then_with(|| cmp_cp(a, b)));
+    out
+}
+
+/// Add drawer: `r` is hidden (when placed) and a new one-button island opens it; answers (form, button island ref).
+pub fn new_drawer(form: &J, r: &str, icon: &str) -> Result<(J, String), String> {
+    if !drawer_targets(form).iter().any(|x| x == r) {
+        return Err("not-drawer-island".into());
+    }
+    if !icon.is_empty() && !DRAWER_ICONS.contains(&icon) {
+        return Err("bad-icon".into());
+    }
+    // it must be able to open: a free float slot, and a button island in it must not make a ninth placed one
+    // a button island in it: after hiding it, its launcher + itself opened must still fit in 8 placed
+    if r.starts_with("buttons:") {
+        let after_hide = placed_buttons(form) - usize::from(placed_refs(form).iter().any(|x| x == r));
+        if after_hide >= 7 {
+            return Err("too-many".into());
+        }
+    }
+    let f = if placed_refs(form).iter().any(|x| x == r) {
+        match apply_op(form, Some(&op(vec![("op", J::s("hide")), ("ref", J::s(r))])), None) {
+            OpResult::Ok { form, .. } => form,
+            OpResult::Err(e) => return Err(e),
+        }
+    } else {
+        form.deep()
+    };
+    // a free float slot once it is hidden (hiding an island that floats alone frees its slot)
+    if floats_of(&f).len() >= 8 {
+        return Err("too-many-floats".into());
+    }
+    let target = if icon.is_empty() {
+        mk(vec![("island", J::s(r))])
+    } else {
+        mk(vec![("icon", J::s(icon)), ("island", J::s(r))])
+    };
+    let item = mk(vec![("a", J::s(DRAWER_ACTION)), ("target", target)]);
+    new_button_island_with(&f, mk(vec![("look", J::s("icon")), ("items", J::arr(vec![item]))]))
+}
+
+/// The form a host renders while `r`'s drawer is open: the hidden island in a float beside its button `btn` (layout
+/// units, host coordinates, integers): under it (over it in the lower half), left-aligned with it (right-aligned in the
+/// right half), DRAWER_GAP away; the float's size is the island's registry float size. Never saved. Answers (form, id).
+pub fn drawer_form(form: &J, r: &str, btn: Rect, host_w: i64, host_h: i64) -> Result<(J, String), String> {
+    if !hidden_refs(form).iter().any(|x| x == r) {
+        return Err("not-hidden".into());
+    }
+    if !drawer_targets(form).iter().any(|x| x == r) {
+        return Err("not-drawer-island".into()); // whatever a layout says
+    }
+    let floats = floats_of(form);
+    if floats.len() >= 8 {
+        return Err("too-many-floats".into());
+    }
+    if r.starts_with("buttons:") && placed_buttons(form) >= 8 {
+        return Err("too-many".into());
+    }
+    // the input domain: integers in [-DRAWER_SPAN, DRAWER_SPAN] (clamped first) — exact in both languages
+    let n = |v: i64| v.clamp(-DRAWER_SPAN, DRAWER_SPAN);
+    let btn = Rect { x: n(btn.x), y: n(btn.y), w: n(btn.w), h: n(btn.h) };
+    let (host_w, host_h) = (n(host_w), n(host_h));
+    let mut taken: Vec<String> = placed_refs(form).into_iter().chain(hidden_refs(form)).collect();
+    for fl in &floats {
+        if let Some(i) = fl.get("id").and_then(|i| i.as_str().map(str::to_string)) {
+            taken.push(i);
+        }
+    }
+    for l in all_locs(form) {
+        if let Some(k) = key_of(&l.node) {
+            taken.push(k.to_string());
+        }
+    }
+    let mut id = "drawer".to_string();
+    let mut n = 2;
+    while taken.contains(&id) {
+        id = format!("drawer-{n}");
+        n += 1;
+    }
+    let right = 2 * btn.x + btn.w > host_w; // doubled centre: integer maths (float_anchor's rule)
+    let bottom = 2 * btn.y + btn.h > host_h;
+    let clamp = |v: i64| v.clamp(-4096, 4096);
+    let dx = clamp(if right { host_w - (btn.x + btn.w) } else { btn.x });
+    let dy = clamp(if bottom { host_h - btn.y + DRAWER_GAP } else { btn.y + btn.h + DRAWER_GAP });
+    let anchor = format!("{}{}", if bottom { "b" } else { "t" }, if right { "r" } else { "l" });
+    let f = form.deep();
+    let kept: Vec<J> = hidden_of(&f).into_iter().filter(|x| !(x.is_obj() && x.is("i", r))).collect();
+    f.set("hidden", J::arr(kept));
+    let mut fl = floats_of(&f);
+    fl.push(mk(vec![
+        ("id", J::s(&id)),
+        ("anchor", J::s(&anchor)),
+        ("dx", J::int(dx)),
+        ("dy", J::int(dy)),
+        ("node", mk(vec![("t", J::s("island")), ("i", J::s(r))])),
+    ]));
+    f.set("floats", J::arr(fl));
+    Ok((f, id))
 }
 
 /// Remove a button island: hidden, then its leaf and its options dropped. None when it can't be hidden.
@@ -886,5 +1056,158 @@ mod tests {
         assert_eq!(list_plan(Some(&["account", "widgets"])), p(false, Some("after"), Some("top")));
         assert_eq!(list_plan(Some(&["widgets", "account"])), p(false, Some("after"), Some("bottom")));
         assert_eq!(list_plan(Some(&[])), p(false, None, None));
+    }
+
+    // ---- buttons and drawers (EDITMODE-UI §7.2, §7.3) — session.test.ts has the same cases, same canonical answers --
+    #[test]
+    fn add_button_holds_one_action_with_its_look() {
+        let f0 = classic();
+        let (a, ra) = new_action_button(&f0, &j(r#"{"a":"call.mic.toggle"}"#), "iconLabel").expect("a button");
+        assert_eq!(ra, "buttons:b1");
+        assert!(placed_refs(&a).contains(&"buttons:b1".to_string()));
+        assert_eq!(
+            a.get("opts").unwrap().get("buttons:b1").unwrap().canon(),
+            r#"{"rows":{"main":{"items":[{"a":"call.mic.toggle"}],"look":"iconLabel"}}}"#
+        );
+        assert!(validate_desktop(Some(&a)).is_empty());
+        let (t, rt) = new_action_button(&a, &j(r#"{"a":"nav.room.open","target":{"room":"!abc:example.org"}}"#), "icon").unwrap();
+        assert_eq!(rt, "buttons:b2");
+        assert_eq!(
+            t.get("opts").unwrap().get("buttons:b2").unwrap().canon(),
+            r#"{"rows":{"main":{"items":[{"a":"nav.room.open","target":{"room":"!abc:example.org"}}],"look":"icon"}}}"#
+        );
+        assert_eq!(new_action_button(&f0, &j(r#"{"a":"Bad"}"#), "icon").err().as_deref(), Some("bad-item"));
+        assert_eq!(new_action_button(&f0, &j(r#"{"b":"call.mic.toggle"}"#), "icon").err().as_deref(), Some("bad-item"));
+        assert_eq!(new_action_button(&f0, &j(r#""call.mic.toggle""#), "icon").err().as_deref(), Some("bad-item"));
+        assert_eq!(new_action_button(&f0, &j(r#"{"a":"call.mic.toggle"}"#), "big").err().as_deref(), Some("bad-look"));
+    }
+
+    #[test]
+    fn add_drawer_hides_the_island_and_adds_its_button() {
+        let f0 = classic();
+        assert_eq!(drawer_targets(&f0), vec!["nav", "dms", "spaces", "rooms", "widgets", "account"]);
+        let (d, rd) = new_drawer(&f0, "rooms", "star").expect("a drawer");
+        assert_eq!(rd, "buttons:b1");
+        assert!(hidden_refs(&d).contains(&"rooms".to_string()));
+        assert!(!placed_refs(&d).contains(&"rooms".to_string()));
+        assert_eq!(
+            d.get("opts").unwrap().get("buttons:b1").unwrap().canon(),
+            r#"{"rows":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"icon":"star","island":"rooms"}}],"look":"icon"}}}"#
+        );
+        assert!(validate_desktop(Some(&d)).is_empty());
+        assert_eq!(drawer_targets(&d), vec!["nav", "dms", "spaces", "rooms", "widgets", "account"], "not its own button");
+        let (p, _) = new_button_island(&d).unwrap();
+        assert_eq!(drawer_targets(&p), vec!["nav", "dms", "spaces", "rooms", "widgets", "account", "buttons:b2"], "a plain button island may");
+        assert_eq!(new_drawer(&d, "buttons:b1", "").err().as_deref(), Some("not-drawer-island"));
+        let (e, _) = new_drawer(&d, "rooms", "").unwrap();
+        assert_eq!(
+            e.get("opts").unwrap().get("buttons:b2").unwrap().canon(),
+            r#"{"rows":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"island":"rooms"}}],"look":"icon"}}}"#
+        );
+        assert_eq!(new_drawer(&f0, "timeline", "star").err().as_deref(), Some("not-drawer-island"));
+        assert_eq!(new_drawer(&f0, "panel", "star").err().as_deref(), Some("not-drawer-island"));
+        assert_eq!(new_drawer(&f0, "rooms:x", "").err().as_deref(), Some("not-drawer-island"));
+        assert_eq!(new_drawer(&f0, "rooms", "rocket").err().as_deref(), Some("bad-icon"));
+    }
+
+    #[test]
+    fn drawer_form_floats_the_island_beside_its_button() {
+        let (d, _) = new_drawer(&classic(), "rooms", "star").unwrap();
+        let (w, h) = (1560, 960);
+        let (o, id) = drawer_form(&d, "rooms", Rect { x: 100, y: 50, w: 40, h: 40 }, w, h).expect("open");
+        assert_eq!(id, "drawer");
+        let last = |f: &J| floats_of(f).last().unwrap().canon();
+        assert_eq!(last(&o), r#"{"anchor":"tl","dx":100,"dy":94,"id":"drawer","node":{"i":"rooms","t":"island"}}"#);
+        assert!(!hidden_refs(&o).contains(&"rooms".to_string()));
+        assert!(placed_refs(&o).contains(&"rooms".to_string()));
+        assert!(validate_desktop(Some(&o)).is_empty());
+        let (br, _) = drawer_form(&d, "rooms", Rect { x: 1400, y: 900, w: 40, h: 40 }, w, h).unwrap();
+        assert_eq!(last(&br), r#"{"anchor":"br","dx":120,"dy":64,"id":"drawer","node":{"i":"rooms","t":"island"}}"#);
+        assert_eq!(drawer_form(&d, "widgets", Rect { x: 0, y: 0, w: 40, h: 40 }, w, h).err().as_deref(), Some("not-hidden"));
+        let hw = apply(&o, r#"{"op":"hide","ref":"widgets"}"#);
+        let (_, id2) = drawer_form(&hw, "widgets", Rect { x: 100, y: 50, w: 40, h: 40 }, w, h).unwrap();
+        assert_eq!(id2, "drawer-2");
+        assert!(hidden_refs(&d).contains(&"rooms".to_string()), "the form it opened from is untouched");
+        // the input domain: clamped to ±65536 — the same numbers as TypeScript (the bridge truncates fractions)
+        let (hg, _) = drawer_form(&d, "rooms", Rect { x: 9007199254740991, y: 50, w: 2, h: 40 }, 9007199254740991, 960).unwrap();
+        assert_eq!(last(&hg), r#"{"anchor":"tr","dx":-2,"dy":94,"id":"drawer","node":{"i":"rooms","t":"island"}}"#);
+    }
+
+    #[test]
+    fn a_drawer_can_hold_a_button_island() {
+        // assembly-042: a button island tucked into a drawer opens as a placed island WITH its row, so a host that
+        // renders the drawer form's islands draws its buttons (the desktop rendered only islands placed in the saved form)
+        let (f, b1) = new_action_button(&classic(), &j(r#"{"a":"app.settings.open"}"#), "icon").unwrap();
+        assert_eq!(b1, "buttons:b1");
+        let row = f.get("opts").unwrap().get("buttons:b1").unwrap().canon();
+        assert!(row.contains("app.settings.open"));
+        let (d, launcher) = new_drawer(&f, "buttons:b1", "star").expect("a button island may go into a drawer");
+        assert_ne!(launcher, "buttons:b1");
+        assert!(hidden_refs(&d).contains(&"buttons:b1".to_string()));
+        let (o, _) = drawer_form(&d, "buttons:b1", Rect { x: 100, y: 50, w: 40, h: 40 }, 1560, 960).expect("opens");
+        assert!(placed_refs(&o).contains(&"buttons:b1".to_string()));
+        assert_eq!(o.get("opts").unwrap().get("buttons:b1").unwrap().canon(), row, "its buttons come along");
+        assert!(validate_desktop(Some(&o)).is_empty());
+        // its own launcher's island can't go into a drawer
+        assert_eq!(new_drawer(&d, &launcher, "").err().as_deref(), Some("not-drawer-island"));
+    }
+
+    #[test]
+    fn a_drawer_must_be_able_to_open() {
+        let mut f = classic();
+        for _ in 0..8 {
+            f = new_button_island(&f).unwrap().0;
+        }
+        assert_eq!(new_drawer(&f, "buttons:b1", "").err().as_deref(), Some("too-many"));
+        // seven placed + one hidden: its launcher would be the eighth, opening it the ninth
+        let seven = apply(&f, r#"{"op":"hide","ref":"buttons:b8"}"#);
+        assert_eq!(new_drawer(&seven, "buttons:b8", "").err().as_deref(), Some("too-many"));
+        // seven in all (the engine's limit counts placed + hidden: 8), one of them hidden: launcher 7th placed, opened 8th
+        let mut g7 = classic();
+        for _ in 0..7 {
+            g7 = new_button_island(&g7).unwrap().0;
+        }
+        let six = apply(&g7, r#"{"op":"hide","ref":"buttons:b7"}"#);
+        let r6 = new_drawer(&six, "buttons:b7", "");
+        assert!(r6.is_ok(), "six placed + one hidden: fits: {:?}", r6.err());
+        assert_eq!(new_drawer(&f, "rooms", "").err().as_deref(), Some("too-many"), "rooms is fine, but its button would be a ninth");
+        let hidden = apply(&f, r#"{"op":"hide","ref":"buttons:b8"}"#);
+        assert!(drawer_form(&hidden, "buttons:b8", Rect { x: 0, y: 0, w: 40, h: 40 }, 1560, 960).is_ok(), "eight placed again is fine");
+        let mut g = classic();
+        for r in ["nav", "dms", "spaces", "widgets", "account"] {
+            g = apply(&g, &format!(r#"{{"op":"float","ref":"{r}","anchor":"tl","dx":16,"dy":16}}"#));
+        }
+        for i in 1..=3 {
+            g = apply(&new_button_island(&g).unwrap().0, &format!(r#"{{"op":"float","ref":"buttons:b{i}","anchor":"br","dx":16,"dy":16}}"#));
+        }
+        assert_eq!(floats_of(&g).len(), 8);
+        assert_eq!(new_drawer(&g, "rooms", "").err().as_deref(), Some("too-many-floats"));
+        assert!(placed_refs(&g).contains(&"rooms".to_string()), "refused before anything was hidden");
+        // an island that floats alone: hiding it frees its slot, so it may go into a drawer even at 8 floats
+        let mut h7 = classic();
+        for r in ["nav", "dms", "spaces", "widgets", "account"] {
+            h7 = apply(&h7, &format!(r#"{{"op":"float","ref":"{r}","anchor":"tl","dx":16,"dy":16}}"#));
+        }
+        for i in 1..=2 {
+            h7 = apply(&new_button_island(&h7).unwrap().0, &format!(r#"{{"op":"float","ref":"buttons:b{i}","anchor":"br","dx":16,"dy":16}}"#));
+        }
+        let r8 = apply(&h7, r#"{"op":"float","ref":"rooms","anchor":"tr","dx":16,"dy":16}"#);
+        assert_eq!(floats_of(&r8).len(), 8);
+        assert!(new_drawer(&r8, "rooms", "").is_ok(), "a floating island at the limit may go into a drawer");
+        // drawer_form itself refuses what may not be in a drawer, whatever a layout says
+        let hp = apply(&classic(), r#"{"op":"hide","ref":"panel"}"#);
+        assert_eq!(drawer_form(&hp, "panel", Rect { x: 0, y: 0, w: 40, h: 40 }, 1560, 960).err().as_deref(), Some("not-drawer-island"));
+    }
+
+    #[test]
+    fn an_older_tin_hat_keeps_a_drawer() {
+        // 12.1.x runs this same engine (repair, ops) and does not know layout.drawer.toggle: what it would do to the layout
+        let (d, _) = new_drawer(&classic(), "rooms", "star").unwrap();
+        let opts = d.get("opts").unwrap().get("buttons:b1").unwrap().canon();
+        assert_eq!(opts, r#"{"rows":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"icon":"star","island":"rooms"}}],"look":"icon"}}}"#);
+        assert!(same(&repair_desktop(Some(&d)).form, &d), "repair changes nothing");
+        let h = apply(&d, r#"{"op":"hide","ref":"widgets"}"#);
+        assert_eq!(h.get("opts").unwrap().get("buttons:b1").unwrap().canon(), opts, "the button item survives an unrelated edit");
+        assert_eq!(hidden_refs(&h), vec!["rooms", "widgets"]);
     }
 }

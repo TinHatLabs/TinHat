@@ -219,6 +219,22 @@ Item {
     }
     Component.onCompleted: host.trigger()
 
+    // ── an open drawer (feat/editmode-buttons-drawers, EDITMODE-UI §7.3; Main.qml renders it as a float, z 10+): a press
+    // anywhere else — docked islands are z 0-2, under this — closes it, the edit toolbar's outside-click rule ──
+    property bool catchOutside: false
+    property real catchZ: 9.5             // Main.qml: above the layout's own floats, under the drawer's
+    signal outsidePressed()
+    MouseArea {
+        objectName: "drawerOutside"
+        z: host.catchZ
+        anchors.fill: parent
+        visible: host.catchOutside
+        enabled: visible
+        acceptedButtons: Qt.AllButtons
+        onPressed: host.outsidePressed()
+        onWheel: (wheel) => { wheel.accepted = true }
+    }
+
     // ── the gap menu's way in (EDITMODE-UI §10): a right-click on the host's own background — under every island, and
     // a click that lands inside an island's rect (content that takes no clicks) is not a gap ──
     MouseArea {

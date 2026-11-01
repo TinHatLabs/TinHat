@@ -558,6 +558,75 @@
         "ok": false
       },
       "input": {
+        "action": "app.zoom.in",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.zoom.in: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.zoom.in"
+      },
+      "name": "app.zoom.in: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.zoom.out: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.zoom.out"
+      },
+      "name": "app.zoom.out: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "app.zoom.reset: target on a targetless action"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "app.zoom.reset"
+      },
+      "name": "app.zoom.reset: no target"
+    },
+    {
+      "expect": {
+        "error": "not-targetable",
+        "ok": false
+      },
+      "input": {
         "action": "calendar.event.new",
         "target": {
           "room": "!room:example.com"

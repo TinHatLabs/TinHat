@@ -135,6 +135,56 @@ Item {
             }
         }
 
+        // 2026-10-31 App size (docs/UI-ZOOM.md; SETTINGS-WINDOW.md §5 card Size; the web's row points at the browser's zoom):
+        // the same value as Ctrl+= / Ctrl+- / Ctrl+0 (Main.qml setUiScale). A drag applies on release — the window would
+        // re-scale under the pointer mid-drag — an arrow key on its release, Plasma's wheel step at once (Basic has no
+        // wheel here: its fractional wheel steps would snap back); the number follows the handle.
+        SettingsSection {
+            title: "Size"
+            SettingsRow {
+                app: pane.app
+                anchorId: "appearance.app-size"
+                label: "App size"
+                description: "Makes everything in Tin Hat bigger or smaller on this device, on top of your system's scaling. Ctrl and + or − do the same, Ctrl and 0 sets it back."
+                    + (pane.app.uiScaleLiveCapable ? "" : " On this computer a new size applies when Tin Hat restarts.")
+                    + (pane.app.uiScalePending ? " Restart Tin Hat to see " + pane.app.uiScale + "%." : "")
+                trailing: RowLayout {
+                    spacing: 10
+                    ThSlider {
+                        id: sizeSlider
+                        Layout.preferredWidth: 200
+                        from: 70; to: 200; stepSize: 10   // ui_scale.rs MIN / MAX / STEP
+                        snapMode: Controls.Slider.SnapAlways
+                        value: pane.app.uiScale
+                        Accessible.name: "App size"
+                        function commit() {
+                            pane.app.setUiScale(Math.round(sizeSlider.value))
+                            sizeSlider.value = Qt.binding(() => pane.app.uiScale)
+                        }
+                        onMoved: if (!sizeSlider.pressed) sizeSlider.commit()
+                        onPressedChanged: if (!sizeSlider.pressed) sizeSlider.commit()
+                    }
+                    Controls.Label {
+                        Layout.preferredWidth: sizeMetrics.width
+                        horizontalAlignment: Text.AlignRight
+                        textFormat: Text.PlainText
+                        text: Math.round(sizeSlider.value) + "%"
+                        color: Th.settingsRowLabelFg
+                        font.features: ({ "tnum": 1 })
+                        TextMetrics { id: sizeMetrics; text: "200%" }
+                    }
+                    ThButton {
+                        app: pane.app
+                        flat: true
+                        text: "Reset"
+                        enabled: pane.app.uiScale !== 100
+                        Accessible.name: "Reset the app size to 100%"
+                        onClicked: pane.app.setUiScale(100)
+                    }
+                }
+            }
+        }
+
         // THEMES-UI §11: the sound pack and the icon style — their own settings, saved through the theme store like a
         // theme pick (the account, or this device with the override on)
         SettingsSection {

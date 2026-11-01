@@ -94,7 +94,13 @@ Item {
         onPressed: el.forceActiveFocus()
         onWheel: (wheel) => { wheel.accepted = true }
     }
-    Keys.onEscapePressed: (event) => { el.em.cancelDrag(); event.accepted = true }   // Esc never leaves edit mode
+    // Esc never leaves edit mode: it closes an open toolbar panel (the web's popovers do), else cancels a move. (This
+    // handler holds the shortcut override while the layer has focus, so the toolbar's own Escape Shortcut can't.)
+    Keys.onEscapePressed: (event) => {
+        if (el.toolbar && el.toolbar.panel.length > 0) el.toolbar.closePanels()
+        else el.em.cancelDrag()
+        event.accepted = true
+    }
     // from the layer itself (nothing selected yet): Tab enters the order at the toolbar, Shift+Tab at its end
     Keys.onTabPressed: (event) => { if (el.toolbar) el.toolbar.focusFirst(); else el.focusFirst(); event.accepted = true }
     Keys.onBacktabPressed: (event) => { el.focusLast(); event.accepted = true }

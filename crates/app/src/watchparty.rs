@@ -228,6 +228,11 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "addLink"]
         fn add_link(self: Pin<&mut WatchPartyController>, text: &QString, play_now: bool);
+        /// QML: lookupLink(text) — Pad QOL: addLink's lookups WITHOUT queueing: linkJson = {status:"resolved", item} (or
+        /// the same card / error / search / browse outcomes); the Pad checks the item, then enqueueItem(item).
+        #[qinvokable]
+        #[cxx_name = "lookupLink"]
+        fn lookup_link(self: Pin<&mut WatchPartyController>, text: &QString);
         /// QML: enqueueItems(itemsJson) — 11.4: append several items in ONE write (a playlist's "Add all").
         #[qinvokable]
         #[cxx_name = "enqueueItems"]
@@ -746,7 +751,16 @@ impl qobject::WatchPartyController {
 
     /// 11.4: the one box / a chat card → a queue item (see the bridge doc). Runs the server round trips off the UI
     /// thread; the outcome lands in `linkJson` (+ `adding` while in flight).
-    pub fn add_link(mut self: Pin<&mut Self>, text: &QString, play_now: bool) {
+    pub fn add_link(self: Pin<&mut Self>, text: &QString, play_now: bool) {
+        self.add_link_with(text, play_now, true);
+    }
+
+    pub fn lookup_link(self: Pin<&mut Self>, text: &QString) {
+        self.add_link_with(text, false, false);
+    }
+
+    /// `commit` false = look up only (Pad QOL): the outcome carries the item, nothing is written.
+    fn add_link_with(mut self: Pin<&mut Self>, text: &QString, play_now: bool, commit: bool) {
         let text = text.to_string();
         let link = crate::medialinks::parse_media_link(&text);
         let kind = link.get("kind").and_then(Value::as_str).unwrap_or("text").to_string();
@@ -775,7 +789,7 @@ impl qobject::WatchPartyController {
         };
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
-            let outcome = resolve_add_link(&room_id, &link, play_now).await;
+            let outcome = resolve_add_link(&room_id, &link, play_now, commit).await;
             let _ = qt.queue(move |mut o| {
                 o.as_mut().set_adding(false);
                 let status = outcome.get("status").and_then(Value::as_str).unwrap_or("");
@@ -2251,10 +2265,14 @@ fn percent_decode(s: &str) -> String {
 
 /// `add_link`'s worker: the server round trips (meta / resolve), then the queue write. Returns the outcome object
 /// (`status`, `item`, `party` (the written party, for the optimistic push), `link`, `meta`, `message`).
-async fn resolve_add_link(room_id: &str, link: &Value, play_now: bool) -> Value {
+async fn resolve_add_link(room_id: &str, link: &Value, play_now: bool, write: bool) -> Value {
     let kind = link.get("kind").and_then(Value::as_str).unwrap_or("");
     let input = link.get("input").and_then(Value::as_str).unwrap_or("").to_string();
     let commit = |item: Value| async move {
+        if !write {
+            // look up only (Pad QOL): the item, nothing queued
+            return serde_json::json!({ "status": "resolved", "item": item });
+        }
         let mut it = item.clone();
         let (url, title) = (it["url"].as_str().unwrap_or("").to_string(), it["title"].as_str().unwrap_or("").to_string());
         match do_edit_queue(room_id, move |q, me| {
@@ -2696,7 +2714,7 @@ pub async fn headless_verify(room_id: &str) {
             for entry in list {
                 if let Some(link) = entry.as_str() {
                     let parsed = crate::medialinks::parse_media_link(link);
-                    let out = resolve_add_link(room_id, &parsed, false).await;
+                    let out = resolve_add_link(room_id, &parsed, false, true).await;
                     eprintln!(
                         "[wptest] enqueue link {link} -> {} {}",
                         out["status"].as_str().unwrap_or("?"),

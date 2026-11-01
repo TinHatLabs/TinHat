@@ -1,0 +1,447 @@
+{
+  "expect": {
+    "advanced": {
+      "accent.base": 8,
+      "accent.bright": 4,
+      "accent.dim": 1,
+      "accent.glow": 0,
+      "badge.bg": 0,
+      "badge.mention": 0,
+      "border.focus": 0,
+      "border.strong": 0,
+      "border.subtle": 1,
+      "call.muted": 0,
+      "call.speaking": 0,
+      "mention.bg": 0,
+      "mention.edge": 0,
+      "name.1": 0,
+      "name.10": 0,
+      "name.11": 0,
+      "name.12": 0,
+      "name.2": 0,
+      "name.3": 0,
+      "name.4": 0,
+      "name.5": 0,
+      "name.6": 0,
+      "name.7": 0,
+      "name.8": 0,
+      "name.9": 0,
+      "presence.away": 0,
+      "presence.busy": 0,
+      "presence.incall": 0,
+      "presence.offline": 0,
+      "presence.online": 0,
+      "scrim": 0,
+      "shadow": 1,
+      "state.aside": 0,
+      "state.danger": 2,
+      "state.dangerBright": 1,
+      "state.info": 0,
+      "state.success": 1,
+      "state.warning": 2,
+      "surface.hover": 0,
+      "surface.island": 9,
+      "surface.overlay": 0,
+      "surface.pressed": 0,
+      "surface.raised": 5,
+      "surface.selected": 0,
+      "surface.sunken": 0,
+      "surface.window": 13,
+      "text.disabled": 0,
+      "text.link": 0,
+      "text.muted": 0,
+      "text.onAccent": 1,
+      "text.primary": 3,
+      "text.secondary": 1
+    },
+    "edit": {
+      "changed": [
+        "roles/accent.bright",
+        "tokens/rail.nav.icon.lit",
+        "tokens/rail.nav.icon.lit.active",
+        "tokens/toast.fg"
+      ],
+      "dirty": true,
+      "exportText": "{\n  \"author\": \"Sam\",\n  \"format\": \"tinhat-theme\",\n  \"id\": \"goose-my-way\",\n  \"name\": \"Goose, my way\",\n  \"names\": \"hash-hsl\",\n  \"roles\": {\n    \"accent.base\": \"#b0508c\",\n    \"accent.bright\": \"#ffcc00\",\n    \"accent.dim\": \"alpha(accent.base, 0.18)\",\n    \"accent.glow\": \"alpha(accent.base, 0.35)\",\n    \"badge.bg\": \"accent.base\",\n    \"badge.mention\": \"state.danger\",\n    \"border.focus\": \"accent.bright\",\n    \"border.strong\": \"mix(surface.window, text.primary, 0.2)\",\n    \"border.subtle\": \"#4a2050\",\n    \"call.muted\": \"state.dangerBright\",\n    \"call.speaking\": \"state.success\",\n    \"mention.bg\": \"alpha(state.warning, 0.1)\",\n    \"mention.edge\": \"state.warning\",\n    \"name.1\": \"#e09085\",\n    \"name.10\": \"#85e0c5\",\n    \"name.11\": \"#85e0d4\",\n    \"name.12\": \"#85dce0\",\n    \"name.2\": \"#e09a85\",\n    \"name.3\": \"#e0a585\",\n    \"name.4\": \"#e0b085\",\n    \"name.5\": \"#e0ba85\",\n    \"name.6\": \"#e0c485\",\n    \"name.7\": \"#e0ce85\",\n    \"name.8\": \"#e0d985\",\n    \"name.9\": \"#dde085\",\n    \"presence.away\": \"#faa81a\",\n    \"presence.busy\": \"#ed4245\",\n    \"presence.incall\": \"#3ba55c\",\n    \"presence.offline\": \"#95a5a6\",\n    \"presence.online\": \"#3ba55c\",\n    \"scrim\": \"alpha(#000000, 0.45)\",\n    \"shadow\": \"#000000\",\n    \"state.aside\": \"#e8b923\",\n    \"state.danger\": \"#d1506e\",\n    \"state.dangerBright\": \"#ff7c9c\",\n    \"state.info\": \"#7a9cff/0.9\",\n    \"state.success\": \"#58c88a\",\n    \"state.warning\": \"#dfa44c\",\n    \"surface.hover\": \"lighter(surface.island, 1.18)\",\n    \"surface.island\": \"#2a1030\",\n    \"surface.overlay\": \"surface.island\",\n    \"surface.pressed\": \"surface.raised\",\n    \"surface.raised\": \"#3a1848\",\n    \"surface.selected\": \"accent.dim\",\n    \"surface.sunken\": \"surface.window\",\n    \"surface.window\": \"#1a0a1a\",\n    \"text.disabled\": \"text.secondary\",\n    \"text.link\": \"accent.bright\",\n    \"text.muted\": \"alpha(#ffffff, 0.5)\",\n    \"text.onAccent\": \"#ffffff\",\n    \"text.primary\": \"#f0e0f0\",\n    \"text.secondary\": \"#c8a0c8\"\n  },\n  \"shape\": {\n    \"radius\": 6\n  },\n  \"sounds\": \"goose\",\n  \"tokens\": {\n    \"button.danger.fg\": \"#ffffff\",\n    \"calendar.day.today.fg\": \"#ffffff\",\n    \"callbar.bg\": \"#000000/0.5\",\n    \"callbar.chevron.bg\": \"#1a1a1f/0.96\",\n    \"callbar.mobile.bg\": \"#000000/0.6\",\n    \"composer.bg\": \"#1a0a1a/0.85\",\n    \"dialog.button.danger.fg\": \"#ffffff\",\n    \"dm.more.fg\": \"#ffffff\",\n    \"dock.handle.icon\": \"#ffffff\",\n    \"icon.scheme.neutral\": \"#f67400\",\n    \"island.bg.account\": \"alpha(account.bg, 0.85)\",\n    \"island.bg.buttons\": \"alpha(surface.raised, 0.85)\",\n    \"island.bg.composer\": \"alpha(composer.bg, 0.85)\",\n    \"island.bg.dms\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.header\": \"alpha(header.bottom.bg, 0.85)\",\n    \"island.bg.nav\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.panel\": \"alpha(panel.bg, 0.85)\",\n    \"island.bg.rooms\": \"alpha(rooms.bg, 0.85)\",\n    \"island.bg.spaces\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.timeline\": \"alpha(timeline.bg, 0.85)\",\n    \"rail.nav.icon.lit\": \"#ffcc00\",\n    \"rail.nav.icon.lit.active\": \"#ffcc00\",\n    \"reel.checkbox.fg\": \"#ffffff\",\n    \"slider.handle.border.disabled\": \"#e995e9\",\n    \"slider.track\": \"#e995e9\",\n    \"toast.fg\": \"#ffcc00\",\n    \"toggle.handle.border.disabled\": \"#e995e9\",\n    \"toggle.track\": \"#e995e9\",\n    \"tooltip.bg\": \"mix(accent.base, surface.island, 0.4)\",\n    \"tooltip.fg\": \"#f0e0f0/0.92\",\n    \"window.titlebar.close.fg.hover\": \"#ffffff\"\n  },\n  \"type\": {\n    \"size\": 105,\n    \"ui\": \"Inter\"\n  },\n  \"v\": 1,\n  \"variant\": \"dark\"\n}\n",
+      "result": "edited"
+    },
+    "open": {
+      "dirty": false,
+      "exportText": "{\n  \"author\": \"Sam\",\n  \"format\": \"tinhat-theme\",\n  \"id\": \"goose-my-way\",\n  \"name\": \"Goose, my way\",\n  \"names\": \"hash-hsl\",\n  \"roles\": {\n    \"accent.base\": \"#b0508c\",\n    \"accent.bright\": \"#e87cc0\",\n    \"accent.dim\": \"alpha(accent.base, 0.18)\",\n    \"accent.glow\": \"alpha(accent.base, 0.35)\",\n    \"badge.bg\": \"accent.base\",\n    \"badge.mention\": \"state.danger\",\n    \"border.focus\": \"accent.bright\",\n    \"border.strong\": \"mix(surface.window, text.primary, 0.2)\",\n    \"border.subtle\": \"#4a2050\",\n    \"call.muted\": \"state.dangerBright\",\n    \"call.speaking\": \"state.success\",\n    \"mention.bg\": \"alpha(state.warning, 0.1)\",\n    \"mention.edge\": \"state.warning\",\n    \"name.1\": \"#e09085\",\n    \"name.10\": \"#85e0c5\",\n    \"name.11\": \"#85e0d4\",\n    \"name.12\": \"#85dce0\",\n    \"name.2\": \"#e09a85\",\n    \"name.3\": \"#e0a585\",\n    \"name.4\": \"#e0b085\",\n    \"name.5\": \"#e0ba85\",\n    \"name.6\": \"#e0c485\",\n    \"name.7\": \"#e0ce85\",\n    \"name.8\": \"#e0d985\",\n    \"name.9\": \"#dde085\",\n    \"presence.away\": \"#faa81a\",\n    \"presence.busy\": \"#ed4245\",\n    \"presence.incall\": \"#3ba55c\",\n    \"presence.offline\": \"#95a5a6\",\n    \"presence.online\": \"#3ba55c\",\n    \"scrim\": \"alpha(#000000, 0.45)\",\n    \"shadow\": \"#000000\",\n    \"state.aside\": \"#e8b923\",\n    \"state.danger\": \"#d1506e\",\n    \"state.dangerBright\": \"#ff7c9c\",\n    \"state.info\": \"#7a9cff/0.9\",\n    \"state.success\": \"#58c88a\",\n    \"state.warning\": \"#dfa44c\",\n    \"surface.hover\": \"lighter(surface.island, 1.18)\",\n    \"surface.island\": \"#2a1030\",\n    \"surface.overlay\": \"surface.island\",\n    \"surface.pressed\": \"surface.raised\",\n    \"surface.raised\": \"#3a1848\",\n    \"surface.selected\": \"accent.dim\",\n    \"surface.sunken\": \"surface.window\",\n    \"surface.window\": \"#1a0a1a\",\n    \"text.disabled\": \"text.secondary\",\n    \"text.link\": \"accent.bright\",\n    \"text.muted\": \"alpha(#ffffff, 0.5)\",\n    \"text.onAccent\": \"#ffffff\",\n    \"text.primary\": \"#f0e0f0\",\n    \"text.secondary\": \"#c8a0c8\"\n  },\n  \"shape\": {\n    \"radius\": 6\n  },\n  \"sounds\": \"goose\",\n  \"tokens\": {\n    \"button.danger.fg\": \"#ffffff\",\n    \"calendar.day.today.fg\": \"#ffffff\",\n    \"callbar.bg\": \"#000000/0.5\",\n    \"callbar.chevron.bg\": \"#1a1a1f/0.96\",\n    \"callbar.mobile.bg\": \"#000000/0.6\",\n    \"composer.bg\": \"#1a0a1a/0.85\",\n    \"dialog.button.danger.fg\": \"#ffffff\",\n    \"dm.more.fg\": \"#ffffff\",\n    \"dock.handle.icon\": \"#ffffff\",\n    \"icon.scheme.neutral\": \"#f67400\",\n    \"island.bg.account\": \"alpha(account.bg, 0.85)\",\n    \"island.bg.buttons\": \"alpha(surface.raised, 0.85)\",\n    \"island.bg.composer\": \"alpha(composer.bg, 0.85)\",\n    \"island.bg.dms\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.header\": \"alpha(header.bottom.bg, 0.85)\",\n    \"island.bg.nav\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.panel\": \"alpha(panel.bg, 0.85)\",\n    \"island.bg.rooms\": \"alpha(rooms.bg, 0.85)\",\n    \"island.bg.spaces\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.timeline\": \"alpha(timeline.bg, 0.85)\",\n    \"rail.nav.icon.lit\": \"#e87cc0\",\n    \"rail.nav.icon.lit.active\": \"#e87cc0\",\n    \"reel.checkbox.fg\": \"#ffffff\",\n    \"slider.handle.border.disabled\": \"#e995e9\",\n    \"slider.track\": \"#e995e9\",\n    \"toast.fg\": \"#e87cc0\",\n    \"toggle.handle.border.disabled\": \"#e995e9\",\n    \"toggle.track\": \"#e995e9\",\n    \"tooltip.bg\": \"mix(accent.base, surface.island, 0.4)\",\n    \"tooltip.fg\": \"#f0e0f0/0.92\",\n    \"window.titlebar.close.fg.hover\": \"#ffffff\"\n  },\n  \"type\": {\n    \"size\": 105,\n    \"ui\": \"Inter\"\n  },\n  \"v\": 1,\n  \"variant\": \"dark\"\n}\n"
+    },
+    "simple": {
+      "groups": [
+        {
+          "id": "backgrounds",
+          "label": "Backgrounds",
+          "swatches": [
+            {
+              "alsoIn": [],
+              "colour": "#2a1030",
+              "follow": [],
+              "id": "surface.island",
+              "label": "Islands",
+              "sources": [
+                "surface.island"
+              ],
+              "usedBy": [
+                "header.bottom.bg",
+                "island.bg.header",
+                "island.bg.panel",
+                "island.bg.rooms",
+                "panel.bg",
+                "rooms.bg",
+                "surface.hover",
+                "surface.island",
+                "surface.overlay",
+                "tooltip.bg"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#1a0a1a",
+              "follow": [],
+              "id": "surface.window",
+              "label": "Window background",
+              "sources": [
+                "surface.window"
+              ],
+              "usedBy": [
+                "border.strong",
+                "island.bg.call",
+                "island.bg.dms",
+                "island.bg.nav",
+                "island.bg.spaces",
+                "island.bg.timeline",
+                "island.bg.widgets",
+                "rail.bg",
+                "rail.nav.icon",
+                "stage.bg",
+                "surface.sunken",
+                "surface.window",
+                "timeline.bg",
+                "toast.bg"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#3a1848",
+              "follow": [],
+              "id": "surface.raised",
+              "label": "Raised surfaces",
+              "sources": [
+                "surface.raised"
+              ],
+              "usedBy": [
+                "account.bg",
+                "island.bg.account",
+                "island.bg.buttons",
+                "settings.inviteCode.row.bg",
+                "surface.pressed",
+                "surface.raised"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#4a2050",
+              "follow": [],
+              "id": "border.subtle",
+              "label": "Subtle borders",
+              "sources": [
+                "border.subtle"
+              ],
+              "usedBy": [
+                "border.subtle",
+                "island.border"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "text",
+          "label": "Text",
+          "swatches": [
+            {
+              "alsoIn": [
+                "backgrounds"
+              ],
+              "colour": "#f0e0f0",
+              "follow": [],
+              "id": "text.primary",
+              "label": "Text",
+              "sources": [
+                "text.primary"
+              ],
+              "usedBy": [
+                "border.strong",
+                "composer.fg",
+                "rail.nav.icon",
+                "text.primary"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#c8a0c8",
+              "follow": [],
+              "id": "text.secondary",
+              "label": "Secondary text",
+              "sources": [
+                "text.secondary"
+              ],
+              "usedBy": [
+                "text.disabled",
+                "text.secondary"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#ffffff",
+              "follow": [],
+              "id": "text.onAccent",
+              "label": "Text on accent",
+              "sources": [
+                "text.onAccent"
+              ],
+              "usedBy": [
+                "rail.nav.icon",
+                "text.onAccent"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "accent",
+          "label": "Accent",
+          "swatches": [
+            {
+              "alsoIn": [
+                "backgrounds",
+                "status"
+              ],
+              "colour": "#b0508c",
+              "follow": [],
+              "id": "accent.base",
+              "label": "Accent",
+              "sources": [
+                "accent.base"
+              ],
+              "usedBy": [
+                "accent.base",
+                "accent.dim",
+                "accent.glow",
+                "badge.bg",
+                "rail.nav.bg",
+                "rail.nav.bg.active",
+                "rail.nav.icon",
+                "surface.selected",
+                "tooltip.bg"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#e87cc0",
+              "follow": [
+                "rail.nav.icon.lit",
+                "rail.nav.icon.lit.active",
+                "toast.fg"
+              ],
+              "id": "accent.bright",
+              "label": "Bright accent",
+              "sources": [
+                "accent.bright"
+              ],
+              "usedBy": [
+                "accent.bright",
+                "border.focus",
+                "calendar.day.today.bg",
+                "icon.highlight",
+                "rail.nav.icon.lit",
+                "rail.nav.icon.lit.active",
+                "text.link",
+                "toast.fg"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "status",
+          "label": "Status",
+          "swatches": [
+            {
+              "alsoIn": [],
+              "colour": "#d1506e",
+              "follow": [],
+              "id": "state.danger",
+              "label": "Danger",
+              "sources": [
+                "state.danger"
+              ],
+              "usedBy": [
+                "badge.mention",
+                "button.danger.bg",
+                "state.danger"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#ff7c9c",
+              "follow": [],
+              "id": "state.dangerBright",
+              "label": "Bright danger",
+              "sources": [
+                "state.dangerBright"
+              ],
+              "usedBy": [
+                "call.muted",
+                "state.dangerBright"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#dfa44c",
+              "follow": [],
+              "id": "state.warning",
+              "label": "Warning",
+              "sources": [
+                "state.warning"
+              ],
+              "usedBy": [
+                "mention.bg",
+                "mention.edge",
+                "state.warning"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#58c88a",
+              "follow": [],
+              "id": "state.success",
+              "label": "Success",
+              "sources": [
+                "state.success"
+              ],
+              "usedBy": [
+                "call.speaking",
+                "state.success"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#7a9cff/0.9",
+              "follow": [],
+              "id": "state.info",
+              "label": "Information",
+              "sources": [
+                "state.info"
+              ],
+              "usedBy": [
+                "state.info"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#e8b923",
+              "follow": [],
+              "id": "state.aside",
+              "label": "Aside",
+              "sources": [
+                "state.aside"
+              ],
+              "usedBy": [
+                "state.aside"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "people",
+          "label": "People",
+          "swatches": [
+            {
+              "alsoIn": [],
+              "colour": "#3ba55c",
+              "follow": [],
+              "id": "presence.online",
+              "label": "Online",
+              "sources": [
+                "presence.online",
+                "presence.incall"
+              ],
+              "usedBy": [
+                "presence.incall",
+                "presence.online"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#faa81a",
+              "follow": [],
+              "id": "presence.away",
+              "label": "Away",
+              "sources": [
+                "presence.away"
+              ],
+              "usedBy": [
+                "presence.away"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#ed4245",
+              "follow": [],
+              "id": "presence.busy",
+              "label": "Busy",
+              "sources": [
+                "presence.busy"
+              ],
+              "usedBy": [
+                "presence.busy"
+              ]
+            },
+            {
+              "alsoIn": [],
+              "colour": "#95a5a6",
+              "follow": [],
+              "id": "presence.offline",
+              "label": "Offline",
+              "sources": [
+                "presence.offline"
+              ],
+              "usedBy": [
+                "presence.offline"
+              ]
+            }
+          ]
+        }
+      ],
+      "handSet": [
+        "button.danger.fg",
+        "calendar.day.today.fg",
+        "callbar.bg",
+        "callbar.chevron.bg",
+        "callbar.mobile.bg",
+        "composer.bg",
+        "dialog.button.danger.fg",
+        "dm.more.fg",
+        "dock.handle.icon",
+        "icon.scheme.neutral",
+        "reel.checkbox.fg",
+        "slider.handle.border.disabled",
+        "slider.track",
+        "text.muted",
+        "toggle.handle.border.disabled",
+        "toggle.track",
+        "tooltip.fg",
+        "window.titlebar.close.fg.hover"
+      ]
+    }
+  },
+  "file": "goose-copy.tinhat-theme.json",
+  "kind": "compat",
+  "op": {
+    "id": "accent.bright",
+    "op": "swatch",
+    "value": "#ffcc00"
+  },
+  "saved": "{\n  \"author\": \"Sam\",\n  \"format\": \"tinhat-theme\",\n  \"id\": \"goose-my-way\",\n  \"name\": \"Goose, my way\",\n  \"names\": \"hash-hsl\",\n  \"roles\": {\n    \"accent.base\": \"#b0508c\",\n    \"accent.bright\": \"#e87cc0\",\n    \"accent.dim\": \"alpha(accent.base, 0.18)\",\n    \"accent.glow\": \"alpha(accent.base, 0.35)\",\n    \"badge.bg\": \"accent.base\",\n    \"badge.mention\": \"state.danger\",\n    \"border.focus\": \"accent.bright\",\n    \"border.strong\": \"mix(surface.window, text.primary, 0.2)\",\n    \"border.subtle\": \"#4a2050\",\n    \"call.muted\": \"state.dangerBright\",\n    \"call.speaking\": \"state.success\",\n    \"mention.bg\": \"alpha(state.warning, 0.1)\",\n    \"mention.edge\": \"state.warning\",\n    \"name.1\": \"#e09085\",\n    \"name.10\": \"#85e0c5\",\n    \"name.11\": \"#85e0d4\",\n    \"name.12\": \"#85dce0\",\n    \"name.2\": \"#e09a85\",\n    \"name.3\": \"#e0a585\",\n    \"name.4\": \"#e0b085\",\n    \"name.5\": \"#e0ba85\",\n    \"name.6\": \"#e0c485\",\n    \"name.7\": \"#e0ce85\",\n    \"name.8\": \"#e0d985\",\n    \"name.9\": \"#dde085\",\n    \"presence.away\": \"#faa81a\",\n    \"presence.busy\": \"#ed4245\",\n    \"presence.incall\": \"#3ba55c\",\n    \"presence.offline\": \"#95a5a6\",\n    \"presence.online\": \"#3ba55c\",\n    \"scrim\": \"alpha(#000000, 0.45)\",\n    \"shadow\": \"#000000\",\n    \"state.aside\": \"#e8b923\",\n    \"state.danger\": \"#d1506e\",\n    \"state.dangerBright\": \"#ff7c9c\",\n    \"state.info\": \"#7a9cff/0.9\",\n    \"state.success\": \"#58c88a\",\n    \"state.warning\": \"#dfa44c\",\n    \"surface.hover\": \"lighter(surface.island, 1.18)\",\n    \"surface.island\": \"#2a1030\",\n    \"surface.overlay\": \"surface.island\",\n    \"surface.pressed\": \"surface.raised\",\n    \"surface.raised\": \"#3a1848\",\n    \"surface.selected\": \"accent.dim\",\n    \"surface.sunken\": \"surface.window\",\n    \"surface.window\": \"#1a0a1a\",\n    \"text.disabled\": \"text.secondary\",\n    \"text.link\": \"accent.bright\",\n    \"text.muted\": \"alpha(#ffffff, 0.5)\",\n    \"text.onAccent\": \"#ffffff\",\n    \"text.primary\": \"#f0e0f0\",\n    \"text.secondary\": \"#c8a0c8\"\n  },\n  \"shape\": {\n    \"radius\": 6\n  },\n  \"sounds\": \"goose\",\n  \"tokens\": {\n    \"button.danger.fg\": \"#ffffff\",\n    \"calendar.day.today.fg\": \"#ffffff\",\n    \"callbar.bg\": \"#000000/0.5\",\n    \"callbar.chevron.bg\": \"#1a1a1f/0.96\",\n    \"callbar.mobile.bg\": \"#000000/0.6\",\n    \"composer.bg\": \"#1a0a1a/0.85\",\n    \"dialog.button.danger.fg\": \"#ffffff\",\n    \"dm.more.fg\": \"#ffffff\",\n    \"dock.handle.icon\": \"#ffffff\",\n    \"icon.scheme.neutral\": \"#f67400\",\n    \"island.bg.account\": \"alpha(account.bg, 0.85)\",\n    \"island.bg.buttons\": \"alpha(surface.raised, 0.85)\",\n    \"island.bg.composer\": \"alpha(composer.bg, 0.85)\",\n    \"island.bg.dms\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.header\": \"alpha(header.bottom.bg, 0.85)\",\n    \"island.bg.nav\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.panel\": \"alpha(panel.bg, 0.85)\",\n    \"island.bg.rooms\": \"alpha(rooms.bg, 0.85)\",\n    \"island.bg.spaces\": \"alpha(rail.bg, 0.85)\",\n    \"island.bg.timeline\": \"alpha(timeline.bg, 0.85)\",\n    \"rail.nav.icon.lit\": \"#e87cc0\",\n    \"rail.nav.icon.lit.active\": \"#e87cc0\",\n    \"reel.checkbox.fg\": \"#ffffff\",\n    \"slider.handle.border.disabled\": \"#e995e9\",\n    \"slider.track\": \"#e995e9\",\n    \"toast.fg\": \"#e87cc0\",\n    \"toggle.handle.border.disabled\": \"#e995e9\",\n    \"toggle.track\": \"#e995e9\",\n    \"tooltip.bg\": \"mix(accent.base, surface.island, 0.4)\",\n    \"tooltip.fg\": \"#f0e0f0/0.92\",\n    \"window.titlebar.close.fg.hover\": \"#ffffff\"\n  },\n  \"type\": {\n    \"size\": 105,\n    \"ui\": \"Inter\"\n  },\n  \"v\": 1,\n  \"variant\": \"dark\"\n}\n"
+}

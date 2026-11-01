@@ -6,7 +6,10 @@
 //     forceMicMuted(true) / toggleMic, the deafen button's applyDeafen, BRB's setAfk, the per-person menu's
 //     pushVolume / setVolume / setMuted, Leave's leaveCall), so every gate a click meets still applies (the
 //     soundboard's padGate / use_soundboard, the server-mute lock, push-to-talk). Then it publishes the new snapshot
-//     and says executed(token): the answer carries the effect.
+//     and says executed(token): the answer carries the effect. Pad QOL (2026-10-31): a search result
+//     (`sound.play.web` → the same startSound) and the call room's Media Party through the window's own functions
+//     (watchCtl.joinParty / play / pause / seek / playUrl(next) / addLink), each re-checking right before it runs that
+//     the url it was meant for still plays and that this device may still drive it.
 //   * the SNAPSHOT: this device's call as the Pad shows it (publishState, at most 4×/s and only when it changed):
 //     {call: {room, since} | null, me: {micMuted, ptt, serverMuted, deaf, brb, talk, sound, gate}, people: [{u, talk,
 //     micOff, away, vol, muted}], recent, favourites}. Read from the controllers' live getters (not the 120 ms / 1 s
@@ -19,6 +22,8 @@ Item {
     id: host
     visible: false
     property var app: null
+    // the Media Party window (Main.qml's), for party.join's "Join + open" — the call bar's own pair
+    property var watchPartyWindowRef: null
     // test hook: the executor's calls in order (scripts/pad-executor-test.qml)
     property var calls: []
     property bool recording: false
@@ -55,9 +60,147 @@ Item {
         case "setVolume": host._rec("setVolume", [String(c.user), String(c.cat), Number(c.level)]); app.audioPrefsCtl.setVolume(String(c.user), String(c.cat), Number(c.level)); return true
         case "setMuted": host._rec("setMuted", [String(c.user), String(c.cat), c.muted === true]); app.audioPrefsCtl.setMuted(String(c.user), String(c.cat), c.muted === true); return true
         case "leave": host._rec("leaveCall", []); app.callctl.leaveCall(); return true
+        case "partyJoin": {
+            // the call bar's Media Party "Join": join (never re-join: joinParty is destructive) + open the window
+            var room = String(app.callctl.roomId || "")
+            host._rec("joinParty", [room])
+            if (room.length === 0) return true
+            // in ANOTHER room's party: switch (leave, then join this one) — review #6; never re-join the same one
+            if (app.watchCtl.inParty && String(app.watchCtl.roomId) !== room) app.watchCtl.leaveParty()
+            if (!app.watchCtl.inParty || String(app.watchCtl.roomId) !== room) app.watchCtl.joinParty(room)
+            var wpw = host.watchPartyWindowRef
+            if (wpw) { if (wpw.openOrRaise) wpw.openOrRaise(); else wpw.show() }
+            return true
+        }
+        case "partyPlay":
+            if (!host.partyStill(String(c.url))) return true
+            host._rec(c.playing === true ? "play" : "pause", []); if (c.playing === true) app.watchCtl.play(); else app.watchCtl.pause(); return true
+        case "partySeek":
+            if (!host.partyStill(String(c.url))) return true
+            host._rec("seek", [String(Math.max(0, Math.floor(Number(c.pos) || 0)))]); app.watchCtl.seek(String(Math.max(0, Math.floor(Number(c.pos) || 0)))); return true
+        case "partyNext": {
+            if (!host.partyStill(String(c.url))) return true
+            var nx = host.nextAfter(String(c.url))
+            host._rec("playUrl", [nx]); if (nx.length > 0) app.watchCtl.playUrl(nx); return true
+        }
+        case "partyAdd": {
+            var r2 = String(app.callctl.roomId || "")
+            var sid = String(c.sid || ""), re = Number(c.re || 0)
+            if (!app.watchCtl.inParty || String(app.watchCtl.roomId) !== r2) { console.warn("[pad] party.add: not in this call room's party"); host.reportAdd(sid, re, false); return true }
+            // the receiver's own link rules agree with the rules' host list (youtube / ytmusic / spotify / apple only)
+            var kind = String(host._json(app.watchCtl.classifyLink(String(c.url)), {}).kind || "")
+            if (["youtube", "ytmusic", "spotify", "apple"].indexOf(kind) === -1) { console.warn("[pad] party.add: a " + kind + " link is not taken from a Pad"); host.reportAdd(sid, re, false); return true }
+            // one Pad add at a time (the controller's lookup is single-flight: its outcome must be OURS — review #3)
+            if (app.watchCtl.adding === true || host._addWait) { console.warn("[pad] party.add: a link is still being looked up"); host.reportAdd(sid, re, false); return true }
+            // queue first; "play now" only after the lookup, if the call session + party are unchanged (the epoch) and I
+            // may still drive it (review #4)
+            host._addWait = { url: String(c.url), room: r2, now: c.now === true, at: Date.now(), epoch: host._epoch, started: false, sid: sid, re: re }
+            // LOOK UP only; nothing is queued until the result is checked (Astra pass 3)
+            host._rec("lookupLink", [String(c.url)]); app.watchCtl.lookupLink(String(c.url)); return true
+        }
         }
         console.warn("[pad] unknown command", JSON.stringify(c))
         return false
+    }
+    // ── Media Party (the call room's) ──
+    function _wpParty() { return host._json(app.watchCtl ? app.watchCtl.partyJson : "", {}) }
+    function _wpPlayback() { return host._json(app.watchCtl ? app.watchCtl.playbackJson : "", {}) }
+    function partyHost() {
+        if (!app.watchCtl || !app.watchCtl.inParty) return false
+        var h = String(host._wpParty().hostId || "")
+        return h.length === 0 || h === String(app.mUserId || "")
+    }
+    // the command's url still plays in the call room's party and I may still drive it (else nothing runs: a log line)
+    function partyStill(url) {
+        var ok = !!app.watchCtl && app.watchCtl.inParty && String(app.watchCtl.roomId) === String(app.callctl.roomId)
+                 && String(host._wpPlayback().url || "") === url && host.partyHost()
+        if (!ok) console.warn("[pad] party command: what plays (or who drives it) changed — not run")
+        return ok
+    }
+    function nextAfter(url) {
+        var q = host._wpParty().queue || []
+        if (q.length === 0) return ""
+        if (url.length === 0) return String(q[0].url || "")
+        for (var i = 0; i < q.length; i++) if (q[i] && q[i].url === url) return i + 1 < q.length ? String(q[i + 1].url || "") : ""
+        return String(q[0].url || "")
+    }
+    property var _addWait: null
+    // the outcome of the latest Pad party.add ({sid, re, ok}: call.party.add — that Pad says "couldn't add that link")
+    property var _lastAdd: null
+    function reportAdd(sid, re, ok) {
+        if (String(sid).length === 0) return
+        host._lastAdd = { sid: String(sid), re: Number(re), ok: ok === true }
+        host.publish(true)
+    }
+    // bumps whenever the call session or this device's party (in it / which room) changes: a lookup that started
+    // before a bump never acts after it (leave + rejoin of the same room is a new session)
+    property int _epoch: 0
+    Connections {
+        target: host.app ? host.app.callctl : null
+        ignoreUnknownSignals: true
+        function onInCallChanged() { host._epoch++ }
+    }
+    Connections {
+        target: host.app ? host.app.watchCtl : null
+        ignoreUnknownSignals: true
+        function onInPartyChanged() { host._epoch++ }
+        function onRoomIdChanged() { host._epoch++ }
+        // the lookup is ours from the moment `adding` rises after our call until it falls: then linkJson is its outcome
+        function onAddingChanged() {
+            var w = host._addWait
+            if (!w) return
+            if (host.app.watchCtl.adding === true) { w.started = true; return }
+            if (!w.started) return
+            host._addWait = null
+            var out = host._json(host.app.watchCtl.linkJson, {})
+            if (w.epoch !== host._epoch) { console.warn("[pad] party.add: the call or the party changed during the lookup"); host.reportAdd(w.sid, w.re, false); return }
+            if (out.status !== "resolved") { console.warn("[pad] party.add: " + String(out.status || "no outcome")); host.reportAdd(w.sid, w.re, false); return }
+            var it = out.item || {}
+            // the lookup's result must be THIS link's (a YouTube id in the request has to be the item's)
+            var m = /(?:[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(w.url)
+            if (m && String(it.url || "").indexOf(m[1]) === -1) { console.warn("[pad] party.add: the lookup answered for another link — not added"); host.reportAdd(w.sid, w.re, false); return }
+            if (!host.app.watchCtl.inParty || String(host.app.watchCtl.roomId) !== w.room || String(host.app.callctl.roomId) !== w.room || String(it.url || "").length === 0) {
+                console.warn("[pad] party.add: no longer this call room's party — not added"); host.reportAdd(w.sid, w.re, false); return
+            }
+            host._rec("enqueueItem", [String(it.url)]); host.app.watchCtl.enqueueItem(JSON.stringify(it))
+            host.reportAdd(w.sid, w.re, true)
+            if (!w.now) return
+            if (!host.partyHost() || String(host.app.callctl.roomId) !== w.room || String(it.url || "").length === 0) {
+                console.warn("[pad] party.add: no longer allowed to drive the party — queued only")
+                return
+            }
+            host._rec("playUrl", [String(it.url)]); host.app.watchCtl.playUrl(String(it.url))
+        }
+    }
+    // a lookup that never reports back (no `adding` rise within 20 s) is given up: the Pad hears "couldn't add"
+    Timer {
+        interval: 5000; repeat: true; running: !!host._addWait
+        onTriggered: { var w = host._addWait; if (w && Date.now() - w.at > 20000 && !(host.app.watchCtl && host.app.watchCtl.adding === true)) { host._addWait = null; host.reportAdd(w.sid, w.re, false) } }
+    }
+    function partySnap(room) {
+        var w = app.watchCtl
+        if (!w) return null
+        var inP = w.inParty === true && String(w.roomId) === room
+        var cp = host._json(w.callPartyJson, {})
+        if (!inP && cp.live !== true) return null
+        var pb = inP ? host._wpPlayback() : { url: cp.url || "", playing: cp.playing === true, positionSecs: 0, updatedAt: 0 }
+        var party = inP ? host._wpParty() : { queue: [], hostId: cp.hostId || "" }
+        var q = party.queue || []
+        var url = String(pb.url || "")
+        var idx = -1
+        for (var i = 0; i < q.length; i++) if (q[i] && q[i].url === url) { idx = i; break }
+        var item = idx >= 0 ? q[idx] : (cp.item || null)
+        var up = idx >= 0 ? q.slice(idx + 1) : q
+        var next = []
+        for (var k = 0; k < up.length && next.length < 5; k++) next.push(String((up[k] && (up[k].title || up[k].url)) || ""))
+        var h = String(party.hostId || "")
+        return {
+            in: inP, host: inP && (h.length === 0 || h === String(app.mUserId || "")),
+            url: url, title: String((item && item.title) || ""), playing: pb.playing === true || pb.playing === "true",
+            pos: Math.max(0, Math.floor(Number(pb.positionSecs) || 0)), at: Math.max(0, Math.floor(Number(pb.updatedAt) || 0)),
+            dur: Math.max(0, Math.floor(Number(item && (item.durationSec || item.duration)) || 0)), next: next,
+            add: host._lastAdd
+        }
     }
     function run(token, cmdsJson) {
         if (!host.app || !host.app.padCtl || !app.padCtl.claim(token)) return
@@ -104,6 +247,7 @@ Item {
             // folded per person: talking = any device talking, mic off = all their devices' mics off
             if (active.indexOf(t.participant) !== -1) p.talk = true
             if (t.kind !== "screenshare") { p._mics += 1; if (t.muted === true) p._muted += 1 }
+            else p.share = true
         }
         var people = []
         for (var k = 0; k < order.length; k++) {
@@ -114,7 +258,7 @@ Item {
                 if (isFinite(v) && Math.abs(v - 1) > 0.001) vol[cats[j]] = v
                 if (app.audioPrefsCtl.mutedFor(e.u, cats[j])) muted[cats[j]] = true
             }
-            people.push({ u: e.u, talk: e.talk, micOff: e._mics > 0 && e._muted === e._mics, away: e.away, vol: vol, muted: muted })
+            people.push({ u: e.u, talk: e.talk, micOff: e._mics > 0 && e._muted === e._mics, away: e.away, share: e.share === true, vol: vol, muted: muted })
         }
         var gate = host._json(app.soundboardCtl.padGate(true, JSON.stringify(app.mCallPerms || {})), { allowed: true, hint: "" })
         var favs = (app.mPersonalSounds || []).map(function (d) { return String((d && d.sourceUrl) || "") }).filter(function (u) { return u.length > 0 })
@@ -129,7 +273,8 @@ Item {
             },
             people: people,
             recent: (app.mSbRecent || []).slice(0, 8),
-            favourites: favs
+            favourites: favs,
+            party: host.partySnap(String(c.roomId))
         }
     }
     property string _last: ""

@@ -14,7 +14,7 @@
 //! ([`Receiver::claim`]: the session still live, Pad on, the device not refused, the very call it was accepted for, ≤
 //! 1.5 s old) and says when it ran ([`Receiver::executed`]); the planned effect is applied to the snapshot at once
 //! ([`Receiver::on_cmd`]), so the next set sees it (mute then unmute in quick succession ends unmuted).
-use crate::padrules::{self as pr, PadCall, PadCmd, PadCtx, PadFacts, PadMe, PadSessions, PadSounds, PadVerdict, PAD_CATS};
+use crate::padrules::{self as pr, PadCall, PadCmd, PadCtx, PadFacts, PadMe, PadParty, PadSessions, PadSounds, PadVerdict, PAD_CATS};
 use serde_json::{json, Map, Value};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -66,6 +66,18 @@ pub enum Exec {
     SetMuted { user: String, cat: &'static str, muted: bool },
     /// `callctl.leaveCall()`
     Leave,
+    /// `soundboardPanel.startSound(url, name, emoji)` for a search result (Pad QOL `sound.play.web`)
+    StartWebSound { url: String, name: String, emoji: String },
+    /// Media Party of the call room: the call bar's "Join" (`app.openWatchParty(room)`)
+    PartyJoin,
+    /// the window's ▶ / ⏸ — QML re-checks that `url` still plays and that it may drive
+    PartyPlay { url: String, playing: bool },
+    /// the window's seek bar
+    PartySeek { url: String, pos: i64 },
+    /// the window's ⏭ (the next queued url after `url`)
+    PartyNext { url: String },
+    /// the window's "Add a link" (queued; "play now" only after the lookup, if the party and host are unchanged)
+    PartyAdd { url: String, now: bool, sid: String, re: i64 },
 }
 
 impl Exec {
@@ -82,6 +94,12 @@ impl Exec {
             Exec::SetVolume { user, cat, level } => json!({"do": "setVolume", "user": user, "cat": cat, "level": level}),
             Exec::SetMuted { user, cat, muted } => json!({"do": "setMuted", "user": user, "cat": cat, "muted": muted}),
             Exec::Leave => json!({"do": "leave"}),
+            Exec::StartWebSound { url, name, emoji } => json!({"do": "startSound", "url": url, "name": name, "emoji": emoji}),
+            Exec::PartyJoin => json!({"do": "partyJoin"}),
+            Exec::PartyPlay { url, playing } => json!({"do": "partyPlay", "url": url, "playing": playing}),
+            Exec::PartySeek { url, pos } => json!({"do": "partySeek", "url": url, "pos": pos}),
+            Exec::PartyNext { url } => json!({"do": "partyNext", "url": url}),
+            Exec::PartyAdd { url, now, sid, re } => json!({"do": "partyAdd", "url": url, "now": now, "sid": sid, "re": re}),
         }
     }
 }
@@ -117,6 +135,15 @@ pub fn exec_plan(v: &PadVerdict) -> Vec<Exec> {
             .flat_map(|cat| [Exec::SetVolume { user: user.clone(), cat: *cat, level: 1.0 }, Exec::SetMuted { user: user.clone(), cat: *cat, muted: false }])
             .collect(),
         Some(PadCmd::Leave) => vec![Exec::Leave],
+        Some(PadCmd::SoundPlayWeb { url, name, emoji }) => {
+            vec![Exec::StartWebSound { url: url.clone(), name: if name.is_empty() { "Sound".into() } else { name.clone() }, emoji: emoji.clone() }]
+        }
+        Some(PadCmd::PartyJoin) => vec![Exec::PartyJoin],
+        Some(PadCmd::PartyPlay { url, playing }) => vec![Exec::PartyPlay { url: url.clone(), playing: *playing }],
+        Some(PadCmd::PartySeek { url, pos }) => vec![Exec::PartySeek { url: url.clone(), pos: *pos }],
+        Some(PadCmd::PartyNext { url }) => vec![Exec::PartyNext { url: url.clone() }],
+        // the command's session + seq ride along: its outcome comes back in call.party.add (that Pad's "couldn't add")
+        Some(PadCmd::PartyAdd { url, now }) => vec![Exec::PartyAdd { url: url.clone(), now: *now, sid: v.sid.clone(), re: v.re }],
         Some(PadCmd::Open { .. }) | Some(PadCmd::Ping { .. }) | Some(PadCmd::Close) | None => Vec::new(),
     }
 }
@@ -129,6 +156,17 @@ fn predict_into(s: &mut Snapshot, cmd: Option<&PadCmd>) {
         Some(PadCmd::Brb { on }) => s.me.brb = *on,
         Some(PadCmd::SoundPlay { url }) => s.sound = url.clone(),
         Some(PadCmd::SoundStop) => s.sound.clear(),
+        Some(PadCmd::SoundPlayWeb { url, .. }) => s.sound = url.clone(),
+        Some(PadCmd::PartyPlay { playing, .. }) => {
+            if let Some(p) = s.party.as_mut() {
+                p.playing = *playing;
+            }
+        }
+        Some(PadCmd::PartyJoin) => {
+            if let Some(p) = s.party.as_mut() {
+                p.in_party = true;
+            }
+        }
         _ => {}
     }
 }
@@ -195,6 +233,10 @@ pub struct Snapshot {
     pub people: Vec<Value>,
     pub recent: Vec<Value>,
     pub favourites: Vec<String>,
+    /// the call room's Media Party (QML `party`: the rules' flags; None = none there)
+    pub party: Option<PadParty>,
+    /// the same block as the state carries it (`build_state` caps it)
+    pub party_raw: Value,
 }
 
 impl Snapshot {
@@ -206,6 +248,13 @@ impl Snapshot {
         let gate = me.get("gate").cloned().unwrap_or(Value::Null);
         let people: Vec<Value> = v.get("people").and_then(|p| p.as_array()).cloned().unwrap_or_default();
         let recent: Vec<Value> = v.get("recent").and_then(|p| p.as_array()).cloned().unwrap_or_default();
+        let party_raw = v.get("party").filter(|p| p.is_object()).cloned().unwrap_or(Value::Null);
+        let party = party_raw.is_object().then(|| PadParty {
+            in_party: b(&party_raw, "in"),
+            host: b(&party_raw, "host"),
+            url: s(&party_raw, "url").to_string(),
+            playing: b(&party_raw, "playing"),
+        });
         let favourites = v
             .get("favourites")
             .and_then(|p| p.as_array())
@@ -227,6 +276,8 @@ impl Snapshot {
             people,
             recent,
             favourites,
+            party,
+            party_raw,
         }
     }
     /// The state's `me.mic`: a moderator's lock first, then push-to-talk, then muted.
@@ -255,8 +306,23 @@ impl Snapshot {
             "room": room, "gen": gen, "since": since,
             "me": {"mic": self.mic(), "deaf": self.me.deaf, "brb": self.me.brb, "talk": self.talk, "sound": self.sound,
                    "gate": {"allowed": self.me.sound_role, "hint": self.gate_hint}},
-            "people": self.people, "recent": self.recent,
+            "people": self.people, "recent": self.recent, "party": self.party_json(),
         }))
+    }
+    /// call.party for build_state: the QML block with the planned flags laid over it (None → null).
+    fn party_json(&self) -> Value {
+        let (Some(p), Some(m)) = (&self.party, self.party_raw.as_object()) else { return Value::Null };
+        let mut m = m.clone();
+        m.insert("in".into(), json!(p.in_party));
+        m.insert("playing".into(), json!(p.playing));
+        // QML lists the upcoming titles as strings (the web's PadPartySnap.next): the state wants {title} objects
+        let next: Vec<Value> = m
+            .get("next")
+            .and_then(|n| n.as_array())
+            .map(|a| a.iter().map(|t| if t.is_string() { json!({"title": t}) } else { t.clone() }).collect())
+            .unwrap_or_default();
+        m.insert("next".into(), Value::Array(next));
+        Value::Object(m)
     }
     /// Everything a state shows except who is talking right now (a change here is a full push).
     fn full_sig(&self) -> String {
@@ -266,7 +332,7 @@ impl Snapshot {
                 m.remove("talk");
             }
         }
-        json!([self.call, self.mic(), self.me.deaf, self.me.brb, self.sound, self.me.sound_role, self.gate_hint, people, self.recent]).to_string()
+        json!([self.call, self.mic(), self.me.deaf, self.me.brb, self.sound, self.me.sound_role, self.gate_hint, people, self.recent, self.party_json()]).to_string()
     }
     /// Who is talking (a change here alone is a talking-only push).
     fn talk_sig(&self) -> String {
@@ -306,6 +372,8 @@ struct ExecRec {
 pub struct Receiver {
     pub table: PadSessions,
     pad_on: bool,
+    /// Pad QOL: this device only WATCHES its call — every command is refused `off` (its mic must never be opened remotely)
+    watching: bool,
     /// what the UI last published
     confirmed: Snapshot,
     /// the effective snapshot the rules read: `confirmed` + the planned effects of the commands still pending
@@ -319,7 +387,7 @@ pub struct Receiver {
 
 impl Receiver {
     pub fn new(pad_on: bool) -> Receiver {
-        Receiver { table: PadSessions::default(), pad_on, confirmed: Snapshot::default(), snap: Snapshot::default(), rseq: 0, last_call: None, dirty: HashMap::new(), pending: Vec::new() }
+        Receiver { table: PadSessions::default(), pad_on, watching: false, confirmed: Snapshot::default(), snap: Snapshot::default(), rseq: 0, last_call: None, dirty: HashMap::new(), pending: Vec::new() }
     }
     pub fn pad_on(&self) -> bool {
         self.pad_on
@@ -350,7 +418,7 @@ impl Receiver {
     /// An answer carries the call only with Pad on, in a call, and to the asking device's live session (a refused
     /// open, a close, an answer to a device without one: `call: null`).
     fn reply_has_call(&self, sid: &str, device: &str, now: i64) -> bool {
-        self.pad_on && self.snap.call.is_some() && self.table.get(sid, now).map(|s| s.device == device).unwrap_or(false)
+        self.pad_on && !self.watching && self.snap.call.is_some() && self.table.get(sid, now).map(|s| s.device == device).unwrap_or(false)
     }
 
     /// The PadCtx the rules read: the snapshot + the sounds the glue looked up for a `sound.play` (my favourites
@@ -363,12 +431,18 @@ impl Receiver {
             room_sounds.insert(room.clone(), call_room_sounds.to_vec());
         }
         PadCtx {
-            pad_on: self.pad_on,
+            pad_on: self.pad_on && !self.watching,
             call: self.snap.call.as_ref().map(|(room, gen, _)| PadCall { room: room.clone(), gen: gen.clone() }),
             participants: self.snap.participants(),
             me: self.snap.me.clone(),
             sounds: PadSounds { favourites, room_sounds, recent: self.snap.recent_urls() },
+            party: self.snap.party.clone(),
         }
+    }
+
+    /// Pad QOL: this device joined its call only to watch (true) or not; read before every command.
+    pub fn set_watching(&mut self, w: bool) {
+        self.watching = w;
     }
 
     /// Settings → Calls → Pad switched. Off: every session ends with a final state `off` (and every later
@@ -793,11 +867,13 @@ impl Controller {
         if op.starts_with("sound.") {
             self.no_sound_retries(); // another tap or Stop: no `unknown-sound` retry of an earlier tap, now or later
         }
-        if op == "sound.play" && now - self.sound_at < PACE_MS {
-            self.sound_wait = Some((cmd.clone(), true)); // ≤ 4 taps/s: a newer tap replaces the one waiting
+        // a search result (`sound.play.web`, Pad QOL) is a sound tap too: the same ≤ 4/s, no unknown-sound retry
+        let tap = op == "sound.play" || op == "sound.play.web";
+        if tap && now - self.sound_at < PACE_MS {
+            self.sound_wait = Some((cmd.clone(), op == "sound.play")); // ≤ 4 taps/s: a newer tap replaces the one waiting
             return (0, Vec::new());
         }
-        if op == "sound.play" {
+        if tap {
             self.sound_at = now;
             self.sound_wait = None;
         }
@@ -1806,5 +1882,78 @@ mod tests {
         let two = json!([{"device": "PC", "createdTs": 9_000}, {"device": "LAPTOP", "createdTs": 1}]);
         assert_eq!(calls_newest_first(&m(vec![("!a:lab.test", t(8_000)), ("!c:lab.test", two)])), vec!["!c:lab.test", "!a:lab.test"]);
         assert!(calls_newest_first(&Map::new()).is_empty());
+    }
+
+    // ---- Pad QOL (2026-10-31): the web's receiver.test.ts cases for the new ops ----
+    const WEB: &str = "https://www.myinstants.com/media/sounds/bruh.mp3";
+    const YT: &str = "https://www.youtube.com/watch?v=abc";
+    fn party_snap(in_party: bool, host: bool) -> Snapshot {
+        let mut v = json!({
+            "call": {"room": ROOM, "gen": "g1", "since": 1000},
+            "me": {"micMuted": false, "ptt": false, "serverMuted": false, "deaf": false, "brb": false, "talk": false, "sound": "",
+                   "gate": {"allowed": true, "hint": ""}},
+            "people": [{"u": "@bob:lab.test", "talk": false, "micOff": false, "away": false, "share": true}],
+            "recent": [], "favourites": [FAV],
+        });
+        v["party"] = json!({"in": in_party, "host": host, "url": YT, "title": "Video", "playing": true, "pos": 12, "at": 9000, "dur": 200, "next": ["Next one"]});
+        Snapshot::parse(&v)
+    }
+    fn plan_of(r: &mut Receiver, seq: i64, op: &str, extra: Value) -> Vec<Exec> {
+        let (_, outs) = r.on_cmd(&cmd(seq, 1_100, op, extra), &facts(PHONE), &[], &[], 1_100);
+        execs(&outs).into_iter().flat_map(|(_, e)| e).collect()
+    }
+
+    #[test]
+    fn pad_qol_every_new_op_runs_exactly_its_buttons_function() {
+        let mut r = receiver();
+        r.set_snapshot(party_snap(true, true), 0);
+        open(&mut r, 1_000);
+        assert_eq!(plan_of(&mut r, 2, "sound.play.web", json!({"url": WEB, "name": "Bruh"})), vec![Exec::StartWebSound { url: WEB.into(), name: "Bruh".into(), emoji: "".into() }]);
+        assert_eq!(plan_of(&mut r, 3, "sound.play.web", json!({"url": WEB})), vec![Exec::StartWebSound { url: WEB.into(), name: "Sound".into(), emoji: "".into() }]);
+        assert!(plan_of(&mut r, 4, "sound.play.web", json!({"url": FAV})).is_empty(), "another site: bad");
+        assert_eq!(plan_of(&mut r, 5, "party.play", json!({"url": YT, "playing": false})), vec![Exec::PartyPlay { url: YT.into(), playing: false }]);
+        assert!(plan_of(&mut r, 6, "party.play", json!({"url": "https://youtu.be/other", "playing": true})).is_empty(), "party-changed");
+        assert_eq!(plan_of(&mut r, 7, "party.seek", json!({"url": YT, "pos": 42})), vec![Exec::PartySeek { url: YT.into(), pos: 42 }]);
+        assert_eq!(plan_of(&mut r, 8, "party.next", json!({"url": YT})), vec![Exec::PartyNext { url: YT.into() }]);
+        assert_eq!(plan_of(&mut r, 9, "party.add", json!({"url": "https://youtu.be/x", "now": true})), vec![Exec::PartyAdd { url: "https://youtu.be/x".into(), now: true, sid: SID.into(), re: 9 }]);
+        assert!(plan_of(&mut r, 10, "party.add", json!({"url": "https://cdn.example.org/a.mp4", "now": false})).is_empty(), "a direct file: bad");
+        assert!(plan_of(&mut r, 11, "party.join", json!({})).is_empty(), "already in: a set, nothing to change");
+        assert_eq!(Exec::PartySeek { url: YT.into(), pos: 42 }.to_json(), json!({"do": "partySeek", "url": YT, "pos": 42}));
+        assert_eq!(Exec::StartWebSound { url: WEB.into(), name: "Bruh".into(), emoji: "".into() }.to_json(), json!({"do": "startSound", "url": WEB, "name": "Bruh", "emoji": ""}));
+    }
+
+    #[test]
+    fn pad_qol_join_and_host_gates() {
+        let mut r = receiver();
+        r.set_snapshot(party_snap(false, false), 0);
+        open(&mut r, 1_000);
+        assert_eq!(plan_of(&mut r, 2, "party.join", json!({})), vec![Exec::PartyJoin]);
+        let mut h = receiver();
+        h.set_snapshot(party_snap(true, false), 0);
+        open(&mut h, 1_000);
+        assert!(plan_of(&mut h, 2, "party.play", json!({"url": YT, "playing": false})).is_empty(), "not the host");
+        assert_eq!(plan_of(&mut h, 3, "party.add", json!({"url": "https://youtu.be/x", "now": false})), vec![Exec::PartyAdd { url: "https://youtu.be/x".into(), now: false, sid: SID.into(), re: 3 }], "anyone queues");
+        assert!(plan_of(&mut h, 4, "party.add", json!({"url": "https://youtu.be/x", "now": true})).is_empty(), "play now: the host only");
+    }
+
+    #[test]
+    fn pad_qol_state_carries_share_and_the_party() {
+        let mut r = receiver();
+        r.set_snapshot(party_snap(true, true), 0);
+        let st = sends(&open(&mut r, 1_000));
+        assert_eq!(st[0]["call"]["people"][0]["share"], true);
+        assert_eq!(st[0]["call"]["party"], json!({"in": true, "host": true, "url": YT, "title": "Video", "playing": true, "pos": 12, "at": 9000, "dur": 200, "next": [{"title": "Next one"}]}));
+        let mut plain = receiver();
+        let st = sends(&open(&mut plain, 1_000));
+        assert!(st[0]["call"].get("party").is_none(), "no party: no block (a 12.1 receiver's shape)");
+    }
+
+    #[test]
+    fn pad_qol_a_watching_receiver_refuses_everything_off() {
+        let mut r = receiver();
+        r.set_watching(true);
+        let st = sends(&open(&mut r, 1_000));
+        assert_eq!(st[0]["why"], "off");
+        assert!(st[0]["call"].is_null());
     }
 }

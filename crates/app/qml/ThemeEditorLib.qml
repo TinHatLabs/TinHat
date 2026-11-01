@@ -1,7 +1,7 @@
 pragma Singleton
 // ThemeEditorLib.qml — the theme editor's pure helpers (11.0 step 5, contract THEMES-UI.md §13.7–§13.9; the web's
 // features/settings/themes/editor/targets.ts + colour.ts, the same rules): what a swatch / row edits (a target =
-// {kind: "background" | "accent" | "palette" | "role" | "token", id}), its stored value in the working document, its
+// {kind: "background" | "accent" | "palette" | "role" | "token", id}; Simple's {kind: "swatch", id, group, whole, label}), its stored value in the working document, its
 // resolved colour, the base's value (Reset), the op that sets it, whether it changed — and the colour popover's maths
 // (HSV ↔ RGB with the standard six-sector formula in doubles, channels round(x × 255); the engine's canonical text).
 // No state, no Qt objects: documents are the parsed JSON of ThemeEditorController.stateJson.
@@ -32,6 +32,8 @@ QtObject {
             }
             return lib.has(p, t.id) && typeof p[t.id] === "string" ? p[t.id] : null
         }
+        case "swatch":
+            return lib.sourceValue(doc, t.id)
         case "role":
         case "token": {
             var o = doc[t.kind === "role" ? "roles" : "tokens"]
@@ -41,6 +43,42 @@ QtObject {
         return null
     }
 
+    /// Simple (palette.ts `sourceValue`): a palette slot, "accent" (the literal accent) or a role's own value.
+    function sourceValue(doc, id) {
+        if (id === "accent") return typeof doc.accent === "string" ? doc.accent : null
+        if (id.indexOf(".") < 0) return lib.storedValue(doc, { id: id, kind: "palette" })
+        return lib.storedValue(doc, { id: id, kind: "role" })
+    }
+    /// A Simple swatch of the state's palette view by one of its sources (null when none).
+    function swatchOf(st, id) {
+        var gs = st && st.palette ? st.palette.groups : []
+        for (var i = 0; i < gs.length; i++)
+            for (var j = 0; j < gs[i].swatches.length; j++) if (gs[i].swatches[j].sources.indexOf(id) >= 0) return gs[i].swatches[j]
+        return null
+    }
+    /// What a Simple swatch's popover shows, live from the state's palette view (the web's palette.ts swatchInfo): the
+    /// swatch of `group` holding `id` (null when gone), lead = first of ≥ 2, the group's size, how many OTHER colours
+    /// follow the edit (with `whole`: the union over the group), the other groups it reaches (ids, group order).
+    function swatchInfo(st, group, id, whole) {
+        var gs = st && st.palette ? st.palette.groups : [], g = null
+        for (var a = 0; a < gs.length; a++) if (gs[a].id === group) g = gs[a]
+        if (!g) return null
+        var i = -1
+        for (var b = 0; b < g.swatches.length; b++) if (g.swatches[b].sources.indexOf(id) >= 0) { i = b; break }
+        if (i < 0) return null
+        var lead = i === 0 && g.swatches.length > 1
+        var list = lead && whole ? g.swatches : [g.swatches[i]]
+        var used = {}, own = {}, also = {}
+        for (var c = 0; c < list.length; c++) {
+            list[c].usedBy.forEach(function (x) { used[x] = true })
+            list[c].sources.forEach(function (x) { own[x] = true })
+            list[c].alsoIn.forEach(function (x) { also[x] = true })
+        }
+        var n = 0
+        for (var k in used) if (!own[k]) n++
+        var order = ["backgrounds", "text", "accent", "status", "people"]
+        return { lead: lead, members: g.swatches.length, usedBy: n, alsoIn: order.filter(function (x) { return also[x] }), colour: g.swatches[i].colour }
+    }
     /// The resolved (canonical) colour a target paints with in the working document (`st` = the parsed stateJson).
     function resolvedValue(st, doc, t) {
         switch (t.kind) {
@@ -49,6 +87,7 @@ QtObject {
         case "palette": { var v = lib.storedValue(doc, t); return v === null ? "#000000" : v }
         case "role": return st.roles[t.id]
         case "token": return st.tokens[t.id]
+        case "swatch": { var v = lib.sourceValue(doc, t.id); return v === null ? "#000000" : String(v).toLowerCase() }
         }
         return "#000000"
     }
@@ -61,12 +100,21 @@ QtObject {
         case "palette": return { op: "palette", slot: t.id, value: value }
         case "role": return { op: "role", id: t.id, value: value }
         case "token": return { op: "token", id: t.id, value: value }
+        case "swatch": return t.whole ? { op: "group", id: t.group, value: value === null ? "" : value } : { op: "swatch", id: t.id, value: value === null ? "" : value }
         }
         return null
     }
 
     /// Reset (§13.9): back to the base's value — its own, or none (then the default / the derivation).
-    function resetOp(base, t) { return lib.opFor(t, lib.storedValue(base, t)) }
+    function resetOp(base, t) {
+        // a swatch resets on its own (its group stays where it is)
+        if (t.kind === "swatch") {
+            // Simple edits colour only: the base's RGB (its alpha stays the source's own, editor.rs write_swatch)
+            var c = lib.literalOf(String(lib.storedValue(base, t) || "").toLowerCase())
+            return lib.opFor({ kind: "swatch", id: t.id, group: t.group, whole: false, label: t.label }, c ? lib.colourText([c.r, c.g, c.b], 1) : null)
+        }
+        return lib.opFor(t, lib.storedValue(base, t))
+    }
     function isChanged(doc, base, t) { return lib.storedValue(doc, t) !== lib.storedValue(base, t) }
     /// "Use default" is offered for an override of a token, or of a role of a palette theme.
     function canUseDefault(doc, t) {
@@ -84,6 +132,7 @@ QtObject {
         case "palette": return ctl.label("palette", t.id)
         case "role": return ctl.label("role", t.id)
         case "token": return ctl.label("token", t.id)
+        case "swatch": return t.label
         }
         return ""
     }

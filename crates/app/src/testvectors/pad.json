@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "about": "Pad (your phone as a remote for your call) - shared test vectors for the pure rules, byte-identical in the web repo (src/features/calls/pad/vectors.json) and the desktop repo (crates/app/src/testvectors/pad.json); the contract is docs/PAD.md in both. trust: rules 1-4 on facts (each overrides defaults.receiverFacts); every failure is a silent drop with that reason, run through checkTrust, checkPadMessage (an open) and acceptState. cmds: one command after an implicit open (sid PhoneSession0001, seq 1, ts 1000, now 1000, want [talk], default facts and ctx); the case's msg is merged over the envelope {v:1, sid, seq:2, ts:1500, room, gen:g1}, `drop` removes keys, `raw` replaces the content, `type` the event type, `now` defaults to 1500. sessions: steps against one receiver table; a step's msg is merged over {v:1, sid, ts:<now>, room, gen:g1}; `repeat` runs it n times with seq+1 each time; `do` steps: refuse / clearRefused / clear / sweep (expect.sids = the sids returned) and pushed / pushWait. ctx and facts merge recursively (objects merge, arrays and scalars replace) over defaults, then the scenario's, then the step's. expect on a message: ok, why, reason, reply, run always; evicted (default []); cmd and live (the live sids after the step) when present. state: buildState input -> exact output + its UTF-8 JSON size, or (generated inputs: genPeople {n, len} -> @p<i>[x...]:example.org; genRecent {n, nameLen, urlLen}) a summary. accept: steps against one controller session {sid PhoneSession0001, device PCDEVICE, lastRseq 0}; msg merges over defaults.state. targets: padTargets(me, myDevice, now, selfVerified, trusted, events) with the defaults below. rate: RateBucket.hit, n times each. stale: staleCheck(offset, ts, now); openStale: openStale(ts, now). why: whyText(code, device, op).",
+  "about": "Pad (your phone as a remote for your call) - shared test vectors for the pure rules, byte-identical in the web repo (src/features/calls/pad/vectors.json) and the desktop repo (crates/app/src/testvectors/pad.json); the contract is docs/PAD.md in both. trust: rules 1-4 on facts (each overrides defaults.receiverFacts); every failure is a silent drop with that reason, run through checkTrust, checkPadMessage (an open) and acceptState. cmds: one command after an implicit open (sid PhoneSession0001, seq 1, ts 1000, now 1000, want [talk], default facts and ctx); the case's msg is merged over the envelope {v:1, sid, seq:2, ts:1500, room, gen:g1}, `drop` removes keys, `raw` replaces the content, `type` the event type, `now` defaults to 1500. sessions: steps against one receiver table; a step's msg is merged over {v:1, sid, ts:<now>, room, gen:g1}; `repeat` runs it n times with seq+1 each time; `do` steps: refuse / clearRefused / clear / sweep (expect.sids = the sids returned) and pushed / pushWait. ctx and facts merge recursively (objects merge, arrays and scalars replace) over defaults, then the scenario's, then the step's. expect on a message: ok, why, reason, reply, run always; evicted (default []); cmd and live (the live sids after the step) when present. state: buildState input -> exact output + its UTF-8 JSON size, or (generated inputs: genPeople {n, len} -> @p<i>[x...]:example.org; genRecent {n, nameLen, urlLen}) a summary. accept: steps against one controller session {sid PhoneSession0001, device PCDEVICE, lastRseq 0}; msg merges over defaults.state. targets: padTargets(me, myDevice, now, selfVerified, trusted, events) with the defaults below. rate: RateBucket.hit, n times each. stale: staleCheck(offset, ts, now); openStale: openStale(ts, now). why: whyText(code, device, op). links (2026-10-31): webSoundOk(url) / partyLinkOk(url) -> expect. cmds may carry ctx (merged over defaults.ctx; ctx.party = the receiver's Media Party in the call room, absent = none). (2026-10-31 review) call.party.add = {sid, re, ok}: the outcome of that session's latest party.add; over 16 KiB the party block always stays (me.sound, then gate.hint go after people).",
   "const": {
     "v": 1,
     "leaseMs": 45000,
@@ -24,7 +24,10 @@
     "spentMs": 600000,
     "maxSpent": 64,
     "maxDepth": 32,
-    "membershipExpiresMs": 14400000
+    "membershipExpiresMs": 14400000,
+    "maxTitle": 200,
+    "maxNext": 5,
+    "maxPos": 86400
   },
   "names": {
     "cap": "pad1",
@@ -39,7 +42,13 @@
     "brb",
     "vol",
     "vol.reset",
-    "leave"
+    "leave",
+    "sound.play.web",
+    "party.join",
+    "party.play",
+    "party.seek",
+    "party.next",
+    "party.add"
   ],
   "cats": [
     "mic",
@@ -120,7 +129,13 @@
         "brb",
         "vol",
         "vol.reset",
-        "leave"
+        "leave",
+        "sound.play.web",
+        "party.join",
+        "party.play",
+        "party.seek",
+        "party.next",
+        "party.add"
       ],
       "call": {
         "room": "!call:example.org",
@@ -2438,6 +2453,1033 @@
         "why": "",
         "reason": "peer-untrusted",
         "reply": false,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web: a search result plays",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3",
+        "name": "Bruh",
+        "emoji": ""
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "sound.play.web",
+          "url": "https://www.myinstants.com/media/sounds/bruh.mp3",
+          "name": "Bruh",
+          "emoji": ""
+        }
+      }
+    },
+    {
+      "name": "sound.play.web: name and emoji optional",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3"
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "sound.play.web",
+          "url": "https://www.myinstants.com/media/sounds/bruh.mp3",
+          "name": "",
+          "emoji": ""
+        }
+      }
+    },
+    {
+      "name": "sound.play.web: not a myinstants sound -> bad",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://sounds.example.org/fav.mp3"
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web: a name over 64 -> bad",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3",
+        "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web: an emoji over 16 -> bad",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3",
+        "emoji": "eeeeeeeeeeeeeeeee"
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web: a non-string name -> bad",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3",
+        "name": 1
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web: off for my role -> off-role",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3"
+      },
+      "expect": {
+        "ok": false,
+        "why": "off-role",
+        "reason": "off-role",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "me": {
+          "soundRole": false
+        }
+      }
+    },
+    {
+      "name": "sound.play.web: server-muted",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3"
+      },
+      "expect": {
+        "ok": false,
+        "why": "server-muted",
+        "reason": "server-muted",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "me": {
+          "serverMuted": true
+        }
+      }
+    },
+    {
+      "name": "sound.play.web: off-role before server-muted",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3"
+      },
+      "expect": {
+        "ok": false,
+        "why": "off-role",
+        "reason": "off-role",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "me": {
+          "soundRole": false,
+          "serverMuted": true
+        }
+      }
+    },
+    {
+      "name": "sound.play.web: not in a call",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3"
+      },
+      "expect": {
+        "ok": false,
+        "why": "not-in-call",
+        "reason": "not-in-call",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "call": null
+      }
+    },
+    {
+      "name": "sound.play.web: another gen -> other-call",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/b.mp3",
+        "gen": "g2"
+      },
+      "expect": {
+        "ok": false,
+        "why": "other-call",
+        "reason": "other-call",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "party.join: no party -> no-party",
+      "msg": {
+        "op": "party.join"
+      },
+      "expect": {
+        "ok": false,
+        "why": "no-party",
+        "reason": "no-party",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "party.join: a party I'm not in -> join",
+      "msg": {
+        "op": "party.join"
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "party.join"
+        }
+      },
+      "ctx": {
+        "party": {
+          "in": false,
+          "host": false,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.join: already in -> nothing to change",
+      "msg": {
+        "op": "party.join"
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: pause what plays",
+      "msg": {
+        "op": "party.play",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "playing": false
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "party.play",
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": false
+        }
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: play while playing -> nothing to change",
+      "msg": {
+        "op": "party.play",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "playing": true
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: another url -> party-changed",
+      "msg": {
+        "op": "party.play",
+        "url": "https://www.youtube.com/watch?v=abcx",
+        "playing": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "party-changed",
+        "reason": "party-changed",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: not the host -> not-host",
+      "msg": {
+        "op": "party.play",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "playing": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "not-host",
+        "reason": "not-host",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": false,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: not in the party -> no-party",
+      "msg": {
+        "op": "party.play",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "playing": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "no-party",
+        "reason": "no-party",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": false,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: no party -> no-party",
+      "msg": {
+        "op": "party.play",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "playing": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "no-party",
+        "reason": "no-party",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "party.play: playing not a bool -> bad",
+      "msg": {
+        "op": "party.play",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "playing": 1
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: url missing -> bad",
+      "msg": {
+        "op": "party.play",
+        "playing": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.play: a non-ASCII url -> bad",
+      "msg": {
+        "op": "party.play",
+        "url": "https://x/é",
+        "playing": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: to 312 s",
+      "msg": {
+        "op": "party.seek",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "pos": 312
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "party.seek",
+          "url": "https://www.youtube.com/watch?v=abc",
+          "pos": 312
+        }
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: 1.0 is an integer",
+      "msg": {
+        "op": "party.seek",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "pos": 1.0
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: 86400 is the end",
+      "msg": {
+        "op": "party.seek",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "pos": 86400
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: 86401 -> bad",
+      "msg": {
+        "op": "party.seek",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "pos": 86401
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: negative -> bad",
+      "msg": {
+        "op": "party.seek",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "pos": -1
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: a fraction -> bad",
+      "msg": {
+        "op": "party.seek",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "pos": 1.5
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: another url -> party-changed",
+      "msg": {
+        "op": "party.seek",
+        "url": "",
+        "pos": 3
+      },
+      "expect": {
+        "ok": false,
+        "why": "party-changed",
+        "reason": "party-changed",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.seek: not the host -> not-host (before party-changed)",
+      "msg": {
+        "op": "party.seek",
+        "url": "",
+        "pos": 3
+      },
+      "expect": {
+        "ok": false,
+        "why": "not-host",
+        "reason": "not-host",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": false,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.next: skip",
+      "msg": {
+        "op": "party.next",
+        "url": "https://www.youtube.com/watch?v=abc"
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "party.next",
+          "url": "https://www.youtube.com/watch?v=abc"
+        }
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.next: nothing playing, url \"\"",
+      "msg": {
+        "op": "party.next",
+        "url": ""
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "",
+          "playing": false
+        }
+      }
+    },
+    {
+      "name": "party.next: not in a call",
+      "msg": {
+        "op": "party.next",
+        "url": "https://www.youtube.com/watch?v=abc"
+      },
+      "expect": {
+        "ok": false,
+        "why": "not-in-call",
+        "reason": "not-in-call",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "call": null,
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.add: queue a link",
+      "msg": {
+        "op": "party.add",
+        "url": "https://youtu.be/abc",
+        "now": false
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "party.add",
+          "url": "https://youtu.be/abc",
+          "now": false
+        }
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": false,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.add: play now as the host",
+      "msg": {
+        "op": "party.add",
+        "url": "https://youtu.be/abc",
+        "now": true
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.add: play now, not the host -> not-host",
+      "msg": {
+        "op": "party.add",
+        "url": "https://youtu.be/abc",
+        "now": true
+      },
+      "expect": {
+        "ok": false,
+        "why": "not-host",
+        "reason": "not-host",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": false,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.add: not in the party -> no-party",
+      "msg": {
+        "op": "party.add",
+        "url": "https://youtu.be/abc",
+        "now": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "no-party",
+        "reason": "no-party",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": false,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.add: a direct file -> bad",
+      "msg": {
+        "op": "party.add",
+        "url": "https://cdn.example.org/a.mp4",
+        "now": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.add: now missing -> bad",
+      "msg": {
+        "op": "party.add",
+        "url": "https://youtu.be/abc"
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "party.add: an action, not a set: the same seq twice -> the second is dropped",
+      "msg": {
+        "op": "party.add",
+        "url": "https://youtu.be/abc",
+        "now": false,
+        "seq": 1
+      },
+      "expect": {
+        "ok": false,
+        "why": "",
+        "reason": "old-seq",
+        "reply": false,
+        "run": false
+      },
+      "ctx": {
+        "party": {
+          "in": true,
+          "host": true,
+          "url": "https://www.youtube.com/watch?v=abc",
+          "playing": true
+        }
+      }
+    },
+    {
+      "name": "sound.play.web from another account -> dropped (other-user), nothing plays",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3"
+      },
+      "facts": {
+        "olmSender": "@mallory:example.org",
+        "eventSender": "@mallory:example.org"
+      },
+      "expect": {
+        "ok": false,
+        "why": "",
+        "reason": "other-user",
+        "reply": false,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web from my unverified device -> dropped (peer-untrusted)",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3"
+      },
+      "facts": {
+        "peerTrusted": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "",
+        "reason": "peer-untrusted",
+        "reply": false,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web plaintext -> dropped (not-olm)",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3"
+      },
+      "facts": {
+        "decrypted": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "",
+        "reason": "not-olm",
+        "reply": false,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web whose Olm key isn't that device's -> dropped (unbound)",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3"
+      },
+      "facts": {
+        "curveMatches": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "",
+        "reason": "unbound",
+        "reply": false,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web while THIS device is unverified -> dropped (self-unverified)",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3"
+      },
+      "facts": {
+        "selfVerified": false
+      },
+      "expect": {
+        "ok": false,
+        "why": "",
+        "reason": "self-unverified",
+        "reply": false,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web on a session never opened -> no-session",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3",
+        "sid": "OtherSession0001"
+      },
+      "expect": {
+        "ok": false,
+        "why": "no-session",
+        "reason": "no-session",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web replaying the open's seq -> dropped (old-seq)",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3",
+        "seq": 1
+      },
+      "expect": {
+        "ok": false,
+        "why": "",
+        "reason": "old-seq",
+        "reply": false,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web held back 8.001 s -> stale, nothing plays",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3",
+        "ts": 1000
+      },
+      "now": 9002,
+      "expect": {
+        "ok": false,
+        "why": "stale",
+        "reason": "stale",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "sound.play.web from the other device a session belongs to -> no-session",
+      "msg": {
+        "op": "sound.play.web",
+        "url": "https://www.myinstants.com/media/sounds/bruh.mp3"
+      },
+      "facts": {
+        "senderDevice": "TABLETDV"
+      },
+      "expect": {
+        "ok": false,
+        "why": "no-session",
+        "reason": "no-session",
+        "reply": true,
         "run": false
       }
     }
@@ -6843,11 +7885,17 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": null
       },
-      "bytes": 191
+      "bytes": 272
     },
     {
       "name": "a call: only non-default volumes, the muted categories, empty vol / mute left out",
@@ -6933,7 +7981,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "!call:example.org",
@@ -6987,7 +8041,7 @@
           ]
         }
       },
-      "bytes": 729
+      "bytes": 810
     },
     {
       "name": "volumes: rounded to 0.01 and clamped to 0-2; a value that rounds to 1 is the default",
@@ -7061,7 +8115,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "!call:example.org",
@@ -7110,7 +8170,7 @@
           "recent": []
         }
       },
-      "bytes": 637
+      "bytes": 718
     },
     {
       "name": "people: invalid ids skipped, each person once (first wins)",
@@ -7178,7 +8238,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "!call:example.org",
@@ -7213,7 +8279,7 @@
           "recent": []
         }
       },
-      "bytes": 505
+      "bytes": 586
     },
     {
       "name": "recent: 8 at most, empty or over-long urls skipped, names cut to 64 and emoji to 16 code points",
@@ -7320,7 +8386,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "!call:example.org",
@@ -7383,7 +8455,7 @@
           ]
         }
       },
-      "bytes": 1133
+      "bytes": 1214
     },
     {
       "name": "me: no sound -> null, an unknown mic -> on, a non-boolean gate -> not allowed, the hint cut to 200",
@@ -7427,7 +8499,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "!call:example.org",
@@ -7449,7 +8527,7 @@
           "recent": []
         }
       },
-      "bytes": 573
+      "bytes": 654
     },
     {
       "name": "me: an over-long sound url -> null; server and ptt pass",
@@ -7495,7 +8573,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "!call:example.org",
@@ -7517,7 +8601,7 @@
           "recent": []
         }
       },
-      "bytes": 376
+      "bytes": 457
     },
     {
       "name": "envelope numbers that are not unsigned integers -> 0, a non-string why -> \"\"",
@@ -7546,11 +8630,17 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": null
       },
-      "bytes": 168
+      "bytes": 249
     },
     {
       "name": "ids that aren't ids are sent as \"\" (the controller then drops the state)",
@@ -7596,7 +8686,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "",
@@ -7618,7 +8714,7 @@
           "recent": []
         }
       },
-      "bytes": 337
+      "bytes": 418
     },
     {
       "name": "the worst case besides people and recent (control characters in the sound url and hint) still fits",
@@ -7658,11 +8754,11 @@
         }
       },
       "summary": {
-        "people": 8,
-        "more": 56,
+        "people": 7,
+        "more": 57,
         "recent": 0,
-        "lastU": "@p8xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:example.org",
-        "bytes": 16317
+        "lastU": "@p7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:example.org",
+        "bytes": 16093
       }
     },
     {
@@ -7709,7 +8805,13 @@
           "brb",
           "vol",
           "vol.reset",
-          "leave"
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
         ],
         "call": {
           "room": "!call:example.org",
@@ -7731,7 +8833,7 @@
           "recent": []
         }
       },
-      "bytes": 360
+      "bytes": 441
     },
     {
       "name": "64 people at most, the rest counted in more",
@@ -7769,7 +8871,7 @@
         "more": 6,
         "recent": 0,
         "lastU": "@p64:example.org",
-        "bytes": 4586
+        "bytes": 4667
       }
     },
     {
@@ -7814,7 +8916,7 @@
         "more": 0,
         "recent": 3,
         "lastU": "@p30xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:example.org",
-        "bytes": 15820
+        "bytes": 15901
       }
     },
     {
@@ -7859,8 +8961,1425 @@
         "more": 12,
         "recent": 0,
         "lastU": "@p52xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:example.org",
-        "bytes": 16232
+        "bytes": 16313
       }
+    },
+    {
+      "name": "party: the block in key order, next cut to 5",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "Never Gonna Give You Up",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": [
+              {
+                "title": "A"
+              },
+              {
+                "title": "B"
+              },
+              {
+                "title": "C"
+              },
+              {
+                "title": "D"
+              },
+              {
+                "title": "E"
+              },
+              {
+                "title": "F"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "Never Gonna Give You Up",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": [
+              {
+                "title": "A"
+              },
+              {
+                "title": "B"
+              },
+              {
+                "title": "C"
+              },
+              {
+                "title": "D"
+              },
+              {
+                "title": "E"
+              }
+            ]
+          }
+        }
+      },
+      "bytes": 1053
+    },
+    {
+      "name": "party: null -> no block",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": null
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "bytes": 810
+    },
+    {
+      "name": "party: wrong types fall back (flags false, ints 0, strings \"\"); a non-ASCII url -> \"\"; pos/dur capped at 86400",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": 1,
+            "host": "yes",
+            "url": "https://x/é",
+            "title": 5,
+            "playing": null,
+            "pos": 90000,
+            "at": -1,
+            "dur": 1.5,
+            "next": [
+              {
+                "title": 1
+              },
+              7,
+              {}
+            ]
+          }
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": false,
+            "host": false,
+            "url": "",
+            "title": "",
+            "playing": false,
+            "pos": 86400,
+            "at": 0,
+            "dur": 0,
+            "next": [
+              {
+                "title": ""
+              },
+              {
+                "title": ""
+              }
+            ]
+          }
+        }
+      },
+      "bytes": 942
+    },
+    {
+      "name": "party: a title cut to 200 code points",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": []
+          }
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": []
+          }
+        }
+      },
+      "bytes": 1761
+    },
+    {
+      "name": "share: true is sent (after away), false is left out",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              },
+              "share": true
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": null
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "share": true,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "bytes": 823
+    },
+    {
+      "name": "share: false is left out",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              },
+              "share": false
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": null
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "bytes": 810
+    },
+    {
+      "name": "party.add outcome: {sid, re, ok} after next",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "Never Gonna Give You Up",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": [
+              {
+                "title": "A"
+              },
+              {
+                "title": "B"
+              },
+              {
+                "title": "C"
+              },
+              {
+                "title": "D"
+              },
+              {
+                "title": "E"
+              },
+              {
+                "title": "F"
+              }
+            ],
+            "add": {
+              "sid": "PhoneSession0001",
+              "re": 7,
+              "ok": false
+            }
+          }
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "Never Gonna Give You Up",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": [
+              {
+                "title": "A"
+              },
+              {
+                "title": "B"
+              },
+              {
+                "title": "C"
+              },
+              {
+                "title": "D"
+              },
+              {
+                "title": "E"
+              }
+            ],
+            "add": {
+              "sid": "PhoneSession0001",
+              "re": 7,
+              "ok": false
+            }
+          }
+        }
+      },
+      "bytes": 1104
+    },
+    {
+      "name": "party.add outcome with a bad sid is left out",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "Never Gonna Give You Up",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": [
+              {
+                "title": "A"
+              },
+              {
+                "title": "B"
+              },
+              {
+                "title": "C"
+              },
+              {
+                "title": "D"
+              },
+              {
+                "title": "E"
+              },
+              {
+                "title": "F"
+              }
+            ],
+            "add": {
+              "sid": "short",
+              "re": 7,
+              "ok": false
+            }
+          }
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ],
+          "party": {
+            "in": true,
+            "host": false,
+            "url": "https://www.youtube.com/watch?v=abc",
+            "title": "Never Gonna Give You Up",
+            "playing": true,
+            "pos": 42,
+            "at": 1761400000000,
+            "dur": 213,
+            "next": [
+              {
+                "title": "A"
+              },
+              {
+                "title": "B"
+              },
+              {
+                "title": "C"
+              },
+              {
+                "title": "D"
+              },
+              {
+                "title": "E"
+              }
+            ]
+          }
+        }
+      },
+      "bytes": 1053
     }
   ],
   "accept": [
@@ -8450,6 +10969,1148 @@
             "rseq": 5
           },
           "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "party: a well-formed block",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=abc",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": []
+              }
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "party: null is fine",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": null
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "party: a missing field -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=abc",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "next": []
+              }
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "party: pos over 86400 -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=abc",
+                "title": "T",
+                "playing": false,
+                "pos": 86401,
+                "at": 0,
+                "dur": 0,
+                "next": []
+              }
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "party: six next -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=abc",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": [
+                  {
+                    "title": "x"
+                  },
+                  {
+                    "title": "x"
+                  },
+                  {
+                    "title": "x"
+                  },
+                  {
+                    "title": "x"
+                  },
+                  {
+                    "title": "x"
+                  },
+                  {
+                    "title": "x"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "party: a title over 200 -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=abc",
+                "title": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": []
+              }
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "party: a non-ASCII url -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://x/é",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": []
+              }
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "party: a string -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": "on"
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "share: a bool is fine",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ],
+                  "share": true
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ]
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "share: not a bool -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ],
+                  "share": 1
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ]
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "party.add outcome: well-formed",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=a",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": [],
+                "add": {
+                  "sid": "PhoneSession0001",
+                  "re": 3,
+                  "ok": true
+                }
+              }
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "party.add outcome: null is fine",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=a",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": [],
+                "add": null
+              }
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "party.add outcome: ok not a bool -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=a",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": [],
+                "add": {
+                  "sid": "PhoneSession0001",
+                  "re": 3,
+                  "ok": 1
+                }
+              }
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "party.add outcome: a bad sid -> bad",
+      "steps": [
+        {
+          "raw": {
+            "v": 1,
+            "sid": "PhoneSession0001",
+            "rseq": 1,
+            "rt": 5000,
+            "re": 0,
+            "ok": true,
+            "why": "",
+            "ops": [
+              "sound.play",
+              "sound.stop",
+              "mic",
+              "deafen",
+              "brb",
+              "vol",
+              "vol.reset",
+              "leave",
+              "sound.play.web",
+              "party.join",
+              "party.play",
+              "party.seek",
+              "party.next",
+              "party.add"
+            ],
+            "call": {
+              "room": "!call:example.org",
+              "gen": "g1",
+              "since": 1000,
+              "me": {
+                "mic": "on",
+                "deaf": false,
+                "brb": false,
+                "talk": false,
+                "sound": null,
+                "gate": {
+                  "allowed": true,
+                  "hint": ""
+                }
+              },
+              "people": [
+                {
+                  "u": "@bob:example.org",
+                  "talk": true,
+                  "micOff": false,
+                  "away": false,
+                  "vol": {
+                    "mic": 0.6
+                  },
+                  "mute": [
+                    "music"
+                  ]
+                }
+              ],
+              "more": 0,
+              "recent": [
+                {
+                  "name": "Bruh",
+                  "url": "https://sounds.example.org/fav.mp3",
+                  "emoji": "😐"
+                }
+              ],
+              "party": {
+                "in": true,
+                "host": true,
+                "url": "https://www.youtube.com/watch?v=a",
+                "title": "T",
+                "playing": false,
+                "pos": 0,
+                "at": 0,
+                "dur": 0,
+                "next": [],
+                "add": {
+                  "sid": "x",
+                  "re": 3,
+                  "ok": true
+                }
+              }
+            }
+          },
+          "expect": "bad"
         }
       ]
     }
@@ -10130,6 +13791,309 @@
       "code": "ended",
       "device": "{device}",
       "expect": "{device} left the call."
+    },
+    {
+      "code": "no-party",
+      "device": "Alice's PC",
+      "expect": "There's no Media Party in this call's room on Alice's PC."
+    },
+    {
+      "code": "not-host",
+      "device": "Alice's PC",
+      "expect": "Only the Media Party host can do that."
+    },
+    {
+      "code": "party-changed",
+      "device": "Alice's PC",
+      "expect": "What's playing on Alice's PC changed — try again."
+    },
+    {
+      "code": "bad-link",
+      "device": "Alice's PC",
+      "expect": "Alice's PC couldn't add that link."
+    },
+    {
+      "code": "old-op",
+      "device": "Alice's PC",
+      "expect": "Update Tin Hat on Alice's PC to use that."
+    }
+  ],
+  "links": [
+    {
+      "name": "a search result",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/bruh.mp3",
+      "expect": true
+    },
+    {
+      "name": "without www",
+      "fn": "webSoundOk",
+      "url": "https://myinstants.com/media/sounds/vine-boom.mp3",
+      "expect": true
+    },
+    {
+      "name": "ogg, dots and dashes in the name",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/a_b-c.1.ogg",
+      "expect": true
+    },
+    {
+      "name": "wav",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/x.wav",
+      "expect": true
+    },
+    {
+      "name": "m4a",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/x.m4a",
+      "expect": true
+    },
+    {
+      "name": "opus",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/x.opus",
+      "expect": true
+    },
+    {
+      "name": "the extension is lower case",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/x.MP3",
+      "expect": false
+    },
+    {
+      "name": "not a sound file",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/x.exe",
+      "expect": false
+    },
+    {
+      "name": "a query",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/x.mp3?a=1",
+      "expect": false
+    },
+    {
+      "name": "a fragment",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/x.mp3#t",
+      "expect": false
+    },
+    {
+      "name": "two dots",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/..mp3",
+      "expect": false
+    },
+    {
+      "name": "a sub path",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/a/b.mp3",
+      "expect": false
+    },
+    {
+      "name": "a percent escape",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/%2e.mp3",
+      "expect": false
+    },
+    {
+      "name": "plain http",
+      "fn": "webSoundOk",
+      "url": "http://www.myinstants.com/media/sounds/x.mp3",
+      "expect": false
+    },
+    {
+      "name": "a port",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com:443/media/sounds/x.mp3",
+      "expect": false
+    },
+    {
+      "name": "user info",
+      "fn": "webSoundOk",
+      "url": "https://u@www.myinstants.com/media/sounds/x.mp3",
+      "expect": false
+    },
+    {
+      "name": "another host",
+      "fn": "webSoundOk",
+      "url": "https://evil.example.org/media/sounds/x.mp3",
+      "expect": false
+    },
+    {
+      "name": "a lookalike host",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com.evil.org/media/sounds/x.mp3",
+      "expect": false
+    },
+    {
+      "name": "a page, not a sound",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/instant/x/",
+      "expect": false
+    },
+    {
+      "name": "relative",
+      "fn": "webSoundOk",
+      "url": "/media/sounds/x.mp3",
+      "expect": false
+    },
+    {
+      "name": "a 201-character name",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.mp3",
+      "expect": false
+    },
+    {
+      "name": "a 200-character name",
+      "fn": "webSoundOk",
+      "url": "https://www.myinstants.com/media/sounds/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.mp3",
+      "expect": true
+    },
+    {
+      "name": "not a string",
+      "fn": "webSoundOk",
+      "url": 5,
+      "expect": false
+    },
+    {
+      "name": "youtube",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "expect": true
+    },
+    {
+      "name": "youtu.be",
+      "fn": "partyLinkOk",
+      "url": "https://youtu.be/dQw4w9WgXcQ",
+      "expect": true
+    },
+    {
+      "name": "youtube music",
+      "fn": "partyLinkOk",
+      "url": "https://music.youtube.com/watch?v=abc",
+      "expect": true
+    },
+    {
+      "name": "mobile youtube",
+      "fn": "partyLinkOk",
+      "url": "https://m.youtube.com/watch?v=abc",
+      "expect": true
+    },
+    {
+      "name": "host case-insensitive",
+      "fn": "partyLinkOk",
+      "url": "https://YouTube.com/watch?v=abc",
+      "expect": true
+    },
+    {
+      "name": "spotify",
+      "fn": "partyLinkOk",
+      "url": "https://open.spotify.com/track/abc",
+      "expect": true
+    },
+    {
+      "name": "apple music",
+      "fn": "partyLinkOk",
+      "url": "https://music.apple.com/us/album/x/1?i=2",
+      "expect": true
+    },
+    {
+      "name": "no path",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com",
+      "expect": true
+    },
+    {
+      "name": "a fragment after the path",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com/watch?v=a#t=10",
+      "expect": true
+    },
+    {
+      "name": "plain http",
+      "fn": "partyLinkOk",
+      "url": "http://www.youtube.com/watch?v=abc",
+      "expect": false
+    },
+    {
+      "name": "a port",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com:443/watch?v=abc",
+      "expect": false
+    },
+    {
+      "name": "user info",
+      "fn": "partyLinkOk",
+      "url": "https://u:p@www.youtube.com/watch",
+      "expect": false
+    },
+    {
+      "name": "a lookalike host",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com.evil.org/watch",
+      "expect": false
+    },
+    {
+      "name": "another host",
+      "fn": "partyLinkOk",
+      "url": "https://evil.org/?u=https://youtube.com/",
+      "expect": false
+    },
+    {
+      "name": "a direct media file",
+      "fn": "partyLinkOk",
+      "url": "https://cdn.example.org/movie.mp4",
+      "expect": false
+    },
+    {
+      "name": "white space",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com/watch?v=a b",
+      "expect": false
+    },
+    {
+      "name": "a backslash",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com/watch\\x",
+      "expect": false
+    },
+    {
+      "name": "non-ASCII",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com/watch?v=é",
+      "expect": false
+    },
+    {
+      "name": "a fragment straight after the host",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com#x",
+      "expect": false
+    },
+    {
+      "name": "2048 characters",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expect": true
+    },
+    {
+      "name": "2049 characters",
+      "fn": "partyLinkOk",
+      "url": "https://www.youtube.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expect": false
+    },
+    {
+      "name": "empty",
+      "fn": "partyLinkOk",
+      "url": "",
+      "expect": false
+    },
+    {
+      "name": "not a string",
+      "fn": "partyLinkOk",
+      "url": null,
+      "expect": false
     }
   ]
 }

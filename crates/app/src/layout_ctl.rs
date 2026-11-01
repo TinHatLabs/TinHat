@@ -174,6 +174,21 @@ pub mod qobject {
         /// QML: layoutCtl.editRemoveButtonIsland(ref) — remove a button island (leaf + options), one step.
         #[qinvokable]
         fn edit_remove_button_island(self: Pin<&mut LayoutController>, island: &QString) -> QString;
+        /// QML: layoutCtl.editNewActionButton(itemJson, look) — Add button (EDITMODE-UI §7.2): a new button island holding
+        /// one action, one step: `{ok, ref}` | `{ok: false, error}` (too-many, bad-item, bad-look).
+        #[qinvokable]
+        fn edit_new_action_button(self: Pin<&mut LayoutController>, item_json: &QString, look: &QString) -> QString;
+        /// QML: layoutCtl.editNewDrawer(ref, icon) — Add drawer (§7.3): the island hidden + its one-button island, one
+        /// step: `{ok, ref}` | `{ok: false, error}` (not-drawer-island, bad-icon, too-many).
+        #[qinvokable]
+        fn edit_new_drawer(self: Pin<&mut LayoutController>, island: &QString, icon: &QString) -> QString;
+        /// QML: layoutCtl.drawerTargets(formJson) — the islands that may go into a drawer (JSON array).
+        #[qinvokable]
+        fn drawer_targets(self: &LayoutController, form_json: &QString) -> QString;
+        /// QML: layoutCtl.drawerForm(formJson, ref, btnJson, hostW, hostH) — the form to render while `ref`'s drawer is
+        /// open (btn and host in layout units): `{ok, form, id}` | `{ok: false, error}`. Never saved.
+        #[qinvokable]
+        fn drawer_form(self: &LayoutController, form_json: &QString, island: &QString, btn_json: &QString, host_w: i32, host_h: i32) -> QString;
         #[qinvokable]
         fn edit_cancel(self: Pin<&mut LayoutController>);
         /// QML: layoutCtl.hiddenRefs(formJson) — the hidden islands in stored order (JSON array).
@@ -487,6 +502,61 @@ impl qobject::LayoutController {
         self.touched();
         QString::from(out.as_str())
     }
+    pub fn edit_new_action_button(mut self: Pin<&mut Self>, item_json: &QString, look: &QString) -> QString {
+        let item = read_json(&item_json.to_string()).unwrap_or(J::Null);
+        let look = look.to_string();
+        let out = match self.as_mut().rust_mut().session.as_mut().filter(|s| !s.closed) {
+            None => step_json(Err("closed".into())),
+            Some(s) => match es::new_action_button(&s.form, &item, &look) {
+                Ok((f, r)) => {
+                    s.commit(&f);
+                    mk(vec![("ok", J::Bool(true)), ("ref", J::s(&r))]).canon()
+                }
+                Err(e) => step_json(Err(e)),
+            },
+        };
+        self.touched();
+        QString::from(out.as_str())
+    }
+    pub fn edit_new_drawer(mut self: Pin<&mut Self>, island: &QString, icon: &QString) -> QString {
+        let (r0, icon) = (island.to_string(), icon.to_string());
+        let out = match self.as_mut().rust_mut().session.as_mut().filter(|s| !s.closed) {
+            None => step_json(Err("closed".into())),
+            Some(s) => match es::new_drawer(&s.form, &r0, &icon) {
+                Ok((f, r)) => {
+                    s.commit(&f);
+                    mk(vec![("ok", J::Bool(true)), ("ref", J::s(&r)), ("island", J::s(&r0))]).canon()
+                }
+                Err(e) => step_json(Err(e)),
+            },
+        };
+        self.touched();
+        QString::from(out.as_str())
+    }
+    pub fn drawer_targets(&self, form_json: &QString) -> QString {
+        let f = form_json.to_string();
+        guarded("drawerTargets", move || {
+            let v = read_json(&f).map(|f| es::drawer_targets(&f)).unwrap_or_default();
+            J::arr(v.iter().map(|s| J::s(s)).collect()).canon()
+        })
+    }
+    pub fn drawer_form(&self, form_json: &QString, island: &QString, btn_json: &QString, host_w: i32, host_h: i32) -> QString {
+        let (f, r, b) = (form_json.to_string(), island.to_string(), btn_json.to_string());
+        guarded("drawerForm", move || {
+            let btn = read_json(&b).map(|v| {
+                // truncated (TypeScript's Math.trunc) and clamped by drawer_form: the web's numbers exactly
+                let n = |k: &str| v.get(k).and_then(|x| x.as_f64()).filter(|x| x.is_finite()).map(|x| x.trunc().clamp(-65536.0, 65536.0) as i64).unwrap_or(0);
+                Rect { x: n("x"), y: n("y"), w: n("w"), h: n("h") }
+            });
+            match (read_json(&f).filter(J::is_obj), btn) {
+                (Some(form), Some(btn)) => match es::drawer_form(&form, &r, btn, host_w as i64, host_h as i64) {
+                    Ok((form, id)) => mk(vec![("ok", J::Bool(true)), ("form", form), ("id", J::s(&id))]).canon(),
+                    Err(e) => step_json(Err(e)),
+                },
+                _ => step_json(Err("bad-op: bad request".into())),
+            }
+        })
+    }
     pub fn edit_remove_button_island(self: Pin<&mut Self>, island: &QString) -> QString {
         let r = island.to_string();
         self.with_session(move |s| match es::remove_button_island_from(&s.form, &r) {
@@ -589,5 +659,24 @@ mod tests {
         assert_eq!(migrate(&q(r#"{"prefs":{"nav_mode":"corner"}}"#)).to_string(), r#"{"view":{"forceCollapse":["navcol"]}}"#);
         // an argument that is not JSON data
         assert_eq!(parse(&solve(&q("garbage"), &q(""))).get("ok").map(|o| o.is_true()), Some(false));
+    }
+}
+
+#[cfg(test)]
+mod drawer_button_island_wiring {
+    //! assembly-042 review: a button island tucked into a drawer is hidden, so the placed-islands Repeater has no
+    //! delegate for it; Main.qml gives the open drawer's button island its own delegate (the web's Shell renders the
+    //! drawer form's islands). Wiring test: the second Repeater exists, keyed on the open drawer, sharing the delegate.
+    #[test]
+    fn the_open_drawers_button_island_gets_a_delegate() {
+        let main = include_str!("../qml/Main.qml");
+        let placed = main.find("model: layoutStoreObj.buttonIslands\n").expect("the placed button islands' Repeater");
+        let drawer = main
+            .find(r#"model: (root.drawerRef.indexOf("buttons:") === 0 && layoutStoreObj.buttonIslands.indexOf(root.drawerRef) < 0)"#)
+            .expect("the open drawer's button island Repeater");
+        assert!(drawer > placed);
+        assert_eq!(main.matches("delegate: buttonIslandDelegate").count(), 2, "both Repeaters share one delegate");
+        let comp = main.find("id: buttonIslandDelegate").expect("the shared delegate");
+        assert!(main[comp..].contains("ButtonsIsland {"), "the delegate draws the island's buttons");
     }
 }

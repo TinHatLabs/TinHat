@@ -359,6 +359,11 @@ impl qobject::SoundboardController {
             if !crate::call_ctl::in_active_call().await {
                 return; // left the call meanwhile
             }
+            if crate::call_ctl::watch_refuses() {
+                eprintln!("[soundboard] playSound: watching — nothing is published until Talk here");
+                let _ = qt.queue(|mut o| o.as_mut().set_error(QString::from(crate::call_ctl::WATCH_HINT)));
+                return;
+            }
             if let Err(e) = tinhat_streamer::play_url_in_call(&url).await {
                 eprintln!("[soundboard] playSound (call publish) failed: {e}");
                 let _ = qt.queue(|mut o| {

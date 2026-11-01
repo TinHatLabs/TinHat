@@ -28,3 +28,8 @@ webrtc-sys = { path = "vendor/webrtc-sys" }
 # travel to other build machines: the Windows VM compiled without nvenc_av1_available
 # and produced a chimera build: new Rust, old C++). Carries: nvenc_av1_available() passthrough.
 libwebrtc = { path = "vendor/libwebrtc" }
+# Vendored webrtc-sys-build 0.3.18 (crates.io file, checksum 7d46da6b…) for one change: zip 0.6.6 -> 9.0.5 (the 2026-10-31
+# Dependabot zip advisories; 0.6 has no fixed release) and an extraction that refuses unsafe entries
+# (vendor/webrtc-sys-build/src/lib.rs, search "PATCH (Tin Hat"). Build-time only: it unpacks LiveKit's prebuilt
+# libwebrtc when LK_CUSTOM_WEBRTC is unset; release builds set it and never call that code.
+webrtc-sys-build = { path = "vendor/webrtc-sys-build" }

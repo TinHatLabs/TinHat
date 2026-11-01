@@ -35,6 +35,7 @@
 //! | [`shape`] | `shape.ts` | a theme's `shape` block: island radius, gap, margin, border (step 1b) |
 //! | [`sync`] | `sync.ts` | THEMES-SYNC.md: `dev.tinhat.theme` / `dev.tinhat.themes` — read, save, merge, the device protocol |
 //! | [`editor`] | `editor.ts` | THEMES-UI.md §13: the theme editor — edits, history, readability, save / export |
+//! | [`palette`] | `palette.ts` | the theme editor's Simple palette: groups, swatches, what follows them; the `swatch` / `group` edits |
 //! | [`look`] | `look.ts` | ENGINE.md §10: the look beyond colours — island shadow, density, fonts, text size |
 //! | [`share`] | `share.ts` | THEMES-UI.md §14: theme share cards — the message, reading one back, Keep |
 //! | [`probe`] | `probe.ts` | THEMES-UI.md §15: the Pick tool's probe colours and the Pick list |
@@ -66,6 +67,7 @@ pub mod literal;
 pub mod look;
 pub mod maths;
 pub mod ops;
+pub mod palette;
 mod parsers;
 pub mod probe;
 pub mod recent;

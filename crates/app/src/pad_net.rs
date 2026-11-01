@@ -431,6 +431,7 @@ impl PadNode {
                     names.entry(u).or_insert(ne);
                 }
             }
+            rx.set_watching(crate::call_ctl::watching_now()); // Pad QOL: a watching device is never a receiver
             let (v, outs) = rx.on_cmd(content, &facts, &favs, rs, now_ms());
             self.dispatch_named(outs, &names); // under the lock: the states leave in rseq order
             v

@@ -13920,6 +13920,214 @@
         "typing": true
       },
       "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Ctrl+Shift+M"
+      },
+      "name": "layout.drawer.toggle Ctrl+Shift+M"
+    },
+    {
+      "expect": {
+        "key": "F9",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "F9"
+      },
+      "name": "layout.drawer.toggle F9"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Ctrl"
+      },
+      "name": "layout.drawer.toggle Ctrl"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Alt"
+      },
+      "name": "layout.drawer.toggle Alt"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+J",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Ctrl+J"
+      },
+      "name": "layout.drawer.toggle Ctrl+J"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "K"
+      },
+      "name": "layout.drawer.toggle K"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Shift+K"
+      },
+      "name": "layout.drawer.toggle Shift+K"
+    },
+    {
+      "expect": {
+        "error": "reserved",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Escape"
+      },
+      "name": "layout.drawer.toggle Escape"
+    },
+    {
+      "expect": {
+        "error": "browser-reserved",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Ctrl+T"
+      },
+      "name": "layout.drawer.toggle Ctrl+T"
+    },
+    {
+      "expect": {
+        "error": "fixed-taken",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Ctrl+V"
+      },
+      "name": "layout.drawer.toggle Ctrl+V"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Return"
+      },
+      "name": "layout.drawer.toggle Return"
+    },
+    {
+      "expect": {
+        "key": "Alt+Shift+Down",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Alt+Shift+Down"
+      },
+      "name": "layout.drawer.toggle Alt+Shift+Down"
+    },
+    {
+      "expect": {
+        "key": "Meta+1",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Meta+1"
+      },
+      "name": "layout.drawer.toggle Meta+1"
+    },
+    {
+      "expect": {
+        "key": "F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "F5"
+      },
+      "name": "layout.drawer.toggle F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Ctrl+F5"
+      },
+      "name": "layout.drawer.toggle Ctrl+F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+P",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "web",
+        "key": "Ctrl+P"
+      },
+      "name": "layout.drawer.toggle Ctrl+P"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+Shift+M",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
         "action": "layout.edit",
         "app": "web",
         "key": "Ctrl+Shift+M"

@@ -3998,6 +3998,636 @@
         "typing": true
       },
       "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Ctrl+Shift+M"
+      },
+      "name": "app.zoom.in Ctrl+Shift+M"
+    },
+    {
+      "expect": {
+        "key": "F9",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "F9"
+      },
+      "name": "app.zoom.in F9"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Ctrl"
+      },
+      "name": "app.zoom.in Ctrl"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Alt"
+      },
+      "name": "app.zoom.in Alt"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+J",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Ctrl+J"
+      },
+      "name": "app.zoom.in Ctrl+J"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "K"
+      },
+      "name": "app.zoom.in K"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Shift+K"
+      },
+      "name": "app.zoom.in Shift+K"
+    },
+    {
+      "expect": {
+        "error": "reserved",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Escape"
+      },
+      "name": "app.zoom.in Escape"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+T",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Ctrl+T"
+      },
+      "name": "app.zoom.in Ctrl+T"
+    },
+    {
+      "expect": {
+        "error": "fixed-taken",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Ctrl+V"
+      },
+      "name": "app.zoom.in Ctrl+V"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Return"
+      },
+      "name": "app.zoom.in Return"
+    },
+    {
+      "expect": {
+        "key": "Alt+Shift+Down",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Alt+Shift+Down"
+      },
+      "name": "app.zoom.in Alt+Shift+Down"
+    },
+    {
+      "expect": {
+        "key": "Meta+1",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Meta+1"
+      },
+      "name": "app.zoom.in Meta+1"
+    },
+    {
+      "expect": {
+        "key": "F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "F5"
+      },
+      "name": "app.zoom.in F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Ctrl+F5"
+      },
+      "name": "app.zoom.in Ctrl+F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+P",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.in",
+        "app": "desktop",
+        "key": "Ctrl+P"
+      },
+      "name": "app.zoom.in Ctrl+P"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+Shift+M",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Ctrl+Shift+M"
+      },
+      "name": "app.zoom.out Ctrl+Shift+M"
+    },
+    {
+      "expect": {
+        "key": "F9",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "F9"
+      },
+      "name": "app.zoom.out F9"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Ctrl"
+      },
+      "name": "app.zoom.out Ctrl"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Alt"
+      },
+      "name": "app.zoom.out Alt"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+J",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Ctrl+J"
+      },
+      "name": "app.zoom.out Ctrl+J"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "K"
+      },
+      "name": "app.zoom.out K"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Shift+K"
+      },
+      "name": "app.zoom.out Shift+K"
+    },
+    {
+      "expect": {
+        "error": "reserved",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Escape"
+      },
+      "name": "app.zoom.out Escape"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+T",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Ctrl+T"
+      },
+      "name": "app.zoom.out Ctrl+T"
+    },
+    {
+      "expect": {
+        "error": "fixed-taken",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Ctrl+V"
+      },
+      "name": "app.zoom.out Ctrl+V"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Return"
+      },
+      "name": "app.zoom.out Return"
+    },
+    {
+      "expect": {
+        "key": "Alt+Shift+Down",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Alt+Shift+Down"
+      },
+      "name": "app.zoom.out Alt+Shift+Down"
+    },
+    {
+      "expect": {
+        "key": "Meta+1",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Meta+1"
+      },
+      "name": "app.zoom.out Meta+1"
+    },
+    {
+      "expect": {
+        "key": "F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "F5"
+      },
+      "name": "app.zoom.out F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Ctrl+F5"
+      },
+      "name": "app.zoom.out Ctrl+F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+P",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.out",
+        "app": "desktop",
+        "key": "Ctrl+P"
+      },
+      "name": "app.zoom.out Ctrl+P"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+Shift+M",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Ctrl+Shift+M"
+      },
+      "name": "app.zoom.reset Ctrl+Shift+M"
+    },
+    {
+      "expect": {
+        "key": "F9",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "F9"
+      },
+      "name": "app.zoom.reset F9"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Ctrl"
+      },
+      "name": "app.zoom.reset Ctrl"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Alt"
+      },
+      "name": "app.zoom.reset Alt"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+J",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Ctrl+J"
+      },
+      "name": "app.zoom.reset Ctrl+J"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "K"
+      },
+      "name": "app.zoom.reset K"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Shift+K"
+      },
+      "name": "app.zoom.reset Shift+K"
+    },
+    {
+      "expect": {
+        "error": "reserved",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Escape"
+      },
+      "name": "app.zoom.reset Escape"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+T",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Ctrl+T"
+      },
+      "name": "app.zoom.reset Ctrl+T"
+    },
+    {
+      "expect": {
+        "error": "fixed-taken",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Ctrl+V"
+      },
+      "name": "app.zoom.reset Ctrl+V"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Return"
+      },
+      "name": "app.zoom.reset Return"
+    },
+    {
+      "expect": {
+        "key": "Alt+Shift+Down",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Alt+Shift+Down"
+      },
+      "name": "app.zoom.reset Alt+Shift+Down"
+    },
+    {
+      "expect": {
+        "key": "Meta+1",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Meta+1"
+      },
+      "name": "app.zoom.reset Meta+1"
+    },
+    {
+      "expect": {
+        "key": "F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "F5"
+      },
+      "name": "app.zoom.reset F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Ctrl+F5"
+      },
+      "name": "app.zoom.reset Ctrl+F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+P",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "app.zoom.reset",
+        "app": "desktop",
+        "key": "Ctrl+P"
+      },
+      "name": "app.zoom.reset Ctrl+P"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+Shift+M",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
         "action": "calendar.event.new",
         "app": "desktop",
         "key": "Ctrl+Shift+M"
@@ -14041,6 +14671,216 @@
         "key": "Ctrl+P"
       },
       "name": "dm.new Ctrl+P"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+Shift+M",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Ctrl+Shift+M"
+      },
+      "name": "layout.drawer.toggle Ctrl+Shift+M"
+    },
+    {
+      "expect": {
+        "key": "F9",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "F9"
+      },
+      "name": "layout.drawer.toggle F9"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Ctrl"
+      },
+      "name": "layout.drawer.toggle Ctrl"
+    },
+    {
+      "expect": {
+        "error": "hold-only",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Alt"
+      },
+      "name": "layout.drawer.toggle Alt"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+J",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Ctrl+J"
+      },
+      "name": "layout.drawer.toggle Ctrl+J"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "K"
+      },
+      "name": "layout.drawer.toggle K"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Shift+K"
+      },
+      "name": "layout.drawer.toggle Shift+K"
+    },
+    {
+      "expect": {
+        "error": "reserved",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Escape"
+      },
+      "name": "layout.drawer.toggle Escape"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+T",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Ctrl+T"
+      },
+      "name": "layout.drawer.toggle Ctrl+T"
+    },
+    {
+      "expect": {
+        "error": "fixed-taken",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Ctrl+V"
+      },
+      "name": "layout.drawer.toggle Ctrl+V"
+    },
+    {
+      "expect": {
+        "error": "needs-modifier",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Return"
+      },
+      "name": "layout.drawer.toggle Return"
+    },
+    {
+      "expect": {
+        "key": "Alt+Shift+Down",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Alt+Shift+Down"
+      },
+      "name": "layout.drawer.toggle Alt+Shift+Down"
+    },
+    {
+      "expect": {
+        "key": "Meta+1",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Meta+1"
+      },
+      "name": "layout.drawer.toggle Meta+1"
+    },
+    {
+      "expect": {
+        "key": "F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "F5"
+      },
+      "name": "layout.drawer.toggle F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+F5",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Ctrl+F5"
+      },
+      "name": "layout.drawer.toggle Ctrl+F5"
+    },
+    {
+      "expect": {
+        "key": "Ctrl+P",
+        "ok": true,
+        "scope": "app",
+        "typing": true
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "app": "desktop",
+        "key": "Ctrl+P"
+      },
+      "name": "layout.drawer.toggle Ctrl+P"
     },
     {
       "expect": {

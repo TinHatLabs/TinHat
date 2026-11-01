@@ -616,6 +616,105 @@
     },
     {
       "apps": [
+        "desktop"
+      ],
+      "group": "app",
+      "icon": "zoom-in-symbolic",
+      "id": "app.zoom.in",
+      "keywords": [
+        "zoom",
+        "scale",
+        "size",
+        "ui scale",
+        "interface size",
+        "text size",
+        "bigger",
+        "larger",
+        "zoom in"
+      ],
+      "label": "Make everything bigger",
+      "notes": "Desktop only (2026-10-31, App size): the app's own size, 70–200 % in 10 % steps, this device only (Settings → Appearance → Size; the desktop's docs/UI-ZOOM.md). Tin Hat Web leaves these keys to the browser, whose zoom is the same feature (web docs/WEB-EXCEPTIONS.md); they are in webKeys.browser.",
+      "shortLabel": "Bigger",
+      "shortcut": [
+        {
+          "keys": [
+            "Ctrl+=",
+            "Ctrl++"
+          ],
+          "scope": "app",
+          "typing": true
+        }
+      ],
+      "since": "11.0",
+      "tip": "Make everything bigger (App size, this device)"
+    },
+    {
+      "apps": [
+        "desktop"
+      ],
+      "group": "app",
+      "icon": "zoom-out-symbolic",
+      "id": "app.zoom.out",
+      "keywords": [
+        "zoom",
+        "scale",
+        "size",
+        "ui scale",
+        "interface size",
+        "text size",
+        "smaller",
+        "zoom out"
+      ],
+      "label": "Make everything smaller",
+      "notes": "Desktop only (2026-10-31, App size): the app's own size, 70–200 % in 10 % steps, this device only (Settings → Appearance → Size; the desktop's docs/UI-ZOOM.md). Tin Hat Web leaves these keys to the browser, whose zoom is the same feature (web docs/WEB-EXCEPTIONS.md); they are in webKeys.browser.",
+      "shortLabel": "Smaller",
+      "shortcut": [
+        {
+          "keys": [
+            "Ctrl+-"
+          ],
+          "scope": "app",
+          "typing": true
+        }
+      ],
+      "since": "11.0",
+      "tip": "Make everything smaller (App size, this device)"
+    },
+    {
+      "apps": [
+        "desktop"
+      ],
+      "group": "app",
+      "icon": "zoom-original-symbolic",
+      "id": "app.zoom.reset",
+      "keywords": [
+        "zoom",
+        "scale",
+        "size",
+        "ui scale",
+        "interface size",
+        "text size",
+        "reset zoom",
+        "actual size",
+        "100"
+      ],
+      "label": "Reset the app size",
+      "notes": "Desktop only (2026-10-31, App size): the app's own size, 70–200 % in 10 % steps, this device only (Settings → Appearance → Size; the desktop's docs/UI-ZOOM.md). Tin Hat Web leaves these keys to the browser, whose zoom is the same feature (web docs/WEB-EXCEPTIONS.md); they are in webKeys.browser.",
+      "shortLabel": "Reset size",
+      "shortcut": [
+        {
+          "keys": [
+            "Ctrl+0"
+          ],
+          "scope": "app",
+          "typing": true
+        }
+      ],
+      "since": "11.0",
+      "tip": "Back to 100 % (App size, this device)"
+    },
+    {
+      "apps": [
         "desktop",
         "web"
       ],
@@ -2833,6 +2932,84 @@
           }
         }
       ]
+    },
+    {
+      "apps": [
+        "desktop",
+        "web"
+      ],
+      "group": "you",
+      "icon": "sidebar-expand-left-symbolic",
+      "id": "layout.drawer.toggle",
+      "keywords": [
+        "drawer",
+        "panel",
+        "tuck away",
+        "island"
+      ],
+      "label": "Open a drawer",
+      "notes": "Edit mode's Add drawer places it (EDITMODE-UI.md §7.3): a button that opens one of your hidden islands in a drawer under it, like the room header's Room info icon. The target names the island (a button without one opens nothing: absent none, no host picker); the icon param picks the button's icon. Hosts render the open drawer by solving drawerForm(form, island, the button's rect) (layout session, both apps). Not in the palette: the button is the drawer.",
+      "palette": false,
+      "since": "11.0",
+      "target": {
+        "absent": "none",
+        "kind": "island",
+        "params": {
+          "icon": {
+            "icons": {
+              "calendar": "view-calendar-symbolic",
+              "chat": "dialog-messages-symbolic",
+              "drawer": "sidebar-expand-left-symbolic",
+              "games": "applications-games-symbolic",
+              "grid": "view-grid-symbolic",
+              "info": "documentinfo-symbolic",
+              "music": "emblem-music-symbolic",
+              "people": "system-users-symbolic",
+              "pin": "pin-symbolic",
+              "star": "starred-symbolic"
+            },
+            "labels": {
+              "calendar": "Calendar",
+              "chat": "Chat",
+              "drawer": "Drawer",
+              "games": "Games",
+              "grid": "Grid",
+              "info": "Info",
+              "music": "Music",
+              "people": "People",
+              "pin": "Pin",
+              "star": "Star"
+            },
+            "type": "enum",
+            "values": [
+              "calendar",
+              "chat",
+              "drawer",
+              "games",
+              "grid",
+              "info",
+              "music",
+              "people",
+              "pin",
+              "star"
+            ]
+          }
+        }
+      },
+      "targetFace": {
+        "label": "{name}",
+        "tip": "Open {name}"
+      },
+      "tip": "Open a drawer",
+      "toggle": {
+        "activeWhen": {
+          "subject": true
+        },
+        "on": {
+          "tip": "Close {name}"
+        },
+        "state": "layout.drawerOpen"
+      }
     },
     {
       "apps": [
@@ -8640,6 +8817,11 @@
         "no"
       ]
     },
+    "layout.drawerOpen": {
+      "doc": "The island whose drawer is open (its ref), or none.",
+      "scope": "global",
+      "type": "text"
+    },
     "memories.synced": {
       "doc": "The Memories player is synced with the call.",
       "scope": "global",
@@ -9035,6 +9217,16 @@
       "stored": false,
       "subject": "inviteCode"
     },
+    "island": {
+      "doc": "An island of your layout, by ref (a drawer's content).",
+      "fallbackName": "this island",
+      "key": "island",
+      "picker": "islands",
+      "portable": true,
+      "stored": true,
+      "subject": "island",
+      "value": "islandRef"
+    },
     "message": {
       "doc": "A timeline event (from the context).",
       "fallbackName": "this message",
@@ -9157,6 +9349,13 @@
     },
     "enum": {
       "doc": "One of the action's own target.values."
+    },
+    "islandRef": {
+      "charset": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:",
+      "doc": "An island of the layout, by ref (LAYOUT.md §2.2: a kind, then ':' and an instance for a multi kind: rooms, buttons:b1).",
+      "max": 37,
+      "min": 1,
+      "token": true
     },
     "railSpace": {
       "doc": "home, favourites, people, orphans — or a space's room id.",

@@ -75,6 +75,23 @@ fn check_bench_aec() {
     }
 }
 
+/// App size (2026-10-31, docs/UI-ZOOM.md): Qt's private include dirs were not found, so ui_scale_bridge.cpp builds its
+/// restart-only path. Fine for a lab build (a warning); a RELEASE (`TINHAT_RELEASE_BUILD=1`) stops here unless
+/// `TINHAT_NO_QT_PRIVATE=1` says it is wanted — a release that is quietly restart-only must be impossible (launch-gate).
+fn qt_private_missing(where_: &str) {
+    let release = std::env::var("TINHAT_RELEASE_BUILD").map(|v| v.trim() == "1").unwrap_or(false);
+    let on_purpose = std::env::var_os("TINHAT_NO_QT_PRIVATE").is_some();
+    if release && !on_purpose {
+        panic!(
+            "TINHAT_RELEASE_BUILD=1 without Qt's private include dirs ({where_}): App size would only change at a restart. \
+             Install this Qt's private headers, or set TINHAT_NO_QT_PRIVATE=1 to ship the restart-only path on purpose (docs/UI-ZOOM.md)"
+        );
+    }
+    println!(
+        "cargo:warning=App size: Qt's private include dirs not found ({where_}) — this build changes the size only at the next start (docs/UI-ZOOM.md)"
+    );
+}
+
 fn main() {
     check_update_trust_config();
     check_call_host_lab();
@@ -148,6 +165,7 @@ fn main() {
                 "qml/ThemeShareCard.qml",
                 "qml/ThemeShareButton.qml",
                 "qml/ThemeTryBar.qml",
+                "qml/ZoomToast.qml", // 2026-10-31 App size (docs/UI-ZOOM.md)
                 "qml/ThemeEditorGallery.qml",
                 "qml/ThemeImportDialog.qml",
                 "qml/ThemeDropOverlay.qml",
@@ -375,6 +393,7 @@ fn main() {
         .file("src/webengine_bridge.cpp") // QtWebEngineQuick::initialize() shim (inline embeds)
         .file("src/clipboard_bridge.cpp") // Ctrl+V attachments: clipboard image/files (9.3.2)
         .file("src/theme_bridge.cpp") // 11.0 step 5: the theme editor review harness's window grab
+        .file("src/ui_scale_bridge.cpp") // 2026-10-31 App size: Qt's scale factor at run time (docs/UI-ZOOM.md)
         .std("c++17")
         .flag_if_supported("-fPIC"); // no-op on MSVC
     // Same MSVC narrow-literal hazard as the QML units above: keep the shim's
@@ -397,6 +416,34 @@ fn main() {
             for inc in &lib.include_paths {
                 build.include(inc);
             }
+        }
+        // App size (ui_scale_bridge.cpp, docs/UI-ZOOM.md): Qt's private include dirs of THIS Qt version, for
+        // qpa/qplatformwindow.h (<QtGui|QtCore>/<version> and …/<version>/QtGui). Missing dirs are fine: the bridge
+        // then builds its restart-only path (__has_include).
+        let mut qt_private: Vec<(String, std::path::PathBuf)> = Vec::new();
+        // TINHAT_NO_QT_PRIVATE=1: build without them on purpose (the restart-only path's own test)
+        let qt_private_pkgs: &[&str] = if std::env::var_os("TINHAT_NO_QT_PRIVATE").is_some() { &[] } else { &["Qt6Gui", "Qt6Core"] };
+        for pkg in qt_private_pkgs.iter().copied() {
+            if let Ok(lib) = pkg_config::Config::new().cargo_metadata(false).probe(pkg) {
+                for inc in &lib.include_paths {
+                    let module = inc.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    if module == "QtGui" || module == "QtCore" {
+                        let v = inc.join(&lib.version);
+                        if v.is_dir() && !qt_private.iter().any(|(m, _)| m == module) {
+                            qt_private.push((module.to_string(), v));
+                        }
+                    }
+                }
+            }
+        }
+        // both or none: qplatformwindow.h needs QtCore's private headers too (one alone would fail the compile)
+        if qt_private.len() == 2 {
+            for (module, v) in &qt_private {
+                build.include(v);
+                build.include(v.join(module));
+            }
+        } else {
+            qt_private_missing(if qt_private_pkgs.is_empty() { "TINHAT_NO_QT_PRIVATE=1" } else { "pkg-config Qt6Gui / Qt6Core" });
         }
         // KF6 KColorScheme (for full-app theming via KColorSchemeManager) ships no
         // pkg-config file here, so add its include dirs + link libs manually.
@@ -459,6 +506,20 @@ fn main() {
         build.include(&qt_headers);
         for m in ["QtCore", "QtGui", "QtQml", "QtQuick", "QtWebEngineQuick", "QtMultimedia", "QtQuickControls2"] {
             build.include(format!("{qt_headers}/{m}"));
+        }
+        // App size (ui_scale_bridge.cpp, docs/UI-ZOOM.md): this Qt's private include dirs for qpa/qplatformwindow.h
+        // (the Qt installer ships them; without them the bridge builds its restart-only path)
+        let qt_version = q("QT_VERSION");
+        // TINHAT_NO_QT_PRIVATE=1: build without them on purpose (the restart-only path's own test); both or none
+        let qt_private: Vec<std::path::PathBuf> =
+            ["QtGui", "QtCore"].iter().map(|m| std::path::Path::new(&qt_headers).join(m).join(&qt_version)).collect();
+        if std::env::var_os("TINHAT_NO_QT_PRIVATE").is_none() && qt_private.iter().all(|v| v.is_dir()) {
+            for (v, m) in qt_private.iter().zip(["QtGui", "QtCore"]) {
+                build.include(v);
+                build.include(v.join(m));
+            }
+        } else {
+            qt_private_missing(&format!("{qt_headers}/QtGui|QtCore/{qt_version}"));
         }
         // 2b) MpvQt (watch-party) — bare-metal port: source-built MSVC MpvQt in the
         //     Kirigami prefix (C:\kde\install, override via TINHAT_MPVQT_PREFIX). When
@@ -527,4 +588,6 @@ fn main() {
     println!("cargo:rerun-if-changed=src/webengine_bridge.cpp");
     println!("cargo:rerun-if-changed=src/clipboard_bridge.cpp");
     println!("cargo:rerun-if-changed=src/theme_bridge.cpp");
+    println!("cargo:rerun-if-changed=src/ui_scale_bridge.cpp");
+    println!("cargo:rerun-if-env-changed=TINHAT_NO_QT_PRIVATE");
 }

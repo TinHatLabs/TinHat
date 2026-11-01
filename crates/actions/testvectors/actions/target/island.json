@@ -1,0 +1,257 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {}
+      },
+      "name": "layout.drawer.toggle: the known subject"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {}
+      },
+      "name": "layout.drawer.toggle: an invalid value"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "island",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "island": 7
+        }
+      },
+      "name": "layout.drawer.toggle: a number"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "calendar"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "calendar"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=calendar"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "chat"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "chat"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=chat"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "drawer"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "drawer"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=drawer"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "games"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "games"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=games"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "grid"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "grid"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=grid"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "info"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "info"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=info"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "music"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "music"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=music"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "people"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "people"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=people"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "pin"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "pin"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=pin"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {
+          "icon": "star"
+        }
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "star"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon=star"
+    },
+    {
+      "expect": {
+        "error": "bad-value",
+        "key": "icon",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "icon": "zz"
+        }
+      },
+      "name": "layout.drawer.toggle: param icon invalid"
+    },
+    {
+      "expect": {
+        "error": "unknown-key",
+        "key": "zzz",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "layout.drawer.toggle: an unknown key"
+    },
+    {
+      "expect": {
+        "error": "too-many-keys",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": {
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
+        }
+      },
+      "name": "layout.drawer.toggle: too many keys"
+    },
+    {
+      "expect": {
+        "error": "not-object",
+        "ok": false
+      },
+      "input": {
+        "action": "layout.drawer.toggle",
+        "target": "x"
+      },
+      "name": "layout.drawer.toggle: not an object"
+    },
+    {
+      "expect": {
+        "ok": true,
+        "target": {}
+      },
+      "input": {
+        "action": "layout.drawer.toggle"
+      },
+      "name": "layout.drawer.toggle: no target"
+    }
+  ],
+  "kind": "target"
+}
