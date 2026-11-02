@@ -61,6 +61,7 @@ Kirigami.ApplicationWindow {
         spacing: 0
         visible: (bootctl.safeMode && !safeModeBanner.dismissed)
                  || (root.mLoggedIn && ((!root.mVerified && !login.firstDevicePending && !root.mGuestAccount) || login.syncDown || root.mUpdateAvailable || root.mUpdateDownloading || root.mUpdateReady))
+                 || root.uiScalePending
         height: visible ? implicitHeight : 0
         // Safe mode (0.8.25, boot.rs): this start runs with software rendering because the
         // previous one never reached the main window. Say so; OK = normal mode next start.
@@ -172,6 +173,42 @@ Kirigami.ApplicationWindow {
             actions: [
                 Kirigami.Action { text: "Restore mine"; onTriggered: layoutStoreObj.resolveConflict(true) },
                 Kirigami.Action { text: "Dismiss"; onTriggered: layoutStoreObj.resolveConflict(false) }
+            ]
+        }
+
+        // 2026-11-01 App size where it can't change live (Wayland — docs/UI-ZOOM.md "Where it changes live"): the size
+        // waits for a restart; Restart now goes through the updater's own restart (updater.restart(): the Flatpak
+        // relaunches through the portal, a binary re-execs itself; session and data are kept as after every update).
+        // Never mid-call: in a call it offers "Restart after the call" and restarts once the call is over.
+        Kirigami.InlineMessage {
+            id: uiScaleRestartBanner
+            Layout.fillWidth: true
+            Layout.leftMargin: root.bannerMargin
+            Layout.rightMargin: root.bannerMargin
+            Layout.topMargin: root.bannerMargin
+            Layout.bottomMargin: root.flatLayout ? Kirigami.Units.smallSpacing : 0
+            visible: root.uiScalePending
+            type: Kirigami.MessageType.Information
+            text: LinkGate.plain(root.uiScaleRestartAfterCall
+                ? ("App size " + root.uiScale + "%: Tin Hat restarts when this call ends.")
+                : ("App size " + root.uiScale + "% applies when Tin Hat restarts."
+                   + (root.uiScaleCallUp ? " Restarting now would end your call." : "")))
+            actions: [
+                Kirigami.Action {
+                    text: "Restart now"
+                    visible: !root.uiScaleCallUp
+                    onTriggered: { console.log("[ui-scale] restart now for " + root.uiScale + "%"); updater.restart() }
+                },
+                Kirigami.Action {
+                    text: "Restart after the call"
+                    visible: root.uiScaleCallUp && !root.uiScaleRestartAfterCall
+                    onTriggered: { root.uiScaleRestartAfterCall = true; console.log("[ui-scale] restart after the call") }
+                },
+                Kirigami.Action {
+                    text: "Don't restart"
+                    visible: root.uiScaleRestartAfterCall
+                    onTriggered: root.uiScaleRestartAfterCall = false
+                }
             ]
         }
 
@@ -702,6 +739,23 @@ Kirigami.ApplicationWindow {
     property int uiScale: settings.uiScalePercent()
     readonly property bool uiScaleLiveCapable: settings.uiScaleLiveCapable()   // false: a restart-only build (Settings says so)
     property bool uiScalePending: settings.uiScalePending(uiScale)   // true: this Qt can't change it live, it applies at the next start
+    // "Restart after the call" (the banner above): restart once the call is over, only while the size still waits
+    property bool uiScaleRestartAfterCall: false
+    // any call state counts (joined, joining, the call layer's own flag, or a failed call still on screen): a restart is
+    // never offered as "now" while one of them is up (lab 2026-11-01: a call whose mic failed showed "In call" with
+    // mInCall false)
+    readonly property bool uiScaleCallUp: root.mInCall || root.mConnecting || root.mCallFailed || (callctl ? callctl.inCall === true : false)
+    onUiScalePendingChanged: if (!uiScalePending) uiScaleRestartAfterCall = false
+    Timer {
+        // a beat after the call ends (the leave is sent and the chime has played), and only if nothing rejoined
+        interval: 1500
+        running: root.uiScaleRestartAfterCall && root.uiScalePending && !root.uiScaleCallUp
+        onTriggered: {
+            // disarm first: if the restart is refused or fails, the banner must not keep promising one
+            root.uiScaleRestartAfterCall = false
+            console.log("[ui-scale] the call ended: restarting for " + root.uiScale + "%"); updater.restart()
+        }
+    }
     function setUiScale(p) {
         var n = settings.uiScaleNormalize(p)
         if (n === root.uiScale) return

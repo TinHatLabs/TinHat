@@ -29,6 +29,8 @@
 #include <QWindow>
 #include <QtGlobal>
 
+#include <cstring>
+
 #if __has_include(<qpa/qplatformwindow.h>)
 #include <qpa/qplatformwindow.h>
 #define TINHAT_UI_SCALE_QPA 1
@@ -121,20 +123,47 @@ void applyNow(double factor) {
 
 extern "C" {
 
+int tinhat_ui_scale_apply(double factor);
+
 // Before QGuiApplication. `force_restart`: TINHAT_UI_SCALE_RESTART=1 (the size changes only at a start). When the live
 // path is missing (or forced off) and the stored size is not 100 %, Qt gets it through QT_SCALE_FACTOR (qputenv: Qt's
 // own CRT, so Windows' static-CRT exe can't lose it — see tinhat_force_quick_style). An environment that already sets
 // QT_SCALE_FACTOR keeps it, multiplied.
+// 2026-11-01 (Restart now re-execs a binary with this process's environment): the QT_SCALE_FACTOR the person's
+// environment had is kept in TINHAT_UI_SCALE_ENV_ORIG ("-" = none) the first time we change it, and put back first
+// thing at every start, so a size is never multiplied by the previous run's size (0.9 × 0.8 …).
 void tinhat_ui_scale_preinit(double factor, int force_restart) {
     g_restartOnly = force_restart != 0;
+    if (qEnvironmentVariableIsSet("TINHAT_UI_SCALE_ENV_ORIG")) {
+        const QByteArray orig = qgetenv("TINHAT_UI_SCALE_ENV_ORIG");
+        if (orig == "-") qunsetenv("QT_SCALE_FACTOR"); else qputenv("QT_SCALE_FACTOR", orig);
+    }
     if ((api().ok() && !g_restartOnly) || qFuzzyCompare(factor, 1.0)) return;
+    if (!qEnvironmentVariableIsSet("TINHAT_UI_SCALE_ENV_ORIG")) {
+        const QByteArray cur = qgetenv("QT_SCALE_FACTOR");
+        qputenv("TINHAT_UI_SCALE_ENV_ORIG", cur.isEmpty() ? QByteArray("-") : cur);
+    }
     bool ok = false;
     const double env = qEnvironmentVariable("QT_SCALE_FACTOR").toDouble(&ok);
     const double f = (ok && env > 0.0) ? env * factor : factor;
     qputenv("QT_SCALE_FACTOR", QByteArray::number(f, 'g', 6));
 }
 
-// 1 = sizes change live here, 0 = only at the next start.
+// The running platform plugin's name ("xcb", "wayland", "windows", …) into buf (NUL-terminated, cut to cap); the
+// length written, 0 before QGuiApplication exists. ui_scale.rs decides on it where a live change is allowed
+// (2026-11-01: the live change crashed the Flatpak on KDE Plasma Wayland — docs/UI-ZOOM.md "Where it changes live").
+int tinhat_ui_scale_platform(char *buf, int cap) {
+    if (!buf || cap <= 0) return 0;
+    buf[0] = 0;
+    if (!qobject_cast<QGuiApplication *>(QCoreApplication::instance())) return 0;
+    const QByteArray n = QGuiApplication::platformName().toUtf8();
+    const int len = qMin(int(n.size()), cap - 1);
+    memcpy(buf, n.constData(), size_t(len));
+    buf[len] = 0;
+    return len;
+}
+
+// 1 = this Qt has the calls to change the size live (the platform check is ui_scale.rs's), 0 = only at the next start.
 int tinhat_ui_scale_live_capable(void) { return (api().ok() && !g_restartOnly) ? 1 : 0; }
 
 // Why (for the start-up log line, so a restart-only build never goes unnoticed): 0 live, 1 built without Qt's private
@@ -144,6 +173,14 @@ int tinhat_ui_scale_why(void) {
     if (!api().ok()) return 2;
     if (g_restartOnly) return 3;
     return 0;
+}
+
+// The size at start: Qt's factor set right after QGuiApplication, ONLY while no window exists yet (on every platform
+// with the calls — the live change of a running app is ui_scale.rs's call). 1 = set, 0 = not (a window already
+// exists, or no calls here: the preinit environment carried it).
+int tinhat_ui_scale_apply_startup(double factor) {
+    if (!QGuiApplication::allWindows().isEmpty()) return 0;
+    return tinhat_ui_scale_apply(factor);
 }
 
 // Set Qt's factor to `factor` now (also right after QGuiApplication, before the first window). 1 = done live,

@@ -70,12 +70,36 @@ pub fn toast(p: i32, prev: i32, dir: i32, pending: bool) -> String {
     t
 }
 
+/// Where a size may change while Tin Hat runs (2026-11-01): only the platform plugins the live change was proven on —
+/// `xcb` (X11, XWayland) and `windows`. On `wayland` pressing Ctrl+- crashed the published 12.1.6 Flatpak on KDE Plasma
+/// (docs/UI-ZOOM.md "Where it changes live"), so there — and on any other plugin — a change is stored and applies at
+/// the next start (the size at start is set before the first window, the moment Qt supports). `force_live`
+/// (TINHAT_UI_SCALE_LIVE=1) lifts the list, for proving another platform; it never overrides a missing Qt call.
+pub fn live_allowed_on(platform: &str, force_live: bool) -> bool {
+    force_live || matches!(platform, "xcb" | "windows")
+}
+
 // ---- the Qt part (ui_scale_bridge.cpp) ---------------------------------------------------------------------------
 extern "C" {
     fn tinhat_ui_scale_preinit(factor: f64, force_restart: c_int);
     fn tinhat_ui_scale_apply(factor: f64) -> c_int;
+    fn tinhat_ui_scale_apply_startup(factor: f64) -> c_int;
     fn tinhat_ui_scale_live_capable() -> c_int;
     fn tinhat_ui_scale_why() -> c_int;
+    fn tinhat_ui_scale_platform(buf: *mut std::ffi::c_char, cap: c_int) -> c_int;
+}
+
+/// The running Qt platform plugin ("" before QGuiApplication).
+fn platform() -> String {
+    let mut buf = [0 as std::ffi::c_char; 64];
+    let n = unsafe { tinhat_ui_scale_platform(buf.as_mut_ptr(), buf.len() as c_int) };
+    let n = (n.max(0) as usize).min(buf.len() - 1);
+    String::from_utf8_lossy(&buf[..n].iter().map(|&c| c as u8).collect::<Vec<u8>>()).into_owned()
+}
+
+/// TINHAT_UI_SCALE_LIVE=1: allow the live change on a platform not in the list (testing only).
+fn force_live() -> bool {
+    std::env::var_os("TINHAT_UI_SCALE_LIVE").is_some_and(|v| v == "1")
 }
 
 /// The size this run started with (what Qt got at start, live or through QT_SCALE_FACTOR).
@@ -107,23 +131,26 @@ pub fn preinit() {
 pub fn apply_startup() {
     let p = stored();
     // one line in every log: which path this build/run has (a restart-only build must be noticed — launch-gate 10-31)
+    let plat = platform();
     let why = match unsafe { tinhat_ui_scale_why() } {
-        0 => "changes live",
-        1 => "restart-only: built without Qt's private headers",
-        2 => "restart-only: this Qt lacks the scale calls",
-        _ => "restart-only: TINHAT_UI_SCALE_RESTART=1",
+        0 if live_allowed_on(&plat, force_live()) => "changes live".to_string(),
+        0 => format!("restart-only: a live change is not proven on '{plat}' yet"),
+        1 => "restart-only: built without Qt's private headers".to_string(),
+        2 => "restart-only: this Qt lacks the scale calls".to_string(),
+        _ => "restart-only: TINHAT_UI_SCALE_RESTART=1".to_string(),
     };
     eprintln!("[ui-scale] App size {p}% at start; {why}");
-    if p != DEFAULT {
-        unsafe {
-            tinhat_ui_scale_apply(factor(p, env_factor()));
-        }
+    // the size at start goes in before the first window on EVERY platform with the calls (Qt's supported moment, the
+    // same factor QT_SCALE_FACTOR sets); only the live change of a running app is limited to live_allowed_on
+    if p != DEFAULT && unsafe { tinhat_ui_scale_apply_startup(factor(p, env_factor())) } == 0 && unsafe { tinhat_ui_scale_why() } == 0 {
+        eprintln!("[ui-scale] the size at start was not set: a window already existed");
     }
 }
 
-/// Can a size change while Tin Hat runs here? (false: Qt lacks the calls, or TINHAT_UI_SCALE_RESTART=1)
+/// Can a size change while Tin Hat runs here? (false: Qt lacks the calls, TINHAT_UI_SCALE_RESTART=1, or the platform
+/// plugin is not one the live change is proven on — live_allowed_on)
 pub fn live_capable() -> bool {
-    !restart_only() && unsafe { tinhat_ui_scale_live_capable() } == 1
+    !restart_only() && unsafe { tinhat_ui_scale_live_capable() } == 1 && live_allowed_on(&platform(), force_live())
 }
 
 /// Is `p` waiting for a restart (it can't change live, and it isn't the size this run started with)?
@@ -135,7 +162,8 @@ pub fn pending(p: i32) -> bool {
 pub fn set(p: i32) -> (i32, bool) {
     let p = normalize(p);
     crate::settings::overlay_pref_write(PREF, &p.to_string());
-    let live = !restart_only() && unsafe { tinhat_ui_scale_apply(factor(p, env_factor())) } == 1;
+    // never the live call where it isn't allowed: the pref above is the change, the next start applies it
+    let live = live_capable() && unsafe { tinhat_ui_scale_apply(factor(p, env_factor())) } == 1;
     (p, live)
 }
 
@@ -157,6 +185,17 @@ mod tests {
         assert_eq!(normalize(196), 200);
         assert_eq!(normalize(74), 70);
         assert_eq!(normalize(75), 80);
+    }
+
+    #[test]
+    fn live_only_where_proven() {
+        // 2026-11-01: Ctrl+- crashed 12.1.6 on KDE Plasma Wayland — live only on the proven plugins
+        assert!(live_allowed_on("xcb", false));
+        assert!(live_allowed_on("windows", false));
+        for p in ["wayland", "wayland-egl", "eglfs", "offscreen", "minimal", "cocoa", "", "XCB"] {
+            assert!(!live_allowed_on(p, false), "{p}");
+            assert!(live_allowed_on(p, true), "{p} with TINHAT_UI_SCALE_LIVE=1");
+        }
     }
 
     #[test]
