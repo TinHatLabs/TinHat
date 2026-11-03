@@ -90,9 +90,9 @@ rm -f "$ARTIFACTS_DIR/lib/libwebrtc.a"
 ar -rc "$ARTIFACTS_DIR/lib/libwebrtc.a" `find "$OUTPUT_DIR/obj" -name '*.o' -not -path "*/third_party/nasm/*"`
 src/third_party/llvm-build/Release+Asserts/bin/llvm-objcopy --redefine-syms="$PWD/boringssl_prefix_symbols.txt" "$ARTIFACTS_DIR/lib/libwebrtc.a"
 
-# Both patches carry a grep-able stamp; an archive without them was built from
+# Every patch carries a grep-able stamp; an archive without them was built from
 # an unpatched (or older) tree and must never be linked.
-for stamp in tinhat-av1-e2ee-v2 tinhat-dav1d-fp-v1; do
+for stamp in tinhat-av1-e2ee-v2 tinhat-dav1d-fp-v1 tinhat-vp9-kf-iv-v1 tinhat-iv-v2; do
   if ! grep -qaF "$stamp" "$ARTIFACTS_DIR/lib/libwebrtc.a"; then
     echo "FATAL: stamp $stamp missing from $ARTIFACTS_DIR/lib/libwebrtc.a (patch not applied?)" >&2
     exit 1

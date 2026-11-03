@@ -1278,30 +1278,25 @@ fn record_dir() -> Option<String> {
     record_dir_slot().lock().unwrap().clone()
 }
 
-fn record_optouts() -> &'static Mutex<std::collections::HashSet<String>> {
-    static S: OnceLock<Mutex<std::collections::HashSet<String>>> = OnceLock::new();
-    S.get_or_init(|| Mutex::new(std::collections::HashSet::new()))
+/// The "never record me" rule for one identity, as the recorder service last set it (`set_record_exclusion`).
+type RecordRule = std::sync::Arc<dyn Fn(&str) -> bool + Send + Sync>;
+fn record_rule() -> &'static Mutex<RecordRule> {
+    static S: OnceLock<Mutex<RecordRule>> = OnceLock::new();
+    S.get_or_init(|| Mutex::new(std::sync::Arc::new(|_: &str| false)))
 }
 
-/// Replace the "never record me" set (bare mxids), from the room's membership markers.
-pub fn set_record_optouts(mxids: Vec<String>) {
-    let mut s = record_optouts().lock().unwrap();
-    s.clear();
-    s.extend(mxids);
-}
-
-/// Bare mxid of a LiveKit identity ("@user:server:DEVICE" → "@user:server").
-fn record_mxid_of(identity: &str) -> String {
-    let mut it = identity.splitn(3, ':');
-    match (it.next(), it.next()) {
-        (Some(a), Some(b)) => format!("{a}:{b}"),
-        _ => identity.to_string(),
-    }
+/// Replace the "never record me" rule, from the room's membership markers. The recorder service passes the app's
+/// `identity::record_excluded` over the room's opt-outs (identity fix 12.1.8: any user who could own the identity
+/// and said no keeps it out; the old first-two-parts cut read `@u:host:8448:DEV` as `@u:host` and recorded a port
+/// server's user who had opted out).
+pub fn set_record_exclusion(rule: impl Fn(&str) -> bool + Send + Sync + 'static) {
+    *record_rule().lock().unwrap() = std::sync::Arc::new(rule);
 }
 
 /// True = "never record me": build NO capture chain for this identity.
 pub fn record_excluded(identity: &str) -> bool {
-    record_optouts().lock().unwrap().contains(&record_mxid_of(identity))
+    let rule = record_rule().lock().unwrap().clone();
+    rule(identity)
 }
 
 /// Live capture chains, keyed "a:<sid>" / "v:<sid>" so unsubscribes tear down one.
@@ -1338,7 +1333,7 @@ pub fn record_pending_len() -> usize {
 }
 
 /// Build capture chains for every queued track whose identity has NOT opted out —
-/// call ONLY after set_record_optouts() with fresh marker data. Excluded tracks are
+/// call ONLY after set_record_exclusion() with fresh marker data. Excluded tracks are
 /// dropped with a SKIP log (re-queueing would just re-race; an opt-out flip back
 /// takes effect at that user's next call join, exactly what the Settings text says).
 pub fn drain_record_pending() {
@@ -7158,6 +7153,11 @@ impl CallSession {
         fps: u32,
         source: livekit::webrtc::video_source::native::NativeVideoSource,
     ) -> Result<gst::Pipeline> {
+        // 12.1.8: the compositor is asked for at most `fps` (ScreenCast::src_fragment_paced, Linux)
+        #[cfg(not(windows))]
+        if crate::capture::source_rate_cap_on() {
+            eprintln!("[call] screen-share: asking the compositor for at most {fps} fps (max-framerate)");
+        }
         // GPU scale-path policy:
         //   Linux   — CUDA convert/scale when the portal reported a size (unchanged).
         //   Windows — the capture textures are already on the D3D11 device; scaling
@@ -8494,12 +8494,16 @@ impl CallSession {
 
     /// Self-test (no devices, no peers): connect with E2EE + publish a synthetic
     /// sine-ish audio track for `secs`, to validate the audio publish path headless.
+    /// Never in a release (cfg tinhat_env_selftests, build.rs).
+    #[cfg(tinhat_env_selftests)]
     pub async fn selftest_audio(ws_url: &str, jwt: &str, identity: &str, secs: u64) -> Result<()> {
         crate::ensure_init()?;
         let key_provider = matrix_key_provider();
-        key_provider.set_key(&ParticipantIdentity(identity.to_owned()), 0, vec![0u8; 16]);
+        // a fresh random key per run (was all-zero: readable by anyone, the SFU included); never persisted
+        key_provider.set_key(&ParticipantIdentity(identity.to_owned()), 0, fresh_test_key().to_vec());
         let mut options = RoomOptions::default();
         options.encryption = Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider });
+        options.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
 
         eprintln!("[call-selftest] connecting…");
         let (room, mut events) = Room::connect(ws_url, jwt, options).await.context("connect")?;
@@ -8540,6 +8544,8 @@ impl CallSession {
     /// Self-test (no GUI): connect with E2EE + publish the (default or `device`)
     /// camera for `secs`, to validate the camera capture+publish path headless. Uses
     /// the capture-only pipeline (no qml6glsink), so it runs with no display.
+    /// Never in a release (cfg tinhat_env_selftests, build.rs).
+    #[cfg(tinhat_env_selftests)]
     pub async fn selftest_camera(
         ws_url: &str,
         jwt: &str,
@@ -8554,9 +8560,11 @@ impl CallSession {
 
         crate::ensure_init()?;
         let key_provider = matrix_key_provider();
-        key_provider.set_key(&ParticipantIdentity(identity.to_owned()), 0, vec![0u8; 16]);
+        // a fresh random key per run (was all-zero: readable by anyone, the SFU included); never persisted
+        key_provider.set_key(&ParticipantIdentity(identity.to_owned()), 0, fresh_test_key().to_vec());
         let mut options = RoomOptions::default();
         options.encryption = Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider });
+        options.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
 
         eprintln!("[cam-selftest] connecting…");
         let (room, mut events) = Room::connect(ws_url, jwt, options).await.context("connect")?;
@@ -8615,6 +8623,25 @@ pub struct LoopbackReport {
     pub luma_peak: u8,
 }
 
+/// A fresh 16-byte media key from the OS RNG for one self-test or loopback run (crypto follow-up (c)). Never persisted,
+/// never logged. The self-tests used to seal with all-zero or fixed keys, i.e. effectively in the clear to the SFU.
+pub fn fresh_test_key() -> [u8; 16] {
+    let mut k = [0u8; 16];
+    getrandom::getrandom(&mut k).expect("OS RNG");
+    k
+}
+
+/// Which key the loopback's SUBSCRIBER installs for the publisher (crypto follow-up (c)).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LoopbackSubKey {
+    /// the publisher's own (fresh) key: POSITIVE, must decode
+    Matching,
+    /// none: NEGATIVE control, must not decode (MissingKey)
+    Missing,
+    /// the all-zero key the self-tests used to seal with: must not decode (DecryptionFailed)
+    Zero,
+}
+
 /// NO-HUMAN E2EE self-test: in ONE process, connect a publisher and a subscriber to
 /// the same LiveKit room (two distinct identities minted from one login via the
 /// lk-jwt device_id), publish a synthetic GCM-encrypted H.264 track, and decode it
@@ -8635,6 +8662,12 @@ pub async fn e2ee_loopback(
     e2ee_loopback_codec(ws_url, pub_jwt, sub_jwt, secs, install_key, "h264").await
 }
 
+/// The ZERO-KEY control: the publisher seals with a fresh random key, the subscriber installs the all-zero key. `codec`
+/// = the POSITIVE run's (TINHAT_E2EE_CODEC), so both controls see the same media.
+pub async fn e2ee_loopback_zero_key(ws_url: &str, pub_jwt: &str, sub_jwt: &str, secs: u64, codec: &str) -> Result<LoopbackReport> {
+    e2ee_loopback_with(ws_url, pub_jwt, sub_jwt, secs, LoopbackSubKey::Zero, codec).await
+}
+
 /// Same loopback, with the publish codec chosen by name ("h264" | "vp9" | "av1").
 /// `av1` is the AV1 + E2EE question: whether the pinned libwebrtc's frame cryptor leaves the
 /// AV1 OBU headers in the clear so the packetizer can still parse them after encryption.
@@ -8646,6 +8679,20 @@ pub async fn e2ee_loopback_codec(
     install_key: bool,
     codec: &str,
 ) -> Result<LoopbackReport> {
+    let sub_key = if install_key { LoopbackSubKey::Matching } else { LoopbackSubKey::Missing };
+    e2ee_loopback_with(ws_url, pub_jwt, sub_jwt, secs, sub_key, codec).await
+}
+
+/// The loopback with an explicit subscriber key (see [`LoopbackSubKey`]).
+pub async fn e2ee_loopback_with(
+    ws_url: &str,
+    pub_jwt: &str,
+    sub_jwt: &str,
+    secs: u64,
+    sub_key: LoopbackSubKey,
+    codec: &str,
+) -> Result<LoopbackReport> {
+    let install_key = sub_key == LoopbackSubKey::Matching;
     use livekit::options::VideoCodec;
     use livekit::track::LocalVideoTrack;
     use livekit::webrtc::video_frame::{I420Buffer, VideoFrame, VideoRotation};
@@ -8660,7 +8707,7 @@ pub async fn e2ee_loopback_codec(
     // throughput. Measured: a healthy binary false-failed at 51%, and a
     // BWE-starved 75% masqueraded as the stale-dav1d signature.
     std::env::set_var("LK_BWE_START_KBPS", "15000");
-    let key: [u8; 16] = [0x5A; 16]; // fixed known media key
+    let key: [u8; 16] = fresh_test_key(); // a fresh random media key per run (crypto follow-up (c))
 
     // ---- Publisher ----
     let kp_pub = matrix_key_provider();
@@ -8673,6 +8720,7 @@ pub async fn e2ee_loopback_codec(
         eprintln!("[loopback] PLAINTEXT CONTROL — no E2EE on either side");
     } else {
         pub_opts.encryption = Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_pub.clone() });
+        pub_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     }
     let (pub_room, mut pub_events) = Room::connect(ws_url, pub_jwt, pub_opts).await.context("loopback pub connect")?;
     let pub_identity = pub_room.local_participant().identity().0;
@@ -8703,6 +8751,8 @@ pub async fn e2ee_loopback_codec(
                 video_codec: match codec {
                     "av1" => VideoCodec::AV1,
                     "vp9" => VideoCodec::VP9,
+                    // assembly-044: "vp8" fell through to H.264, so the loopback's "VP8" runs tested H.264 twice
+                    "vp8" => VideoCodec::VP8,
                     _ => VideoCodec::H264,
                 },
                 source: TrackSource::Screenshare,
@@ -8741,16 +8791,30 @@ pub async fn e2ee_loopback_codec(
     });
 
     // ---- Subscriber ----
-    let kp_sub = matrix_key_provider();
-    if install_key {
-        kp_sub.set_key(&ParticipantIdentity(pub_identity.clone()), 0, key.to_vec());
-        eprintln!("[loopback] subscriber installed key under {pub_identity:?} (POSITIVE)");
+    // ZERO-KEY: the subscriber gives up on a key at its first failed frame (failure_tolerance 0), so a wrong key shows
+    // as DecryptionFailed. The Tin Hat provider (tolerance -1, never gives up) would stay silent; test-only.
+    let kp_sub = if sub_key == LoopbackSubKey::Zero {
+        let mut o = crate::lk_publish::matrix_key_provider_options();
+        o.failure_tolerance = 0;
+        KeyProvider::new(o)
     } else {
-        eprintln!("[loopback] subscriber installed NO key (NEGATIVE control)");
+        matrix_key_provider()
+    };
+    match sub_key {
+        LoopbackSubKey::Matching => {
+            kp_sub.set_key(&ParticipantIdentity(pub_identity.clone()), 0, key.to_vec());
+            eprintln!("[loopback] subscriber installed key under {pub_identity:?} (POSITIVE)");
+        }
+        LoopbackSubKey::Zero => {
+            kp_sub.set_key(&ParticipantIdentity(pub_identity.clone()), 0, vec![0u8; 16]);
+            eprintln!("[loopback] subscriber installed the ALL-ZERO key (ZERO-KEY control: must NOT decode)");
+        }
+        LoopbackSubKey::Missing => eprintln!("[loopback] subscriber installed NO key (NEGATIVE control)"),
     }
     let mut sub_opts = RoomOptions::default();
     if !plaintext {
         sub_opts.encryption = Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_sub });
+        sub_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     }
     let (sub_room, mut sub_events) = Room::connect(ws_url, sub_jwt, sub_opts).await.context("loopback sub connect")?;
     let sub_identity = sub_room.local_participant().identity().0;
@@ -8890,7 +8954,7 @@ pub async fn share_loopback(ws_url: &str, pub_jwt: &str, sub_jwt: &str) -> Resul
     use std::time::Duration;
 
     crate::ensure_init()?;
-    let key: [u8; 16] = [0xA5; 16];
+    let key: [u8; 16] = fresh_test_key(); // fresh per run (was a fixed key)
 
     // Publisher: the APP'S room options (dynacast included) — the gate must exercise
     // exactly what production ships, so a future dynacast re-enable trips it.
@@ -8898,6 +8962,7 @@ pub async fn share_loopback(ws_url: &str, pub_jwt: &str, sub_jwt: &str) -> Resul
     let mut pub_opts = RoomOptions::default();
     pub_opts.encryption =
         Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_pub.clone() });
+    pub_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     pub_opts.dynacast = false; // KEEP IN LOCKSTEP with CallSession::connect (see comment there)
     let (pub_room, mut pub_events) =
         Room::connect(ws_url, pub_jwt, pub_opts).await.context("sharetest pub connect")?;
@@ -8912,6 +8977,7 @@ pub async fn share_loopback(ws_url: &str, pub_jwt: &str, sub_jwt: &str) -> Resul
     let mut sub_opts = RoomOptions::default();
     sub_opts.encryption =
         Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_sub });
+    sub_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     let (_sub_room, mut sub_events) =
         Room::connect(ws_url, sub_jwt, sub_opts).await.context("sharetest sub connect")?;
     let fr2 = frames.clone();
@@ -9042,6 +9108,7 @@ pub async fn speakers_loopback(
     let mut b_opts = RoomOptions::default();
     b_opts.encryption =
         Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_b.clone() });
+    b_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     b_opts.dynacast = false; // KEEP IN LOCKSTEP with CallSession::connect
     let (b_room, mut b_events) =
         Room::connect(ws_url, b_jwt, b_opts).await.context("speakertest B connect")?;
@@ -9049,7 +9116,7 @@ pub async fn speakers_loopback(
     // CRITICAL: a key under OUR OWN identity, or the FrameCryptor cannot encrypt our
     // outgoing audio and the track sends NO RTP AT ALL — the SFU then has nothing to
     // score and the gate silently proves nothing (measured: MissingKey => zero deltas).
-    kp_b.set_key(&ParticipantIdentity(b_identity.clone()), 0, vec![0xA5; 16]);
+    kp_b.set_key(&ParticipantIdentity(b_identity.clone()), 0, fresh_test_key().to_vec());
 
     // Track the latest ActiveSpeakersChanged list + delta churn. Any active identity
     // that isn't B is the child (the room is isolated; only A and B are ever in it).
@@ -9338,12 +9405,13 @@ pub async fn speakers_publish_steady(ws_url: &str, jwt: &str, secs: u64) -> Resu
     let mut opts = RoomOptions::default();
     opts.encryption =
         Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp.clone() });
+    opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     opts.dynacast = false;
     let (room, mut events) =
         Room::connect(ws_url, jwt, opts).await.context("speakertest child connect")?;
     // Own-identity key or the cryptor sends nothing (see speakers_loopback).
     let identity = room.local_participant().identity().0.clone();
-    kp.set_key(&ParticipantIdentity(identity), 0, vec![0xA5; 16]);
+    kp.set_key(&ParticipantIdentity(identity), 0, fresh_test_key().to_vec());
     tokio::spawn(async move { while events.recv().await.is_some() {} });
     let src = spk_publish_tone(&room, "amic").await?;
     let feed = spk_spawn_tone(src, |_| 0.5);
@@ -9416,13 +9484,14 @@ pub async fn simulcast_loopback(
     if !crate::lk_publish::nvenc_available() {
         anyhow::bail!("NVENC not available — the simulcast gate is NVENC-specific");
     }
-    let key: [u8; 16] = [0x5A; 16];
+    let key: [u8; 16] = fresh_test_key(); // fresh per run (was a fixed key)
 
     // ---- Publisher (E2EE on, like a real call; dynacast OFF — see doc comment) ----
     let kp_pub = matrix_key_provider();
     let mut pub_opts = RoomOptions::default();
     pub_opts.encryption =
         Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_pub.clone() });
+    pub_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     let (pub_room, mut pub_events) =
         Room::connect(ws_url, pub_jwt, pub_opts).await.context("simtest pub connect")?;
     let pub_identity = pub_room.local_participant().identity().0;
@@ -9442,6 +9511,7 @@ pub async fn simulcast_loopback(
     let mut sub_opts = RoomOptions::default();
     sub_opts.encryption =
         Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_sub });
+    sub_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     let (sub_room, mut sub_events) =
         Room::connect(ws_url, sub_jwt, sub_opts).await.context("simtest sub connect")?;
     let st2 = sub_state.clone();
@@ -13156,6 +13226,7 @@ pub async fn rejoin_keytest(
     let mut sub_opts = RoomOptions::default();
     sub_opts.encryption =
         Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp_sub });
+    sub_opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
     let (sub_room, mut sub_events) =
         Room::connect(ws_url, sub_jwt, sub_opts).await.context("rejoin sub connect")?;
     eprintln!("[rejoin] SUB connected as {:?}", sub_room.local_participant().identity().0);
@@ -13204,6 +13275,7 @@ pub async fn rejoin_keytest(
         let mut opts = RoomOptions::default();
         opts.encryption =
             Some(E2eeOptions { encryption_type: EncryptionType::Gcm, key_provider: kp.clone() });
+        opts.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
         let (room, mut events) = Room::connect(ws_url, jwt, opts).await.context("pub connect")?;
         let identity = room.local_participant().identity().0;
         kp.set_key(&ParticipantIdentity(identity.clone()), index as i32, key.to_vec());
@@ -14374,5 +14446,66 @@ mod encoder_mismatch_tests {
         assert_eq!(encoder_mismatch("VP9 (software fallback)", "video/VP9", "libvpx"), None);
         assert_eq!(encoder_mismatch("H.264/VAAPI (GPU)", "video/H264", "VAAPI H264"), None);
         assert_eq!(encoder_mismatch("Opus", "audio/opus", "x"), None); // unknown label: nothing to compare
+    }
+}
+
+/// Crypto follow-ups (c) + (a), 12.1.8: self-test keys are fresh and random, no self-test seals with a constant key,
+/// and no E2EE Room of the streamer encrypts its data channel (the main call doesn't either; data packets are never
+/// sealed with call keys).
+#[cfg(test)]
+mod test_key_and_data_channel_tests {
+    /// The two sources, without this test module (its own lines name the patterns it looks for).
+    fn sources() -> Vec<(&'static str, String)> {
+        let d = concat!(env!("CARGO_MANIFEST_DIR"), "/src/");
+        let cut = ["mod test_key_and", "_data_channel_tests"].concat();
+        ["call.rs", "lk_publish.rs"]
+            .iter()
+            .map(|f| {
+                let s = std::fs::read_to_string(format!("{d}{f}")).unwrap();
+                let s = match s.find(&cut) { Some(i) => s[..i].to_string(), None => s };
+                (*f, s)
+            })
+            .collect()
+    }
+
+    #[test]
+    fn fresh_test_keys_are_random_and_not_zero() {
+        let a = super::fresh_test_key();
+        let b = super::fresh_test_key();
+        assert_ne!(a, [0u8; 16]);
+        assert_ne!(a, b, "two runs must not share a key");
+    }
+
+    #[test]
+    fn no_self_test_seals_with_a_constant_key() {
+        for (f, s) in sources() {
+            for (n, l) in s.lines().enumerate() {
+                let code = l.split("//").next().unwrap_or("");
+                let constant = code.contains("vec![0u8; 16]") || code.contains("[0xA5; 16]") || code.contains("[0x5A; 16]");
+                if code.contains("set_key(") && constant {
+                    // the one allowed: the loopback's ZERO-KEY control installs the zero key on the SUBSCRIBER
+                    assert!(code.contains("kp_sub.set_key"), "{f}:{}: a constant media key: {l}", n + 1);
+                }
+                let fixed = ["let key: [u8; 16] = ", "["].concat();
+                assert!(!code.contains(&fixed), "{f}:{}: a constant media key: {l}", n + 1);
+            }
+        }
+    }
+
+    #[test]
+    fn no_e2ee_room_encrypts_its_data_channel() {
+        for (f, s) in sources() {
+            let lines: Vec<&str> = s.lines().collect();
+            for (i, l) in lines.iter().enumerate() {
+                if l.contains(".encryption =") && !l.trim_start().starts_with("//") && !l.contains("encryption = None") {
+                    let var = l.trim_start().split('.').next().unwrap();
+                    let lo = i.saturating_sub(4);
+                    let hi = (i + 6).min(lines.len());
+                    let near = lines[lo..hi].join("\n");
+                    assert!(near.contains(&format!("{var}.encrypt_data_channel = false")),
+                        "{f}:{}: an E2EE Room without encrypt_data_channel = false", i + 1);
+                }
+            }
+        }
     }
 }

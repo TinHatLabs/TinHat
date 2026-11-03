@@ -92,10 +92,23 @@ fn qt_private_missing(where_: &str) {
     );
 }
 
+/// crypto follow-up (c): the env self-test hooks (TINHAT_LKTEST / TINHAT_CALLTEST / TINHAT_CAMTEST in main.rs) are
+/// compiled only outside a release: `TINHAT_RELEASE_BUILD=1` builds neither contain nor accept them (lab and knob
+/// builds keep them). The release checks (PKGBUILD, the release scripts) also refuse a binary that names them.
+fn env_selftests_cfg() {
+    println!("cargo:rerun-if-env-changed=TINHAT_RELEASE_BUILD");
+    println!("cargo:rustc-check-cfg=cfg(tinhat_env_selftests)");
+    let release = std::env::var("TINHAT_RELEASE_BUILD").map(|v| v.trim() == "1").unwrap_or(false);
+    if !release {
+        println!("cargo:rustc-cfg=tinhat_env_selftests");
+    }
+}
+
 fn main() {
     check_update_trust_config();
     check_call_host_lab();
     check_bench_aec();
+    env_selftests_cfg();
     generate_th_qml();
 
     // Bake a short git hash so dev vs released builds are distinguishable (About sheet +

@@ -65,6 +65,10 @@ pub mod qobject {
         #[qproperty(bool, installing)] //           QML: installing — install-to-apps copy in progress
         #[qproperty(QString, manual_update_hint)] // QML: manualUpdateHint — 10.0: what to do when the app can't update itself (per channel)
         #[qproperty(QString, channel)] //           QML: channel — 10.0: "flatpak" | "pacman-final" | "" (self-managed / Windows bundle)
+        #[qproperty(bool, restarting)] //           QML: restarting — 12.1.8: a Flatpak relaunch is waiting for the new instance
+        #[qproperty(QString, restart_failed)] //    QML: restartFailed — 12.1.8: "" or the line saying the restart didn't happen (still running)
+        #[qproperty(bool, call_up)] //              QML: callUp — 12.1.8: set by Main.qml (any call state up); a hand-over never ends a call
+        #[qproperty(bool, restart_waits_for_call)] // QML: restartWaitsForCall — 12.1.8: a hand-over was called off because a call started
         type UpdateController = super::UpdateControllerRust;
 
         /// QML: updater.checkForUpdates() — fetch the manifest + compare (non-blocking).
@@ -74,7 +78,8 @@ pub mod qobject {
         /// the running binary. Sets readyToRestart on success.
         #[qinvokable]
         fn download_and_apply(self: Pin<&mut UpdateController>);
-        /// QML: updater.restart() — re-exec the (now-updated) binary in place.
+        /// QML: updater.restart() — re-exec the (now-updated) binary in place (Flatpak: relaunch through the portal).
+        /// 12.1.8: quits only once the new instance runs; a failure keeps this one up and sets restartFailed.
         #[qinvokable]
         fn restart(self: Pin<&mut UpdateController>);
         /// QML: updater.installToApps() — Windows: copy this portable bundle into the
@@ -114,6 +119,10 @@ pub struct UpdateControllerRust {
     installed_version: QString,
     install_prompt_due: bool,
     installing: bool,
+    restarting: bool,
+    restart_failed: QString,
+    call_up: bool,
+    restart_waits_for_call: bool,
     // sha256 hex from the manifest, kept between check and apply (not a qproperty).
     expected_sha: String,
 }
@@ -152,8 +161,12 @@ fn relaunch_into(exe: &std::path::Path, why: &str) {
         return;
     }
     eprintln!("[update] relaunching into {} ({why})", exe.display());
-    let _ = std::process::Command::new(exe).env("TINHAT_RELAUNCH", why).spawn();
-    std::process::exit(0);
+    // 12.1.8: quit only if the new process exists (relaunch.rs); a failed spawn keeps this one up
+    let r = std::process::Command::new(exe).env("TINHAT_RELAUNCH", why).spawn();
+    match crate::relaunch::spawn_verdict(&r) {
+        Ok(()) => std::process::exit(0),
+        Err(e) => crate::relaunch::log_failed(&e),
+    }
 }
 
 /// Whether we may replace our own binary in place. False when the executable is under a
@@ -249,6 +262,10 @@ impl Default for UpdateControllerRust {
             can_self_update: self_update_supported(),
             manual_update_hint: QString::from(&manual_update_hint(portable_run())),
             channel: QString::from(channel()),
+            restarting: false,
+            restart_failed: QString::default(),
+            call_up: false,
+            restart_waits_for_call: false,
             expected_sha: String::new(),
         }
     }
@@ -423,6 +440,8 @@ impl qobject::UpdateController {
                             o.as_mut().set_installed_version(QString::from(env!("CARGO_PKG_VERSION")));
                             o.as_mut().set_status(QString::from("Installed — opening the installed app…"));
                             relaunch_into(&exe, "install");
+                            // 12.1.8: relaunch_into returns only when the installed copy could not be started
+                            o.as_mut().set_restart_failed(QString::from(crate::relaunch::FAILED_MESSAGE));
                         }
                         Err(e) => {
                             eprintln!("[update] install-to-apps failed: {e}");
@@ -448,6 +467,8 @@ impl qobject::UpdateController {
             }
             crate::platform::mark_install_prompt_seen();
             relaunch_into(&exe, "open-installed");
+            // 12.1.8: relaunch_into returns only when the installed copy could not be started
+            self.as_mut().set_restart_failed(QString::from(crate::relaunch::FAILED_MESSAGE));
         }
     }
 
@@ -457,18 +478,63 @@ impl qobject::UpdateController {
         self.as_mut().set_install_prompt_due(false);
     }
 
-    pub fn restart(self: Pin<&mut Self>) {
+    /// 12.1.8: a restart that did not happen — log the reason, stay up, say so (Main.qml's banner).
+    fn restart_did_not_happen(mut self: Pin<&mut Self>, why: &str) {
+        crate::relaunch::log_failed(why);
+        self.as_mut().set_restarting(false);
+        self.as_mut().set_restart_failed(QString::from(crate::relaunch::FAILED_MESSAGE));
+    }
+
+    pub fn restart(mut self: Pin<&mut Self>) {
+        if *self.restarting() {
+            eprintln!("[relaunch] a restart is already under way");
+            return;
+        }
+        self.as_mut().set_restart_failed(QString::default());
+        self.as_mut().set_restart_waits_for_call(false);
         if in_flatpak() {
             // 10.1.1: relaunch into the new deployment through the portal (flatpak-spawn
             // --latest-version runs the newest installed commit in a fresh sandbox the portal owns),
             // then quit. 12.0: the single-instance lock is shared by every instance of the Flatpak
             // and stays ours until this process is gone; the child (TINHAT_RELAUNCH=update) waits
             // for it, so the two never use the profile at the same time.
-            match crate::flatpak::relaunch_latest(&[]) {
-                Ok(()) => eprintln!("[update] flatpak: quitting — the relaunched instance runs the new deployment"),
-                Err(e) => eprintln!("[update] flatpak: relaunch failed ({e}) — quitting; the next launch runs the new deployment"),
+            // 12.1.8: quit only once the child runs; until then (up to relaunch::CONFIRM_TIMEOUT, off the Qt
+            // thread) this instance stays fully usable, and a failure keeps it up with a message.
+            // The hand-over is committed on the Qt thread right before exit: if the queue runs late and the child gave
+            // up in between, commit() sees it and this instance stays. A queue that fails drops the hand-over = called off.
+            self.as_mut().set_restarting(true);
+            let qt = self.qt_thread();
+            let spawned = std::thread::Builder::new().name("relaunch".into()).spawn(move || {
+                let r = crate::flatpak::relaunch_latest(&[]);
+                let _ = qt.queue(move |mut o| {
+                    // 12.1.8 (assembly-044 review): this instance stayed usable during the hand-over, so a call may have
+                    // started meanwhile. Never end it: drop the hand-over (= called off, the child exits quietly) and wait.
+                    let r = match r {
+                        Ok(h) => match crate::relaunch::at_hand_over(*o.call_up()) {
+                            crate::relaunch::HandOver::Commit => h.commit(),
+                            crate::relaunch::HandOver::WaitForCall => {
+                                drop(h);
+                                eprintln!("[relaunch] called off at the hand-over: a call started — still running, restart after the call");
+                                o.as_mut().set_restarting(false);
+                                o.as_mut().set_restart_waits_for_call(true);
+                                return;
+                            }
+                        },
+                        Err(e) => Err(e),
+                    };
+                    match r {
+                        Ok(()) => {
+                            eprintln!("[update] flatpak: quitting — the relaunched instance runs the new deployment");
+                            std::process::exit(0);
+                        }
+                        Err(e) => o.restart_did_not_happen(&format!("flatpak: {e}")),
+                    }
+                });
+            });
+            if let Err(e) = spawned {
+                self.restart_did_not_happen(&format!("flatpak: cannot start the relaunch thread: {e}"));
             }
-            std::process::exit(0);
+            return;
         }
         // Prefer the freshly-installed path captured by the apply step — after the swap,
         // current_exe() follows the renamed inode to `<exe>.bak` (the OLD build).
@@ -477,7 +543,10 @@ impl qobject::UpdateController {
             .unwrap()
             .clone()
             .or_else(|| std::env::current_exe().ok());
-        let Some(exe) = exe else { return };
+        let Some(exe) = exe else {
+            self.restart_did_not_happen("no path to this program");
+            return;
+        };
         // U3 guard (c): never exec a swapped-in path that isn't a regular executable file
         // (an archive/garbage something managed to write there, a directory, a dangling
         // path). Refuse loudly instead of a confusing exec failure — or worse.
@@ -499,9 +568,10 @@ impl qobject::UpdateController {
                 "[update] refusing restart: {} is not a regular executable file",
                 exe.display()
             );
-            self.set_status(QString::from(
+            self.as_mut().set_status(QString::from(
                 "Restart refused: the installed update is not a valid executable — reinstall from a fresh download.",
             ));
+            self.restart_did_not_happen(&format!("{} is not a regular executable file", exe.display()));
             return;
         }
         let args: Vec<String> = std::env::args().skip(1).collect();
@@ -509,8 +579,9 @@ impl qobject::UpdateController {
         {
             use std::os::unix::process::CommandExt;
             // exec replaces this process image with the updated binary (no orphan).
+            // 12.1.8: exec returns only when it failed — this instance stays up and says so
             let err = std::process::Command::new(&exe).args(&args).exec();
-            eprintln!("[update] re-exec failed: {err}");
+            self.restart_did_not_happen(&crate::relaunch::exec_returned(&err));
         }
         #[cfg(not(unix))]
         {
@@ -520,11 +591,15 @@ impl qobject::UpdateController {
             // session's log the parent already shipped (the duplicate-upload pairs seen
             // on every update day).
             eprintln!("[update] restarting into the updated build");
-            let _ = std::process::Command::new(&exe)
+            let r = std::process::Command::new(&exe)
                 .args(&args)
                 .env("TINHAT_RELAUNCH", "update")
                 .spawn();
-            std::process::exit(0);
+            // 12.1.8: quit only if the new process exists; a failed spawn keeps this one up with a message
+            match crate::relaunch::spawn_verdict(&r) {
+                Ok(()) => std::process::exit(0),
+                Err(e) => self.restart_did_not_happen(&e),
+            }
         }
     }
 }

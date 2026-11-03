@@ -24,6 +24,10 @@ import dev.tinhat.app
 
 Kirigami.ApplicationWindow {
     id: root
+    // 12.1.8 (docs/KEYS-IN-WINDOWS.md): this window's own Shortcuts only while IT has the keyboard. Qt counts the main window
+    // as active while one of its transient children (Calendar, Media Party, …) has focus, so an ungated Shortcut here
+    // collided with that window's (Escape there was ambiguous: nothing closed).
+    readonly property bool keysHere: root.activeFocusItem !== null
     // ===================== AppCore: controllers + glue (9.0 hoist) =====================
     // Everything that is NOT this window's look lives in AppCore.qml so a second shell could
     // share it. Every moved property/function comes back here as an alias/forwarder so the
@@ -62,6 +66,8 @@ Kirigami.ApplicationWindow {
         visible: (bootctl.safeMode && !safeModeBanner.dismissed)
                  || (root.mLoggedIn && ((!root.mVerified && !login.firstDevicePending && !root.mGuestAccount) || login.syncDown || root.mUpdateAvailable || root.mUpdateDownloading || root.mUpdateReady))
                  || root.uiScalePending
+                 || updater.restartFailed.length > 0   // 12.1.8: e.g. Windows "Open the installed app" failed with nothing else up
+                 || root.restartAfterCall               // 12.1.8: an update restart waits for the call to end
         height: visible ? implicitHeight : 0
         // Safe mode (0.8.25, boot.rs): this start runs with software rendering because the
         // previous one never reached the main window. Say so; OK = normal mode next start.
@@ -197,7 +203,9 @@ Kirigami.ApplicationWindow {
                 Kirigami.Action {
                     text: "Restart now"
                     visible: !root.uiScaleCallUp
-                    onTriggered: { console.log("[ui-scale] restart now for " + root.uiScale + "%"); updater.restart() }
+                    enabled: !updater.restarting
+                    // disarm first: a manual restart replaces the after-call one (a failure must not bring a second, automatic one)
+                    onTriggered: { root.uiScaleRestartAfterCall = false; console.log("[ui-scale] restart now for " + root.uiScale + "%"); updater.restart() }
                 },
                 Kirigami.Action {
                     text: "Restart after the call"
@@ -209,6 +217,39 @@ Kirigami.ApplicationWindow {
                     visible: root.uiScaleRestartAfterCall
                     onTriggered: root.uiScaleRestartAfterCall = false
                 }
+            ]
+        }
+
+        // 12.1.8 (assembly-044 review): an update restart that was called off because a call started waits for its end
+        Kirigami.InlineMessage {
+            id: restartAfterCallBanner
+            Layout.fillWidth: true
+            Layout.leftMargin: root.bannerMargin
+            Layout.rightMargin: root.bannerMargin
+            Layout.topMargin: root.bannerMargin
+            Layout.bottomMargin: root.flatLayout ? Kirigami.Units.smallSpacing : 0
+            visible: root.restartAfterCall
+            type: Kirigami.MessageType.Information
+            text: LinkGate.plain("Tin Hat restarts to finish the update when this call ends.")
+            actions: [
+                Kirigami.Action { text: "Don't restart"; onTriggered: root.restartAfterCall = false }
+            ]
+        }
+
+        // 12.1.8: a restart that did not happen (relaunch.rs: the new instance never ran): Tin Hat stays up and says so
+        Kirigami.InlineMessage {
+            id: restartFailedBanner
+            Layout.fillWidth: true
+            Layout.leftMargin: root.bannerMargin
+            Layout.rightMargin: root.bannerMargin
+            Layout.topMargin: root.bannerMargin
+            Layout.bottomMargin: root.flatLayout ? Kirigami.Units.smallSpacing : 0
+            visible: updater.restartFailed.length > 0
+            onVisibleChanged: if (visible) console.log("[relaunch] banner: " + updater.restartFailed)
+            type: Kirigami.MessageType.Warning
+            text: LinkGate.plain(updater.restartFailed)
+            actions: [
+                Kirigami.Action { text: "Dismiss"; onTriggered: updater.restartFailed = "" }
             ]
         }
 
@@ -250,6 +291,7 @@ Kirigami.ApplicationWindow {
                 Kirigami.Action {
                     text: "Restart now"
                     visible: root.mUpdateReady
+                    enabled: !updater.restarting
                     onTriggered: updater.restart()
                 }
             ]
@@ -537,7 +579,7 @@ Kirigami.ApplicationWindow {
         else if (core._fsPrevVisibility === Window.Maximized) root.showMaximized()
         else root.showNormal()
     }
-    Shortcut { sequence: "Esc"; enabled: core.shareFullscreen.length > 0; onActivated: root.leaveShareFullscreen() }
+    Shortcut { sequence: "Esc"; enabled: root.keysHere && core.shareFullscreen.length > 0; onActivated: root.leaveShareFullscreen() }
     // Pad QOL: this computer's Media Party window on `room`'s party (the call bar's Join + open; another room's party:
     // switch) — the Pad window's "Watch on this computer"
     function openWatchPartyFor(partyRoom) {
@@ -745,15 +787,39 @@ Kirigami.ApplicationWindow {
     // never offered as "now" while one of them is up (lab 2026-11-01: a call whose mic failed showed "In call" with
     // mInCall false)
     readonly property bool uiScaleCallUp: root.mInCall || root.mConnecting || root.mCallFailed || (callctl ? callctl.inCall === true : false)
+    // 12.1.8 (assembly-044 review): an update restart (not App size) that waits for the call to end
+    property bool restartAfterCall: false
     onUiScalePendingChanged: if (!uiScalePending) uiScaleRestartAfterCall = false
+    // 12.1.8 (assembly-044 review): the updater never ends a call at a Flatpak hand-over; it is told when one is up, and
+    // a hand-over called off for a call re-arms the restart for after the call (App size or update). callUp also reads
+    // the call controller's own flags: join_call sets `connecting` at once, the m* mirrors follow only on the next poll.
+    Binding { target: updater; property: "callUp"
+              value: root.uiScaleCallUp || (callctl ? (callctl.connecting === true || callctl.inCall === true) : false) }
+    Connections {
+        target: updater
+        function onRestartWaitsForCallChanged() {
+            if (!updater.restartWaitsForCall) return
+            console.log("[relaunch] a call started during the hand-over: restarting after the call")
+            if (root.uiScalePending) root.uiScaleRestartAfterCall = true
+            else root.restartAfterCall = true
+            updater.restartWaitsForCall = false
+        }
+        // any restart that starts (every Restart now: banner, update banner, Settings, actions) or fails replaces the
+        // armed after-call one: a failure must never be followed by a second, automatic restart
+        function onRestartingChanged() { if (updater.restarting) { root.uiScaleRestartAfterCall = false; root.restartAfterCall = false } }
+        function onRestartFailedChanged() { if (updater.restartFailed.length > 0) { root.uiScaleRestartAfterCall = false; root.restartAfterCall = false } }
+    }
     Timer {
         // a beat after the call ends (the leave is sent and the chime has played), and only if nothing rejoined
         interval: 1500
-        running: root.uiScaleRestartAfterCall && root.uiScalePending && !root.uiScaleCallUp
+        running: ((root.uiScaleRestartAfterCall && root.uiScalePending) || root.restartAfterCall) && !root.uiScaleCallUp && !updater.restarting
         onTriggered: {
             // disarm first: if the restart is refused or fails, the banner must not keep promising one
-            root.uiScaleRestartAfterCall = false
-            console.log("[ui-scale] the call ended: restarting for " + root.uiScale + "%"); updater.restart()
+            var update = root.restartAfterCall && !(root.uiScaleRestartAfterCall && root.uiScalePending)
+            root.uiScaleRestartAfterCall = false; root.restartAfterCall = false
+            if (update) console.log("[relaunch] the call ended: restarting to finish the update")
+            else console.log("[ui-scale] the call ended: restarting for " + root.uiScale + "%")
+            updater.restart()
         }
     }
     function setUiScale(p) {
@@ -2381,10 +2447,10 @@ Kirigami.ApplicationWindow {
     // 10.1 (TH-CALL-16): Escape leaves "fill the app"; F11 toggles it.
     Shortcut {
         sequence: "Escape"
-        enabled: root.callMaximized && root.callShown && !callOptions.opened && !streamPopover.opened && !soundboardPanel.opened && !settingsWindow.visible
+        enabled: root.keysHere && root.callMaximized && root.callShown && !callOptions.opened && !streamPopover.opened && !soundboardPanel.opened && !settingsWindow.visible
         onActivated: root.callMaximized = false
     }
-    Shortcut { sequences: actionsHost.keysFor("call.fill.toggle"); enabled: root.callShown && root.mLoggedIn; onActivated: root.callMaximized = !root.callMaximized }
+    Shortcut { sequences: actionsHost.keysFor("call.fill.toggle"); enabled: root.keysHere && root.callShown && root.mLoggedIn; onActivated: root.callMaximized = !root.callMaximized }
     // Ctrl+K: the palette over rooms, people and actions (ACTIONS.md §10; QuickSwitcher.qml).
     QuickSwitcher {
         id: quickSwitcher
@@ -4576,7 +4642,7 @@ Kirigami.ApplicationWindow {
     }
     Shortcut {   // EDITMODE-UI §1: layout.edit (Ctrl+E) opens edit mode (works while typing, with every button hidden); editing = Done
         sequences: actionsHost.keysFor("layout.edit")
-        enabled: root.mLoggedIn
+        enabled: root.keysHere && root.mLoggedIn
         onActivated: root.openEditLayout(false)
     }
     // the way in that always works (EDITMODE-UI §10): right-click (a long press) on a gap / the margin / the host
@@ -4854,10 +4920,10 @@ Kirigami.ApplicationWindow {
                 if (lists[l][k] && lists[l][k].id === id) return lists[l][k].unread || 0
         return 0
     }
-    Shortcut { sequences: actionsHost.keysFor("nav.room.previous"); onActivated: root.stepRoom(-1, false) }
-    Shortcut { sequences: actionsHost.keysFor("nav.room.next"); onActivated: root.stepRoom(1, false) }
-    Shortcut { sequences: actionsHost.keysFor("nav.unread.previous"); onActivated: root.stepRoom(-1, true) }
-    Shortcut { sequences: actionsHost.keysFor("nav.unread.next"); onActivated: root.stepRoom(1, true) }
+    Shortcut { sequences: actionsHost.keysFor("nav.room.previous"); enabled: root.keysHere; onActivated: root.stepRoom(-1, false) }
+    Shortcut { sequences: actionsHost.keysFor("nav.room.next"); enabled: root.keysHere; onActivated: root.stepRoom(1, false) }
+    Shortcut { sequences: actionsHost.keysFor("nav.unread.previous"); enabled: root.keysHere; onActivated: root.stepRoom(-1, true) }
+    Shortcut { sequences: actionsHost.keysFor("nav.unread.next"); enabled: root.keysHere; onActivated: root.stepRoom(1, true) }
 
     // Screenshot hook (env TINHAT_GUI_DOCK="corner"): pin the corner nav open a moment
     // after login so the hover panel can be captured without simulating hover.

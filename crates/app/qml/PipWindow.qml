@@ -54,7 +54,12 @@ Window {
     visible: true
 
     function openQualityMenu() { qualityMenu.popup(qualityBtn, 0, qualityBtn.height + 4) }
-    Shortcut { sequence: "Escape"; onActivated: pip.close() }   // 10.1 (TH-A11Y-12)
+    // 12.1.8 (fix/windows-escape, docs/KEYS-IN-WINDOWS.md): this window's keys only while IT has the keyboard. A secondary
+    // window is the main window's transient child, and Qt counts such a window as active whenever the main one is (on
+    // Windows from launch: the dark-title-bar sweep gives every window a native handle), so an unguarded Shortcut here
+    // took Escape (and Space, K, M, F, digits) from the main window: no panel, drawer or popup closed on Escape.
+    readonly property bool keysHere: pip.visible && pip.activeFocusItem !== null
+    Shortcut { sequence: "Escape"; enabled: pip.keysHere; onActivated: pip.close() }   // 10.1 (TH-A11Y-12)
 
     Component.onCompleted: {
         if (audioPrefs && volMxid.length > 0) {

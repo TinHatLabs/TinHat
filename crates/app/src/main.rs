@@ -49,6 +49,7 @@ pub mod logship; // opt-OUT scrubbed log upload + problem reports, to the user's
 pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
 pub mod left_words; // 12.1.1: the "already left" words of a kick / Disconnect / Mute (= the web's spaces/leftWords.ts)
+pub mod identity; // identity fix 12.1.8: LiveKit identity → user by the call memberships (= the web's features/calls/identity.ts)
 pub mod companions; // screen share P3: fold a phone's share-only companion into its person (= the web's features/calls/companions.ts)
 pub mod callrules; // the calls-round rules: call host policy, key recipients v2, rotate-on-leave (pure; = the web's features/calls/callrules.ts)
 pub mod key_intake; // every Olm-decrypted media key goes through keyrules before the keyring
@@ -97,6 +98,7 @@ pub mod storekey; // M10 (sec-night 2026-10-27): the store passphrase in the OS 
 pub mod soundboard; // SoundboardController — room + personal sounds, web search (dev.tinhat.soundboard)
 pub mod status_ctl; // per-person "looking to play" status (dev.tinhat.userstatus)
 pub mod stream; // StreamController — NVENC screen-share publish into a call
+pub mod relaunch; // 12.1.8: a relaunch quits only once the new instance runs (pure rules + the child's ack)
 pub mod update; // UpdateController — in-app / startup update check + self-replace
 pub mod update_trust; // H3: what the updater believes — the signed feed (minisign, release key compiled in), pinned downloads (pure)
 pub mod video; // FFI to the C++ qml6glsink bridge (native remote-video tiles)
@@ -203,6 +205,16 @@ fn print_loopback(label: &str, r: &tinhat_streamer::call::LoopbackReport) {
         } else {
             "FAIL — key installed but nothing decoded (inspect e2ee_states: MissingKey=identity/index, DecryptionFailed=bytes/KDF)"
         }
+    } else if label == "ZERO-KEY" {
+        // the subscriber HAS a key (the zero one): it must receive the track, decode nothing, and fail to decrypt
+        let failed = r.e2ee_states.iter().any(|s| s.contains("DecryptionFailed"));
+        if r.subscribed && r.frames_decoded == 0 && failed {
+            "PASS — frames sealed under the fresh key arrive but do NOT decrypt with the zero key (DecryptionFailed)"
+        } else if r.frames_decoded > 0 {
+            "FAIL — decoded with the ZERO key: the publisher sealed with a zero key"
+        } else {
+            "INCONCLUSIVE — no track or no DecryptionFailed state seen (transport/publisher problem, not a pass)"
+        }
     } else if r.frames_decoded == 0 {
         "PASS — no key => no decode (E2EE is genuinely active)"
     } else {
@@ -269,6 +281,11 @@ fn acquire_single_instance_lock() -> Option<std::fs::File> {
     let file = loop {
         match lock_file_exclusive(&path) {
             Ok(None) if wait_until.is_some_and(|t| std::time::Instant::now() < t) => {
+                // 12.1.8: the previous instance deleted our hand-over file = it called the restart off and stays up
+                if relaunch::called_off() {
+                    eprintln!("[relaunch] the previous instance called the restart off — exiting quietly");
+                    std::process::exit(0);
+                }
                 if !waited {
                     eprintln!("[main] relaunch: waiting for the previous instance to exit");
                     waited = true;
@@ -278,6 +295,11 @@ fn acquire_single_instance_lock() -> Option<std::fs::File> {
             }
             r => break r,
         }
+    };
+    // 12.1.8: a relaunched child that gave up withdraws its hand-over and takes one last look (relaunch_last_look)
+    let file = match file {
+        Ok(None) => Ok(relaunch_last_look(&path)),
+        r => r,
     };
     let file = match file {
         Ok(Some(f)) => f,
@@ -300,6 +322,26 @@ fn acquire_single_instance_lock() -> Option<std::fs::File> {
     let scope = if shared { " (shared by every instance of this Flatpak app)" } else { "" };
     eprintln!("[main] single-instance lock acquired{scope}");
     Some(file)
+}
+
+/// 12.1.8: a relaunched child that gave up waiting for the previous instance. It withdraws its hand-over FIRST
+/// (relaunch.rs: the previous instance can no longer commit to it), then looks at the lock for a few seconds more: if
+/// the previous instance had committed just before, it is exiting now and the lock frees — the restart goes on.
+/// `None` = not a relaunch with a hand-over, or the previous instance stays.
+#[cfg(unix)]
+fn relaunch_last_look(path: &std::path::Path) -> Option<std::fs::File> {
+    if !relaunch::withdraw() {
+        return None;
+    }
+    let until = std::time::Instant::now() + std::time::Duration::from_secs(3);
+    while std::time::Instant::now() < until {
+        if let Ok(Some(f)) = lock_file_exclusive(path) {
+            eprintln!("[relaunch] the previous instance exited at the hand-over — continuing");
+            return Some(f);
+        }
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+    None
 }
 
 /// Open (create) `path` and take an exclusive non-blocking `flock` on it. `Ok(Some)` = we hold
@@ -615,6 +657,9 @@ fn main() {
     // we need to debug the zombie. Held for the whole process lifetime; released on exit/crash.
     // Bypass: TINHAT_NO_SINGLE_INSTANCE=1. Kept in INSTANCE_LOCK so it outlives app.exec(); a
     // Flatpak relaunch's child waits for it until this process is gone.
+    // 12.1.8: a relaunched child says it runs BEFORE it waits for the lock: the previous instance holds that lock
+    // and quits only once it has heard from us (relaunch.rs)
+    relaunch::ack_if_asked();
     *INSTANCE_LOCK.lock().unwrap() = acquire_single_instance_lock();
 
     // Safe mode (0.8.25): decided from the previous start's marker, exported into the
@@ -768,6 +813,7 @@ fn main() {
     // Headless self-test of the LiveKit connect+publish path in THIS binary's
     // environment (libwebrtc linked with Qt/matrix/gst), bypassing Qt + the portal:
     //   TINHAT_LKTEST=1 LIVEKIT_URL=… LK_TOKEN=… LK_IDENTITY=… ./tinhat
+    #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a developer hook
     if std::env::var_os("TINHAT_LKTEST").is_some() {
         let _g = bridge::runtime().enter();
         let url = std::env::var("LIVEKIT_URL").expect("LIVEKIT_URL");
@@ -783,6 +829,7 @@ fn main() {
 
     // Headless self-test of the unified CALL session's audio publish path:
     //   TINHAT_CALLTEST=1 LIVEKIT_URL=… LK_TOKEN=… LK_IDENTITY=… ./tinhat
+    #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a developer hook
     if std::env::var_os("TINHAT_CALLTEST").is_some() {
         let _g = bridge::runtime().enter();
         let url = std::env::var("LIVEKIT_URL").expect("LIVEKIT_URL");
@@ -839,6 +886,7 @@ fn main() {
 
     // Headless self-test of the camera capture+publish path (no GUI/render):
     //   TINHAT_CAMTEST=1 LIVEKIT_URL=… LK_TOKEN=… LK_IDENTITY=… [TINHAT_CAM_DEVICE=/dev/video0] ./tinhat
+    #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a developer hook
     if std::env::var_os("TINHAT_CAMTEST").is_some() {
         let _g = bridge::runtime().enter();
         let url = std::env::var("LIVEKIT_URL").expect("LIVEKIT_URL");
@@ -900,6 +948,18 @@ fn main() {
                     }
                 }
                 _ => eprintln!("[loopback] NEGATIVE token mint failed"),
+            }
+            // ZERO-KEY control (crypto follow-up (c)): the subscriber installs the ALL-ZERO key the self-tests used to
+            // seal with -> must NOT decode: frames sealed under a self-test's fresh random key are not readable with it.
+            match (mint("loopPubC").await, mint("loopSubC").await) {
+                (Ok(p), Ok(s)) => {
+                    let codec = std::env::var("TINHAT_E2EE_CODEC").unwrap_or_else(|_| "h264".into());
+                    match tinhat_streamer::call::e2ee_loopback_zero_key(&p.url, &p.jwt, &s.jwt, 8, &codec).await {
+                        Ok(r) => print_loopback("ZERO-KEY", &r),
+                        Err(e) => eprintln!("[loopback] ZERO-KEY run error: {e}"),
+                    }
+                }
+                _ => eprintln!("[loopback] ZERO-KEY token mint failed"),
             }
         });
         return;

@@ -423,13 +423,16 @@ Item {
         if (conv._frozenTailId.length > 0) conv._dividerSettled = true
     }
 
+    // 12.1.8 (docs/KEYS-IN-WINDOWS.md): a floating chat window is the main window's transient child, so its paging keys
+    // only while that window has the keyboard (else they collide with the main timeline's and neither pages).
+    readonly property bool _keysHere: conv.visible && conv.Window.activeFocusItem !== null
     // 10.1 (TL-21): PgUp/PgDn/Home/End page the timeline whenever no text field has focus (they
     // used to work only while the composer was focused — click a bubble and they died).
     readonly property bool _noTextFocus: !(conv.Window.activeFocusItem && ("cursorPosition" in conv.Window.activeFocusItem))
-    Shortcut { sequence: "PgUp"; enabled: conv.visible && !conv.hidden && conv._noTextFocus; onActivated: msgView.pageBy(-1) }
-    Shortcut { sequence: "PgDown"; enabled: conv.visible && !conv.hidden && conv._noTextFocus; onActivated: msgView.pageBy(1) }
-    Shortcut { sequence: "End"; enabled: conv.visible && !conv.hidden && conv._noTextFocus; onActivated: msgView.jumpToLatest() }
-    Shortcut { sequence: "Home"; enabled: conv.visible && !conv.hidden && conv._noTextFocus; onActivated: { msgView.positionViewAtBeginning(); msgView._maybeLoadOlder() } }
+    Shortcut { sequence: "PgUp"; enabled: conv._keysHere && !conv.hidden && conv._noTextFocus; onActivated: msgView.pageBy(-1) }
+    Shortcut { sequence: "PgDown"; enabled: conv._keysHere && !conv.hidden && conv._noTextFocus; onActivated: msgView.pageBy(1) }
+    Shortcut { sequence: "End"; enabled: conv._keysHere && !conv.hidden && conv._noTextFocus; onActivated: msgView.jumpToLatest() }
+    Shortcut { sequence: "Home"; enabled: conv._keysHere && !conv.hidden && conv._noTextFocus; onActivated: { msgView.positionViewAtBeginning(); msgView._maybeLoadOlder() } }
     // 10.1 (TL-17): the shared controller re-targets in place — react to the room id at once
     // instead of on the next 120 ms tick (the header switched, the old messages lingered).
     Connections {

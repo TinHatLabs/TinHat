@@ -14,7 +14,8 @@
 //! So a click calls `Update()` at once and narrates Flatpak's progress; "nothing to update" (our
 //! feed ahead of the mirror by seconds) ends the attempt with a try-again line. Restart =
 //! `flatpak-spawn --latest-version tinhat` (the portal's Spawn with LATEST_VERSION; no extra
-//! permission; the portal owns the child, so it outlives us), then exit. 12.0: the single-instance
+//! permission; the portal owns the child, so it outlives us), then exit — 12.1.8: only once the child has said it
+//! runs; a failed relaunch keeps this instance up (relaunch.rs). 12.0: the single-instance
 //! lock is shared by every instance of the app and stays ours until we are gone; the relaunched
 //! child (TINHAT_RELAUNCH=update) waits for it (main.rs acquire_single_instance_lock).
 
@@ -254,25 +255,111 @@ mod imp {
         }
     }
 
+    /// A Flatpak relaunch whose child has said it runs (relaunch.rs). [`Handoff::commit`] looks once more and, if the
+    /// child still runs, lets the caller exit; dropping it uncommitted calls the restart off: the ack file goes (the
+    /// waiting child exits quietly) and the helper is stopped.
+    pub struct Handoff {
+        ack: std::path::PathBuf,
+        token: String,
+        helper: Option<std::process::Child>,
+        committed: bool,
+    }
+    impl Handoff {
+        /// Right before `exit`: the child still runs (its lock) and the helper still runs. `Ok` = exit now.
+        pub fn commit(mut self) -> Result<(), String> {
+            let helper = match self.helper.as_mut().map(|c| c.try_wait()) {
+                Some(Ok(None)) => None,
+                Some(Ok(Some(st))) => Some(st.code()),
+                _ => Some(None),
+            };
+            let ack = crate::relaunch::ack_state(&self.ack, &self.token);
+            match crate::relaunch::judge(helper, ack, std::time::Duration::ZERO, std::time::Duration::MAX) {
+                crate::relaunch::Verdict::Started => {
+                    self.committed = true;
+                    Ok(())
+                }
+                crate::relaunch::Verdict::Failed(why) => Err(format!("at the hand-over: {why}")),
+                crate::relaunch::Verdict::Pending => Err(format!("at the hand-over: the new instance no longer runs ({ack:?})")),
+            }
+        }
+    }
+    impl Drop for Handoff {
+        fn drop(&mut self) {
+            if self.committed {
+                return;
+            }
+            // the cancellation signal: the child polls for its ack file while it waits for our lock
+            if let Err(e) = std::fs::remove_file(&self.ack) {
+                if e.kind() != std::io::ErrorKind::NotFound {
+                    eprintln!("[flatpak] could not delete the hand-over file ({e}); the child times out instead");
+                }
+            }
+            if let Some(mut c) = self.helper.take() {
+                if let Ok(None) = c.try_wait() {
+                    // only our own helper (its pid), never anything matched by name; flatpak-spawn forwards it
+                    if unsafe { libc::kill(c.id() as i32, libc::SIGTERM) } != 0 {
+                        eprintln!("[flatpak] could not stop flatpak-spawn {}: {}", c.id(), std::io::Error::last_os_error());
+                    }
+                    for _ in 0..20 {
+                        if !matches!(c.try_wait(), Ok(None)) {
+                            return;
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(50));
+                    }
+                    eprintln!("[flatpak] flatpak-spawn {} still runs 1 s after SIGTERM (its child was told to stand down)", c.id());
+                }
+            }
+        }
+    }
+
     /// Relaunch into the newest installed commit through the portal: `flatpak-spawn
     /// --latest-version` starts a fresh sandbox on the new deployment (Spawn flag LATEST_VERSION;
-    /// needs no extra finish-args) and the portal owns that child, so it outlives us. The caller
-    /// exits right after, still holding the shared single-instance lock: the child (it gets
-    /// TINHAT_RELAUNCH=update) waits until we are gone. Our arguments carry over.
+    /// needs no extra finish-args) and the portal owns that child, so it outlives us. Our arguments carry over.
     /// flatpak-spawn forwards NOTHING of our process environment — the child gets the instance's
     /// original launch environment — so anything meant for the child goes through `--env=`.
-    pub fn relaunch_latest(extra_env: &[(&str, &str)]) -> Result<(), String> {
+    ///
+    /// 12.1.8: returns once the new instance RUNS (relaunch.rs: its ack file holds the token and is locked, and
+    /// flatpak-spawn still runs) — call [`Handoff::commit`] right before exiting, still holding the shared
+    /// single-instance lock, which the child (TINHAT_RELAUNCH=update) waits for. `Err` = no new instance (the portal
+    /// refused, the child died, or it said nothing in time): the attempt is already called off; the caller stays up.
+    /// Blocks up to relaunch::CONFIRM_TIMEOUT — call it off the Qt thread.
+    pub fn relaunch_latest(extra_env: &[(&str, &str)]) -> Result<Handoff, String> {
+        use crate::relaunch;
+        let dir = relaunch::ack_dir().ok_or_else(|| "no cache folder for the hand-over file".to_string())?;
+        let ack = relaunch::new_ack_path(&dir)?;
+        let token = relaunch::token_of(&ack).ok_or_else(|| "bad hand-over file name".to_string())?;
         let args: Vec<String> = std::env::args().skip(1).collect();
         let mut cmd = std::process::Command::new("flatpak-spawn");
         cmd.arg("--latest-version").arg("--env=TINHAT_RELAUNCH=update");
+        cmd.arg(format!("--env={}={}", relaunch::ACK_ENV, ack.display()));
         for (k, v) in extra_env {
             cmd.arg(format!("--env={k}={v}"));
         }
         cmd.arg("--").arg("tinhat").args(&args);
         cmd.stdin(std::process::Stdio::null());
         let child = cmd.spawn().map_err(|e| format!("flatpak-spawn: {e}"))?;
-        eprintln!("[flatpak] relaunching into the latest installed version (flatpak-spawn pid {})", child.id());
-        Ok(())
+        eprintln!(
+            "[flatpak] relaunching into the latest installed version (flatpak-spawn pid {}); waiting for it to run",
+            child.id()
+        );
+        let mut h = Handoff { ack, token, helper: Some(child), committed: false };
+        let r = relaunch::wait_confirmed(
+            || match h.helper.as_mut().map(|c| c.try_wait()) {
+                Some(Ok(None)) => None,
+                Some(Ok(Some(st))) => Some(st.code()),
+                _ => Some(None),
+            },
+            || relaunch::ack_state(&h.ack, &h.token),
+            relaunch::CONFIRM_TIMEOUT,
+            std::time::Duration::from_millis(100),
+        );
+        match r {
+            Ok(()) => {
+                eprintln!("[flatpak] the new instance runs");
+                Ok(h)
+            }
+            Err(e) => Err(e), // h drops here: called off
+        }
     }
 
     /// TINHAT_UPDATE_TEST=portal — run INSIDE the Flatpak on a session bus that has flatpak-portal:
@@ -332,8 +419,8 @@ mod imp {
         });
         if rc == 0 && relaunch {
             // the single-instance lock stays ours: the child waits for it until we have exited
-            match relaunch_latest(&[("TINHAT_UPDATE_TEST", "portal-child")]) {
-                Ok(()) => eprintln!("[portaltest] relaunch requested — exiting so the child proves it outlives us"),
+            match relaunch_latest(&[("TINHAT_UPDATE_TEST", "portal-child")]).and_then(|h| h.commit()) {
+                Ok(()) => eprintln!("[portaltest] the relaunched child runs — exiting so it proves it outlives us"),
                 Err(e) => {
                     eprintln!("[portaltest] VERDICT: FAIL — relaunch: {e}");
                     std::process::exit(1);
@@ -364,7 +451,7 @@ mod imp {
 }
 
 #[cfg(target_os = "linux")]
-pub use imp::{headless_portal_test, portal_child_marker, relaunch_latest, request_apply, start_monitor};
+pub use imp::{headless_portal_test, portal_child_marker, relaunch_latest, request_apply, start_monitor, Handoff};
 
 #[cfg(not(target_os = "linux"))]
 pub fn start_monitor() {}
@@ -373,6 +460,14 @@ pub fn request_apply(_on_done: Done) -> Result<String, String> {
     Err("not a Flatpak".into())
 }
 #[cfg(not(target_os = "linux"))]
-pub fn relaunch_latest(_extra_env: &[(&str, &str)]) -> Result<(), String> {
+pub struct Handoff;
+#[cfg(not(target_os = "linux"))]
+impl Handoff {
+    pub fn commit(self) -> Result<(), String> {
+        Err("not a Flatpak".into())
+    }
+}
+#[cfg(not(target_os = "linux"))]
+pub fn relaunch_latest(_extra_env: &[(&str, &str)]) -> Result<Handoff, String> {
     Err("not a Flatpak".into())
 }

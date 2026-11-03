@@ -8,7 +8,8 @@
 //! edit ONCE (`finish`) — or None when nothing changed (the engine's `save` would answer noop).
 //!
 //! Host logic that CHOOSES operations (both apps must choose the same ones, EDITMODE-UI §4.3 / §8):
-//!   pick_preset   applyPreset, then carry every placed island's button rows (opts.<ref>.rows)
+//!   pick_preset   applyPreset, then carry every placed island's button rows (opts.<ref>.rows), then the user's own
+//!                 button islands and drawers (carry_own, 12.1.8)
 //!   float_anchor  the host corner nearest to an island's centre
 //!   dock_float    the island's registry home list as dock placements, first success wins
 //!   reset_island  hide → strip size / from, from = the preset's parent + index → restore
@@ -19,7 +20,7 @@
 use crate::form::{all_locs, find_key, floats_of, hidden_of, is_island, key_of};
 use crate::json::{cmp_cp, mk, J};
 use crate::ops::{apply_op, OpResult};
-use crate::repair::repair_phone;
+use crate::repair::{repair_phone, validate_desktop};
 use crate::schema::{def, kind_of, preset_desktop, preset_phone};
 
 /// The undo stack keeps at most this many steps (the oldest go first).
@@ -275,7 +276,115 @@ pub fn pick_preset(form: &J, name: &str) -> Result<J, String> {
             }
         }
     }
-    Ok(next)
+    Ok(carry_own(form, next))
+}
+
+/// The pick's second half (12.1.8, EDITMODE-UI §8 "your own button islands come along"): the user's own button islands
+/// (`buttons:*`) and drawers of the form before the pick, carried into the preset. A preset has no button islands, so
+/// without this a pick dropped every Add button / Add drawer result. Three passes; a step the engine refuses, or one
+/// whose form would not validate, is skipped (the form stays as it was before that step):
+///   1. a HIDDEN own button island the new form lacks: hidden again, with its rows (a drawer's island, or one hidden by
+///      hand — still restorable from Add island);
+///   2. every drawer reachable from a PLACED own button island — its drawers, and the drawers of an island (with rows) in
+///      one of them, and so on (breadth first from the placed ones in document order; row keys in code-point order; items in
+///      order; each island once): the island it opens is hidden in the new form (the preset placed it) or put back into
+///      `hidden` (it was hidden and the preset lacks it), and keeps its rows;
+///   3. a PLACED own button island the new form doesn't place: back at its registry home (hidden + restore, like New
+///      button island), with its rows.
+/// The layout format is unchanged: everything here is an ordinary hidden list entry, placement or `rows` option.
+fn carry_own(before: &J, mut next: J) -> J {
+    let valid = |f: &J| validate_desktop(Some(f)).is_empty();
+    let rows_of = |r: &str| before.get("opts").and_then(|o| o.get(r)).filter(J::is_obj).and_then(|o| o.get("rows"));
+    let in_form = |f: &J, r: &str| placed_refs(f).iter().any(|x| x == r) || hidden_refs(f).iter().any(|x| x == r);
+    let push_hidden = |f: &J, r: &str| -> Option<J> {
+        let g = f.deep();
+        let mut hid = hidden_of(&g);
+        hid.push(mk(vec![("t", J::s("island")), ("i", J::s(r))]));
+        g.set("hidden", J::arr(hid));
+        if valid(&g) {
+            Some(g)
+        } else {
+            None
+        }
+    };
+    let set_rows = |f: J, r: &str| -> J {
+        let Some(rows) = rows_of(r) else { return f };
+        let set = op(vec![("op", J::s("setOpt")), ("ref", J::s(r)), ("key", J::s("rows")), ("value", rows.deep())]);
+        match apply_op(&f, Some(&set), None) {
+            OpResult::Ok { form, .. } if valid(&form) => form,
+            _ => f,
+        }
+    };
+    // 1. hidden own button islands
+    for r in hidden_refs(before) {
+        if r.starts_with("buttons:") && !in_form(&next, &r) {
+            if let Some(g) = push_hidden(&next, &r) {
+                next = set_rows(g, &r);
+            }
+        }
+    }
+    // 2. the islands the drawers open, breadth first from the placed own button islands
+    let placed_own: Vec<String> = placed_refs(before).into_iter().filter(|r| r.starts_with("buttons:")).collect();
+    let mut queue: Vec<String> = placed_own.clone();
+    let mut seen: Vec<String> = Vec::new();
+    let mut targets: Vec<String> = Vec::new();
+    let mut qi = 0;
+    while qi < queue.len() {
+        let b = queue[qi].clone();
+        qi += 1;
+        if seen.contains(&b) {
+            continue;
+        }
+        seen.push(b.clone());
+        let Some(rows) = rows_of(&b).filter(J::is_obj) else { continue };
+        let mut keys = rows.keys();
+        keys.sort_by(|x, y| cmp_cp(x, y));
+        for k in keys {
+            let Some(items) = rows.get(&k).and_then(|row| row.get("items")).filter(J::is_arr) else { continue };
+            for it in items.items() {
+                if !(it.is_obj() && it.is("a", DRAWER_ACTION)) {
+                    continue;
+                }
+                let t = it.get("target").and_then(|t| t.get("island")).and_then(|i| i.as_str().map(str::to_string));
+                if let Some(t) = t.filter(|t| !t.is_empty() && !targets.contains(t)) {
+                    queue.push(t.clone()); // any island with rows may hold a drawer of its own
+                    targets.push(t);
+                }
+            }
+        }
+    }
+    for t in &targets {
+        if placed_refs(&next).iter().any(|x| x == t) {
+            if let OpResult::Ok { form, .. } = apply_op(&next, Some(&op(vec![("op", J::s("hide")), ("ref", J::s(t))])), None) {
+                if valid(&form) {
+                    next = form;
+                }
+            }
+        } else if !hidden_refs(&next).iter().any(|x| x == t) && hidden_refs(before).iter().any(|x| x == t) {
+            if let Some(g) = push_hidden(&next, t) {
+                next = g;
+            }
+        }
+        if hidden_refs(&next).iter().any(|x| x == t) {
+            next = set_rows(next, t);
+        }
+    }
+    // 3. placed own button islands, back at their registry home
+    for r in &placed_own {
+        if in_form(&next, r) {
+            continue;
+        }
+        let g = next.deep();
+        let mut hid = hidden_of(&g);
+        hid.push(mk(vec![("t", J::s("island")), ("i", J::s(r))]));
+        g.set("hidden", J::arr(hid));
+        if let OpResult::Ok { form, .. } = apply_op(&g, Some(&op(vec![("op", J::s("restore")), ("ref", J::s(r))])), None) {
+            if valid(&form) {
+                next = set_rows(form, r);
+            }
+        }
+    }
+    next
 }
 
 /// A rect in host pixels.
@@ -762,6 +871,10 @@ mod tests {
     use crate::json::read_json;
     use crate::repair::{repair_desktop, validate_desktop};
     use crate::schema::{classic_desktop, classic_phone};
+    /// presets_carry_your_buttons_and_drawers: the Compact pick of its start form (the web asserts the same string)
+    /// presets_carry_nested_drawers_and_target_rows: the Call-first pick (the web asserts the same string)
+    const CARRY_NESTED: &str = r##"{"collapse":[{"below":1300,"ref":"panel","to":"overlay"},{"below":1180,"ref":"navcol","to":"drawer"}],"floats":[],"hidden":[{"i":"buttons:b1","t":"island"},{"from":{"index":0,"parent":"roomscol"},"i":"rooms","size":{"auto":true,"grow":1,"min":160},"t":"island"},{"from":{"index":0,"parent":"roomscol"},"i":"widgets","size":{"auto":true},"t":"island"}],"opts":{"buttons:b1":{"rows":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"icon":"star","island":"rooms"}}],"look":"icon"}}},"buttons:b2":{"rows":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"island":"buttons:b1"}},{"a":"layout.drawer.toggle","target":{"island":"Bad Ref"}}],"look":"icon"}}},"rooms":{"rows":{"main":{"items":[{"a":"app.settings.open"},{"a":"layout.drawer.toggle","target":{"island":"widgets"}}]}}}},"preset":"callFirst","root":{"c":[{"c":[{"c":[{"c":[{"i":"nav","size":{"auto":true},"t":"island"},{"i":"dms","size":{"auto":true},"t":"island"},{"i":"spaces","size":{"min":112,"share":1},"t":"island"}],"id":"rail","size":{"fixed":68},"t":"col"},{"i":"account","size":{"fixed":260},"t":"island"}],"id":"navcol","size":{"auto":true},"t":"row"},{"c":[{"i":"header","size":{"auto":true},"t":"island"},{"c":[{"i":"call","size":{"min":480,"share":2},"t":"island"},{"c":[{"i":"timeline","size":{"min":120,"share":1},"t":"island"},{"i":"composer","size":{"auto":true},"t":"island"}],"id":"roomcol","size":{"min":340,"share":1},"t":"col"},{"i":"panel","size":{"fixed":324},"t":"island"}],"id":"stage","size":{"share":1},"t":"row"}],"id":"main","size":{"min":360,"share":1},"t":"col"}],"id":"body","size":{"share":1},"t":"row"},{"i":"buttons:b2","t":"island"}],"id":"n1","t":"col"}}"##;
+    const CARRY_COMPACT: &str = r##"{"collapse":[{"below":820,"ref":"panel","to":"overlay"},{"below":680,"ref":"navcol","to":"drawer"}],"floats":[],"gap":4,"hidden":[{"i":"buttons:b3","t":"island"},{"i":"buttons:b5","t":"island"},{"from":{"index":0,"parent":"roomscol"},"i":"rooms","size":{"auto":true,"grow":1,"min":160},"t":"island"}],"margin":4,"opts":{"buttons:b1":{"rows":{"main":{"items":[{"a":"call.deafen"}],"look":"icon"}}},"buttons:b2":{"rows":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"icon":"star","island":"rooms"}}],"look":"icon"}}},"buttons:b3":{"rows":{"main":{"items":[{"a":"app.settings.open"}]}}},"buttons:b4":{"rows":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"island":"buttons:b3"}}],"look":"icon"}}},"buttons:b5":{"rows":{"main":{"items":[]}}},"rooms":{"compact":true}},"preset":"compact","root":{"c":[{"c":[{"c":[{"c":[{"i":"nav","size":{"auto":true},"t":"island"},{"i":"dms","size":{"auto":true},"t":"island"},{"i":"spaces","size":{"min":112,"share":1},"t":"island"}],"id":"rail","size":{"fixed":64},"t":"col"},{"c":[{"i":"widgets","size":{"auto":true},"t":"island"},{"i":"account","size":{"auto":true},"t":"island"}],"id":"roomscol","size":{"fixed":248},"t":"col"}],"id":"navcol","size":{"auto":true},"t":"row"},{"c":[{"i":"header","size":{"auto":true},"t":"island"},{"i":"call","size":{"auto":true,"min":252},"t":"island"},{"c":[{"c":[{"i":"timeline","size":{"min":120,"share":1},"t":"island"},{"i":"composer","size":{"auto":true},"t":"island"}],"id":"roomcol","size":{"min":360,"share":1},"t":"col"},{"i":"panel","size":{"fixed":300},"t":"island"}],"id":"convrow","size":{"min":160,"minPm":250,"share":1},"t":"row"}],"id":"main","size":{"min":360,"share":1},"t":"col"}],"id":"body","size":{"share":1},"t":"row"},{"i":"buttons:b1","t":"island"},{"i":"buttons:b2","t":"island"},{"i":"buttons:b4","t":"island"}],"id":"n1","t":"col"}}"##;
 
     fn j(s: &str) -> J {
         read_json(s).expect("json")
@@ -1008,6 +1121,90 @@ mod tests {
             f = new_button_island(&f).unwrap().0;
         }
         assert_eq!(new_button_island(&f).err().as_deref(), Some("too-many"));
+    }
+
+    #[test]
+    fn presets_carry_your_buttons_and_drawers() {
+        // 12.1.8 (EDITMODE-UI §8): Add button + Add drawer (Rooms, and a button island) + a hidden button island survive
+        // every preset pick; the web's session.test.ts asserts the same canonical form for Compact.
+        let f0 = classic();
+        let (a, ra) = new_action_button(&f0, &j(r#"{"a":"call.deafen"}"#), "icon").unwrap();
+        let (b, rb) = new_drawer(&a, "rooms", "star").unwrap();
+        let (c, rc) = new_button_island(&b).unwrap();
+        let c = apply(&c, &format!(r#"{{"op":"setOpt","ref":"{rc}","key":"rows","value":{{"main":{{"items":[{{"a":"app.settings.open"}}]}}}}}}"#));
+        let (d, rd) = new_drawer(&c, &rc, "").unwrap();
+        let (e, re) = new_button_island(&d).unwrap();
+        let e = apply(&e, &format!(r#"{{"op":"hide","ref":"{re}"}}"#));
+        assert_eq!((ra.as_str(), rb.as_str(), rc.as_str(), rd.as_str(), re.as_str()), ("buttons:b1", "buttons:b2", "buttons:b3", "buttons:b4", "buttons:b5"));
+        let rows = |f: &J, r: &str| f.get("opts").and_then(|o| o.get(r)).and_then(|o| o.get("rows")).map(|x| x.canon());
+        for p in ["classic", "compact", "callFirst", "sideMonitor", "handheld"] {
+            let g = pick_preset(&e, p).unwrap_or_else(|x| panic!("{p}: {x}"));
+            assert!(g.is("preset", p), "{p}");
+            assert!(validate_desktop(Some(&g)).is_empty(), "{p}: {:?}", validate_desktop(Some(&g)));
+            let placed = placed_refs(&g);
+            let hidden = hidden_refs(&g);
+            for r in [&ra, &rb, &rd] {
+                assert!(placed.contains(r), "{p}: {r} placed");
+                assert_eq!(rows(&g, r), rows(&e, r), "{p}: {r} rows");
+            }
+            for r in ["rooms", rc.as_str(), re.as_str()] {
+                assert!(hidden.iter().any(|x| x == r) && !placed.iter().any(|x| x == r), "{p}: {r} hidden");
+            }
+            assert_eq!(rows(&g, &rc), rows(&e, &rc), "{p}: the drawer's button island keeps its button");
+            assert!(drawer_form(&g, "rooms", Rect { x: 0, y: 0, w: 40, h: 40 }, 1600, 1000).is_ok(), "{p}: the Rooms drawer opens");
+            assert!(drawer_form(&g, &rc, Rect { x: 0, y: 0, w: 40, h: 40 }, 1600, 1000).is_ok(), "{p}: the button drawer opens");
+        }
+        // nothing of yours: the pick is applyPreset (+ rows) as before
+        assert!(same(&pick_preset(&f0, "compact").unwrap(), &preset_desktop("compact").unwrap()));
+        // a session: one undo step; Previous brings back the start
+        let mut s = start(&e);
+        assert_eq!(s.preset("callFirst"), Ok(()));
+        assert_eq!(s.undo_depth(), 1);
+        assert_eq!(s.previous(), Ok(()));
+        assert!(same(&s.form, &e));
+        // the shared vector (session.test.ts: the same string)
+        let g = pick_preset(&e, "compact").unwrap();
+        if std::env::var_os("CARRY_DUMP").is_some() {
+            println!("CARRY_COMPACT={}", g.canon());
+            println!("CARRY_START={}", e.canon());
+        }
+        assert_eq!(g.canon(), CARRY_COMPACT);
+    }
+
+    #[test]
+    fn presets_carry_nested_drawers_and_target_rows() {
+        // the review's cases: a drawer whose island has a drawer of its own (b2 → b1 → Rooms → Widgets), the
+        // Rooms island's own rows, and a malformed hidden entry ("Bad Ref") that must not come back (a well-formed unknown ref is kept: a newer Tin Hat's island)
+        let f0 = classic();
+        let (a, ra) = new_drawer(&f0, "rooms", "star").unwrap();
+        let a = apply(&a, r#"{"op":"setOpt","ref":"rooms","key":"rows","value":{"main":{"items":[{"a":"app.settings.open"},{"a":"layout.drawer.toggle","target":{"island":"widgets"}}]}}}"#);
+        // (Add drawer refuses a button island that holds a drawer button: this chain only comes from a hand-made layout)
+        let a = apply(&a, &format!(r#"{{"op":"hide","ref":"{ra}"}}"#));
+        let (b, rb) = new_button_island(&a).unwrap();
+        assert_eq!((ra.as_str(), rb.as_str()), ("buttons:b1", "buttons:b2"));
+        let b = apply(&b, r#"{"op":"setOpt","ref":"buttons:b2","key":"rows","value":{"main":{"items":[{"a":"layout.drawer.toggle","target":{"island":"buttons:b1"}},{"a":"layout.drawer.toggle","target":{"island":"Bad Ref"}}],"look":"icon"}}}"#);
+        let mut hid = hidden_of(&b);
+        hid.push(j(r#"{"t":"island","i":"Bad Ref"}"#));
+        b.set("hidden", J::arr(hid));
+        let rows = |f: &J, r: &str| f.get("opts").and_then(|o| o.get(r)).and_then(|o| o.get("rows")).map(|x| x.canon());
+        for p in ["classic", "compact", "callFirst", "sideMonitor", "handheld"] {
+            let g = pick_preset(&b, p).unwrap_or_else(|x| panic!("{p}: {x}"));
+            assert!(validate_desktop(Some(&g)).is_empty(), "{p}: {:?}", validate_desktop(Some(&g)));
+            let (placed, hidden) = (placed_refs(&g), hidden_refs(&g));
+            assert!(placed.contains(&rb), "{p}: b2 placed");
+            for r in ["rooms", ra.as_str(), "widgets"] {
+                assert!(hidden.iter().any(|x| x == r) && !placed.iter().any(|x| x == r), "{p}: {r} hidden");
+                assert_eq!(rows(&g, r), rows(&b, r), "{p}: {r} rows");
+            }
+            assert!(!hidden.iter().any(|x| x == "Bad Ref") && !placed.iter().any(|x| x == "Bad Ref"), "{p}: a malformed ref is refused");
+            // Rooms now holds a drawer button itself, so (by design) it can't go into a drawer; its own drawer opens
+            assert!(drawer_form(&g, "widgets", Rect { x: 0, y: 0, w: 40, h: 40 }, 1600, 1000).is_ok(), "{p}: Rooms' Widgets drawer opens");
+        }
+        let g = pick_preset(&b, "callFirst").unwrap();
+        if std::env::var_os("CARRY_DUMP").is_some() {
+            println!("CARRY_NESTED={}", g.canon());
+        }
+        assert_eq!(g.canon(), CARRY_NESTED);
     }
 
     #[test]

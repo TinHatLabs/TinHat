@@ -570,8 +570,13 @@ Window {
         keysCard.visible = false
         Qt.callLater(function () { searchField.forceActiveFocus(); searchField.selectAll() })
     }
+    // 12.1.8 (fix/windows-escape, docs/KEYS-IN-WINDOWS.md): this window's keys only while IT has the keyboard. A secondary
+    // window is the main window's transient child, and Qt counts such a window as active whenever the main one is (on
+    // Windows from launch: the dark-title-bar sweep gives every window a native handle), so an unguarded Shortcut here
+    // took Escape (and Space, K, M, F, digits) from the main window: no panel, drawer or popup closed on Escape.
+    readonly property bool keysHere: sheet.visible && sheet.activeFocusItem !== null
     // keys (testvectors/mediaparty/shortcuts.json = MP_SHORTCUTS): never while typing in the one box
-    readonly property bool keysOn: sheet.visible && !searchField.activeFocus
+    readonly property bool keysOn: sheet.keysHere && !searchField.activeFocus
     Shortcut { sequence: "Space"; enabled: sheet.keysOn; onActivated: sheet.runAction("watchParty.playPause") }
     Shortcut { sequence: "K"; enabled: sheet.keysOn; onActivated: sheet.runAction("watchParty.playPause") }
     Shortcut { sequence: "Left"; enabled: sheet.keysOn; onActivated: sheet.seekBy(-5) }

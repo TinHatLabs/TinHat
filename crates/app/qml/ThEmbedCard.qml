@@ -24,6 +24,9 @@ import QtWebEngine
 
 Item {
     id: card
+    // 12.1.8 (docs/KEYS-IN-WINDOWS.md): these Shortcuts only while this item's window has the keyboard (the main window
+    // and its transient children count as active together, so an ungated Shortcut collides across windows).
+    readonly property bool _keysHere: card.Window.activeFocusItem !== null
     required property var app            // ApplicationWindow (theme tokens); may be null
     property bool inView: true   // 11.0 (GPU.md §2.6): inside the timeline's viewport (ChatBubble passes it)
     property var embed: ({})             // one embed descriptor (see header)
@@ -133,7 +136,7 @@ Item {
             ThIcon { anchors.centerIn: parent; width: 16; height: 16; app: card.app; name: "view-restore-symbolic"; color: Th.embedOverlayFg; isMask: true }
             MouseArea { id: fsExitMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: card.leaveFullscreen(true) }
         }
-        Shortcut { sequence: "Escape"; enabled: card.fullscreen; context: Qt.WindowShortcut; onActivated: card.leaveFullscreen(true) }
+        Shortcut { sequence: "Escape"; enabled: card._keysHere && card.fullscreen; context: Qt.WindowShortcut; onActivated: card.leaveFullscreen(true) }
     }
     Component.onDestruction: if (card.fullscreen) card.leaveFullscreen(true)
 

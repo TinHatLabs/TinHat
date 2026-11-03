@@ -1,0 +1,330 @@
+--- a/api/crypto/frame_crypto_transformer.cc
++++ b/api/crypto/frame_crypto_transformer.cc
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include "api/crypto/frame_crypto_transformer.h"
++#include "api/crypto/tinhat_iv.h"  // PATCH (Tin Hat) tinhat-iv-v2 + tinhat-vp9-kf-iv-v1
+ 
+ #include <openssl/aes.h>
+ #include <openssl/digest.h>
+@@ -43,6 +44,19 @@
+ #include "rtc_base/logging.h"
+ #include "rtc_base/time_utils.h"
+ 
++tinhat::IvAllocator& tinhat::ProcessIvAllocator() {
++  // PATCH (Tin Hat) tinhat-iv-v2: ONE counter domain per process (never destroyed: no static-destruction order
++  // issue). The random domain and start are defence in depth only; uniqueness comes from the counter.
++  static tinhat::IvAllocator* const alloc = [] {
++    const uint32_t domain = webrtc::CreateRandomId();
++    const uint64_t start = (static_cast<uint64_t>(webrtc::CreateRandomId() & 0xFF) << 32) | webrtc::CreateRandomId();
++    RTC_LOG(LS_INFO) << "Tin Hat IV allocator active: " << tinhat::kTinHatIvStamp;
++    return new tinhat::IvAllocator(domain, start);
++  }();
++  return *alloc;
++}
++
++
+ enum class EncryptOrDecrypt { kEncrypt = 0, kDecrypt };
+ 
+ #define Success 0
+@@ -255,6 +269,20 @@
+   return ss.str();
+ }
+ 
++// PATCH (Tin Hat) VP9 E2EE keyframe IV (share-never-decodes): VP9 frames are encrypted from byte 0 (no clear
++// bytes, the rule of every LiveKit client), but the LiveKit SFU decides "keyframe" from byte 0 of the VP9 payload
++// (mediatransportutil codec.IsVP9KeyFrame): on ciphertext any frame passes with probability 1/16, so its forwarder
++// could wait a whole share for a layer lock or start on a delta frame. AES-GCM is counter mode (ciphertext byte 0 =
++// plaintext byte 0 XOR keystream byte 0) and the IV rides in the trailer, so the sender takes IVs from its
++// allocator until byte 0 tells the SFU the truth (tinhat::StepVp9Iv). Receivers and the wire format are unchanged.
++inline bool FrameIsVp9(webrtc::TransformableFrameInterface* frame,
++                       webrtc::FrameCryptorTransformer::MediaType type) {
++  if (type != webrtc::FrameCryptorTransformer::MediaType::kVideoFrame)
++    return false;
++  auto videoFrame = static_cast<webrtc::TransformableVideoFrameInterface*>(frame);
++  return videoFrame->header().codec == webrtc::VideoCodecType::kVideoCodecVP9;
++}
++
+ uint8_t get_unencrypted_bytes(webrtc::TransformableFrameInterface* frame,
+                               webrtc::FrameCryptorTransformer::MediaType type) {
+   uint8_t unencrypted_bytes = 0;
+@@ -596,6 +624,60 @@
+   frame_trailer[0] = getIvSize();
+   frame_trailer[1] = key_index_;
+   webrtc::Buffer iv = makeIv(frame->GetSsrc(), frame->GetTimestamp());
++  if (iv.size() != getIvSize()) {
++    // PATCH (Tin Hat) tinhat-iv-v2: the allocator is exhausted (255^8 seals): never reuse an IV, drop the frame.
++    if (last_enc_error_ != FrameCryptionState::kEncryptionFailed) {
++      last_enc_error_ = FrameCryptionState::kEncryptionFailed;
++      onFrameCryptionStateChanged(last_enc_error_);
++    }
++    RTC_LOG(LS_ERROR) << "Tin Hat IV allocator exhausted; frame dropped";
++    return;
++  }
++
++  // PATCH (Tin Hat) VP9 E2EE keyframe IV: see FrameIsVp9 above and api/crypto/tinhat_iv.h. Each candidate seals ONE
++  // byte (the frame's first) privately: with a 96-bit IV that byte equals byte 0 of the real ciphertext whatever the
++  // length and AAD. Only a matching IV is ever sent; a cap miss (p = (15/16)^512 for a keyframe) drops the frame:
++  // the stream recovers when a later keyframe is delivered, which the receivers' or SFU's next PLI normally brings.
++  if (unencrypted_bytes == 0 && FrameIsVp9(frame.get(), type_)) {
++    static const bool log_vp9_stamp_once = [] {
++      RTC_LOG(LS_INFO) << "VP9 E2EE keyframe IV active: " << tinhat::kTinHatVp9KfIvStamp;
++      return true;
++    }();
++    (void)log_vp9_stamp_once;
++    const bool want_key =
++        static_cast<webrtc::TransformableVideoFrameInterface*>(frame.get())
++            ->IsKeyFrame();
++    uint8_t first = data_in[0];
++    const tinhat::Vp9IvResult r = tinhat::StepVp9Iv(
++        tinhat::ProcessIvAllocator(), want_key,
++        [&](const tinhat::Iv& cand, uint8_t* c0) {
++          std::vector<uint8_t> probe;
++          webrtc::Buffer cand_iv(cand.data(), cand.size());
++          if (AesEncryptDecrypt(EncryptOrDecrypt::kEncrypt, algorithm_,
++                                key_set->encryption_key, cand_iv, frame_header,
++                                webrtc::ArrayView<uint8_t>(&first, 1),
++                                &probe) != Success ||
++              probe.empty()) {
++            return false;
++          }
++          *c0 = probe[0];
++          return true;
++        });
++    if (r.step != tinhat::Vp9IvStep::kMatched) {
++      if (r.step != tinhat::Vp9IvStep::kCapMiss &&
++          last_enc_error_ != FrameCryptionState::kEncryptionFailed) {
++        last_enc_error_ = FrameCryptionState::kEncryptionFailed;
++        onFrameCryptionStateChanged(last_enc_error_);
++      }
++      RTC_LOG(LS_WARNING) << "VP9 E2EE keyframe IV: frame dropped ("
++                          << (r.step == tinhat::Vp9IvStep::kCapMiss ? "no match in cap"
++                              : r.step == tinhat::Vp9IvStep::kSealFailed ? "probe seal failed"
++                                                                          : "IV allocator exhausted")
++                          << ", key=" << want_key << ", tries=" << r.tries << ")";
++      return;
++    }
++    iv = webrtc::Buffer(r.iv.data(), r.iv.size());
++  }
+ 
+   webrtc::Buffer payload(data_in.size() - unencrypted_bytes);
+   for (size_t i = unencrypted_bytes; i < data_in.size(); i++) {
+@@ -918,21 +1000,16 @@
+ }
+ 
+ webrtc::Buffer FrameCryptorTransformer::makeIv(uint32_t ssrc, uint32_t timestamp) {
+-  uint32_t send_count = 0;
+-  if (send_counts_.find(ssrc) == send_counts_.end()) {
+-    send_counts_[ssrc] = floor(CreateRandomNonZeroId() * 0xFFFF);
+-  } else {
+-    send_count = send_counts_[ssrc];
+-  }
+-  webrtc::ByteBufferWriter buf;
+-  buf.WriteUInt32(ssrc);
+-  buf.WriteUInt32(timestamp);
+-  buf.WriteUInt32(timestamp - (send_count % 0xFFFF));
+-  send_counts_[ssrc] = send_count + 1;
+-
+-  RTC_CHECK_EQ(buf.Length(), getIvSize());
+-
+-  return webrtc::Buffer(buf.Data(), buf.Length());
++  // PATCH (Tin Hat) tinhat-iv-v2: upstream built ssrc | timestamp | timestamp - (count % 0xFFFF) from a per-cryptor
++  // counter (restarting with every cryptor; the % 0xFFFF and the RTP timestamp both repeat over a long call), which
++  // can't be argued unique. The IV now comes from the process allocator: domain || 64-bit counter, each value once.
++  // An empty buffer = exhausted: the caller drops the frame.
++  (void)ssrc;
++  (void)timestamp;
++  std::optional<tinhat::Iv> iv = tinhat::ProcessIvAllocator().Next();
++  if (!iv) return webrtc::Buffer();
++  RTC_CHECK_EQ(iv->size(), getIvSize());
++  return webrtc::Buffer(iv->data(), iv->size());
+ }
+ 
+ uint8_t FrameCryptorTransformer::getIvSize() {
+@@ -976,6 +1053,9 @@
+   auto timestamp = Timestamp::Millis(webrtc::TimeMillis())
+                        .ms();   // use current time millis as timestamp
+   auto iv = makeIv(timestamp);  // for data packets, ssrc is always 0
++  if (iv.size() != 12) {  // PATCH (Tin Hat) tinhat-iv-v2: allocator exhausted, never reuse an IV
++    return RTCError(RTCErrorType::INTERNAL_ERROR, "DataPacketCryptor::Encrypt() IV allocator exhausted");
++  }
+ 
+   std::vector<uint8_t> buffer;
+   webrtc::Buffer payload(data.data(), data.size());
+@@ -1081,19 +1161,13 @@
+ }
+ 
+ webrtc::Buffer DataPacketCryptor::makeIv(uint32_t timestamp) {
+-  if (send_count_ == 0) {
+-    send_count_ = floor(CreateRandomNonZeroId() * 0xFFFF);
+-  }
+-  webrtc::ByteBufferWriter buf;
+-  uint32_t random_u32 = CreateRandomId();
+-  buf.WriteUInt32(random_u32);
+-  buf.WriteUInt32(timestamp);
+-  buf.WriteUInt32(timestamp - (send_count_ % 0xFFFF));
+-  send_count_ += 1;
+-
+-  RTC_CHECK_EQ(buf.Length(), 12);
+-
+-  return webrtc::Buffer(buf.Data(), buf.Length());
++  // PATCH (Tin Hat) tinhat-iv-v2: data packets sealed under a call key take their IVs from the SAME process
++  // allocator as the media frames (upstream: random | timestamp | timestamp - (count % 0xFFFF), its own counter), so
++  // no data packet can repeat an IV of a frame or of another packet under that key. Empty = exhausted: Encrypt fails.
++  (void)timestamp;
++  std::optional<tinhat::Iv> iv = tinhat::ProcessIvAllocator().Next();
++  if (!iv) return webrtc::Buffer();
++  return webrtc::Buffer(iv->data(), iv->size());
+ }
+ 
+ }  // namespace webrtc
+--- a/api/crypto/frame_crypto_transformer.h
++++ b/api/crypto/frame_crypto_transformer.h
+@@ -523,7 +523,8 @@
+  private:
+   FrameCryptorTransformer::Algorithm algorithm_;
+   webrtc::scoped_refptr<KeyProvider> key_provider_;
+-  uint32_t send_count_ = 0;
++  // tinhat-iv-v2: makeIv takes its IVs from the process allocator; the upstream counter is kept for the layout only
++  [[maybe_unused]] uint32_t send_count_ = 0;
+   mutable webrtc::Mutex mutex_;
+ };
+ 
+--- /dev/null
++++ b/api/crypto/tinhat_iv.h
+@@ -0,0 +1,134 @@
++/*
++ * PATCH (Tin Hat) — tinhat_iv.h: the sender's AES-GCM IV allocator (stamp tinhat-iv-v2) and the VP9 keyframe IV
++ * step (stamp tinhat-vp9-kf-iv-v1). Header-only and std-only on purpose: the desktop repo's
++ * vendor/webrtc-sys/libwebrtc-patches/tests/tinhat_iv_test.cc compiles THIS file against real AES-GCM.
++ *
++ * IV = domain (4 bytes) || counter (8 bytes), 12 bytes, EVERY BYTE NONZERO and byte 0 >= 4 (stamp tinhat-iv-v2; see
++ * "H.264-safe layout" below). One allocator per process (ProcessIvAllocator,
++ * frame_crypto_transformer.cc): every sealing cryptor of the process (mic, camera, share, every SSRC, simulcast
++ * layer, SVC layer, every call room, every key) takes its IVs from it. Next() hands out each counter value once,
++ * the counter never wraps (exhausted at 255^8: Next() refuses, the frame is dropped). A Tin Hat call key is
++ * minted per join / rotation in one process and never leaves it, so within that key's lifetime no (key, IV) pair
++ * can repeat. The receiver reads the IV from the frame trailer, so the layout is a sender-side choice:
++ * wire-compatible with every receiver. Argument in full: the desktop repo's
++ * vendor/webrtc-sys/libwebrtc-patches/README.md ("IV uniqueness").
++ *
++ * H.264-safe layout (12.1.8, tinhat-iv-v2). For H.264/H.265 the sender RBSP-escapes ciphertext || IV || trailer
++ * (H264::WriteRbsp: a 0x03 before any byte <= 3 that follows two 0x00), while every receiver in users' hands reads
++ * the IV from the RAW tail of the frame before unescaping. v1's big-endian counter (top bytes 00 00 00) put an escape
++ * inside the IV of every H.264 frame. v2 writes no zero byte at all: the domain bytes are mapped into 1..255 (byte 0
++ * into 4..255) and the counter is written as 8 base-255 digits, each + 1 (a bijection on c < 255^8, so uniqueness is
++ * unchanged). Then no escape can land inside IV || trailer: one before IV[k >= 1] needs two zero bytes in front of it
++ * (inside the IV, or the tag's last byte + IV[0]), and IV bytes are never 0; before T0 (= ivLength 12 > 3) none; before
++ * T1 (the key index) it needs (IV[11], T0) = 00 00. The only junction escape possible, tag ... 00 00 | IV[0], needs
++ * IV[0] <= 3, and byte 0 is >= 4; were it ever to happen, it would sit BEFORE IV[0], i.e. outside the 14-byte tail the
++ * receiver reads, so even then the read would be right.
++ */
++#ifndef API_CRYPTO_TINHAT_IV_H_
++#define API_CRYPTO_TINHAT_IV_H_
++
++#include <array>
++#include <cstdint>
++#include <mutex>
++#include <optional>
++
++namespace tinhat {
++
++constexpr char kTinHatIvStamp[] = "tinhat-iv-v2";
++constexpr char kTinHatVp9KfIvStamp[] = "tinhat-vp9-kf-iv-v1";
++constexpr int kVp9KfIvMaxTries = 512;
++
++using Iv = std::array<uint8_t, 12>;
++
++class IvAllocator {
++ public:
++  // 255^8: the number of 8-digit base-255 counter values (> 2^63).
++  static constexpr uint64_t kCounterLimit = 17878103347812890625ull;
++
++  IvAllocator(uint32_t domain, uint64_t start) : next_(start) {
++    // the domain's random bytes, mapped so that none is 0 and byte 0 is >= 4 (H.264-safe layout, above)
++    domain_[0] = static_cast<uint8_t>(4 + ((domain >> 24) & 0xff) % 252);
++    for (int i = 1; i < 4; i++) domain_[i] = static_cast<uint8_t>(1 + ((domain >> (24 - 8 * i)) & 0xff) % 255);
++  }
++  IvAllocator(const IvAllocator&) = delete;
++  IvAllocator& operator=(const IvAllocator&) = delete;
++
++  // The counter as 8 base-255 digits, most significant first, each + 1 (every byte 1..255). c < kCounterLimit.
++  static void EncodeCounter(uint64_t c, uint8_t* out8) {
++    for (int i = 7; i >= 0; i--) {
++      out8[i] = static_cast<uint8_t>(c % 255 + 1);
++      c /= 255;
++    }
++  }
++
++  // The next unused IV, or nullopt once the counter is exhausted (never reused, never wrapped).
++  std::optional<Iv> Next() {
++    std::lock_guard<std::mutex> lock(mu_);
++    if (next_ >= kCounterLimit) return std::nullopt;
++    const uint64_t c = next_++;
++    Iv iv;
++    for (int i = 0; i < 4; i++) iv[i] = domain_[i];
++    EncodeCounter(c, iv.data() + 4);
++    return iv;
++  }
++
++ private:
++  std::mutex mu_;
++  std::array<uint8_t, 4> domain_{};
++  uint64_t next_;
++};
++
++// Byte-for-byte the LiveKit SFU's test on byte 0 of a VP9 payload (mediatransportutil codec.IsVP9KeyFrame, after
++// the RTP descriptor's B bit). Shared vectors: the desktop repo's testvectors/vp9-kf-iv/vectors.json.
++inline bool Vp9ByteLooksLikeKeyFrame(uint8_t b) {
++  if ((b & 0xc0) != 0x80) return false;
++  const uint8_t profile = (b >> 4) & 0x3;
++  if (profile != 3) return (b & 0x0c) == 0;
++  return (b & 0x06) == 0;
++}
++
++enum class Vp9IvStep { kMatched, kCapMiss, kSealFailed, kExhausted };
++
++struct Vp9IvResult {
++  Vp9IvStep step = Vp9IvStep::kCapMiss;
++  int tries = 0;
++  Iv iv{};
++};
++
++// The VP9 keyframe IV step: take candidates from `alloc` until ciphertext byte 0 under that IV gives the SFU the
++// right verdict (keyframe <=> looks like one). seal_first_byte(iv, &c0) seals ONE byte (the frame's first plaintext
++// byte) under the candidate IV and returns ciphertext byte 0; it is a private computation (its output and tag are
++// discarded). Every candidate is consumed from the allocator (never handed out again). Only kMatched may be sent:
++// the caller drops the frame on kCapMiss / kSealFailed / kExhausted.
++template <typename SealFirstByte>
++Vp9IvResult StepVp9Iv(IvAllocator& alloc, bool want_key, SealFirstByte seal_first_byte,
++                      int max_tries = kVp9KfIvMaxTries) {
++  Vp9IvResult r;
++  for (int t = 1; t <= max_tries; t++) {
++    std::optional<Iv> iv = alloc.Next();
++    r.tries = t;
++    if (!iv) {
++      r.step = Vp9IvStep::kExhausted;
++      return r;
++    }
++    r.iv = *iv;
++    uint8_t c0 = 0;
++    if (!seal_first_byte(r.iv, &c0)) {
++      r.step = Vp9IvStep::kSealFailed;
++      return r;
++    }
++    if (Vp9ByteLooksLikeKeyFrame(c0) == want_key) {
++      r.step = Vp9IvStep::kMatched;
++      return r;
++    }
++  }
++  r.step = Vp9IvStep::kCapMiss;
++  return r;
++}
++
++// The process's one allocator (frame_crypto_transformer.cc).
++IvAllocator& ProcessIvAllocator();
++
++}  // namespace tinhat
++
++#endif  // API_CRYPTO_TINHAT_IV_H_

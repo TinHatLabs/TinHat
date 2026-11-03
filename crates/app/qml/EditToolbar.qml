@@ -31,6 +31,7 @@ Item {
     property string drawerIcon: "drawer"   // Add drawer: the button's icon (the action's icon param)
     function closePanels() { tb.panel = "" }
     onPanelChanged: {
+        console.log("[editmode] panel " + (tb.panel.length > 0 ? tb.panel : "closed"))   // the gates read it (Escape closes a panel)
         if (tb.panel === "presets") presetsPanel.refresh()
         // an open panel takes the keyboard (Escape closes it, Tab walks it); closed, the edit layer gets it back — not
         // the composer or whatever had it before (their own Escape would win)
@@ -41,12 +42,15 @@ Item {
     function focusFirst() { if (tb.em.readOnly) doneBtn.forceActiveFocus(Qt.TabFocusReason); else undoBtn.forceActiveFocus(Qt.TabFocusReason) }
     function focusLast() { doneBtn.forceActiveFocus(Qt.TabFocusReason) }
 
-    Shortcut { sequence: "Ctrl+Z"; enabled: tb.em.open; onActivated: tb.em.undo() }
-    Shortcut { sequences: ["Ctrl+Shift+Z", "Ctrl+Y"]; enabled: tb.em.open; onActivated: tb.em.redo() }
-    Shortcut { sequences: ["Ctrl+Return", "Ctrl+Enter"]; enabled: tb.em.open; onActivated: tb.em.done() }
+    // 12.1.8 (docs/KEYS-IN-WINDOWS.md): these Shortcuts only while this item's window has the keyboard (the main window
+    // and its transient children count as active together, so an ungated Shortcut collides across windows).
+    readonly property bool _keysHere: tb.Window.activeFocusItem !== null
+    Shortcut { sequence: "Ctrl+Z"; enabled: tb._keysHere && tb.em.open; onActivated: tb.em.undo() }
+    Shortcut { sequences: ["Ctrl+Shift+Z", "Ctrl+Y"]; enabled: tb._keysHere && tb.em.open; onActivated: tb.em.redo() }
+    Shortcut { sequences: ["Ctrl+Return", "Ctrl+Enter"]; enabled: tb._keysHere && tb.em.open; onActivated: tb.em.done() }
     // Escape closes an open panel (the web's popovers: closeOnEscape); with none open it is the layer's (Esc never
     // leaves edit mode)
-    Shortcut { sequence: "Escape"; enabled: tb.panel.length > 0; onActivated: tb.closePanels() }
+    Shortcut { sequence: "Escape"; enabled: tb._keysHere && tb.panel.length > 0; onActivated: tb.closePanels() }
 
     component TBtn: Rectangle {
         id: b

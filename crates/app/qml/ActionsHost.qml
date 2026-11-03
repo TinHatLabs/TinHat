@@ -371,12 +371,16 @@ Item {
     Repeater {
         model: host.userShortcuts
         delegate: Item {
+            id: userKey
             required property var modelData
+            // 12.1.8 (docs/KEYS-IN-WINDOWS.md): a `main` key only while the main window has the keyboard (it counts as
+            // active while a transient child has focus, so the key would collide with that window's)
+            readonly property bool _keysHere: userKey.modelData.scope !== "main" || (!!host.app && host.app.activeFocusItem !== null)
             Shortcut {
                 sequence: modelData.key
                 // ACTIONS.md §8.7: scope `main` = the main window's, `app` = every Tin Hat window
                 context: modelData.scope === "main" ? Qt.WindowShortcut : Qt.ApplicationShortcut
-                enabled: !!host.app && host.app.mLoggedIn === true
+                enabled: userKey._keysHere && !!host.app && host.app.mLoggedIn === true
                 onActivated: host.run(modelData.action, { source: "key" })
             }
         }

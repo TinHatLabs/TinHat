@@ -110,8 +110,14 @@ Window {
         win._seedName = ""; win._seedTopic = ""
         win._syncOverview()
     }
+    // 12.1.8 (fix/windows-escape, docs/KEYS-IN-WINDOWS.md): this window's keys only while IT has the keyboard. A secondary
+    // window is the main window's transient child, and Qt counts such a window as active whenever the main one is (on
+    // Windows from launch: the dark-title-bar sweep gives every window a native handle), so an unguarded Shortcut here
+    // took Escape (and Space, K, M, F, digits) from the main window: no panel, drawer or popup closed on Escape.
+    readonly property bool keysHere: win.visible && win.activeFocusItem !== null
     Shortcut {
         sequence: "Escape"
+        enabled: win.keysHere
         onActivated: {
             if (invitePopover.opened) invitePopover.close()
             else if (memberMenu.opened) memberMenu.close()

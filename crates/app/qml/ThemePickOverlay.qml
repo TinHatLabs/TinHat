@@ -17,6 +17,9 @@ import dev.tinhat.app   // Th: settings.themeEditor.pick.*
 
 Item {
     id: ov
+    // 12.1.8 (docs/KEYS-IN-WINDOWS.md): these Shortcuts only while this item's window has the keyboard (the main window
+    // and its transient children count as active together, so an ungated Shortcut collides across windows).
+    readonly property bool _keysHere: ov.Window.activeFocusItem !== null
     property bool armed: false
     property var panel: null                // ThemeEditorPanel (ctl, host, showPicked)
 
@@ -177,7 +180,7 @@ Item {
     /// the review harness: hover the scene point (gx, gy) as a pointer would, and keep it there
     function testHover(gx, gy) { ov.testPinned = false; ov.hover(gx, gy); ov.testPinned = true }
 
-    Shortcut { sequence: "Esc"; enabled: ov.armed; context: Qt.WindowShortcut; onActivated: { if (ov.panel) ov.panel.pickArmed = false } }
+    Shortcut { sequence: "Esc"; enabled: ov._keysHere && ov.armed; context: Qt.WindowShortcut; onActivated: { if (ov.panel) ov.panel.pickArmed = false } }
 
     MouseArea {
         id: catcher

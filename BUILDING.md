@@ -16,10 +16,16 @@ export LK_CUSTOM_WEBRTC=/path/to/libwebrtc/linux-x64-release   # the patched arc
 cargo build --release -p tinhat-app        # -> target/release/tinhat
 ```
 
-The binary must carry both ship stamps (`tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`) — `grep` them; a build
-without them linked the upstream libwebrtc and encrypted AV1 will not decode.
+The binary must carry the four ship stamps (`tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`, `tinhat-vp9-kf-iv-v1`, `tinhat-iv-v2`) — `grep` them;
+a build without them linked the upstream (or an older) libwebrtc: encrypted AV1 will not decode, and encrypted VP9
+shares can wait or never start at the SFU.
 
 ## Release builds
+
+Every release train builds with `TINHAT_RELEASE_BUILD=1` and runs `scripts/release-binary-check.sh <binary>` on the
+result. It requires the four libwebrtc stamps and refuses the pre-rename ones and the developer self-test hooks
+`TINHAT_LKTEST` / `TINHAT_CALLTEST` / `TINHAT_CAMTEST`. Those hooks seal with a throwaway test key and exist only outside
+a release: `build.rs` sets `cfg(tinhat_env_selftests)` unless `TINHAT_RELEASE_BUILD=1`.
 
 A release binary shouldn't carry the build machine's paths (Rust panic locations, C/C++ `__FILE__`). Run
 `scripts/release-paths.sh` (Linux) or `windows\release-paths.ps1` (Windows) in the checkout, then build with

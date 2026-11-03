@@ -897,6 +897,7 @@ pub async fn start_e2ee_screenshare(
         encryption_type: EncryptionType::Gcm,
         key_provider,
     });
+    options.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
 
     eprintln!("[lk] connecting…");
     let (room, _events) = Room::connect(ws_url, jwt, options)
@@ -985,15 +986,18 @@ pub async fn start_e2ee_screenshare(
 /// Self-test (no portal, no Matrix): connect with E2EE + publish synthetic frames,
 /// to check whether LiveKit connect/publish work inside the app binary's
 /// environment (libwebrtc linked alongside Qt/matrix-sdk/gst). Run via the app's
-/// `TINHAT_LKTEST` path. Mirrors the standalone spike.
+/// `TINHAT_LKTEST` path. Mirrors the standalone spike. Never in a release (cfg tinhat_env_selftests, build.rs).
+#[cfg(tinhat_env_selftests)]
 pub async fn selftest(ws_url: &str, jwt: &str, identity: &str, secs: u64) -> Result<()> {
     let key_provider = matrix_key_provider();
-    key_provider.set_key(&ParticipantIdentity(identity.to_owned()), 0, vec![0u8; 16]);
+    // a fresh random key per run (was all-zero: frames readable by anyone, the SFU included); never persisted
+    key_provider.set_key(&ParticipantIdentity(identity.to_owned()), 0, crate::call::fresh_test_key().to_vec());
     let mut options = RoomOptions::default();
     options.encryption = Some(E2eeOptions {
         encryption_type: EncryptionType::Gcm,
         key_provider,
     });
+    options.encrypt_data_channel = false; // data packets are never sealed with call keys (as the main call)
 
     eprintln!("[selftest] connecting…");
     let (room, mut events) = Room::connect(ws_url, jwt, options)
@@ -1112,7 +1116,7 @@ pub(crate) fn build_capture_pipeline_cuda(
     #[cfg(not(windows))]
     let src = {
         let _ = paced;
-        screencast.src_fragment()
+        screencast.src_fragment_paced(fps)
     };
     let desc = cuda_presized_desc(&src, out_w, out_h, fps);
     gst::parse::launch(&desc)?
@@ -1148,7 +1152,7 @@ pub(crate) fn build_capture_pipeline_cuda_learn(
     box_h: u32,
     fps: u32,
 ) -> Result<gst::Pipeline> {
-    let desc = cuda_learn_desc(&screencast.src_fragment(), fps);
+    let desc = cuda_learn_desc(&screencast.src_fragment_paced(fps), fps);
     let pipeline = gst::parse::launch(&desc)?
         .downcast::<gst::Pipeline>()
         .map_err(|_| anyhow::anyhow!("cuda capture: parsed element is not a Pipeline"))?;
@@ -1313,6 +1317,11 @@ pub(crate) fn build_capture_pipeline(screencast: &ScreenCast, max_w: u32, max_h:
     // downscale (5K -> the 1080p box is 2.67x), so HUD/chat text aliases and shimmers — which
     // the encoder then wastes bitrate on. Cost scales with OUTPUT pixels; when the source
     // already fits the box videoscale stays passthrough and method is inert.
+    // Linux: the stream's maximum frame rate is negotiated with the compositor (src_fragment_paced). Windows keeps its
+    // plain head on this path (its paced head is a different mechanism, chosen by the GPU candidates).
+    #[cfg(not(windows))]
+    let src = screencast.src_fragment_paced(fps);
+    #[cfg(windows)]
     let src = screencast.src_fragment();
     // Windows: d3d11screencapturesrc hands out D3D11 GPU textures; videorate's (ANY)
     // passthrough re-times them untouched (same reasoning as the DMABuf case above) and
@@ -2714,6 +2723,134 @@ mod share_capture_tests {
         }
     }
 
+    /// 12.1.8: the capped head offers max-framerate EXACTLY fps first, then anything; no cap = the plain head.
+    #[cfg(not(windows))]
+    #[test]
+    fn source_head_carries_the_max_framerate() {
+        let head = "pipewiresrc fd=3 path=7 do-timestamp=true keepalive-time=1000";
+        assert_eq!(
+            crate::capture::source_head_with_cap(head, 60, true),
+            format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(ANY),max-framerate=(fraction)60/1; video/x-raw(ANY)\"")
+        );
+        assert_eq!(crate::capture::source_head_with_cap(head, 0, true), head, "fps 0 = no cap");
+        assert_eq!(crate::capture::source_head_with_cap(head, 60, false), head, "cap off = the plain head");
+    }
+
+    /// The capped head parses and negotiates through the real CPU launch line with a source that has NO
+    /// max-framerate field (GStreamer side; the PipeWire side is the gate below).
+    #[cfg(not(windows))]
+    #[test]
+    fn capped_head_negotiates_without_a_max_framerate_field() {
+        let _ = gst::init();
+        let head = crate::capture::source_head_with_cap(
+            // faster than the cap: videorate drop-only can't raise a rate (a 30 fps source fails with or without the
+            // cap); the field source is variable-rate or the game's rate
+            "videotestsrc num-buffers=40 ! video/x-raw,format=BGRx,width=640,height=360,framerate=120/1",
+            60,
+            true,
+        );
+        let desc = cpu_capture_desc(&head, "", 60, 2);
+        let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+        install_first_frame_repin(&pipeline, 640, 360, None, Default::default(), "test");
+        let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        pipeline.set_state(gst::State::Playing).unwrap();
+        let mut n = 0;
+        while sink.try_pull_sample(gst::ClockTime::from_seconds(3)).is_some() {
+            n += 1;
+        }
+        let _ = pipeline.set_state(gst::State::Null);
+        assert!(n >= 15, "only {n} frames through the capped head"); // 40 at 120 fps -> ~20 at the 60 cap
+    }
+
+    /// SHARE-GAME-LAG gate (12.1.8), opt-in: TINHAT_RATECAP_GATE=/path/to/kwinlike-src with a PipeWire daemon in the
+    /// environment (the build machine's rig). kwinlike-src negotiates like a compositor's screencast and then produces at
+    /// the negotiated maximum (KWin: `m_vsync->setRefreshRate(framerate())`), writing every frame. Runs, each through
+    /// the app's own CPU capture launch line and head at a 60 fps share, 165 Hz "monitor":
+    ///   kwin   ([0..165] offered, KWin's form) capped:   negotiated max must be EXACTLY 60/1, the source <= 63 fps
+    ///   mutter ([1..165], mutter/xdpw/Hyprland form) capped: the same (the range form would have picked 1 fps)
+    ///   fixed  (165 only) capped:   negotiates via the plain structure (165) and the share still gets ~60
+    ///   kwin   cap OFF (control):   negotiated max 165, the source runs free (>= 120 fps) — the gate can fail.
+    #[cfg(not(windows))]
+    #[test]
+    fn rate_cap_gate() {
+        let Some(bin) = std::env::var_os("TINHAT_RATECAP_GATE") else {
+            eprintln!("skipping: TINHAT_RATECAP_GATE not set");
+            return;
+        };
+        let _ = gst::init();
+        // (negotiated max_framerate as "n/d", the source's produced fps after warm-up, the share's fps)
+        let run = |mode: &str, cap: bool| -> (String, f64, f64) {
+            let mut child = std::process::Command::new(&bin)
+                .args(["1920", "1080", "165", "16", mode])
+                .stdout(std::process::Stdio::piped())
+                .spawn()
+                .expect("kwinlike-src");
+            let out = child.stdout.take().unwrap();
+            let lines = std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+            let (tx, rx) = std::sync::mpsc::channel::<u32>();
+            let reader = {
+                let lines = lines.clone();
+                std::thread::spawn(move || {
+                    use std::io::BufRead;
+                    for l in std::io::BufReader::new(out).lines().map_while(Result::ok) {
+                        if let Some(id) = l.strip_prefix("node id: ").and_then(|v| v.trim().parse().ok()) {
+                            let _ = tx.send(id);
+                        }
+                        lines.lock().unwrap().push(l);
+                    }
+                })
+            };
+            let node = rx.recv_timeout(std::time::Duration::from_secs(10)).expect("no node id from kwinlike-src");
+            let head = crate::capture::source_head_with_cap(&format!("pipewiresrc path={node} do-timestamp=true keepalive-time=1000"), 60, cap);
+            let desc = cpu_capture_desc(&head, "", 60, cpu_capture_threads());
+            let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+            install_first_frame_repin(&pipeline, 1920, 1080, None, Default::default(), "gate");
+            let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+            pipeline.set_state(gst::State::Playing).unwrap();
+            let t0 = std::time::Instant::now();
+            let (mut n, mut first) = (0u32, None);
+            while t0.elapsed().as_secs_f64() < 13.0 {
+                if sink.try_pull_sample(gst::ClockTime::from_mseconds(200)).is_some() && t0.elapsed().as_secs_f64() >= 3.0 {
+                    first.get_or_insert_with(std::time::Instant::now);
+                    n += 1;
+                }
+            }
+            let share_fps = n as f64 / first.map(|f| f.elapsed().as_secs_f64()).unwrap_or(1.0).max(0.001);
+            let _ = pipeline.set_state(gst::State::Null);
+            let _ = child.wait();
+            let _ = reader.join();
+            let log = lines.lock().unwrap().join("\n");
+            let neg = log
+                .lines()
+                .find_map(|l| l.strip_prefix("[kwinlike] negotiated ")?.split("max_framerate ").nth(1)?.split_whitespace().next().map(str::to_owned))
+                .unwrap_or_default();
+            // complete 5 s reports only, after the first (warm-up)
+            let produced: Vec<f64> = log
+                .lines()
+                .filter_map(|l| l.strip_prefix("[kwinlike] produced ")?.split_whitespace().next()?.parse().ok())
+                .collect();
+            let src_fps = produced.iter().skip(1).take(2).copied().fold(0.0, f64::max);
+            eprintln!(
+                "[ratecap-gate] {mode:6} cap {}: negotiated max {neg}, source produced {src_fps:.1} fps, share got {share_fps:.1} fps",
+                if cap { "ON " } else { "OFF" }
+            );
+            (neg, src_fps, share_fps)
+        };
+        let kwin = run("range0", true);
+        let mutter = run("range1", true);
+        let fixed = run("fixed", true);
+        let control = run("range0", false);
+        assert_eq!(kwin.0, "60/1", "KWin-style offer: negotiated max");
+        assert!(kwin.1 > 0.0 && kwin.1 <= 63.0, "KWin-style: the source still produced {:.1} fps", kwin.1);
+        assert!(kwin.2 >= 54.0, "KWin-style: the share got {:.1} fps", kwin.2);
+        assert_eq!(mutter.0, "60/1", "[1..refresh] offer: negotiated max (a range cap would pick 1)");
+        assert!(mutter.2 >= 54.0, "[1..refresh]: the share got {:.1} fps", mutter.2);
+        assert_eq!(fixed.0, "165/1", "fixed-max producer: negotiates through the plain structure");
+        assert!(fixed.2 >= 54.0, "fixed-max producer: the share still works ({:.1} fps)", fixed.2);
+        assert_eq!(control.0, "165/1", "control: without the cap the stream takes the producer's maximum");
+        assert!(control.1 >= 120.0, "control: the source should run free ({:.1} fps): the gate could not fail", control.1);
+    }
+
     /// Half the cores, 1..=8 (12.1.2: was at most 4).
     #[test]
     fn cpu_capture_threads_scale_to_eight() {
@@ -3009,5 +3146,137 @@ mod send_gate_tests {
         // the fast path goes only through the state-locked queue
         let need = region(rs, "fn publisher_negotiation_needed(self: &Arc<Self>)", "fn queue_negotiation");
         assert!(!need.contains("NegotiationState::PendingRetry"), "an unlocked PendingRetry write is back");
+    }
+}
+
+/// VP9 E2EE keyframe IV (share-never-decodes, 12.1.7): the rule lives in the patched libwebrtc
+/// (vendor/webrtc-sys/libwebrtc-patches/vp9-e2ee-keyframe-iv.patch) and in Tin Hat Web's patched E2EE worker; both are
+/// pinned to the shared vectors (testvectors/vp9-kf-iv, byte-identical in both repos; web: tools/vp9-kf-iv-unit.mjs).
+#[cfg(test)]
+mod vp9_kf_iv_tests {
+    fn vectors() -> serde_json::Value {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testvectors/vp9-kf-iv/vectors.json");
+        serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
+    }
+    fn patch() -> String {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../vendor/webrtc-sys/libwebrtc-patches/vp9-e2ee-keyframe-iv.patch");
+        std::fs::read_to_string(path).unwrap()
+    }
+    /// The C++ predicate, line for line as the patch adds it (a change there must change this test and the vectors).
+    fn looks_like_keyframe(b: u8) -> bool {
+        if (b & 0xc0) != 0x80 {
+            return false;
+        }
+        let profile = (b >> 4) & 0x3;
+        if profile != 3 {
+            return (b & 0x0c) == 0;
+        }
+        (b & 0x06) == 0
+    }
+
+    #[test]
+    fn predicate_matches_the_shared_vectors() {
+        let v = vectors();
+        let keys: Vec<u8> = v["looks_like_keyframe"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as u8).collect();
+        assert_eq!(keys.len(), 16, "1 byte in 16 looks like a VP9 keyframe to the SFU");
+        for b in 0..=255u8 {
+            assert_eq!(looks_like_keyframe(b), keys.contains(&b), "byte {b:#04x}");
+        }
+        for c in v["cases"].as_array().unwrap() {
+            let b = c["byte"].as_u64().unwrap() as u8;
+            assert_eq!(looks_like_keyframe(b), c["key"].as_bool().unwrap(), "{}", c["why"]);
+        }
+    }
+
+    /// The patch carries exactly this predicate, the vectors' cap, both stamps the build gates grep for, the IV
+    /// allocator (domain || 64-bit counter, each value once, no wrap) behind makeIv, and the drop path; it moves only
+    /// sender IVs (decryptFrame untouched). The allocator's behaviour itself is tested by tests/tinhat_iv_test.cc
+    /// (run-tinhat-iv-test.sh: the header as shipped against real AES-GCM).
+    #[test]
+    fn the_libwebrtc_patch_carries_the_same_rule() {
+        let v = vectors();
+        let p = patch();
+        assert!(p.contains(&format!("constexpr char kTinHatVp9KfIvStamp[] = \"{}\";", v["stamp"].as_str().unwrap())));
+        assert!(p.contains("constexpr char kTinHatIvStamp[] = \"tinhat-iv-v2\";"));
+        assert!(p.contains(&format!("constexpr int kVp9KfIvMaxTries = {};", v["max_tries"].as_u64().unwrap())));
+        for line in [
+            "+  if ((b & 0xc0) != 0x80) return false;",
+            "+  const uint8_t profile = (b >> 4) & 0x3;",
+            "+  if (profile != 3) return (b & 0x0c) == 0;",
+            "+  return (b & 0x06) == 0;",
+            "+    if (next_ >= kCounterLimit) return std::nullopt;",
+            "+    EncodeCounter(c, iv.data() + 4);",
+            "+    domain_[0] = static_cast<uint8_t>(4 + ((domain >> 24) & 0xff) % 252);",
+            "+    const uint64_t c = next_++;",
+            "+    std::optional<Iv> iv = alloc.Next();",
+            "+    if (Vp9ByteLooksLikeKeyFrame(c0) == want_key) {",
+            "+  std::optional<tinhat::Iv> iv = tinhat::ProcessIvAllocator().Next();",
+            "+  if (unencrypted_bytes == 0 && FrameIsVp9(frame.get(), type_)) {",
+            "+    if (r.step != tinhat::Vp9IvStep::kMatched) {",
+            "+    iv = webrtc::Buffer(r.iv.data(), r.iv.size());",
+        ] {
+            assert!(p.lines().any(|l| l == line), "patch line missing: {line}");
+        }
+        assert!(!p.contains("decryptFrame"), "the patch must stay sender-only");
+        assert!(!p.contains("TINHAT_LAB_"), "lab knobs never go into the shipped patch");
+    }
+
+    /// The H.264-safe IV layout (tinhat-iv-v2): a Rust mirror of the patch's encoding, pinned to the shared vectors
+    /// (testvectors/iv-layout, byte-identical in the web repo): counter = 8 base-255 digits + 1, domain bytes in 1..255
+    /// with byte 0 >= 4. Every vector byte is nonzero, so H.264 RBSP escaping can't land inside the IV (the 12.1.8 v1
+    /// layout's top bytes were 00 00 00: every H.264 frame undecodable for native receivers).
+    #[test]
+    fn iv_layout_matches_the_shared_vectors() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testvectors/iv-layout/vectors.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        assert_eq!(v["stamp"], "tinhat-iv-v2");
+        let limit: u128 = v["counter_limit"].as_str().unwrap().parse().unwrap();
+        assert_eq!(limit, 255u128.pow(8));
+        let enc = |mut c: u128| -> Vec<u8> {
+            let mut out = vec![0u8; 8];
+            for i in (0..8).rev() {
+                out[i] = (c % 255 + 1) as u8;
+                c /= 255;
+            }
+            out
+        };
+        let cases = v["counters"].as_array().unwrap();
+        assert!(cases.len() >= 40);
+        for c in cases {
+            let n: u128 = c["counter"].as_str().unwrap().parse().unwrap();
+            let want: Vec<u8> = c["bytes"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as u8).collect();
+            assert_eq!(enc(n), want, "counter {n}");
+            assert!(want.iter().all(|b| *b != 0), "a zero byte at counter {n}");
+        }
+        for d in v["domains"].as_array().unwrap() {
+            let dom = d["domain"].as_u64().unwrap() as u32;
+            let b = dom.to_be_bytes();
+            let mine = [4 + b[0] % 252, 1 + b[1] % 255, 1 + b[2] % 255, 1 + b[3] % 255];
+            let want: Vec<u8> = d["bytes"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as u8).collect();
+            assert_eq!(mine.to_vec(), want, "domain {dom:#x}");
+            assert!(mine[0] >= 4 && mine.iter().all(|x| *x != 0));
+        }
+        // the patch's header carries exactly this rule
+        let p = patch();
+        assert!(p.contains("static constexpr uint64_t kCounterLimit = 17878103347812890625ull;"));
+        assert!(p.lines().any(|l| l == "+      out8[i] = static_cast<uint8_t>(c % 255 + 1);"));
+        assert!(p.lines().any(|l| l == "+    for (int i = 1; i < 4; i++) domain_[i] = static_cast<uint8_t>(1 + ((domain >> (24 - 8 * i)) & 0xff) % 255);"));
+    }
+
+    /// Crypto follow-up (a): the data-packet cryptor takes its IVs from the process allocator too (upstream's own
+    /// random | ts | ts - count % 0xFFFF rule is gone from the patched file).
+    #[test]
+    fn data_packet_ivs_come_from_the_allocator() {
+        let p = patch();
+        // the signature is a context line of the hunk (only the body changes): find it with either diff prefix
+        let i = p.find("webrtc::Buffer DataPacketCryptor::makeIv(uint32_t timestamp) {").expect("data makeIv hunk");
+        // the function's lines in the hunk: up to the hunk's next header or its closing brace
+        let rest = &p[i..];
+        let end = rest.find("\n@@").or_else(|| rest.find("\n }")).or_else(|| rest.find("\n+}")).unwrap_or(rest.len());
+        let body = &rest[..end];
+        assert!(!body.contains("send_count_ % 0xFFFF") || body.contains("-  buf.WriteUInt32(timestamp - (send_count_ % 0xFFFF));"),
+            "upstream's data IV rule must be removed, not kept");
+        assert!(body.contains("tinhat::ProcessIvAllocator().Next()"), "data packets must use the allocator");
+        assert!(p.contains("DataPacketCryptor::Encrypt() IV allocator exhausted"), "an exhausted allocator must fail the packet");
     }
 }

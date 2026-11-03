@@ -902,19 +902,24 @@ Window {
     objectName: "memories"
     visible: false
 
+    // 12.1.8 (fix/windows-escape, docs/KEYS-IN-WINDOWS.md): this window's keys only while IT has the keyboard. A secondary
+    // window is the main window's transient child, and Qt counts such a window as active whenever the main one is (on
+    // Windows from launch: the dark-title-bar sweep gives every window a native handle), so an unguarded Shortcut here
+    // took Escape (and Space, K, M, F, digits) from the main window: no panel, drawer or popup closed on Escape.
+    readonly property bool keysHere: mem.visible && mem.activeFocusItem !== null
     // ---- keyboard: the usual player keys ----
-    Shortcut { sequence: "Esc"; enabled: mem.visible && (mem.sel !== null || mem.theater)
+    Shortcut { sequence: "Esc"; enabled: mem.keysHere && (mem.sel !== null || mem.theater)
                onActivated: if (mem.theater) mem.setTheater(false); else mem.backToList() }
-    Shortcut { sequence: "Space"; enabled: mem.visible && mem.sel !== null; onActivated: mem.togglePlay() }
-    Shortcut { sequence: "K"; enabled: mem.visible && mem.sel !== null; onActivated: mem.togglePlay() }
-    Shortcut { sequence: "Left"; enabled: mem.visible && mem.sel !== null; onActivated: mem.skipBy(-10) }
-    Shortcut { sequence: "Right"; enabled: mem.visible && mem.sel !== null; onActivated: mem.skipBy(10) }
-    Shortcut { sequence: "J"; enabled: mem.visible && mem.sel !== null; onActivated: mem.skipBy(-10) }
-    Shortcut { sequence: "L"; enabled: mem.visible && mem.sel !== null; onActivated: mem.skipBy(10) }
-    Shortcut { sequence: "Shift+Left"; enabled: mem.visible && mem.sel !== null; onActivated: mem.skipBy(-60) }
-    Shortcut { sequence: "Shift+Right"; enabled: mem.visible && mem.sel !== null; onActivated: mem.skipBy(60) }
-    Shortcut { sequence: "M"; enabled: mem.visible && mem.sel !== null; onActivated: mem.muted = !mem.muted }
-    Shortcut { sequence: "F"; enabled: mem.visible && mem.sel !== null; onActivated: mem.setTheater(!mem.theater) }
+    Shortcut { sequence: "Space"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.togglePlay() }
+    Shortcut { sequence: "K"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.togglePlay() }
+    Shortcut { sequence: "Left"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.skipBy(-10) }
+    Shortcut { sequence: "Right"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.skipBy(10) }
+    Shortcut { sequence: "J"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.skipBy(-10) }
+    Shortcut { sequence: "L"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.skipBy(10) }
+    Shortcut { sequence: "Shift+Left"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.skipBy(-60) }
+    Shortcut { sequence: "Shift+Right"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.skipBy(60) }
+    Shortcut { sequence: "M"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.muted = !mem.muted }
+    Shortcut { sequence: "F"; enabled: mem.keysHere && mem.sel !== null; onActivated: mem.setTheater(!mem.theater) }
     // 1-9: put that point of view on stage (the number sits on each POV button)
     Item {
         visible: false
@@ -924,13 +929,13 @@ Window {
                 required property int index
                 Shortcut {
                     sequence: String(index + 1)
-                    enabled: mem.visible && mem.sel !== null
+                    enabled: mem.keysHere && mem.sel !== null
                     onActivated: { var p = mem.povByKey(index + 1); if (p) { if (mem.hiddenFiles[p.file]) mem.toggleHidden(p.file); mem.focusTrack(p.file) } }
                 }
             }
         }
     }
-    Shortcut { sequence: "0"; enabled: mem.visible && mem.sel !== null && mem.audioUrl.length > 0; onActivated: mem.focusTrack("") }
+    Shortcut { sequence: "0"; enabled: mem.keysHere && mem.sel !== null && mem.audioUrl.length > 0; onActivated: mem.focusTrack("") }
 
     // A side tile: LIVE muted gst playback (streamer::memtile via vodctl), attached
     // by the SAME video_bridge machinery as live call-grid tiles — mpvqt reliably

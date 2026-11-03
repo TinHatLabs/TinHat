@@ -1,0 +1,277 @@
+{
+  "v": 1,
+  "about": "Tin Hat identity fix 12.1.8 (finding B, share claude/tinhat-security-review/IDENTITY-PARSE-20261102.md): which user a LiveKit identity `<mxid>:<device>` belongs to, by the room's live call memberships (sender, device_id), whether an identity is a given user's (identityIsUser: the input is always an identity, never a bare mxid), and the recorder's \"never record me\" rule (any POSSIBLE owner opted out -> not recorded; a membership can't overrule it). Byte-identical copies: web src/features/calls/testvectors/identity.json (the owner), desktop crates/app/src/testvectors/identity.json. sessions = [sender, device_id] of live memberships.",
+  "user": [
+    {
+      "name": "port server user, membership known",
+      "identity": "@u:h.test:8448:DEV",
+      "sessions": [
+        [
+          "@u:h.test:8448",
+          "DEV"
+        ]
+      ],
+      "users": [
+        "@u:h.test:8448"
+      ],
+      "user": "@u:h.test:8448"
+    },
+    {
+      "name": "port server user, no membership: the last ':' (the first two parts gave @u:h.test)",
+      "identity": "@u:h.test:8448:DEV",
+      "sessions": [],
+      "users": [],
+      "user": "@u:h.test:8448"
+    },
+    {
+      "name": "plain server",
+      "identity": "@u:h.test:DEV",
+      "sessions": [],
+      "users": [],
+      "user": "@u:h.test"
+    },
+    {
+      "name": "IPv6 literal with a port",
+      "identity": "@u:[::1]:8448:DEV",
+      "sessions": [],
+      "users": [],
+      "user": "@u:[::1]:8448"
+    },
+    {
+      "name": "':' in a device: the membership places it",
+      "identity": "@a:h.test:8448:EVIL",
+      "sessions": [
+        [
+          "@a:h.test",
+          "8448:EVIL"
+        ]
+      ],
+      "users": [
+        "@a:h.test"
+      ],
+      "user": "@a:h.test"
+    },
+    {
+      "name": "':' in a device and the look-alike both live: ambiguous, the last ':' decides",
+      "identity": "@a:h.test:8448:EVIL",
+      "sessions": [
+        [
+          "@a:h.test",
+          "8448:EVIL"
+        ],
+        [
+          "@a:h.test:8448",
+          "EVIL"
+        ]
+      ],
+      "users": [
+        "@a:h.test",
+        "@a:h.test:8448"
+      ],
+      "user": "@a:h.test:8448"
+    },
+    {
+      "name": "a membership of someone else is no match",
+      "identity": "@b:h.test:DEV",
+      "sessions": [
+        [
+          "@c:h.test",
+          "DEV"
+        ]
+      ],
+      "users": [],
+      "user": "@b:h.test"
+    },
+    {
+      "name": "the same user twice (two state spellings) is one",
+      "identity": "@u:h.test:DEV",
+      "sessions": [
+        [
+          "@u:h.test",
+          "DEV"
+        ],
+        [
+          "@u:h.test",
+          "DEV"
+        ]
+      ],
+      "users": [
+        "@u:h.test"
+      ],
+      "user": "@u:h.test"
+    },
+    {
+      "name": "no sender / no device never matches",
+      "identity": "@u:h.test:",
+      "sessions": [
+        [
+          "@u:h.test",
+          ""
+        ],
+        [
+          "",
+          "@u:h.test:"
+        ]
+      ],
+      "users": [],
+      "user": "@u:h.test"
+    },
+    {
+      "name": "not an identity (no ':')",
+      "identity": "You",
+      "sessions": [],
+      "users": [],
+      "user": "You"
+    }
+  ],
+  "recordExcluded": [
+    {
+      "name": "port server user's opt-out is honoured (the old first-two-parts rule recorded her)",
+      "identity": "@carol:h.test:8448:PHONE",
+      "optouts": [
+        "@carol:h.test:8448"
+      ],
+      "want": true
+    },
+    {
+      "name": "someone who didn't opt out is recorded",
+      "identity": "@dan:h.test:DESK",
+      "optouts": [
+        "@carol:h.test:8448"
+      ],
+      "want": false
+    },
+    {
+      "name": "the port-less user's opt-out also covers the port user's identity (a possible owner said no: fail closed)",
+      "identity": "@carol:h.test:8448:PHONE",
+      "optouts": [
+        "@carol:h.test"
+      ],
+      "want": true
+    },
+    {
+      "name": "':' device: the look-alike's opt-out covers it too (a membership can't overrule a possible owner's no)",
+      "identity": "@a:h.test:8448:EVIL",
+      "optouts": [
+        "@a:h.test:8448"
+      ],
+      "want": true
+    },
+    {
+      "name": "':' device: its owner's opt-out",
+      "identity": "@a:h.test:8448:EVIL",
+      "optouts": [
+        "@a:h.test"
+      ],
+      "want": true
+    },
+    {
+      "name": "nobody opted out",
+      "identity": "@a:h.test:8448:EVIL",
+      "optouts": [],
+      "want": false
+    },
+    {
+      "name": "unplaced: another user",
+      "identity": "@b:h.test:DEV",
+      "optouts": [
+        "@a:h.test"
+      ],
+      "want": false
+    },
+    {
+      "name": "unplaced: a longer server name is another server",
+      "identity": "@a:h.testx:DEV",
+      "optouts": [
+        "@a:h.test"
+      ],
+      "want": false
+    },
+    {
+      "name": "a bare identity equal to an opted-out mxid",
+      "identity": "@a:h.test",
+      "optouts": [
+        "@a:h.test"
+      ],
+      "want": true
+    },
+    {
+      "name": "an empty opt-out entry excludes nobody",
+      "identity": "@b:h.test:DEV",
+      "optouts": [
+        ""
+      ],
+      "want": false
+    },
+    {
+      "name": "one of several opt-outs",
+      "identity": "@carol:h.test:8448:PHONE",
+      "optouts": [
+        "@x:h.test",
+        "@carol:h.test:8448"
+      ],
+      "want": true
+    }
+  ],
+  "identityIsUser": [
+    {
+      "name": "an identity of the port user",
+      "id": "@u:h.test:8448:DEV",
+      "mxid": "@u:h.test:8448",
+      "sessions": [],
+      "want": true
+    },
+    {
+      "name": "the port user's identity is not the port-less user",
+      "id": "@u:h.test:8448:DEV",
+      "mxid": "@u:h.test",
+      "sessions": [],
+      "want": false
+    },
+    {
+      "name": "an identity that reads like a bare port mxid is the port-less user's device 8448",
+      "id": "@u:h.test:8448",
+      "mxid": "@u:h.test",
+      "sessions": [],
+      "want": true
+    },
+    {
+      "name": "... and not the port user (an identity is never compared as a bare mxid)",
+      "id": "@u:h.test:8448",
+      "mxid": "@u:h.test:8448",
+      "sessions": [],
+      "want": false
+    },
+    {
+      "name": "':' device: not the look-alike",
+      "id": "@a:h.test:8448:EVIL",
+      "mxid": "@a:h.test:8448",
+      "sessions": [
+        [
+          "@a:h.test",
+          "8448:EVIL"
+        ]
+      ],
+      "want": false
+    },
+    {
+      "name": "':' device: its real owner",
+      "id": "@a:h.test:8448:EVIL",
+      "mxid": "@a:h.test",
+      "sessions": [
+        [
+          "@a:h.test",
+          "8448:EVIL"
+        ]
+      ],
+      "want": true
+    },
+    {
+      "name": "an empty mxid is nobody",
+      "id": "x",
+      "mxid": "",
+      "sessions": [],
+      "want": false
+    }
+  ]
+}

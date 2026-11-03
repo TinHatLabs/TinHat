@@ -6,6 +6,8 @@ license.workspace = true
 description = "NVENC/VAAPI screen-share publisher into a LiveKit room (Tin Hat desktop)"
 
 [dependencies]
+# crypto follow-up (c): fresh self-test keys from the OS RNG (already in the lockfile via rand)
+getrandom = "0.2"
 gstreamer = "0.23"
 gstreamer-app = "0.23" # appsink: pull raw I420 frames to feed the LiveKit SDK
 gstreamer-video = "0.23" # VideoFrameRef: read I420 planes + strides

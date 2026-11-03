@@ -41,6 +41,17 @@ impl ScreenCast {
         )
     }
 
+    /// 12.1.8: the source head with the share's frame rate as the stream's MAXIMUM, negotiated with the compositor
+    /// (`max-framerate` in the PipeWire format; pipewiresrc 1.4 carries it from these caps). KWin offers
+    /// max-framerate as a range up to the monitor's refresh rate and paces its screencast at what was negotiated, so
+    /// without it a 60 fps share of a 120 fps game made KWin render and copy 120 frames a second (28 MB each at
+    /// 3233x2151) on the GPU the game is using, and `videorate` threw half away after the copy (SHARE-GAME-LAG).
+    /// Off with TINHAT_SHARE_NO_RATE_CAP set. A producer that can't do a maximum of `fps` negotiates uncapped (see
+    /// [`source_head_with_cap`]).
+    pub(crate) fn src_fragment_paced(&self, fps: u32) -> String {
+        source_head_paced(&self.src_fragment(), fps)
+    }
+
     /// Raw fd for `pipewiresrc fd=`. The fd stays owned by `self`.
     pub fn raw_fd(&self) -> i32 {
         self.fd.as_raw_fd()
@@ -192,4 +203,29 @@ fn probe_stream_size(fd: i32, node_id: u32) -> Option<(u32, u32)> {
             None
         }
     }
+}
+
+/// Whether share capture heads carry the frame-rate cap: on unless TINHAT_SHARE_NO_RATE_CAP is set (to anything).
+pub(crate) fn source_rate_cap_on() -> bool {
+    std::env::var_os("TINHAT_SHARE_NO_RATE_CAP").is_none()
+}
+
+/// The app's head: [`source_head_with_cap`] with the cap on unless switched off.
+pub(crate) fn source_head_paced(head: &str, fps: u32) -> String {
+    source_head_with_cap(head, fps, source_rate_cap_on())
+}
+
+/// `head ! capsfilter name=ratecap caps="video/x-raw(ANY),max-framerate=fps/1; video/x-raw(ANY)"`, or the head alone
+/// (cap off, or fps 0). TWO structures, in order of preference, each its own EnumFormat for PipeWire:
+///   1. max-framerate EXACTLY fps — not a [0, fps] range: pipewiresrc 1.4 exports a range with its MINIMUM as the
+///      preferred value, which against KWin's [0, refresh] offer can settle on 0 (= unthrottled) and against a
+///      [1, refresh] offer (mutter, xdpw, Hyprland) on 1 fps;
+///   2. anything — so a producer whose maximum can't be fps (a fixed higher one, a slower display) still negotiates,
+///      uncapped as before, inside the same negotiation (no failed start, no app-level retry).
+/// A named capsfilter with QUOTED caps: gst_parse rejects bare caps holding ranges or lists.
+pub(crate) fn source_head_with_cap(head: &str, fps: u32, cap: bool) -> String {
+    if fps == 0 || !cap {
+        return head.to_string();
+    }
+    format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(ANY),max-framerate=(fraction){fps}/1; video/x-raw(ANY)\"")
 }

@@ -92,8 +92,16 @@ if [ $? -ne 0 ]; then
     fatal=$((fatal + 1))
 fi
 
+# 12.1.8 (docs/KEYS-IN-WINDOWS.md): every window Shortcut is gated on ITS window having the keyboard (the main window and
+# its transient children count as active together: a hidden window's ungated Escape took the key from the main window).
+wk=$(python3 "$HERE/qml-window-keys-check.py" --selftest 2>&1 && python3 "$HERE/qml-window-keys-check.py" "$QML_DIR" 2>&1)
+if [ $? -ne 0 ]; then
+    echo "$wk" | grep -v "^qml-window-keys-check:" | sed "s/^/QMLLINT FAIL: /"
+    fatal=$((fatal + 1))
+fi
+
 if [ "$fatal" -eq 0 ]; then
-    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat errors (${layout} layout-positioning warnings, non-fatal)"
+    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat / window-keys errors (${layout} layout-positioning warnings, non-fatal)"
     exit 0
 fi
 echo "QMLLINT FAIL: $fatal file(s) would fail to load"

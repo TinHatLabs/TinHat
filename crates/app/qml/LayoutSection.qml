@@ -42,7 +42,7 @@ SettingsRowGroup {
     SettingsRow {
         app: sec.app
         label: "Edit layout"
-        description: "Move, resize and add islands. Ctrl+E or right-clicking a gap between islands opens it anywhere."
+        description: "Move, resize and add islands. Ctrl+E in the main window, or right-clicking a gap between islands, opens it."
         trailing: [
             ThButton {
                 app: sec.app

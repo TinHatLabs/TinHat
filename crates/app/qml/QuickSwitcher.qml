@@ -137,8 +137,8 @@ Controls.Popup {
     }
 
     onAboutToShow: { query = ""; qsField.text = ""; _buildSnapshot(); list.currentIndex = 0 }
-    onOpened: qsField.forceActiveFocus()
-    onClosed: { stage = ""; stageFromOutside = false; pick = null }
+    onOpened: { console.log("[switcher] open"); qsField.forceActiveFocus() }   // [switcher]: the gates read open / closed
+    onClosed: { console.log("[switcher] closed"); stage = ""; stageFromOutside = false; pick = null }
     onRoomsChanged: if (opened) _buildSnapshot()
     Connections {
         target: qs.app && qs.app.actions ? qs.app.actions : null

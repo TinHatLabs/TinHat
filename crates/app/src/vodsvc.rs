@@ -471,6 +471,15 @@ async fn others_in_call(room: &matrix_sdk::Room) -> usize {
     crate::rtc::call_member_devices(room).await.iter().filter(|(u, _)| *u != own).count()
 }
 
+/// The "never record me" rule for the room being recorded: who opted out (their membership markers), matched to each
+/// LiveKit identity by `crate::identity::record_excluded` (identity fix 12.1.8: any possible owner's "no" counts, a
+/// server's port kept; the old first-two-parts cut recorded a `host:8448` user who had opted out). Always set BEFORE
+/// a chain is built (the opt-out guarantee for late joiners).
+async fn set_record_consent(room: &matrix_sdk::Room) {
+    let optouts = crate::rtc::record_optout_mxids(room).await;
+    tinhat_streamer::call::set_record_exclusion(move |identity| crate::identity::record_excluded(identity, &optouts));
+}
+
 pub async fn run() {
     let base = std::env::var("TINHAT_VOD_DIR").unwrap_or_else(|_| "/vods".to_string());
     if std::fs::create_dir_all(&base).is_err() {
@@ -567,9 +576,7 @@ pub async fn run() {
                             // Refresh consent FIRST, then build chains for queued tracks —
                             // this ordering (not subscribe-time building) is the opt-out
                             // guarantee for late joiners.
-                            tinhat_streamer::call::set_record_optouts(
-                                crate::rtc::record_optout_mxids(&room).await,
-                            );
+                            set_record_consent(&room).await;
                             tinhat_streamer::call::drain_record_pending();
                         }
                     } else {
@@ -614,9 +621,7 @@ pub async fn run() {
                 }
                 // Consent set FIRST, then the capture dir, then join — order matters:
                 // a chain must never be built before the opt-outs are in place.
-                tinhat_streamer::call::set_record_optouts(
-                    crate::rtc::record_optout_mxids(&room).await,
-                );
+                set_record_consent(&room).await;
                 tinhat_streamer::call::set_record_dir(Some(dir.clone()));
                 let room_name = room.display_name().await.map(|d| d.to_string()).unwrap_or_default();
                 write_session_start(&dir, &room_id, &room_name, &by, start);
