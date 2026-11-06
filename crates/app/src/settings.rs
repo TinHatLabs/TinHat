@@ -149,6 +149,15 @@ pub mod qobject {
         /// Can the size change while Tin Hat runs here? (false: a restart-only build / Qt — Settings says so)
         #[qinvokable]
         fn ui_scale_live_capable(self: &SettingsController) -> bool;
+        /// 12.1.9: Settings → Appearance "Change size instantly (experimental)" (ui_scale.rs LIVE_PREF)
+        #[qinvokable]
+        fn ui_scale_live_opt_in(self: &SettingsController) -> bool;
+        /// Store the opt-in; answers whether the size now changes live
+        #[qinvokable]
+        fn set_ui_scale_live_opt_in(self: Pin<&mut SettingsController>, on: bool) -> bool;
+        /// Is the opt-in offered here (Wayland and other plugins the live change isn't proven on)?
+        #[qinvokable]
+        fn ui_scale_live_opt_in_offered(self: &SettingsController) -> bool;
         /// Is this size waiting for a restart (no live change here, and not the size this run started with)?
         #[qinvokable]
         fn ui_scale_pending(self: &SettingsController, p: i32) -> bool;
@@ -577,6 +586,18 @@ impl qobject::SettingsController {
         crate::ui_scale::live_capable()
     }
 
+    pub fn ui_scale_live_opt_in(&self) -> bool {
+        crate::ui_scale::live_opt_in()
+    }
+
+    pub fn set_ui_scale_live_opt_in(self: Pin<&mut Self>, on: bool) -> bool {
+        crate::ui_scale::set_live_opt_in(on)
+    }
+
+    pub fn ui_scale_live_opt_in_offered(&self) -> bool {
+        crate::ui_scale::live_opt_in_offered()
+    }
+
     pub fn ui_scale_pending(&self, p: i32) -> bool {
         crate::ui_scale::pending(p)
     }
@@ -971,8 +992,9 @@ async fn raw_profile_field(hs: &str, token: &str, user: &str, key: &str) -> Opti
         .get(format!(
             "{}/_matrix/client/v3/profile/{}/{}",
             hs.trim_end_matches('/'),
-            user,
-            key
+            // 12.1.9 (assembly-044 area 3 URL audit): the mxid and the key are path segments, encoded
+            crate::share_link::encode_component(user),
+            crate::share_link::encode_component(key)
         ))
         .bearer_auth(token)
         .timeout(std::time::Duration::from_secs(20))
@@ -1093,8 +1115,8 @@ pub(crate) async fn get_profile_field(
     let url = format!(
         "{}_matrix/client/v3/profile/{}/{}",
         client.homeserver(),
-        user,
-        key
+        crate::share_link::encode_component(user.as_str()), // 12.1.9: path segments, encoded
+        crate::share_link::encode_component(key)
     );
     let token = client.access_token()?;
     let resp = matrix_sdk::reqwest::Client::new()
@@ -1123,8 +1145,8 @@ pub(crate) async fn set_profile_field(
     let url = format!(
         "{}_matrix/client/v3/profile/{}/{}",
         client.homeserver(),
-        user,
-        key
+        crate::share_link::encode_component(user.as_str()), // 12.1.9: path segments, encoded
+        crate::share_link::encode_component(key)
     );
     let body = serde_json::json!({ key: value }).to_string();
     let resp = matrix_sdk::reqwest::Client::new()

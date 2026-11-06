@@ -513,43 +513,63 @@ pub async fn non_native_call_members(room: &Room) -> Vec<String> {
     out
 }
 
-/// Bare mxids of LIVE call members advertising `record_optout` ("Never record me") in
-/// their `dev.tinhat.client` marker (0.8.7). ANY opted-out device excludes that
-/// user's EVERY track — the conservative direction for a privacy promise. Same
-/// liveness rules as [`call_member_devices`].
-pub async fn record_optout_mxids(room: &Room) -> Vec<String> {
-    let Ok(raws) = room.get_state_events_static::<CallMemberEventContent>().await else {
-        return Vec::new();
+/// Is `key` a client marker ("<reverse-domain>.client", e.g. today's `dev.tinhat.client`)? "Never record me" is honoured
+/// in ANY client marker, not only today's name (recorder fix 2026-11-04): clients from before the dev.tinhat.* rename
+/// (11.x and older) still publish their marker under the old name, and a recorder that read only the new key would
+/// record such a member who had opted out (the old 10.5.0 recorder read only the old name: the mirror image). Counting
+/// every marker can only exclude more people, never fewer.
+pub(crate) fn is_client_marker_key(key: &str) -> bool {
+    key.len() > ".client".len() && key.ends_with(".client")
+}
+
+/// "Never record me" in ONE membership event's content (shared rule: testvectors/record-optout.json, byte-identical
+/// to the web's copy): true when ANY client marker ([`is_client_marker_key`]), at the content's top level or in any
+/// entry of a legacy `memberships` array, is an object with `record_optout` = JSON `true`. Anything else (absent,
+/// false, not a boolean, a marker that is not an object) is not an opt-out.
+pub(crate) fn content_record_optout(content: &serde_json::Map<String, serde_json::Value>) -> bool {
+    let marker_says = |obj: &serde_json::Map<String, serde_json::Value>| {
+        obj.iter().any(|(k, m)| {
+            is_client_marker_key(k)
+                && m.as_object().and_then(|m| m.get("record_optout")).and_then(|b| b.as_bool()) == Some(true)
+        })
     };
-    let now = now_ms();
+    if marker_says(content) {
+        return true;
+    }
+    content
+        .get("memberships")
+        .and_then(|m| m.as_array())
+        .is_some_and(|entries| entries.iter().filter_map(|e| e.as_object()).any(marker_says))
+}
+
+/// The "Never record me" set from raw membership state events (`sender` + `content`): every sender with an opt-out
+/// in any NON-tombstone membership. Deliberately NO liveness filter (2026-11-04): an expired or ghost membership that
+/// says "no" still counts — excluding someone who is not really in the call costs nothing, recording someone whose
+/// marker aged out would break the promise.
+pub(crate) fn record_optout_senders(events: &[serde_json::Value]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
-    for raw in &raws {
-        let Ok(v) = serde_json::to_value(raw) else { continue };
+    for v in events {
         let sender = v.get("sender").and_then(|s| s.as_str()).unwrap_or("");
         let Some(content) = v.get("content").and_then(|c| c.as_object()) else { continue };
         if sender.is_empty() || content.is_empty() {
             continue; // tombstone = left
         }
-        let created = content
-            .get("created_ts")
-            .and_then(|t| t.as_u64())
-            .or_else(|| v.get("origin_server_ts").and_then(|t| t.as_u64()));
-        let expires = content.get("expires").and_then(|t| t.as_u64()).unwrap_or(MEMBER_EXPIRES_MS);
-        if let Some(created) = created {
-            if now > created.saturating_add(expires) {
-                continue; // ghost of an unclean exit
-            }
-        }
-        let optout = content
-            .get("dev.tinhat.client")
-            .and_then(|c| c.get("record_optout"))
-            .and_then(|k| k.as_bool())
-            == Some(true);
-        if optout && !out.iter().any(|u| u == sender) {
+        if content_record_optout(content) && !out.iter().any(|u| u == sender) {
             out.push(sender.to_string());
         }
     }
     out
+}
+
+/// Bare mxids of call members advertising `record_optout` ("Never record me") in a client marker (0.8.7; any client
+/// marker and no liveness filter since 2026-11-04, see [`record_optout_senders`]). ANY opted-out device excludes that
+/// user's EVERY track — the conservative direction for a privacy promise.
+pub async fn record_optout_mxids(room: &Room) -> Vec<String> {
+    let Ok(raws) = room.get_state_events_static::<CallMemberEventContent>().await else {
+        return Vec::new();
+    };
+    let events: Vec<serde_json::Value> = raws.iter().filter_map(|raw| serde_json::to_value(raw).ok()).collect();
+    record_optout_senders(&events)
 }
 
 /// The call service when the user's server names none in its well-known: `<homeserver origin>/livekit/jwt`, where a
@@ -774,6 +794,27 @@ mod tests {
         let f = oldest_focus(&crate::keyrules::live_sessions_from(&evs, now), room).unwrap();
         assert_eq!((f.service_url.as_str(), f.alias.as_str()), ("https://old.test/livekit/jwt", room));
         assert!(oldest_focus(&crate::keyrules::live_sessions_from(&evs[1..4], now), room).is_none());
+    }
+
+    /// Recorder consent (2026-11-04): testvectors/record-optout.json — the web runs the same bytes (callrules.test.ts).
+    #[test]
+    fn record_optout_shared_vectors() {
+        let v: serde_json::Value = serde_json::from_str(include_str!("testvectors/record-optout.json")).unwrap();
+        assert_eq!(v["v"], 1);
+        let cases = v["content"].as_array().unwrap();
+        assert!(cases.len() >= 10);
+        for c in cases {
+            let got = content_record_optout(c["content"].as_object().unwrap());
+            assert_eq!(got, c["optout"].as_bool().unwrap(), "content case: {}", c["name"]);
+        }
+        let sets = v["senders"].as_array().unwrap();
+        assert!(!sets.is_empty());
+        for s in sets {
+            let got = record_optout_senders(s["events"].as_array().unwrap());
+            let want: Vec<String> =
+                s["expect"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
+            assert_eq!(got, want, "senders case: {}", s["name"]);
+        }
     }
 
     // Roster rule (guest-leave, 12.1): the same table as the web's callrules.test.ts (roster/…).

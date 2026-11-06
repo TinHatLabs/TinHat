@@ -422,7 +422,7 @@ fn main() {
         // player surface's libmpv) emits its own -lmpv link directive here too.
         // Qt6Multimedia + gstreamer-video-1.0: the QVideoSink tile path (0.8.19, Memories
         // side tiles) — QVideoFrame/QVideoSink + gst_video_frame_map.
-        for pkg in ["Qt6Quick", "Qt6Qml", "Qt6WebEngineQuick", "Qt6Multimedia", "gstreamer-1.0", "gstreamer-video-1.0", "mpv"] {
+        for pkg in ["Qt6Quick", "Qt6Qml", "Qt6WebEngineQuick", "Qt6Multimedia", "gstreamer-1.0", "gstreamer-video-1.0", "gstreamer-gl-1.0", "mpv"] {
             let lib = pkg_config::Config::new()
                 .probe(pkg)
                 .unwrap_or_else(|e| panic!("pkg-config {pkg} failed: {e}"));

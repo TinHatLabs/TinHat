@@ -41,6 +41,10 @@ pub mod camera;
 pub mod memtile;
 
 pub mod aec;
+pub mod capture_lease;
+mod remote_audio; // Pad Watch round 13: the remote-track taps take only a RemoteAudioFrame (the type proof) // Pad Watch Layer 2: the capture lease (WATCH-LEASE/DESIGN.md §2)
+#[cfg(test)]
+mod capture_lint; // round 9: the closed capture set (every source / start gated or listed)
 pub mod call;
 pub mod hear; // 10.5: "can they hear me?" — mic check, muted talk, receipts, echo
 pub mod sameroom; // 11.3: "same room" — link up, room-mic election, in-room playback mute
@@ -106,7 +110,7 @@ pub use hear::{fix_system_level as hear_fix_system_level, request_heal as hear_r
 pub use sameroom::{answer_ask as same_room_answer, cancel_ask as same_room_cancel, auto_link as same_room_auto, forget_pair as same_room_forget_pair, link_with as same_room_link, pairs_json as same_room_pairs_json, set_auto as same_room_set_auto, set_hear_through as same_room_hear_through, set_store_path as same_room_set_store_path, state_json as same_room_json, unlink as same_room_unlink};
 pub use call::{mic_capture_down, mic_wanted};
 // Pad QOL (2026-10-31): watching — no microphone captured until this device's own "Talk here"
-pub use call::{capture_barred, set_capture_barred};
+pub use call::{capture_barred, leased_start, retire_mic_monitor_if_barred, retire_output_taps_if_barred, set_capture_barred};
 // 0.8.33: the speaker outputs summed into the echo reference (empty = Tin Hat's own output).
 pub use aec::{ref_outputs as aec_ref_outputs, set_ref_outputs as set_aec_ref_outputs};
 // Abandoned-connect cleanup (do_join timeout path) — see call.rs::abandon_partial_connect.
@@ -116,6 +120,8 @@ pub use call::abandon_partial_connect;
 // speakers_json: the SFU's active-speaker list (server-side voice detection) for the
 // voice overlay — robust where a raw RMS floor is not (AGC boosts ambient noise).
 pub use call::{audio_levels_json, mic_level, speakers_json};
+// Pad on the phone, Step A: the server-minted participant attributes (person tiles, the Pad chip)
+pub use call::{participant_attributes, participant_attrs_rev};
 // Outgoing "stream health": publisher-side stats (encoder, res/fps, send bitrate, quality
 // limitation, receiver-report loss/RTT) per outgoing stream, refreshed every 3s while
 // screen/camera/mic tracks are live. Feeds the in-call transparency popup.
@@ -390,9 +396,10 @@ pub fn start_screenshare_publish(
     let pipeline =
         build_screenshare_pipeline_with_token(screencast.raw_fd(), screencast.node_id(), ws_url, jwt, room)?;
 
-    pipeline
-        .set_state(gst::State::Playing)
-        .context("failed to start the screen-share pipeline")?;
+    anyhow::ensure!(
+        crate::call::leased_start(crate::capture_lease::Kind::Screen, &pipeline, 8000, "dev screen share"),
+        "failed to start the screen-share pipeline"
+    );
 
     let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     spawn_bus_watch(&pipeline, stop.clone(), on_event);
@@ -440,7 +447,7 @@ fn spawn_bus_watch(
 
 /// Play a pipeline for `secs` seconds, surfacing bus errors. Always returns it to NULL.
 pub fn run_for(pipeline: &gst::Pipeline, secs: u64) -> Result<()> {
-    pipeline.set_state(gst::State::Playing)?;
+    anyhow::ensure!(crate::call::leased_start(crate::capture_lease::Kind::ConnTest, pipeline, 8000, "dev pipeline"), "the pipeline did not start");
     let bus = pipeline.bus().context("pipeline has no bus")?;
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(secs);
 

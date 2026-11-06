@@ -1,0 +1,1304 @@
+{
+ "_doc": "Pad Watch: the client's check of a Watch token (WATCH-LEASE/DESIGN.md \u00a71.5). Byte-identical in tinhat-web src/features/calls/ and the desktop repo (Tin Hat desktop) crates/app/src/; sha256 pinned in both tests.",
+ "cases": [
+  {
+   "name": "the server's exact Watch grant",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": true
+  },
+  {
+   "name": "canPublish true",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": true,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "canPublish missing (LiveKit's default is true)",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "canPublishData true",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": true,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "canPublishData missing",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "a publish source allowed",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [
+      "MICROPHONE"
+     ],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "canPublishSources missing (= every source)",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "roomAdmin true (could grant itself publish)",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false,
+     "roomAdmin": true
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "roomAdmin false is still an unknown grant key",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false,
+     "roomAdmin": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "roomCreate",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false,
+     "roomCreate": true
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "ingressAdmin",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false,
+     "ingressAdmin": true
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "canUpdateOwnMetadata true",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": true,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "hidden true",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": true,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "agent true",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": true
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "another room",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!other:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "roomJoin false",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": false,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "canSubscribe false (nothing to watch)",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": false,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "the normal identity (no ~watch-0123456789abcdef)",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "someone else's device",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:DESK~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "someone else's account",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@bob:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "a sip grant",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    },
+    "sip": {
+     "admin": true
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "a roomConfig",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    },
+    "roomConfig": {
+     "name": "x"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "a kind",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    },
+    "kind": "agent"
+   },
+   "ok": false
+  },
+  {
+   "name": "metadata set by the issuer",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    },
+    "metadata": "x"
+   },
+   "ok": false
+  },
+  {
+   "name": "attributes without the watch mark",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {}
+   },
+   "ok": false
+  },
+  {
+   "name": "extra attribute",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1",
+     "x": "y"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "no video grant",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "video is not an object",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": [],
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "canPublish as the string false",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": "false",
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "not an object",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": "x",
+   "ok": false
+  },
+  {
+   "name": "null",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": null,
+   "ok": false
+  },
+  {
+   "name": "iat and jti are fine",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    },
+    "iat": 1799999990,
+    "jti": "abc"
+   },
+   "ok": true
+  },
+  {
+   "name": "an mxid with a port",
+   "identity": "@a:h.test:8448:DEV",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@a:h.test:8448:DEV~watch-0123456789abcdef",
+    "name": "@a:h.test:8448",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": true
+  },
+  {
+   "name": "LiveKit's publish=X form (#) is never a watcher",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE#watch",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "~watch-0123456789abcdef with a # before it",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE#x~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "raw: the exact grant as text",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}",
+   "ok": true
+  },
+  {
+   "name": "raw: the exact grant, spaced and newlined",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\n  \"iss\": \"lkkey\",\n  \"sub\": \"@alice:home.test:PHONE~watch-0123456789abcdef\",\n  \"name\": \"@alice:home.test\",\n  \"nbf\": 1799999990,\n  \"exp\": 1800000300,\n  \"video\": {\n    \"room\": \"!call:home.test\",\n    \"roomJoin\": true,\n    \"canSubscribe\": true,\n    \"canPublish\": false,\n    \"canPublishData\": false,\n    \"canPublishSources\": [],\n    \"canUpdateOwnMetadata\": false,\n    \"hidden\": false,\n    \"recorder\": false,\n    \"agent\": false\n  },\n  \"attributes\": {\n    \"tinhat.watch\": \"1\"\n  }\n}",
+   "ok": true
+  },
+  {
+   "name": "raw: a duplicate video key, the first one roomAdmin (Go merges both)",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"video\":{\"roomAdmin\":true},\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}",
+   "ok": false
+  },
+  {
+   "name": "raw: a duplicate canPublish inside video",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"canPublish\":true,\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}",
+   "ok": false
+  },
+  {
+   "name": "raw: a duplicate key written with an escape (\\u0076ideo)",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"\\u0076ideo\":{\"roomAdmin\":true},\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}",
+   "ok": false
+  },
+  {
+   "name": "raw: a duplicate sub",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"sub\":\"@bob:home.test:X~watch-0123456789abcdef\",\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}",
+   "ok": false
+  },
+  {
+   "name": "raw: a duplicate attribute",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"0\",\"tinhat.watch\":\"1\"}}",
+   "ok": false
+  },
+  {
+   "name": "raw: an escaped room value is the same room",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"\\u0021call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}",
+   "ok": true
+  },
+  {
+   "name": "raw: not JSON",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "x",
+   "ok": false
+  },
+  {
+   "name": "raw: trailing garbage",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}x",
+   "ok": false
+  },
+  {
+   "name": "raw: two objects",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "raw": "{\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}{\"iss\":\"lkkey\",\"sub\":\"@alice:home.test:PHONE~watch-0123456789abcdef\",\"name\":\"@alice:home.test\",\"nbf\":1799999990,\"exp\":1800000300,\"video\":{\"room\":\"!call:home.test\",\"roomJoin\":true,\"canSubscribe\":true,\"canPublish\":false,\"canPublishData\":false,\"canPublishSources\":[],\"canUpdateOwnMetadata\":false,\"hidden\":false,\"recorder\":false,\"agent\":false},\"attributes\":{\"tinhat.watch\":\"1\"}}",
+   "ok": false
+  },
+  {
+   "name": "round 5: the pre-upgrade form \u2026~watch (no nonce) is refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "round 5: an uppercase nonce is refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789ABCDEF",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "round 5: a short nonce is refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "round 5: a long nonce is refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef00",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "round 5: another fresh nonce is just as good",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-fedcba9876543210",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1"
+    }
+   },
+   "ok": true
+  },
+  {
+   "name": "PAD-PHONE Step A (0.3.13): the watch mark + the server's person / Pad attributes for THIS account",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1",
+     "tinhat.person": "@alice:home.test",
+     "tinhat.pad": "phone",
+     "tinhat.mode": "watch"
+    }
+   },
+   "ok": true
+  },
+  {
+   "name": "PAD-PHONE Step A: a person attribute for another account is refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1",
+     "tinhat.person": "@bob:home.test",
+     "tinhat.pad": "phone",
+     "tinhat.mode": "watch"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "PAD-PHONE Step A: an extra attribute beside them is refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1",
+     "tinhat.person": "@alice:home.test",
+     "tinhat.pad": "phone",
+     "tinhat.mode": "watch",
+     "tinhat.other": "x"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "PAD-PHONE Step A: a Pad mode other than watch on a Watch token is refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.watch": "1",
+     "tinhat.person": "@alice:home.test",
+     "tinhat.pad": "phone",
+     "tinhat.mode": "mic"
+    }
+   },
+   "ok": false
+  },
+  {
+   "name": "PAD-PHONE Step A: the person attributes without the watch mark are refused",
+   "identity": "@alice:home.test:PHONE",
+   "room": "!call:home.test",
+   "payload": {
+    "iss": "lkkey",
+    "sub": "@alice:home.test:PHONE~watch-0123456789abcdef",
+    "name": "@alice:home.test",
+    "nbf": 1799999990,
+    "exp": 1800000300,
+    "video": {
+     "room": "!call:home.test",
+     "roomJoin": true,
+     "canSubscribe": true,
+     "canPublish": false,
+     "canPublishData": false,
+     "canPublishSources": [],
+     "canUpdateOwnMetadata": false,
+     "hidden": false,
+     "recorder": false,
+     "agent": false
+    },
+    "attributes": {
+     "tinhat.person": "@alice:home.test",
+     "tinhat.pad": "phone",
+     "tinhat.mode": "watch"
+    }
+   },
+   "ok": false
+  }
+ ]
+}

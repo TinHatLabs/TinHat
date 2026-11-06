@@ -316,7 +316,7 @@ fn audio_sids_live() -> &'static Mutex<std::collections::HashSet<String>> {
 /// user presses Fix on X's tile — until it builds, the track goes away, or the call ends.
 fn spawn_playback_retry(
     pb: Arc<Mutex<std::collections::HashMap<String, PlaybackHandle>>>,
-    track: livekit::webrtc::audio_track::RtcAudioTrack,
+    track: livekit::track::RemoteAudioTrack,
     who: String,
     category: String,
     sid: String,
@@ -378,8 +378,39 @@ fn set_mic_level(rms: f32) {
     *mic_level_cell().lock().unwrap() = rms;
 }
 
-/// Store the latest RMS for one remote track (called from the playback loop).
-fn set_track_level(identity: &str, category: &str, rms: f32) {
+/// Pad on the phone, Step A (share claude/tinhat-pad/PAD-PHONE/DESIGN.md): every remote participant's LiveKit attributes,
+/// as the SERVER minted them into its token (canUpdateOwnMetadata false: no participant sets or changes its own), with a
+/// revision that goes up on every change. The app groups tiles by person and draws the Pad chip from these alone.
+fn participant_attrs() -> &'static Mutex<(u64, HashMap<String, HashMap<String, String>>)> {
+    static M: OnceLock<Mutex<(u64, HashMap<String, HashMap<String, String>>)>> = OnceLock::new();
+    M.get_or_init(|| Mutex::new((0, HashMap::new())))
+}
+fn set_participant_attrs(identity: &str, attrs: HashMap<String, String>) {
+    let mut m = participant_attrs().lock().unwrap();
+    if m.1.get(identity) != Some(&attrs) {
+        m.1.insert(identity.to_string(), attrs);
+        m.0 += 1;
+    }
+}
+fn drop_participant_attrs(identity: &str) {
+    let mut m = participant_attrs().lock().unwrap();
+    if m.1.remove(identity).is_some() {
+        m.0 += 1;
+    }
+}
+/// The attributes the server minted for `identity` (empty: none / not in the call).
+pub fn participant_attributes(identity: &str) -> HashMap<String, String> {
+    participant_attrs().lock().unwrap().1.get(identity).cloned().unwrap_or_default()
+}
+/// The revision of the attribute map (tiles fold again when it moves).
+pub fn participant_attrs_rev() -> u64 {
+    participant_attrs().lock().unwrap().0
+}
+
+/// Store the latest RMS for one remote track (called from the playback loop). Round 13: it takes only a
+/// [`crate::remote_audio::RemoteAudioFrame`] — a decoded frame of a RECEIVED track (the type proof).
+fn set_track_level(identity: &str, category: &str, frame: &crate::remote_audio::RemoteAudioFrame) {
+    let rms = rms_of(&frame.data);
     track_levels()
         .lock()
         .unwrap()
@@ -1322,6 +1353,53 @@ pub enum PendingRecord {
     },
 }
 
+/// Whose track each live capture chain records (the chain key -> the LiveKit identity), so a "no" that turns up while
+/// the chain runs stops it (stop_excluded_record_chains).
+fn record_chain_owners() -> &'static Mutex<HashMap<String, String>> {
+    static O: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+    O.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// 12.1.9 (assembly-045 review, area 4): stop every live capture chain whose identity the CURRENT rule excludes — a
+/// "never record me" that turns up mid-call (the person's phone joins with it on, an older client's marker is read,
+/// the setting is switched on) no longer only holds back new tracks: what is being recorded of that person stops now.
+/// The service calls it right after refreshing the rule. What was written before stays (it was recorded while no "no"
+/// was known). Answers how many chains were stopped.
+pub fn stop_excluded_record_chains() -> usize {
+    let keys: Vec<(String, String)> = record_chain_owners()
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|(_, id)| record_excluded(id))
+        .map(|(k, id)| (k.clone(), id.clone()))
+        .collect();
+    // take them all out first, then quiesce EVERY feeder (no more frames reach any of them), then flush and tear down
+    // (review r2: a serial teardown let the later chains keep recording while the first one flushed)
+    let mut stopping = Vec::new();
+    for (k, id) in keys {
+        record_chain_owners().lock().unwrap().remove(&k);
+        if let Some(chain) = record_chains().lock().unwrap().remove(&k) {
+            stopping.push((k, id, chain));
+        }
+    }
+    for (_, _, (p, task)) in &stopping {
+        task.abort();
+        if let Some(src) = p.by_name("src") {
+            if let Ok(a) = src.downcast::<gstreamer_app::AppSrc>() {
+                let _ = a.end_of_stream();
+            }
+        }
+    }
+    if !stopping.is_empty() {
+        std::thread::sleep(std::time::Duration::from_millis(150)); // the muxers finish the files
+    }
+    for (k, id, (p, _)) in &stopping {
+        set_state_bounded(p.upcast_ref(), gst::State::Null, 1500, "vodrec stop");
+        eprintln!("[vod] STOP {k} {id} (never-record-me, seen mid-call)");
+    }
+    stopping.len()
+}
+
 fn record_pending() -> &'static Mutex<Vec<PendingRecord>> {
     static P: OnceLock<Mutex<Vec<PendingRecord>>> = OnceLock::new();
     P.get_or_init(|| Mutex::new(Vec::new()))
@@ -1352,6 +1430,7 @@ pub fn drain_record_pending() {
                 match build_record_audio(track, &identity, &sid, &dir) {
                     Ok(pt) => {
                         record_chains().lock().unwrap().insert(format!("a:{sid}"), pt);
+                        record_chain_owners().lock().unwrap().insert(format!("a:{sid}"), identity.clone());
                     }
                     Err(e) => eprintln!("[vod] audio record build failed: {e}"),
                 }
@@ -1364,6 +1443,7 @@ pub fn drain_record_pending() {
                 match build_record_video(track, &identity, &sid, screenshare, &dir) {
                     Ok(pt) => {
                         record_chains().lock().unwrap().insert(format!("v:{sid}"), pt);
+                        record_chain_owners().lock().unwrap().insert(format!("v:{sid}"), identity.clone());
                     }
                     Err(e) => eprintln!("[vod] video record build failed: {e}"),
                 }
@@ -1478,6 +1558,7 @@ fn build_record_video(
 /// normal leave finalizes) and by the service between recordings. No-op for clients.
 pub fn finalize_recordings() {
     record_pending().lock().unwrap().clear(); // never-built queued tracks just drop
+    record_chain_owners().lock().unwrap().clear();
     let drained: Vec<_> = record_chains().lock().unwrap().drain().collect();
     if drained.is_empty() {
         return;
@@ -2113,6 +2194,23 @@ fn tap_head(out: &str, name: &str, role: &str) -> String {
 }
 
 /// 10.5: the same monitor head for the "can they hear me?" system-audio sniffer (hear.rs).
+/// Round 10 test seam: the speaker-output taps (the speaker meter, the hear sniffer) built on a synthetic head in unit
+/// tests (no sound server there). Always None outside `cargo test`.
+#[cfg(test)]
+thread_local! {
+    pub(crate) static TAP_TEST_HEAD: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
+}
+pub(crate) fn tap_test_head() -> Option<String> {
+    #[cfg(test)]
+    {
+        TAP_TEST_HEAD.with(|h| h.borrow().clone())
+    }
+    #[cfg(not(test))]
+    {
+        None
+    }
+}
+
 pub(crate) fn monitor_head(out: &str, name: &str) -> String {
     tap_head(out, name, ROLE_SNIFFER)
 }
@@ -2870,7 +2968,7 @@ pub fn headless_aecmic_test() -> ! {
     let pull = |label: &str| -> (bool, bool) {
         match build_mic_pipeline() {
             Ok((p, sink)) => {
-                let ok = p.set_state(gst::State::Playing).is_ok()
+                let ok = leased_start(crate::capture_lease::Kind::Mic, &p, 5000, "aecmic self-test")
                     && sink
                         .try_pull_sample(gst::ClockTime::from_seconds(5))
                         .is_some();
@@ -2936,7 +3034,7 @@ pub fn headless_aec_erle_test() -> ! {
     };
     let gauge = EcGauge::attach(&p);
     let fifo = EcFifoSet::attach(&p);
-    if p.set_state(gst::State::Playing).is_err() {
+    if !leased_start(crate::capture_lease::Kind::Mic, &p, 5000, "erle self-test") {
         eprintln!("[erle] start FAILED");
         std::process::exit(2);
     }
@@ -5974,6 +6072,9 @@ fn aux_publish_gate(slot: &'static str) -> Arc<tokio::sync::Mutex<()>> {
 /// E2EE key), and starts the fetch/decode pipeline. The mic track + its source are untouched.
 /// NO-OP error if not in a call. Idempotent per slot.
 async fn publish_aux(kind: AuxKind, url: &str) -> Result<()> {
+    // 12.1.8 (Astra r2): this work belongs to the call it was asked in — the participant then; a leave + a new call
+    // (a watch) meanwhile voids it (the slot mutex doesn't cover a call teardown)
+    let origin = aux_participant().lock().unwrap().as_ref().map(|p| p.sid());
     // Receivers key their per-user gain on the publication SOURCE
     // (category_for_source): ScreenshareAudio -> "screenshare", which is what the
     // left bar's "Stream" dial and the share tile's slider drive. Every desktop-audio
@@ -6006,6 +6107,9 @@ async fn publish_aux(kind: AuxKind, url: &str) -> Result<()> {
         .unwrap()
         .clone()
         .context("not in a call (no active participant for 2nd audio track)")?;
+    if Some(participant.sid()) != origin || capture_barred() {
+        anyhow::bail!("the call changed while this was starting — not published");
+    }
 
     // A DEDICATED source/track — never the mic's. STEREO (music/game audio keeps its
     // imaging; the mic stays mono). 1s queue (re-chunked downstream like mic).
@@ -6032,6 +6136,11 @@ async fn publish_aux(kind: AuxKind, url: &str) -> Result<()> {
         )
         .await
         .context("publish 2nd audio track failed")?;
+    // re-checked once published (the publish awaited): a watch since, or another call → take it back, capture nothing
+    if capture_barred() || aux_participant().lock().unwrap().as_ref().map(|p| p.sid()) != origin {
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(3), participant.unpublish_track(&publication.sid())).await;
+        anyhow::bail!("the call changed while this was starting — not published");
+    }
     let sid = publication.sid();
 
     let (pipeline, task, stop) =
@@ -6062,6 +6171,14 @@ async fn publish_aux(kind: AuxKind, url: &str) -> Result<()> {
 /// `pipewiresrc` on `node` instead of `uridecodebin` on a URL. The mic track is untouched.
 /// NO-OP error if not in a call. Idempotent per slot.
 async fn publish_aux_pipewire(kind: AuxKind, node: &str) -> Result<()> {
+    // 12.1.8 (Astra r2): this work belongs to the call it was asked in — the participant then; a leave + a new call
+    // (a watch) meanwhile voids it (the slot mutex doesn't cover a call teardown)
+    let origin = aux_participant().lock().unwrap().as_ref().map(|p| p.sid());
+    // Layer 2 (Astra r3 #3): and it holds a lease of that call session to its store — a teardown (the session ends) or a
+    // Watch press voids it, and what it built is NULLed instead of registering after the teardown drained the slots
+    let lease = crate::capture_lease::session()
+        .and_then(|kg| crate::capture_lease::take(crate::capture_lease::Kind::ShareAudio, Some(kg)))
+        .ok_or_else(|| anyhow::anyhow!("You're watching — tap Talk first"))?;
     let slot = kind.track_name();
     let gate = aux_publish_gate(slot);
     let _one_at_a_time = gate.lock().await;
@@ -6077,6 +6194,9 @@ async fn publish_aux_pipewire(kind: AuxKind, node: &str) -> Result<()> {
         .unwrap()
         .clone()
         .context("not in a call (no active participant for 2nd audio track)")?;
+    if Some(participant.sid()) != origin || capture_barred() {
+        anyhow::bail!("the call changed while this was starting — not published");
+    }
 
     let source = NativeAudioSource::new(
         AudioSourceOptions { echo_cancellation: false, noise_suppression: false, auto_gain_control: false },
@@ -6100,11 +6220,16 @@ async fn publish_aux_pipewire(kind: AuxKind, node: &str) -> Result<()> {
         )
         .await
         .context("publish music source 2nd audio track failed")?;
+    // re-checked once published (the publish awaited): a watch since, or another call → take it back, capture nothing
+    if capture_barred() || !lease.valid() || aux_participant().lock().unwrap().as_ref().map(|p| p.sid()) != origin {
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(3), participant.unpublish_track(&publication.sid())).await;
+        anyhow::bail!("the call changed while this was starting — not published");
+    }
     let sid = publication.sid();
 
     let node_owned = node.to_string();
     let (pipeline, task, stop) =
-        match start_aux_pipewire_capture(&node_owned, slot, source.clone(), move || {
+        match start_aux_pipewire_capture(&node_owned, slot, source.clone(), &lease, move || {
             teardown_aux(slot)
         }) {
             Ok(v) => v,
@@ -6118,9 +6243,21 @@ async fn publish_aux_pipewire(kind: AuxKind, node: &str) -> Result<()> {
                 return Err(e);
             }
         };
+    // the commit point, atomic with a revoke: stored only while the lease (= its call session, no Watch press) holds
+    let handle = AuxAudioHandle { pipeline: pipeline.clone(), task, source, sid: sid.clone(), stop: stop.clone() };
+    let mut handle = Some(handle);
+    if lease.commit_with(|| store_aux(slot, handle.take().expect("once"))).is_none() {
+        if let Some(h) = handle {
+            h.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            h.task.abort();
+        }
+        set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "share-audio capture");
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(3), participant.unpublish_track(&sid)).await;
+        eprintln!("[aux/{slot}] the call ended / Watch began while it started — stopped, not registered");
+        anyhow::bail!("the call changed while this was starting — not published");
+    }
     eprintln!("[aux/{slot}] published + capturing PipeWire source {node}");
     clear_republished_sid(slot); // fresh publish: the cached sid is current again
-    store_aux(slot, AuxAudioHandle { pipeline, task, source, sid, stop });
     Ok(())
 }
 
@@ -6160,6 +6297,7 @@ fn start_aux_pipewire_capture(
     node: &str,
     label: &str,
     source: NativeAudioSource,
+    lease: &crate::capture_lease::Lease,
     on_done: impl Fn() + Send + 'static,
 ) -> Result<(gst::Pipeline, tokio::task::JoinHandle<()>, Arc<std::sync::atomic::AtomicBool>)> {
     let (pipeline, appsink) = build_aux_pipewire_pipeline(node)?;
@@ -6227,7 +6365,7 @@ fn start_aux_pipewire_capture(
         });
     }
 
-    if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "share-audio capture start") {
+    if !leased_play(lease, &pipeline, 6000, "share-audio capture start") {
         // Unblock the bus-watch thread spawned above and NULL the half-started pipeline —
         // returning bare Err leaked one OS thread spinning on timed_pop per failed start.
         stop.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -6460,6 +6598,7 @@ impl CallSession {
         // was static until a full rejoin.
         let keyring_gen = KEYRING_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
         *active_key_provider().lock().unwrap() = Some((keyring_gen, key_provider.clone()));
+        crate::capture_lease::set_session(keyring_gen); // Layer 2: this session's leases count from here
         // Replay peer keys that arrived during join (EC sends its key the moment it
         // sees our membership, which we publish before this connect — those installs
         // were buffered, not lost). Without this they'd be dropped → MissingKey →
@@ -6533,7 +6672,11 @@ impl CallSession {
         // already up. (The one-time module load + node warm-up adds ~0.5s before connect —
         // deliberately BEFORE, so the wait also guarantees the mic later binds a live node.)
         audio_health_probe();
-        let _ = aec_start();
+        // 12.1.8 (Astra r2): a watch join loads no echo canceller (it would open the microphone); publish_mic_muted
+        // brings it up before the first capture when Talk here opens the bar
+        if !capture_barred() {
+            let _ = aec_start();
+        }
 
         // Seed the bandwidth estimator BEFORE the transport exists. The
         // webrtc-sys SetLocalDescription patch registers full BitrateSettings
@@ -6573,8 +6716,9 @@ impl CallSession {
                 crate::callstats::participant_present(&id.0);
             }
         }
-        for (id, _) in room.remote_participants() {
+        for (id, p) in room.remote_participants() {
             corner_add_participant(&id.0); // 9.4: pull targets resolve against who is here
+            set_participant_attrs(&id.0, p.attributes()); // Pad on the phone, Step A
         }
         // Make every LOCAL sender cryptor encrypt at OUR key index. Upstream creates
         // sender cryptors hardwired to index 0, so any other announced index silently
@@ -6660,7 +6804,7 @@ impl CallSession {
                             });
                             continue;
                         }
-                        match build_playback(t.rtc_track(), identity.clone(), category.clone(), sid.clone()) {
+                        match build_playback(t.clone(), identity.clone(), category.clone(), sid.clone()) {
                             Ok((p, task)) => {
                                 // NULL + ABORT any displaced playback (re-subscribe of the same
                                 // sid): HashMap::insert drops the old value, but a bare gst Drop
@@ -6678,7 +6822,7 @@ impl CallSession {
                             Err(e) => {
                                 eprintln!("[call] playback build failed for {identity} ({category}): {e:#} — retrying");
                                 crate::hear::note_play_stall(&sid, true); // "can't hear X — repairing"
-                                spawn_playback_retry(pb.clone(), t.rtc_track(), identity, category, sid);
+                                spawn_playback_retry(pb.clone(), t.clone(), identity, category, sid);
                             }
                         }
                     }
@@ -6855,6 +6999,7 @@ impl CallSession {
                     RoomEvent::ParticipantConnected(p) => {
                         let identity = p.identity().0.clone();
                         eprintln!("[call] participant joined: {identity}");
+                        set_participant_attrs(&identity, p.attributes()); // Pad on the phone, Step A
                         corner_add_participant(&identity);
                         crate::hear::participant_present(&identity); // 10.5
                         crate::sameroom::participant_joined(&identity); // 11.3
@@ -6927,6 +7072,7 @@ impl CallSession {
                         // Purge every gain entry for this peer (all categories) so no stale
                         // (dead) WeakRef survives a re-join.
                         let identity = p.identity().0.clone();
+                        drop_participant_attrs(&identity); // Pad on the phone, Step A
                         unregister_participant_gains(&identity);
                         unregister_participant_levels(&identity); // #B drop their levels
                         crate::hear::participant_left(&identity); // 10.5
@@ -7072,6 +7218,12 @@ impl CallSession {
                         );
                         republished_sids().lock().unwrap().insert(name, sid);
                     }
+                    // Pad on the phone, Step A: the server's attributes (tinhat.person / tinhat.pad) group and chip the tiles
+                    RoomEvent::ParticipantAttributesChanged { participant, .. } => {
+                        if let livekit::participant::Participant::Remote(rp) = &participant {
+                            set_participant_attrs(&rp.identity().0, rp.attributes());
+                        }
+                    }
                     RoomEvent::ConnectionQualityChanged { quality, participant } => {
                         // widgets: LiveKit's own view of each connection (the Call stats widget's dot).
                         let local = matches!(participant, livekit::participant::Participant::Local(_));
@@ -7152,6 +7304,7 @@ impl CallSession {
         th: u32,
         fps: u32,
         source: livekit::webrtc::video_source::native::NativeVideoSource,
+        lease: &crate::capture_lease::Lease,
     ) -> Result<gst::Pipeline> {
         // 12.1.8: the compositor is asked for at most `fps` (ScreenCast::src_fragment_paced, Linux)
         #[cfg(not(windows))]
@@ -7201,7 +7354,7 @@ impl CallSession {
         // output re-pin, so a fresh start now never keeps a renegotiated CUDA chain. The learning run still proves the
         // compositor's frames import into CUDA (else: CPU path, as before).
         if want_gpu_learn {
-            match Self::learn_share_size_gpu(screencast, box_w, box_h, fps) {
+            match Self::learn_share_size_gpu(screencast, box_w, box_h, fps, lease) {
                 Ok((rw, rh)) => {
                     (tw, th) = crate::lk_publish::fit_even(rw, rh, box_w, box_h);
                     eprintln!("[call] screen-share: learned the source size {rw}x{rh} -> {tw}x{th}; starting the pre-sized GPU pipeline");
@@ -7214,6 +7367,14 @@ impl CallSession {
         if want_gpu {
             type Builder = fn(&ScreenCast, u32, u32, u32) -> Result<gst::Pipeline>;
             let mut candidates: Vec<(&'static str, Builder)> = Vec::new();
+            // 12.1.9 (SHARE-GAME-LAG): zero-copy first when opted in; no DMA-BUF from the compositor = no first frame =
+            // the CUDA candidate below, as before.
+            #[cfg(not(windows))]
+            if crate::capture::share_dmabuf_on() && crate::lk_publish::gl_dmabuf_available() {
+                candidates.push(("GPU (GL) scale, zero-copy DMA-BUF", |sc, w, h, f| {
+                    crate::lk_publish::build_capture_pipeline_gl_dmabuf(sc, w, h, f)
+                }));
+            }
             if crate::lk_publish::cuda_scale_available() {
                 #[cfg(windows)]
                 candidates.push(("GPU (CUDA) scale, source-paced", |sc, w, h, f| {
@@ -7265,7 +7426,7 @@ impl CallSession {
                             // RC2: accepted only once a frame has come through THIS pipeline (a PLAYING
                             // state alone said nothing about import or negotiation failures downstream).
                             let flowing = first_frame_flag(&appsink);
-                            if set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "screen capture start") {
+                            if leased_play(lease, &pipeline, 6000, "screen capture start") {
                                 // Windows keeps the negotiation check: d3d11screencapturesrc has no keepalive resend,
                                 // so a still desktop could deliver nothing within the wait.
                                 #[cfg(windows)]
@@ -7306,9 +7467,9 @@ impl CallSession {
             .downcast::<gstreamer_app::AppSink>()
             .map_err(|_| anyhow::anyhow!("screenshare sink not an AppSink"))?;
         crate::lk_publish::wire_appsink_to_source(&appsink, source);
-        if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 8000, "screen capture start") {
+        if !leased_play(lease, &pipeline, 8000, "screen capture start") {
             set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "screen capture");
-            anyhow::bail!("screenshare pipeline start failed (the capture never started)");
+            anyhow::bail!("screenshare pipeline start failed or revoked (the capture is not running)");
         }
         eprintln!("[call] screen-share capture: CPU scale path");
         Ok(pipeline)
@@ -7324,6 +7485,7 @@ impl CallSession {
         box_w: u32,
         box_h: u32,
         fps: u32,
+        lease: &crate::capture_lease::Lease,
     ) -> std::result::Result<(u32, u32), String> {
         let pipeline = crate::lk_publish::build_capture_pipeline_cuda_learn(screencast, box_w, box_h, fps)
             .map_err(|e| format!("unavailable ({e})"))?;
@@ -7337,9 +7499,10 @@ impl CallSession {
             return Err("no appsink".into());
         };
         let flowing = first_frame_flag(&appsink);
-        if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "screen capture size probe") {
+        // round 9: the size probe is a capture start too — under the share's lease, gated at its sources
+        if !leased_play(lease, &pipeline, 6000, "screen capture size probe") {
             stop(&pipeline);
-            return Err("did not start".into());
+            return Err("did not start (or revoked)".into());
         }
         if let Err(why) = wait_first_frame(&pipeline, &flowing, 4000) {
             stop(&pipeline);
@@ -7417,6 +7580,11 @@ impl CallSession {
             screencast.close().await; // the portal session ends now (no lingering share indicator)
             anyhow::bail!("You're watching — tap Talk first");
         }
+        // Layer 2: this share holds a lease of this call to its commit (a Watch press NULLs what it built)
+        let Ok(lease) = session_lease(self.keyring_gen, crate::capture_lease::Kind::Screen) else {
+            screencast.close().await;
+            anyhow::bail!("You're watching — tap Talk first");
+        };
         // Publish at the source's REAL aspect ratio (fit into the quality box) so an
         // ultrawide isn't squished into 16:9; honour the user's quality/fps/bitrate.
         let q = crate::lk_publish::share_quality();
@@ -7477,7 +7645,7 @@ impl CallSession {
         });
         let publication = publish_result.context("publish screenshare failed")?;
 
-        let pipeline = match Self::start_share_capture(&screencast, q, tw, th, fps, source) {
+        let pipeline = match Self::start_share_capture(&screencast, q, tw, th, fps, source, &lease) {
             Ok(p) => {
                 crate::lk_publish::install_cadence_probes(&p, fps, "share");
                 p
@@ -7511,6 +7679,13 @@ impl CallSession {
             pw_snapshot("share started");
         });
         clear_republished_sid("screen"); // fresh publish: the cached sid is current again
+        if !lease.commit() {
+            // a Watch press while it started: the capture was NULLed — it doesn't stay published
+            bus_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            self.unpublish_orphaned_track(publication.sid(), "screen-share (revoked)").await;
+            screencast.close().await;
+            return Ok(());
+        }
         self.screenshare = Some((pipeline, screencast, publication.sid(), bus_stop));
         self.announce_recording_only().await;
         self.share_is_av1 = matches!(codec, livekit::options::VideoCodec::AV1);
@@ -7624,6 +7799,12 @@ impl CallSession {
         use livekit::webrtc::video_source::native::NativeVideoSource;
         use livekit::webrtc::video_source::{RtcVideoSource, VideoResolution};
 
+        // Layer 2 (Astra r3 #5): a quality change is a re-publish under a lease of this call — a Watch press (a queued one
+        // too) voids it at its next step, so it can't publish a new share into the call it is leaving
+        let lease = match session_lease(self.keyring_gen, crate::capture_lease::Kind::Screen) {
+            Ok(l) => Some(l),
+            Err(_) => None,
+        };
         // Take the live share apart; if not sharing, nothing to do.
         let Some((old_pipeline, screencast, old_sid, old_bus_stop)) = self.screenshare.take() else {
             return Ok(());
@@ -7641,6 +7822,13 @@ impl CallSession {
         )
         .await;
 
+        // (revoked meanwhile, or barred from the start: the share ends here instead of coming back)
+        let Some(lease) = lease.filter(|l| l.valid()) else {
+            eprintln!("[call] screen-share restart: watching / the call changed — the share stays stopped");
+            screencast.close().await;
+            self.announce_recording_only().await;
+            return Ok(());
+        };
         // 3) Re-publish at the NEW quality, reusing the SAME portal cast (no re-prompt).
         let q = crate::lk_publish::share_quality();
         let (tw, th, fps, bitrate_bps) = crate::lk_publish::publish_target(screencast.size(), q);
@@ -7673,9 +7861,15 @@ impl CallSession {
             )
             .await
             .context("re-publish screenshare failed")?;
+        if !lease.valid() {
+            eprintln!("[call] screen-share restart: revoked while re-publishing — taken back, not restarted");
+            self.unpublish_orphaned_track(publication.sid(), "screen-share restart (revoked)").await;
+            screencast.close().await;
+            return Ok(());
+        }
 
         // 4) Rebuild + start the capture pipeline against the EXISTING portal fd/node_id.
-        let pipeline = match Self::start_share_capture(&screencast, q, tw, th, fps, source) {
+        let pipeline = match Self::start_share_capture(&screencast, q, tw, th, fps, source, &lease) {
             Ok(p) => {
                 crate::lk_publish::install_cadence_probes(&p, fps, "share");
                 p
@@ -7708,6 +7902,12 @@ impl CallSession {
             pw_snapshot("share re-published");
         });
         clear_republished_sid("screen"); // fresh publish: the cached sid is current again
+        if !lease.commit() {
+            bus_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            self.unpublish_orphaned_track(publication.sid(), "screen-share restart (revoked)").await;
+            screencast.close().await;
+            return Ok(());
+        }
         self.screenshare = Some((pipeline, screencast, publication.sid(), bus_stop));
         self.announce_recording_only().await;
         self.share_is_av1 = matches!(codec, livekit::options::VideoCodec::AV1);
@@ -7735,6 +7935,8 @@ impl CallSession {
         if capture_barred() {
             anyhow::bail!("You're watching — tap Talk first");
         }
+        // Layer 2: the camera holds a lease of this call to its commit (a Watch press NULLs it, also mid-start)
+        let lease = session_lease(self.keyring_gen, crate::capture_lease::Kind::Camera)?;
         if device.is_some() {
             set_camera_target(device.clone());
         }
@@ -7856,26 +8058,49 @@ impl CallSession {
             stats_stop.clone(),
         );
 
+        let mut selfview_gate: Option<crate::capture_lease::Gate> = None;
         let ptr = if with_selfview {
             // Leave in NULL; the app sets it PLAYING on the GUI thread (qml6glsink GL
             // affinity). Return the ptr so attach_video can bind the self-view "sink".
+            // (Layer 2: held by the lease until the commit below — a Watch press NULLs it; the GUI start comes after.
+            // Round 9: and gated at its sources NOW — closed until `commit_opening` below, closed again by any revoke)
+            let Some(g) = gate_closed(&pipeline) else {
+                bus_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                stats_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                self.unpublish_orphaned_track(publication.sid(), "camera").await;
+                anyhow::bail!("camera self-view: no source to gate");
+            };
+            selfview_gate = Some(g);
+            let q = pipeline.clone();
+            let _ = lease.hold(move || {
+                let _ = q.set_state(gst::State::Null);
+            });
             pipeline.as_ptr() as usize
+        } else if !leased_play(&lease, &pipeline, 6000, "camera capture start") {
+            bus_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            stats_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            let _ = pipeline.set_state(gst::State::Null);
+            self.unpublish_orphaned_track(publication.sid(), "camera").await;
+            anyhow::bail!("camera capture start failed or revoked");
         } else {
-            match pipeline.set_state(gst::State::Playing).context("camera capture start failed") {
-                Ok(_) => 0,
-                Err(e) => {
-                    bus_stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    stats_stop.store(true, std::sync::atomic::Ordering::Relaxed); // task never stored — end it here
-                    let _ = pipeline.set_state(gst::State::Null);
-                    self.unpublish_orphaned_track(publication.sid(), "camera").await;
-                    return Err(e);
-                }
-            }
+            0
         };
         eprintln!(
             "[call] camera published sid={} (selfview={with_selfview}, device={dev:?}, simulcast={simulcast_on})",
             publication.sid()
         );
+        // round 9: a self-view's gate opens with the commit (under the lease lock)
+        let committed = match &selfview_gate {
+            Some(g) => lease.commit_opening(g),
+            None => lease.commit(),
+        };
+        if !committed {
+            bus_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            stats_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            let _ = pipeline.set_state(gst::State::Null);
+            self.unpublish_orphaned_track(publication.sid(), "camera (revoked)").await;
+            anyhow::bail!("You're watching — tap Talk first");
+        }
         clear_republished_sid("camera"); // fresh publish: the cached sid is current again
         self.camera = Some(CameraHandle {
             pipeline,
@@ -7929,6 +8154,12 @@ impl CallSession {
     /// published track + (if it had one) self-view. Returns the new pipeline ptr when
     /// a self-view was rebuilt (the app re-attaches it on the GUI thread), else 0.
     pub fn restart_camera(&mut self) -> Result<usize> {
+        if self.camera.is_none() {
+            return Ok(0);
+        }
+        // Round 9: the rebuilt camera is a capture start like every other — under a lease of this call, gated at its
+        // sources (leased_play), a self-view gated closed until the commit
+        let lease = session_lease(self.keyring_gen, crate::capture_lease::Kind::Camera)?;
         let Some(h) = self.camera.as_mut() else { return Ok(0) };
         // Flip the OLD watcher's flag alongside the NULL (a stale-true flag on the NULLed
         // pipeline is harmless if the rebuild below fails).
@@ -7958,18 +8189,31 @@ impl CallSession {
             ),
             None => crate::lk_publish::watch_pipeline_bus(&pipeline),
         };
-        let ptr = if h.with_selfview {
-            pipeline.as_ptr() as usize
+        let (ptr, committed) = if h.with_selfview {
+            let g = gate_closed(&pipeline).context("camera self-view: no source to gate")?;
+            let q = pipeline.clone();
+            let _ = lease.hold(move || {
+                let _ = q.set_state(gst::State::Null);
+            });
+            (pipeline.as_ptr() as usize, lease.commit_opening(&g))
         } else {
             // One retry after a beat: unlike the mic, the camera is EXCLUSIVE-open
             // (same-device restarts — quality toggles — NEED the NULL-first order
             // above), and some drivers release the device a moment after NULL.
-            if pipeline.set_state(gst::State::Playing).is_err() {
+            if !leased_play(&lease, &pipeline, 6000, "camera restart") {
                 std::thread::sleep(std::time::Duration::from_millis(300));
-                pipeline.set_state(gst::State::Playing).context("camera restart failed")?;
+                if !leased_play(&lease, &pipeline, 6000, "camera restart") {
+                    let _ = pipeline.set_state(gst::State::Null);
+                    anyhow::bail!("camera restart failed or revoked");
+                }
             }
-            0
+            (0, lease.commit())
         };
+        if !committed {
+            bus_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            let _ = pipeline.set_state(gst::State::Null);
+            anyhow::bail!("You're watching — tap Talk first");
+        }
         h.pipeline = pipeline;
         h.device = dev;
         h.bus_stop = bus_stop;
@@ -8031,6 +8275,11 @@ impl CallSession {
         if self.mic.is_some() {
             return Ok(());
         }
+        // Layer 2: this publish holds a lease of this call to its commit (a Watch press stops what it built)
+        let Ok(lease) = session_lease(self.keyring_gen, crate::capture_lease::Kind::Mic) else {
+            eprintln!("[call] watching — no microphone captured (the mic lease was refused)");
+            return Ok(());
+        };
         // Ensure echo cancellation is up BEFORE capture, so the mic pipeline binds to the
         // cancelled virtual source. On a normal join this is an idempotent no-op — connect()
         // already brought AEC up before any playback pipeline was built. It RELOADS when the
@@ -8076,8 +8325,12 @@ impl CallSession {
             )
             .await
             .context("publish mic failed")?;
+        if !lease.valid() {
+            self.unpublish_orphaned_track(publication.sid(), "mic (revoked)").await;
+            return Ok(());
+        }
 
-        let (pipeline, task) = match start_mic_capture(source.clone()) {
+        let (pipeline, task) = match start_mic_capture(source.clone(), &lease) {
             Ok(v) => v,
             Err(e) => {
                 self.unpublish_orphaned_track(publication.sid(), "mic").await;
@@ -8115,6 +8368,13 @@ impl CallSession {
             livekit::track::Track::LocalAudio(mute_track.clone()),
             stats_stop.clone(),
         );
+        // the commit point: a Watch press since NULLed the capture — it doesn't stay published
+        if !lease.commit() {
+            task.abort();
+            stats_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            self.unpublish_orphaned_track(publication.sid(), "mic (revoked)").await;
+            return Ok(());
+        }
         self.mic = Some(MicHandle {
             pipeline,
             task,
@@ -8258,6 +8518,8 @@ impl CallSession {
     /// Re-point the mic at the currently-selected input (after `set_mic_target`):
     /// rebuild only the capture pipeline, feeding the SAME published track.
     pub fn restart_mic(&mut self) -> Result<()> {
+        // Layer 2: the rebuilt capture holds a lease of this call until it is swapped in
+        let lease = session_lease(self.keyring_gen, crate::capture_lease::Kind::Mic)?;
         use std::sync::atomic::Ordering;
         let Some(h) = &mut self.mic else { return Ok(()) };
         // 0.8.28: the WebRTC stage's echo probe is EXCLUSIVE. Build-then-swap
@@ -8295,23 +8557,27 @@ impl CallSession {
                 );
             }
             let source = h.source.clone();
-            let built = start_mic_capture(source.clone()).or_else(|e| {
+            let built = start_mic_capture(source.clone(), &lease).or_else(|e| {
                 eprintln!(
                     "[call] processed mic chain failed after the old capture stopped ({e}) — \
                      retrying on the plain chain"
                 );
                 force_plain_mic_once().store(true, Ordering::Relaxed);
-                start_mic_capture(source.clone()).or_else(|e2| {
+                start_mic_capture(source.clone(), &lease).or_else(|e2| {
                     eprintln!(
                         "[call] plain mic chain failed too ({e2}) — retrying on the system default input"
                     );
                     force_plain_mic_once().store(true, Ordering::Relaxed);
                     force_default_mic_once().store(true, Ordering::Relaxed);
-                    start_mic_capture(source.clone())
+                    start_mic_capture(source.clone(), &lease)
                 })
             });
             match built {
                 Ok((pipeline, task)) => {
+                    if !lease.commit() {
+                        task.abort();
+                        anyhow::bail!("You're watching — tap Talk first");
+                    }
                     h.pipeline = pipeline;
                     h.task = task;
                     eprintln!("[call] mic rebuilt (old capture stopped first so the echo canceller could rebind)");
@@ -8337,7 +8603,11 @@ impl CallSession {
             // capture must come up FIRST; only then is the old one torn down. On
             // failure the previous device keeps running and the caller can tell the
             // user the switch didn't take.
-            let (pipeline, task) = start_mic_capture(h.source.clone())?;
+            let (pipeline, task) = start_mic_capture(h.source.clone(), &lease)?;
+            if !lease.commit() {
+                task.abort();
+                anyhow::bail!("You're watching — tap Talk first");
+            }
             let old_pipeline = std::mem::replace(&mut h.pipeline, pipeline);
             let old_task = std::mem::replace(&mut h.task, task);
             old_task.abort();
@@ -8368,6 +8638,9 @@ impl CallSession {
         use std::time::Duration;
         const NET_T: Duration = Duration::from_secs(3);
 
+        // Layer 2 (Astra r3 #3): the session ends for its leases FIRST — capture work still starting for it can no
+        // longer register (an aux capture that finishes after the drain below is NULLed instead of stored)
+        crate::capture_lease::end_session(self.keyring_gen);
         // ── Phase 1: synchronous local teardown (no awaits) ──────────────────────────
         // 10.5: the "can they hear me?" analyzer and its bookkeeping go first (the UI shows nothing
         // outside a call), and a mic we no longer want must not be re-published by anyone.
@@ -8438,6 +8711,11 @@ impl CallSession {
         }
         track_gains().lock().unwrap().clear(); // drop all per-track gain WeakRefs
         track_levels().lock().unwrap().clear(); // #B drop all per-track audio levels
+        {
+            let mut a = participant_attrs().lock().unwrap(); // Pad on the phone, Step A
+            a.1.clear();
+            a.0 += 1;
+        }
         playback_sinks().lock().unwrap().clear(); // drop output-sink WeakRefs (next call re-registers)
         clear_recv_state(); // drop retained remote publications + transient receive policy
         *away_active().lock().unwrap() = false; // next call starts not-AFK
@@ -8593,7 +8871,7 @@ impl CallSession {
             .map_err(|_| anyhow::anyhow!("cam sink not an AppSink"))?;
         crate::lk_publish::wire_appsink_to_source(&appsink, source);
         let bus_stop = crate::lk_publish::watch_pipeline_bus(&pipeline);
-        pipeline.set_state(gst::State::Playing).context("cam capture start")?;
+        anyhow::ensure!(leased_start(crate::capture_lease::Kind::Camera, &pipeline, 5000, "cam self-test"), "cam capture start");
 
         tokio::time::sleep(std::time::Duration::from_secs(secs)).await;
         eprintln!("[cam-selftest] done; closing");
@@ -9760,6 +10038,135 @@ fn capture_barred_flag() -> &'static std::sync::atomic::AtomicBool {
 }
 pub fn set_capture_barred(on: bool) {
     capture_barred_flag().store(on, std::sync::atomic::Ordering::SeqCst);
+    crate::capture_lease::set_barred(on); // Layer 2: a closed bar admits no lease and voids the live ones
+}
+
+/// Pad Watch Layer 2 (WATCH-LEASE/DESIGN.md §2): a lease for a capture / publish of THIS call session (`kg` = its
+/// keyring generation, the session's identity in [`crate::capture_lease`]).
+fn session_lease(kg: u64, kind: crate::capture_lease::Kind) -> Result<crate::capture_lease::Lease> {
+    crate::capture_lease::take(kind, Some(kg)).ok_or_else(|| anyhow::anyhow!("You're watching — tap Talk first"))
+}
+
+/// Layer 2: start a capture pipeline under `lease` — held FIRST (a revoke from here on NULLs it), then PLAYING, then
+/// re-checked (a revoke during the start: NULL again). false = not started / stopped.
+/// Round 7: a drop-probe on every SOURCE element's output pads (nested bins too), passing buffers only while `gate` is
+/// open. Everything downstream — converters, a gst encoder, the appsink that feeds a LiveKit source — sees nothing
+/// while it is closed. Returns how many pads were gated.
+pub(crate) fn gate_sources(pipeline: &gst::Pipeline, gate: &crate::capture_lease::Gate) -> usize {
+    let mut n = 0;
+    for e in pipeline.iterate_recurse().into_iter().flatten() {
+        if !e.sink_pads().is_empty() {
+            continue;
+        }
+        for pad in e.src_pads() {
+            let g = gate.clone();
+            pad.add_probe(gst::PadProbeType::BUFFER | gst::PadProbeType::BUFFER_LIST, move |_, _| {
+                if g.load(std::sync::atomic::Ordering::SeqCst) {
+                    gst::PadProbeReturn::Ok
+                } else {
+                    gst::PadProbeReturn::Drop
+                }
+            });
+            n += 1;
+        }
+    }
+    n
+}
+
+/// Round 9: gate a capture pipeline that will be started OUTSIDE `leased_play` (the camera self-view, started on the
+/// GUI thread): its sources are gated CLOSED now; `Lease::commit_opening` opens the gate at the commit. None = no source
+/// element (refuse to start it).
+pub(crate) fn gate_closed(pipeline: &gst::Pipeline) -> Option<crate::capture_lease::Gate> {
+    let gate = crate::capture_lease::new_gate();
+    (gate_sources(pipeline, &gate) > 0).then_some(gate)
+}
+
+/// Round 10: gate one element — a source, or a bin of them — as `gate_sources` gates a pipeline's.
+pub(crate) fn gate_element(el: &gst::Element, gate: &crate::capture_lease::Gate) -> usize {
+    let mut els = vec![el.clone()];
+    if let Some(bin) = el.downcast_ref::<gst::Bin>() {
+        els.extend(bin.iterate_recurse().into_iter().flatten());
+    }
+    let mut n = 0;
+    for e in els {
+        // sources only (no sink pad); a bin's own ghost pads proxy its children's, which are gated themselves
+        if !e.sink_pads().is_empty() || e.is::<gst::Bin>() {
+            continue;
+        }
+        for pad in e.src_pads() {
+            let g = gate.clone();
+            pad.add_probe(gst::PadProbeType::BUFFER | gst::PadProbeType::BUFFER_LIST, move |_, _| {
+                if g.load(std::sync::atomic::Ordering::SeqCst) {
+                    gst::PadProbeReturn::Ok
+                } else {
+                    gst::PadProbeReturn::Drop
+                }
+            });
+            n += 1;
+        }
+    }
+    n
+}
+
+/// Round 10: `leased_play` for ONE element of a running pipeline (the echo reference restarted in place): gated closed,
+/// PLAYING under the lease, the gate opened only if the start is accepted; a revoke NULLs the element.
+pub(crate) fn leased_play_element(lease: &crate::capture_lease::Lease, el: &gst::Element, what: &'static str) -> bool {
+    let gate = crate::capture_lease::new_gate();
+    if gate_element(el, &gate) == 0 {
+        eprintln!("[lease] {what}: no source pad to gate — not started");
+        return false;
+    }
+    let w = el.downgrade();
+    crate::capture_lease::start_under_gated(
+        lease,
+        Some(gate),
+        move || {
+            if let Some(e) = w.upgrade() {
+                set_state_bounded(&e, gst::State::Null, 1500, "revoked capture");
+            }
+        },
+        || el.set_state(gst::State::Playing).is_ok(),
+    )
+}
+
+/// Round 10: the lease-gated start for the CLI self-tests and the dev binaries (no call: session None) — the same
+/// `leased_play` + commit every app capture goes through, so no capture start in the tree is outside a lease gate.
+pub fn leased_start(kind: crate::capture_lease::Kind, pipeline: &gst::Pipeline, ms: u64, what: &'static str) -> bool {
+    let Some(lease) = crate::capture_lease::take(kind, None) else {
+        eprintln!("[lease] {what}: watching — not started");
+        return false;
+    };
+    if !leased_play(&lease, pipeline, ms, what) {
+        return false;
+    }
+    if !lease.commit() {
+        set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, what);
+        return false;
+    }
+    true
+}
+
+pub(crate) fn leased_play(lease: &crate::capture_lease::Lease, pipeline: &gst::Pipeline, ms: u64, what: &'static str) -> bool {
+    // round 7 (shape 2): the capture's samples are gated at its source until its start is accepted under the lease
+    // lock — a capture that starts late after a Watch press is open for at most `ms` + the 1.5 s stop, and sends nothing
+    let gate = crate::capture_lease::new_gate();
+    if gate_sources(pipeline, &gate) == 0 {
+        eprintln!("[lease] {what}: no source element to gate — not started");
+        return false;
+    }
+    let q = pipeline.clone();
+    let ok = crate::capture_lease::start_under_gated(
+        lease,
+        Some(gate),
+        move || {
+            set_state_bounded(q.upcast_ref(), gst::State::Null, 1500, "revoked capture");
+        },
+        || set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, ms, what),
+    );
+    if !ok {
+        eprintln!("[lease] {what}: not running (revoked, or the start failed)");
+    }
+    ok
 }
 pub fn capture_barred() -> bool {
     capture_barred_flag().load(std::sync::atomic::Ordering::SeqCst)
@@ -10702,26 +11109,9 @@ fn ec_ref_restart(pw: glib::WeakRef<gst::Pipeline>, src_name: String, ff: Arc<Ec
             std::thread::sleep(std::time::Duration::from_millis(ms));
         }
         let Some(src) = p.by_name(&src_name) else { return give_up("not found in the mic pipeline", true) };
-        let clock = p.clock();
-        if clock.is_some() && clock == src.provide_clock() {
-            // never the case for a wrapped head (only a SLAVED source runs the skew resync), but never stop the clock
-            return give_up("it provides the pipeline clock, not restarting it", true);
-        }
-        if src.set_state(gst::State::Null).is_err() {
-            return give_up("it did not stop", true);
-        }
-        if let Some(c) = &clock {
-            if src.set_clock(Some(c)).is_err() {
-                return give_up("it refused the pipeline clock", true);
-            }
-        }
-        if let Some(bt) = p.base_time() {
-            src.set_base_time(bt);
-        }
         // await_stream BEFORE the start: the new head's STREAM_START can reach the probe at once
-        ff.repair.lock().unwrap().await_stream = true;
-        if src.set_state(gst::State::Playing).is_err() {
-            return give_up("it did not start again", true);
+        if let Err(why) = ec_ref_restart_src(&p, &src, || ff.repair.lock().unwrap().await_stream = true) {
+            return give_up(why, true);
         }
         drop(_state); // the state changes are done; the wait below must not hold up a teardown
         drop(p);
@@ -10738,6 +11128,41 @@ fn ec_ref_restart(pw: glib::WeakRef<gst::Pipeline>, src_name: String, ff: Arc<Ec
         }
         give_up("its restarted stream never reached the echo probe", true);
     });
+}
+/// The restart itself: `src` (a reference head inside the running mic pipeline `p`, whose STATE_LOCK the caller holds)
+/// NULL, re-clocked, PLAYING again. `before_start` runs just before the PLAYING transition.
+fn ec_ref_restart_src(p: &gst::Pipeline, src: &gst::Element, before_start: impl FnOnce()) -> Result<(), &'static str> {
+    // round 10: the reference hears the speakers (other apps included): a restart is a capture start like any other —
+    // refused while watching (the device is left closed), gated at its source and opened only under the lease
+    let Some(lease) = crate::capture_lease::take(crate::capture_lease::Kind::OutputTap, None) else {
+        let _ = src.set_state(gst::State::Null);
+        return Err("watching — the echo reference is not restarted");
+    };
+    let clock = p.clock();
+    if clock.is_some() && clock == src.provide_clock() {
+        // never the case for a wrapped head (only a SLAVED source runs the skew resync), but never stop the clock
+        return Err("it provides the pipeline clock, not restarting it");
+    }
+    if src.set_state(gst::State::Null).is_err() {
+        return Err("it did not stop");
+    }
+    if let Some(c) = &clock {
+        if src.set_clock(Some(c)).is_err() {
+            return Err("it refused the pipeline clock");
+        }
+    }
+    if let Some(bt) = p.base_time() {
+        src.set_base_time(bt);
+    }
+    before_start();
+    if !leased_play_element(&lease, src, "echo reference restart") {
+        return Err("it did not start again (or a Watch press revoked it)");
+    }
+    if !lease.commit() {
+        let _ = src.set_state(gst::State::Null);
+        return Err("a Watch press revoked it while starting");
+    }
+    Ok(())
 }
 /// Is the RUNNING mic build's reference in the wrapped state?
 fn ec_ref_wrapped_now() -> bool {
@@ -11170,6 +11595,7 @@ pub fn aec_status_note() -> String {
 
 fn start_mic_capture(
     source: NativeAudioSource,
+    lease: &crate::capture_lease::Lease,
 ) -> Result<(gst::Pipeline, tokio::task::JoinHandle<()>)> {
     use std::collections::VecDeque;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -11180,6 +11606,10 @@ fn start_mic_capture(
     const CAP: usize = 20; // 200ms hard ceiling — UNGATED front-leak so latency can't run away
     const GATE_RMS: f32 = 0.02; // silence gate (~-34 dBFS): floor ~0.0003, speech > 0.05
 
+    // 12.1.7: the lowest layer of every call mic capture (publish, re-publish, restart): never while barred
+    if capture_barred() {
+        anyhow::bail!("watching — no microphone captured (Talk here turns it on)");
+    }
     let (pipeline, appsink) = build_mic_pipeline()?;
     // 0.8.28: which rung this chain is (so a never-primed stall can block the right one).
     let chain_flags = mic_chain_flags().load(Ordering::Relaxed);
@@ -11850,7 +12280,7 @@ fn start_mic_capture(
         }
     });
 
-    if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 8000, "mic capture start") {
+    if !leased_play(lease, &pipeline, 8000, "mic capture start") {
         // ABORT THE FEEDER before surfacing the error: dropped un-aborted, the leaked
         // task's never-primed stall watch re-latched mic_capture_unhealthy every 10ms
         // FOREVER (it has no exit condition of its own), so the join healer tore down
@@ -12325,7 +12755,18 @@ fn monitor_tap(sink: &gstreamer_app::AppSink, store: fn(f32)) -> Result<gst::Flo
 /// Start the standalone pre/post-denoise mic monitor. Returns false if one is already running
 /// or the pipeline can't be built. Safe to call alongside a live call (separate pipewiresrc).
 pub fn start_mic_monitor() -> bool {
+    // Layer 2 (Astra r3 #1): the meter holds a lease from here; a Watch press NULLs what it built, also mid-start
+    let Some(lease) = crate::capture_lease::take(crate::capture_lease::Kind::Meter, None) else {
+        eprintln!("[mic-monitor] watching — the meter opens no microphone (Talk here first)");
+        return false;
+    };
     let mut cell = mic_monitor_cell().lock().unwrap();
+    // 12.1.8 (Astra r1/r2): watching (or a watch call not settled yet) — the meter opens no microphone either. Checked
+    // under the cell lock and again once PLAYING (a watch beginning meanwhile tears it down: retire_mic_monitor_if_barred)
+    if capture_barred() {
+        eprintln!("[mic-monitor] watching — the meter opens no microphone (Talk here first)");
+        return false;
+    }
     if cell.is_some() {
         // Idempotent SUCCESS: a live monitor satisfies the request (the Settings→noise-test
         // handoff relies on this — its superseded stop leaves the previous monitor running,
@@ -12399,14 +12840,48 @@ pub fn start_mic_monitor() -> bool {
                 .build(),
         );
     }
-    if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "mic meter start") {
-        eprintln!("[mic-monitor] start failed (the capture never started)");
+    if !leased_play(&lease, &pipeline, 6000, "mic meter start") {
+        eprintln!("[mic-monitor] start failed or revoked (the capture is not running)");
         set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "mic meter");
+        return false;
+    }
+    if capture_barred() || !lease.commit() {
+        set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "mic meter");
+        eprintln!("[mic-monitor] watching began while starting — stopped");
         return false;
     }
     eprintln!("[mic-monitor] started (pre/post-denoise meter)");
     *cell = Some(pipeline);
     true
+}
+
+/// 12.1.8 (Astra r2): a watch join just closed the capture bar — stop the meter if one runs (a start in progress
+/// finishes under the same lock first and sees the bar itself).
+pub fn retire_mic_monitor_if_barred() {
+    if !capture_barred() {
+        return;
+    }
+    let mut cell = mic_monitor_cell().lock().unwrap();
+    if let Some(p) = cell.take() {
+        set_state_bounded(p.upcast_ref(), gst::State::Null, 1500, "mic meter");
+        set_mic_level(0.0);
+        set_mic_level_pre(0.0);
+        eprintln!("[mic-monitor] stopped — watching");
+    }
+}
+
+/// Round 10: a Watch press / watch join — the speaker-OUTPUT taps close their devices (their gates closed at the revoke
+/// already). The playback pipelines are not touched: the watcher keeps hearing the call.
+pub fn retire_output_taps_if_barred() {
+    if !capture_barred() {
+        return;
+    }
+    let had = output_monitor_cell().lock().unwrap().is_some();
+    if had {
+        stop_output_monitor();
+        eprintln!("[output-monitor] stopped — watching");
+    }
+    crate::hear::retire_sniffer();
 }
 
 /// Stop the standalone mic monitor + zero the meters. Idempotent; never touches a live call.
@@ -12440,6 +12915,11 @@ fn output_monitor_cell() -> &'static Mutex<Option<gst::Pipeline>> {
 /// already running or the pipeline can't be built. Safe to call alongside a live call
 /// (separate pipewiresrc). Re-point it on a device switch via [`set_playback_target`].
 pub fn start_output_monitor() -> bool {
+    // round 10: the speaker meter hears what the computer plays (other apps included): leased + gated like every capture
+    let Some(lease) = crate::capture_lease::take(crate::capture_lease::Kind::OutputTap, None) else {
+        eprintln!("[output-monitor] watching — the speaker meter taps nothing");
+        return false;
+    };
     let mut cell = output_monitor_cell().lock().unwrap();
     if cell.is_some() {
         return false;
@@ -12455,9 +12935,14 @@ pub fn start_output_monitor() -> bool {
     // Windows (wasapi2src loopback=true on the render endpoint); a bare default head
     // on Windows must ALSO be loopback (a bare wasapi2src would capture the MIC).
     let src = match target {
+        _ if tap_test_head().is_some() => tap_test_head().unwrap_or_default(),
         Some(sink) => audio_src_fragment(Some(&format!("{sink}.monitor"))),
         None if cfg!(windows) => audio_src_fragment(Some(".monitor")),
-        None => audio_src_fragment(None),
+        // 12.1.8 (Astra r2): never a bare default source — on the PulseAudio path that is the MICROPHONE
+        None => {
+            eprintln!("[output-monitor] no output sink resolved — not started (a bare source could be the microphone)");
+            return false;
+        }
     };
     // Mono S16LE 48k -> appsink (meter only, sync=false). audioconvert collapses the sink's
     // (usually stereo) monitor to mono so rms_of sees one interleaved stream.
@@ -12489,9 +12974,14 @@ pub fn start_output_monitor() -> bool {
                 .build(),
         );
     }
-    if !set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "speaker meter start") {
-        eprintln!("[output-monitor] start failed (the capture never started)");
+    if !leased_play(&lease, &pipeline, 6000, "speaker meter start") {
+        eprintln!("[output-monitor] start failed or revoked (the capture is not running)");
         set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "speaker meter");
+        return false;
+    }
+    if !lease.commit() {
+        set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "speaker meter");
+        eprintln!("[output-monitor] watching began while starting — stopped");
         return false;
     }
     eprintln!("[output-monitor] started (speaker meter)");
@@ -12721,7 +13211,7 @@ fn send_or_retire(tx: &std::sync::mpsc::Sender<RebuiltGuard>, built: RebuiltPlay
 }
 
 fn build_playback(
-    rtc_track: livekit::webrtc::audio_track::RtcAudioTrack,
+    track: livekit::track::RemoteAudioTrack,
     who: String,
     category: String,
     sid: String,
@@ -12736,7 +13226,8 @@ fn build_playback(
     let mut pipeline_w = pipeline.downgrade();
     drop(pipeline); // the slot owns it from here
 
-    let mut stream = NativeAudioStream::new(rtc_track, SAMPLE_RATE as i32, 2);
+    // round 13: a RemoteAudioStream — only a received RemoteAudioTrack makes one (crate::remote_audio)
+    let mut stream = crate::remote_audio::RemoteAudioStream::new(&track, SAMPLE_RATE as i32, 2);
     let task = tokio::spawn(async move {
         // 10.0.6 stall watchdog: the bounded leaky chain sits at ~40 ms while the output drains
         // and pins at its ~200 ms cap when the output stream is connected but never runs (the
@@ -12793,8 +13284,8 @@ fn build_playback(
             };
             if let Some(frame) = frame.as_ref() {
                 // #B: stash this frame's RMS so the app can animate this peer's waveform.
-                set_track_level(&who, &category, rms_of(&frame.data));
-                crate::hear::note_recv(&sid, &frame.data); // 10.5: "can't hear X", receipts, echo
+                set_track_level(&who, &category, frame);
+                crate::hear::note_recv(&sid, frame); // 10.5: "can't hear X", receipts, echo
             }
             // A rebuild that finished on its thread: adopt the new pipeline, retire the old one.
             if let Some(rx) = pending.as_ref() {
@@ -14507,5 +14998,347 @@ mod test_key_and_data_channel_tests {
                 }
             }
         }
+    }
+}
+
+/// Round 7 (shape 2): a Watch press IN the admission → platform-start gap, on a real GStreamer pipeline. The appsink at
+/// the end stands for every consumer of captured samples (a gst encoder, the appsink that feeds a LiveKit source): it
+/// must see ZERO buffers. The start is made slow (+300 ms after PLAYING, a pipewiresrc that is slow to start), so an
+/// ungated capture would deliver ~30 buffers before its owner stops it.
+#[cfg(test)]
+mod round7_gate_tests {
+    use super::*;
+    use crate::capture_lease::{new_gate, revoke, start_under, start_under_gated, take, Kind, GAP};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    fn counted_pipeline() -> (gst::Pipeline, Arc<AtomicU64>) {
+        crate::ensure_init().expect("gst");
+        let p = gst::parse::launch(
+            "audiotestsrc is-live=true samplesperbuffer=480 ! audioconvert ! audio/x-raw,format=S16LE,rate=48000,channels=1 ! appsink name=out emit-signals=false sync=false max-buffers=1000",
+        )
+        .expect("pipeline")
+        .downcast::<gst::Pipeline>()
+        .expect("a pipeline");
+        let n = Arc::new(AtomicU64::new(0));
+        let n2 = n.clone();
+        let sink = p.by_name("out").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        sink.set_callbacks(
+            gstreamer_app::AppSinkCallbacks::builder()
+                .new_sample(move |s| {
+                    let _ = s.pull_sample();
+                    n2.fetch_add(1, Ordering::SeqCst);
+                    Ok(gst::FlowSuccess::Ok)
+                })
+                .build(),
+        );
+        (p, n)
+    }
+
+    /// -> (buffers that reached the sink, how long the late capture was open, still running?)
+    fn press_in_gap(gated: bool) -> (u64, std::time::Duration, bool) {
+        set_capture_barred(false);
+        let lease = take(Kind::Mic, None).expect("admitted");
+        let pressed = Arc::new(std::sync::Mutex::new(None::<std::time::Instant>));
+        let pr = pressed.clone();
+        GAP.with(|g| {
+            *g.borrow_mut() = Some(Box::new(move || {
+                set_capture_barred(true); // the Watch press, in the gap
+                revoke("watch");
+                *pr.lock().unwrap() = Some(std::time::Instant::now());
+            }))
+        });
+        let (p, n) = counted_pipeline();
+        let q = p.clone();
+        let stop = move || {
+            set_state_bounded(q.upcast_ref(), gst::State::Null, 1500, "test stop");
+        };
+        let p2 = p.clone();
+        let start = move || {
+            let ok = set_state_bounded(p2.upcast_ref(), gst::State::Playing, 6000, "test start");
+            std::thread::sleep(std::time::Duration::from_millis(300)); // a slow platform start
+            ok
+        };
+        let running = if gated {
+            let gate = new_gate();
+            assert!(gate_sources(&p, &gate) > 0);
+            start_under_gated(&lease, Some(gate), stop, start)
+        } else {
+            start_under(&lease, stop, start) // round 6: no source gate
+        };
+        let open = pressed.lock().unwrap().map(|t| t.elapsed()).unwrap_or_default();
+        GAP.with(|g| *g.borrow_mut() = None);
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        let after = p.current_state();
+        set_state_bounded(p.upcast_ref(), gst::State::Null, 1500, "test end");
+        set_capture_barred(false);
+        assert_eq!(after, gst::State::Null, "the owner stopped the late capture");
+        (n.load(Ordering::SeqCst), open, running)
+    }
+
+    #[test]
+    fn round7_red_without_the_gate_a_late_capture_delivers_samples_downstream() {
+        let (n, _, running) = press_in_gap(false);
+        assert!(!running);
+        assert!(n > 0, "round 6: {n} buffers reached the sink before the owner stopped it");
+    }
+
+    #[test]
+    fn round7_green_a_late_capture_delivers_nothing_and_is_stopped_within_its_bound() {
+        let (n, open, running) = press_in_gap(true);
+        assert!(!running);
+        assert_eq!(n, 0, "no captured sample reached the sink");
+        eprintln!("[round7] late capture open for {} ms (bound: the start's own timeout + 1.5 s stop)", open.as_millis());
+        assert!(open < std::time::Duration::from_millis(6000 + 1500 + 300 + 500), "{open:?}");
+    }
+}
+
+/// Round 8: the DRAIN bound — how long samples captured BEFORE a Watch press keep reaching the consumer after it (the
+/// appsink that feeds a LiveKit source / an encoder), on real GStreamer pipelines shaped like the capture chains (audio:
+/// live source → convert → resample → caps → queue → appsink; video: live source → caps → convert → queue → appsink).
+/// Each run starts a gated capture, lets it run 40–220 ms, revokes (the press), and records the last buffer that reached
+/// the appsink after the press. N runs each, worst case asserted with margin. (The mic / aux feeder after the appsink adds
+/// at most its own jitter cushion: CAP = 20 frames × 10 ms = 200 ms hard ceiling, 40 ms target — call.rs
+/// start_mic_capture; video has no queue after the appsink.)
+#[cfg(test)]
+mod round8_drain_tests {
+    use super::*;
+    use crate::capture_lease::{new_gate, revoke, start_under_gated, take, Kind};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    pub(crate) const N: usize = 40;
+    /// the asserted worst case for the gst part (the measured worst is printed; margin on top)
+    pub(crate) const DRAIN_ASSERT_MS: u128 = 60;
+
+    fn run_once(desc: &str, run_ms: u64) -> u128 {
+        crate::ensure_init().expect("gst");
+        set_capture_barred(false);
+        let p = gst::parse::launch(desc).expect("pipeline").downcast::<gst::Pipeline>().expect("a pipeline");
+        let last = Arc::new(std::sync::Mutex::new(None::<std::time::Instant>));
+        let l2 = last.clone();
+        let count = Arc::new(AtomicU64::new(0));
+        let c2 = count.clone();
+        let sink = p.by_name("out").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        sink.set_callbacks(
+            gstreamer_app::AppSinkCallbacks::builder()
+                .new_sample(move |s| {
+                    let _ = s.pull_sample();
+                    *l2.lock().unwrap() = Some(std::time::Instant::now());
+                    c2.fetch_add(1, Ordering::SeqCst);
+                    Ok(gst::FlowSuccess::Ok)
+                })
+                .build(),
+        );
+        let lease = take(Kind::Mic, None).expect("admitted");
+        let gate = new_gate();
+        assert!(gate_sources(&p, &gate) > 0);
+        let q = p.clone();
+        let p2 = p.clone();
+        assert!(start_under_gated(
+            &lease,
+            Some(gate),
+            move || {
+                set_state_bounded(q.upcast_ref(), gst::State::Null, 1500, "drain stop");
+            },
+            move || set_state_bounded(p2.upcast_ref(), gst::State::Playing, 6000, "drain start"),
+        ));
+        std::thread::sleep(std::time::Duration::from_millis(run_ms));
+        assert!(count.load(Ordering::SeqCst) > 0, "the capture was flowing before the press");
+        let pressed = std::time::Instant::now();
+        set_capture_barred(true);
+        revoke("watch"); // the press: the gate closes now, the NULL runs on its own thread
+        std::thread::sleep(std::time::Duration::from_millis(400));
+        let drain = last.lock().unwrap().filter(|t| *t > pressed).map(|t| t.duration_since(pressed).as_millis()).unwrap_or(0);
+        drop(lease);
+        set_state_bounded(p.upcast_ref(), gst::State::Null, 1500, "drain end");
+        set_capture_barred(false);
+        drain
+    }
+
+    fn worst(desc: &str, label: &str) -> u128 {
+        let mut w = 0;
+        let mut all = vec![];
+        for i in 0..N {
+            let d = run_once(desc, 40 + (i as u64 * 37) % 180);
+            all.push(d);
+            w = w.max(d);
+        }
+        all.sort();
+        eprintln!("[round8] {label}: drain after the press over N={N} runs: worst {w} ms, median {} ms", all[N / 2]);
+        w
+    }
+
+    #[test]
+    fn round8_audio_chain_drain_is_bounded() {
+        let w = worst(
+            "audiotestsrc is-live=true samplesperbuffer=480 ! audioconvert ! audioresample ! audio/x-raw,format=S16LE,rate=48000,channels=1 ! queue ! appsink name=out emit-signals=false sync=false",
+            "audio chain (gst part)",
+        );
+        assert!(w <= DRAIN_ASSERT_MS, "audio drain {w} ms > {DRAIN_ASSERT_MS} ms");
+    }
+
+    #[test]
+    fn round8_video_chain_drain_is_bounded() {
+        let w = worst(
+            "videotestsrc is-live=true ! video/x-raw,width=640,height=360,framerate=30/1 ! videoconvert ! queue ! appsink name=out emit-signals=false sync=false",
+            "video chain",
+        );
+        assert!(w <= DRAIN_ASSERT_MS, "video drain {w} ms > {DRAIN_ASSERT_MS} ms");
+    }
+
+    #[test]
+    fn round8_the_mic_feeder_cushion_is_capped() {
+        // the feeder after the appsink can still hand out what it holds: at most its CAP (start_mic_capture)
+        let src = include_str!("call.rs");
+        assert!(src.contains("const CAP: usize = 20; // 200ms hard ceiling"), "the feeder's hard ceiling is 20 × 10 ms");
+    }
+}
+
+/// Round 9: the camera SELF-VIEW path (started later on the GUI thread, outside leased_play): gated closed at build
+/// time, opened by `commit_opening`, closed again by a Watch revoke — with the call's teardown still waiting (the Watch
+/// QUEUED behind it, e.g. while a screen-quality restart holds the call mutex: nothing stops the camera yet). The
+/// appsink stands for the self-view pipeline's publish branch (the LiveKit source / the encoder).
+#[cfg(test)]
+mod round9_selfview_tests {
+    use super::*;
+    use crate::capture_lease::{revoke, set_session, take, Kind};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    fn selfview_press(gated: bool) -> (u64, u64, u64) {
+        crate::ensure_init().expect("gst");
+        set_capture_barred(false);
+        set_session(42);
+        let p = gst::parse::launch("videotestsrc is-live=true ! video/x-raw,width=320,height=180,framerate=30/1 ! videoconvert ! appsink name=out emit-signals=false sync=false")
+            .expect("pipeline")
+            .downcast::<gst::Pipeline>()
+            .expect("a pipeline");
+        let frames = Arc::new(AtomicU64::new(0));
+        let f2 = frames.clone();
+        p.by_name("out").unwrap().downcast::<gstreamer_app::AppSink>().unwrap().set_callbacks(
+            gstreamer_app::AppSinkCallbacks::builder()
+                .new_sample(move |s| {
+                    let _ = s.pull_sample();
+                    f2.fetch_add(1, Ordering::SeqCst);
+                    Ok(gst::FlowSuccess::Ok)
+                })
+                .build(),
+        );
+        let lease = take(Kind::Camera, Some(42)).expect("admitted");
+        let gate = if gated { Some(gate_closed(&p).expect("a source")) } else { None };
+        // the GUI thread starts the self-view early (before the commit): nothing may pass yet
+        let _ = p.set_state(gst::State::Playing);
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let before_commit = frames.load(Ordering::SeqCst);
+        match &gate {
+            Some(g) => assert!(lease.commit_opening(g)),
+            None => assert!(lease.commit()),
+        }
+        drop(lease);
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let flowing = frames.load(Ordering::SeqCst);
+        // the Watch press, queued behind the call's teardown: the session isn't ended, nothing stopped the camera yet
+        set_capture_barred(true);
+        revoke("watch");
+        let at_press = frames.load(Ordering::SeqCst);
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        let after = frames.load(Ordering::SeqCst) - at_press;
+        set_state_bounded(p.upcast_ref(), gst::State::Null, 1500, "selfview end");
+        set_capture_barred(false);
+        (before_commit, flowing - before_commit, after)
+    }
+
+    #[test]
+    fn round9_red_an_ungated_selfview_keeps_sending_frames_after_the_press() {
+        let (_, flowing, after) = selfview_press(false);
+        assert!(flowing > 0);
+        assert!(after > 5, "round 8: {after} frames after the press");
+    }
+
+    #[test]
+    fn round9_green_the_selfview_is_gated_closed_until_commit_and_at_the_press() {
+        let (before_commit, flowing, after) = selfview_press(true);
+        assert_eq!(before_commit, 0, "nothing passes before the commit");
+        assert!(flowing > 0, "frames pass once committed");
+        assert!(after <= 1, "at most one frame already past the gate at the press (the drain), got {after}");
+    }
+}
+
+#[cfg(test)]
+mod round10_tap_tests {
+    //! Pad Watch round 10: the speaker-OUTPUT taps (they hear what the computer plays, other apps included) are
+    //! captures like any other — refused while watching, gated at their source at the press. Red on round 9, green now.
+    use super::*;
+    use crate::capture_lease::revoke;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    pub(crate) const HEAD: &str = "audiotestsrc is-live=true wave=sine samplesperbuffer=480";
+
+    pub(crate) fn count_into(p: &gst::Pipeline, sink: &str) -> Arc<AtomicU64> {
+        let n = Arc::new(AtomicU64::new(0));
+        let n2 = n.clone();
+        p.by_name(sink).expect("sink").static_pad("sink").expect("pad").add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+            n2.fetch_add(1, Ordering::SeqCst);
+            gst::PadProbeReturn::Ok
+        });
+        n
+    }
+    fn ms(v: u64) {
+        std::thread::sleep(std::time::Duration::from_millis(v));
+    }
+
+    #[test]
+    fn round10_speaker_meter_is_gated_at_the_press_and_refused_while_watching() {
+        crate::ensure_init().expect("gst");
+        crate::capture_lease::set_barred(false);
+        TAP_TEST_HEAD.with(|h| *h.borrow_mut() = Some(HEAD.into()));
+        stop_output_monitor();
+        assert!(start_output_monitor(), "the speaker meter starts when not watching");
+        let p = output_monitor_cell().lock().unwrap().clone().expect("running");
+        let n = count_into(&p, "outmon");
+        ms(300);
+        assert!(n.load(Ordering::SeqCst) > 0, "the meter's samples flow before the press");
+        // the Watch press
+        crate::capture_lease::set_barred(true);
+        revoke("watch");
+        let at = n.load(Ordering::SeqCst);
+        ms(400);
+        let after = n.load(Ordering::SeqCst) - at;
+        stop_output_monitor();
+        assert!(after <= 1, "the speaker meter is gated at its source at the press: {after} buffers after it");
+        assert!(!start_output_monitor(), "a speaker meter start while watching is refused");
+        stop_output_monitor();
+        crate::capture_lease::set_barred(false);
+        TAP_TEST_HEAD.with(|h| *h.borrow_mut() = None);
+    }
+
+    #[test]
+    fn round10_echo_reference_restart_is_gated_and_refused_after_the_press() {
+        crate::ensure_init().expect("gst");
+        crate::capture_lease::set_barred(false);
+        // a mic pipeline's reference head (no mic gate here: this tests the restart's own gating)
+        let p = gst::parse::launch(&format!("{HEAD} name=tinhatecref ! fakesink name=s sync=false"))
+            .expect("pipeline")
+            .downcast::<gst::Pipeline>()
+            .expect("a pipeline");
+        let n = count_into(&p, "s");
+        assert!(set_state_bounded(p.upcast_ref(), gst::State::Playing, 3000, "ec test"));
+        ms(200);
+        let src = p.by_name("tinhatecref").unwrap();
+        assert_eq!(ec_ref_restart_src(&p, &src, || ()), Ok(()), "a restart while not watching runs");
+        ms(300);
+        let flowing = n.load(Ordering::SeqCst);
+        assert!(flowing > 0);
+        crate::capture_lease::set_barred(true);
+        revoke("watch");
+        let at = n.load(Ordering::SeqCst);
+        ms(400);
+        let after = n.load(Ordering::SeqCst) - at;
+        let again = ec_ref_restart_src(&p, &src, || ());
+        ms(200);
+        let (_, cur, _) = src.state(gst::ClockTime::from_mseconds(500));
+        set_state_bounded(p.upcast_ref(), gst::State::Null, 1500, "ec test end");
+        crate::capture_lease::set_barred(false);
+        assert!(after <= 1, "the restarted reference is gated at its source at the press: {after} buffers after it");
+        assert!(again.is_err(), "a reference restart after the press is refused");
+        assert_ne!(cur, gst::State::Playing, "and the reference device is not re-opened");
     }
 }

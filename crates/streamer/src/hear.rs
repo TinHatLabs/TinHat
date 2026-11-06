@@ -852,11 +852,12 @@ pub(crate) fn note_play_stall(sid: &str, stalled: bool) {
 }
 
 /// One decoded frame from a remote track — each playback feeder, every 10 ms.
-pub(crate) fn note_recv(sid: &str, frame: &[i16]) {
+/// Round 13: it takes only a [`crate::remote_audio::RemoteAudioFrame`] (a decoded frame of a RECEIVED track).
+pub(crate) fn note_recv(sid: &str, frame: &crate::remote_audio::RemoteAudioFrame) {
     if !ON.load(Ordering::Relaxed) {
         return;
     }
-    let db = db_of_i16(frame);
+    let db = db_of_i16(&frame.data);
     let now = Instant::now();
     let mut h = hear().lock().unwrap();
     if db > -40.0 {
@@ -1042,6 +1043,13 @@ fn sniffer_cell() -> &'static Mutex<Option<gst::Pipeline>> {
 fn sniffer_stop() {
     sniffer_stop_with(false)
 }
+/// Round 10: a Watch press / watch join closes the sniffer's device (its gate closed at the revoke already).
+pub(crate) fn retire_sniffer() {
+    if sniffer_cell().lock().unwrap().is_some() {
+        sniffer_stop_with(true);
+        eprintln!("[hear] system-audio sniffer stopped — watching");
+    }
+}
 /// `wait`: stop the old monitor before returning (bounded) — a start runs on a blocking thread and
 /// replaces the old one in order rather than beside a teardown.
 fn sniffer_stop_with(wait: bool) {
@@ -1067,6 +1075,11 @@ fn sniffer_stop_with(wait: bool) {
 /// Listen to what `out` plays (its monitor; "" = the default output) at 8 kHz, as loudness only.
 fn sniffer_start(out: &str) -> bool {
     sniffer_stop_with(true);
+    // round 10: the sniffer hears what the computer plays (other apps included): leased + gated like every capture
+    let Some(lease) = crate::capture_lease::take(crate::capture_lease::Kind::OutputTap, None) else {
+        eprintln!("[hear] system-audio sniffer: watching — not started");
+        return false;
+    };
     // One session's sniffer (#4): a start still running when the call ends must not install a
     // capture afterwards, and its callbacks must not feed the next call.
     let my_session = SESSION.load(Ordering::SeqCst);
@@ -1081,7 +1094,7 @@ fn sniffer_start(out: &str) -> bool {
         "{}{native} ! queue max-size-time=200000000 max-size-buffers=0 max-size-bytes=0 leaky=downstream ! \
          audioconvert ! audioresample ! audio/x-raw,format=F32LE,rate=8000,channels=1,layout=interleaved ! \
          appsink name=hearsnk sync=false max-buffers=20 drop=true",
-        crate::call::monitor_head(out, "hearsniff")
+        crate::call::tap_test_head().unwrap_or_else(|| crate::call::monitor_head(out, "hearsniff"))
     );
     let pipeline = match gst::parse::launch(&desc).ok().and_then(|p| p.downcast::<gst::Pipeline>().ok()) {
         Some(p) => p,
@@ -1128,7 +1141,7 @@ fn sniffer_start(out: &str) -> bool {
         h.sys = Some(Env::new());
         h.sniff_out = Some(out.to_string());
     }
-    if !crate::call::set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 4000, "hear sniffer start") {
+    if !crate::call::leased_play(&lease, &pipeline, 4000, "hear sniffer start") {
         crate::call::set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "hear sniffer");
         let mut h = hear().lock().unwrap();
         h.sys = None;
@@ -1136,7 +1149,7 @@ fn sniffer_start(out: &str) -> bool {
         eprintln!("[hear] system-audio sniffer: the monitor of {out:?} would not start");
         return false;
     }
-    if !ON.load(Ordering::Relaxed) || SESSION.load(Ordering::SeqCst) != my_session {
+    if !ON.load(Ordering::Relaxed) || SESSION.load(Ordering::SeqCst) != my_session || !lease.commit() {
         crate::call::set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "hear sniffer (call ended)");
         return false;
     }
@@ -2203,5 +2216,43 @@ mod tests {
         assert_eq!(parse_vol0("Volume: front-left: 0 /   0% / -inf dB,   front-right: 0 /   0% / -inf dB\n        balance 0.00"), Some(true));
         assert_eq!(parse_vol0("Volume: mono: 65536 / 100% / 0.00 dB\n"), Some(false));
         assert_eq!(parse_vol0("nothing"), None);
+    }
+}
+
+#[cfg(test)]
+mod round10_sniffer_tests {
+    //! Pad Watch round 10: the hear sniffer (a speaker-output tap) is refused while watching and gated at the press.
+    use super::*;
+    use crate::call::TAP_TEST_HEAD;
+
+    #[test]
+    fn round10_hear_sniffer_is_gated_at_the_press_and_refused_while_watching() {
+        crate::ensure_init().expect("gst");
+        crate::capture_lease::set_barred(false);
+        TAP_TEST_HEAD.with(|h| *h.borrow_mut() = Some("audiotestsrc is-live=true wave=sine samplesperbuffer=480".into()));
+        let was_on = ON.swap(true, Ordering::SeqCst);
+        assert!(sniffer_start(""), "the sniffer starts when not watching");
+        let p = sniffer_cell().lock().unwrap().clone().expect("running");
+        let n = std::sync::Arc::new(AtomicU64::new(0));
+        let n2 = n.clone();
+        p.by_name("hearsnk").unwrap().static_pad("sink").unwrap().add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+            n2.fetch_add(1, Ordering::SeqCst);
+            gst::PadProbeReturn::Ok
+        });
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        assert!(n.load(Ordering::SeqCst) > 0);
+        crate::capture_lease::set_barred(true);
+        crate::capture_lease::revoke("watch");
+        let at = n.load(Ordering::SeqCst);
+        std::thread::sleep(std::time::Duration::from_millis(400));
+        let after = n.load(Ordering::SeqCst) - at;
+        sniffer_stop_with(true);
+        let again = sniffer_start("");
+        sniffer_stop_with(true);
+        ON.store(was_on, Ordering::SeqCst);
+        crate::capture_lease::set_barred(false);
+        TAP_TEST_HEAD.with(|h| *h.borrow_mut() = None);
+        assert!(after <= 1, "the sniffer is gated at its source at the press: {after} buffers after it");
+        assert!(!again, "a sniffer start while watching is refused");
     }
 }

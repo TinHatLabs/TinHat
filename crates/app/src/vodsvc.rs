@@ -55,11 +55,92 @@ fn fmt_secs(ms: i64) -> String {
     format!("{sign}{}.{:03}", a / 1000, a % 1000)
 }
 
+/// A capture smaller than this never received a frame: the streamer opened the Matroska file (a 173-byte header)
+/// and nothing followed (no media key reached us, the track ended at once, …). One H.264/AV1 keyframe or a few Opus
+/// packets are already bigger. Same threshold as the remux skip below and the server's Memories listing.
+pub(crate) const FRAMELESS_MAX_BYTES: u64 = 1024;
+
+/// True for a header-only (or missing) capture: nothing to remux, mix or combine, and nothing a player could show.
+fn is_frameless(path: &str) -> bool {
+    std::fs::metadata(path).map(|m| m.len() < FRAMELESS_MAX_BYTES).unwrap_or(true)
+}
+
+/// Temp names for outputs written next to the recordings (renamed into place when complete, so a reader never sees
+/// a half-written file and an existing output is never truncated in place). Every directory scan skips them.
+fn is_temp_name(name: &str) -> bool {
+    name.starts_with(".remux-") || name.starts_with(".tmp-")
+}
+
+/// ffmpeg / ffprobe for post-processing, at the lowest priority (2026-11-04): nice 19 + the idle I/O class, so
+/// remuxes, mixdowns and combined files never compete with a live call, the host's game servers or anything else.
+/// Only the post-processing children: the live capture itself stays at the service's own priority.
+#[allow(unused_mut)]
+fn media_cmd(prog: &str) -> std::process::Command {
+    let mut c = std::process::Command::new(prog);
+    #[cfg(target_os = "linux")]
+    {
+        use std::os::unix::process::CommandExt;
+        // SAFETY: setpriority and ioprio_set are plain syscalls on the child itself, async-signal-safe between fork
+        // and exec; their results are ignored (lowering one's own priority is always permitted).
+        unsafe {
+            c.pre_exec(|| {
+                libc::setpriority(libc::PRIO_PROCESS, 0, 19);
+                // ioprio_set(IOPRIO_WHO_PROCESS = 1, 0 = this process, IOPRIO_CLASS_IDLE (3) << IOPRIO_CLASS_SHIFT (13))
+                libc::syscall(libc::SYS_ioprio_set, 1, 0, 3 << 13);
+                Ok(())
+            });
+        }
+    }
+    c
+}
+
+/// Hold post-processing while `TINHAT_VOD_PAUSE_FILE` exists (2026-11-04). The operator's own "not now" switch —
+/// e.g. the host creates the file while people are playing on a game server that shares the machine. Live recording
+/// is never paused; only the remux / mixdown / combined steps wait, then carry on where they were.
+fn wait_while_paused(step: &str) {
+    let Some(p) = std::env::var_os("TINHAT_VOD_PAUSE_FILE").filter(|p| !p.is_empty()) else { return };
+    let path = std::path::PathBuf::from(p);
+    if !path.exists() {
+        return;
+    }
+    eprintln!("[vod] post-processing PAUSED before {step} (pause file {} present)", path.display());
+    let t0 = std::time::Instant::now();
+    while path.exists() {
+        std::thread::sleep(std::time::Duration::from_secs(30));
+    }
+    eprintln!("[vod] post-processing resumed after {} s ({step})", t0.elapsed().as_secs());
+}
+
+/// ONE post-close pipeline at a time (session close and the startup sweep used to run side by side).
+static PIPELINE: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+/// The startup sweep retries an unfinished session at most this many times (2026-11-04: a session whose combined
+/// step could never succeed was redone in full — mixdown + every combined file — at EVERY start, ~10 min of CPU).
+/// Attempts are counted in `<session>/.vod-repair.json` (hidden, beside the recordings, never read by players).
+const REPAIR_MAX_ATTEMPTS: u64 = 3;
+
+fn repair_attempts(dir: &str) -> u64 {
+    std::fs::read_to_string(format!("{dir}/.vod-repair.json"))
+        .ok()
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .and_then(|v| v.get("attempts").and_then(|a| a.as_u64()))
+        .unwrap_or(0)
+}
+
+fn note_repair_attempt(dir: &str, attempts: u64, finished: bool) {
+    let v = serde_json::json!({ "attempts": attempts, "last_ms": now_ms() as u64, "finished": finished });
+    let p = format!("{dir}/.vod-repair.json");
+    let tmp = format!("{dir}/.tmp-vod-repair.json");
+    if std::fs::write(&tmp, v.to_string()).is_ok() {
+        let _ = std::fs::rename(&tmp, &p);
+    }
+}
+
 /// First video stream start_time in seconds via ffprobe (None on any failure). A
 /// combined file MUST start its video at ~0: the player maps mpv time-pos 0 to the
 /// track's start_ms, so any leading offset here is a timeline error of that size.
 fn probe_video_start_secs(path: &str) -> Option<f64> {
-    let o = std::process::Command::new("ffprobe")
+    let o = media_cmd("ffprobe")
         .args([
             "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=start_time",
             "-of", "csv=p=0", path,
@@ -78,7 +159,7 @@ fn probe_video_start_secs(path: &str) -> Option<f64> {
 /// container duration — a streamable-Matroska capture has none until the seekability remux, and
 /// judging by duration (0.8.21 → 0.8.31) rejected every capture of every session.
 fn probe_audio_packets(path: &str) -> Option<u64> {
-    let o = std::process::Command::new("ffprobe")
+    let o = media_cmd("ffprobe")
         .args([
             "-v", "error", "-select_streams", "a:0", "-count_packets",
             "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", path,
@@ -101,20 +182,21 @@ fn remux_captures(dir: &str, all: bool) {
         let name = e.file_name().to_string_lossy().to_string();
         if name == "mixed.mka"
             || name.starts_with("combined-")
-            || name.starts_with(".remux-")
+            || is_temp_name(&name)
             || !(name.ends_with(".mka") || name.ends_with(".mkv"))
         {
             continue;
         }
         let src = format!("{dir}/{name}");
+        if is_frameless(&src) {
+            continue; // header-only capture: nothing to remux, the mixdown skips it
+        }
         if !all && probe_duration_secs(&src).is_some() {
             continue; // already seekable
         }
-        if std::fs::metadata(&src).map(|m| m.len() < 1024).unwrap_or(true) {
-            continue; // header-only capture: nothing to remux, the mixdown skips it
-        }
+        wait_while_paused("a remux");
         let tmp = format!("{dir}/.remux-{name}");
-        let ok = std::process::Command::new("ffmpeg")
+        let ok = media_cmd("ffmpeg")
             .args(["-y", "-i", &src, "-c", "copy", &tmp])
             .output()
             .map(|o| o.status.success())
@@ -130,7 +212,7 @@ fn remux_captures(dir: &str, all: bool) {
 
 /// Container duration in seconds via ffprobe (None on any failure).
 fn probe_duration_secs(path: &str) -> Option<f64> {
-    let o = std::process::Command::new("ffprobe")
+    let o = media_cmd("ffprobe")
         .args(["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path])
         .output()
         .ok()?;
@@ -191,7 +273,9 @@ fn enrich_tracks_end_ms(dir: &str) {
 /// there is no mixed.mka, or a video track has no combined-<file>. This is exactly
 /// the API's `ready == false` (the player's "Processing" card), so anything true here
 /// is stuck until someone reruns the pipeline. Video-only sessions (no audio) are
-/// left alone -- there is nothing to mix.
+/// left alone -- there is nothing to mix. Frameless captures (2026-11-04) count for
+/// nothing: a header-only video can never get a combined file, and a session whose
+/// only blocker was one used to be "unfinished" forever (redone at every start).
 fn session_unfinished(dir: &str) -> bool {
     let Ok(tracks) = std::fs::read_to_string(format!("{dir}/tracks.jsonl")) else { return false };
     let mut has_audio = false;
@@ -200,6 +284,9 @@ fn session_unfinished(dir: &str) -> bool {
         let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else { continue };
         let kind = v.get("kind").and_then(|k| k.as_str()).unwrap_or("");
         let Some(f) = v.get("file").and_then(|x| x.as_str()) else { continue };
+        if is_frameless(&format!("{dir}/{f}")) {
+            continue;
+        }
         if kind == "audio" {
             has_audio = true;
         } else if !std::path::Path::new(&format!("{dir}/combined-{f}")).exists() {
@@ -246,7 +333,7 @@ fn repair_crashed_sessions(base: &str) {
                     let name = f.file_name().to_string_lossy().to_string();
                     if name == "mixed.mka"
                         || name.starts_with("combined-")
-                        || name.starts_with(".remux-")
+                        || is_temp_name(&name)
                         || !(name.ends_with(".mka") || name.ends_with(".mkv"))
                     {
                         continue;
@@ -269,6 +356,13 @@ fn repair_crashed_sessions(base: &str) {
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_millis())
                 .unwrap_or(0);
+            let attempts = repair_attempts(&dir);
+            if !open_ended && attempts >= REPAIR_MAX_ATTEMPTS {
+                eprintln!("[vod] REPAIR skip (tried {attempts} times already, see .vod-repair.json): {dir}");
+                continue;
+            }
+            // counted BEFORE the work: a repair cut short (crash, restart) still uses up an attempt
+            note_repair_attempt(&dir, attempts + 1, false);
             if open_ended {
                 eprintln!(
                     "[vod] REPAIR crashed session {dir}: stamping end_ms={end_ms} + post-close pipeline"
@@ -279,7 +373,9 @@ fn repair_crashed_sessions(base: &str) {
                 eprintln!("[vod] REPAIR unfinished closed session {dir}: mixdown + combined");
                 post_close_pipeline(&dir, false);
             }
-            eprintln!("[vod] REPAIR done: {dir}");
+            let finished = !session_unfinished(&dir);
+            note_repair_attempt(&dir, attempts + 1, finished);
+            eprintln!("[vod] REPAIR done: {dir} ({})", if finished { "finished" } else { "STILL unfinished" });
         }
     }
 }
@@ -296,6 +392,8 @@ fn spawn_mixdown(dir: String) {
 /// Blocking -- called on a plain thread at session close (spawn_mixdown) and
 /// synchronously from the R4 startup crash repair.
 fn post_close_pipeline(dir: &str, remux: bool) {
+    // One at a time (a poisoned lock only means an earlier pipeline panicked: carry on).
+    let _one = PIPELINE.lock().unwrap_or_else(|e| e.into_inner());
     // R3 first: the remux below rewrites the track files (and their mtimes).
     enrich_tracks_end_ms(dir);
     // Then the seekability remux — BEFORE the mixdown, so the mix reads seekable inputs with
@@ -303,6 +401,9 @@ fn post_close_pipeline(dir: &str, remux: bool) {
     // ran at all once the mixdown had rejected every un-remuxed capture).
     remux_captures(dir, remux);
     {
+        // Repair mode (`remux == false`, the startup sweep) keeps a readable mixed.mka: only what is missing is
+        // rebuilt (2026-11-04; the sweep used to redo the whole mix of a 14-hour session at every start).
+        let keep_mixed = !remux && probe_duration_secs(&format!("{dir}/mixed.mka")).is_some();
         let tracks = std::fs::read_to_string(format!("{dir}/tracks.jsonl")).unwrap_or_default();
         let mut inputs: Vec<(String, u64)> = Vec::new();
         let mut min_start = u64::MAX;
@@ -321,6 +422,9 @@ fn post_close_pipeline(dir: &str, remux: bool) {
             // ones included -- the combined step below uses the same origin, so
             // skipping an input never shifts the timeline.
             min_start = min_start.min(s);
+            if keep_mixed {
+                continue; // no mix to build: don't read every capture just to count its packets
+            }
             // A capture that opened but never received a frame is a 173-byte
             // header-only file; ffmpeg fails the WHOLE amix on it (exit 187 =
             // AVERROR_EOF) and the session then shows "Processing" forever. Feed
@@ -330,45 +434,63 @@ fn post_close_pipeline(dir: &str, remux: bool) {
                 _ => eprintln!("[vod] mixdown: skipping unreadable/empty audio capture {f}"),
             }
         }
-        if inputs.is_empty() {
+        if inputs.is_empty() && !keep_mixed {
             eprintln!("[vod] mixdown: no readable audio captures in {dir}");
             return;
         }
-        let mut cmd = std::process::Command::new("ffmpeg");
-        cmd.arg("-y");
-        for (f, _) in &inputs {
-            cmd.arg("-i").arg(format!("{dir}/{f}"));
-        }
-        let mut fc = String::new();
-        for (i, (_, s)) in inputs.iter().enumerate() {
-            let d = s - min_start;
-            fc.push_str(&format!("[{i}:a]adelay={d}|{d}[a{i}];"));
-        }
-        for i in 0..inputs.len() {
-            fc.push_str(&format!("[a{i}]"));
-        }
-        fc.push_str(&format!("amix=inputs={}:normalize=0[out]", inputs.len()));
-        cmd.arg("-filter_complex").arg(&fc).arg("-map").arg("[out]");
-        cmd.arg("-c:a").arg("libopus").arg("-b:a").arg("128k");
-        // R1: bound the mix to the session span when the end stamp is known. NOT
-        // -shortest -- that would truncate the mix to the shortest audio track.
-        if let Some(end) = session_end_ms(dir) {
-            let span_ms = end as i64 - min_start as i64;
-            if span_ms > 0 {
-                cmd.arg("-t").arg(fmt_secs(span_ms));
+        if keep_mixed {
+            eprintln!("[vod] mixdown: kept the existing readable mixed.mka in {dir}");
+        } else {
+            wait_while_paused("the mixdown");
+            // Written to a temp name and renamed into place: an existing mixed.mka is never truncated while a player
+            // may be reading it, and a failed mix leaves the old one (if any) untouched.
+            let mixed_tmp = format!("{dir}/.tmp-mixed.mka");
+            let mut cmd = media_cmd("ffmpeg");
+            cmd.arg("-y");
+            for (f, _) in &inputs {
+                cmd.arg("-i").arg(format!("{dir}/{f}"));
             }
-        }
-        cmd.arg(format!("{dir}/mixed.mka"));
-        match cmd.output() {
-            Ok(o) if o.status.success() => eprintln!("[vod] mixdown OK -> {dir}/mixed.mka"),
-            Ok(o) => {
-                let s = String::from_utf8_lossy(&o.stderr);
-                let mut last: Vec<&str> = s.lines().filter(|l| !l.trim().is_empty()).collect();
-                let keep = last.len().saturating_sub(3);
-                let tail = last.split_off(keep).join(" | ");
-                eprintln!("[vod] mixdown FAILED ({}): {tail}", o.status);
+            let mut fc = String::new();
+            for (i, (_, s)) in inputs.iter().enumerate() {
+                let d = s - min_start;
+                fc.push_str(&format!("[{i}:a]adelay={d}|{d}[a{i}];"));
             }
-            Err(e) => eprintln!("[vod] mixdown spawn failed: {e}"),
+            for i in 0..inputs.len() {
+                fc.push_str(&format!("[a{i}]"));
+            }
+            fc.push_str(&format!("amix=inputs={}:normalize=0[out]", inputs.len()));
+            cmd.arg("-filter_complex").arg(&fc).arg("-map").arg("[out]");
+            cmd.arg("-c:a").arg("libopus").arg("-b:a").arg("128k");
+            // R1: bound the mix to the session span when the end stamp is known. NOT
+            // -shortest -- that would truncate the mix to the shortest audio track.
+            if let Some(end) = session_end_ms(dir) {
+                let span_ms = end as i64 - min_start as i64;
+                if span_ms > 0 {
+                    cmd.arg("-t").arg(fmt_secs(span_ms));
+                }
+            }
+            cmd.arg(&mixed_tmp);
+            match cmd.output() {
+                Ok(o) if o.status.success() => match std::fs::rename(&mixed_tmp, format!("{dir}/mixed.mka")) {
+                    Ok(()) => eprintln!("[vod] mixdown OK -> {dir}/mixed.mka"),
+                    Err(e) => {
+                        let _ = std::fs::remove_file(&mixed_tmp);
+                        eprintln!("[vod] mixdown rename FAILED ({e}) in {dir}");
+                    }
+                },
+                Ok(o) => {
+                    let _ = std::fs::remove_file(&mixed_tmp);
+                    let s = String::from_utf8_lossy(&o.stderr);
+                    let mut last: Vec<&str> = s.lines().filter(|l| !l.trim().is_empty()).collect();
+                    let keep = last.len().saturating_sub(3);
+                    let tail = last.split_off(keep).join(" | ");
+                    eprintln!("[vod] mixdown FAILED ({}): {tail}", o.status);
+                }
+                Err(e) => {
+                    let _ = std::fs::remove_file(&mixed_tmp);
+                    eprintln!("[vod] mixdown spawn failed: {e}");
+                }
+            }
         }
         // COMBINED per-POV files: video + the aligned mixed audio in ONE mkv
         // (stream copy). The player prefers these — a single ordinary file gives
@@ -407,9 +529,22 @@ fn post_close_pipeline(dir: &str, remux: bool) {
                     // OUTPUT. Every Opus packet is a keyframe, the video's first
                     // packet lands exactly on the cut, so nothing is lost.
                     let skip_ms = vs as i64 - a0 as i64;
-                    let vdur = probe_duration_secs(&format!("{dir}/{f}"));
+                    let src = format!("{dir}/{f}");
                     let out = format!("{dir}/combined-{f}");
-                    let mut cmd = std::process::Command::new("ffmpeg");
+                    if is_frameless(&src) {
+                        // 2026-11-04: nothing to combine (the capture never got a frame) — not a failure, and no
+                        // reason to come back to this session at every start.
+                        eprintln!("[vod] combined: skipped {f} (no frames were captured)");
+                        continue;
+                    }
+                    if keep_mixed && probe_duration_secs(&out).is_some() {
+                        continue; // repair mode: this POV's combined file is already there and readable
+                    }
+                    wait_while_paused("a combined file");
+                    let vdur = probe_duration_secs(&src);
+                    // temp name + rename, like the mix (never truncate a combined file a player may be reading)
+                    let out_tmp = format!("{dir}/.tmp-combined-{f}");
+                    let mut cmd = media_cmd("ffmpeg");
                     cmd.arg("-y");
                     if skip_ms >= 0 {
                         cmd.arg("-itsoffset").arg(fmt_secs(skip_ms));
@@ -434,8 +569,9 @@ fn post_close_pipeline(dir: &str, remux: bool) {
                             cmd.arg("-shortest");
                         }
                     }
-                    cmd.arg(&out);
-                    let ok = cmd.output().map(|o| o.status.success()).unwrap_or(false);
+                    cmd.arg(&out_tmp);
+                    let ok = cmd.output().map(|o| o.status.success()).unwrap_or(false)
+                        && std::fs::rename(&out_tmp, &out).is_ok();
                     if ok {
                         eprintln!(
                             "[vod] combined POV file -> combined-{f} (audio skip {}s)",
@@ -456,7 +592,8 @@ fn post_close_pipeline(dir: &str, remux: bool) {
                             }
                         }
                     } else {
-                        let _ = std::fs::remove_file(&out);
+                        // only our own temp file goes; an existing combined file is never removed
+                        let _ = std::fs::remove_file(&out_tmp);
                         eprintln!("[vod] combined FAILED for {f}");
                     }
                 }
@@ -535,12 +672,26 @@ pub async fn run() {
         std::collections::HashMap::new();
 
     loop {
-        let _ = client
+        let synced = client
             .sync_once(
                 crate::bridge::sync_settings()
                     .timeout(std::time::Duration::from_secs(10)),
             )
             .await;
+        // Peers' media keys arrive ONLY as Olm-encrypted to-device events (since 2026-09-21). The GUI's sync loop
+        // (bridge.rs) hands them to the key intake; this loop used to drop the response, so the recorder never had a
+        // key: every recording since was silent audio and frameless video (recorder fix 2026-11-04).
+        if let Ok(response) = &synced {
+            let mut keys = 0usize;
+            for pe in &response.to_device {
+                if crate::key_intake::ingest_sync_to_device(pe).await {
+                    keys += 1;
+                }
+            }
+            if keys > 0 {
+                eprintln!("[vod] {keys} media-key event(s) from this sync handed to the key intake");
+            }
+        }
 
         // Accept invites — being invitable is how a room opts INTO recording at all.
         for room in client.invited_rooms() {
@@ -577,6 +728,8 @@ pub async fn run() {
                             // this ordering (not subscribe-time building) is the opt-out
                             // guarantee for late joiners.
                             set_record_consent(&room).await;
+                            // 12.1.9: a "no" seen now also stops what is already being recorded of that person
+                            tinhat_streamer::call::stop_excluded_record_chains();
                             tinhat_streamer::call::drain_record_pending();
                         }
                     } else {
@@ -637,5 +790,112 @@ pub async fn run() {
         }
 
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tmpdir(tag: &str) -> String {
+        let d = std::env::temp_dir().join(format!("vodsvc-test-{tag}-{}-{}", std::process::id(), now_ms()));
+        std::fs::create_dir_all(&d).unwrap();
+        d.to_string_lossy().to_string()
+    }
+
+    fn write(dir: &str, name: &str, bytes: usize) {
+        std::fs::write(format!("{dir}/{name}"), vec![0u8; bytes]).unwrap();
+    }
+
+    fn tracks(dir: &str, lines: &[(&str, &str)]) {
+        let body: String = lines
+            .iter()
+            .map(|(kind, file)| serde_json::json!({"kind": kind, "file": file, "start_ms": 1000}).to_string() + "\n")
+            .collect();
+        std::fs::write(format!("{dir}/tracks.jsonl"), body).unwrap();
+    }
+
+    /// 2026-11-04: a frameless (header-only) video no longer keeps a session "unfinished" — that is what made the
+    /// startup sweep redo 10 old sessions at every start. The same session with a REAL video lacking its combined
+    /// file must still be unfinished (the negative control: the check can fail).
+    #[test]
+    fn frameless_video_does_not_block_but_a_real_one_does() {
+        let d = tmpdir("frameless");
+        write(&d, "audio-a.mka", 4096);
+        write(&d, "cam-a.mkv", 173);
+        write(&d, "mixed.mka", 4096);
+        tracks(&d, &[("audio", "audio-a.mka"), ("cam", "cam-a.mkv")]);
+        assert!(is_frameless(&format!("{d}/cam-a.mkv")));
+        assert!(!session_unfinished(&d), "a header-only video must not block");
+        write(&d, "cam-a.mkv", 64 * 1024); // the same track, now with frames
+        assert!(session_unfinished(&d), "a real video without its combined file must block");
+        write(&d, "combined-cam-a.mkv", 64 * 1024);
+        assert!(!session_unfinished(&d));
+        std::fs::remove_file(format!("{d}/mixed.mka")).unwrap();
+        assert!(session_unfinished(&d), "readable audio without a mix must block");
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    /// A session whose only audio is frameless has nothing to mix: not unfinished (and missing files count as frameless).
+    #[test]
+    fn frameless_audio_only_session_is_not_unfinished() {
+        let d = tmpdir("audio0");
+        write(&d, "audio-a.mka", 173);
+        tracks(&d, &[("audio", "audio-a.mka"), ("share", "share-gone.mkv")]);
+        assert!(is_frameless(&format!("{d}/share-gone.mkv")));
+        assert!(!session_unfinished(&d));
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn repair_attempts_are_counted_and_capped() {
+        let d = tmpdir("attempts");
+        assert_eq!(repair_attempts(&d), 0);
+        for n in 1..=REPAIR_MAX_ATTEMPTS {
+            note_repair_attempt(&d, n, false);
+            assert_eq!(repair_attempts(&d), n);
+        }
+        assert!(repair_attempts(&d) >= REPAIR_MAX_ATTEMPTS);
+        assert!(!std::path::Path::new(&format!("{d}/.tmp-vod-repair.json")).exists());
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn temp_names_are_recognised() {
+        for n in [".tmp-mixed.mka", ".tmp-combined-cam-a.mkv", ".remux-audio-a.mka"] {
+            assert!(is_temp_name(n), "{n}");
+        }
+        for n in ["mixed.mka", "combined-cam-a.mkv", "audio-a.mka", "tmp-x.mka"] {
+            assert!(!is_temp_name(n), "{n}");
+        }
+    }
+
+    /// Post-processing children run at nice 19 (field 19 of /proc/<pid>/stat), whatever our own niceness.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn media_cmd_children_run_at_nice_19() {
+        let o = media_cmd("cat").arg("/proc/self/stat").output().unwrap();
+        let s = String::from_utf8_lossy(&o.stdout).to_string();
+        let after_comm = &s[s.rfind(')').unwrap() + 2..];
+        let nice: i64 = after_comm.split_whitespace().nth(16).unwrap().parse().unwrap();
+        assert_eq!(nice, 19, "stat: {s}");
+        // control: a plain Command does NOT get it (so the assertion above can fail)
+        let o2 = std::process::Command::new("cat").arg("/proc/self/stat").output().unwrap();
+        let s2 = String::from_utf8_lossy(&o2.stdout).to_string();
+        let nice2: i64 = s2[s2.rfind(')').unwrap() + 2..].split_whitespace().nth(16).unwrap().parse().unwrap();
+        assert_ne!(nice2, 19, "the test process itself must not already be at 19 for this to prove anything");
+    }
+
+    #[test]
+    fn pause_file_holds_until_removed() {
+        let d = tmpdir("pause");
+        let pf = format!("{d}/pause");
+        // no file: returns at once
+        std::env::set_var("TINHAT_VOD_PAUSE_FILE", &pf);
+        let t0 = std::time::Instant::now();
+        wait_while_paused("test");
+        assert!(t0.elapsed() < std::time::Duration::from_secs(2));
+        std::env::remove_var("TINHAT_VOD_PAUSE_FILE");
+        let _ = std::fs::remove_dir_all(&d);
     }
 }

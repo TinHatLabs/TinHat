@@ -183,6 +183,22 @@ Item {
                     }
                 }
             }
+            // 12.1.9 (docs/UI-ZOOM.md "Change size instantly"): only where the size waits for a restart because the live
+            // change isn't proven there (Wayland); off by default. Same as TINHAT_UI_SCALE_LIVE=1, kept per device.
+            SettingsRow {
+                app: pane.app
+                visible: liveOffered
+                readonly property bool liveOffered: pane.app.settings.uiScaleLiveOptInOffered()
+                label: "Change size instantly (experimental)"
+                description: "On Wayland a new size normally waits until Tin Hat restarts, because changing it live once crashed Tin Hat on KDE Plasma. Turn this on to see it change straight away. If Tin Hat closes when you change the size, turn it off again."
+                toggle: liveSw
+                trailing: ThSwitch {
+                    id: liveSw
+                    Accessible.name: "Change size instantly (experimental)"
+                    checked: pane.app.settings.uiScaleLiveOptIn()
+                    onToggled: pane.app.setUiScaleLiveOptIn(checked)
+                }
+            }
         }
 
         // THEMES-UI §11: the sound pack and the icon style — their own settings, saved through the theme store like a

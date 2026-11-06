@@ -1,0 +1,1062 @@
+{
+  "about": "Pad on the phone, Step A (share claude/tinhat-pad/PAD-PHONE/DESIGN.md): one tile per PERSON. Byte-identical in web src/features/calls/persontiles.vectors.json and desktop crates/app/src/testvectors/persontiles.json. personOf(identity, attrs): the server-minted tinhat.person P (a valid mxid) and identity === P + ':' + DEVICE ([A-Za-z0-9_+/-]{1,64}: the server's identity.mjs DEVICE_RE, 0.3.12) with an optional exact '~watch-<16 lowercase hex>'; anything else is nobody's (its own tile). chipOf: personOf ok + tinhat.pad=phone + tinhat.mode=watch + the ~watch- suffix. The mxid localpart: 1-255 UTF-16 code units, none of them ':' or one of JavaScript's \\s characters ([\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]: the server's MXID_RE). Fold output fields: members (sorted; [] for one device), pad, muted (all members), othersLive (self tile: one of my other devices' mic is live), alts / altOf (a person's other cameras: one shown, the others kept and hidden), serverMuted (every member) / partlyMuted (some).",
+  "person": [
+    {
+      "identity": "@alice:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "watch"
+      },
+      "person": "@alice:example.org",
+      "chip": "watch"
+    },
+    {
+      "identity": "@alice:example.org:8448:EVIL",
+      "attrs": {},
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:8448:EVIL",
+      "attrs": {
+        "tinhat.person": "@alice:example.org:8448"
+      },
+      "person": "@alice:example.org:8448",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:8448:EVIL",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@bob:host.test:8448:DEV",
+      "attrs": {
+        "tinhat.person": "@bob:host.test:8448"
+      },
+      "person": "@bob:host.test:8448",
+      "chip": ""
+    },
+    {
+      "identity": "@v6:[2001:db8::1]:8448:D_1-x",
+      "attrs": {
+        "tinhat.person": "@v6:[2001:db8::1]:8448"
+      },
+      "person": "@v6:[2001:db8::1]:8448",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:1234",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:DEV1\n",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:DEV1#x",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:DEV1~watch-0123456789abcdef~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~watch-0123456789ABCDEF",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "watch"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:D\u00c9V",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@Alice:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "watch"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.pad": "phone",
+        "tinhat.mode": "watch"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "not-an-mxid"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:Ab+c/D",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:q1w2E3r4+T5y6/U7i8O9p0AaSsDdFfGgHhJjKkLlZzX",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PH+/~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "watch"
+      },
+      "person": "@alice:example.org",
+      "chip": "watch"
+    },
+    {
+      "identity": "@ali\u0085ce:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@ali\u0085ce:example.org"
+      },
+      "person": "@ali\u0085ce:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@ali\ufeffce:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@ali\ufeffce:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@ali\u00a0ce:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@ali\u00a0ce:example.org"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00a:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00a:example.org"
+      },
+      "person": "@\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00a:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00:example.org"
+      },
+      "person": "",
+      "chip": ""
+    }
+  ],
+  "fold": [
+    {
+      "name": "a 2-device person (computer + watching phone) = one tile with the chip; nobody else changes",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~watch-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "participant": "@bob:example.org:B1",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~watch-0123456789abcdef"
+          ],
+          "pad": "watch",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "the negative control: no server attribute (an old server, a pre-upgrade session) = separate tiles, no chip",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~watch-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {},
+      "out": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~watch-0123456789abcdef",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "a colon-injection session (pre-upgrade, no attribute) never joins the person it looks like",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:8448:DEV1",
+          "participant": "@alice:example.org:8448:DEV1",
+          "kind": "avatar",
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:8448:EVIL",
+          "participant": "@alice:example.org:8448:EVIL",
+          "kind": "avatar",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:8448:DEV1": {
+          "tinhat.person": "@alice:example.org:8448"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@alice:example.org:8448:DEV1",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:8448:EVIL",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "a camera: the person's camera tile carries the group, the avatar of the other device goes, a share stays its own tile",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_cam1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "video",
+          "muted": true
+        },
+        {
+          "id": "vid_ss1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "screenshare",
+          "muted": true
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~watch-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_cam1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~watch-0123456789abcdef"
+          ],
+          "pad": "watch",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        },
+        {
+          "id": "vid_ss1",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "my own phone watching folds into my self tile (the chip on mine)",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "avatar_@me:example.org:PH~watch-00000000000000aa",
+          "participant": "@me:example.org:PH~watch-00000000000000aa",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@me:example.org:PH~watch-00000000000000aa": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [
+            "@me:example.org:PH~watch-00000000000000aa"
+          ],
+          "pad": "watch",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "two people never merge, even with the same display name; each person's devices merge in identity order",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@sam:a.test:Z9",
+          "participant": "@sam:a.test:Z9",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@sam:b.test:S1",
+          "participant": "@sam:b.test:S1",
+          "kind": "avatar",
+          "muted": false
+        },
+        {
+          "id": "avatar_@sam:a.test:A1",
+          "participant": "@sam:a.test:A1",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@sam:a.test:Z9": {
+          "tinhat.person": "@sam:a.test"
+        },
+        "@sam:b.test:S1": {
+          "tinhat.person": "@sam:b.test"
+        },
+        "@sam:a.test:A1": {
+          "tinhat.person": "@sam:a.test"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@sam:a.test:Z9",
+          "members": [
+            "@sam:a.test:A1",
+            "@sam:a.test:Z9"
+          ],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        },
+        {
+          "id": "avatar_@sam:b.test:S1",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "my other device's live mic shows on my self tile (its level counts for my ring)",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "avatar_@me:example.org:LAPTOP",
+          "participant": "@me:example.org:LAPTOP",
+          "kind": "avatar",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@me:example.org:LAPTOP": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [
+            "@me:example.org:LAPTOP"
+          ],
+          "pad": "",
+          "othersLive": true,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "two cameras of one person: one tile shows one (the lowest tile id), the other is kept and hidden",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_TR_z9",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "vid_TR_a1",
+          "participant": "@alice:example.org:DEV2",
+          "kind": "video",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:DEV2": {
+          "tinhat.person": "@alice:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_TR_z9",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "vid_TR_a1",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "vid_TR_a1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:DEV2"
+          ],
+          "pad": "",
+          "othersLive": false,
+          "alts": [
+            "vid_TR_z9"
+          ],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "two cameras: the viewer's own pick is shown instead",
+      "own": "@me:example.org:ME1",
+      "pick": {
+        "@alice:example.org": "vid_TR_z9"
+      },
+      "tiles": [
+        {
+          "id": "vid_TR_z9",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "vid_TR_a1",
+          "participant": "@alice:example.org:DEV2",
+          "kind": "video",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:DEV2": {
+          "tinhat.person": "@alice:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_TR_z9",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:DEV2"
+          ],
+          "pad": "",
+          "othersLive": false,
+          "alts": [
+            "vid_TR_a1"
+          ],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "vid_TR_a1",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "vid_TR_z9",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "a moderator's mute on ONE device of a person: the tile says partly; on every device: muted by a moderator",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "participant": "@bob:example.org:B1",
+          "kind": "avatar",
+          "muted": false,
+          "serverMuted": false
+        },
+        {
+          "id": "avatar_@bob:example.org:B2",
+          "participant": "@bob:example.org:B2",
+          "kind": "avatar",
+          "muted": true,
+          "serverMuted": true,
+          "serverMutedBy": "@mod:example.org"
+        },
+        {
+          "id": "avatar_@carol:example.org:C1",
+          "participant": "@carol:example.org:C1",
+          "kind": "avatar",
+          "muted": true,
+          "serverMuted": true,
+          "serverMutedBy": "@mod:example.org"
+        },
+        {
+          "id": "avatar_@carol:example.org:C2",
+          "participant": "@carol:example.org:C2",
+          "kind": "avatar",
+          "muted": true,
+          "serverMuted": true,
+          "serverMutedBy": "@mod:example.org"
+        }
+      ],
+      "attrs": {
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@bob:example.org:B2": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@carol:example.org:C1": {
+          "tinhat.person": "@carol:example.org"
+        },
+        "@carol:example.org:C2": {
+          "tinhat.person": "@carol:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "members": [
+            "@bob:example.org:B1",
+            "@bob:example.org:B2"
+          ],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": true,
+          "muted": false
+        },
+        {
+          "id": "avatar_@carol:example.org:C1",
+          "members": [
+            "@carol:example.org:C1",
+            "@carol:example.org:C2"
+          ],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": true,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "review r2: a watcher has no mic (it publishes nothing): never 'live on another device', never makes its person unmuted",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "avatar_@me:example.org:PH~watch-0123456789abcdef",
+          "participant": "@me:example.org:PH~watch-0123456789abcdef",
+          "kind": "avatar",
+          "muted": false
+        },
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "participant": "@bob:example.org:B1",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@bob:example.org:B2~watch-0123456789abcdef",
+          "participant": "@bob:example.org:B2~watch-0123456789abcdef",
+          "kind": "avatar",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@me:example.org:PH~watch-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@bob:example.org:B2~watch-0123456789abcdef": {
+          "tinhat.person": "@bob:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [
+            "@me:example.org:PH~watch-0123456789abcdef"
+          ],
+          "pad": "watch",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "members": [
+            "@bob:example.org:B1",
+            "@bob:example.org:B2~watch-0123456789abcdef"
+          ],
+          "pad": "watch",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "review r2: my self-view and my other device's camera are ONE person's cameras: my self-view shown, the other behind the switcher",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "vid_TRph",
+          "participant": "@me:example.org:PH2",
+          "kind": "video",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@me:example.org:PH2": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [
+            "@me:example.org:PH2"
+          ],
+          "pad": "",
+          "othersLive": true,
+          "alts": [
+            "vid_TRph"
+          ],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "vid_TRph",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "vid_selfview",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "review r2: I picked my other device's camera: it is shown with my tile's fields, my self-view behind the switcher",
+      "own": "@me:example.org:ME1",
+      "pick": {
+        "@me:example.org": "vid_TRph"
+      },
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "vid_TRph",
+          "participant": "@me:example.org:PH2",
+          "kind": "video",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@me:example.org:PH2": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [
+            "@me:example.org:PH2"
+          ],
+          "pad": "",
+          "othersLive": true,
+          "alts": [],
+          "altOf": "vid_TRph",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "vid_TRph",
+          "members": [
+            "@me:example.org:PH2"
+          ],
+          "pad": "",
+          "othersLive": true,
+          "alts": [
+            "vid_selfview"
+          ],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "assembly-045 review: a watcher that joined first never stands for the person (the computer's avatar does), and a watcher never decides 'moderated' (the computer is server-muted = the person is)",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~watch-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true,
+          "serverMuted": true,
+          "serverMutedBy": "@mod:example.org"
+        },
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "participant": "@bob:example.org:B1",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~watch-0123456789abcdef"
+          ],
+          "pad": "watch",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": true,
+          "partlyMuted": false,
+          "muted": true
+        },
+        {
+          "id": "avatar_@bob:example.org:B1",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    }
+  ]
+}

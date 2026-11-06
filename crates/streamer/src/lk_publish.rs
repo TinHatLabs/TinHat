@@ -465,6 +465,10 @@ pub async fn connection_probe(url: &str, token: &str, secs: u32) -> Result<Probe
     use livekit::webrtc::video_source::{RtcVideoSource, VideoResolution};
 
     crate::ensure_init()?;
+    // Pad Watch Layer 2 (Astra r3 #6 desktop twin): the test holds a lease to its end — a Watch press stops its pattern
+    // and leaves its probe room at the next step; nothing is published after the press
+    let lease = crate::capture_lease::take(crate::capture_lease::Kind::ConnTest, None)
+        .ok_or_else(|| anyhow::anyhow!("You're watching — tap Talk first"))?;
     // Probe with the encoder a real share would resolve to under the user's CURRENT
     // preference — the point is to predict share quality, so measure the same path.
     let (codec, backend, encoder_label) =
@@ -483,6 +487,10 @@ pub async fn connection_probe(url: &str, token: &str, secs: u32) -> Result<Probe
     let (room, _events) = Room::connect(url, token, RoomOptions::default())
         .await
         .map_err(|e| anyhow::anyhow!("SFU connect failed: {e}"))?;
+    if !lease.valid() {
+        let _ = room.close().await;
+        anyhow::bail!("You're watching — the connection test stopped");
+    }
     let source = NativeVideoSource::new(VideoResolution { width: 1920, height: 1080 }, true);
     let track =
         LocalVideoTrack::create_video_track("conntest", RtcVideoSource::Native(source.clone()));
@@ -514,6 +522,10 @@ pub async fn connection_probe(url: &str, token: &str, secs: u32) -> Result<Probe
         std::env::remove_var("LK_BWE_START_KBPS");
     });
     let publication = publish_result.map_err(|e| anyhow::anyhow!("probe publish failed: {e}"))?;
+    if !lease.valid() {
+        let _ = room.close().await;
+        anyhow::bail!("You're watching — the connection test stopped");
+    }
     // Open the throttle: allocation-probe the estimator up to the probe cap so
     // the plateau arrives in seconds, not at the 45s wall.
     spawn_throttle_opener(stats_track.clone(), PROBE_CAP_BPS);
@@ -532,9 +544,11 @@ pub async fn connection_probe(url: &str, token: &str, secs: u32) -> Result<Probe
         .downcast::<gstreamer_app::AppSink>()
         .map_err(|_| anyhow::anyhow!("probe sink not an AppSink"))?;
     wire_appsink_to_source(&appsink, source);
-    pipeline
-        .set_state(gst::State::Playing)
-        .context("probe pipeline start failed")?;
+    if !crate::call::leased_play(&lease, &pipeline, 6000, "probe pattern start") {
+        let _ = pipeline.set_state(gst::State::Null);
+        let _ = room.close().await;
+        anyhow::bail!("probe pipeline start failed or revoked");
+    }
 
     let mut peak = 0u64;
     let mut tail: Vec<u64> = Vec::new();
@@ -561,6 +575,11 @@ pub async fn connection_probe(url: &str, token: &str, secs: u32) -> Result<Probe
     let mut i = 0u32;
     loop {
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        if !lease.valid() {
+            let _ = pipeline.set_state(gst::State::Null);
+            let _ = room.close().await;
+            anyhow::bail!("You're watching — the connection test stopped");
+        }
         let stats = match livekit::track::Track::LocalVideo(stats_track.clone()).get_stats().await {
             Ok(s) => s,
             Err(e) => {
@@ -969,9 +988,14 @@ pub async fn start_e2ee_screenshare(
         .map_err(|_| anyhow::anyhow!("sink is not an AppSink"))?;
     wire_appsink_to_source(&appsink, source);
 
-    pipeline
-        .set_state(gst::State::Playing)
-        .context("failed to start capture pipeline")?;
+    // round 9: a capture start like every other — under a lease (refused while watching), gated at its source; the
+    // commit keeps the gate registered, so a Watch revoke closes it
+    let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None)
+        .ok_or_else(|| anyhow::anyhow!("You're watching — tap Talk first"))?;
+    if !crate::call::leased_play(&lease, &pipeline, 6000, "e2ee screen-share start") || !lease.commit() {
+        let _ = pipeline.set_state(gst::State::Null);
+        anyhow::bail!("failed to start capture pipeline (or watching)");
+    }
     eprintln!("[lk] capture pipeline PLAYING");
     let bus_stop = watch_pipeline_bus(&pipeline); // surface gst errors (no longer silent)
 
@@ -1122,6 +1146,59 @@ pub(crate) fn build_capture_pipeline_cuda(
     gst::parse::launch(&desc)?
         .downcast::<gst::Pipeline>()
         .map_err(|_| anyhow::anyhow!("cuda capture: parsed element is not a Pipeline"))
+}
+
+/// 12.1.9 (SHARE-GAME-LAG): are the GStreamer GL elements of the zero-copy capture present? (Cached.)
+#[cfg(not(windows))]
+pub(crate) fn gl_dmabuf_available() -> bool {
+    static OK: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *OK.get_or_init(|| {
+        let missing: Vec<&str> = ["glupload", "glcolorscale", "glcolorconvert", "gldownload"]
+            .into_iter()
+            .filter(|n| gst::ElementFactory::find(n).is_none())
+            .collect();
+        if !missing.is_empty() {
+            eprintln!("[capture] zero-copy (DMA-BUF) capture unavailable: no {}", missing.join("/"));
+        }
+        missing.is_empty()
+    })
+}
+
+/// 12.1.9 zero-copy capture (Linux, opt-in TINHAT_SHARE_DMABUF=1): take the compositor's DMA-BUF, import it into GL
+/// (an EGLImage, no copy), scale + convert to I420 on the GPU and download only the finished frame. The shm path that
+/// the CUDA chain negotiates (12.1.8: `modifier=absent`) makes KWin read every full-size frame back into system memory
+/// (44 MB for a 5120x2160 desktop) and makes us upload it again; here neither copy happens. DMA-BUF only (see
+/// [`crate::capture::source_head_dmabuf`]): without one the candidate fails and the share takes the CUDA path. Needs a
+/// known output size, like [`build_capture_pipeline_cuda`].
+#[cfg(not(windows))]
+pub(crate) fn build_capture_pipeline_gl_dmabuf(
+    screencast: &ScreenCast,
+    out_w: u32,
+    out_h: u32,
+    fps: u32,
+) -> Result<gst::Pipeline> {
+    let desc = gl_dmabuf_desc(&screencast.src_fragment_dmabuf(fps), out_w, out_h, fps);
+    gst::parse::launch(&desc)?
+        .downcast::<gst::Pipeline>()
+        .map_err(|_| anyhow::anyhow!("zero-copy capture: parsed element is not a Pipeline"))
+}
+
+/// The launch line of [`build_capture_pipeline_gl_dmabuf`] for a source head (the gates feed it a test producer).
+/// The import goes through glcolorconvert to RGBA/2D first (an NVIDIA tiled DMA-BUF can import as an external-oes
+/// texture or another format, which glcolorscale does not take; on a plain RGBA 2D import it passes through), then the
+/// scale, then the small frame is converted to I420 and downloaded (~4 MB instead of the source's full size).
+pub(crate) fn gl_dmabuf_desc(src: &str, out_w: u32, out_h: u32, fps: u32) -> String {
+    format!(
+        "{src} ! \
+         videorate drop-only=true ! video/x-raw(ANY),framerate={fps}/1 ! \
+         glupload ! glcolorconvert ! video/x-raw(memory:GLMemory),format=RGBA,texture-target=2D ! \
+         glcolorscale name=vscale ! \
+         video/x-raw(memory:GLMemory),width={out_w},height={out_h},pixel-aspect-ratio=1/1 ! \
+         glcolorconvert ! video/x-raw(memory:GLMemory),format=I420 ! \
+         gldownload ! video/x-raw,format=I420 ! \
+         queue name=outq max-size-buffers=4 leaky=downstream ! \
+         appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
+    )
 }
 
 /// The launch line of [`build_capture_pipeline_cuda`] (the pre-sized GPU capture: its output caps are final at build
@@ -2736,6 +2813,185 @@ mod share_capture_tests {
         assert_eq!(crate::capture::source_head_with_cap(head, 60, false), head, "cap off = the plain head");
     }
 
+    /// 12.1.9: the zero-copy head accepts ONLY DMA-BUF (capped first, then uncapped); no shm structure, so a compositor
+    /// without DMA-BUF makes the candidate fail and the share falls back to the CUDA path.
+    #[cfg(not(windows))]
+    #[test]
+    fn dmabuf_head_accepts_only_dmabuf() {
+        let head = "pipewiresrc fd=3 path=7 do-timestamp=true keepalive-time=1000";
+        let capped = crate::capture::source_head_dmabuf(head, 60, true);
+        assert_eq!(
+            capped,
+            format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(memory:DMABuf),max-framerate=(fraction)60/1; video/x-raw(memory:DMABuf)\"")
+        );
+        assert_eq!(crate::capture::source_head_dmabuf(head, 60, false), format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(memory:DMABuf)\""));
+        assert_eq!(crate::capture::source_head_dmabuf(head, 0, true), format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(memory:DMABuf)\""));
+        let _ = gst::init();
+        let caps: gst::Caps = "video/x-raw(memory:DMABuf),max-framerate=(fraction)60/1; video/x-raw(memory:DMABuf)".parse().unwrap();
+        assert_eq!(caps.size(), 2);
+        for s in caps.iter_with_features() {
+            assert!(s.1.contains("memory:DMABuf"), "every structure must be DMA-BUF: {caps}");
+        }
+        assert!(!caps.can_intersect(&"video/x-raw,format=BGRA".parse::<gst::Caps>().unwrap()), "shm must not match");
+    }
+
+    /// The zero-copy tail (glupload -> glcolorscale -> glcolorconvert I420 -> gldownload) delivers I420 frames at the
+    /// pinned size. Fed from system memory here (a test source can't make a DMA-BUF); the DMA-BUF import is the rig gate
+    /// below. Skips (says so) when this machine has no GL at all.
+    #[cfg(not(windows))]
+    #[test]
+    fn gl_dmabuf_tail_scales_to_i420() {
+        let _ = gst::init();
+        if !gl_dmabuf_available() {
+            eprintln!("skipping: no GStreamer GL elements");
+            return;
+        }
+        // preflight: can this machine run GL at all? (the builder has no EGL; the GPU rig and the desktops do)
+        let pre = gst::parse::launch("videotestsrc num-buffers=1 ! glupload ! gldownload ! fakesink").unwrap();
+        let pre_ok = pre.set_state(gst::State::Playing).is_ok()
+            && pre
+                .bus()
+                .unwrap()
+                .timed_pop_filtered(gst::ClockTime::from_seconds(5), &[gst::MessageType::Eos, gst::MessageType::Error])
+                .is_some_and(|m| matches!(m.view(), gst::MessageView::Eos(_)));
+        let _ = pre.set_state(gst::State::Null);
+        if !pre_ok {
+            eprintln!("skipping: no working GL here (preflight videotestsrc ! glupload ! gldownload failed)");
+            return;
+        }
+        // GL works: from here on every failure is the tail's
+        let head = "videotestsrc num-buffers=40 ! video/x-raw,format=RGBA,width=1280,height=540,framerate=120/1";
+        let desc = gl_dmabuf_desc(head, 640, 270, 60);
+        let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+        let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        pipeline.set_state(gst::State::Playing).expect("zero-copy tail did not start");
+        let mut n = 0;
+        let mut caps = None;
+        while let Some(sample) = sink.try_pull_sample(gst::ClockTime::from_seconds(5)) {
+            caps = sample.caps().map(|c| c.to_owned());
+            n += 1;
+        }
+        let bus_err = pipeline.bus().and_then(|b| b.pop_filtered(&[gst::MessageType::Error]));
+        let _ = pipeline.set_state(gst::State::Null);
+        if let Some(m) = bus_err {
+            if let gst::MessageView::Error(e) = m.view() {
+                panic!("zero-copy tail failed: {} ({:?})", e.error(), e.debug());
+            }
+        }
+        // 40 frames at 120 fps -> ~20 at the 60 cap; the leaky queue / dropping appsink may shed a few
+        assert!(n >= 5, "only {n} frames through the zero-copy tail");
+        let caps = caps.unwrap();
+        let st = caps.structure(0).unwrap();
+        assert_eq!(st.get::<&str>("format").unwrap(), "I420", "{caps}");
+        assert_eq!((st.get::<i32>("width").unwrap(), st.get::<i32>("height").unwrap()), (640, 270), "{caps}");
+        assert!(caps.features(0).map(|f| f.is_any() || !f.contains("memory:GLMemory")).unwrap_or(true), "must be system memory: {caps}");
+    }
+
+    /// SHARE-GAME-LAG zero-copy gate (12.1.9), opt-in: TINHAT_DMABUF_GATE=/path/to/kwingpu-src (stream-perf tool,
+    /// share claude/tinhat-desktop/SHARE-GAME-LAG/stream-perf-20261103/) on a machine with an NVIDIA EGL + PipeWire
+    /// (the laptop GPU rig). The producer negotiates like KWin's screencast: DMA-BUF (the modifier NVIDIA's EGL exports)
+    /// offered FIRST, shm second, max-framerate [0..165]. Runs, each through the app's own launch lines at a 60 fps share:
+    ///   zero-copy head + GL tail vs the DMA-BUF producer: it must pick DMA-BUF and the share must get >= 54 fps;
+    ///   control 1, the same head vs a shm-only producer: NO frames (that is what makes the app fall back to CUDA);
+    ///   control 2, the 12.1.8 CUDA chain vs the DMA-BUF producer: it picks shm (the readback being removed).
+    #[cfg(not(windows))]
+    #[test]
+    fn dmabuf_capture_gate() {
+        let Some(bin) = std::env::var_os("TINHAT_DMABUF_GATE") else {
+            eprintln!("skipping: TINHAT_DMABUF_GATE not set");
+            return;
+        };
+        let _ = gst::init();
+        // (what the producer says the consumer chose, frames/s the share got)
+        // (what the producer says the consumer chose, fps in the fixed window, all samples, bus errors)
+        let run = |dmabuf_producer: bool, desc_for: &dyn Fn(u32) -> String| -> (String, f64, u32, usize) {
+            let mut cmd = std::process::Command::new(&bin);
+            cmd.args(["1920", "1080", "165", "14", "range0"]).stdout(std::process::Stdio::piped());
+            cmd.env_remove("DMABUF").env_remove("GPU");
+            if dmabuf_producer { cmd.env("DMABUF", "1"); } else { cmd.env("GPU", "1"); }
+            let mut child = cmd.spawn().expect("kwingpu-src");
+            let out = child.stdout.take().unwrap();
+            let lines = std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+            let (tx, rx) = std::sync::mpsc::channel::<u32>();
+            let reader = {
+                let lines = lines.clone();
+                std::thread::spawn(move || {
+                    use std::io::BufRead;
+                    for l in std::io::BufReader::new(out).lines().map_while(Result::ok) {
+                        if let Some(id) = l.strip_prefix("node id: ").and_then(|v| v.trim().parse().ok()) {
+                            let _ = tx.send(id);
+                        }
+                        lines.lock().unwrap().push(l);
+                    }
+                })
+            };
+            let node = rx.recv_timeout(std::time::Duration::from_secs(10)).expect("producer node id");
+            let pipeline = gst::parse::launch(&desc_for(node)).unwrap().downcast::<gst::Pipeline>().unwrap();
+            let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+            // started like every capture: through the lease (capture_lint; a refused or failed start = no frames)
+            let _ = crate::call::leased_start(crate::capture_lease::Kind::Screen, &pipeline, 8000, "dmabuf gate");
+            // warm-up 2 s, then count over a FIXED 6 s window (a late burst can't pass); total = every sample seen
+            let t0 = std::time::Instant::now();
+            let (mut n, mut total) = (0u32, 0u32);
+            while t0.elapsed() < std::time::Duration::from_secs(8) {
+                if sink.try_pull_sample(gst::ClockTime::from_mseconds(200)).is_some() {
+                    total += 1;
+                    if t0.elapsed() >= std::time::Duration::from_secs(2) {
+                        n += 1;
+                    }
+                }
+            }
+            let errors = pipeline
+                .bus()
+                .map(|b| std::iter::from_fn(|| b.pop_filtered(&[gst::MessageType::Error])).count())
+                .unwrap_or(0);
+            let _ = pipeline.set_state(gst::State::Null);
+            let fps = n as f64 / 6.0;
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = reader.join();
+            let chose = lines
+                .lock()
+                .unwrap()
+                .iter()
+                .find_map(|l| l.strip_prefix("[kwingpu] consumer chose ").map(|r| r.split(' ').next().unwrap_or("").to_string()))
+                .unwrap_or_else(|| "nothing".into());
+            eprintln!(
+                "[dmabuf-gate] producer {} -> consumer chose {chose}, share got {fps:.1} fps ({total} samples, {errors} bus errors)",
+                if dmabuf_producer { "DMA-BUF+shm" } else { "shm only" }
+            );
+            (chose, fps, total, errors)
+        };
+        let src = |node: u32| format!("pipewiresrc path={node} do-timestamp=true keepalive-time=1000");
+        // TINHAT_DMABUF_GATE_PLANT=1 = the planted fault that shows the gate can fail: a head that asks for system
+        // memory (what 12.1.8 effectively negotiated), so the producer hands over shm and the DMA-BUF assertion must fire.
+        let plant = std::env::var_os("TINHAT_DMABUF_GATE_PLANT").is_some();
+        let zero_copy = |node: u32| {
+            let head = if plant {
+                format!("{} ! capsfilter name=ratecap caps=\"video/x-raw,max-framerate=(fraction)60/1\"", src(node))
+            } else {
+                crate::capture::source_head_dmabuf(&src(node), 60, true)
+            };
+            gl_dmabuf_desc(&head, 960, 540, 60)
+        };
+        let (chose, fps, _, errors) = run(true, &zero_copy);
+        assert_eq!(chose, "DMA-BUF", "the zero-copy head must take the DMA-BUF");
+        assert!(fps >= 54.0, "zero-copy share got {fps:.1} fps");
+        assert_eq!(errors, 0, "the zero-copy share posted bus errors");
+        assert!(cuda_scale_available(), "the controls need the CUDA chain (an NVIDIA rig)");
+        let cuda = |node: u32| cuda_presized_desc(&crate::capture::source_head_with_cap(&src(node), 60, true), 960, 540, 60);
+        // control 1: the shm-only producer WORKS (an accepting chain gets frames from it) ...
+        let (chose_ok, fps_ok, _, _) = run(false, &cuda);
+        assert!(chose_ok == "shm" && fps_ok > 10.0, "control 1a: the shm-only producer did not work ({chose_ok}, {fps_ok:.1} fps)");
+        // ... and the DMA-BUF-only head gets NOTHING from it: what makes the app fall back to CUDA
+        let (_, _, total_shm, _) = run(false, &zero_copy);
+        assert_eq!(total_shm, 0, "control 1b: the DMA-BUF-only head took {total_shm} frames from a shm-only producer");
+        // control 2: the 12.1.8 CUDA chain against the DMA-BUF producer picks shm (the read-back this removes)
+        let (chose_cuda, fps_cuda, _, _) = run(true, &cuda);
+        assert_eq!(chose_cuda, "shm", "control 2: the 12.1.8 CUDA chain must still pick shm");
+        assert!(fps_cuda > 0.0, "control 2 got no frames");
+    }
+
     /// The capped head parses and negotiates through the real CPU launch line with a source that has NO
     /// max-framerate field (GStreamer side; the PipeWire side is the gate below).
     #[cfg(not(windows))]
@@ -2806,7 +3062,8 @@ mod share_capture_tests {
             let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
             install_first_frame_repin(&pipeline, 1920, 1080, None, Default::default(), "gate");
             let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
-            pipeline.set_state(gst::State::Playing).unwrap();
+            // started like every capture: through the lease (capture_lint)
+            assert!(crate::call::leased_start(crate::capture_lease::Kind::Screen, &pipeline, 8000, "rate-cap gate"), "the gate's capture did not start");
             let t0 = std::time::Instant::now();
             let (mut n, mut first) = (0u32, None);
             while t0.elapsed().as_secs_f64() < 13.0 {

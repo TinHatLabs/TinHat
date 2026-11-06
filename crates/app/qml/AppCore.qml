@@ -258,7 +258,14 @@ Item {
             tunedIn: !!(t && t.tunedIn),
             vidW: (t && t.vidW) ? Number(t.vidW) : 0,
             vidH: (t && t.vidH) ? Number(t.vidH) : 0,
-            cameraMuted: !!(t && t.cameraMuted)
+            cameraMuted: !!(t && t.cameraMuted),
+            // Pad on the phone, Step A (persontiles.rs): this person's devices ("\n"-joined; "" for one) + the Pad chip
+            members: (t && t.members && t.members.length > 0) ? t.members.join("\n") : "",
+            pad: (t && t.pad) ? String(t.pad) : "",
+            othersLive: !!(t && t.othersLive),
+            alts: (t && t.alts && t.alts.length > 0) ? t.alts.join("\n") : "",
+            altOf: (t && t.altOf) ? String(t.altOf) : "",
+            partlyMuted: !!(t && t.partlyMuted)
         }
         r.raw = JSON.stringify(r)
         return r
@@ -314,9 +321,15 @@ Item {
     // the device rotates per login — remembering it would forget people weekly.
     property var mHiddenTiles: []
     property var hiddenKeys: []
+    // 12.1.9 (assembly-044 area 3 P2): everything before the LAST ':' (identity.rs mxid_of, the web's calls/identity.ts
+    // mxidOf), so @u:host:8448:DEV stays @u:host:8448 (the old first-two-parts split made it @u:host, and a menu for
+    // @u:host could moderate the port user's device). A bare mxid (one ':' after the localpart) is kept as it is.
     function tileMxid(p) {
-        var m = /^(@[^:]+:[^:]+)/.exec(p || "")
-        return m ? m[1] : (p || "")
+        var s = String(p || "")
+        var i = s.lastIndexOf(":")
+        if (i <= 0) return s
+        var head = s.substring(0, i)
+        return head.indexOf(":") >= 0 ? head : s
     }
     function tileKey(md) {
         if (!md || !md.participant) return ""
@@ -388,6 +401,21 @@ Item {
         return out
     }
     function isTileHidden(id) { return core.mHiddenTiles.indexOf(id) !== -1 || core.isRecOnlyHidden(id) }
+    // PAD-PHONE Step A: a person's other camera (altOf: the fold shows one camera per person) is out of the grid but its
+    // row and video surface stay (never a delegate destroyed under a live sink); not counted as "hidden" by the user
+    function isAltCamera(id) {
+        var ts = core.callTiles || []
+        for (var i = 0; i < ts.length; i++) if (ts[i] && ts[i].id === id) return !!ts[i].altOf
+        return false
+    }
+    function isTileOut(id) { return core.isTileHidden(id) || core.isAltCamera(id) }
+    // the alt cameras' ids, for the grid's layout (review a045 area 2: they were invisible but still took a slot, and in
+    // speaker mode the stage could stay on the camera the switcher had just hidden)
+    readonly property var altCameraIds: {
+        var out = [], ts = core.callTiles || []
+        for (var i = 0; i < ts.length; i++) if (ts[i] && ts[i].altOf) out.push(String(ts[i].id))
+        return out
+    }
     // Game chat: `peers`/`muted` hold FULL LiveKit identities; strip rows carry bare mxids.
     function isGameChat(identity) { return core.mGameChatPeers.peers.indexOf(identity) !== -1 }
     function isGameChatMuted(identity) { return core.mGameChatPeers.muted.indexOf(identity) !== -1 }
@@ -1645,8 +1673,8 @@ Item {
         var map = core.mServerMutedMap || {}
         if (identity && identity.length > 0 && map[identity] !== undefined) return String(map[identity])
         if (mxid && mxid.length > 0) {
-            var pre = mxid + ":"
-            for (var k in map) if (k.indexOf(pre) === 0) return String(map[k])
+            // 12.1.9: by the identity's own user (tileMxid), not a "mxid:" prefix (that also matched a port server's user)
+            for (var k in map) if (core.tileMxid(k) === mxid) return String(map[k])
         }
         return ""
     }
@@ -2440,9 +2468,25 @@ Item {
     // view uses the local mic level; a remote tile carries the full LiveKit identity
     // (@u:server:DEVICE) while levels are keyed by that same identity — but tracks may also
     // register under a bare mxid, so match by mxid PREFIX (cf. the #5 gain path / isAway).
-    function tileAudioLevel(participant, isSelf) {
-        if (isSelf) return core.mMicLevel
+    function tileAudioLevel(participant, isSelf, selfMuted) {
         var p = participant || ""
+        if (isSelf) {
+            // PAD-PHONE Step A: my tile also speaks when one of my other devices does ("\n"-joined members); my muted
+            // mic silences only my own part (review r2)
+            var top0 = selfMuted ? 0.0 : core.mMicLevel
+            if (p.indexOf(":") >= 0) {
+                var ms0 = p.split("\n")
+                for (var j = 0; j < ms0.length; j++) top0 = Math.max(top0, core.tileAudioLevel(ms0[j], false))
+            }
+            return top0
+        }
+        // Pad on the phone, Step A: a person's tile ("\n"-joined members, which no call identity contains) is speaking
+        // when any of their devices is
+        if (p.indexOf("\n") >= 0) {
+            var ms = p.split("\n"), top = 0.0
+            for (var mi = 0; mi < ms.length; mi++) top = Math.max(top, core.tileAudioLevel(ms[mi], false))
+            return top
+        }
         var best = 0.0
         for (var k in core.mAudioLevels) {
             var bar = k.indexOf("|")

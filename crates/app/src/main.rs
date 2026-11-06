@@ -50,10 +50,12 @@ pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
 pub mod left_words; // 12.1.1: the "already left" words of a kick / Disconnect / Mute (= the web's spaces/leftWords.ts)
 pub mod identity; // identity fix 12.1.8: LiveKit identity → user by the call memberships (= the web's features/calls/identity.ts)
+pub mod persontiles; // Pad on the phone, Step A: one tile per person from the server attribute (= web persontiles.ts)
 pub mod companions; // screen share P3: fold a phone's share-only companion into its person (= the web's features/calls/companions.ts)
 pub mod callrules; // the calls-round rules: call host policy, key recipients v2, rotate-on-leave (pure; = the web's features/calls/callrules.ts)
 pub mod key_intake; // every Olm-decrypted media key goes through keyrules before the keyring
 pub mod padrules; // Pad: the phone as a remote for my call — the pure rules (= the web's features/calls/pad/rules.ts; docs/PAD.md)
+pub mod watch_session; // 12.1.7 Pad Watch: the call-episode ledger — whether a (re)join watches (= the web's features/calls/watchsession.ts)
 pub mod pad_engine; // Pad: the receiver + controller state machines over the rules (no I/O, injected clocks)
 pub mod pad_net; // Pad: Olm to-device transport + the trust glue (one node per session)
 pub mod pad_ctl; // Pad: PadController — the QML bridge (exec → PadHost.qml, the chip, discovery, the Pad window)
@@ -693,6 +695,11 @@ fn main() {
         option_env!("TINHAT_BUILD_HASH").unwrap_or("dev"),
         std::env::consts::OS
     );
+    // 12.1.9: the CUDA performance-boost decision early_startup made (before stderr reached the log file)
+    #[cfg(not(windows))]
+    if let Some(note) = platform::cuda_perf_boost_note() {
+        eprintln!("{note}");
+    }
     // Windows: the safe-mode decision above ran before stderr reached the log file (a shortcut
     // or Explorer start has no stderr at all), so its lines were lost. One summary line here:
     // marker path, what the previous start left, this start's mode.

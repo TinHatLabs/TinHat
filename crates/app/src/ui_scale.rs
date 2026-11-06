@@ -16,6 +16,10 @@ pub const DEFAULT: i32 = 100;
 pub const STEP: i32 = 10;
 /// The device pref file (settings.rs overlay prefs): "120" = 120 %. Absent / unreadable = 100.
 pub const PREF: &str = "ui-scale";
+/// 12.1.9: Settings → Appearance → "Change size instantly (experimental)": "1" = the live change also where it isn't
+/// proven yet (Wayland), i.e. what TINHAT_UI_SCALE_LIVE=1 does, kept per device. Off by default; restart-only stays the
+/// default on Wayland. The DPR walk guard (ui_scale_bridge.cpp) covers the live path wherever it runs (not `windows`).
+pub const LIVE_PREF: &str = "ui-scale-live";
 
 /// Any value → a size the app uses: clamped to MIN..=MAX and snapped to the nearest step (a half step rounds up).
 pub fn normalize(p: i32) -> i32 {
@@ -97,12 +101,35 @@ fn platform() -> String {
     String::from_utf8_lossy(&buf[..n].iter().map(|&c| c as u8).collect::<Vec<u8>>()).into_owned()
 }
 
-/// TINHAT_UI_SCALE_LIVE=1: allow the live change on a platform not in the list (testing only).
+/// TINHAT_UI_SCALE_LIVE=1 (testing), or the Settings opt-in (LIVE_PREF): allow the live change on a platform not in
+/// the list.
 fn force_live() -> bool {
-    std::env::var_os("TINHAT_UI_SCALE_LIVE").is_some_and(|v| v == "1")
+    std::env::var_os("TINHAT_UI_SCALE_LIVE").is_some_and(|v| v == "1") || live_opt_in()
 }
 
-/// The size this run started with (what Qt got at start, live or through QT_SCALE_FACTOR).
+/// The Settings opt-in "Change size instantly (experimental)" of this device.
+pub fn live_opt_in() -> bool {
+    crate::settings::overlay_pref_read(LIVE_PREF).map(|s| s.trim() == "1").unwrap_or(false)
+}
+
+/// Store the opt-in. Answers whether the size now changes live.
+pub fn set_live_opt_in(on: bool) -> bool {
+    crate::settings::overlay_pref_write(LIVE_PREF, if on { "1" } else { "0" });
+    live_capable()
+}
+
+/// Is the opt-in worth offering here? Only where the live change is held back by the platform list alone: Qt has the
+/// calls, TINHAT_UI_SCALE_RESTART isn't set, and the plugin is not one of the proven ones (in practice Wayland).
+pub fn live_opt_in_offered() -> bool {
+    offered_on(&platform(), !restart_only() && unsafe { tinhat_ui_scale_live_capable() } == 1)
+}
+
+fn offered_on(platform: &str, qt_capable: bool) -> bool {
+    qt_capable && !live_allowed_on(platform, false)
+}
+
+/// The size Qt shows now: what this run started with (live or through QT_SCALE_FACTOR), then each live change (12.1.9:
+/// with the opt-in a run can change live and then go back to restart-only, so "pending" compares with what is shown).
 static STARTUP: AtomicI32 = AtomicI32::new(DEFAULT);
 
 /// TINHAT_UI_SCALE_RESTART=1: never change the size live (it then applies at the next start) — the safety valve if a
@@ -133,7 +160,9 @@ pub fn apply_startup() {
     // one line in every log: which path this build/run has (a restart-only build must be noticed — launch-gate 10-31)
     let plat = platform();
     let why = match unsafe { tinhat_ui_scale_why() } {
-        0 if live_allowed_on(&plat, force_live()) => "changes live".to_string(),
+        0 if live_allowed_on(&plat, false) => "changes live".to_string(),
+        0 if live_opt_in() => format!("changes live on '{plat}': the experimental setting is on"),
+        0 if force_live() => format!("changes live on '{plat}': TINHAT_UI_SCALE_LIVE=1"),
         0 => format!("restart-only: a live change is not proven on '{plat}' yet"),
         1 => "restart-only: built without Qt's private headers".to_string(),
         2 => "restart-only: this Qt lacks the scale calls".to_string(),
@@ -164,6 +193,11 @@ pub fn set(p: i32) -> (i32, bool) {
     crate::settings::overlay_pref_write(PREF, &p.to_string());
     // never the live call where it isn't allowed: the pref above is the change, the next start applies it
     let live = live_capable() && unsafe { tinhat_ui_scale_apply(factor(p, env_factor())) } == 1;
+    if live {
+        // the size now shown = the LAST size asked for: a handler running inside the change may ask for another one,
+        // which the bridge coalesces and shows; that request wrote the pref after ours (review a045 area 3)
+        STARTUP.store(stored(), Ordering::Relaxed);
+    }
     (p, live)
 }
 
@@ -195,6 +229,19 @@ mod tests {
         for p in ["wayland", "wayland-egl", "eglfs", "offscreen", "minimal", "cocoa", "", "XCB"] {
             assert!(!live_allowed_on(p, false), "{p}");
             assert!(live_allowed_on(p, true), "{p} with TINHAT_UI_SCALE_LIVE=1");
+        }
+    }
+
+    #[test]
+    fn opt_in_offered_only_where_the_list_holds_it_back() {
+        // 12.1.9: the Settings opt-in shows on Wayland (and other unproven plugins), never where it changes live anyway,
+        // and never where Qt can't change it live at all (a restart-only build / TINHAT_UI_SCALE_RESTART=1)
+        for p in ["wayland", "wayland-egl", "eglfs"] {
+            assert!(offered_on(p, true), "{p}");
+            assert!(!offered_on(p, false), "{p} without the Qt calls");
+        }
+        for p in ["xcb", "windows"] {
+            assert!(!offered_on(p, true), "{p}");
         }
     }
 

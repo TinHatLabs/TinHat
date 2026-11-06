@@ -246,6 +246,9 @@ Item {
             }
             // folded per person: talking = any device talking, mic off = all their devices' mics off
             if (active.indexOf(t.participant) !== -1) p.talk = true
+            // a person tile (Step A) stands for all its members: any of them talking counts (a045 review)
+            var mem = t.members || []
+            for (var mi = 0; mi < mem.length; mi++) if (active.indexOf(String(mem[mi])) !== -1) p.talk = true
             if (t.kind !== "screenshare") { p._mics += 1; if (t.muted === true) p._muted += 1 }
             else p.share = true
         }

@@ -247,8 +247,8 @@ pub fn probe_camera(device: Option<&str>, secs: u64) {
             })
             .build(),
     );
-    if let Err(e) = pipeline.set_state(gst::State::Playing) {
-        eprintln!("[camprobe] play failed: {e}");
+    if !crate::call::leased_start(crate::capture_lease::Kind::Camera, &pipeline, 5000, "camera probe") {
+        eprintln!("[camprobe] play failed");
         return;
     }
     // Poll the bus for errors/warnings (else a v4l2 negotiation failure is silent).

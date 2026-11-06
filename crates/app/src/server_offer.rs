@@ -140,6 +140,10 @@ pub struct ServerOffer {
     /// `features.call_key_rotation === false` (calls round M2 kill switch, DESIGN §3.10): the calls don't mint new keys
     /// on a leave. Not a `ServerFeature` (it gates no button); absent or anything else = rotation on.
     pub key_rotation_off: bool,
+    /// `features.pad_watch === true`: the server mints subscribe-only Pad Watch tokens (server feat/watch-token; share
+    /// claude/tinhat-pad/WATCH-LEASE/DESIGN.md §1.5). Not a `ServerFeature`: absent = NOT offered (an older server can't
+    /// do Watch, and Watch never falls back to a normal token). Mirrors offer.ts `padWatch`.
+    pub pad_watch: bool,
 }
 
 /// No announcement (today's behaviour everywhere).
@@ -198,7 +202,14 @@ pub fn parse_offer(well_known: &Value) -> ServerOffer {
     };
     let owner = t.get("account").and_then(obj).and_then(|a| a.get("owner")).and_then(Value::as_str).filter(|o| is_mxid(o)).unwrap_or("").to_string();
     let key_rotation_off = t.get("features").and_then(obj).and_then(|f| f.get("call_key_rotation")) == Some(&Value::Bool(false));
-    ServerOffer { server, api, web, features, recorder, password_reset, owner, key_rotation_off }
+    let pad_watch = t.get("features").and_then(obj).and_then(|f| f.get("pad_watch")) == Some(&Value::Bool(true));
+    ServerOffer { server, api, web, features, recorder, password_reset, owner, key_rotation_off, pad_watch }
+}
+
+/// Pad Watch is offered by this server (strict `features.pad_watch === true`; never for a guest account; offer.ts
+/// store `padWatchOffered`).
+pub fn pad_watch_offered() -> bool {
+    current().pad_watch && !guest_now()
 }
 
 /// Is the feature on? Only an explicit `false` turns it off.
@@ -256,6 +267,9 @@ pub fn offer_to_json(o: &ServerOffer) -> Value {
     }
     if o.key_rotation_off {
         f.insert("call_key_rotation".to_string(), Value::Bool(false));
+    }
+    if o.pad_watch {
+        f.insert("pad_watch".to_string(), Value::Bool(true));
     }
     let mut v = json!({ "server": o.server, "api": o.api, "features": f, "recorder": o.recorder });
     if !o.web.is_empty() {
@@ -926,6 +940,7 @@ mod tests {
                 password_reset: PasswordReset::Email,
                 owner: "".into(),
                 key_rotation_off: false,
+                pad_watch: false,
             }
         );
         for f in [Calls, Soundboard, Gifs, Games, Presence, Push, Memories, Reports, Guests] {
@@ -963,7 +978,7 @@ mod tests {
     #[test]
     fn only_booleans_count_unknown_keys_and_odd_values_are_ignored() {
         let o = parse_offer(&offer_with(json!({ "memories": "false", "soundboard": 0, "calls": null, "gifs": "no", "extra": true }), json!({ "server": 7, "api": null })));
-        assert_eq!(o, ServerOffer { server: "".into(), api: "".into(), web: "".into(), features: BTreeMap::new(), recorder: "".into(), password_reset: PasswordReset::Email, owner: "".into(), key_rotation_off: false });
+        assert_eq!(o, ServerOffer { server: "".into(), api: "".into(), web: "".into(), features: BTreeMap::new(), recorder: "".into(), password_reset: PasswordReset::Email, owner: "".into(), key_rotation_off: false, pad_watch: false });
         for f in SERVER_FEATURES {
             assert!(feature_on(&o, f), "{}", f.name());
         }
@@ -1474,4 +1489,21 @@ mod tests {
         assert_eq!(api_base(), None);
         assert!(feature_on_global(Memories));
     }
+
+    /// Pad Watch redesign: `pad_watch` only for an explicit true (absent = an older server = no Watch); kept by the
+    /// store; a change of it is a change. Mirrors offer.test.ts "pad_watch: …".
+    #[test]
+    fn pad_watch_only_when_the_server_says_exactly_true() {
+        assert!(parse_offer(&offer_with(json!({ "pad_watch": true }), json!({}))).pad_watch);
+        for v in [json!(false), json!(1), json!("true"), Value::Null, json!({})] {
+            assert!(!parse_offer(&offer_with(json!({ "pad_watch": v }), json!({}))).pad_watch, "{v}");
+        }
+        assert!(!parse_offer(&announced()).pad_watch);
+        assert!(!no_offer().pad_watch);
+        let on = parse_offer(&offer_with(json!({ "pad_watch": true }), json!({})));
+        assert!(parse_offer(&json!({ DISCOVERY_KEY: offer_to_json(&on) })).pad_watch, "the store keeps it");
+        assert_ne!(on, parse_offer(&offer_with(json!({}), json!({}))));
+        assert!(ServerFeature::parse("pad_watch").is_none(), "not one of the default-on features");
+    }
+
 }

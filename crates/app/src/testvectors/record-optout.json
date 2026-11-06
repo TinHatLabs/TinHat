@@ -1,0 +1,380 @@
+{
+  "v": 1,
+  "about": "Never record me (record_optout) as the recorder reads it. Shared rule: desktop crates/app/src/rtc.rs content_record_optout + record_optout_senders, web src/features/calls/callrules.ts contentRecordOptout + recordOptoutSenders. The desktop owns this file; the web keeps a byte-identical copy (sha256 pinned in its test). 2026-11-04 recorder fix: ANY client marker counts (a content key '<name>.client' holding an object; today's dev.tinhat.client, the marker name of clients from before the dev.tinhat.* rename, which com.example.client stands in for here, and any later one), at the top level and in any legacy memberships[] entry, record_optout = JSON true only; senders: every non-tombstone membership counts, with NO liveness filter (an expired membership that says no still counts).",
+  "content": [
+    {
+      "name": "new marker true",
+      "content": {
+        "application": "m.call",
+        "device_id": "A",
+        "dev.tinhat.client": {
+          "kind": "native",
+          "record_optout": true
+        }
+      },
+      "optout": true
+    },
+    {
+      "name": "new marker false",
+      "content": {
+        "application": "m.call",
+        "device_id": "A",
+        "dev.tinhat.client": {
+          "kind": "native",
+          "record_optout": false
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "pre-rename marker true (an 11.x client)",
+      "content": {
+        "application": "m.call",
+        "device_id": "A",
+        "com.example.client": {
+          "kind": "native",
+          "version": "11.3.0",
+          "record_optout": true
+        }
+      },
+      "optout": true
+    },
+    {
+      "name": "pre-rename marker false",
+      "content": {
+        "application": "m.call",
+        "device_id": "A",
+        "com.example.client": {
+          "kind": "web",
+          "record_optout": false
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "both markers, only the pre-rename one says no",
+      "content": {
+        "device_id": "A",
+        "dev.tinhat.client": {
+          "record_optout": false
+        },
+        "com.example.client": {
+          "record_optout": true
+        }
+      },
+      "optout": true
+    },
+    {
+      "name": "both markers, only the new one says no",
+      "content": {
+        "device_id": "A",
+        "dev.tinhat.client": {
+          "record_optout": true
+        },
+        "com.example.client": {
+          "record_optout": false
+        }
+      },
+      "optout": true
+    },
+    {
+      "name": "no marker (another Matrix client)",
+      "content": {
+        "application": "m.call",
+        "device_id": "A",
+        "call_id": "",
+        "scope": "m.room"
+      },
+      "optout": false
+    },
+    {
+      "name": "marker without the field",
+      "content": {
+        "device_id": "A",
+        "dev.tinhat.client": {
+          "kind": "web",
+          "version": "12.1.8-web"
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "string true is not the wire format",
+      "content": {
+        "device_id": "A",
+        "dev.tinhat.client": {
+          "record_optout": "true"
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "number 1 is not the wire format",
+      "content": {
+        "device_id": "A",
+        "com.example.client": {
+          "record_optout": 1
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "marker that is not an object",
+      "content": {
+        "device_id": "A",
+        "dev.tinhat.client": "native",
+        "com.example.client": [
+          "record_optout"
+        ]
+      },
+      "optout": false
+    },
+    {
+      "name": "legacy memberships array, entry says no (new key)",
+      "content": {
+        "memberships": [
+          {
+            "application": "m.call",
+            "device_id": "A"
+          },
+          {
+            "application": "m.call",
+            "device_id": "B",
+            "dev.tinhat.client": {
+              "record_optout": true
+            }
+          }
+        ]
+      },
+      "optout": true
+    },
+    {
+      "name": "legacy memberships array, entry says no (pre-rename key)",
+      "content": {
+        "memberships": [
+          {
+            "application": "m.call",
+            "device_id": "B",
+            "com.example.client": {
+              "record_optout": true
+            }
+          }
+        ]
+      },
+      "optout": true
+    },
+    {
+      "name": "legacy memberships array, nobody says no",
+      "content": {
+        "memberships": [
+          {
+            "device_id": "A",
+            "dev.tinhat.client": {
+              "record_optout": false
+            }
+          },
+          "junk",
+          null
+        ]
+      },
+      "optout": false
+    },
+    {
+      "name": "a later marker name counts too",
+      "content": {
+        "device_id": "A",
+        "org.example.next.client": {
+          "record_optout": true
+        }
+      },
+      "optout": true
+    },
+    {
+      "name": "'.client' alone is not a marker",
+      "content": {
+        "device_id": "A",
+        ".client": {
+          "record_optout": true
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "'client' without a name is not a marker",
+      "content": {
+        "device_id": "A",
+        "client": {
+          "record_optout": true
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "a key that only contains .client is not a marker",
+      "content": {
+        "device_id": "A",
+        "dev.tinhat.clientx": {
+          "record_optout": true
+        },
+        "dev.tinhat.client.extra": {
+          "record_optout": true
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "record_optout outside any marker does not count",
+      "content": {
+        "device_id": "A",
+        "record_optout": true,
+        "dev.tinhat.client": {
+          "kind": "web"
+        }
+      },
+      "optout": false
+    },
+    {
+      "name": "tombstone",
+      "content": {},
+      "optout": false
+    }
+  ],
+  "senders": [
+    {
+      "name": "mixed room: new + pre-rename opt-outs counted once each, others not",
+      "events": [
+        {
+          "sender": "@new:a.test",
+          "origin_server_ts": 1000,
+          "content": {
+            "device_id": "N1",
+            "dev.tinhat.client": {
+              "record_optout": true
+            }
+          }
+        },
+        {
+          "sender": "@new:a.test",
+          "origin_server_ts": 1001,
+          "content": {
+            "device_id": "N2",
+            "dev.tinhat.client": {
+              "record_optout": true
+            }
+          }
+        },
+        {
+          "sender": "@old:a.test",
+          "origin_server_ts": 1002,
+          "content": {
+            "device_id": "O1",
+            "com.example.client": {
+              "version": "11.3.0",
+              "record_optout": true
+            }
+          }
+        },
+        {
+          "sender": "@yes:a.test",
+          "origin_server_ts": 1003,
+          "content": {
+            "device_id": "Y1",
+            "dev.tinhat.client": {
+              "record_optout": false
+            }
+          }
+        },
+        {
+          "sender": "@element:b.test",
+          "origin_server_ts": 1004,
+          "content": {
+            "device_id": "E1",
+            "application": "m.call"
+          }
+        }
+      ],
+      "expect": [
+        "@new:a.test",
+        "@old:a.test"
+      ]
+    },
+    {
+      "name": "one opted-out device excludes the user even when another device says yes",
+      "events": [
+        {
+          "sender": "@two:a.test",
+          "origin_server_ts": 1000,
+          "content": {
+            "device_id": "PHONE",
+            "dev.tinhat.client": {
+              "record_optout": false
+            }
+          }
+        },
+        {
+          "sender": "@two:a.test",
+          "origin_server_ts": 1001,
+          "content": {
+            "device_id": "DESK",
+            "com.example.client": {
+              "record_optout": true
+            }
+          }
+        }
+      ],
+      "expect": [
+        "@two:a.test"
+      ]
+    },
+    {
+      "name": "an expired membership that says no still counts (no liveness filter)",
+      "events": [
+        {
+          "sender": "@ghost:a.test",
+          "origin_server_ts": 1,
+          "content": {
+            "device_id": "G",
+            "created_ts": 1,
+            "expires": 1,
+            "dev.tinhat.client": {
+              "record_optout": true
+            }
+          }
+        }
+      ],
+      "expect": [
+        "@ghost:a.test"
+      ]
+    },
+    {
+      "name": "tombstones and sender-less events never count",
+      "events": [
+        {
+          "sender": "@left:a.test",
+          "origin_server_ts": 1000,
+          "content": {}
+        },
+        {
+          "origin_server_ts": 1001,
+          "content": {
+            "device_id": "X",
+            "dev.tinhat.client": {
+              "record_optout": true
+            }
+          }
+        },
+        {
+          "sender": "",
+          "origin_server_ts": 1002,
+          "content": {
+            "device_id": "X",
+            "dev.tinhat.client": {
+              "record_optout": true
+            }
+          }
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

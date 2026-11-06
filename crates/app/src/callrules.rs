@@ -622,6 +622,293 @@ where
     rep
 }
 
+// ---- Pad Watch: the subscribe-only Watch token (share claude/tinhat-pad/WATCH-LEASE/DESIGN.md §1.5) -----------------
+
+/// The LiveKit identity suffix of a Watch connection: `<mxid>:<device>~watch` (only the server's Watch route mints it;
+/// never `#`: LiveKit's own `publish=X` join parameter appends `#X` to any identity, publish rights and all).
+pub const WATCH_SUFFIX: &str = "~watch";
+
+/// A watch identity: `~watch` at the end and no `#` anywhere (callrules.ts isWatchIdentity).
+pub fn is_watch_identity(identity: &str) -> bool {
+    // round 5: `<mxid>:<device>~watch-<16 hex>` (a fresh nonce per Watch token), no `#` anywhere (callrules.ts WATCH_ID_RE)
+    !identity.contains('#') && identity.rsplit_once(&format!("{WATCH_SUFFIX}-")).is_some_and(|(_, n)| is_nonce(n))
+}
+fn is_nonce(n: &str) -> bool {
+    n.len() == 16 && n.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+const WATCH_TOP_KEYS: [&str; 9] = ["iss", "sub", "name", "nbf", "exp", "iat", "jti", "video", "attributes"];
+const WATCH_VIDEO_KEYS: [&str; 10] =
+    ["room", "roomJoin", "canSubscribe", "canPublish", "canPublishData", "canPublishSources", "canUpdateOwnMetadata", "hidden", "recorder", "agent"];
+const WATCH_MUST_BE_FALSE: [&str; 6] = ["canPublish", "canPublishData", "canUpdateOwnMetadata", "hidden", "recorder", "agent"];
+
+/// Why a Watch token's payload is not the exact Watch profile (None = it is): `sub` = our identity + `~watch`, one
+/// room, join + subscribe, every publish / metadata / special right explicitly false, no publish source, the watch mark
+/// as its only attribute, and NOTHING else (an unknown grant such as roomAdmin, sip, roomConfig, kind, metadata =
+/// refused). Defence against an issuer mistake; the SFU enforcing the grant is what makes it safe. Mirrors
+/// callrules.ts watchTokenProblem (shared cases: watchtoken.cases.json).
+pub fn watch_token_problem(payload: &serde_json::Value, identity: &str, room: &str) -> Option<String> {
+    use serde_json::Value;
+    let Some(p) = payload.as_object() else { return Some("not a token payload".into()) };
+    if let Some(k) = p.keys().find(|k| !WATCH_TOP_KEYS.contains(&k.as_str())) {
+        return Some(format!("unexpected claim {k}"));
+    }
+    let pre = format!("{identity}{WATCH_SUFFIX}-");
+    let sub_ok = p.get("sub").and_then(Value::as_str).and_then(|s| s.strip_prefix(&pre)).is_some_and(is_nonce);
+    if !sub_ok || identity.contains(['#', '~']) {
+        return Some("not this device's watch identity".into());
+    }
+    let Some(g) = p.get("video").and_then(Value::as_object) else { return Some("no video grant".into()) };
+    if let Some(k) = g.keys().find(|k| !WATCH_VIDEO_KEYS.contains(&k.as_str())) {
+        return Some(format!("unexpected grant {k}"));
+    }
+    if g.get("room").and_then(Value::as_str) != Some(room) {
+        return Some("another room".into());
+    }
+    if g.get("roomJoin") != Some(&Value::Bool(true)) || g.get("canSubscribe") != Some(&Value::Bool(true)) {
+        return Some("can't join to watch".into());
+    }
+    if let Some(k) = WATCH_MUST_BE_FALSE.iter().find(|k| g.get(**k) != Some(&Value::Bool(false))) {
+        return Some(format!("{k} isn't false"));
+    }
+    if !matches!(g.get("canPublishSources"), Some(Value::Array(a)) if a.is_empty()) {
+        return Some("publish sources allowed".into());
+    }
+    let Some(a) = p.get("attributes").and_then(Value::as_object) else { return Some("no watch mark".into()) };
+    // the watch mark alone (before 0.3.13), or (PAD-PHONE Step A, 0.3.13) the watch mark + the server's person / Pad
+    // attributes, exactly, the person being THIS account (the identity's own mxid)
+    let s = |k: &str| a.get(k).and_then(Value::as_str);
+    let mut keys: Vec<&str> = a.keys().map(String::as_str).collect();
+    keys.sort_unstable();
+    let mine = identity.rfind(':').map(|i| &identity[..i]).unwrap_or("");
+    let old = keys == ["tinhat.watch"] && s("tinhat.watch") == Some("1");
+    let v13 = keys == ["tinhat.mode", "tinhat.pad", "tinhat.person", "tinhat.watch"]
+        && s("tinhat.watch") == Some("1")
+        && s("tinhat.pad") == Some("phone")
+        && s("tinhat.mode") == Some("watch")
+        && s("tinhat.person") == Some(mine);
+    if !old && !v13 {
+        return Some("not the watch mark".into());
+    }
+    None
+}
+
+/// Why `text` is not ONE plain JSON value whose objects all have distinct keys (None = it is). serde_json keeps the last
+/// of two equal keys while LiveKit's Go decoder merges both (Astra r3 #2), so a Watch token is read only when no object
+/// repeats a key, compared after unescaping. Mirrors callrules.ts jsonDuplicateKey.
+pub fn json_duplicate_key(text: &str) -> Option<String> {
+    struct P<'a> {
+        b: &'a [u8],
+        t: &'a str,
+        i: usize,
+    }
+    impl P<'_> {
+        fn ws(&mut self) {
+            while self.i < self.b.len() && matches!(self.b[self.i], b' ' | b'\t' | b'\n' | b'\r') {
+                self.i += 1;
+            }
+        }
+        fn string(&mut self) -> Result<String, String> {
+            let start = self.i;
+            if self.b.get(self.i) != Some(&b'"') {
+                return Err("a string expected".into());
+            }
+            self.i += 1;
+            while self.i < self.b.len() && self.b[self.i] != b'"' {
+                self.i += if self.b[self.i] == b'\\' { 2 } else { 1 };
+            }
+            if self.i >= self.b.len() {
+                return Err("an unterminated string".into());
+            }
+            self.i += 1;
+            serde_json::from_str::<String>(&self.t[start..self.i]).map_err(|e| e.to_string())
+        }
+        fn value(&mut self, depth: usize) -> Result<(), String> {
+            if depth > 32 {
+                return Err("too deep".into());
+            }
+            self.ws();
+            match self.b.get(self.i) {
+                Some(b'{') => {
+                    self.i += 1;
+                    let mut keys = std::collections::HashSet::new();
+                    self.ws();
+                    if self.b.get(self.i) == Some(&b'}') {
+                        self.i += 1;
+                        return Ok(());
+                    }
+                    loop {
+                        self.ws();
+                        let k = self.string()?;
+                        if !keys.insert(k.clone()) {
+                            return Err(format!("the key {k:?} twice"));
+                        }
+                        self.ws();
+                        if self.b.get(self.i) != Some(&b':') {
+                            return Err("a colon expected".into());
+                        }
+                        self.i += 1;
+                        self.value(depth + 1)?;
+                        self.ws();
+                        match self.b.get(self.i) {
+                            Some(b',') => self.i += 1,
+                            Some(b'}') => {
+                                self.i += 1;
+                                return Ok(());
+                            }
+                            _ => return Err("a comma or } expected".into()),
+                        }
+                    }
+                }
+                Some(b'[') => {
+                    self.i += 1;
+                    self.ws();
+                    if self.b.get(self.i) == Some(&b']') {
+                        self.i += 1;
+                        return Ok(());
+                    }
+                    loop {
+                        self.value(depth + 1)?;
+                        self.ws();
+                        match self.b.get(self.i) {
+                            Some(b',') => self.i += 1,
+                            Some(b']') => {
+                                self.i += 1;
+                                return Ok(());
+                            }
+                            _ => return Err("a comma or ] expected".into()),
+                        }
+                    }
+                }
+                Some(b'"') => self.string().map(|_| ()),
+                _ => {
+                    // a literal or a number, checked by serde_json on its own
+                    let rest = &self.t[self.i..];
+                    let end = rest.find(|c: char| matches!(c, ',' | '}' | ']' | ' ' | '\t' | '\n' | '\r')).unwrap_or(rest.len());
+                    let tok = &rest[..end];
+                    let ok = matches!(tok, "true" | "false" | "null")
+                        || (!tok.is_empty() && tok.chars().all(|c| c.is_ascii_digit() || "+-.eE".contains(c)) && serde_json::from_str::<serde_json::Number>(tok).is_ok());
+                    if !ok {
+                        return Err("a value expected".into());
+                    }
+                    self.i += end;
+                    Ok(())
+                }
+            }
+        }
+    }
+    let mut p = P { b: text.as_bytes(), t: text, i: 0 };
+    if let Err(e) = p.value(0) {
+        return Some(e);
+    }
+    p.ws();
+    if p.i != text.len() {
+        return Some("text after the value".into());
+    }
+    None
+}
+
+/// `watch_token_problem` on the token's RAW payload text: refused when any object repeats a key (`json_duplicate_key`).
+pub fn watch_token_problem_raw(text: Option<&str>, identity: &str, room: &str) -> Option<String> {
+    let Some(text) = text else { return Some("not a token payload".into()) };
+    if let Some(d) = json_duplicate_key(text) {
+        return Some(format!("the payload isn't plain JSON ({d})"));
+    }
+    match serde_json::from_str::<serde_json::Value>(text) {
+        Ok(v) => watch_token_problem(&v, identity, room),
+        Err(_) => Some("not a token payload".into()),
+    }
+}
+
+/// The payload TEXT of a JWT (base64url-decoded, strict UTF-8), or None when it can't be read.
+pub fn jwt_payload_text(jwt: &str) -> Option<String> {
+    use base64::Engine as _;
+    let parts: Vec<&str> = jwt.split('.').collect();
+    if parts.len() != 3 || !parts[1].bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b'_') {
+        return None;
+    }
+    let bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(parts[1]).ok()?;
+    String::from_utf8(bytes).ok()
+}
+
+/// The payload of a JWT (not verified: the SFU does that), or Null when it can't be read.
+pub fn jwt_payload_of(jwt: &str) -> serde_json::Value {
+    use base64::Engine as _;
+    let parts: Vec<&str> = jwt.split('.').collect();
+    if parts.len() != 3 {
+        return serde_json::Value::Null;
+    }
+    base64::engine::general_purpose::URL_SAFE_NO_PAD
+        .decode(parts[1].trim_end_matches('='))
+        .ok()
+        .and_then(|b| serde_json::from_slice(&b).ok())
+        .unwrap_or(serde_json::Value::Null)
+}
+
+#[cfg(test)]
+mod watch_token_tests {
+    use super::*;
+    const CASES: &str = include_str!("watchtoken.cases.json");
+    /// the web's watchtoken.test.ts WATCH_TOKEN_CASES_SHA256 (same bytes on both sides)
+    const CASES_SHA256: &str = "9740a159fb7164b5b28f13eadc33cd3efa35d30b8bdd6d10f2af9a28e8724762";
+
+    #[test]
+    fn the_case_table_is_the_shared_one() {
+        use sha2::Digest;
+        let h = sha2::Sha256::digest(CASES.as_bytes());
+        assert_eq!(h.iter().map(|b| format!("{b:02x}")).collect::<String>(), CASES_SHA256);
+    }
+
+    #[test]
+    fn every_shared_case() {
+        let v: serde_json::Value = serde_json::from_str(CASES).unwrap();
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 51);
+        for c in cases {
+            let raw = match c.get("raw") {
+                Some(r) => r.as_str().unwrap().to_string(),
+                None => serde_json::to_string(&c["payload"]).unwrap(),
+            };
+            let why = watch_token_problem_raw(Some(&raw), c["identity"].as_str().unwrap(), c["room"].as_str().unwrap());
+            assert_eq!(why.is_none(), c["ok"].as_bool().unwrap(), "{}: {why:?}", c["name"]);
+        }
+    }
+
+    #[test]
+    fn watch_identity_and_payload_reading() {
+        assert!(is_watch_identity("@a:h.test:PHONE~watch-0123456789abcdef"));
+        assert!(is_watch_identity("@a:h.test:8448:PHONE~watch-0123456789abcdef"));
+        for id in [
+            "@a:h.test:PHONE#watch",
+            "@a:h.test:PHONE#x~watch-0123456789abcdef",
+            "@a:h.test:PHONE",
+            "@a:h.test:PHONE~watch-0123456789abcdef#x",
+            "@a:h.test:PHONE~watch",
+            "@a:h.test:PHONE~watch-0123456789ABCDEF",
+        ] {
+            assert!(!is_watch_identity(id), "{id}");
+        }
+        use base64::Engine as _;
+        let p = serde_json::json!({ "sub": "@\u{e4}:h.test:D~watch-0123456789abcdef", "video": { "room": "!r:h" } });
+        let b = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(serde_json::to_vec(&p).unwrap());
+        assert_eq!(jwt_payload_of(&format!("x.{b}.y")), p);
+        assert!(jwt_payload_of("x.y").is_null());
+        assert!(jwt_payload_of("a.%%%.c").is_null());
+    }
+
+    #[test]
+    fn raw_payload_text_and_duplicate_keys() {
+        use base64::Engine as _;
+        let b = |t: &[u8]| base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(t);
+        assert_eq!(jwt_payload_text(&format!("x.{}.y", b(br#"{"a":1}"#))).as_deref(), Some(r#"{"a":1}"#));
+        assert_eq!(jwt_payload_text(&format!("x.{}.y", b(&[0xff, 0xfe]))), None, "not UTF-8");
+        assert_eq!(jwt_payload_text("x.a+b/.y"), None, "not base64url");
+        assert!(json_duplicate_key(r#"{"a":{"b":1,"b":2}}"#).is_some());
+        assert!(json_duplicate_key(r#"{"a":[{"b":1},{"b":2}]}"#).is_none(), "the same key in two objects is fine");
+        assert!(json_duplicate_key(r#"{"a\"b":1,"a\"b":2}"#).is_some(), "escaped quotes in keys");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

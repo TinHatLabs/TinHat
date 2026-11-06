@@ -105,9 +105,9 @@ pub mod qobject {
         #[qinvokable]
         fn join_call(self: Pin<&mut CallController>, room_id: &QString);
         /// QML: callctl.joinCallPressed(roomId) — a Join PRESS (header, call island, palette, Pad bar, auto-join at
-        /// sign-in): always a normal join. assembly-042: a watch intent left by a watch call that ended without a leave
-        /// (kicked, the call ended, the rejoin gave up) must never turn the next press into a watch join. Internal
-        /// rejoins (a drop, a switch, the call-host sheet's go-ahead) keep calling join_call and stay watch joins.
+        /// sign-in): always a normal join — a new episode in the watch ledger (watch_session.rs, 12.1.7). Internal
+        /// rejoins (a drop's recovery, a queued join, the call-host sheet's go-ahead) ask the ledger, which joins only
+        /// the episode they belong to, in its own mode. join_call is the same as a press.
         #[qinvokable]
         fn join_call_pressed(self: Pin<&mut CallController>, room_id: &QString);
         #[qinvokable]
@@ -120,6 +120,10 @@ pub mod qobject {
         /// or stop talking (mutes it). Only ever this device's own press.
         #[qinvokable]
         fn watch_talk(self: Pin<&mut CallController>, on: bool);
+        /// QML: callctl.padWatchOffered() — Watch is on in this build AND this server mints subscribe-only Watch tokens
+        /// (WATCH-LEASE/DESIGN.md §1.5); the Pad shows no Watch strip otherwise.
+        #[qinvokable]
+        fn pad_watch_offered(self: Pin<&mut CallController>) -> bool;
         /// QML: callctl.watchHear(on) — watching: hear the call here or not (off also mutes the mic if talking).
         #[qinvokable]
         fn watch_hear(self: Pin<&mut CallController>, on: bool);
@@ -279,6 +283,9 @@ pub mod qobject {
         /// Watch (and hear) a share its owner flagged "recording only", or stop again.
         #[qinvokable]
         fn set_tile_tuned_in(self: Pin<&mut CallController>, id: &QString, tuned: bool);
+        /// PAD-PHONE Step A: show this camera of its person (one of a person tile's alts)
+        #[qinvokable]
+        fn pick_camera(self: Pin<&mut CallController>, id: &QString);
         /// Flag OUR share as recording-only (announced to peers now if sharing).
         #[qinvokable]
         fn apply_share_recording_only(self: Pin<&mut CallController>, on: bool);
@@ -665,12 +672,31 @@ async fn refresh_call_companions(room: &matrix_sdk::Room) {
 /// (all under the desired-tiles lock, the pairs read inside it, so neither a rebuild publishing at the same moment nor
 /// a newer revision is overwritten with an older one). Lock order: desired → active call room → pairs (those two are
 /// only ever held for one statement elsewhere).
+/// PAD-PHONE Step A: this viewer's camera pick per person (person mxid → camera tile id) + its revision.
+fn cam_pick() -> &'static std::sync::Mutex<(u64, std::collections::HashMap<String, String>)> {
+    static P: OnceLock<std::sync::Mutex<(u64, std::collections::HashMap<String, String>)>> = OnceLock::new();
+    P.get_or_init(|| std::sync::Mutex::new((0, std::collections::HashMap::new())))
+}
+/// The companions fold, then (Pad on the phone, Step A) one tile per person from the server's attributes.
+fn fold_all(raw: Vec<serde_json::Value>, pairs: &[(String, String)]) -> Vec<serde_json::Value> {
+    let own = my_call_identity();
+    let folded = crate::companions::fold_tiles(raw, pairs, &own);
+    let pick = cam_pick().lock().unwrap().1.clone();
+    crate::persontiles::fold_persons(folded, &own, &|id| tinhat_streamer::participant_attributes(id), &pick)
+}
+/// The revision the tiles were folded at: the companion pairs', the participant attributes' and the camera pick's
+/// (any of them moving refolds).
+fn fold_rev(companion_rev: u64) -> u64 {
+    companion_rev.wrapping_add(tinhat_streamer::participant_attrs_rev() << 32).wrapping_add(cam_pick().lock().unwrap().0 << 48)
+}
+
 fn desired_tiles_for_poll() -> String {
     let mut d = desired_video_tiles().lock().unwrap();
     let (rev, pairs) = current_companion_pairs();
+    let rev = fold_rev(rev);
     if d.rev != rev {
         if let Some(raw) = d.raw.clone() {
-            let folded = crate::companions::fold_tiles(raw, &pairs, &my_call_identity());
+            let folded = fold_all(raw, &pairs);
             if let Ok(json) = serde_json::to_string(&folded) {
                 d.json = json;
             }
@@ -1088,7 +1114,8 @@ fn build_tiles(
     // Screen share P3: a phone's share-only companion joins its person's tiles (no second avatar / name). The unfolded
     // tiles + the pairs' revision go with the JSON to set_desired_tiles, so the poll can fold them again.
     let (rev, pairs) = current_companion_pairs();
-    let folded = crate::companions::fold_tiles(arr.clone(), &pairs, &my_call_identity());
+    let rev = fold_rev(rev);
+    let folded = fold_all(arr.clone(), &pairs);
     let json = serde_json::to_string(&folded).unwrap_or_else(|_| "[]".to_string());
     BuiltTiles { json, raw: arr, rev }
 }
@@ -1379,6 +1406,10 @@ pub(crate) async fn announce_key_to_members(
     if keys.is_empty() {
         return AnnounceReport { sent: vec![], failed: vec![] };
     }
+    if keys_receive_only() {
+        eprintln!("[e2ee] not announcing: watching, receive-only");
+        return AnnounceReport { sent: vec![], failed: vec![] };
+    }
     let our_member_id = format!("{user_id}:{device_id}");
     // the call these keys belong to (the caller's generation, else the current one, fixed BEFORE any await): a send
     // that outlives its call stops
@@ -1446,8 +1477,9 @@ pub(crate) async fn announce_key_to_members(
         |tag| async move {
             let id = tag.rsplit_once('#').map(|(i, _)| i.to_string()).unwrap_or_default();
             let now = crate::rtc::key_recipients_now(room, user_id, device_id, &sfu_gone_now()).await;
-            // checked AFTER the read: the call this send belongs to must still be the current one
-            if current_keys().map(|(g, _)| g) != gen_at_start {
+            // checked AFTER the read: the call this send belongs to must still be the current one, and this device not
+            // watching (the receive-only rule at the send boundary, Astra r3 #3)
+            if current_keys().map(|(g, _)| g) != gen_at_start || keys_receive_only() {
                 return false;
             }
             if now.ids.contains(&id) {
@@ -1461,6 +1493,9 @@ pub(crate) async fn announce_key_to_members(
         |(_, dev, (key, index))| {
             let (rid, member) = (rid.clone(), our_member_id.clone());
             async move {
+                if keys_receive_only() {
+                    return false; // watching since this batch was checked: nothing goes out
+                }
                 match crate::e2ee_keys::send_our_key_to_device(client, &rid, device_id, &member, &key, index, std::slice::from_ref(&dev)).await {
                     Ok(failed) => failed.is_empty(),
                     Err(e) => {
@@ -2128,18 +2163,82 @@ const MAX_AUTO_REJOINS: u32 = 2;
 
 /// Pre-drop mic mute, set by the auto-rejoin path and consumed by the next join — a
 /// muted user must never be silently rejoined with a HOT mic.
-/// Pad QOL: the room this device WATCHES (None = none): every (re)join of it — the auto-rejoin after a drop — is a
-/// watch join too, so a drop never brings the mic back. Cleared by leave_call and watch_talk(true).
-fn watch_intent() -> &'static std::sync::Mutex<Option<String>> {
-    static W: std::sync::OnceLock<std::sync::Mutex<Option<String>>> = std::sync::OnceLock::new();
-    W.get_or_init(|| std::sync::Mutex::new(None))
+/// 12.1.7: whether a (re)join watches is decided by the watch ledger only (crate::watch_session; the episode a join
+/// belongs to), never by the caller: presses start episodes, Leave / sign-out end them, a recovery holds its episode's
+/// ticket. The streamer's capture bar follows the episode when its join starts (cleared only by a normal join / Talk).
+use crate::watch_session::{ledger as watch_ledger, Decision as WatchDecision, Phase as WatchPhase};
+
+/// 12.1.8 (Astra r2): every teardown is done and no episode is current: nothing of a watch call runs any more — the
+/// ledger's bar opens and the streamer's follows it (the one other place the bar opens besides a normal join / Talk).
+fn settle_watch_bar() {
+    if teardowns_in_flight().load(std::sync::atomic::Ordering::SeqCst) != 0 {
+        return;
+    }
+    let mut l = watch_ledger();
+    if l.settled() {
+        tinhat_streamer::set_capture_barred(l.bar);
+        eprintln!("[watch-ledger] settled: no call, no episode — the capture bar is open again");
+    }
+}
+
+/// A panic inside a teardown task must not leave the hangingUp gate shut for good (assembly-042 r3 #4): on unwind it
+/// does the teardown's bookkeeping (the in-flight count, the gate, the queued join). Disarmed on the normal path.
+struct TeardownUnwind {
+    qt: Option<cxx_qt::CxxQtThread<qobject::CallController>>,
+    armed: bool,
+}
+impl Drop for TeardownUnwind {
+    fn drop(&mut self) {
+        if !self.armed || !std::thread::panicking() {
+            return;
+        }
+        eprintln!("[call] a teardown panicked — releasing the hangingUp gate");
+        let last = teardowns_in_flight().fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1;
+        if let (true, Some(qt)) = (last, self.qt.take()) {
+            let _ = qt.queue(|mut o| {
+                o.as_mut().set_hanging_up(false);
+                o.as_mut().teardown_finished();
+            });
+        }
+    }
+}
+
+/// A panic inside a join task must not leave "Connecting…" (and the watch flags) set for good (assembly-042 r3 #4):
+/// on unwind the join ends as a failure (the episode is given up; the capture bar stays as it was — fail closed).
+struct JoinUnwind {
+    qt: cxx_qt::CxxQtThread<qobject::CallController>,
+    gen: u64,
+}
+impl Drop for JoinUnwind {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            return;
+        }
+        eprintln!("[call] the join (gen {}) panicked — ending it", self.gen);
+        let gen = self.gen;
+        let _ = self.qt.queue(move |mut o| {
+            if join_gen_stale(gen) {
+                return;
+            }
+            watch_ledger().gave_up();
+            *join_target().lock().unwrap() = None;
+            o.as_mut().set_connecting(false);
+            o.as_mut().set_reconnecting(false);
+            o.as_mut().set_call_failed(true);
+            o.as_mut().set_fail_reason(QString::from("something went wrong while joining. Try again."));
+            o.as_mut().set_status(QString::from("Couldn't join the call — something went wrong"));
+        });
+    }
 }
 /// Pad QOL: this device only watches its call (a Pad receiver is off then; rtc.rs leaves `pad1` out).
 /// Watching (assembly-042 review): this device captures and publishes nothing (camera, screen, music, sounds,
 /// the join sound) until Talk here; Talk is the one way out of watch mode. Same rule and hint as the web.
 pub const WATCH_HINT: &str = "You're watching — tap Talk first";
 /// 12.1.6: Watch (join from the Pad without a microphone) is switched off until 12.1.7; the QML hides its entry.
-pub const WATCH_AVAILABLE: bool = false;
+pub const WATCH_AVAILABLE: bool = true; // Pad on the phone, Step A (12.1.9): Watch on (the server-minted subscribe-only token + the leases)
+/// Pad on the phone, Step A: shown when Watch begins. Plain: the server refuses anything this device would send while
+/// watching (the subscribe-only token); turning the mic off here may lag.
+pub const WATCH_MIC_NOTE: &str = "Watching — the mic may take a moment to switch off; nothing is sent";
 pub const WATCH_OFF_NOTE: &str = "Watching from here isn't available yet — it comes in a later update";
 pub fn watch_refuses() -> bool {
     tinhat_streamer::capture_barred()
@@ -2148,6 +2247,23 @@ pub fn watching_now() -> bool {
     tinhat_streamer::capture_barred() || WATCHING.load(std::sync::atomic::Ordering::SeqCst)
 }
 static WATCHING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Layer 2: since when a watch join has been waiting for revoked captures to end (begin_join).
+fn watch_pending_since() -> std::sync::MutexGuard<'static, Option<std::time::Instant>> {
+    static M: OnceLock<std::sync::Mutex<Option<std::time::Instant>>> = OnceLock::new();
+    M.get_or_init(|| std::sync::Mutex::new(None)).lock().unwrap_or_else(|p| p.into_inner())
+}
+/// Pad Watch (WATCH-LEASE/DESIGN.md §1.7): while this device is watching (from the Watch press, a queued one too, until a
+/// normal join starts) it sends no media key to anyone — whoever asks (a join, a newcomer, a rotation, a resend of an
+/// earlier call). It still receives everyone's keys. The web's keys.ts setKeysReceiveOnly.
+static KEYS_RECEIVE_ONLY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub fn set_keys_receive_only(on: bool) {
+    if KEYS_RECEIVE_ONLY.swap(on, std::sync::atomic::Ordering::SeqCst) != on {
+        eprintln!("[e2ee] receive-only {}", if on { "on (watching)" } else { "off" });
+    }
+}
+pub fn keys_receive_only() -> bool {
+    KEYS_RECEIVE_ONLY.load(std::sync::atomic::Ordering::SeqCst)
+}
 
 fn rejoin_mic_muted() -> &'static std::sync::Mutex<Option<bool>> {
     static M: OnceLock<std::sync::Mutex<Option<bool>>> = OnceLock::new();
@@ -2170,6 +2286,7 @@ async fn teardown_call_session(
     qt: Option<cxx_qt::CxxQtThread<qobject::CallController>>,
 ) {
     crate::afk_ctl::clear_intent(); // a torn-down call must not carry away-state into a rejoin
+    let mut unwind = TeardownUnwind { qt: qt.clone(), armed: true };
     let taken = current_call().lock().await.take();
     let close_fut = async {
         if let Some(call) = taken {
@@ -2194,12 +2311,17 @@ async fn teardown_call_session(
     *call_keys().lock().unwrap() = None;
     video_registry().lock().unwrap().clear();
     eprintln!("[call] session torn down after disconnect");
+    unwind.armed = false;
     let last = teardowns_in_flight().fetch_sub(1, std::sync::atomic::Ordering::SeqCst) == 1;
     if let Some(qt) = qt {
         // Clear the rejoin gate only when NO other teardown is still in flight (see
         // teardowns_in_flight) — but always then, regardless of how teardown went.
+        // 12.1.7: then a join queued behind it (a press during the teardown) runs, if its episode is still current.
         if last {
-            let _ = qt.queue(|mut o| o.as_mut().set_hanging_up(false));
+            let _ = qt.queue(|mut o| {
+                o.as_mut().set_hanging_up(false);
+                o.as_mut().teardown_finished();
+            });
         }
     }
 }
@@ -2243,7 +2365,62 @@ fn spawn_camera_restart(qt: cxx_qt::CxxQtThread<qobject::CallController>, status
 }
 
 impl qobject::CallController {
-    pub fn join_call(mut self: Pin<&mut Self>, room_id: &QString) {
+    /// = join_call_pressed: a join asked for from outside the controller is a press (a normal join). There is no way
+    /// to ask for a watch join here; internal rejoins go through the ledger (run_watch_decision → begin_join).
+    pub fn join_call(self: Pin<&mut Self>, room_id: &QString) {
+        self.join_call_pressed(room_id);
+    }
+
+    /// The phase the watch ledger decides in.
+    fn watch_phase(&self) -> WatchPhase {
+        if *self.in_call() {
+            WatchPhase::Live
+        } else if *self.connecting() {
+            WatchPhase::Connecting
+        } else if *self.hanging_up() {
+            WatchPhase::Tearing
+        } else {
+            WatchPhase::Idle
+        }
+    }
+
+    /// Carry out a ledger decision: join now, queue behind the teardown, or leave the call up first (a switch).
+    fn run_watch_decision(mut self: Pin<&mut Self>, d: WatchDecision, why: &str) {
+        match d {
+            WatchDecision::None(w) | WatchDecision::Abort(w) => eprintln!("[watch-ledger] {why}: {} ({w})", d.kind()),
+            WatchDecision::Leave => {}
+            WatchDecision::Queue { id, room, watch } => {
+                eprintln!("[watch-ledger] {why}: queue {room} (episode {id}{})", if watch { ", watching" } else { "" });
+                *pending_switch().lock().unwrap() = Some(room);
+                self.as_mut().set_status(QString::from("Joining as soon as the last call has ended…"));
+            }
+            WatchDecision::LeaveThenJoin { id, room, watch } => {
+                eprintln!("[watch-ledger] {why}: leave, then join {room} (episode {id}{})", if watch { ", watching" } else { "" });
+                eprintln!("[call] switch requested -> {room} (leaving the current call first)");
+                *pending_switch().lock().unwrap() = Some(room);
+                self.as_mut().hang_up();
+            }
+            WatchDecision::Join { id, room, watch } => {
+                eprintln!("[watch-ledger] {why}: join {room} (episode {id}{})", if watch { ", watching" } else { "" });
+                self.as_mut().begin_join(id, &QString::from(&room));
+            }
+        }
+    }
+
+    /// Every teardown finished (the hangingUp gate just opened): the join queued behind it, if still current.
+    fn teardown_finished(mut self: Pin<&mut Self>) {
+        *pending_switch().lock().unwrap() = None;
+        let d = watch_ledger().teardown_done();
+        if let WatchDecision::Join { ref room, .. } = d {
+            eprintln!("[call] switching into {room}");
+        } else {
+            settle_watch_bar();
+        }
+        self.as_mut().run_watch_decision(d, "teardown done");
+    }
+
+    /// The join of ledger episode `id` really starts: its mode comes from the ledger (start_join), never the caller.
+    fn begin_join(mut self: Pin<&mut Self>, id: u64, room_id: &QString) {
         // Block (re)join while a previous hang-up is still tearing down: rejoining before
         // CallSession::close() finishes leaves TWO live participants under our identity
         // (user:device) and the SFU wedges the new join in "connecting" forever.
@@ -2251,6 +2428,31 @@ impl qobject::CallController {
             eprintln!("[call] join refused: in_call={} connecting={} hanging_up={}", *self.in_call(), *self.connecting(), *self.hanging_up());
             return;
         }
+        // Layer 2 "Watch pending": a watch join starts only once every revoked capture has come back and been stopped
+        // (capture_lease::pending() = 0) — never on a timeout: after 15 s it gives up instead
+        if watch_ledger().watching() && tinhat_streamer::capture_lease::pending() > 0 {
+            let waited = watch_pending_since().get_or_insert_with(std::time::Instant::now).elapsed();
+            if waited > std::time::Duration::from_secs(15) {
+                *watch_pending_since() = None;
+                eprintln!("[lease] episode {id}: a capture didn't stop within 15 s — not starting the watch");
+                watch_ledger().gave_up();
+                self.as_mut().set_status(QString::from("Couldn't start watching — a microphone or screen capture didn't stop. Try again."));
+                return;
+            }
+            let qt = self.qt_thread();
+            let rid = room_id.clone();
+            crate::bridge::runtime().spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                let _ = qt.queue(move |mut o| o.as_mut().begin_join(id, &rid));
+            });
+            return;
+        }
+        *watch_pending_since() = None;
+        // the ledger's word on this episode (and the capture bar follows it, below, before anything connects)
+        let Some(watch) = watch_ledger().start_join(id) else {
+            eprintln!("[watch-ledger] episode {id} is no longer current — not joining {room_id}");
+            return;
+        };
         let room_id = room_id.to_string();
         *join_target().lock().unwrap() = Some(room_id.clone()); // 10.0: the watcher must not ring for this room
         self.as_mut().set_room_id(QString::from(&room_id));
@@ -2277,13 +2479,15 @@ impl qobject::CallController {
         if ptt_muted {
             self.as_mut().set_mic_muted(true);
         }
-        // Pad QOL: a watch join (watch_call, or any rejoin of the watched room): capture barred + deafened BEFORE
-        // connect, so nothing is captured and every remote track subscribed during connect starts cut
-        let watch = watch_intent().lock().unwrap().as_deref() == Some(room_id.as_str());
-        if !watch {
-            *watch_intent().lock().unwrap() = None;
-        }
+        // Pad QOL: a watch join (the ledger's episode is a watching one): capture barred + deafened BEFORE connect, so
+        // nothing is captured and every remote track subscribed during connect starts cut
         tinhat_streamer::set_capture_barred(watch);
+        set_keys_receive_only(watch); // a watch join sends no media key; a normal join (a press) announces again
+        if watch {
+            // a meter still running from before the watch stops now (off the Qt thread: NULLing can block)
+            crate::bridge::runtime().spawn_blocking(tinhat_streamer::retire_mic_monitor_if_barred);
+            crate::bridge::runtime().spawn_blocking(tinhat_streamer::retire_output_taps_if_barred); // round 10
+        }
         WATCHING.store(watch, std::sync::atomic::Ordering::SeqCst);
         self.as_mut().set_watching(watch);
         self.as_mut().set_no_capture(watch);
@@ -2294,11 +2498,13 @@ impl qobject::CallController {
             eprintln!("[call] joining {room_id} to WATCH (no mic, deafened)");
         }
         let qt = self.qt_thread();
+        let unwind_qt = qt.clone();
         crate::bridge::runtime().spawn(async move {
+            let _unwind = JoinUnwind { qt: unwind_qt, gen: my_gen };
             // Auto-rejoin restores the pre-drop mute; a plain user-initiated join starts
             // unmuted as before (the cell is only ever set by the auto-rejoin path).
             let start_muted = rejoin_mic_muted().lock().unwrap().take().unwrap_or(false) || ptt_muted;
-            match do_join(&room_id, start_muted, my_gen).await {
+            match do_join(&room_id, start_muted, my_gen, watch).await {
                 Ok(mut rx) => {
                     // Superseded between do_join's guarded store and here (the user
                     // cancelled and possibly rejoined): stand down WITHOUT touching
@@ -2878,6 +3084,11 @@ impl qobject::CallController {
                                 } else {
                                     false
                                 };
+                                // 12.1.7: the ticket the recovery must present (the episode that dropped, in its own
+                                // mode); no ticket (nothing to recover, or the call is being left / switched) = no
+                                // auto-rejoin. A drop that won't be recovered ends the episode.
+                                let ticket = if disconnected { watch_ledger().dropped(&room_id, auto_rejoin) } else { None };
+                                let auto_rejoin = auto_rejoin && ticket.is_some();
                                 if disconnected && !auto_rejoin {
                                     // This call is over for good — don't let its clock leak
                                     // eligibility into anything later.
@@ -2955,13 +3166,25 @@ impl qobject::CallController {
                                                 // Still parked? The user may have rejoined manually,
                                                 // joined elsewhere, hung up during the pause
                                                 // (call_started None), or another teardown may run.
-                                                if !o.in_call()
+                                                let d = if !o.in_call()
                                                     && !o.connecting()
                                                     && !o.hanging_up()
                                                     && call_started().lock().unwrap().is_some()
                                                 {
-                                                    o.as_mut().join_call(&QString::from(&rid));
+                                                    // 12.1.7: only the episode that dropped, in its own mode (a press /
+                                                    // Leave / sign-out since then voided the ticket)
+                                                    Some(watch_ledger().recover(ticket))
                                                 } else {
+                                                    None
+                                                };
+                                                if let Some(WatchDecision::Join { id, room, watch }) = d.clone().filter(|d| matches!(d, WatchDecision::Join { room, .. } if *room == rid)) {
+                                                    eprintln!("[watch-ledger] recovery: join {room} (episode {id}{})", if watch { ", watching" } else { "" });
+                                                    o.as_mut().begin_join(id, &QString::from(&room));
+                                                } else {
+                                                    match d {
+                                                        Some(d) => eprintln!("[watch-ledger] recovery of {rid}: {} — not rejoining", d.kind()),
+                                                        None => eprintln!("[watch-ledger] recovery of {rid}: not attempted (left, or another join runs)"),
+                                                    }
                                                     // Something else took over — stop claiming to
                                                     // reconnect (whatever ran owns the state now),
                                                     // and drop the un-consumed mute restore so it
@@ -3029,6 +3252,17 @@ impl qobject::CallController {
                     }
                     let reason = join_fail_reason(&e);
                     let _ = qt.queue(move |mut o| {
+                        watch_ledger().gave_up(); // 12.1.7: the next join is a press (or nothing)
+                        settle_watch_bar();
+                        // round 5 (Pad gates): a watch join that failed leaves watch mode — not "watching", not deafened
+                        // (the capture bar is the ledger's, settled above)
+                        if WATCHING.swap(false, std::sync::atomic::Ordering::SeqCst) || *o.watching() {
+                            o.as_mut().set_watching(false);
+                            o.as_mut().set_no_capture(tinhat_streamer::capture_barred());
+                            tinhat_streamer::set_deafened(false);
+                            o.as_mut().set_deafened(false);
+                            eprintln!("[call] the watch join failed — out of watch mode");
+                        }
                         o.as_mut().set_connecting(false);
                         // 10.1 (TH-CALL-03): EVERY failed join keeps the call panel up with the
                         // banner ("Couldn't join" + Try again). It used to vanish behind a 4 s
@@ -3049,27 +3283,37 @@ impl qobject::CallController {
         if target.is_empty() {
             return;
         }
-        // a switch is a press too: the room it joins is joined normally (assembly-042; the call it leaves ends anyway).
-        // Not a "switch" into the call already up: a live watch keeps its intent.
-        if !in_call_room(&target) {
-            *watch_intent().lock().unwrap() = None;
-        }
-        if !*self.in_call() && !*self.connecting() && !*self.hanging_up() {
-            self.as_mut().join_call(room_id);
-            return;
-        }
-        if *self.in_call() && self.room_id().to_string() == target {
-            return; // already there
-        }
-        eprintln!("[call] switch requested -> {target} (leaving the current call first)");
-        *pending_switch().lock().unwrap() = Some(target);
-        if *self.hanging_up() {
-            return; // a teardown is already in flight — it will pick the target up
-        }
-        self.as_mut().leave_call();
+        // a switch is a press too: the room it joins is joined normally (assembly-042); only the call actually up or
+        // joining in that room stays as it is (12.1.7: the watch ledger; a teardown in flight picks the target up)
+        let (phase, cur) = (self.watch_phase(), self.room_id().to_string());
+        let d = watch_ledger().press_switch(&target, phase, &cur);
+        self.as_mut().run_watch_decision(d, "switch");
     }
 
     pub fn leave_call(mut self: Pin<&mut Self>) {
+        // 12.1.7: an explicit leave ends the episode — a recovery or a queued join of it never runs
+        watch_ledger().press_leave();
+        if *self.hanging_up() {
+            // a teardown is already in flight — don't spawn a duplicate; cancel what waits behind it: a queued join /
+            // switch, and the auto-rejoin after a drop (assembly-042 r3: Leave during a drop's teardown)
+            *pending_switch().lock().unwrap() = None;
+            *call_started().lock().unwrap() = None;
+            *rejoin_mic_muted().lock().unwrap() = None;
+            auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
+            if *self.reconnecting() {
+                self.as_mut().set_reconnecting(false);
+                self.as_mut().set_status(QString::from("Left call"));
+            }
+            self.as_mut().set_watching(false);
+            self.as_mut().set_no_capture(false);
+            WATCHING.store(false, std::sync::atomic::Ordering::SeqCst);
+            return;
+        }
+        self.as_mut().hang_up();
+    }
+
+    /// The hang-up itself (Leave, or a switch leaving the call up first — the switch's target waits in the ledger).
+    fn hang_up(mut self: Pin<&mut Self>) {
         if *self.hanging_up() {
             return; // a teardown is already in flight — don't spawn a duplicate
         }
@@ -3085,9 +3329,8 @@ impl qobject::CallController {
         *call_started().lock().unwrap() = None;
         auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
         *rejoin_mic_muted().lock().unwrap() = None;
-        // Pad QOL: an explicit leave ends watching (the next Join is a full one)
-        *watch_intent().lock().unwrap() = None;
-        tinhat_streamer::set_capture_barred(false);
+        // Pad QOL: the call ends, and so does watching's UI. 12.1.7: the capture bar stays as it is — only the next
+        // normal join's start (or Talk here) clears it, so a publish still in flight from a watch call stays refused
         WATCHING.store(false, std::sync::atomic::Ordering::SeqCst);
         self.as_mut().set_watching(false);
         self.as_mut().set_no_capture(false);
@@ -3136,7 +3379,9 @@ impl qobject::CallController {
         // count==0, compute last=true, and open the hangingUp gate while THIS teardown
         // hasn't even started.
         teardowns_in_flight().fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let unwind_qt = qt.clone();
         let handle = crate::bridge::runtime().spawn(async move {
+            let mut unwind = TeardownUnwind { qt: Some(unwind_qt), armed: true };
             let cell = current_call();
             let taken = cell.lock().await.take(); // releases the mutex immediately
             // No stored session = the user cancelled a join that was still connecting.
@@ -3187,6 +3432,7 @@ impl qobject::CallController {
             *call_keys().lock().unwrap() = None;
             video_registry().lock().unwrap().clear();
             eprintln!("[call] hangup teardown complete — rejoin unblocked");
+            unwind.armed = false;
             // Clear hangingUp only when no OTHER teardown is still in flight (a terminal
             // disconnect's teardown can overlap this one; the gate must outlive BOTH) —
             // but always then, regardless of how teardown went, so the UI never wedges.
@@ -3194,10 +3440,11 @@ impl qobject::CallController {
             let _ = qt.queue(move |mut o| {
                 if last {
                     o.as_mut().set_hanging_up(false);
-                    // 10.0 call switch: the pending target joins the moment the teardown is done.
-                    if let Some(target) = pending_switch().lock().unwrap().take() {
-                        eprintln!("[call] switching into {target}");
-                        o.as_mut().join_call(&QString::from(&target));
+                    // 10.0 call switch: the pending target joins the moment the teardown is done (12.1.7: the queued
+                    // episode, if still current — a Leave since voided it).
+                    let queued = pending_switch().lock().unwrap().is_some();
+                    o.as_mut().teardown_finished();
+                    if queued {
                         return;
                     }
                 }
@@ -3246,6 +3493,11 @@ impl qobject::CallController {
         if *self.in_call() {
             self.as_mut()
                 .set_conn_test(QString::from("End the call first — the test needs the line to itself."));
+            return;
+        }
+        // 12.1.8 (Astra r2): watching (or a watch call still settling) publishes nothing, not even the test's pattern
+        if watch_ledger().watching() || tinhat_streamer::capture_barred() || *self.connecting() || *self.hanging_up() {
+            self.as_mut().set_conn_test(QString::from(WATCH_HINT));
             return;
         }
         self.as_mut()
@@ -3748,7 +4000,8 @@ impl qobject::CallController {
         let host = crate::callrules::host_of(&norm);
         eprintln!("[call-host] user chose {} host={host}", if always { "always" } else { "join" });
         if !always {
-            self.as_mut().join_call(&QString::from(&room));
+            let d = watch_ledger().resume(&room); // the current episode, in its own mode
+            self.as_mut().run_watch_decision(d, "call-host go-ahead");
             return;
         }
         let qt = self.qt_thread();
@@ -3769,7 +4022,8 @@ impl qobject::CallController {
                     eprintln!("[call-host] the join was left or replaced while saving the host — not joining");
                     return;
                 }
-                o.as_mut().join_call(&QString::from(&room));
+                let d = watch_ledger().resume(&room); // the current episode, in its own mode
+                o.as_mut().run_watch_decision(d, "call-host go-ahead");
             });
         });
     }
@@ -4262,6 +4516,15 @@ impl qobject::CallController {
         // call) is what crashed/stalled the app when the noise panel opened. Mirror the
         // started flag back on the Qt thread (false also drives the QML "unavailable" hint).
         mic_monitor_wanted().store(true, std::sync::atomic::Ordering::Relaxed);
+        // 12.1.7 (Astra r1): watching — the meter opens no microphone (the streamer refuses too, and a watch beginning
+        // stops a running one)
+        if watch_ledger().watching() || tinhat_streamer::capture_barred() {
+            eprintln!("[mic-monitor] not started — watching (Talk here first)");
+            let mut me = self;
+            me.as_mut().set_mic_monitoring(false);
+            me.as_mut().set_status(QString::from(WATCH_HINT));
+            return;
+        }
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
             let ok = tinhat_streamer::start_mic_monitor();
@@ -4437,6 +4700,26 @@ impl qobject::CallController {
         tinhat_streamer::set_tile_tuned_in(&id.to_string(), tuned);
     }
 
+    pub fn pick_camera(self: Pin<&mut Self>, id: &QString) {
+        let id = id.to_string();
+        let raw = desired_video_tiles().lock().unwrap().raw.clone().unwrap_or_default();
+        let Some(t) = raw.iter().find(|t| t.get("id").and_then(serde_json::Value::as_str) == Some(id.as_str())) else { return };
+        let p = t.get("participant").and_then(serde_json::Value::as_str).unwrap_or("").to_string();
+        // my self-view is one of MY cameras (review r2); everyone else's: the person the server vouches for
+        let person = if p == "You" {
+            let me = my_call_identity();
+            me.rfind(':').filter(|&i| i > 0).map(|i| me[..i].to_string()).unwrap_or_default()
+        } else {
+            crate::persontiles::person_of(&p, &tinhat_streamer::participant_attributes(&p))
+        };
+        if person.is_empty() {
+            return;
+        }
+        let mut m = cam_pick().lock().unwrap();
+        m.1.insert(person, id);
+        m.0 += 1; // the poll refolds (fold_rev)
+    }
+
     pub fn apply_share_recording_only(mut self: Pin<&mut Self>, on: bool) {
         tinhat_streamer::set_share_recording_only(on);
         self.as_mut().set_share_rec_only(on);
@@ -4604,11 +4887,11 @@ impl qobject::CallController {
     }
 
     pub fn join_call_pressed(mut self: Pin<&mut Self>, room_id: &QString) {
-        // (not while a call is up or connecting: a press then joins nothing, and a live watch keeps its intent)
-        if !*self.in_call() && !*self.connecting() {
-            *watch_intent().lock().unwrap() = None;
-        }
-        self.join_call(room_id);
+        // a press is a normal join — a new episode (while a call is up or connecting it joins nothing and the episode
+        // stays as it is; during a teardown it is queued behind it)
+        let phase = self.watch_phase();
+        let d = watch_ledger().press_join(&room_id.to_string(), phase);
+        self.as_mut().run_watch_decision(d, "join press");
     }
 
     pub fn watch_call(mut self: Pin<&mut Self>, room_id: &QString) {
@@ -4619,18 +4902,34 @@ impl qobject::CallController {
             self.as_mut().set_status(QString::from(WATCH_OFF_NOTE));
             return;
         }
-        let room = room_id.to_string();
-        if room.is_empty() || *self.in_call() || *self.connecting() || *self.hanging_up() {
-            eprintln!(
-                "[call] watch {room:?} refused: in_call={} connecting={} hanging_up={}",
-                *self.in_call(),
-                *self.connecting(),
-                *self.hanging_up()
-            );
+        // Watch needs the server's subscribe-only token (WATCH-LEASE/DESIGN.md §1.5): an older server offers no Watch
+        if !crate::server_offer::pad_watch_offered() {
+            eprintln!("[call] watch refused: this server doesn't mint Watch tokens");
+            self.as_mut().set_status(QString::from(crate::livekit::WATCH_NOT_HERE_TEXT));
             return;
         }
-        *watch_intent().lock().unwrap() = Some(room);
-        self.as_mut().join_call(room_id);
+        let phase = self.watch_phase();
+        let d = watch_ledger().press_watch(&room_id.to_string(), phase);
+        if watch_ledger().watching() {
+            // Layer 2 (Astra r3 #5): the press closes the streamer's capture bar NOW (a queued watch too: an old call's
+            // re-publish waiting on its mutex finds it closed) and revokes every capture lease — what they hold stops,
+            // work in flight stands down at its next step; the watch join waits for them (begin_join)
+            tinhat_streamer::set_capture_barred(true);
+            let n = tinhat_streamer::capture_lease::revoke("watch");
+            if n > 0 {
+                eprintln!("[lease] the Watch press stopped {n} capture operation(s) in flight");
+            }
+            self.as_mut().set_status(QString::from(WATCH_MIC_NOTE)); // Step A: the plain note
+            // round 10: the speaker-output taps (meter, hear sniffer) close their devices now, off the Qt thread (their
+            // gates closed in the revoke); playback is untouched — the watcher keeps hearing the call
+            crate::bridge::runtime().spawn_blocking(tinhat_streamer::retire_output_taps_if_barred);
+            set_keys_receive_only(true); // no media key leaves this device from the press on (a queued watch too)
+        }
+        self.as_mut().run_watch_decision(d, "watch");
+    }
+
+    pub fn pad_watch_offered(self: Pin<&mut Self>) -> bool {
+        WATCH_AVAILABLE && crate::server_offer::pad_watch_offered()
     }
 
     pub fn watch_talk(mut self: Pin<&mut Self>, on: bool) {
@@ -4648,37 +4947,16 @@ impl qobject::CallController {
             self.as_mut().set_status(QString::from(&format!("{by} muted your mic for everyone — ask them to unmute you")));
             return;
         }
-        // chose to talk: capture allowed from now on, hearing too; a rejoin after a drop is a normal one now
-        *watch_intent().lock().unwrap() = None;
-        tinhat_streamer::set_capture_barred(false);
-        self.as_mut().set_no_capture(false);
-        self.as_mut().apply_deafen(false);
-        self.as_mut().set_mic_muted(false);
-        let qt = self.qt_thread();
-        crate::bridge::runtime().spawn(async move {
-            let cell = current_call();
-            let mut guard = cell.lock().await;
-            let Some(call) = guard.as_mut() else { return }; // still connecting: do_join publishes it (no longer barred)
-            // re-checked when the publish really starts: barred again (a leave / a new watch join), a moderator's mute
-            // meanwhile → nothing (review pass 2 #2)
-            if tinhat_streamer::capture_barred() || tinhat_streamer::i_am_server_muted() {
-                eprintln!("[call] watching: Talk here — the mic is not started (barred / server-muted meanwhile)");
-                return;
-            }
-            let r = if call.has_mic() {
-                call.set_mic_muted(false);
-                Ok(())
-            } else {
-                call.publish_mic_muted(false).await
-            };
-            if let Err(e) = r {
-                eprintln!("[call] watching: Talk here could not start the mic: {e}");
-                let _ = qt.queue(move |mut o| {
-                    o.as_mut().set_mic_muted(true);
-                    o.as_mut().set_status(QString::from(&format!("Couldn't start your mic — {e}")));
-                });
-            }
-        });
+        // Talk here (WATCH-LEASE/DESIGN.md §1.6): the watch connection's token is subscribe-only, so it can never be
+        // given the mic. Talking = Stop watching + a Join PRESS of the same call, queued behind the teardown: a new
+        // normal episode with a normal token and identity. The bar stays closed until that normal join starts.
+        let room = self.room_id().to_string();
+        if room.is_empty() {
+            return;
+        }
+        eprintln!("[watch] Talk here: leaving the watch connection of {room}, then a normal join");
+        self.as_mut().leave_call();
+        self.as_mut().join_call_pressed(&QString::from(&room));
     }
 
     pub fn watch_hear(mut self: Pin<&mut Self>, on: bool) {
@@ -5159,6 +5437,8 @@ pub async fn leave_on_exit() {
 /// shell when the sign-in screen comes back (Main.qml onMLoggedInChanged → leaveCall).
 pub async fn leave_for_sign_out() {
     join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    watch_ledger().session_lost(); // 12.1.7: no recovery or queued join of this account's episode runs
+    tinhat_streamer::capture_lease::revoke("signed out"); // Layer 2: every capture still starting stops now
     host_approvals().lock().unwrap().clear();
     *call_started().lock().unwrap() = None;
     auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
@@ -5323,6 +5603,7 @@ async fn do_join(
     room_id: &str,
     start_muted: bool,
     my_gen: u64,
+    watch: bool,
 ) -> Result<UnboundedReceiver<CallEvent>, String> {
     let client = crate::session::client().ok_or_else(|| "Not signed in".to_string())?;
     let rid = matrix_sdk::ruma::RoomId::parse(room_id).map_err(|e| format!("bad room id: {e}"))?;
@@ -5366,10 +5647,18 @@ async fn do_join(
     // Bounded: lk-jwt-service is reached with a client that has no timeout of its own, and a
     // join stalled here is exactly the attempt that later resumes and tramples a NEWER
     // call (Astra review 2026-09-21, finding 5).
-    let sfu = match tokio::time::timeout(
-        std::time::Duration::from_secs(20),
-        crate::livekit::request_sfu_config(&client, &focus.service_url, &focus.alias),
-    )
+    // A watch join: the server's subscribe-only Watch token (the SFU refuses any publish from it, WATCH-LEASE/DESIGN.md
+    // §1), only from this server's own call service, never a normal token instead.
+    if watch && decision.decision != "own" {
+        return Err(crate::livekit::WATCH_NOT_HERE_TEXT.to_string());
+    }
+    let sfu = match tokio::time::timeout(std::time::Duration::from_secs(20), async {
+        if watch {
+            crate::livekit::request_watch_config(&client, &focus.service_url, &focus.alias).await
+        } else {
+            crate::livekit::request_sfu_config(&client, &focus.service_url, &focus.alias).await
+        }
+    })
     .await
     {
         Ok(r) => r?,
@@ -6073,7 +6362,7 @@ pub async fn dump_room_keys(room_id: &str) {
 /// via `set_record_dir` (per-track chains built on TrackSubscribed).
 pub async fn vod_join_until(room_id: &str, stop: std::sync::Arc<std::sync::atomic::AtomicBool>) {
     let my_gen = join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-    match do_join(room_id, false, my_gen).await {
+    match do_join(room_id, false, my_gen, false).await {
         Ok(mut rx) => {
             eprintln!("[vod] joined {room_id} for recording");
             crate::bridge::runtime().spawn(install_peer_keys_loop(room_id.to_string()));
@@ -6130,13 +6419,13 @@ pub async fn vod_join_until(room_id: &str, stop: std::sync::Arc<std::sync::atomi
 /// Run via `TINHAT_AUTOJOIN=<room_id>`.
 pub async fn headless_join(room_id: &str, secs: u64) {
     let mut my_gen = join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-    let mut joined = do_join(room_id, false, my_gen).await;
+    let mut joined = do_join(room_id, false, my_gen, false).await;
     // M1 in the lab: the gates answer the "hosted elsewhere" sheet through TINHAT_TEST_CALL_HOST
     if let Err(prompt) = joined.as_ref().map(|_| ()).map_err(|e| e.strip_prefix(HOST_ASK).map(str::to_string)) {
         if let (Some(prompt), Some(client)) = (prompt, crate::session::client()) {
             if headless_host_answer(&client, room_id, &prompt).await {
                 my_gen = join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-                joined = do_join(room_id, false, my_gen).await;
+                joined = do_join(room_id, false, my_gen, false).await;
             } else {
                 eprintln!("[call-host] cancelled — not joining");
             }
@@ -6412,23 +6701,122 @@ mod watch_publish_tests {
         ] {
             assert!(!src.contains("callctl.joinCall("), "{f}: a Join press must call joinCallPressed");
         }
+        // 12.1.7: every join of the controller goes through the watch ledger (watch_session.rs; the state table's rows
+        // are its own tests): a press starts an episode, internal rejoins ask the ledger, nothing else chooses a mode
         let ctl = include_str!("call_ctl.rs");
-        let b = body_of(ctl, "pub fn join_call_pressed(");
-        assert!(b.find("*watch_intent().lock().unwrap() = None").unwrap() < b.find("self.join_call(room_id)").unwrap());
-        let sw = body_of(ctl, "pub fn switch_call(");
-        assert!(sw.contains("if !in_call_room(&target) {") && sw.contains("*watch_intent().lock().unwrap() = None"));
+        let code = &ctl[..ctl.find("#[cfg(test)]").unwrap()];
+        assert!(!code.contains("watch_intent"), "the room-keyed watch intent is gone");
+        let calls: Vec<_> = code.match_indices(".join_call(").collect();
+        assert_eq!(calls.len(), 0, "nothing inside the controller calls join_call (a press): internal joins ask the ledger");
+        let jc = body_of(ctl, "pub fn join_call(self");
+        assert!(jc[..300].contains("self.join_call_pressed(room_id)"), "join_call is a press");
+        assert!(body_of(ctl, "pub fn join_call_pressed(").contains("watch_ledger().press_join("));
+        assert!(body_of(ctl, "pub fn switch_call(").contains("watch_ledger().press_switch("));
+        assert!(body_of(ctl, "pub fn watch_call(").contains("watch_ledger().press_watch("));
+        // Leave ends the episode BEFORE the "a teardown is already running" early return (the round-3 escape)
+        let lv = body_of(ctl, "pub fn leave_call(");
+        assert!(lv.find("watch_ledger().press_leave()").unwrap() < lv.find("if *self.hanging_up() {").unwrap());
+        assert!(lv.contains("*call_started().lock().unwrap() = None;"), "Leave during a teardown cancels the auto-rejoin");
+        // the join's mode comes from the ledger before anything is set or spawned; the bar follows it
+        let bj: String = ctl[ctl.find("fn begin_join(").unwrap()..].chars().take(9000).collect();
+        let sj = bj.find("watch_ledger().start_join(id)").expect("begin_join asks the ledger");
+        assert!(sj < bj.find("set_connecting(true)").unwrap() && sj < bj.find("set_capture_barred(watch)").unwrap());
+        // the bar opens only on a normal join's start (above) or Talk here — never on a leave
+        // (Talk here no longer opens it: WATCH-LEASE §1.6, it is Leave + a Join press of the same call)
+        assert_eq!(code.matches("set_capture_barred(false)").count(), 0, "only a normal join's start and settle open the bar");
+        assert!(body_of(ctl, "fn settle_watch_bar(").contains("set_capture_barred(l.bar)"));
+        assert!(body_of(ctl, "fn teardown_finished(").contains("settle_watch_bar();"));
+        let wt = body_of(ctl, "pub fn watch_talk(");
+        assert!(wt.find("self.as_mut().leave_call();").unwrap() < wt.find("self.as_mut().join_call_pressed(").unwrap());
+        assert!(!wt.contains("watch_ledger().talk(") && !wt.contains("publish_mic_muted") && !wt.contains("set_no_capture(false)"));
+        // Pad Watch redesign (layer 1): a watch join takes the server's Watch token; watching sends no media key
+        let dj: String = ctl[ctl.find("async fn do_join(").unwrap()..].chars().take(12000).collect();
+        assert!(dj.contains("crate::livekit::request_watch_config(&client, &focus.service_url, &focus.alias)"));
+        assert!(dj.find("if watch && decision.decision != \"own\"").unwrap() < dj.find("request_watch_config").unwrap());
+        assert!(bj.contains("set_keys_receive_only(watch);") && bj.contains("do_join(&room_id, start_muted, my_gen, watch)"));
+        let wc = body_of(ctl, "pub fn watch_call(");
+        assert!(wc.find("pad_watch_offered()").unwrap() < wc.find("watch_ledger().press_watch(").unwrap());
+        assert!(wc.contains("set_keys_receive_only(true)"));
+        let ak = body_of(ctl, "pub(crate) async fn announce_key_to_members(");
+        assert!(ak.find("if keys_receive_only() {").unwrap() < ak.find("key_recipients_now").unwrap(), "the one announce entry refuses while watching");
+        // and the send boundary (Astra r3 #3): every batch's check and its send
+        let ak_full: String = ctl[ctl.find("pub(crate) async fn announce_key_to_members(").unwrap()..].chars().take(9000).collect();
+        assert!(ak_full.contains("|| keys_receive_only() {") && ak_full.contains("if keys_receive_only() {\n                    return false;"));
+        let send_sites = code.matches("send_our_key_to_device(").count();
+        assert_eq!(send_sites, 1, "our key leaves only through announce_key_to_members");
+        assert_eq!(code.matches("request_watch_config(").count(), 1, "nothing but the join asks for a Watch token");
+        // Layer 2: the Watch press closes the streamer bar and revokes every lease before the decision runs; sign-out
+        // revokes; a watch join waits for every lease to end
+        let wc2 = body_of(ctl, "pub fn watch_call(");
+        assert!(wc2.find("tinhat_streamer::capture_lease::revoke(\"watch\")").unwrap() < wc2.find("self.as_mut().run_watch_decision(d, \"watch\")").unwrap());
+        assert!(wc2.find("tinhat_streamer::set_capture_barred(true)").unwrap() < wc2.find("run_watch_decision").unwrap());
+        assert!(body_of(ctl, "pub async fn leave_for_sign_out(").contains("capture_lease::revoke(\"signed out\")"));
+        assert!(bj.find("capture_lease::pending() > 0").unwrap() < bj.find("watch_ledger().start_join(id)").unwrap());
+        // every capture start of the streamer runs under a lease (leased_play), every store commits it
+        let st2 = include_str!("../../streamer/src/call.rs");
+        let st_code = st2; // (call.rs has #[cfg(test)] items early in the file: the whole source is checked)
+        for what in ["\"mic capture start\"", "\"mic meter start\"", "\"share-audio capture start\"", "\"screen capture start\"", "\"camera capture start\""] {
+            assert!(st_code.matches(what).count() >= 1, "{what}");
+            for (i, _) in st_code.match_indices(what) {
+                let mut a = i.saturating_sub(80);
+                while !st_code.is_char_boundary(a) {
+                    a -= 1;
+                }
+                let pre = &st_code[a..i];
+                assert!(pre.contains("leased_play("), "{what} not started under a lease: …{pre}");
+            }
+        }
+        assert!(st_code.contains("lease.commit_with(|| store_aux(slot"), "the aux store is the commit");
+        assert!(st_code.contains("crate::capture_lease::end_session(self.keyring_gen);"), "close() ends the session's leases first");
+        let rs = &st_code[st_code.find("pub async fn restart_screenshare(").unwrap()..];
+        let rs = &rs[..rs.find("pub async fn publish_camera(").unwrap()];
+        assert!(rs.find("lease.filter(|l| l.valid())").unwrap() < rs.find(".publish_track(").unwrap(), "checked before re-publishing");
+        assert!(rs.contains("if !lease.commit() {"));
+        let lk = include_str!("../../streamer/src/lk_publish.rs");
+        let cp = &lk[lk.find("pub async fn connection_probe(").unwrap()..];
+        assert!(cp.find("Kind::ConnTest").unwrap() < cp.find("Room::connect(").unwrap() && cp.contains("leased_play(&lease, &pipeline"));
+        assert!(!body_of(ctl, "fn hang_up(").contains("set_capture_barred"));
+        // the recovery presents its episode's ticket; sign-out ends the episode; the queued join is the ledger's
+        assert!(code.contains("watch_ledger().dropped(&room_id, auto_rejoin)") && code.contains("Some(watch_ledger().recover(ticket))"));
+        assert!(body_of(ctl, "pub async fn leave_for_sign_out(").contains("watch_ledger().session_lost()"));
+        assert!(body_of(ctl, "fn teardown_finished(").contains("watch_ledger().teardown_done()"));
+        assert_eq!(code.matches("watch_ledger().resume(&room)").count(), 2, "both call-host go-aheads resume the episode");
+        // the mic meter (Astra r1): refused while watching, at the app and in the streamer (under its lock), and the
+        // streamer's meter bar follows the ledger after every decision
+        assert!(body_of(ctl, "pub fn start_mic_monitor(").contains("if watch_ledger().watching() || tinhat_streamer::capture_barred() {"));
+        let st = include_str!("../../streamer/src/call.rs");
+        let mm: String = st[st.find("pub fn start_mic_monitor(").unwrap()..].chars().take(6000).collect();
+        assert!(mm.find("if capture_barred() {").unwrap() < mm.find("audio_src_fragment(").unwrap());
+        // Layer 2: started under its lease (held, PLAYING, re-checked) and committed only while the bar is open
+        assert!(mm.contains("leased_play(&lease, &pipeline, 6000, \"mic meter start\")"), "started under the lease");
+        assert!(mm.contains("if capture_barred() || !lease.commit() {"), "re-checked once PLAYING, and committed");
+        assert!(body_of(st, "pub fn retire_mic_monitor_if_barred(").contains("cell.take()"));
+        // r2: aux work is bound to its call; no AEC (mic) at a watch connect; the output meter never falls back to a bare source
+        for f in ["async fn publish_aux(", "async fn publish_aux_pipewire("] {
+            let b: String = st[st.find(f).unwrap()..].chars().take(5000).collect();
+            assert!(b.contains("let origin = aux_participant()") && b.matches("!= origin").count() >= 2, "{f}");
+        }
+        assert!(st.contains("if !capture_barred() {\n            let _ = aec_start();"));
+        assert!(!body_of(st, "pub fn start_output_monitor(").contains("None => audio_src_fragment(None)"));
+        assert!(body_of(ctl, "pub fn run_connection_test(").contains("watch_ledger().watching() || tinhat_streamer::capture_barred()"));
+        let smc: String = st[st.find("fn start_mic_capture(").unwrap()..].chars().take(1800).collect();
+        assert!(smc.find("if capture_barred() {").unwrap() < smc.find("build_mic_pipeline()").unwrap(), "every call mic capture checks the bar");
+        // a panic in a join / teardown task can't wedge connecting / the hangingUp gate (r3 #4)
+        assert!(bj.contains("let _unwind = JoinUnwind {"));
+        assert!(body_of(ctl, "async fn teardown_call_session(").contains("TeardownUnwind {"));
+        assert!(body_of(ctl, "fn hang_up(").contains("TeardownUnwind {") || ctl[ctl.find("fn hang_up(").unwrap()..].contains("let mut unwind = TeardownUnwind {"));
     }
     #[test]
-    fn watch_is_off_in_12_1_6() {
-        // launch-gate's stop rule (assembly-042): Watch is unreachable until 12.1.7 — the op refuses before anything
-        // else, and the Pad window hides its strip
-        assert!(!super::WATCH_AVAILABLE);
+    fn watch_is_on_in_12_1_9_and_still_guarded() {
+        // Pad on the phone, Step A (12.1.9): Watch is on; the op still checks the switch before anything else, and the
+        // Pad window shows its strip only where the server offers Watch
+        assert!(super::WATCH_AVAILABLE);
         let ctl = include_str!("call_ctl.rs");
         let b = body_of(ctl, "pub fn watch_call(");
         let off = b.find("if !WATCH_AVAILABLE {").expect("watch_call checks WATCH_AVAILABLE");
-        assert!(off < b.find("watch_intent()").unwrap() && b[off..].contains("WATCH_OFF_NOTE"));
+        assert!(off < b.find("press_watch(").unwrap() && b[off..].contains("WATCH_OFF_NOTE"));
         let pw = include_str!("../qml/PadWindow.qml");
-        assert!(pw.contains("readonly property bool watchAvailable: false") && pw.contains("visible: watchAvailable && !pad.watchingHere"));
+        assert!(pw.contains("readonly property bool watchAvailable: true") && pw.contains("visible: watchAvailable && pad.padWatchOk && !pad.watchingHere"));
     }
     #[test]
     fn watch_refuses_follows_the_capture_bar() {

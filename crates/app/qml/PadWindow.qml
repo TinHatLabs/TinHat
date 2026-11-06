@@ -222,6 +222,13 @@ Controls.Popup {
     // watch: this computer joins the call to WATCH (a normal, visible join: no microphone captured, sound off)
     readonly property bool watchingHere: !!pad.app.callctl && pad.app.callctl.watching === true && String(pad.app.callctl.roomId) === pad.roomId
                                          && (pad.app.callctl.inCall === true || pad.app.callctl.connecting === true)
+    // Pad Watch (WATCH-LEASE/DESIGN.md §1.5, Astra r3 #7): this build offers Watch AND the server mints Watch tokens.
+    // The server's answer can arrive after the Pad opened, so it is re-read every 2 s while the window is up.
+    property bool padWatchOk: false
+    Timer {
+        interval: 2000; repeat: true; triggeredOnStart: true; running: pad.visible
+        onTriggered: pad.padWatchOk = !!pad.app.callctl && pad.app.callctl.padWatchOffered() === true
+    }
     readonly property bool inOtherCall: !!pad.app.callctl && (pad.app.callctl.inCall === true || pad.app.callctl.connecting === true) && !pad.watchingHere
     readonly property var sharers: {
         var l = pad.view ? pad.view.people : [], out = []
@@ -586,8 +593,9 @@ Controls.Popup {
                 // ---- Watch (only while someone shares, or while this computer watches) ----
                 Rectangle {
                     // 12.1.6: Watch is off (call_ctl.rs WATCH_AVAILABLE; back in 12.1.7) — the strip stays hidden
-                    readonly property bool watchAvailable: false
-                    visible: watchAvailable && !pad.watchingHere && pad.sharers.length > 0
+                    readonly property bool watchAvailable: true
+                    // and only on a server that mints subscribe-only Watch tokens (WATCH-LEASE/DESIGN.md §1.5)
+                    visible: watchAvailable && pad.padWatchOk && !pad.watchingHere && pad.sharers.length > 0
                     Layout.fillWidth: true
                     Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.topMargin: 6
                     implicitHeight: watchCol.implicitHeight + 20

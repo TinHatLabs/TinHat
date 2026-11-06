@@ -376,3 +376,45 @@ async fn recheck_loop() {
         }
     }
 }
+
+/// One to-device event from a sync response, for a sync loop other than the GUI's — the Memories recorder's
+/// (vodsvc.rs; recorder fix 2026-11-04: its loop dropped the sync response, so since peers send media keys ONLY
+/// over to-device (2026-09-21) the recorder never had a key and every recording was silent audio and frameless
+/// video). The same rule as the GUI loop in bridge.rs: an Olm-DECRYPTED `io.element.call.encryption_keys` goes
+/// through [`ingest`] (the trust rules); a plaintext / UTD / invalid one is rejected and logged. Returns whether the
+/// event was a media-key event at all.
+pub async fn ingest_sync_to_device(pe: &matrix_sdk::deserialized_responses::ProcessedToDeviceEvent) -> bool {
+    use matrix_sdk::deserialized_responses::{AlgorithmInfo, ProcessedToDeviceEvent as P};
+    let raw = pe.as_raw();
+    let Ok(ev) = raw.deserialize_as::<serde_json::Value>() else { return false };
+    if ev.get("type").and_then(|t| t.as_str()) != Some(crate::e2ee_keys::ENCRYPTION_KEYS_EVENT) {
+        return false;
+    }
+    let sender = ev.get("sender").and_then(|s| s.as_str()).unwrap_or("?").to_string();
+    match pe {
+        P::Decrypted { encryption_info, .. } => {
+            let enc = OlmInfo {
+                sender: encryption_info.sender.to_string(),
+                sender_device: encryption_info.sender_device.as_ref().map(|d| d.to_string()),
+                sender_curve: match &encryption_info.algorithm_info {
+                    AlgorithmInfo::OlmV1Curve25519AesSha2 { curve25519_public_key_base64 } => {
+                        Some(curve25519_public_key_base64.clone())
+                    }
+                    _ => None,
+                },
+            };
+            ingest(enc, ev).await;
+        }
+        P::UnableToDecrypt { .. } | P::PlainText(_) | P::Invalid(_) => {
+            let variant = match pe {
+                P::UnableToDecrypt { .. } => "UTD",
+                P::PlainText(_) => "plain",
+                _ => "invalid",
+            };
+            eprintln!(
+                "[recv1-td] REJECTED {variant} encryption_keys from {sender} — only Olm-decrypted key events are trusted"
+            );
+        }
+    }
+    true
+}

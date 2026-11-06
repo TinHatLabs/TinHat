@@ -74,6 +74,45 @@ pub async fn request_sfu_config_with_device(
     Ok(cfg)
 }
 
+/// Pad Watch (share claude/tinhat-pad/WATCH-LEASE/DESIGN.md §1.5): a subscribe-only token from the own server's Watch
+/// route (`{service}/watch`, the same body and once-only / no-redirect rules as `/sfu/get`). The answer must be the
+/// exact Watch profile (`callrules::watch_token_problem`) or the watch join fails — never a normal token instead.
+/// Mirrors the web's rtc.ts mintWatchToken.
+pub async fn request_watch_config(client: &Client, service_url: &str, room: &str) -> Result<SfuConfig, String> {
+    let device_id = client.device_id().map(|d| d.to_string()).unwrap_or_default();
+    let user_id = client.user_id().map(|u| u.to_string()).unwrap_or_default();
+    let openid = client
+        .account()
+        .request_openid_token()
+        .await
+        .map_err(|e| format!("OpenID token request failed: {e}"))?;
+    let body = serde_json::json!({
+        "room": room,
+        "openid_token": {
+            "access_token": openid.access_token,
+            "token_type": openid.token_type,
+            "matrix_server_name": openid.matrix_server_name,
+            "expires_in": openid.expires_in.as_secs(),
+        },
+        "device_id": device_id,
+    });
+    let url = format!("{}/watch", service_url.trim_end_matches('/'));
+    let text = match post_sfu_get(&no_redirect_client()?, &url, serde_json::to_vec(&body).map_err(|e| e.to_string())?).await {
+        Ok(t) => t,
+        Err(e) if e.contains("HTTP 404") || e.contains("HTTP 405") => return Err(WATCH_NOT_HERE_TEXT.to_string()),
+        Err(e) => return Err(e),
+    };
+    let mut cfg = serde_json::from_str::<SfuConfig>(&text).map_err(|e| format!("the Watch sign-in answer is unreadable: {e}"))?;
+    cfg.url = checked_sfu_url(&cfg.url)?;
+    // the RAW payload: a repeated key is refused before any parse could merge it (Astra r3 #2)
+    let text = crate::callrules::jwt_payload_text(&cfg.jwt);
+    if let Some(why) = crate::callrules::watch_token_problem_raw(text.as_deref(), &format!("{user_id}:{device_id}"), room) {
+        return Err(format!("the server's Watch pass isn't watch-only ({why}) — not joining"));
+    }
+    Ok(cfg)
+}
+pub const WATCH_NOT_HERE_TEXT: &str = "This server can't do Watch yet";
+
 /// POST the OpenID proof to `{service}/sfu/get` ONCE, to that address only: a redirect (any 3xx) is a failure, never
 /// followed — a 307/308 would re-send the body, i.e. the user's sign-in proof, to wherever it points (security review
 /// 12.1.0 must-fix; the mobile core's `no_redirect_client` does the same). Returns the answer's body on a 2xx.

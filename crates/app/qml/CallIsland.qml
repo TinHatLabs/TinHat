@@ -1004,7 +1004,7 @@ ColumnLayout {
                 var w = Math.max(0, Math.floor((width - (c - 1) * spacing) / c))
                 // Hidden tiles take no space, so the compact height must not
                 // reserve rows for them either.
-                var shownTiles = island.app.callTiles.filter(function(t){ return t && !island.app.isTileHidden(t.id) })
+                var shownTiles = island.app.callTiles.filter(function(t){ return t && !island.app.isTileOut(t.id) })
                 var primTiles = island.app.mLocalAfk ? 1 : shownTiles.filter(function(t){ return t.kind !== "avatar" && t.cameraMuted !== true }).length
                 var hasAvatar = !island.app.mLocalAfk && shownTiles.some(function(t){ return t.kind === "avatar" || t.cameraMuted === true })
                 var rows = Math.max(1, Math.ceil(Math.max(1, primTiles) / c))
@@ -1019,14 +1019,14 @@ ColumnLayout {
             readonly property real haveBudget: island.height > 0
                 ? Math.max(0, island.height - chromeH - (callSeam.visible ? callSeam.implicitHeight : 0)) : wantBudget
             readonly property real wantH: !visible ? 0 : (weightedLayout(width, wantBudget, island.app.callTiles, island.app.mLocalAfk,
-                island.app.mHiddenTiles.concat(island.app.recOnlyHiddenIds), island.app.callLayout, island.app.pinnedTile,
+                island.app.mHiddenTiles.concat(island.app.recOnlyHiddenIds, island.app.altCameraIds), island.app.callLayout, island.app.pinnedTile,
                 island.app.callSideFrac).bottom || 0)
             readonly property var layout: weightedLayout(
                 width,
                 island.app.callMaximized ? availH : Math.min(wantBudget, haveBudget),
                 island.app.callTiles,
                 island.app.mLocalAfk,
-                island.app.mHiddenTiles.concat(island.app.recOnlyHiddenIds),
+                island.app.mHiddenTiles.concat(island.app.recOnlyHiddenIds, island.app.altCameraIds),
                 island.app.callLayout,
                 island.app.pinnedTile,
                 island.app.callSideFrac)
@@ -1150,7 +1150,7 @@ ColumnLayout {
                     // …and hidden tiles: the delegate stays alive (video sink is
                     // NOT detached, so bringing it back is instant) but takes no
                     // space — weightedLayout already gave it a zero slot.
-                    readonly property bool isHidden: island.app.isTileHidden(modelData.id)
+                    readonly property bool isHidden: island.app.isTileOut(modelData.id)
                     visible: (!island.app.mLocalAfk || isSelf) && !isHidden
                     // #7 AFK: this participant marked BRB? (self-view uses our own flag)
                     readonly property bool isAway: tile.isSelf
@@ -1556,6 +1556,46 @@ ColumnLayout {
                                 width: Math.min(implicitWidth, Math.max(40, tile.width - 8 - 60 - (waveRow.visible ? 43 + 6 : 0) - 70))
                                 elide: Text.ElideRight
                             }
+                            // PAD-PHONE Step A: my mic live on another of my devices; a moderator's mute on some of their devices; their
+                            // other camera (switch)
+                            ThIcon {
+                                visible: tile.modelData.othersLive === true
+                                anchors.verticalCenter: parent.verticalCenter
+                                app: island.app; name: "audio-input-microphone-symbolic"; width: 16; height: 16; color: Th.tileNameFg; isMask: true
+                                HoverHandler { id: othersLiveHover }
+                                Controls.ToolTip.visible: othersLiveHover.hovered
+                                Controls.ToolTip.delay: 300
+                                Controls.ToolTip.text: "Your mic is live on another of your devices"
+                            }
+                            ThIcon {
+                                visible: !tile.isSelf && tile.modelData.partlyMuted === true
+                                anchors.verticalCenter: parent.verticalCenter
+                                app: island.app; name: "microphone-sensitivity-muted-symbolic"; width: 16; height: 16; color: Th.tileNameFg; isMask: true
+                                HoverHandler { id: partlyHover }
+                                Controls.ToolTip.visible: partlyHover.hovered
+                                Controls.ToolTip.delay: 300
+                                Controls.ToolTip.text: "A moderator muted " + (tile.modelData.name || "them") + " on one of their devices"
+                            }
+                            ThIcon {
+                                visible: (tile.modelData.alts || "").length > 0
+                                anchors.verticalCenter: parent.verticalCenter
+                                app: island.app; name: "camera-web-symbolic"; width: 16; height: 16; color: Th.tileNameFg; isMask: true
+                                HoverHandler { id: altCamHover }
+                                TapHandler { onTapped: island.app.callctl.pickCamera(String(tile.modelData.alts).split("\n")[0]) }
+                                Controls.ToolTip.visible: altCamHover.hovered
+                                Controls.ToolTip.delay: 300
+                                Controls.ToolTip.text: (tile.modelData.name || "They") + " has another camera — show it"
+                            }
+                            // Pad on the phone, Step A: the Pad chip — from the SERVER's attributes only (persontiles.rs)
+                            ThIcon {
+                                visible: tile.modelData.pad === "watch"
+                                anchors.verticalCenter: parent.verticalCenter
+                                app: island.app; name: "smartphone-symbolic"; width: 16; height: 16; color: Th.tileNameFg; isMask: true
+                                HoverHandler { id: padChipHover }
+                                Controls.ToolTip.visible: padChipHover.hovered
+                                Controls.ToolTip.delay: 300
+                                Controls.ToolTip.text: tile.isSelf ? "Your phone is watching (Pad)" : ((tile.modelData.name || "They") + " is also on their phone (Pad), watching")
+                            }
                             // #B live waveform: a few small bars whose height tracks
                             // this participant's audio RMS. Overlay-only (z:3 strip),
                             // no layout/pipeline impact. Below a small floor the bars
@@ -1569,9 +1609,11 @@ ColumnLayout {
                                 // The tile's current level (0..1), recomputed when the
                                 // mirror updates the maps (each is a binding dependency).
                                 // A muted participant never animates as "speaking".
-                                readonly property real level: (tile.isSelf && island.app.mMicMuted) || (tile.modelData.muted === true)
+                                // (review r2: my muted mic silences only MY part — my other devices still speak on my tile)
+                                readonly property real level: (!tile.isSelf && tile.modelData.muted === true)
                                     ? 0.0
-                                    : island.app.tileAudioLevel(tile.modelData.participant, tile.isSelf)
+                                    : island.app.tileAudioLevel(tile.modelData.members || tile.modelData.participant, tile.isSelf, tile.isSelf && island.app.mMicMuted)
+                                // (my tile: my own mic level, and my other devices' when they speak — PAD-PHONE Step A)
                                 // Low floor so normal speech (low RMS) registers; below it the
                                 // bars rest flat (idle / muted background noise).
                                 readonly property real floor: 0.02

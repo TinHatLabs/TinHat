@@ -1,0 +1,593 @@
+{
+ "_doc": "Pad Watch Layer 2: the capture lease (share claude/tinhat-pad/WATCH-LEASE/DESIGN.md \u00a72). Byte-identical in tinhat-web src/features/calls/ and the desktop repo (Tin Hat desktop) crates/streamer/src/; sha256 pinned in both tests. A resource whose name starts with ! throws when stopped. Round 6: begin_start / end_start = the start of a platform capture under the lease lock.",
+ "cases": [
+  {
+   "name": "L01 idle: a meter lease is taken, holds its capture, commits; nothing stopped",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "m",
+     "res": "t1",
+     "ok": true,
+     "stopped": []
+    },
+    {
+     "do": "commit",
+     "lease": "m",
+     "ok": true,
+     "stopped": []
+    },
+    {
+     "do": "done",
+     "lease": "m"
+    },
+    {
+     "do": "pending",
+     "n": 0
+    }
+   ]
+  },
+  {
+   "name": "L02 a Watch press revokes: every held capture stops AT the press, the lease is invalid after",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "m",
+     "res": "t1",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1,
+     "stopped": [
+      "t1"
+     ]
+    },
+    {
+     "do": "valid",
+     "lease": "m",
+     "ok": false
+    },
+    {
+     "do": "commit",
+     "lease": "m",
+     "ok": false,
+     "stopped": []
+    }
+   ]
+  },
+  {
+   "name": "L03 a capture arriving after the revoke is stopped the moment it is held",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1,
+     "stopped": []
+    },
+    {
+     "do": "hold",
+     "lease": "m",
+     "res": "late",
+     "ok": false,
+     "stopped": [
+      "late"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "L04 two overlapping starts own their captures separately: a revoke stops both",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "a",
+     "ok": true
+    },
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "b",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "a",
+     "res": "ta",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "b",
+     "res": "tb",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 2,
+     "stopped": [
+      "ta",
+      "tb"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "L05 barred: no lease of any kind is admitted",
+   "steps": [
+    {
+     "do": "bar",
+     "on": true
+    },
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": false
+    },
+    {
+     "do": "take",
+     "kind": "mic",
+     "owner": "A",
+     "as": "x",
+     "ok": false
+    },
+    {
+     "do": "take",
+     "kind": "conntest",
+     "owner": null,
+     "as": "c",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "name": "L06 a call lease is bound to its session: valid only while that session is current",
+   "steps": [
+    {
+     "do": "owner",
+     "cur": "A"
+    },
+    {
+     "do": "take",
+     "kind": "mic",
+     "owner": "A",
+     "as": "x",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "x",
+     "res": "mic",
+     "ok": true
+    },
+    {
+     "do": "owner",
+     "cur": "B"
+    },
+    {
+     "do": "valid",
+     "lease": "x",
+     "ok": false
+    },
+    {
+     "do": "commit",
+     "lease": "x",
+     "ok": false,
+     "stopped": [
+      "mic"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "L07 stale work never takes a lease for a session that isn't current (Talk here's new call)",
+   "steps": [
+    {
+     "do": "owner",
+     "cur": "B"
+    },
+    {
+     "do": "take",
+     "kind": "screen",
+     "owner": "A",
+     "as": "x",
+     "ok": false
+    },
+    {
+     "do": "take",
+     "kind": "screen",
+     "owner": "B",
+     "as": "y",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "name": "L08 a lease taken before a revoke stays invalid after the bar opens again",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "bar",
+     "on": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1
+    },
+    {
+     "do": "bar",
+     "on": false
+    },
+    {
+     "do": "valid",
+     "lease": "m",
+     "ok": false
+    },
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "n",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "name": "L09 pending counts every lease not done yet, revoked ones too (Watch waits for them)",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "a",
+     "ok": true
+    },
+    {
+     "do": "take",
+     "kind": "conntest",
+     "owner": null,
+     "as": "b",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 2
+    },
+    {
+     "do": "pending",
+     "n": 2
+    },
+    {
+     "do": "done",
+     "lease": "a"
+    },
+    {
+     "do": "pending",
+     "n": 1
+    },
+    {
+     "do": "done",
+     "lease": "b"
+    },
+    {
+     "do": "pending",
+     "n": 0
+    }
+   ]
+  },
+  {
+   "name": "L10 a committed resource is no longer the lease's: a later revoke doesn't stop it twice",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "m",
+     "res": "t",
+     "ok": true
+    },
+    {
+     "do": "commit",
+     "lease": "m",
+     "ok": true
+    },
+    {
+     "do": "done",
+     "lease": "m"
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 0,
+     "stopped": []
+    }
+   ]
+  },
+  {
+   "name": "L11 a lease holds several resources; a revoke stops all of them even if one stop fails",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "screen",
+     "owner": null,
+     "as": "s",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "s",
+     "res": "video",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "s",
+     "res": "!boom",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "s",
+     "res": "audio",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1,
+     "stopped": [
+      "video",
+      "!boom",
+      "audio"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "L12 done twice / commit after done are harmless",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "done",
+     "lease": "m"
+    },
+    {
+     "do": "done",
+     "lease": "m"
+    },
+    {
+     "do": "pending",
+     "n": 0
+    },
+    {
+     "do": "commit",
+     "lease": "m",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "name": "L13 a session going away (closing) invalidates its leases like a newer session does",
+   "steps": [
+    {
+     "do": "owner",
+     "cur": "A"
+    },
+    {
+     "do": "take",
+     "kind": "camera",
+     "owner": "A",
+     "as": "c",
+     "ok": true
+    },
+    {
+     "do": "owner",
+     "cur": null
+    },
+    {
+     "do": "valid",
+     "lease": "c",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "name": "L14 round 6: a start after a revoke never begins (begin_start refused)",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1
+    },
+    {
+     "do": "begin_start",
+     "lease": "m",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "name": "L15 round 6: a revoke WHILE starting stops nothing itself; the worker learns it at end_start and stops its own capture",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "begin_start",
+     "lease": "m",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1,
+     "stopped": []
+    },
+    {
+     "do": "end_start",
+     "lease": "m",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "name": "L16 round 6: a start that finishes valid is held as usual (a later revoke stops it)",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "begin_start",
+     "lease": "m",
+     "ok": true
+    },
+    {
+     "do": "end_start",
+     "lease": "m",
+     "ok": true
+    },
+    {
+     "do": "hold",
+     "lease": "m",
+     "res": "t",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1,
+     "stopped": [
+      "t"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "L17 round 6: a starting lease is pending until its operation ends",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "meter",
+     "owner": null,
+     "as": "m",
+     "ok": true
+    },
+    {
+     "do": "begin_start",
+     "lease": "m",
+     "ok": true
+    },
+    {
+     "do": "revoke",
+     "why": "watch",
+     "n": 1
+    },
+    {
+     "do": "pending",
+     "n": 1
+    },
+    {
+     "do": "end_start",
+     "lease": "m",
+     "ok": false
+    },
+    {
+     "do": "done",
+     "lease": "m"
+    },
+    {
+     "do": "pending",
+     "n": 0
+    }
+   ]
+  },
+  {
+   "name": "L18 round 6: a bar closing while starting also voids it at end_start",
+   "steps": [
+    {
+     "do": "take",
+     "kind": "camera",
+     "owner": null,
+     "as": "c",
+     "ok": true
+    },
+    {
+     "do": "begin_start",
+     "lease": "c",
+     "ok": true
+    },
+    {
+     "do": "bar",
+     "on": true
+    },
+    {
+     "do": "end_start",
+     "lease": "c",
+     "ok": false
+    }
+   ]
+  }
+ ]
+}

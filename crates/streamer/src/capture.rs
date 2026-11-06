@@ -52,6 +52,11 @@ impl ScreenCast {
         source_head_paced(&self.src_fragment(), fps)
     }
 
+    /// The zero-copy (DMA-BUF only) head for this cast, see [`source_head_dmabuf`].
+    pub(crate) fn src_fragment_dmabuf(&self, fps: u32) -> String {
+        source_head_dmabuf(&self.src_fragment(), fps, source_rate_cap_on())
+    }
+
     /// Raw fd for `pipewiresrc fd=`. The fd stays owned by `self`.
     pub fn raw_fd(&self) -> i32 {
         self.fd.as_raw_fd()
@@ -176,7 +181,13 @@ fn probe_stream_size(fd: i32, node_id: u32) -> Option<(u32, u32)> {
         *seen_cb.lock().unwrap() = Some(size.ok_or_else(|| caps.map(|c| c.to_string()).unwrap_or_else(|| "no caps".into())));
         gst::PadProbeReturn::Remove
     });
-    if !crate::call::set_state_bounded(pipeline.upcast_ref(), gst::State::Playing, 6000, "share size probe") {
+    // round 9: the probe is a capture start like every other — under a lease (refused while watching), gated at its
+    // source (leased_play)
+    let Some(lease) = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None) else {
+        eprintln!("[capture] size probe: watching — not started");
+        return None;
+    };
+    if !crate::call::leased_play(&lease, &pipeline, 6000, "share size probe") {
         eprintln!("[capture] size probe: the probe pipeline did not start");
         crate::call::set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "share size probe");
         return None;
@@ -208,6 +219,25 @@ fn probe_stream_size(fd: i32, node_id: u32) -> Option<(u32, u32)> {
 /// Whether share capture heads carry the frame-rate cap: on unless TINHAT_SHARE_NO_RATE_CAP is set (to anything).
 pub(crate) fn source_rate_cap_on() -> bool {
     std::env::var_os("TINHAT_SHARE_NO_RATE_CAP").is_none()
+}
+
+/// 12.1.9 (SHARE-GAME-LAG): the zero-copy capture is opt-in for the A/B while it is proven on real desktops:
+/// TINHAT_SHARE_DMABUF=1 turns it on.
+pub(crate) fn share_dmabuf_on() -> bool {
+    std::env::var("TINHAT_SHARE_DMABUF").map(|v| v == "1").unwrap_or(false)
+}
+
+/// The zero-copy head: like [`source_head_with_cap`], but it accepts ONLY the compositor's DMA-BUF (`memory:DMABuf`),
+/// capped first, then uncapped. No shm structure on purpose: a compositor that can't hand over a DMA-BUF must make this
+/// candidate FAIL (no first frame), so the share falls back to the CUDA path instead of uploading a full-size shm frame
+/// into GL, which would cost what the CUDA path costs and save nothing.
+pub(crate) fn source_head_dmabuf(head: &str, fps: u32, cap: bool) -> String {
+    if fps == 0 || !cap {
+        return format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(memory:DMABuf)\"");
+    }
+    format!(
+        "{head} ! capsfilter name=ratecap caps=\"video/x-raw(memory:DMABuf),max-framerate=(fraction){fps}/1; video/x-raw(memory:DMABuf)\""
+    )
 }
 
 /// The app's head: [`source_head_with_cap`] with the cap on unless switched off.

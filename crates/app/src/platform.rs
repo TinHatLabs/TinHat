@@ -475,9 +475,76 @@ pub(crate) fn hard_exit(code: i32) -> ! {
 /// before QGuiApplication). Linux: point GStreamer's CUDA filters at a bundled NVRTC (below).
 #[cfg(not(windows))]
 pub(crate) fn early_startup() {
+    cuda_perf_boost_env();
     if std::path::Path::new("/.flatpak-info").exists() {
         use_bundled_nvrtc(std::path::Path::new("/app/lib"));
     }
+}
+
+/// What the app did about NVIDIA's CUDA performance boost at startup (logged after the banner, see
+/// [`cuda_perf_boost_note`]).
+#[cfg(not(windows))]
+static CUDA_PERF_BOOST: std::sync::OnceLock<CudaPerfBoost> = std::sync::OnceLock::new();
+
+#[cfg(not(windows))]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum CudaPerfBoost {
+    /// We set CUDA_DISABLE_PERF_BOOST=1.
+    Disabled,
+    /// The user's own CUDA_DISABLE_PERF_BOOST value, left alone.
+    UserSet(String),
+    /// TINHAT_CUDA_PERF_BOOST=1: the driver's default boost is kept.
+    Kept,
+}
+
+/// 12.1.9 (SHARE-GAME-LAG, stream-perf 2026-11-03): the decision, pure. `user_value` = CUDA_DISABLE_PERF_BOOST as
+/// found, `keep` = TINHAT_CUDA_PERF_BOOST=1.
+#[cfg(not(windows))]
+pub(crate) fn cuda_perf_boost_plan(user_value: Option<&std::ffi::OsStr>, keep: Option<&std::ffi::OsStr>) -> CudaPerfBoost {
+    if let Some(v) = user_value {
+        return CudaPerfBoost::UserSet(v.to_string_lossy().into_owned());
+    }
+    if keep.is_some_and(|v| v == "1") {
+        return CudaPerfBoost::Kept;
+    }
+    CudaPerfBoost::Disabled
+}
+
+/// 12.1.9: turn off NVIDIA's CUDA performance boost for this process (Linux driver env CUDA_DISABLE_PERF_BOOST=1).
+/// By default the driver lifts the GPU to a higher performance state whenever a process does ANY CUDA work: every
+/// NVENC encode (the camera, a share) and every CUDA scale here is CUDA work. Measured on an NVIDIA laptop GPU with a
+/// GPU-bound game at its power limit (share claude/tinhat-desktop/SHARE-GAME-LAG/, stream-perf 2026-11-03): a 4 KB
+/// CUDA memset 30 times a second, an NVENC camera, or a share each cost the game 23-27 % of its frame rate, because the
+/// lifted state (P1, higher memory clock) spends the power budget the game's clocks needed; light titles that don't
+/// use the whole GPU kept their rate. With the boost off the same encodes cost 0-4 % and the GPU stayed in the game's
+/// state. Must run before anything initialises CUDA (gst::init loads nvcodec, which calls cuInit): early_startup, at
+/// the top of the synchronous main(), before any thread exists (same rule as use_bundled_nvrtc below).
+/// A user's own CUDA_DISABLE_PERF_BOOST wins; TINHAT_CUDA_PERF_BOOST=1 keeps the driver's default.
+#[cfg(not(windows))]
+fn cuda_perf_boost_env() {
+    let plan = cuda_perf_boost_plan(
+        std::env::var_os("CUDA_DISABLE_PERF_BOOST").as_deref(),
+        std::env::var_os("TINHAT_CUDA_PERF_BOOST").as_deref(),
+    );
+    if plan == CudaPerfBoost::Disabled {
+        std::env::set_var("CUDA_DISABLE_PERF_BOOST", "1");
+    }
+    let _ = CUDA_PERF_BOOST.set(plan);
+}
+
+/// The log line for [`cuda_perf_boost_env`]'s decision (None before early_startup ran).
+#[cfg(not(windows))]
+pub(crate) fn cuda_perf_boost_note() -> Option<String> {
+    // the driver honours the variable from 580 on; say which one this is (none = no NVIDIA kernel module)
+    let driver = nvidia_driver_version().unwrap_or_else(|| "none".into());
+    Some(match CUDA_PERF_BOOST.get()? {
+        CudaPerfBoost::Disabled => format!(
+            "[gpu] requested no CUDA performance boost (CUDA_DISABLE_PERF_BOOST=1, NVIDIA driver {driver}): encodes and GPU \
+             scaling should not lift the GPU's power state under a game (TINHAT_CUDA_PERF_BOOST=1 keeps the driver default)"
+        ),
+        CudaPerfBoost::UserSet(v) => format!("[gpu] CUDA_DISABLE_PERF_BOOST={v:?} set by the user, left as is (NVIDIA driver {driver})"),
+        CudaPerfBoost::Kept => format!("[gpu] CUDA performance boost kept (TINHAT_CUDA_PERF_BOOST=1, NVIDIA driver {driver})"),
+    })
 }
 
 /// 12.1.2: GPU scaling for shares in the Flatpak. The runtime's nvcodec plugin registers cudaupload/cudadownload, but
@@ -546,6 +613,25 @@ fn bundled_nvrtc(lib_dir: &std::path::Path) -> Option<std::path::PathBuf> {
         })
         .max_by_key(|(major, _)| *major)
         .map(|(_, p)| p)
+}
+
+#[cfg(all(test, not(windows)))]
+mod cuda_perf_boost_tests {
+    use super::{cuda_perf_boost_plan, CudaPerfBoost};
+    use std::ffi::OsStr;
+
+    #[test]
+    fn perf_boost_is_turned_off_unless_the_user_decided() {
+        assert_eq!(cuda_perf_boost_plan(None, None), CudaPerfBoost::Disabled);
+        assert_eq!(cuda_perf_boost_plan(None, Some(OsStr::new("0"))), CudaPerfBoost::Disabled, "only 1 keeps the boost");
+        assert_eq!(cuda_perf_boost_plan(None, Some(OsStr::new("1"))), CudaPerfBoost::Kept);
+        // the user's own value wins over both, even 0
+        assert_eq!(cuda_perf_boost_plan(Some(OsStr::new("0")), None), CudaPerfBoost::UserSet("0".into()));
+        assert_eq!(cuda_perf_boost_plan(Some(OsStr::new("1")), Some(OsStr::new("1"))), CudaPerfBoost::UserSet("1".into()));
+        // an empty value is still the user's (we don't second-guess it)
+        assert_eq!(cuda_perf_boost_plan(Some(OsStr::new("")), None), CudaPerfBoost::UserSet(String::new()));
+        assert_eq!(cuda_perf_boost_plan(None, Some(OsStr::new(""))), CudaPerfBoost::Disabled);
+    }
 }
 
 #[cfg(all(test, not(windows)))]

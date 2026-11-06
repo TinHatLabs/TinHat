@@ -1,0 +1,2282 @@
+{
+ "version": 1,
+ "note": "Pad Watch 12.1.7 state table (share claude/tinhat-pad/WATCH-1217/STATE-TABLE.md). Identical in tinhat-web src/features/calls/watchsession.cases.json and the desktop repo (Tin Hat desktop) crates/app/src/watchsession.cases.json.",
+ "cases": [
+  {
+   "name": "R01 idle Join press -> normal join, capture open",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R02 idle Watch press -> watch join, capture barred",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R03 watching A, Join press on A -> nothing changes, still watching",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "live",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R04 watching A, Join press on B while live -> refused, still watching",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressJoin",
+     "room": "B",
+     "phase": "live",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R05 normal call A, Watch press -> refused, still a normal call",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    },
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "live",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R06 watching A, Watch press while connecting -> refused",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "connecting",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R07 watching A, recoverable drop -> recovery is a watch join",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "r"
+    },
+    {
+     "do": "startJoin",
+     "of": "r",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R08 normal A, recoverable drop -> recovery is a normal join",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "r"
+    },
+    {
+     "do": "startJoin",
+     "of": "r",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R09 ESCAPE web: watching A, drop, Leave during teardown -> recovery aborts, bar stays",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R10 ESCAPE desktop: watching A, drop, Join press on B during teardown -> B queued normal, A's recovery aborts",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "pressJoin",
+     "room": "B",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": false
+     },
+     "save": "b",
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "join",
+      "room": "B",
+      "watch": false
+     },
+     "save": "b2"
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "startJoin",
+     "of": "b2",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R11 ESCAPE desktop: watching A, drop, switch to B during teardown -> B queued normal, recovery aborts",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "pressSwitch",
+     "room": "B",
+     "phase": "tearing",
+     "cur": "A",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "join",
+      "room": "B",
+      "watch": false
+     },
+     "save": "b"
+    },
+    {
+     "do": "startJoin",
+     "of": "b",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R12 watching A, drop, recovery runs BEFORE the queued press is joined -> still aborts",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "pressJoin",
+     "room": "B",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "join",
+      "room": "B",
+      "watch": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R13 watching A, drop, Watch press on B during teardown -> B queued as a watch join",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "pressWatch",
+     "room": "B",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": true
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "join",
+      "room": "B",
+      "watch": true
+     },
+     "save": "b"
+    },
+    {
+     "do": "startJoin",
+     "of": "b",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R14 watching A, drop, Join press on A during teardown -> a normal join of A (a press), recovery aborts",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "A",
+      "watch": false
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "b"
+    },
+    {
+     "do": "startJoin",
+     "of": "b",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R15 watching A, Talk here -> capture open, still the same episode",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "talk",
+     "epIs": "a",
+     "want": true,
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R16 watching A, Talk here, drop -> recovery is a normal join of the same episode",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "talk",
+     "epIs": "a",
+     "want": true
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "epIs": "a",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "r"
+    },
+    {
+     "do": "startJoin",
+     "of": "r",
+     "epIs": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R17 watching A, Stop watching (Leave) -> bar stays until the next normal join",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    },
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "n"
+    },
+    {
+     "do": "startJoin",
+     "of": "n",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R18 P2 web: watching A, kicked -> switch/Answer into A is a normal join",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": false,
+     "ticket": false,
+     "save": "t"
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "pressSwitch",
+     "room": "A",
+     "phase": "idle",
+     "cur": "A",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "n"
+    },
+    {
+     "do": "startJoin",
+     "of": "n",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R19 watching A, the rejoin gives up -> Try again (a press) is a normal join",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "r"
+    },
+    {
+     "do": "startJoin",
+     "of": "r",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "gaveUp"
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "n"
+    },
+    {
+     "do": "startJoin",
+     "of": "n",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R20 watching A live, switch to A -> nothing changes",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressSwitch",
+     "room": "A",
+     "phase": "live",
+     "cur": "A",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R21 watching A connecting, switch to A -> nothing changes",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "pressSwitch",
+     "room": "A",
+     "phase": "connecting",
+     "cur": "A",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R22 watching A live, switch to B -> leave A then a normal join of B; A's late drop recovers nothing",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressSwitch",
+     "room": "B",
+     "phase": "live",
+     "cur": "A",
+     "want": {
+      "kind": "leave-then-join",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": false
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "join",
+      "room": "B",
+      "watch": false
+     },
+     "save": "b"
+    },
+    {
+     "do": "startJoin",
+     "of": "b",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R23 watching A live, switch to B, Leave during the teardown -> nothing joins",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressSwitch",
+     "room": "B",
+     "phase": "live",
+     "cur": "A",
+     "want": {
+      "kind": "leave-then-join",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R24 reload rejoin of a watch -> a watch join",
+   "steps": [
+    {
+     "do": "reloadRejoin",
+     "room": "A",
+     "watching": true,
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R25 reload rejoin of a normal call -> a normal join",
+   "steps": [
+    {
+     "do": "reloadRejoin",
+     "room": "A",
+     "watching": false,
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R26 reload rejoin while busy -> nothing",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    },
+    {
+     "do": "reloadRejoin",
+     "room": "A",
+     "watching": true,
+     "phase": "live",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R27 watching A, drop, session lost -> no recovery, nothing queued",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "sessionLost",
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    }
+   ]
+  },
+  {
+   "name": "R28 call-host sheet go-ahead for a watch join -> a watch join",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     }
+    },
+    {
+     "do": "resume",
+     "room": "A",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "r"
+    },
+    {
+     "do": "startJoin",
+     "of": "r",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R29 call-host sheet go-ahead after Leave -> nothing joins",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "resume",
+     "room": "A",
+     "want": {
+      "kind": "abort"
+     }
+    }
+   ]
+  },
+  {
+   "name": "R30 call-host sheet go-ahead after a Join press elsewhere -> not the watch episode",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "pressJoin",
+     "room": "B",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "resume",
+     "room": "A",
+     "want": {
+      "kind": "abort"
+     }
+    }
+   ]
+  },
+  {
+   "name": "R31 a watch join in flight whose episode ended never starts",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": null,
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R32 a stale normal join never clears the bar of a newer watch episode",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "n"
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "w"
+    },
+    {
+     "do": "startJoin",
+     "of": "w",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "startJoin",
+     "of": "n",
+     "want": null,
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R33 watching A, two drops in a row -> both recoveries are watch joins",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "r"
+    },
+    {
+     "do": "startJoin",
+     "of": "r",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t2"
+    },
+    {
+     "do": "recover",
+     "ticket": "t2",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "r2"
+    },
+    {
+     "do": "startJoin",
+     "of": "r2",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R34 Watch press queued behind a normal call's teardown -> a watch join when it ends",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "A",
+      "watch": true
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "w"
+    },
+    {
+     "do": "startJoin",
+     "of": "w",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R35 Join press queued behind a teardown, then Leave -> nothing joins",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "pressJoin",
+     "room": "B",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R36 Talk here while a join is queued -> refused",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "pressWatch",
+     "room": "B",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": true
+     }
+    },
+    {
+     "do": "talk",
+     "want": false,
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R37 a watch join that fails -> the episode ends; the call-host go-ahead finds nothing",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "gaveUp"
+    },
+    {
+     "do": "resume",
+     "room": "A",
+     "want": {
+      "kind": "abort"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R38 watching A, drop, Join press on B, then Leave -> nothing joins, nothing recovers",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "pressJoin",
+     "room": "B",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "abort"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R39 Talk here when not watching -> nothing",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    },
+    {
+     "do": "talk",
+     "want": false,
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R40 a press with no room -> nothing",
+   "steps": [
+    {
+     "do": "pressJoin",
+     "room": "",
+     "phase": "idle",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "pressWatch",
+     "room": "",
+     "phase": "idle",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "pressSwitch",
+     "room": "",
+     "phase": "idle",
+     "cur": "",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": null,
+     "want": {
+      "kind": "abort"
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R41 watching A, drop, Talk here during the teardown (ticket taken before Talk) -> the recovery is a normal join",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "talk",
+     "epIs": "a",
+     "want": true,
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": false
+     },
+     "save": "r"
+    },
+    {
+     "do": "startJoin",
+     "of": "r",
+     "epIs": "a",
+     "want": {
+      "watch": false
+     },
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R42 watching A, Leave, the teardown done -> settled: the bar opens (nothing of the watch call runs)",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     },
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "settled",
+     "want": true,
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "R43 watching A, a drop recovering -> not settled: the bar stays closed",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     },
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "dropped",
+     "room": "A",
+     "recoverable": true,
+     "ticket": true,
+     "save": "t"
+    },
+    {
+     "do": "teardownDone",
+     "want": {
+      "kind": "none"
+     }
+    },
+    {
+     "do": "settled",
+     "want": false,
+     "check": {
+      "bar": true,
+      "watching": true
+     }
+    },
+    {
+     "do": "recover",
+     "ticket": "t",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "R44 a watch join that fails, then settled -> the bar opens; a queued press is never settled away",
+   "steps": [
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "a"
+    },
+    {
+     "do": "startJoin",
+     "of": "a",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "gaveUp"
+    },
+    {
+     "do": "settled",
+     "want": true,
+     "check": {
+      "bar": false,
+      "watching": false
+     }
+    },
+    {
+     "do": "pressWatch",
+     "room": "A",
+     "phase": "idle",
+     "want": {
+      "kind": "join",
+      "room": "A",
+      "watch": true
+     },
+     "save": "b"
+    },
+    {
+     "do": "startJoin",
+     "of": "b",
+     "want": {
+      "watch": true
+     }
+    },
+    {
+     "do": "pressLeave",
+     "want": {
+      "kind": "leave"
+     }
+    },
+    {
+     "do": "pressJoin",
+     "room": "B",
+     "phase": "tearing",
+     "want": {
+      "kind": "queue",
+      "room": "B",
+      "watch": false
+     }
+    },
+    {
+     "do": "settled",
+     "want": false,
+     "check": {
+      "bar": true,
+      "watching": false
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -400,6 +400,7 @@ Kirigami.ApplicationWindow {
     property alias selfPip: core.selfPip
     property alias selfPipEffective: core.selfPipEffective   // 10.1 (TH-CALL-24)
     property alias recOnlyHiddenIds: core.recOnlyHiddenIds
+    property alias altCameraIds: core.altCameraIds
     property alias visibleShareIds: core.visibleShareIds
     property alias watchedShareIds: core.watchedShareIds
     property alias liveCallParts: core.liveCallParts
@@ -779,7 +780,8 @@ Kirigami.ApplicationWindow {
     // everything is drawn again at the new resolution). Ctrl+= / Ctrl++ / Ctrl+- / Ctrl+0 (the Shortcuts below, the
     // actions app.zoom.*) and Settings → Appearance → Size (the slider) both go through setUiScale.
     property int uiScale: settings.uiScalePercent()
-    readonly property bool uiScaleLiveCapable: settings.uiScaleLiveCapable()   // false: a restart-only build (Settings says so)
+    // false: a restart-only build / platform (Settings says so); 12.1.9: the Wayland opt-in changes it (setUiScaleLiveOptIn)
+    property bool uiScaleLiveCapable: settings.uiScaleLiveCapable()
     property bool uiScalePending: settings.uiScalePending(uiScale)   // true: this Qt can't change it live, it applies at the next start
     // "Restart after the call" (the banner above): restart once the call is over, only while the size still waits
     property bool uiScaleRestartAfterCall: false
@@ -829,6 +831,19 @@ Kirigami.ApplicationWindow {
         settings.applyUiScale(n)
         root.uiScalePending = settings.uiScalePending(n)
     }
+    /** 12.1.9: Settings → Appearance "Change size instantly (experimental)". Turning it on applies a size that was waiting
+     *  for a restart at once (that is what the setting is for); turning it off leaves the size as shown. */
+    function setUiScaleLiveOptIn(on) {
+        root.uiScaleLiveCapable = settings.setUiScaleLiveOptIn(on)
+        root.uiScalePending = settings.uiScalePending(root.uiScale)
+        if (on && root.uiScaleLiveCapable) {
+            console.log("[ui-scale] the experimental live change is on")
+            settings.applyUiScale(root.uiScale)
+            root.uiScalePending = settings.uiScalePending(root.uiScale)
+        } else if (!on) {
+            console.log("[ui-scale] the experimental live change is off: new sizes apply at the next start")
+        }
+    }
     /** A key press (or the palette): dir > 0 bigger, < 0 smaller, 0 = 100 %; the toast says the size. */
     function zoomStep(dir) {
         var prev = root.uiScale
@@ -858,6 +873,7 @@ Kirigami.ApplicationWindow {
     function isTunedIn(id) { return core.isTunedIn(id) }
     function isRecOnlyHidden(id) { return core.isRecOnlyHidden(id) }
     function isTileHidden(id) { return core.isTileHidden(id) }
+    function isTileOut(id) { return core.isTileOut(id) }
     function isGameChat(identity) { return core.isGameChat(identity) }
     function isGameChatMuted(identity) { return core.isGameChatMuted(identity) }
     function isGameChatMxid(mxid) { return core.isGameChatMxid(mxid) }
@@ -1066,7 +1082,7 @@ Kirigami.ApplicationWindow {
     function _cqW() { return core._cqW() }
     function _cqH() { return core._cqH() }
     function _cqSim() { return core._cqSim() }
-    function tileAudioLevel(participant, isSelf) { return core.tileAudioLevel(participant, isSelf) }
+    function tileAudioLevel(participant, isSelf, selfMuted) { return core.tileAudioLevel(participant, isSelf, selfMuted) }
     function localpart(mxid) { return core.localpart(mxid) }
     function senderColor(mxid) { return core.senderColor(mxid) }
     function dayLabel(ms) { return core.dayLabel(ms) }
@@ -3086,9 +3102,17 @@ Kirigami.ApplicationWindow {
         repeat: true
         running: login.autoJoinRoom.length > 0
         property bool done: false
+        property int waited: 0
         onTriggered: {
             if (done) { running = false; return }
             if (login.loggedIn && login.autoJoinRoom.length > 0) {
+                // 12.1.9 (BACKLOG 12.1.4 note, assembly-044 AV1 run 1): right after a fresh sign-in the first sync may not
+                // have the room yet ("[call] join failed: Room not found") — wait for it in the room list (up to ~30 s)
+                if (String(login.roomsJson || "").indexOf("\"" + login.autoJoinRoom + "\"") < 0 && waited < 20) {
+                    waited++
+                    if (waited === 1) console.log("[autojoin] waiting for the first sync to list " + login.autoJoinRoom)
+                    return
+                }
                 done = true
                 root.openRoomId(login.autoJoinRoom)
                 callctl.joinCallPressed(login.autoJoinRoom)
@@ -3880,7 +3904,9 @@ Kirigami.ApplicationWindow {
             r = { verified: login.verified, inCall: root.mInCall, room: root.mCallRoomId, micMuted: callctl.micMuted, ptt: callctl.pushToTalk,
                   serverMuted: callctl.serverMuted, deaf: callctl.deafened, brb: !!afkCtl && afkCtl.localAfk === true,
                   playing: soundboardPanel ? String(soundboardPanel.playingUrl || "") : "", chips: root.mPadChips, padOn: padCtl.padOn, vol: v,
-                  watching: callctl.watching === true, noCapture: callctl.noCapture === true, recent: (root.mSbRecent || []).map(function (x) { return String(x.url || "") }) }
+                  watching: callctl.watching === true, noCapture: callctl.noCapture === true, recent: (root.mSbRecent || []).map(function (x) { return String(x.url || "") }),
+                  levels: String(callctl.audioLevels || "[]"), // round 11: the decoded per-track playback levels (lab gate: the watcher hears)
+                  tiles: String(callctl.videoTiles || "[]") } // PAD-PHONE Step A: the call tiles as drawn (lab gate: one tile per person)
         }
         // Pad QOL (2026-10-31): the Media Party and Watch by the same calls as their buttons (lab gates only)
         else if (s.do === "party-join") { watchCtl.joinParty(String(s.room || root.mCallRoomId)); r = "joined" }
@@ -3904,7 +3930,7 @@ Kirigami.ApplicationWindow {
         else if (s.do === "share-stop") { callctl.stopScreen(); r = "share-stop" }
         else if (s.do === "camera") { callctl.toggleCamera(); r = "camera" }
         else if (s.do === "sound") { soundboardCtl.playSound(String(s.room || root.mCallRoomId), String(s.url || "")); r = "sound" }
-        else if (s.do === "status") { r = { status: String(callctl.status), error: String(callctl.lastError || ""), sharing: callctl.sharing === true, camera: callctl.cameraOn === true, watching: callctl.watching === true, noCapture: callctl.noCapture === true, inCall: root.mInCall, room: root.mCallRoomId } }
+        else if (s.do === "status") { r = { status: String(callctl.status), error: String(callctl.lastError || ""), sharing: callctl.sharing === true, camera: callctl.cameraOn === true, watching: callctl.watching === true, noCapture: callctl.noCapture === true, inCall: root.mInCall, room: root.mCallRoomId, hangingUp: callctl.hangingUp === true, reconnecting: callctl.reconnecting === true, connecting: callctl.connecting === true, callFailed: callctl.callFailed === true } }
         else r = padWindow.drive(s)
         console.log("[paddrive] #" + n + " " + s.do + " -> " + (typeof r === "object" ? JSON.stringify(r) : String(r)) + " t=" + Date.now())
     }

@@ -72,6 +72,9 @@
 #include <cmath>
 #include <functional>
 #include <gst/video/video.h>
+#ifndef _WIN32
+#include "gl_current_guard.h" // 12.1.9: keep the render thread's current GstGL context alive
+#endif
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QGuiApplication>
@@ -987,6 +990,11 @@ int tinhat_video_attach(void *pipeline, const char *object_name) {
                        "item will render BLACK. The caller must rebuild_video_tile first.\n",
                        object_name, gst_element_state_get_name(cur));
         }
+#ifndef _WIN32
+        // Before the first bind into this window: keep the render thread's current GstGL
+        // context alive (crash 2026-11-04, see gl_current_guard.h).
+        tinhat_glguard::install(qw);
+#endif
         g_object_set(sink, "widget", video, nullptr);
         gst_object_unref(sink);
         qw->scheduleRenderJob(new SetPlaying(pipe, qw, 0), QQuickWindow::AfterRenderingStage);

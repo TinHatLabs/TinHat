@@ -265,7 +265,10 @@ fn main() -> Result<()> {
         }
     });
 
-    pipeline.set_state(gst::State::Playing)?;
+    anyhow::ensure!(
+        tinhat_streamer::leased_start(tinhat_streamer::capture_lease::Kind::Screen, &pipeline, 8000, "captest"),
+        "the capture did not start"
+    );
     eprintln!("[captest] PLAYING — counting frames into the appsink (this is what feeds libwebrtc)\n");
 
     let mut last = 0u64;

@@ -20,6 +20,14 @@ pub fn mxid_of(identity: &str) -> String {
     }
 }
 
+/// 12.1.9 (assembly-044 area 3 P2): is this call participant (an identity, or a fake call's bare mxid) the user
+/// `mxid`'s, by the string alone? The call menus' rule (AppCore.qml tileMxid / identityForMxid; the web's identity.ts
+/// isParticipantOf): `@a:h:8448:DEV` is `@a:h:8448`'s, never `@a:h`'s.
+#[allow(dead_code)] // the QML copy (AppCore.qml tileMxid) is what runs; this one carries the mirrored tests
+pub fn is_participant_of(participant: &str, mxid: &str) -> bool {
+    !mxid.is_empty() && (participant == mxid || mxid_of(participant) == mxid)
+}
+
 /// Users whose live call membership `(sender, device_id)` mints exactly this identity, deduped, in order.
 pub fn users_of_identity(identity: &str, sessions: &[(String, String)]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
@@ -145,5 +153,18 @@ mod tests {
         assert!(!record_excluded("é", &["@é:h".to_string()]));
         assert!(record_excluded("@é:h:ü", &["@é:h".to_string()]));
         assert_eq!(mxid_of(":"), ":");
+    }
+
+    #[test]
+    fn menu_participant_keeps_the_port() {
+        // 12.1.9: mirrored in the web's identity.test.ts ("menu: …")
+        assert!(is_participant_of("@a:h:8448:DEV", "@a:h:8448"));
+        assert!(!is_participant_of("@a:h:8448:DEV", "@a:h"));
+        assert!(is_participant_of("@a:h:PHONE", "@a:h"));
+        assert!(!is_participant_of("@a:h:PHONE", "@a:h:8448"));
+        assert!(is_participant_of("@a:h:DEV~watch-0123456789abcdef", "@a:h"));
+        assert!(is_participant_of("@a:h", "@a:h"));
+        assert!(!is_participant_of("@a:h:DEV", ""));
+        assert!(!is_participant_of("@ab:h:DEV", "@a:h"));
     }
 }
