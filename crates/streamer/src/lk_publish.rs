@@ -3446,9 +3446,10 @@ mod vp9_kf_iv_tests {
     }
 
     /// The patch carries exactly this predicate, the vectors' cap, both stamps the build gates grep for, the IV
-    /// allocator (domain || 64-bit counter, each value once, no wrap) behind makeIv, and the drop path; it moves only
-    /// sender IVs (decryptFrame untouched). The allocator's behaviour itself is tested by tests/tinhat_iv_test.cc
-    /// (run-tinhat-iv-test.sh: the header as shipped against real AES-GCM).
+    /// allocator (domain || 64-bit counter, each value once, no wrap) behind makeIv, and the drop path. Its only
+    /// receiver change is tinhat-iv-rx-v1: decryptFrame takes the IV from the UNESCAPED body (SplitRxTail), never
+    /// from the raw tail. The allocator and the split are tested by tests/tinhat_iv_test.cc (the header as shipped
+    /// against real AES-GCM); the receiver itself by tests/run-tinhat-rx-test.sh against the built archive.
     #[test]
     fn the_libwebrtc_patch_carries_the_same_rule() {
         let v = vectors();
@@ -3474,7 +3475,20 @@ mod vp9_kf_iv_tests {
         ] {
             assert!(p.lines().any(|l| l == line), "patch line missing: {line}");
         }
-        assert!(!p.contains("decryptFrame"), "the patch must stay sender-only");
+        assert!(p.contains("constexpr char kTinHatIvRxStamp[] = \"tinhat-iv-rx-v1\";"));
+        for line in [
+            "+  if (!tinhat::SplitRxTail(encrypted_buffer.data(), encrypted_buffer.size(), ivLength, tinhat::kGcmTagLen,",
+            "+  webrtc::Buffer iv(encrypted_buffer.data() + rx_tail.iv_off, rx_tail.iv_len);",
+            "+  webrtc::Buffer encrypted_payload(encrypted_buffer.data(), rx_tail.ct_len);",
+            "+  if (data_in.size() < static_cast<size_t>(unencrypted_bytes) + 2) {",
+            "-    iv[i] = data_in[data_in.size() - 2 - ivLength + i];",
+            "+  if (frameSize < 3) return false;",
+            "+  if (encrypted_buffer.size() < static_cast<size_t>(ivLength) + 2 + tinhat::kGcmTagLen) {",
+        ] {
+            assert!(p.lines().any(|l| l == line), "receiver line missing: {line}");
+        }
+        // the raw-tail IV read (upstream) is GONE: it is what broke every v1 H.264 frame for native receivers
+        assert!(!p.lines().any(|l| l.starts_with('+') && l.contains("data_in[data_in.size() - 2 - ivLength")));
         assert!(!p.contains("TINHAT_LAB_"), "lab knobs never go into the shipped patch");
     }
 

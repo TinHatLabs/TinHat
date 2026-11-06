@@ -92,7 +92,7 @@ src/third_party/llvm-build/Release+Asserts/bin/llvm-objcopy --redefine-syms="$PW
 
 # Every patch carries a grep-able stamp; an archive without them was built from
 # an unpatched (or older) tree and must never be linked.
-for stamp in tinhat-av1-e2ee-v2 tinhat-dav1d-fp-v1 tinhat-vp9-kf-iv-v1 tinhat-iv-v2; do
+for stamp in tinhat-av1-e2ee-v2 tinhat-dav1d-fp-v1 tinhat-vp9-kf-iv-v1 tinhat-iv-v2 tinhat-iv-rx-v1; do
   if ! grep -qaF "$stamp" "$ARTIFACTS_DIR/lib/libwebrtc.a"; then
     echo "FATAL: stamp $stamp missing from $ARTIFACTS_DIR/lib/libwebrtc.a (patch not applied?)" >&2
     exit 1

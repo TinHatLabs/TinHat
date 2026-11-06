@@ -28,7 +28,18 @@
  enum class EncryptOrDecrypt { kEncrypt = 0, kDecrypt };
  
  #define Success 0
-@@ -255,6 +269,20 @@
+@@ -229,7 +243,9 @@
+ #endif // RTC_ENABLE_H265
+ 
+ inline bool NeedsRbspUnescaping(const uint8_t* frameData, size_t frameSize) {
+-  for (size_t i = 0; i < frameSize - 3; ++i) {
++  // PATCH (Tin Hat) tinhat-iv-rx-v1: bounds check for bodies shorter than 3 bytes.
++  if (frameSize < 3) return false;
++  for (size_t i = 0; i + 3 < frameSize; ++i) {  // = upstream's bound (i < frameSize - 3)
+     if (frameData[i] == 0 && frameData[i + 1] == 0 && frameData[i + 2] == 3)
+       return true;
+   }
+@@ -255,6 +271,20 @@
    return ss.str();
  }
  
@@ -49,7 +60,7 @@
  uint8_t get_unencrypted_bytes(webrtc::TransformableFrameInterface* frame,
                                webrtc::FrameCryptorTransformer::MediaType type) {
    uint8_t unencrypted_bytes = 0;
-@@ -596,6 +624,60 @@
+@@ -596,6 +626,60 @@
    frame_trailer[0] = getIvSize();
    frame_trailer[1] = key_index_;
    webrtc::Buffer iv = makeIv(frame->GetSsrc(), frame->GetTimestamp());
@@ -110,7 +121,106 @@
  
    webrtc::Buffer payload(data_in.size() - unencrypted_bytes);
    for (size_t i = unencrypted_bytes; i < data_in.size(); i++) {
-@@ -918,21 +1000,16 @@
+@@ -726,11 +810,23 @@
+ 
+   uint8_t unencrypted_bytes = get_unencrypted_bytes(frame.get(), type_);
+ 
++  // PATCH (Tin Hat) tinhat-iv-rx-v1: bounds check, the frame must hold its clear header and the 2-byte trailer.
++  if (data_in.size() < static_cast<size_t>(unencrypted_bytes) + 2) {
++    RTC_LOG(LS_WARNING) << "FrameCryptorTransformer::decryptFrame() frame too short";
++    if (last_dec_error_ != FrameCryptionState::kDecryptionFailed) {
++      last_dec_error_ = FrameCryptionState::kDecryptionFailed;
++      onFrameCryptionStateChanged(last_dec_error_);
++    }
++    return;
++  }
++
+   webrtc::Buffer frame_header(unencrypted_bytes);
+   for (size_t i = 0; i < unencrypted_bytes; i++) {
+     frame_header[i] = data_in[i];
+   }
+ 
++  // The trailer is read raw here (key lookup, length check): it is never RBSP-escaped (api/crypto/tinhat_iv.h,
++  // "The receiver"), so these are the same bytes SplitRxTail reads from the unescaped body below.
+   webrtc::Buffer frame_trailer(2);
+   frame_trailer[0] = data_in[data_in.size() - 2];
+   frame_trailer[1] = data_in[data_in.size() - 1];
+@@ -773,10 +869,9 @@
+ 
+   auto key_set = key_handler->GetKeySet(key_index);
+ 
+-  webrtc::Buffer iv = webrtc::Buffer(ivLength);
+-  for (size_t i = 0; i < ivLength; i++) {
+-    iv[i] = data_in[data_in.size() - 2 - ivLength + i];
+-  }
++  // PATCH (Tin Hat) tinhat-iv-rx-v1: the IV is no longer read from the RAW tail here. For H.264/H.265 the sender
++  // escaped ciphertext || IV || trailer as one run, so an IV holding `00 00 [00-03]` arrives with a 0x03 inside it;
++  // it is taken from the UNESCAPED body below (SplitRxTail), together with the ciphertext.
+ 
+   // PATCH (Tin Hat) AV1 E2EE: drop the synthetic wrapper OBU prefix. It
+   // is not part of the ciphertext or the AAD, it only existed to keep the RTP
+@@ -787,8 +882,8 @@
+     const size_t offset = Av1WrapperCiphertextOffset(data_in);
+     // IV + 2-byte trailer + 16-byte GCM tag must fit after the wrapper;
+     // anything less is not one of our frames.
+-    if (offset == 0 ||
+-        data_in.size() < offset + static_cast<size_t>(ivLength) + 2 + 16) {
++    if (offset == 0 || offset >= data_in.size() ||
++        data_in.size() - offset < static_cast<size_t>(ivLength) + 2 + 16) {
+       RTC_LOG(LS_WARNING)
+           << "FrameCryptorTransformer::decryptFrame() malformed AV1 wrapper";
+       if (last_dec_error_ != FrameCryptionState::kDecryptionFailed) {
+@@ -805,6 +900,17 @@
+     encrypted_buffer[i - skip_bytes] = data_in[i];
+   }
+ 
++  // PATCH (Tin Hat) tinhat-iv-rx-v1: a body too short for tag || IV || trailer is refused BEFORE any parsing
++  // (unescaping only removes bytes, so it can't become long enough). SplitRxTail checks again after unescaping.
++  if (encrypted_buffer.size() < static_cast<size_t>(ivLength) + 2 + tinhat::kGcmTagLen) {
++    RTC_LOG(LS_WARNING) << "FrameCryptorTransformer::decryptFrame() frame body too short";
++    if (last_dec_error_ != FrameCryptionState::kDecryptionFailed) {
++      last_dec_error_ = FrameCryptionState::kDecryptionFailed;
++      onFrameCryptionStateChanged(last_dec_error_);
++    }
++    return;
++  }
++
+   if (FrameIsH264(frame.get(), type_) &&
+       NeedsRbspUnescaping(encrypted_buffer.data(), encrypted_buffer.size())) {
+     encrypted_buffer.SetData(
+@@ -818,10 +924,28 @@
+ #endif // RTC_ENABLE_H265
+   }
+ 
+-  webrtc::Buffer encrypted_payload(encrypted_buffer.size() - ivLength - 2);
+-  for (size_t i = 0; i < encrypted_payload.size(); i++) {
+-    encrypted_payload[i] = encrypted_buffer[i];
++  // PATCH (Tin Hat) tinhat-iv-rx-v1: ciphertext, IV and trailer from the unescaped body = exactly what the sender
++  // sealed, whatever IV layout it used (upstream, tinhat-iv-v1, tinhat-iv-v2). A body too short for tag || IV ||
++  // trailer is refused.
++  static const bool log_rx_stamp_once = [] {
++    RTC_LOG(LS_INFO) << "E2EE receiver reads the IV after unescaping: " << tinhat::kTinHatIvRxStamp;
++    return true;
++  }();
++  (void)log_rx_stamp_once;
++  tinhat::RxTail rx_tail;
++  if (!tinhat::SplitRxTail(encrypted_buffer.data(), encrypted_buffer.size(), ivLength, tinhat::kGcmTagLen,
++                           &rx_tail) ||
++      rx_tail.key_index != key_index) {
++    RTC_LOG(LS_WARNING) << "FrameCryptorTransformer::decryptFrame() malformed frame body";
++    if (last_dec_error_ != FrameCryptionState::kDecryptionFailed) {
++      last_dec_error_ = FrameCryptionState::kDecryptionFailed;
++      onFrameCryptionStateChanged(last_dec_error_);
++    }
++    return;
+   }
++  webrtc::Buffer iv(encrypted_buffer.data() + rx_tail.iv_off, rx_tail.iv_len);
++
++  webrtc::Buffer encrypted_payload(encrypted_buffer.data(), rx_tail.ct_len);
+ 
+   webrtc::Buffer tag(encrypted_payload.data() + encrypted_payload.size() - 16, 16);
+   std::vector<uint8_t> buffer;
+@@ -918,21 +1042,16 @@
  }
  
  webrtc::Buffer FrameCryptorTransformer::makeIv(uint32_t ssrc, uint32_t timestamp) {
@@ -142,7 +252,7 @@
  }
  
  uint8_t FrameCryptorTransformer::getIvSize() {
-@@ -976,6 +1053,9 @@
+@@ -976,6 +1095,9 @@
    auto timestamp = Timestamp::Millis(webrtc::TimeMillis())
                         .ms();   // use current time millis as timestamp
    auto iv = makeIv(timestamp);  // for data packets, ssrc is always 0
@@ -152,7 +262,7 @@
  
    std::vector<uint8_t> buffer;
    webrtc::Buffer payload(data.data(), data.size());
-@@ -1081,19 +1161,13 @@
+@@ -1081,19 +1203,13 @@
  }
  
  webrtc::Buffer DataPacketCryptor::makeIv(uint32_t timestamp) {
@@ -193,11 +303,12 @@
  
 --- /dev/null
 +++ b/api/crypto/tinhat_iv.h
-@@ -0,0 +1,134 @@
+@@ -0,0 +1,169 @@
 +/*
-+ * PATCH (Tin Hat) — tinhat_iv.h: the sender's AES-GCM IV allocator (stamp tinhat-iv-v2) and the VP9 keyframe IV
-+ * step (stamp tinhat-vp9-kf-iv-v1). Header-only and std-only on purpose: the desktop repo's
-+ * vendor/webrtc-sys/libwebrtc-patches/tests/tinhat_iv_test.cc compiles THIS file against real AES-GCM.
++ * PATCH (Tin Hat) — tinhat_iv.h: the sender's AES-GCM IV allocator (stamp tinhat-iv-v2), the VP9 keyframe IV
++ * step (stamp tinhat-vp9-kf-iv-v1) and the receiver's trailer split (stamp tinhat-iv-rx-v1, at the end).
++ * Header-only and std-only on purpose: the desktop repo's vendor/webrtc-sys/libwebrtc-patches/tests/tinhat_iv_test.cc
++ * compiles THIS file against real AES-GCM.
 + *
 + * IV = domain (4 bytes) || counter (8 bytes), 12 bytes, EVERY BYTE NONZERO and byte 0 >= 4 (stamp tinhat-iv-v2; see
 + * "H.264-safe layout" below). One allocator per process (ProcessIvAllocator,
@@ -224,6 +335,7 @@
 +#define API_CRYPTO_TINHAT_IV_H_
 +
 +#include <array>
++#include <cstddef>
 +#include <cstdint>
 +#include <mutex>
 +#include <optional>
@@ -324,6 +436,39 @@
 +
 +// The process's one allocator (frame_crypto_transformer.cc).
 +IvAllocator& ProcessIvAllocator();
++
++// ---- The receiver (stamp tinhat-iv-rx-v1, 12.1.10) ----
++// Upstream decryptFrame read the IV from the RAW frame tail and only then RBSP-unescaped the rest (H.264/H.265). A
++// sender escapes ciphertext || IV || trailer as one run, so any IV holding `00 00 [00-03]` (the 12.1.8 candidate's
++// v1 layout on every frame; upstream's layout rarely) arrived with a 0x03 inside it and the raw read was shifted.
++// The receiver now unescapes the whole body FIRST and takes ciphertext, IV and trailer from the unescaped bytes,
++// which are exactly what the sender sealed, whatever IV it chose (upstream, v1, v2). The 2-byte trailer itself is
++// never escaped (an escape before T0 = ivLength needs T0 <= 3; before T1 it needs (IV[last], T0) = 00 00), so
++// reading it raw first (key lookup, length check) and from the unescaped tail later gives the same bytes.
++constexpr char kTinHatIvRxStamp[] = "tinhat-iv-rx-v1";
++constexpr size_t kGcmTagLen = 16;
++
++struct RxTail {
++  size_t ct_len = 0;      // ciphertext incl. the GCM tag: body[0, ct_len)
++  size_t iv_off = 0;      // IV: body[iv_off, iv_off + iv_len)
++  uint8_t iv_len = 0;
++  uint8_t key_index = 0;
++};
++
++// Splits a received BODY (everything after the clear header; for AV1 after the wrapper; for H.264/H.265 ALREADY
++// unescaped). Refuses (false) a body whose trailer names another IV length or that is too short to hold
++// ciphertext >= min_ct_len (the GCM tag) || IV || trailer (bounds check).
++inline bool SplitRxTail(const uint8_t* body, size_t n, uint8_t want_iv_len, size_t min_ct_len, RxTail* out) {
++  if (body == nullptr || n < 2) return false;
++  const uint8_t iv_len = body[n - 2];
++  if (iv_len != want_iv_len) return false;
++  if (n < static_cast<size_t>(iv_len) + 2 + min_ct_len) return false;
++  out->iv_len = iv_len;
++  out->key_index = body[n - 1];
++  out->iv_off = n - 2 - iv_len;
++  out->ct_len = out->iv_off;
++  return true;
++}
 +
 +}  // namespace tinhat
 +

@@ -107,7 +107,8 @@ std::vector<uint8_t> seal_aad(const uint8_t key[16], const uint8_t* iv, const st
 // One E2EE H.264 frame the way the patched libwebrtc sends it and EVERY receiver in users' hands reads it (the
 // upstream decryptFrame: trailer + IV from the RAW tail, then ParseRbsp over the rest, then GCM). Returns true when
 // the receiver gets the plaintext back.
-bool h264_round_trip(const uint8_t key[16], const tinhat::Iv& iv, std::mt19937& rng) {
+// hardened = the tinhat-iv-rx-v1 receiver (unescape the whole body FIRST, then tinhat::SplitRxTail as shipped).
+bool h264_round_trip(const uint8_t key[16], const tinhat::Iv& iv, std::mt19937& rng, bool hardened = false) {
   std::vector<uint8_t> frame = {0, 0, 0, 1, 0x65};  // Annex B start code + IDR NAL header
   const size_t n = 40 + rng() % 400;
   for (size_t i = 0; i < n; i++) frame.push_back(rng() % 7 == 0 ? 0 : static_cast<uint8_t>(rng()));
@@ -120,6 +121,14 @@ bool h264_round_trip(const uint8_t key[16], const tinhat::Iv& iv, std::mt19937& 
   std::vector<uint8_t> wire = aad;
   const std::vector<uint8_t> esc = write_rbsp(body);
   wire.insert(wire.end(), esc.begin(), esc.end());
+  if (hardened) {
+    std::vector<uint8_t> enc(wire.begin() + clear, wire.end());
+    if (needs_unescape(enc)) enc = parse_rbsp(enc);
+    tinhat::RxTail t;
+    if (!tinhat::SplitRxTail(enc.data(), enc.size(), 12, tinhat::kGcmTagLen, &t)) return false;
+    std::vector<uint8_t> ct(enc.begin(), enc.begin() + t.ct_len), back;
+    return open_gcm(key, enc.data() + t.iv_off, aad, ct, &back) && back == payload;
+  }
   // the receiver (upstream decryptFrame)
   const uint8_t iv_len = wire[wire.size() - 2];
   if (iv_len != 12) return false;
@@ -388,6 +397,49 @@ int main() {
       v1_ok += h264_round_trip(key, iv, rng);
     }
     check(v1_ok == 0, "control: the 12.1.8 v1 layout fails the same round trip on every frame (" + std::to_string(v1_ok) + "/" + std::to_string(n) + " came back)");
+  }
+  // 10. The hardened receiver (tinhat-iv-rx-v1): unescape first, SplitRxTail as shipped. Every layout comes back,
+  //     v1 included (the frames v1 senders put on the wire were always well-formed); short bodies are refused.
+  {
+    std::mt19937 rng(1219);
+    uint8_t key[16];
+    RAND_bytes(key, 16);
+    tinhat::IvAllocator a(0xa5a5a5a5u, 4228250625ull - 2000);
+    int v2_ok = 0, v1_ok = 0, planted_ok = 0, n = 20000;
+    for (int i = 0; i < n; i++) v2_ok += h264_round_trip(key, *a.Next(), rng, true);
+    for (int i = 0; i < n; i++) {
+      tinhat::Iv iv;
+      const uint64_t c = (static_cast<uint64_t>(rng() & 0xff) << 32) | rng();
+      for (int k = 0; k < 4; k++) iv[k] = static_cast<uint8_t>(0x5a5a5a5au >> (24 - 8 * k));
+      for (int k = 0; k < 8; k++) iv[4 + k] = static_cast<uint8_t>(c >> (56 - 8 * k));
+      v1_ok += h264_round_trip(key, iv, rng, true);
+    }
+    int planted_escaped = 0;
+    for (int i = 0; i < 1100; i++) {  // `00 00 b` (b <= 3) planted at every IV position
+      tinhat::Iv iv;
+      for (auto& b : iv) b = static_cast<uint8_t>(1 + rng() % 255);
+      const int p = i % 11;
+      iv[p] = iv[p + 1] = 0;
+      if (p + 2 < 12) { iv[p + 2] = static_cast<uint8_t>((i / 11) % 4); planted_escaped++; }
+      planted_ok += h264_round_trip(key, iv, rng, true);
+    }
+    check(v2_ok == n, "hardened receiver: v2 IVs " + std::to_string(v2_ok) + "/" + std::to_string(n));
+    check(v1_ok == n, "hardened receiver: the 12.1.8 v1 layout " + std::to_string(v1_ok) + "/" + std::to_string(n) + " (raw-tail receivers: 0)");
+    check(planted_ok == 1100, "hardened receiver: planted 00 00 [00-03] at every IV position " + std::to_string(planted_ok) + "/1100 (" + std::to_string(planted_escaped) + " escaped inside the IV)");
+    tinhat::RxTail t;
+    bool short_ok = true;
+    std::vector<uint8_t> body(64, 0x11);
+    for (size_t len = 0; len < 30; len++) {  // < 16 (tag) + 12 (IV) + 2 (trailer)
+      if (len >= 2) { body[len - 2] = 12; body[len - 1] = 0; }
+      short_ok = short_ok && !tinhat::SplitRxTail(body.data(), len, 12, tinhat::kGcmTagLen, &t);
+    }
+    body[28] = 12; body[29] = 3;
+    short_ok = short_ok && tinhat::SplitRxTail(body.data(), 30, 12, tinhat::kGcmTagLen, &t) && t.ct_len == 16 &&
+               t.iv_off == 16 && t.iv_len == 12 && t.key_index == 3;
+    body[28] = 16;
+    short_ok = short_ok && !tinhat::SplitRxTail(body.data(), 30, 12, tinhat::kGcmTagLen, &t) &&
+               !tinhat::SplitRxTail(nullptr, 30, 12, tinhat::kGcmTagLen, &t);
+    check(short_ok, "SplitRxTail refuses bodies shorter than tag || IV || trailer, another IV length, null; splits 30 bytes exactly");
   }
   std::printf(fails ? "TINHAT-IV TEST: FAIL (%d)\n" : "TINHAT-IV TEST: PASS\n", fails);
   return fails ? 1 : 0;

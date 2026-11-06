@@ -3,8 +3,8 @@
 Three patches ride on the rebuilt libwebrtc. All must be applied before
 running the build runners; each carries a grep-able vintage stamp so a stale
 archive can never masquerade as current (`strings <binary>` must show
-`tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`, `tinhat-vp9-kf-iv-v1` AND
-`tinhat-iv-v2`; the third patch carries the last two).
+`tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`, `tinhat-vp9-kf-iv-v1`,
+`tinhat-iv-v2` AND `tinhat-iv-rx-v1`; the third patch carries the last three).
 
 Our `webrtc-sys` normally links the LiveKit prebuilt `libwebrtc` (release tag
 `webrtc-51ef663` — named after the LAST 7 hex chars of webrtc-sdk/webrtc commit
@@ -149,9 +149,8 @@ Why no escape can then reach the 14 bytes the receiver reads raw (`IV ‖ ivLeng
   can't happen. Even if it did, the `0x03` would be inserted BEFORE IV[0], i.e. into the ciphertext side. The last 14
   bytes of the frame would still be exactly `IV ‖ trailer`, so the receiver's tail read would be unaffected.
 
-H.265 uses the same RBSP rule and the same raw-tail read, so it is covered too. No receiver changes: hardening
-`decryptFrame` (read the IV after `ParseRbsp`) is left for 12.1.9. It can't help receivers already in users' hands, and
-v2 senders don't need it.
+H.265 uses the same RBSP rule and the same raw-tail read, so it is covered too. The receiver was hardened later
+(next section); v2 senders don't need it, and it can't help receivers already in users' hands.
 
 Tests (`tests/tinhat_iv_test.cc`, the shipped header against OpenSSL):
 - no zero byte, byte 0 ≥ 4, no `00 00 [00–03]` run inside the IV, IV ‖ trailer or after any tag tail, over 300k IVs;
@@ -161,6 +160,44 @@ Tests (`tests/tinhat_iv_test.cc`, the shipped header against OpenSSL):
   20000/20000 (the control).
 - Shared vectors: `testvectors/iv-layout/vectors.json` (Rust `iv_layout_matches_the_shared_vectors`, the web's
   `iv-unique-unit`).
+
+## The receiver reads the IV after unescaping (`tinhat-iv-rx-v1`)
+
+Upstream `decryptFrame` took the IV from the RAW frame tail and only then ran `ParseRbsp` over the rest. The sender
+escapes `ciphertext ‖ IV ‖ trailer` as one run, so the raw read is wrong whenever the escape lands inside the IV: on
+every frame of a v1 sender, and on the rare upstream IV that holds `00 00 [00–03]`. The receiver now:
+
+- unescapes the whole body first (H.264/H.265; other codecs have no escaping), then takes ciphertext, IV and trailer
+  from the unescaped bytes with `tinhat::SplitRxTail` (`api/crypto/tinhat_iv.h`). Those are exactly the bytes the
+  sender sealed, whatever IV layout it used: upstream, v1 and v2 senders all decode.
+- still reads the 2-byte trailer raw first (IV length, key index for the key lookup). The trailer is never escaped:
+  an escape before T0 needs T0 ≤ 3 (it is 12); one before T1 needs (IV[last], T0) = `00 00`. So the raw trailer and
+  the unescaped one are the same bytes (also checked).
+- bounds checks: a frame too short for its clear header and trailer, or a body too short for tag ‖ IV ‖ trailer,
+  is refused before any parsing (and again after unescaping); `NeedsRbspUnescaping` checks short bodies.
+- The structural refusals report `DecryptionFailed` (a frame shorter than header + trailer now does so before the key
+  lookup, where upstream reached `MissingKey`); they don't count towards `failure_tolerance` and never invalidate a
+  key.
+
+The Tin Hat Web worker (livekit-client's `decryptFrame`) already unescapes before it reads the IV: no web change.
+
+Tests:
+- `tests/run-tinhat-rx-test.sh <artifact dir>`: compiles `tests/tinhat_rx_test.cc` against a BUILT archive
+  (`lib/libwebrtc.a` + `include/`) and drives that archive's own `FrameCryptorTransformer`. For H.264, H.265, VP8, VP9
+  and AV1 it seals frames under the transformer's derived key with the upstream, v1, v2 and PLANTED IV layouts
+  (`00 00 [00–03]` at every IV position), escapes them with the archive's `WriteRbsp`, sends the H.264 ones through
+  the archive's RTP packetizer and depacketizer as well, and checks every frame decrypts byte-identically. It also
+  round-trips each codec and audio through the archive's own sender (H.264 and AV1 also through the RTP hop: the AV1
+  depacketizer's rewritten wrapper), covers tag/IV junction escapes and a nonzero key index, and feeds short and
+  malformed frames per codec in a child process with a timeout. Negative sets (another key; a flipped tag,
+  ciphertext, IV or clear-header byte; short frames) must deliver NOTHING. Controls: the v1 and planted sets must
+  carry escapes inside the tail. ("upstream" = upstream's IV allocation inside Tin Hat's framing: its AV1 frames
+  carry Tin Hat's wrapper.) **Shown able to fail:** on the previous archive (raw-tail receiver) H.264/H.265 v1 come
+  back 0/300, planted 24/264, upstream 296/300.
+- `tests/tinhat_iv_test.cc` section 10: `SplitRxTail` as shipped, unescape-first: v1 20000/20000, v2 20000/20000,
+  planted 1100/1100, short bodies refused.
+- Rust `the_libwebrtc_patch_carries_the_same_rule`: the receiver lines are in the patch and the raw-tail IV read is
+  removed.
 
 ## Rebuilding (how this was produced)
 

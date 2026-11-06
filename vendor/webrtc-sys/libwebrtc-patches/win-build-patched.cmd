@@ -61,7 +61,7 @@ copy /y "%OUTPUT_DIR%\obj\webrtc.lib" "%ARTIFACTS_DIR%\lib"
 if errorlevel 1 ( echo FATAL: could not copy webrtc.lib & exit /b 1 )
 rem Every patch carries a grep-able stamp; a library without them was built from
 rem an unpatched or older tree and must never be linked.
-for %%s in (tinhat-av1-e2ee-v2 tinhat-dav1d-fp-v1 tinhat-vp9-kf-iv-v1 tinhat-iv-v2) do (
+for %%s in (tinhat-av1-e2ee-v2 tinhat-dav1d-fp-v1 tinhat-vp9-kf-iv-v1 tinhat-iv-v2 tinhat-iv-rx-v1) do (
   findstr /m /c:"%%s" "%ARTIFACTS_DIR%\lib\webrtc.lib" >nul
   if errorlevel 1 (
     echo FATAL: stamp %%s missing from "%ARTIFACTS_DIR%\lib\webrtc.lib" - patch not applied?
