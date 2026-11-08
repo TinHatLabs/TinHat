@@ -143,14 +143,14 @@ Window {
     }
 
     // Is `identity` in the SFU's active-speaker list? Speakers carry the full LiveKit
-    // identity (@user:server:DEVICE); tiles may carry either form — match by mxid
-    // prefix exactly like tileAudioLevel / the #5 gain path.
+    // identity (@user:server:DEVICE); tiles may carry either form — matched like tileAudioLevel,
+    // by the strict rule (12.1.11: AppCore sameParticipant; a "x:" prefix made @a:h speak for @a:h:8448:DEV).
     function speakingNow(identity) {
         var act = (app.mSpeakers && app.mSpeakers.active) ? app.mSpeakers.active : []
         var p = identity || ""
         for (var i = 0; i < act.length; ++i) {
             var a = act[i]
-            if (a === p || p.indexOf(a + ":") === 0 || a.indexOf(p + ":") === 0) return true
+            if (app.sameParticipant(a, p)) return true
         }
         return false
     }

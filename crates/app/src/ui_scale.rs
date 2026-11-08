@@ -7,7 +7,7 @@
 //! layers are drawn at the new resolution (crisp, never a stretched picture) and every layout re-flows; windows keep
 //! their size on screen. The pure rules live here (unit-tested); the bridge does the Qt part.
 use std::ffi::c_int;
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicI32, AtomicI8, Ordering};
 
 /// The smallest, largest and default size, in percent, and one step.
 pub const MIN: i32 = 70;
@@ -16,9 +16,11 @@ pub const DEFAULT: i32 = 100;
 pub const STEP: i32 = 10;
 /// The device pref file (settings.rs overlay prefs): "120" = 120 %. Absent / unreadable = 100.
 pub const PREF: &str = "ui-scale";
-/// 12.1.9: Settings → Appearance → "Change size instantly (experimental)": "1" = the live change also where it isn't
-/// proven yet (Wayland), i.e. what TINHAT_UI_SCALE_LIVE=1 does, kept per device. Off by default; restart-only stays the
-/// default on Wayland. The DPR walk guard (ui_scale_bridge.cpp) covers the live path wherever it runs (not `windows`).
+/// Settings → Appearance → "Change size instantly" (12.1.9 as an experimental opt-in): "1" = the live change also
+/// where it isn't on the proven list, i.e. what TINHAT_UI_SCALE_LIVE=1 does; "0" = restart-only there. Kept per device.
+/// 12.1.11: absent = the platform's default (`live_by_default`): ON on Wayland (12.1.9 ran clean with the DPR walk
+/// guard), so the switch is the off-ramp there. The guard (ui_scale_bridge.cpp) covers the live path wherever it runs
+/// (not `windows`).
 pub const LIVE_PREF: &str = "ui-scale-live";
 
 /// Any value → a size the app uses: clamped to MIN..=MAX and snapped to the nearest step (a half step rounds up).
@@ -83,6 +85,22 @@ pub fn live_allowed_on(platform: &str, force_live: bool) -> bool {
     force_live || matches!(platform, "xcb" | "windows")
 }
 
+/// 12.1.11: where "Change size instantly" is ON until the person turns it off (the pref absent): Wayland. 12.1.9 shipped
+/// the guarded live path there as an opt-in and ran clean (no ui-scale crash reports, no "guarded DPR walk" lines), so
+/// the live change is the default; the switch stays as the off-ramp. Other unproven plugins stay restart-only.
+pub fn live_by_default(platform: &str) -> bool {
+    matches!(platform, "wayland" | "wayland-egl")
+}
+
+/// The switch's state from the stored pref ("1" on, "0" off, absent / anything else = the platform's default).
+fn opt_in_from(pref: Option<&str>, platform: &str) -> bool {
+    match pref.map(str::trim) {
+        Some("1") => true,
+        Some("0") => false,
+        _ => live_by_default(platform),
+    }
+}
+
 // ---- the Qt part (ui_scale_bridge.cpp) ---------------------------------------------------------------------------
 extern "C" {
     fn tinhat_ui_scale_preinit(factor: f64, force_restart: c_int);
@@ -104,24 +122,49 @@ fn platform() -> String {
 /// TINHAT_UI_SCALE_LIVE=1 (testing), or the Settings opt-in (LIVE_PREF): allow the live change on a platform not in
 /// the list.
 fn force_live() -> bool {
-    std::env::var_os("TINHAT_UI_SCALE_LIVE").is_some_and(|v| v == "1") || live_opt_in()
+    env_force_live() || live_opt_in()
 }
 
-/// The Settings opt-in "Change size instantly (experimental)" of this device.
+fn env_force_live() -> bool {
+    std::env::var_os("TINHAT_UI_SCALE_LIVE").is_some_and(|v| v == "1")
+}
+
+/// This run's own choice from the switch (-1 = none yet, 0 off, 1 on). 12.1.11 review (a047 area 2 P2): the pref write
+/// ignores errors, and an absent pref now means ON on Wayland, so a failed write of "0" must not silently leave the live
+/// path on for the rest of the run.
+static SWITCH: AtomicI8 = AtomicI8::new(-1);
+
+/// The Settings switch "Change size instantly" of this device (12.1.11: absent = the platform's default).
 pub fn live_opt_in() -> bool {
-    crate::settings::overlay_pref_read(LIVE_PREF).map(|s| s.trim() == "1").unwrap_or(false)
+    match SWITCH.load(Ordering::Relaxed) {
+        0 => false,
+        1 => true,
+        _ => opt_in_from(crate::settings::overlay_pref_read(LIVE_PREF).as_deref(), &platform()),
+    }
+}
+
+/// Did the person set the switch themselves (the pref holds "1" or "0")? Only for the start log line.
+fn live_pref_set() -> bool {
+    crate::settings::overlay_pref_read(LIVE_PREF).is_some_and(|s| matches!(s.trim(), "1" | "0"))
 }
 
 /// Store the opt-in. Answers whether the size now changes live.
 pub fn set_live_opt_in(on: bool) -> bool {
-    crate::settings::overlay_pref_write(LIVE_PREF, if on { "1" } else { "0" });
+    SWITCH.store(on as i8, Ordering::Relaxed);
+    let want = if on { "1" } else { "0" };
+    crate::settings::overlay_pref_write(LIVE_PREF, want);
+    if crate::settings::overlay_pref_read(LIVE_PREF).map(|s| s.trim() == want) != Some(true) {
+        eprintln!("[ui-scale] Change size instantly: the setting could not be saved; it holds until Tin Hat closes");
+    }
     live_capable()
 }
 
 /// Is the opt-in worth offering here? Only where the live change is held back by the platform list alone: Qt has the
 /// calls, TINHAT_UI_SCALE_RESTART isn't set, and the plugin is not one of the proven ones (in practice Wayland).
 pub fn live_opt_in_offered() -> bool {
-    offered_on(&platform(), !restart_only() && unsafe { tinhat_ui_scale_live_capable() } == 1)
+    // not under TINHAT_UI_SCALE_LIVE=1 either: that test override wins, so a switch there would say off while sizes
+    // still change live (a047 area 2 P3)
+    !env_force_live() && offered_on(&platform(), !restart_only() && unsafe { tinhat_ui_scale_live_capable() } == 1)
 }
 
 fn offered_on(platform: &str, qt_capable: bool) -> bool {
@@ -161,8 +204,10 @@ pub fn apply_startup() {
     let plat = platform();
     let why = match unsafe { tinhat_ui_scale_why() } {
         0 if live_allowed_on(&plat, false) => "changes live".to_string(),
-        0 if live_opt_in() => format!("changes live on '{plat}': the experimental setting is on"),
+        0 if live_opt_in() && live_pref_set() => format!("changes live on '{plat}': the setting is on"),
+        0 if live_opt_in() => format!("changes live on '{plat}': the default here (Settings → Change size instantly)"),
         0 if force_live() => format!("changes live on '{plat}': TINHAT_UI_SCALE_LIVE=1"),
+        0 if live_by_default(&plat) => format!("restart-only on '{plat}': Change size instantly is off"),
         0 => format!("restart-only: a live change is not proven on '{plat}' yet"),
         1 => "restart-only: built without Qt's private headers".to_string(),
         2 => "restart-only: this Qt lacks the scale calls".to_string(),
@@ -230,6 +275,26 @@ mod tests {
             assert!(!live_allowed_on(p, false), "{p}");
             assert!(live_allowed_on(p, true), "{p} with TINHAT_UI_SCALE_LIVE=1");
         }
+    }
+
+    #[test]
+    fn wayland_changes_live_by_default_and_the_switch_turns_it_off() {
+        // 12.1.11: the pref absent = ON on Wayland only; "0" is the off-ramp; "1" still turns it on elsewhere
+        for p in ["wayland", "wayland-egl"] {
+            assert!(opt_in_from(None, p), "{p}");
+            assert!(opt_in_from(Some("garbage"), p), "{p}");
+            assert!(!opt_in_from(Some("0"), p), "{p}");
+            assert!(!opt_in_from(Some(" 0\n"), p), "{p}");
+            assert!(opt_in_from(Some("1"), p), "{p}");
+        }
+        for p in ["eglfs", "offscreen", "minimal", "cocoa", "", "Wayland"] {
+            assert!(!opt_in_from(None, p), "{p}");
+            assert!(!opt_in_from(Some("0"), p), "{p}");
+            assert!(opt_in_from(Some("1"), p), "{p}");
+        }
+        // the proven list itself is unchanged: Wayland is live through the switch, never through the list
+        assert!(!live_allowed_on("wayland", false));
+        assert!(!live_by_default("xcb") && !live_by_default("windows"));
     }
 
     #[test]

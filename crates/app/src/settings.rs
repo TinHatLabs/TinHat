@@ -149,7 +149,7 @@ pub mod qobject {
         /// Can the size change while Tin Hat runs here? (false: a restart-only build / Qt — Settings says so)
         #[qinvokable]
         fn ui_scale_live_capable(self: &SettingsController) -> bool;
-        /// 12.1.9: Settings → Appearance "Change size instantly (experimental)" (ui_scale.rs LIVE_PREF)
+        /// Settings → Appearance "Change size instantly" (ui_scale.rs LIVE_PREF; 12.1.11: on by default on Wayland)
         #[qinvokable]
         fn ui_scale_live_opt_in(self: &SettingsController) -> bool;
         /// Store the opt-in; answers whether the size now changes live

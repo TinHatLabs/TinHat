@@ -68,13 +68,22 @@ fn error_message(status: u16, body: &Value) -> String {
 /// Err(message) otherwise — the server's `error` text verbatim ("You can't moderate calls
 /// in this space", "…outranks you", "They're not in the call") or "server said <status>".
 pub async fn call_action(room_id: &str, action: &str, target_identity: &str) -> Result<Value, String> {
+    call_action_scoped(room_id, action, target_identity, false).await
+}
+
+/// PAD-PHONE Step B: `person` = the action covers every current connection of the target's person (their computer and
+/// their phone's Pad ones; the server answers per device, `scope: "person"`).
+pub async fn call_action_scoped(room_id: &str, action: &str, target_identity: &str, person: bool) -> Result<Value, String> {
     let token = crate::session::client()
         .and_then(|c| c.access_token())
         .ok_or_else(|| "Not signed in".to_string())?;
-    let body = serde_json::json!({ "room_id": room_id, "action": action, "target": target_identity });
+    let mut body = serde_json::json!({ "room_id": room_id, "action": action, "target": target_identity });
+    if person {
+        body["scope"] = serde_json::json!("person");
+    }
     let (status, v) = post_json_auth("/moderation/call", &token, body).await?;
     if (200..300).contains(&status) {
-        eprintln!("[moderation] {action} {target_identity} in {room_id} -> {status}");
+        eprintln!("[moderation] {action} {target_identity} in {room_id}{} -> {status}", if person { " (person)" } else { "" });
         Ok(v)
     } else {
         let msg = error_message(status, &v);

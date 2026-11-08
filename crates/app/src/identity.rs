@@ -28,6 +28,16 @@ pub fn is_participant_of(participant: &str, mxid: &str) -> bool {
     !mxid.is_empty() && (participant == mxid || mxid_of(participant) == mxid)
 }
 
+/// 12.1.11 (assembly-047): do two call ids (each an identity or a bare mxid, in either order) name the same
+/// participant: the same string, or one is the other's user ([`is_participant_of`]). The call UI's display matches
+/// (levels, away, "can they hear me?", speaking: AppCore.qml sameParticipant; the web's identity.ts sameParticipant).
+/// Two devices of one person are two participants. Replaces the `"x:"` prefix matches that let `@a:h` claim
+/// `@a:h:8448:DEV`.
+#[allow(dead_code)] // the QML copy (AppCore.qml sameParticipant) is what runs; this one carries the mirrored tests
+pub fn same_participant(a: &str, b: &str) -> bool {
+    !a.is_empty() && !b.is_empty() && (a == b || is_participant_of(a, b) || is_participant_of(b, a))
+}
+
 /// Users whose live call membership `(sender, device_id)` mints exactly this identity, deduped, in order.
 pub fn users_of_identity(identity: &str, sessions: &[(String, String)]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
@@ -113,6 +123,84 @@ mod tests {
             let got = record_excluded(c["identity"].as_str().unwrap(), &strs(&c["optouts"]));
             assert_eq!(got, c["want"].as_bool().unwrap(), "recordExcluded: {}", c["name"]);
         }
+        // 12.1.11 (assembly-047): the call UI's display matches (AppCore.qml runs the same groups: qml-identity-test.qml)
+        let (po, same) = (v["participantOf"].as_array().unwrap(), v["sameParticipant"].as_array().unwrap());
+        assert!(po.len() >= 15 && same.len() >= 14);
+        for c in po {
+            let got = is_participant_of(c["participant"].as_str().unwrap(), c["mxid"].as_str().unwrap());
+            assert_eq!(got, c["want"].as_bool().unwrap(), "participantOf: {}", c["name"]);
+        }
+        for c in same {
+            let got = same_participant(c["a"].as_str().unwrap(), c["b"].as_str().unwrap());
+            assert_eq!(got, c["want"].as_bool().unwrap(), "sameParticipant: {}", c["name"]);
+        }
+    }
+
+    /// The call UI's old display rule (`a === b || a.indexOf(b + ":") === 0 || b.indexOf(a + ":") === 0`) fails the
+    /// sameParticipant vectors on the port user (negative control: what the vectors pin down).
+    #[test]
+    fn the_old_prefix_rule_fails_the_port_vectors() {
+        let old = |a: &str, b: &str| a == b || a.starts_with(&format!("{b}:")) || b.starts_with(&format!("{a}:"));
+        let v: Value = serde_json::from_str(VECTORS).unwrap();
+        let wrong: Vec<&str> = v["sameParticipant"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|c| old(c["a"].as_str().unwrap(), c["b"].as_str().unwrap()) != c["want"].as_bool().unwrap())
+            .map(|c| c["name"].as_str().unwrap())
+            .collect();
+        assert!(wrong.len() >= 3, "the old rule should miss the port vectors: {wrong:?}");
+        assert!(!same_participant("@a:h:8448:PC", "@a:h"));
+    }
+
+    /// No QML file matches call identities by a `"x:"` prefix (`s.indexOf(x + ":") === 0`, `startsWith(x + ":")`):
+    /// that is how `@a:h` claimed `@a:h:8448:DEV` (levels, away, "can they hear me?", speaking, the recorder; fixed
+    /// 12.1.11). Use AppCore.qml isParticipantOf / sameParticipant (= this file's rules) instead.
+    #[test]
+    fn qml_has_no_prefix_identity_match() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("qml");
+        let hits = qml_prefix_matches(&dir);
+        assert!(hits.is_empty(), "\"x:\" prefix identity matches in QML (use AppCore isParticipantOf/sameParticipant):\n{}", hits.join("\n"));
+    }
+
+    fn qml_prefix_matches(dir: &std::path::Path) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut stack = vec![dir.to_path_buf()];
+        while let Some(d) = stack.pop() {
+            let Ok(rd) = std::fs::read_dir(&d) else { continue };
+            for e in rd.flatten() {
+                let p = e.path();
+                if p.is_dir() {
+                    stack.push(p);
+                } else if p.extension().is_some_and(|x| x == "qml") {
+                    let text = std::fs::read_to_string(&p).unwrap_or_default();
+                    for (i, line) in text.lines().enumerate() {
+                        let code = line.split("//").next().unwrap_or("");
+                        let squashed: String = code.chars().filter(|c| !c.is_whitespace()).collect();
+                        let prefix = squashed.contains("+\":\")===0")
+                            || squashed.contains("+':')===0")
+                            || (squashed.contains("startsWith(") && (squashed.contains("+\":\")") || squashed.contains("+':')")));
+                        if prefix {
+                            out.push(format!("{}:{}: {}", p.display(), i + 1, line.trim()));
+                        }
+                    }
+                }
+            }
+        }
+        out.sort();
+        out
+    }
+
+    /// The scanner itself finds the old forms (so an empty result above means something).
+    #[test]
+    fn qml_prefix_scanner_sees_the_old_forms() {
+        let dir = std::env::temp_dir().join(format!("qml-prefix-scan-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("sub")).unwrap();
+        std::fs::write(dir.join("A.qml"), "x\n  if (a === p || p.indexOf(a + \":\") === 0) return\n").unwrap();
+        std::fs::write(dir.join("sub/B.qml"), "return id.startsWith(u + ':')\nvar lp = s.split(\":\")[0]\n// p.indexOf(u + \":\") === 0 in a comment\n").unwrap();
+        let hits = qml_prefix_matches(&dir);
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(hits.len(), 2, "{hits:?}");
     }
 
     /// The byte copy equals the web's (`TINHAT_WEB_DIR` = a tinhat-web tree, else `$HOME/tinhat-web`; skipped when

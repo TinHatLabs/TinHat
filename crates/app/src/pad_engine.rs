@@ -78,6 +78,9 @@ pub enum Exec {
     PartyNext { url: String },
     /// the window's "Add a link" (queued; "play now" only after the lookup, if the party and host are unchanged)
     PartyAdd { url: String, now: bool, sid: String, re: i64 },
+    /// PAD-PHONE Step B `takeover.mic`: on = the phone takes the mic (QML: mute with the "phone has the mic" reason,
+    /// remembering whether the mic was on); off = give it back (only that reason is lifted)
+    TakeMic { on: bool, sid: String },
 }
 
 impl Exec {
@@ -100,8 +103,13 @@ impl Exec {
             Exec::PartySeek { url, pos } => json!({"do": "partySeek", "url": url, "pos": pos}),
             Exec::PartyNext { url } => json!({"do": "partyNext", "url": url}),
             Exec::PartyAdd { url, now, sid, re } => json!({"do": "partyAdd", "url": url, "now": now, "sid": sid, "re": re}),
+            Exec::TakeMic { on, sid } => json!({"do": "takeMic", "on": on, "sid": sid}),
         }
     }
+}
+
+fn pad_ok(on: bool) -> bool {
+    on
 }
 
 /// What a verdict runs: nothing unless it is ok AND `run` (every op is a set: no change = nothing to call).
@@ -144,6 +152,7 @@ pub fn exec_plan(v: &PadVerdict) -> Vec<Exec> {
         Some(PadCmd::PartyNext { url }) => vec![Exec::PartyNext { url: url.clone() }],
         // the command's session + seq ride along: its outcome comes back in call.party.add (that Pad's "couldn't add")
         Some(PadCmd::PartyAdd { url, now }) => vec![Exec::PartyAdd { url: url.clone(), now: *now, sid: v.sid.clone(), re: v.re }],
+        Some(PadCmd::TakeoverMic { on }) => vec![Exec::TakeMic { on: *on, sid: v.sid.clone() }],
         Some(PadCmd::Open { .. }) | Some(PadCmd::Ping { .. }) | Some(PadCmd::Close) | None => Vec::new(),
     }
 }
@@ -152,6 +161,7 @@ pub fn exec_plan(v: &PadVerdict) -> Vec<Exec> {
 fn predict_into(s: &mut Snapshot, cmd: Option<&PadCmd>) {
     match cmd {
         Some(PadCmd::Mic { muted }) => s.me.mic_muted = *muted,
+        Some(PadCmd::TakeoverMic { on: true }) => s.me.mic_muted = true,
         Some(PadCmd::Deafen { on }) => s.me.deaf = *on,
         Some(PadCmd::Brb { on }) => s.me.brb = *on,
         Some(PadCmd::SoundPlay { url }) => s.sound = url.clone(),
@@ -269,6 +279,7 @@ impl Snapshot {
                 deaf: b(&me, "deaf"),
                 brb: b(&me, "brb"),
                 sound_role: b(&gate, "allowed"),
+                take_by: String::new(), // the receiver's own record (Receiver::take), never the UI's
             },
             talk: b(&me, "talk"),
             sound: s(&me, "sound").to_string(),
@@ -348,6 +359,10 @@ pub enum Out {
     Send { device: String, content: Value },
     /// run these commands on the UI thread, then say `executed(token)`
     Exec { token: i64, cmds: Vec<Exec> },
+    /// PAD-PHONE Step B: the mic hold of Pad session `sid` ends — its session is gone (lapsed, closed, replaced, refused,
+    /// Pad off, the call changed), or (clients round 2 #7) an acquisition the UI RAN could not be committed (its session
+    /// ended before the confirmation): the UI lifts that session's hold only
+    TakeReleased { sid: String },
 }
 
 /// A command handed to the executor: what it was accepted for, so the UI can claim it only while that still holds.
@@ -383,11 +398,42 @@ pub struct Receiver {
     /// sid → (a full change waits, a talking-only change waits)
     dirty: HashMap<String, (bool, bool)>,
     pending: Vec<ExecRec>,
+    /// PAD-PHONE Step B: the session (sid, device) whose phone holds this device's mic — receiver-owned and leased:
+    /// it ends with that session
+    take: Option<(String, String)>,
 }
 
 impl Receiver {
     pub fn new(pad_on: bool) -> Receiver {
-        Receiver { table: PadSessions::default(), pad_on, watching: false, confirmed: Snapshot::default(), snap: Snapshot::default(), rseq: 0, last_call: None, dirty: HashMap::new(), pending: Vec::new() }
+        Receiver { table: PadSessions::default(), pad_on, watching: false, confirmed: Snapshot::default(), snap: Snapshot::default(), rseq: 0, last_call: None, dirty: HashMap::new(), pending: Vec::new(), take: None }
+    }
+    /// The phone device holding this device's mic (None = nobody).
+    pub fn take_device(&self) -> Option<String> {
+        self.take.as_ref().map(|(_, d)| d.clone())
+    }
+    /// Every live session gets a full push (who holds the mic changed: `me.take`).
+    fn dirty_all(&mut self) {
+        for x in self.table.sessions.iter() {
+            self.dirty.entry(x.sid.clone()).or_insert((false, false)).0 = true;
+        }
+    }
+    /// The user took the mic back on this device (its own mic button, "Take the mic back"): the takeover ends with no
+    /// restore, and the phone learns it from the next state (`take` gone). true = one was held.
+    pub fn cancel_take(&mut self) -> bool {
+        // every session gets a fresh state either way (take:false is what each of them reads)
+        self.dirty_all();
+        self.take.take().is_some()
+    }
+    /// The lease: the holder's session must still be live (and the call the same: `call_changed`).
+    fn check_take(&mut self, now: i64, call_changed: bool) -> Vec<Out> {
+        let Some((sid, _)) = &self.take else { return Vec::new() };
+        let alive = self.pad_on && !call_changed && self.table.get(sid, now).is_some();
+        if alive {
+            return Vec::new();
+        }
+        let (sid, _) = self.take.take().unwrap_or_default();
+        self.dirty_all();
+        vec![Out::TakeReleased { sid }]
     }
     pub fn pad_on(&self) -> bool {
         self.pad_on
@@ -406,7 +452,13 @@ impl Receiver {
             self.rseq = now.max(0).saturating_mul(1000);
         }
         self.rseq += 1;
-        let call = if with_call { self.snap.call_json().unwrap_or(Value::Null) } else { Value::Null };
+        let mut call = if with_call { self.snap.call_json().unwrap_or(Value::Null) } else { Value::Null };
+        // Step B: `me.take` for the session holding the mic only
+        if self.take.as_ref().is_some_and(|(t, _)| t == sid) {
+            if let Some(me) = call.get_mut("me").and_then(|m| m.as_object_mut()) {
+                me.insert("take".into(), Value::from(true));
+            }
+        }
         pr::build_state(&json!({"sid": sid, "rseq": self.rseq, "rt": now.max(0), "re": re, "ok": ok, "why": why, "call": call})).0
     }
     /// A final state: nothing to control any more, and why.
@@ -434,7 +486,7 @@ impl Receiver {
             pad_on: self.pad_on && !self.watching,
             call: self.snap.call.as_ref().map(|(room, gen, _)| PadCall { room: room.clone(), gen: gen.clone() }),
             participants: self.snap.participants(),
-            me: self.snap.me.clone(),
+            me: PadMe { take_by: self.take.as_ref().map(|(s, _)| s.clone()).unwrap_or_default(), ..self.snap.me.clone() },
             sounds: PadSounds { favourites, room_sounds, recent: self.snap.recent_urls() },
             party: self.snap.party.clone(),
         }
@@ -459,7 +511,9 @@ impl Receiver {
         }
         self.recompute();
         let gone = self.table.clear(now);
-        gone.iter().filter_map(|sid| devs.get(sid).map(|d| (d.clone(), sid.clone()))).map(|(d, sid)| self.final_state(&d, &sid, "off", now)).collect()
+        let mut outs: Vec<Out> = gone.iter().filter_map(|sid| devs.get(sid).map(|d| (d.clone(), sid.clone()))).map(|(d, sid)| self.final_state(&d, &sid, "off", now)).collect();
+        outs.extend(self.check_take(now, false));
+        outs
     }
 
     /// A new snapshot from the UI. The call changing (room or generation; leaving = none) clears the × refusals,
@@ -475,6 +529,7 @@ impl Receiver {
             if self.last_call.is_some() {
                 self.table.clear_refused();
             }
+            outs.extend(self.check_take(now, true)); // Step B: a takeover belongs to one call
             self.last_call = key.clone();
             let why = if key.is_some() { "other-call" } else { "not-in-call" };
             let gone: Vec<ExecRec> = self.pending.iter().filter(|p| !p.claimed).cloned().collect();
@@ -547,6 +602,7 @@ impl Receiver {
         if v.ok && matches!(v.cmd, Some(PadCmd::Close)) {
             self.retire_sids(std::slice::from_ref(&v.sid));
         }
+        outs.extend(self.check_take(now, false)); // an open that replaced the holder's session
         let cmds = exec_plan(&v);
         if !cmds.is_empty() {
             // (1 ..= 2^31 − 1: the token crosses Qt as an int)
@@ -602,7 +658,40 @@ impl Receiver {
         let Some(i) = self.pending.iter().position(|p| p.token == token && p.claimed) else { return Vec::new() };
         let p = self.pending.remove(i);
         self.recompute();
-        self.reply_ok(&p, now)
+        let mut outs = self.commit_take(&p, now);
+        outs.extend(self.reply_ok(&p, now));
+        outs
+    }
+    /// Step B (client review #4): who holds the mic changes only once the executor RAN the command — taking it (and
+    /// `take: true` in any state) never before the mute ran; giving it back (or the Pad's own unmute) only once that ran.
+    /// A command that was refused, went stale or was never claimed changes nothing.
+    fn commit_take(&mut self, p: &ExecRec, now: i64) -> Vec<Out> {
+        match p.cmd {
+            Some(PadCmd::TakeoverMic { on: true }) => {
+                // only while that session still lives, in the call it was accepted for; otherwise the mute the UI
+                // already ran is released again (clients round 2 #7: no hold without an owner)
+                let live_call = self.snap.call.as_ref().map(|(r, g, _)| (r.clone(), g.clone()));
+                if pad_ok(self.pad_on) && live_call == p.call && self.table.get(&p.sid, now).is_some_and(|s| s.device == p.device) {
+                    self.take = Some((p.sid.clone(), p.device.clone()));
+                    self.dirty_all();
+                } else {
+                    return vec![Out::TakeReleased { sid: p.sid.clone() }];
+                }
+            }
+            Some(PadCmd::TakeoverMic { on: false }) => {
+                if self.take.as_ref().is_some_and(|(t, _)| *t == p.sid) {
+                    self.take = None;
+                    self.dirty_all();
+                }
+            }
+            Some(PadCmd::Mic { muted: false }) => {
+                if self.take.take().is_some() {
+                    self.dirty_all();
+                }
+            }
+            _ => {}
+        }
+        Vec::new()
     }
     fn reply_ok(&mut self, p: &ExecRec, now: i64) -> Vec<Out> {
         if !p.reply {
@@ -624,7 +713,9 @@ impl Receiver {
         }
         self.recompute();
         let gone = self.table.refuse(device, now);
-        gone.iter().filter_map(|sid| devs.get(sid).map(|d| (d.clone(), sid.clone()))).map(|(d, sid)| self.final_state(&d, &sid, "closed", now)).collect()
+        let mut outs: Vec<Out> = gone.iter().filter_map(|sid| devs.get(sid).map(|d| (d.clone(), sid.clone()))).map(|(d, sid)| self.final_state(&d, &sid, "closed", now)).collect();
+        outs.extend(self.check_take(now, false));
+        outs
     }
 
     /// The live sessions' controller devices (the chip), oldest first, each once.
@@ -639,7 +730,7 @@ impl Receiver {
     }
     /// Anything for [`Receiver::tick`] to do (sessions or answers waiting).
     pub fn busy(&self) -> bool {
-        !self.table.sessions.is_empty() || !self.pending.is_empty()
+        !self.table.sessions.is_empty() || !self.pending.is_empty() || self.take.is_some()
     }
 
     /// The clock: answers the executor never confirmed, lapsed sessions, the paced pushes.
@@ -653,6 +744,7 @@ impl Receiver {
         for p in late {
             // claimed (so it ran) but not confirmed: answer ok; never claimed: it will never run — `stale`
             if p.claimed {
+                outs.extend(self.commit_take(&p, now));
                 outs.extend(self.reply_ok(&p, now));
             } else {
                 outs.extend(self.refusal(&p, "stale", now));
@@ -660,6 +752,7 @@ impl Receiver {
         }
         let lapsed = self.table.sweep(now);
         self.retire_sids(&lapsed);
+        outs.extend(self.check_take(now, false)); // Step B: the holder's lease lapsed (the phone is gone)
         let live: Vec<(String, String)> = self.table.live(now).iter().map(|x| (x.sid.clone(), x.device.clone())).collect();
         for (sid, device) in live {
             let Some((full, talk)) = self.dirty.get(&sid).copied() else { continue };
@@ -1164,6 +1257,143 @@ mod tests {
         let mut r = Receiver::new(true);
         r.set_snapshot(snap(false), 0);
         r
+    }
+
+    // ---- PAD-PHONE Step B: takeover.mic (receiver-owned, leased; ownership only once the executor ran it) ----
+    fn took(outs: &[Out]) -> bool {
+        format!("{outs:?}").contains("TakeReleased")
+    }
+    fn take_in(outs: &[Out]) -> Option<bool> {
+        sends(outs).last().map(|st| st["call"]["me"]["take"] == json!(true))
+    }
+    /// takeover.mic {on} accepted, claimed and executed -> (verdict, the answer)
+    fn take_run(r: &mut Receiver, seq: i64, now: i64, on: bool) -> (PadVerdict, Vec<Out>) {
+        let (v, outs) = r.on_cmd(&cmd(seq, now, "takeover.mic", json!({"on": on})), &facts(PHONE), &[], &[], now);
+        let Some((tok, _)) = execs(&outs).into_iter().next() else { return (v, outs) };
+        assert!(r.claim(tok, Some((ROOM.into(), "g1".into())), now + 10).0);
+        let answer = r.executed(tok, now + 20);
+        (v, answer)
+    }
+
+    #[test]
+    fn takeover_is_owned_only_once_the_executor_ran_it_and_the_state_says_take() {
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        let (v, outs) = r.on_cmd(&cmd(2, 1_100, "takeover.mic", json!({"on": true})), &facts(PHONE), &[], &[], 1_100);
+        assert!(v.ok && v.run);
+        assert_eq!(execs(&outs)[0].1, vec![Exec::TakeMic { on: true, sid: SID.into() }]);
+        assert_eq!(r.take_device(), None, "accepted is not owned (review #4): nothing advertises take:true yet");
+        let tok = execs(&outs)[0].0;
+        assert!(r.claim(tok, Some((ROOM.into(), "g1".into())), 1_150).0);
+        let answer = r.executed(tok, 1_200);
+        assert_eq!(r.take_device().as_deref(), Some(PHONE));
+        assert_eq!(take_in(&answer), Some(true), "the holder's answer carries me.take");
+        // a repeat is a no-op set; giving it back runs, and ownership ends once that ran
+        let (v2, _) = r.on_cmd(&cmd(3, 1_300, "takeover.mic", json!({"on": true})), &facts(PHONE), &[], &[], 1_300);
+        assert!(v2.ok && !v2.run);
+        let (v3, outs3) = r.on_cmd(&cmd(4, 1_400, "takeover.mic", json!({"on": false})), &facts(PHONE), &[], &[], 1_400);
+        assert!(v3.ok && v3.run);
+        assert_eq!(execs(&outs3)[0].1, vec![Exec::TakeMic { on: false, sid: SID.into() }]);
+        assert_eq!(r.take_device().as_deref(), Some(PHONE), "not released before the give-back ran");
+        let tok3 = execs(&outs3)[0].0;
+        assert!(r.claim(tok3, Some((ROOM.into(), "g1".into())), 1_410).0);
+        r.executed(tok3, 1_420);
+        assert_eq!(r.take_device(), None);
+    }
+
+    #[test]
+    fn a_takeover_that_never_ran_is_never_owned() {
+        // refused at the claim (another call by then): nothing owned, take never advertised
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        let (_, outs) = r.on_cmd(&cmd(2, 1_100, "takeover.mic", json!({"on": true})), &facts(PHONE), &[], &[], 1_100);
+        let tok = execs(&outs)[0].0;
+        let (ran, refusal) = r.claim(tok, Some(("!other:lab.test".into(), "g9".into())), 1_150);
+        assert!(!ran);
+        assert_eq!(take_in(&refusal), Some(false));
+        assert_eq!(r.take_device(), None);
+        // never claimed: stale at the clock, still nothing owned
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        r.on_cmd(&cmd(2, 1_100, "takeover.mic", json!({"on": true})), &facts(PHONE), &[], &[], 1_100);
+        r.tick(1_100 + EXEC_TIMEOUT_MS + 1);
+        assert_eq!(r.take_device(), None);
+    }
+
+    /// clients round 2 #7: the UI ran the acquisition, then the session was refused / lapsed before the confirmation —
+    /// the receiver owns nothing, so it must hand the UI a release for that session (no orphaned mute). Written against
+    /// the receiver's existing API (claim / refuse / executed / tick) and Out's Debug text, so it runs on the round-2
+    /// code too (where it fails).
+    #[test]
+    fn an_executed_acquisition_whose_session_ended_is_released_again() {
+        // refused (×) between the claim and the confirmation
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        let (_, outs) = r.on_cmd(&cmd(2, 1_100, "takeover.mic", json!({"on": true})), &facts(PHONE), &[], &[], 1_100);
+        let tok = execs(&outs)[0].0;
+        assert!(r.claim(tok, Some((ROOM.into(), "g1".into())), 1_150).0);
+        r.refuse(PHONE, 1_160);
+        let after = r.executed(tok, 1_200);
+        assert!(took(&after), "a release for the hold the UI just ran: {after:?}");
+        assert!(format!("{after:?}").contains(SID), "keyed by its session");
+        assert_eq!(r.take_device(), None);
+        // claimed, then the session lapsed and the confirmation never came: the clock releases it
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        let (_, outs) = r.on_cmd(&cmd(2, 1_100, "takeover.mic", json!({"on": true})), &facts(PHONE), &[], &[], 1_100);
+        let tok = execs(&outs)[0].0;
+        assert!(r.claim(tok, Some((ROOM.into(), "g1".into())), 1_150).0);
+        r.set_pad_on(false, 1_160);
+        let late = r.tick(1_100 + EXEC_TIMEOUT_MS + 1);
+        assert!(took(&late), "{late:?}");
+    }
+
+    #[test]
+    fn takeover_ends_with_its_session_lease_refusal_pad_off_and_call_change() {
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        take_run(&mut r, 2, 1_100, true);
+        assert!(!took(&r.tick(30_000)));
+        assert!(took(&r.tick(1_100 + pr::LEASE_MS + 1)), "45 s without a command: the mic goes back");
+        assert_eq!(r.take_device(), None);
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        take_run(&mut r, 2, 1_100, true);
+        assert!(took(&r.refuse(PHONE, 1_200)));
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        take_run(&mut r, 2, 1_100, true);
+        assert!(took(&r.set_pad_on(false, 1_200)));
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        take_run(&mut r, 2, 1_100, true);
+        assert!(took(&r.set_snapshot(Snapshot::default(), 1_200)));
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        take_run(&mut r, 2, 1_100, true);
+        assert!(!took(&r.set_snapshot(snap(true), 1_200)));
+        assert_eq!(r.take_device().as_deref(), Some(PHONE));
+    }
+
+    #[test]
+    fn the_user_taking_the_mic_back_ends_the_takeover_without_a_release() {
+        let mut r = receiver();
+        open(&mut r, 1_000);
+        take_run(&mut r, 2, 1_100, true);
+        assert!(r.cancel_take());
+        assert!(!r.cancel_take());
+        assert_eq!(r.take_device(), None);
+        // and the Pad's own mic unmute does the same, once it ran
+        let mut r = receiver();
+        r.set_snapshot(snap(true), 0);
+        open(&mut r, 1_000);
+        take_run(&mut r, 2, 1_100, true);
+        let (_, outs) = r.on_cmd(&cmd(3, 1_200, "mic", json!({"muted": false})), &facts(PHONE), &[], &[], 1_200);
+        let tok = execs(&outs)[0].0;
+        assert_eq!(r.take_device().as_deref(), Some(PHONE));
+        assert!(r.claim(tok, Some((ROOM.into(), "g1".into())), 1_210).0);
+        r.executed(tok, 1_220);
+        assert_eq!(r.take_device(), None);
     }
 
     // ---- the executor plan: each op → exactly its button's command; a refusal → nothing ----

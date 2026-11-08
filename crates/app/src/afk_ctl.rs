@@ -127,6 +127,11 @@ fn is_forbidden(e: &matrix_sdk::Error) -> bool {
 /// join, so a call NEVER inherits stale away-state. Without this, BRB stays sticky across a
 /// teardown and re-arms the next (re)join: the rising edge re-mutes the mic, unpublishes the
 /// camera, and cuts incoming audio, so a rejoined call comes back dead ("can't recover").
+/// PAD-PHONE Step B: BRB is on here (the mic handoff never restores the mic over it).
+pub(crate) fn afk_intent() -> bool {
+    AFK_INTENT.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 pub fn clear_intent() {
     AFK_INTENT.store(false, std::sync::atomic::Ordering::Relaxed);
 }

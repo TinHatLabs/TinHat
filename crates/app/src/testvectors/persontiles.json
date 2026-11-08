@@ -1,5 +1,5 @@
 {
-  "about": "Pad on the phone, Step A (share claude/tinhat-pad/PAD-PHONE/DESIGN.md): one tile per PERSON. Byte-identical in web src/features/calls/persontiles.vectors.json and desktop crates/app/src/testvectors/persontiles.json. personOf(identity, attrs): the server-minted tinhat.person P (a valid mxid) and identity === P + ':' + DEVICE ([A-Za-z0-9_+/-]{1,64}: the server's identity.mjs DEVICE_RE, 0.3.12) with an optional exact '~watch-<16 lowercase hex>'; anything else is nobody's (its own tile). chipOf: personOf ok + tinhat.pad=phone + tinhat.mode=watch + the ~watch- suffix. The mxid localpart: 1-255 UTF-16 code units, none of them ':' or one of JavaScript's \\s characters ([\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]: the server's MXID_RE). Fold output fields: members (sorted; [] for one device), pad, muted (all members), othersLive (self tile: one of my other devices' mic is live), alts / altOf (a person's other cameras: one shown, the others kept and hidden), serverMuted (every member) / partlyMuted (some).",
+  "about": "Pad on the phone, Step A (share claude/tinhat-pad/PAD-PHONE/DESIGN.md): one tile per PERSON. Byte-identical in web src/features/calls/persontiles.vectors.json and desktop crates/app/src/testvectors/persontiles.json. personOf(identity, attrs): the server-minted tinhat.person P (a valid mxid) and identity === P + ':' + DEVICE ([A-Za-z0-9_+/-]{1,64}: the server's identity.mjs DEVICE_RE, 0.3.12) with an optional exact '~watch-<16 lowercase hex>'; anything else is nobody's (its own tile). chipOf: personOf ok + tinhat.pad=phone + tinhat.mode=watch + the ~watch- suffix. The mxid localpart: 1-255 UTF-16 code units, none of them ':' or one of JavaScript's \\s characters ([\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]: the server's MXID_RE). Fold output fields: members (sorted; [] for one device), pad, muted (all members), othersLive (self tile: one of my other devices' mic is live), alts / altOf (a person's other cameras: one shown, the others kept and hidden), serverMuted (every member) / partlyMuted (some). Step B (12.1.10 / server 0.3.14): the phone's Mic / Camera modes \u2014 chipOf also gives 'mic' (tinhat.mode=mic + the '~pad-mic-<16 lowercase hex>' suffix) and 'camera' (tinhat.mode=camera + '~pad-cam-<16 lowercase hex>'); a person's pad = their chips once each in the order watch, mic, camera joined by '+'; a Camera-mode device has no mic (as a watcher); a Pad camera is shown unless the viewer picked another (the lowest such tile id). play: playMicOf(identity, attrs, own) = false only for my OWN other devices (server-vouched). chimes: PersonChimes steps (join / leave / tick with the identities present, me included, and the clock): a join chimes only for a person with no other connection, a leave only for their last one, a Pad connection's last leave waits 5000 ms and their return in that time cancels both. keyAlias: keyAliasBase(identity, attrs) = the '<mxid>:<device>' whose media keys a server-vouched Pad Mic / Camera connection decrypts under (its suffix dropped), else '' (normal, Watch, unvouched, mismatched).",
   "person": [
     {
       "identity": "@alice:example.org:DEV1",
@@ -225,6 +225,152 @@
       },
       "person": "",
       "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "person": "@alice:example.org",
+      "chip": "mic"
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "camera",
+        "tinhat.gen": "3"
+      },
+      "person": "@alice:example.org",
+      "chip": "camera"
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "camera",
+        "tinhat.gen": "3"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "watch",
+        "tinhat.gen": "3"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "screen"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.mode": "mic"
+      },
+      "person": "@alice:example.org",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789ABCDEF",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-scr-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {},
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@mallory:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "person": "",
+      "chip": ""
+    },
+    {
+      "identity": "@alice:example.org:8448:PHONE~pad-cam-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org:8448",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "camera",
+        "tinhat.gen": "3"
+      },
+      "person": "@alice:example.org:8448",
+      "chip": "camera"
     }
   ],
   "fold": [
@@ -1057,6 +1203,1363 @@
           "muted": true
         }
       ]
+    },
+    {
+      "name": "Step B: a computer muted by the takeover + its phone in Mic mode, transmitting = one tile, live, chip mic",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "kind": "avatar",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "pad": "mic",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "Step B: a phone in Mic mode that is muted + a muted computer = one tile, muted",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "pad": "mic",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "Step B: a Camera-mode phone (no mic) never makes the person 'not muted'; its camera is the shown one over the computer's (lower id)",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "vid_TR_a_computer",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "video",
+          "muted": true
+        },
+        {
+          "id": "vid_TR_z_phone",
+          "participant": "@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+          "kind": "video",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_TR_a_computer",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "vid_TR_z_phone",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        },
+        {
+          "id": "vid_TR_z_phone",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~pad-cam-0123456789abcdef"
+          ],
+          "pad": "camera",
+          "othersLive": false,
+          "alts": [
+            "vid_TR_a_computer"
+          ],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "Step B: the viewer's pick of the computer's camera holds over the Pad camera",
+      "own": "@me:example.org:ME1",
+      "pick": {
+        "@alice:example.org": "vid_TR_a_computer"
+      },
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": false
+        },
+        {
+          "id": "vid_TR_a_computer",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "vid_TR_z_phone",
+          "participant": "@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+          "kind": "video",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_TR_a_computer",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~pad-cam-0123456789abcdef"
+          ],
+          "pad": "camera",
+          "othersLive": false,
+          "alts": [
+            "vid_TR_z_phone"
+          ],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "vid_TR_z_phone",
+          "members": [],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "vid_TR_a_computer",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "Step B: a computer + a phone in Mic mode + a tablet in Camera mode = one tile, pad 'mic+camera', the Pad camera shown",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "kind": "avatar",
+          "muted": false
+        },
+        {
+          "id": "vid_TR_tab",
+          "participant": "@alice:example.org:TAB~pad-cam-0123456789abcdef",
+          "kind": "video",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:TAB~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_TR_tab",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+            "@alice:example.org:TAB~pad-cam-0123456789abcdef"
+          ],
+          "pad": "mic+camera",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "Step B: a moderator's mute on the computer only, phone in Camera mode = fully moderated (the camera has nothing to mute)",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true,
+          "serverMuted": true,
+          "serverMutedBy": "@mod:example.org"
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+          "kind": "avatar",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~pad-cam-0123456789abcdef"
+          ],
+          "pad": "camera",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": true,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "Step B: a moderator's mute on the computer only, phone in Mic mode not muted = partly moderated, live",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true,
+          "serverMuted": true,
+          "serverMutedBy": "@mod:example.org"
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "kind": "avatar",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "pad": "mic",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": true,
+          "muted": false
+        }
+      ]
+    },
+    {
+      "name": "Step B: MY phone in Mic mode, transmitting, while my computer is muted by the takeover = my tile says another device is live",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_self",
+          "participant": "You",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@me:example.org:PHONE~pad-mic-0123456789abcdef",
+          "participant": "@me:example.org:PHONE~pad-mic-0123456789abcdef",
+          "kind": "avatar",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_self",
+          "members": [
+            "@me:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "pad": "mic",
+          "othersLive": true,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "Step B: MY phone in Camera mode: its camera is my shown camera over my self-view (my explicit choice), the self-view an alternative",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "vid_selfview",
+          "participant": "You",
+          "kind": "video",
+          "muted": false
+        },
+        {
+          "id": "vid_TR_myphone",
+          "participant": "@me:example.org:PHONE~pad-cam-0123456789abcdef",
+          "kind": "video",
+          "muted": true
+        }
+      ],
+      "attrs": {
+        "@me:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "vid_selfview",
+          "members": [
+            "@me:example.org:PHONE~pad-cam-0123456789abcdef"
+          ],
+          "pad": "camera",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "vid_TR_myphone",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        },
+        {
+          "id": "vid_TR_myphone",
+          "members": [
+            "@me:example.org:PHONE~pad-cam-0123456789abcdef"
+          ],
+          "pad": "camera",
+          "othersLive": false,
+          "alts": [
+            "vid_selfview"
+          ],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": true
+        }
+      ]
+    },
+    {
+      "name": "Step B: a forged Mic chip (mode mic on a ~watch identity) = no chip, still the person's (grouped, no mic of its own)",
+      "own": "@me:example.org:ME1",
+      "tiles": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "participant": "@alice:example.org:DEV1",
+          "kind": "avatar",
+          "muted": true
+        },
+        {
+          "id": "avatar_@alice:example.org:PHONE~watch-0123456789abcdef",
+          "participant": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "kind": "avatar",
+          "muted": false
+        }
+      ],
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        }
+      },
+      "out": [
+        {
+          "id": "avatar_@alice:example.org:DEV1",
+          "members": [
+            "@alice:example.org:DEV1",
+            "@alice:example.org:PHONE~watch-0123456789abcdef"
+          ],
+          "pad": "",
+          "othersLive": false,
+          "alts": [],
+          "altOf": "",
+          "serverMuted": false,
+          "partlyMuted": false,
+          "muted": false
+        }
+      ]
+    }
+  ],
+  "play": [
+    {
+      "name": "my phone's mic on my computer: not played",
+      "identity": "@me:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@me:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "own": "@me:example.org:ME1",
+      "expect": false
+    },
+    {
+      "name": "my other computer's mic: not played either",
+      "identity": "@me:example.org:LAPTOP",
+      "attrs": {
+        "tinhat.person": "@me:example.org"
+      },
+      "own": "@me:example.org:ME1",
+      "expect": false
+    },
+    {
+      "name": "someone else's phone mic: played",
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "own": "@me:example.org:ME1",
+      "expect": true
+    },
+    {
+      "name": "someone else: played",
+      "identity": "@alice:example.org:DEV1",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "own": "@me:example.org:ME1",
+      "expect": true
+    },
+    {
+      "name": "no server attribute (an old server): played (never silenced on the string alone)",
+      "identity": "@me:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {},
+      "own": "@me:example.org:ME1",
+      "expect": true
+    },
+    {
+      "name": "a forged person attribute on another account's identity: played",
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@me:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "own": "@me:example.org:ME1",
+      "expect": true
+    },
+    {
+      "name": "a port user is not the portless user",
+      "identity": "@me:example.org:8448:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@me:example.org:8448",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "own": "@me:example.org:ME1",
+      "expect": true
+    }
+  ],
+  "chimes": [
+    {
+      "name": "a new person joins: 1 join chime; their Pad phone joining after: none",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "join",
+          "id": "@alice:example.org:DEV1",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": "join"
+        },
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:DEV1"
+          ],
+          "now": 10,
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "a person whose phone joins first (the race): the phone is their first connection = 1 chime, the computer after = none",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": "join"
+        },
+        {
+          "op": "join",
+          "id": "@alice:example.org:DEV1",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "now": 5,
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "the Pad phone leaves while the computer stays: no chime",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "leave",
+          "id": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:DEV1"
+          ],
+          "now": 0,
+          "expect": ""
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:DEV1"
+          ],
+          "now": 10000,
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "the computer (last normal device) leaves while the phone watches: no chime; then the phone (last) leaves and doesn't come back: 1 leave chime after the grace",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "leave",
+          "id": "@alice:example.org:DEV1",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:PHONE~watch-0123456789abcdef"
+          ],
+          "now": 0,
+          "expect": ""
+        },
+        {
+          "op": "leave",
+          "id": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 100,
+          "expect": ""
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 5099,
+          "expect": 0
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 5100,
+          "expect": 1
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 20000,
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a phone alone in the call switches Watch -> Mic -> Camera (leave + rejoin each time): no chime at all",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "leave",
+          "id": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": ""
+        },
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 1500,
+          "expect": ""
+        },
+        {
+          "op": "leave",
+          "id": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 4000,
+          "expect": ""
+        },
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 6000,
+          "expect": ""
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:PHONE~pad-cam-0123456789abcdef"
+          ],
+          "now": 20000,
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a person's last NORMAL device leaves: a leave chime at once",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "leave",
+          "id": "@bob:example.org:B1",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": "leave"
+        }
+      ]
+    },
+    {
+      "name": "my own phone joins my call on Pad Mic: no chime (I am present)",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "join",
+          "id": "@me:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1",
+            "@bob:example.org:B1"
+          ],
+          "now": 0,
+          "expect": ""
+        },
+        {
+          "op": "leave",
+          "id": "@me:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1",
+            "@bob:example.org:B1"
+          ],
+          "now": 100,
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "negative control: someone else's phone joining is a new person when they have no other connection",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1",
+            "@bob:example.org:B1"
+          ],
+          "now": 0,
+          "expect": "join"
+        }
+      ]
+    },
+    {
+      "name": "without the server attribute (old server): the identity's own mxid decides, the Pad suffix dropped",
+      "attrs": {},
+      "steps": [
+        {
+          "op": "join",
+          "id": "@alice:example.org:DEV1",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": "join"
+        },
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:DEV1"
+          ],
+          "now": 1,
+          "expect": ""
+        },
+        {
+          "op": "leave",
+          "id": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:DEV1"
+          ],
+          "now": 2,
+          "expect": ""
+        },
+        {
+          "op": "leave",
+          "id": "@alice:example.org:DEV1",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 3,
+          "expect": "leave"
+        }
+      ]
+    },
+    {
+      "name": "a held-back leave whose person came back with a normal device (Talk here) = no chimes",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "leave",
+          "id": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": ""
+        },
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 1200,
+          "expect": ""
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:PHONE"
+          ],
+          "now": 6000,
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a return AFTER the grace (a late timer): both the leave and the arrival chime (owed leave played by the next tick)",
+      "attrs": {
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "leave",
+          "id": "@alice:example.org:PHONE~watch-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": ""
+        },
+        {
+          "op": "join",
+          "id": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 6000,
+          "expect": "join"
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "now": 6001,
+          "expect": 1
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1",
+            "@alice:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "now": 20000,
+          "expect": 0
+        }
+      ]
+    }
+  ],
+  "keyAlias": [
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "expect": "@alice:example.org:PHONE"
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-cam-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "camera",
+        "tinhat.gen": "3"
+      },
+      "expect": "@alice:example.org:PHONE"
+    },
+    {
+      "identity": "@alice:example.org:8448:PHONE~pad-cam-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org:8448",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "camera",
+        "tinhat.gen": "3"
+      },
+      "expect": "@alice:example.org:8448:PHONE"
+    },
+    {
+      "identity": "@alice:example.org:PHONE~watch-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "watch",
+        "tinhat.gen": "3"
+      },
+      "expect": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE",
+      "attrs": {
+        "tinhat.person": "@alice:example.org"
+      },
+      "expect": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {},
+      "expect": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@mallory:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "expect": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "camera",
+        "tinhat.gen": "3"
+      },
+      "expect": ""
+    },
+    {
+      "identity": "@alice:example.org:PHONE~pad-mic-0123456789abcdef#X",
+      "attrs": {
+        "tinhat.person": "@alice:example.org",
+        "tinhat.pad": "phone",
+        "tinhat.mode": "mic",
+        "tinhat.gen": "3"
+      },
+      "expect": ""
     }
   ]
 }

@@ -831,17 +831,17 @@ Kirigami.ApplicationWindow {
         settings.applyUiScale(n)
         root.uiScalePending = settings.uiScalePending(n)
     }
-    /** 12.1.9: Settings → Appearance "Change size instantly (experimental)". Turning it on applies a size that was waiting
-     *  for a restart at once (that is what the setting is for); turning it off leaves the size as shown. */
+    /** Settings → Appearance "Change size instantly" (12.1.9 opt-in, 12.1.11 on by default on Wayland). Turning it on
+     *  applies a size that was waiting for a restart at once; turning it off leaves the size as shown. */
     function setUiScaleLiveOptIn(on) {
         root.uiScaleLiveCapable = settings.setUiScaleLiveOptIn(on)
         root.uiScalePending = settings.uiScalePending(root.uiScale)
         if (on && root.uiScaleLiveCapable) {
-            console.log("[ui-scale] the experimental live change is on")
+            console.log("[ui-scale] Change size instantly is on")
             settings.applyUiScale(root.uiScale)
             root.uiScalePending = settings.uiScalePending(root.uiScale)
         } else if (!on) {
-            console.log("[ui-scale] the experimental live change is off: new sizes apply at the next start")
+            console.log("[ui-scale] Change size instantly is off: new sizes apply at the next start")
         }
     }
     /** A key press (or the palette): dir > 0 bigger, < 0 smaller, 0 = 100 %; the toast says the size. */
@@ -861,6 +861,8 @@ Kirigami.ApplicationWindow {
     function _syncTileModel() { return core._syncTileModel() }
     function _rebuildSelfviewRow() { return core._rebuildSelfviewRow() }
     function tileMxid(p) { return core.tileMxid(p) }
+    function isParticipantOf(p, mxid) { return core.isParticipantOf(p, mxid) }
+    function sameParticipant(a, b) { return core.sameParticipant(a, b) }
     function tileKey(md) { return core.tileKey(md) }
     function isKeyHidden(md) { return core.isKeyHidden(md) }
     function defaultFillModeFor(md) { return core.defaultFillModeFor(md) }

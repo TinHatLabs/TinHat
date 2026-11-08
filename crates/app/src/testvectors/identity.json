@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "about": "Tin Hat identity fix 12.1.8 (finding B, share claude/tinhat-security-review/IDENTITY-PARSE-20261102.md): which user a LiveKit identity `<mxid>:<device>` belongs to, by the room's live call memberships (sender, device_id), whether an identity is a given user's (identityIsUser: the input is always an identity, never a bare mxid), and the recorder's \"never record me\" rule (any POSSIBLE owner opted out -> not recorded; a membership can't overrule it). Byte-identical copies: web src/features/calls/testvectors/identity.json (the owner), desktop crates/app/src/testvectors/identity.json. sessions = [sender, device_id] of live memberships.",
+  "about": "Tin Hat identity fix 12.1.8 (finding B, share claude/tinhat-security-review/IDENTITY-PARSE-20261102.md): which user a LiveKit identity `<mxid>:<device>` belongs to, by the room's live call memberships (sender, device_id), whether an identity is a given user's (identityIsUser: the input is always an identity, never a bare mxid), and the recorder's \"never record me\" rule (any POSSIBLE owner opted out -> not recorded; a membership can't overrule it). Byte-identical copies: web src/features/calls/testvectors/identity.json (the owner), desktop crates/app/src/testvectors/identity.json. sessions = [sender, device_id] of live memberships. 12.1.11 (assembly-047): participantOf = is this call participant (an identity, a Pad/Watch identity, or a fake call's bare mxid) the user mxid's, by the string alone (the call UI's display matches); sameParticipant = do two call ids (identity or bare mxid, either order) name the same participant. Never a \"x:\" prefix match: @a:h must not claim @a:h:8448:DEV. Desktop QML copy: AppCore.qml isParticipantOf / sameParticipant (scripts/qml-identity-test.qml).",
   "user": [
     {
       "name": "port server user, membership known",
@@ -272,6 +272,184 @@
       "mxid": "",
       "sessions": [],
       "want": false
+    }
+  ],
+  "participantOf": [
+    {
+      "name": "an identity of the port user",
+      "participant": "@a:h.test:8448:DEV",
+      "mxid": "@a:h.test:8448",
+      "want": true
+    },
+    {
+      "name": "the port user's identity is not the port-less user's (a prefix said it was)",
+      "participant": "@a:h.test:8448:DEV",
+      "mxid": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "a plain identity",
+      "participant": "@a:h.test:PHONE",
+      "mxid": "@a:h.test",
+      "want": true
+    },
+    {
+      "name": "a plain identity is not the port user's",
+      "participant": "@a:h.test:PHONE",
+      "mxid": "@a:h.test:8448",
+      "want": false
+    },
+    {
+      "name": "a Watch identity is its person's",
+      "participant": "@a:h.test:DEV~watch-0123456789abcdef",
+      "mxid": "@a:h.test",
+      "want": true
+    },
+    {
+      "name": "a Pad Mic identity is its person's",
+      "participant": "@a:h.test:PC~pad-mic-0123456789abcdef",
+      "mxid": "@a:h.test",
+      "want": true
+    },
+    {
+      "name": "a Pad Camera identity of the port user",
+      "participant": "@a:h.test:8448:PC~pad-cam-0123456789abcdef",
+      "mxid": "@a:h.test:8448",
+      "want": true
+    },
+    {
+      "name": "a Pad Camera identity of the port user is not the port-less user's",
+      "participant": "@a:h.test:8448:PC~pad-cam-0123456789abcdef",
+      "mxid": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "a Pad identity is not the identity it pairs with",
+      "participant": "@a:h.test:PC~pad-mic-0123456789abcdef",
+      "mxid": "@a:h.test:PC",
+      "want": false
+    },
+    {
+      "name": "a fake call's bare mxid tile",
+      "participant": "@a:h.test",
+      "mxid": "@a:h.test",
+      "want": true
+    },
+    {
+      "name": "no mxid matches nothing",
+      "participant": "@a:h.test:DEV",
+      "mxid": "",
+      "want": false
+    },
+    {
+      "name": "a longer localpart is someone else",
+      "participant": "@ab:h.test:DEV",
+      "mxid": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "a longer host is someone else",
+      "participant": "@a:h.test2:DEV",
+      "mxid": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "an IPv6 literal server",
+      "participant": "@a:[::1]:8448:DEV",
+      "mxid": "@a:[::1]:8448",
+      "want": true
+    },
+    {
+      "name": "a string that reads like a bare port mxid is the port-less user's device 8448 (the string alone can't tell)",
+      "participant": "@a:h.test:8448",
+      "mxid": "@a:h.test",
+      "want": true
+    }
+  ],
+  "sameParticipant": [
+    {
+      "name": "the same identity",
+      "a": "@a:h.test:PC",
+      "b": "@a:h.test:PC",
+      "want": true
+    },
+    {
+      "name": "an identity and its user",
+      "a": "@a:h.test:PC",
+      "b": "@a:h.test",
+      "want": true
+    },
+    {
+      "name": "its user and an identity (either order)",
+      "a": "@a:h.test",
+      "b": "@a:h.test:PC",
+      "want": true
+    },
+    {
+      "name": "the port user's identity is not the port-less user (a prefix said it was)",
+      "a": "@a:h.test:8448:PC",
+      "b": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "the port-less user is not the port user's identity (either order)",
+      "a": "@a:h.test",
+      "b": "@a:h.test:8448:PC",
+      "want": false
+    },
+    {
+      "name": "the port user's identity and the port user",
+      "a": "@a:h.test:8448:PC",
+      "b": "@a:h.test:8448",
+      "want": true
+    },
+    {
+      "name": "two devices of one person are two participants",
+      "a": "@a:h.test:PC",
+      "b": "@a:h.test:PHONE",
+      "want": false
+    },
+    {
+      "name": "a Pad Mic identity and its person",
+      "a": "@a:h.test:PC~pad-mic-0123456789abcdef",
+      "b": "@a:h.test",
+      "want": true
+    },
+    {
+      "name": "a Pad Mic identity is not the identity it pairs with",
+      "a": "@a:h.test:PC~pad-mic-0123456789abcdef",
+      "b": "@a:h.test:PC",
+      "want": false
+    },
+    {
+      "name": "a Watch identity of the port user is not the port-less user",
+      "a": "@a:h.test:8448:PC~watch-0123456789abcdef",
+      "b": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "a longer localpart is someone else",
+      "a": "@ab:h.test:PC",
+      "b": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "empty is nobody",
+      "a": "",
+      "b": "",
+      "want": false
+    },
+    {
+      "name": "empty is not a user",
+      "a": "",
+      "b": "@a:h.test",
+      "want": false
+    },
+    {
+      "name": "the bare port mxid string reads as the port-less user's device 8448",
+      "a": "@a:h.test:8448",
+      "b": "@a:h.test",
+      "want": true
     }
   ]
 }

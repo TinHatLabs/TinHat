@@ -72,6 +72,8 @@ pub enum PadEvent {
     Ended(String),
     /// a decision worth a log line (the lab test reads them; the app's sink drops them: they are on stderr already)
     Log(String),
+    /// receiver (PAD-PHONE Step B): the phone's takeover of this device's mic ended with its session — give it back
+    TakeReleased(String),
 }
 
 pub type Sink = Arc<dyn Fn(PadEvent) + Send + Sync>;
@@ -465,6 +467,10 @@ impl PadNode {
         for o in outs {
             match o {
                 Out::Send { device, content } => self.enqueue(&device, pr::PAD_STATE, content),
+                Out::TakeReleased { sid } => {
+                    self.log("takeover.mic: that session's hold ends — the mic goes back".into());
+                    self.emit(PadEvent::TakeReleased(sid))
+                }
                 Out::Exec { token, cmds } => {
                     let cmds = cmds
                         .iter()
@@ -537,6 +543,19 @@ impl PadNode {
         self.rx.lock().unwrap().snapshot().call.as_ref().map(|c| (c.0.clone(), c.1.clone()))
     }
     /// × on the chip: end that device's Pad for this call.
+    /// The devices with a live Pad session here (the chip's list).
+    pub fn session_devices(&self) -> Vec<String> {
+        self.chips.lock().unwrap().clone()
+    }
+    /// PAD-PHONE Step B: the user took the mic back here (the mic button, "Take the mic back"): the takeover ends
+    /// without a restore; the phone learns it from the next state.
+    pub fn cancel_take(self: &Arc<Self>) {
+        let ended = self.rx.lock().unwrap().cancel_take();
+        if ended {
+            self.log("takeover.mic: taken back on this device".into());
+        }
+        self.ensure_ticker(); // every session's next state says take:false
+    }
     pub fn refuse(self: &Arc<Self>, device: &str) {
         {
             let mut rx = self.rx.lock().unwrap();

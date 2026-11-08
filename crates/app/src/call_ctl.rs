@@ -350,12 +350,32 @@ pub mod qobject {
         /// the flag. Polled from QML's 120ms mirror. Cheap (a mutex peek); no-op while consistent.
         #[qinvokable]
         fn refresh_music_state(self: Pin<&mut CallController>);
+        /// PAD-PHONE Step B: my own person's server-vouched Pad Mic connections with an UNMUTED mic publication in this
+        /// call (a JSON array of identities).
+        #[qinvokable]
+        fn own_pad_mics(self: &CallController) -> QString;
+        /// PAD-PHONE Step B (mic_handoff.rs): `takeover.mic` ran for Pad session `sid` (on = take, off = give back).
+        #[qinvokable]
+        fn pad_take(self: Pin<&mut CallController>, on: bool, sid: &QString);
+        /// The receiver's release of session `sid`'s hold (its session ended, or an acquisition it couldn't commit).
+        #[qinvokable]
+        fn pad_take_released(self: Pin<&mut CallController>, sid: &QString);
+        /// "Take the mic back": the one deferred handoff (as every unmute while the phone has the mic).
+        #[qinvokable]
+        fn take_mic_back(self: Pin<&mut CallController>);
+        /// The handoff's clock (QML, every 500 ms in a call): the deferred restore, the auto rule. Returns held.
+        #[qinvokable]
+        fn handoff_tick(self: Pin<&mut CallController>) -> bool;
         /// Emitted when a REMOTE participant joins / leaves the call — QML plays the themed
         /// join/leave chime. (The local user's own join doesn't raise these.)
         #[qsignal]
         fn participant_joined(self: Pin<&mut CallController>, identity: QString);
         #[qsignal]
         fn participant_left(self: Pin<&mut CallController>, identity: QString);
+        /// PAD-PHONE Step B (2026-11-06): the call chime, decided per PERSON (persontiles::PersonChimes): "join" /
+        /// "leave". A Pad connection of someone already in the call (or a phone switching modes) never chimes.
+        #[qsignal]
+        fn person_chime(self: Pin<&mut CallController>, kind: QString);
         /// #7 RNNoise: enable/disable mic noise-cancellation (default OFF; persisted).
         /// Rebuilds the mic capture pipeline mid-call so it takes effect immediately.
         /// (Named apply_* so it doesn't collide with the mic_denoise qproperty setter.)
@@ -677,6 +697,20 @@ fn cam_pick() -> &'static std::sync::Mutex<(u64, std::collections::HashMap<Strin
     static P: OnceLock<std::sync::Mutex<(u64, std::collections::HashMap<String, String>)>> = OnceLock::new();
     P.get_or_init(|| std::sync::Mutex::new((0, std::collections::HashMap::new())))
 }
+/// PAD-PHONE Step B: the call chimes per person — the rule's state and the identities in the call (me included).
+fn person_chimes() -> &'static std::sync::Mutex<(crate::persontiles::PersonChimes, Vec<String>)> {
+    static C: std::sync::OnceLock<std::sync::Mutex<(crate::persontiles::PersonChimes, Vec<String>)>> = std::sync::OnceLock::new();
+    C.get_or_init(|| std::sync::Mutex::new((crate::persontiles::PersonChimes::default(), Vec::new())))
+}
+/// The call generation the chime state belongs to (bumped at each call's start and end).
+static CHIME_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+fn chime_now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+fn chime_attrs(id: &str) -> std::collections::HashMap<String, String> {
+    tinhat_streamer::participant_attributes(id)
+}
+
 /// The companions fold, then (Pad on the phone, Step A) one tile per person from the server's attributes.
 fn fold_all(raw: Vec<serde_json::Value>, pairs: &[(String, String)]) -> Vec<serde_json::Value> {
     let own = my_call_identity();
@@ -933,12 +967,23 @@ async fn moderate_async(
     let me_mxid = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
     let my_name = name_for_mxid(&me_mxid);
     let who = person_label(&target);
-    if action == "disconnect" {
+    // PAD-PHONE Step B: a person with more than one connection in the call (their computer + their phone's Pad) is acted
+    // on as ONE person — the server covers every device and answers per device (client review #11: notices only for the
+    // devices it really acted on, every failure reported)
+    let person = person_devices(&target) > 1;
+    if action == "disconnect" && !person {
         tinhat_streamer::publish_moderation_notice(&target, &my_name).await;
     }
-    match crate::moderation::call_action(&room_id, action, &target).await {
-        Ok(_) => {
-            tinhat_streamer::publish_moderation_packet(action, &target, &my_name).await;
+    match crate::moderation::call_action_scoped(&room_id, action, &target, person).await {
+        Ok(v) => {
+            let partial = person_partial_text(&v);
+            let acted: Vec<String> = if person { person_ok_devices(&v) } else { vec![target.clone()] };
+            for id in &acted {
+                if person && action == "disconnect" {
+                    tinhat_streamer::publish_moderation_notice(id, &my_name).await;
+                }
+                tinhat_streamer::publish_moderation_packet(action, id, &my_name).await;
+            }
             if action != "disconnect" && announce {
                 let target_mxid = mxid_of(&target);
                 if let Err(e) =
@@ -953,7 +998,16 @@ async fn moderate_async(
                     "unmute" => format!("Unmuted {who} for everyone"),
                     _ => format!("Disconnected {who} from the call"),
                 };
-                let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&text)));
+                // a device the server couldn't act on is reported as an error, whatever the action (review #11)
+                match partial {
+                    Some(p) => {
+                        let text = format!("{text} — {p}");
+                        let _ = qt.queue(move |mut o| o.as_mut().report_error(&text));
+                    }
+                    None => {
+                        let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&text)));
+                    }
+                }
             }
         }
         Err(e) => {
@@ -969,6 +1023,81 @@ async fn moderate_async(
             }
         }
     }
+}
+
+/// PAD-PHONE Step B (clients round 2 #4): my person's server-vouched Pad Mic connections in the call, from the call
+/// server's PUBLICATIONS (not our subscriptions): live = an unmuted mic publication, unknown = a publication list not
+/// seen yet (never "stopped").
+fn phone_view() -> crate::mic_handoff::Phone {
+    let me = my_call_identity();
+    let mut ph = crate::mic_handoff::Phone::default();
+    let Some(i) = me.rfind(':').filter(|&i| i > 0) else { return ph };
+    let mine = &me[..i];
+    let mut ids = tinhat_streamer::call::present_participants();
+    ids.sort();
+    for id in ids {
+        let a = chime_attrs(&id);
+        if crate::persontiles::chip_of(&id, &a) != "mic" || crate::persontiles::person_of(&id, &a) != mine {
+            continue;
+        }
+        match tinhat_streamer::call::remote_mic_live(&id) {
+            Some(true) => ph.live.push(id.clone()),
+            None => ph.unknown.push(id.clone()),
+            Some(false) => {}
+        }
+        ph.present.push(id);
+    }
+    ph
+}
+fn own_pad_mics_now() -> Vec<String> {
+    phone_view().live
+}
+/// The receiver-side mic handoff of this call (mic_handoff.rs).
+fn handoff() -> &'static std::sync::Mutex<crate::mic_handoff::MicHandoff> {
+    static H: std::sync::OnceLock<std::sync::Mutex<crate::mic_handoff::MicHandoff>> = std::sync::OnceLock::new();
+    H.get_or_init(|| std::sync::Mutex::new(crate::mic_handoff::MicHandoff::default()))
+}
+/// Whether the phone holding (or last holding) the mic has a Pad session here that can hear take:false.
+fn hold_has_session(h: &crate::mic_handoff::MicHandoff) -> bool {
+    use crate::mic_handoff::{Hold, HoldBy};
+    match &h.hold {
+        Some(Hold { by: HoldBy::Pad(_), .. }) => true,
+        Some(Hold { by: HoldBy::Auto(id), .. }) => {
+            let base = id.rfind('~').map(|i| &id[..i]).unwrap_or(id);
+            let dev = base.rsplit(':').next().unwrap_or("").to_string();
+            crate::pad_ctl::node().map(|n| n.session_devices().contains(&dev)).unwrap_or(false)
+        }
+        None => false,
+    }
+}
+/// do_join's muted barrier (clients round 2 #2): the mic was published muted because my phone was transmitting in the
+/// roster; the in-call step then hands the mic to the handoff (or unmutes it as asked when the phone is gone by then).
+static JOIN_BARRIER_MUTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// PAD-PHONE Step B: how many connections of this participant's PERSON are in the call (persontiles chime_person over
+/// the call's identities: their computer + their phone's Pad connections).
+fn person_devices(target: &str) -> usize {
+    let p = crate::persontiles::chime_person(target, &chime_attrs(target));
+    let present = person_chimes().lock().unwrap().1.clone();
+    present.iter().filter(|o| crate::persontiles::chime_person(o, &chime_attrs(o)) == p).count()
+}
+/// The identities a person-wide answer acted on (`devices[]` with `result: "ok"`).
+fn person_ok_devices(v: &serde_json::Value) -> Vec<String> {
+    v.get("devices")
+        .and_then(|d| d.as_array())
+        .map(|a| {
+            a.iter()
+                .filter(|d| d.get("result").and_then(|r| r.as_str()) == Some("ok"))
+                .filter_map(|d| d.get("identity").and_then(|i| i.as_str()).map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+/// A person-wide answer with a device that failed: "1 of 2 devices didn't respond" (None = every device done).
+fn person_partial_text(v: &serde_json::Value) -> Option<String> {
+    let failed = v.get("failed").and_then(|x| x.as_u64()).unwrap_or(0);
+    let done = v.get("done").and_then(|x| x.as_u64()).unwrap_or(0);
+    (failed > 0).then(|| format!("{failed} of {} devices couldn't be reached", failed + done))
 }
 
 /// The bare mxid for a LiveKit identity (`@user:server:DEVICE` -> `@user:server`).
@@ -2759,6 +2888,16 @@ impl qobject::CallController {
                             || *o.mic_muted()
                             || qobject::CallController::ptt_target_muted(*o.push_to_talk(), *o.ptt_speaking(), false);
                         o.as_mut().set_mic_muted(want_muted);
+                        // PAD-PHONE Step B: the handoff starts with the roster (a muted join while my phone transmits)
+                        let barrier = JOIN_BARRIER_MUTED.swap(false, std::sync::atomic::Ordering::SeqCst);
+                        let acts = {
+                            let mic = o.mic_view();
+                            handoff().lock().unwrap().joined(crate::persontiles_now_ms(), mic, &phone_view())
+                        };
+                        let held = acts.contains(&crate::mic_handoff::Act::Mute);
+                        o.as_mut().run_handoff(acts);
+                        let start_muted = start_muted || barrier;
+                        let want_muted = want_muted || held;
                         if want_muted != start_muted {
                             crate::bridge::runtime().spawn(async move {
                                 let cell = current_call();
@@ -2810,6 +2949,12 @@ impl qobject::CallController {
                     // when they leave, so a rejoin is re-enforced again).
                     let mut enforced: std::collections::HashSet<String> = std::collections::HashSet::new();
                     let my_identity = my_call_identity();
+                    let chime_gen = CHIME_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+                    {
+                        let mut pc = person_chimes().lock().unwrap();
+                        pc.0.clear();
+                        pc.1 = vec![my_identity.clone()];
+                    }
                     // Resolve display names up front so tiles show real names, not raw mxids.
                     crate::bridge::runtime().spawn({
                         let rid = room_id.clone();
@@ -2927,9 +3072,27 @@ impl qobject::CallController {
                                 let json = built.json.clone();
                                 publish_desired(built);
                                 let id_sig = identity.clone();
+                                // Step B: the chime is about the PERSON (none for their Pad connection, or a mode switch)
+                                let kind = {
+                                    let mut pc = person_chimes().lock().unwrap();
+                                    pc.1 = std::iter::once(my_call_identity()).chain(participants.iter().cloned()).collect();
+                                    let present = pc.1.clone();
+                                    let k = pc.0.join(&identity, &chime_attrs, &present, chime_now_ms());
+                                    // a person back only after their grace: their owed leave plays first (tick), then the join
+                                    let owed = pc.0.tick(&chime_attrs, &present, chime_now_ms());
+                                    (owed, k)
+                                };
+                                let (owed, kind) = kind;
                                 let _ = qt2.queue(move |mut o| {
                                     o.as_mut().set_video_tiles(QString::from(&json));
-                                    o.as_mut().participant_joined(QString::from(&id_sig)); // -> join chime
+                                    o.as_mut().participant_joined(QString::from(&id_sig));
+                                    let current = CHIME_GEN.load(std::sync::atomic::Ordering::SeqCst) == chime_gen;
+                                    if owed > 0 && current {
+                                        o.as_mut().person_chime(QString::from("leave"));
+                                    }
+                                    if !kind.is_empty() && current {
+                                        o.as_mut().person_chime(QString::from(kind)); // -> join chime
+                                    }
                                 });
                             }
                             CallEvent::ParticipantLeft { identity } => {
@@ -2946,9 +3109,43 @@ impl qobject::CallController {
                                 let json = built.json.clone();
                                 publish_desired(built);
                                 let id_sig = identity.clone();
+                                // Step B: a leave chimes only for the person's LAST connection; a Pad one waits 5 s for
+                                // their next connection (a mode switch), then the tick below decides
+                                let kind = {
+                                    let mut pc = person_chimes().lock().unwrap();
+                                    pc.1 = std::iter::once(my_call_identity()).chain(participants.iter().cloned()).collect();
+                                    let present = pc.1.clone();
+                                    pc.0.leave(&identity, &chime_attrs, &present, chime_now_ms())
+                                };
+                                if kind.is_empty() && crate::persontiles::is_pad_identity(&identity) {
+                                    let qt4 = qt2.clone();
+                                    crate::bridge::runtime().spawn(async move {
+                                        tokio::time::sleep(std::time::Duration::from_millis(crate::persontiles::PAD_LEAVE_GRACE_MS + 50)).await;
+                                        // only for the call it was armed in (review #9), checked UNDER the ledger lock (the
+                                        // teardown clears the ledger under it too) and again when the chime is delivered
+                                        let n = {
+                                            let mut pc = person_chimes().lock().unwrap();
+                                            if CHIME_GEN.load(std::sync::atomic::Ordering::SeqCst) != chime_gen {
+                                                return;
+                                            }
+                                            let present = pc.1.clone();
+                                            pc.0.tick(&chime_attrs, &present, chime_now_ms())
+                                        };
+                                        if n > 0 {
+                                            let _ = qt4.queue(move |mut o| {
+                                                if CHIME_GEN.load(std::sync::atomic::Ordering::SeqCst) == chime_gen {
+                                                    o.as_mut().person_chime(QString::from("leave"));
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
                                 let _ = qt2.queue(move |mut o| {
                                     o.as_mut().set_video_tiles(QString::from(&json));
-                                    o.as_mut().participant_left(QString::from(&id_sig)); // -> leave chime
+                                    o.as_mut().participant_left(QString::from(&id_sig));
+                                    if !kind.is_empty() && CHIME_GEN.load(std::sync::atomic::Ordering::SeqCst) == chime_gen {
+                                        o.as_mut().person_chime(QString::from(kind)); // -> leave chime
+                                    }
                                 });
                             }
                             CallEvent::TrackMuteChanged { identity, category, muted: m } => {
@@ -3206,6 +3403,14 @@ impl qobject::CallController {
                                 }
                             }
                         }
+                    }
+                    // Step B (client review #9): the call's chime state ends with it — a held-back leave of this call
+                    // never chimes later (its grace task sees another generation)
+                    {
+                        let mut pc = person_chimes().lock().unwrap();
+                        CHIME_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                        pc.0.clear();
+                        pc.1.clear();
                     }
                     set_desired_tiles("[]");
                     let _ = qt2.queue(|mut o| {
@@ -3835,6 +4040,10 @@ impl qobject::CallController {
     /// when a finite music file reached EOS and auto-unpublished (the streamer tore the slot
     /// down but nothing told the QObject). Only writes on a change, so the qproperty's changed
     /// signal doesn't fire every 120ms.
+    pub fn own_pad_mics(&self) -> QString {
+        QString::from(&serde_json::Value::from(own_pad_mics_now()).to_string())
+    }
+
     pub fn refresh_music_state(mut self: Pin<&mut Self>) {
         let live = tinhat_streamer::is_music_playing();
         if *self.music_playing() && !live {
@@ -4987,7 +5196,95 @@ impl qobject::CallController {
             return;
         }
         let muted = !*self.mic_muted();
+        if muted {
+            handoff().lock().unwrap().user_mute(); // PAD-PHONE Step B: the user's mute is kept
+            self.apply_mic(true);
+        } else {
+            self.request_unmute(); // PAD-PHONE Step B: through the handoff (deferred while the phone has the mic)
+        }
+    }
+
+    /// PAD-PHONE Step B (clients round 2 #1): EVERY unmute request (the mic button, push-to-talk, the Pad's unmute, BRB's
+    /// return, "Take the mic back") — the one deferred handoff while the phone holds the mic or a restore is pending.
+    fn request_unmute(mut self: Pin<&mut Self>) {
+        let mic = self.mic_view();
+        let phone = phone_view();
+        let acts = {
+            let mut h = handoff().lock().unwrap();
+            let has = hold_has_session(&h);
+            h.user_unmute(mic, &phone, has)
+        };
+        self.as_mut().run_handoff(acts);
+    }
+
+    /// The local mic's flags the handoff reads.
+    fn mic_view(&self) -> crate::mic_handoff::Mic {
+        crate::mic_handoff::Mic {
+            muted: *self.mic_muted(),
+            server_muted: *self.server_muted(),
+            ptt: *self.push_to_talk() && !*self.ptt_speaking(),
+            afk: crate::afk_ctl::afk_intent(),
+            watching: *self.no_capture(),
+        }
+    }
+
+    /// Carry out the handoff's actions (its own mutes never count as the user's).
+    fn run_handoff(mut self: Pin<&mut Self>, acts: Vec<crate::mic_handoff::Act>) {
+        use crate::mic_handoff::Act;
+        for a in acts {
+            match a {
+                Act::Mute => self.as_mut().apply_mic(true),
+                Act::Unmute => self.as_mut().apply_mic(false),
+                Act::CancelSession => {
+                    if let Some(n) = crate::pad_ctl::node() {
+                        n.cancel_take();
+                    }
+                }
+                Act::Status(s) => self.as_mut().set_status(QString::from(s)),
+            }
+        }
+    }
+
+    pub fn pad_take(mut self: Pin<&mut Self>, on: bool, sid: &QString) {
+        if !*self.in_call() {
+            return;
+        }
+        let mic = self.mic_view();
+        let sid = sid.to_string();
+        let acts = {
+            let mut h = handoff().lock().unwrap();
+            if on { h.pad_take(&sid, mic) } else { h.pad_release(&sid, mic, &phone_view()) }
+        };
+        self.as_mut().run_handoff(acts);
+    }
+
+    pub fn pad_take_released(mut self: Pin<&mut Self>, sid: &QString) {
+        let mic = self.mic_view();
+        let acts = handoff().lock().unwrap().pad_release(&sid.to_string(), mic, &phone_view());
+        self.as_mut().run_handoff(acts);
+    }
+
+    pub fn take_mic_back(self: Pin<&mut Self>) {
+        self.request_unmute();
+    }
+
+    pub fn handoff_tick(mut self: Pin<&mut Self>) -> bool {
+        if !*self.in_call() {
+            handoff().lock().unwrap().left();
+            return false;
+        }
+        let mic = self.mic_view();
+        let acts = handoff().lock().unwrap().tick(crate::persontiles_now_ms(), mic, &phone_view());
+        self.as_mut().run_handoff(acts);
+        handoff().lock().unwrap().held()
+    }
+
+    /// Set the mic and apply it to the live call (the old force_mic_muted body; a moderator's mute keeps the SFU side).
+    fn apply_mic(mut self: Pin<&mut Self>, muted: bool) {
         self.as_mut().set_mic_muted(muted);
+        if !muted && *self.server_muted() {
+            return;
+        }
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let guard = cell.lock().await;
@@ -5003,19 +5300,15 @@ impl qobject::CallController {
     /// already read false-but-Paused. The AFK/BRB restore uses it so coming back can't be
     /// defeated by a stale toggle/mirror state.
     pub fn force_mic_muted(mut self: Pin<&mut Self>, muted: bool) {
-        self.as_mut().set_mic_muted(muted);
         // RBAC: while server-muted the INTENT is recorded (it decides what happens when the
-        // moderator unmutes us) but no unmute reaches the SFU.
-        if !muted && *self.server_muted() {
-            return;
+        // moderator unmutes us) but no unmute reaches the SFU (apply_mic).
+        // PAD-PHONE Step B: a mute is the user's (kept by the handoff); an unmute goes through the handoff.
+        if muted {
+            handoff().lock().unwrap().user_mute();
+            self.as_mut().apply_mic(true);
+        } else {
+            self.as_mut().request_unmute();
         }
-        crate::bridge::runtime().spawn(async move {
-            let cell = current_call();
-            let guard = cell.lock().await;
-            if let Some(call) = guard.as_ref() {
-                call.set_mic_muted(muted);
-            }
-        });
     }
 
     /// Toggle the local camera: publish (with a qml6glsink self-view tile bound on the
@@ -5926,7 +6219,14 @@ async fn do_join(
                 call.close().await;
                 return Err("superseded by a newer join".to_string());
             }
-            call.publish_mic_muted(start_muted).await
+            // PAD-PHONE Step B (clients round 2 #2): the roster is known (connect seeded every participant's
+            // publications): a Pad Mic of my person transmitting there = this mic publishes MUTED
+            let barrier = !start_muted && !phone_view().live.is_empty();
+            JOIN_BARRIER_MUTED.store(barrier, std::sync::atomic::Ordering::SeqCst);
+            if barrier {
+                eprintln!("[pad] my phone is transmitting in this call — joining with the mic muted");
+            }
+            call.publish_mic_muted(start_muted || barrier).await
         }
     };
     if let Err(e) = mic_result {

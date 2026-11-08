@@ -127,6 +127,21 @@ ColumnLayout {
                         onDisconnect: island.app.padCtl.refuseDevice(modelData.device)
                     }
                 }
+                // PAD-PHONE Step B: my phone has the mic (its takeover mutes this computer with a reason of its own)
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    visible: island.app.mInCall && island.app.mPadTakeHeld === true
+                    text: "· Your phone has the mic"
+                    color: Th.callStatusBarCountFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+                Controls.ToolButton {
+                    visible: island.app.mInCall && island.app.mPadTakeHeld === true
+                    text: "Take the mic back"
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    Accessible.name: "Take the mic back from your phone"
+                    onClicked: island.app.padTakeBackRequested()
+                }
                 // "N hidden ▾" — the way back for hidden tiles, in the call
                 // header where it is always reachable (the tiles themselves are
                 // gone). 0.8.7: a click opens a MENU naming each hidden stream
@@ -1157,10 +1172,10 @@ ColumnLayout {
                         ? island.app.mLocalAfk
                         // mAwayUsers holds bare mxids (@user:server); a remote tile's
                         // participant is the full LiveKit identity @user:server:DEVICE —
-                        // match by mxid prefix (cf. the #5 gain path), not exact compare.
+                        // match by its user (12.1.11: AppCore isParticipantOf, strict: a "u:" prefix
+                        // showed @a:h:8448:DEV away when @a:h was), not exact compare.
                         : island.app.mAwayUsers.some(function(u) {
-                            var p = tile.modelData.participant || ""
-                            return p === u || p.indexOf(u + ":") === 0
+                            return island.app.isParticipantOf(tile.modelData.participant || "", u)
                         })
                     // WEIGHTED layout (Element-style spotlight + filmstrip). videoGrid
                     // computes EVERY tile's absolute slot at once (screenshare / camera =
@@ -1587,14 +1602,19 @@ ColumnLayout {
                                 Controls.ToolTip.text: (tile.modelData.name || "They") + " has another camera — show it"
                             }
                             // Pad on the phone, Step A: the Pad chip — from the SERVER's attributes only (persontiles.rs)
+                            // Step B: the modes aggregate ("watch", "mic", "camera", "mic+camera", …): "Pad · Mic + Camera"
                             ThIcon {
-                                visible: tile.modelData.pad === "watch"
+                                readonly property var modes: String(tile.modelData.pad || "").length > 0 ? String(tile.modelData.pad).split("+") : []
+                                readonly property string label: "Pad · " + modes.map(function (m) { return m === "watch" ? "Watch" : (m === "mic" ? "Mic" : "Camera") }).join(" + ")
+                                readonly property string doing: modes.map(function (m) { return m === "watch" ? "watching" : (m === "mic" ? "using it as the microphone" : "using it as the camera") }).join(" and ")
+                                visible: modes.length > 0
                                 anchors.verticalCenter: parent.verticalCenter
                                 app: island.app; name: "smartphone-symbolic"; width: 16; height: 16; color: Th.tileNameFg; isMask: true
+                                Accessible.name: label
                                 HoverHandler { id: padChipHover }
                                 Controls.ToolTip.visible: padChipHover.hovered
                                 Controls.ToolTip.delay: 300
-                                Controls.ToolTip.text: tile.isSelf ? "Your phone is watching (Pad)" : ((tile.modelData.name || "They") + " is also on their phone (Pad), watching")
+                                Controls.ToolTip.text: label + " — joined from the Pad (phone)" + (tile.isSelf ? ": your phone is " : ": " + (tile.modelData.name || "they") + " is ") + doing
                             }
                             // #B live waveform: a few small bars whose height tracks
                             // this participant's audio RMS. Overlay-only (z:3 strip),

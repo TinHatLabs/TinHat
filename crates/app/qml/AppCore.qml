@@ -331,6 +331,22 @@ Item {
         var head = s.substring(0, i)
         return head.indexOf(":") >= 0 ? head : s
     }
+    // 12.1.11 (assembly-047): THE strict identity rules for every display match in the call UI (levels, away, "can they
+    // hear me?", speaking, the recorder). identity.rs is_participant_of / same_participant, the web's calls/identity.ts
+    // isParticipantOf / sameParticipant, pinned to the shared testvectors/identity.json by scripts/qml-identity-test.qml
+    // (run from qml-lint.sh). Never match by a "x + ':'" prefix: that made @a:h claim @a:h:8448:DEV (another server's
+    // user that differs only by a port); identity.rs's tests refuse such a prefix match anywhere in the QML.
+    // Is this participant (a LiveKit identity, a Pad/Watch one, or a fake call's bare mxid) the user `mxid`'s?
+    function isParticipantOf(participant, mxid) {
+        var m = String(mxid || ""), p = String(participant || "")
+        return m.length > 0 && (p === m || core.tileMxid(p) === m)
+    }
+    // Do two call ids (each an identity or a bare mxid, in either order) name the same participant: the same string, or
+    // one is the other's user. Two devices of one person are NOT the same participant (levels are per device).
+    function sameParticipant(a, b) {
+        var x = String(a || ""), y = String(b || "")
+        return x.length > 0 && y.length > 0 && (x === y || core.isParticipantOf(x, y) || core.isParticipantOf(y, x))
+    }
     function tileKey(md) {
         if (!md || !md.participant) return ""
         var kind = (md.screenshare === true || md.kind === "screenshare") ? "share"
@@ -733,7 +749,7 @@ Item {
         if (!peers || !identity) return null
         if (peers[identity]) return peers[identity]
         for (var k in peers) {
-            if (k.indexOf(identity + ":") === 0 || identity.indexOf(k + ":") === 0) return peers[k]
+            if (core.sameParticipant(k, identity)) return peers[k]   // 12.1.11: strict (no "x:" prefix)
         }
         return null
     }
@@ -742,7 +758,7 @@ Item {
         var tiles = mVideoTiles || []
         for (var i = 0; i < tiles.length; ++i) {
             var p = tiles[i].participant || ""
-            if (tiles[i].name && (p === identity || identity.indexOf(p + ":") === 0 || p.indexOf(identity + ":") === 0))
+            if (tiles[i].name && core.sameParticipant(p, identity))
                 return tiles[i].name
         }
         var lp = String(identity).split(":")[0]
@@ -915,8 +931,11 @@ Item {
         // call switch plays leave then join as the two edges happen).
         function onInCallChanged() { if (callctl.inCall) { core._chimeArmAt = Date.now() + 2500; core.playCallChime("join") } else core.playCallChime("leave") }
         // BOTH edges refresh the strip (a join never did — only leaves).
-        function onParticipantJoined(identity) { if (Date.now() >= core._chimeArmAt) core.playCallChime("join"); nav.refreshParticipants() }
-        function onParticipantLeft(identity) { core.playCallChime("leave"); nav.refreshParticipants() } // drop their bubble from the room-list call strip
+        // PAD-PHONE Step B (2026-11-06): the chimes follow PEOPLE (call_ctl personChime): a Pad connection of someone
+        // already in the call, or a phone switching Watch / Mic / Camera, never chimes
+        function onParticipantJoined(identity) { nav.refreshParticipants() }
+        function onParticipantLeft(identity) { nav.refreshParticipants() } // drop their bubble from the room-list call strip
+        function onPersonChime(kind) { if (kind !== "join" || Date.now() >= core._chimeArmAt) core.playCallChime(kind) }
     }
 
     // After leaving a call, the room-list call-participant strip reads m.call.member STATE, which
@@ -985,6 +1004,10 @@ Item {
     PadController { id: padCtl }
     property bool mPadOn: true                       // Settings → Calls → Pad
     property var mPadChips: []                       // [{device, name}] my devices with a live Pad session here
+    // PAD-PHONE Step B: my phone holds this computer's mic (takeover.mic, or a Pad Mic connection of mine already
+    // transmitting when I joined); PadHost.qml owns it, the call strip shows it with "Take the mic back"
+    property bool mPadTakeHeld: false
+    signal padTakeBackRequested()
     property var mPadTargets: ({ rooms: {}, names: {} })   // my other devices in each call (discovery + why not)
     property var mPadRemote: null                    // the session this device drives (state, reach, pending)
     property var mPadSounds: ({})                    // {room, roomSounds, people} for the Pad window
@@ -1631,10 +1654,11 @@ Item {
         v[core.serverGates.retiredPredicate || "selfhost.retired"] = false
         return v
     }
-    // the Memories recorder the server announces (offer.ts isRecorderId): the account, or "<account>:<device>"
+    // the Memories recorder the server announces (offer.ts isRecorderId): the account, or "<account>:<device>".
+    // 12.1.11: the account's devices by the strict rule (a "r:" prefix also named @rec:h:8448's devices the recorder)
     function isRecorder(id) {
         var r = String((core.mServerOffer && core.mServerOffer.recorder) || ""), s = String(id || "")
-        return r.length > 0 && s.length > 0 && (s === r || s.indexOf(r + ":") === 0)
+        return r.length > 0 && s.length > 0 && core.isParticipantOf(s, r)
     }
     // the signed-in account is one of the server's temporary guest accounts (offer.ts isGuestAccount)
     readonly property bool mGuestAccount: !!core.mServerOffer && core.mServerOffer.guest === true
@@ -2491,7 +2515,7 @@ Item {
         for (var k in core.mAudioLevels) {
             var bar = k.indexOf("|")
             var id = bar >= 0 ? k.substring(0, bar) : k
-            if (id === p || p.indexOf(id + ":") === 0 || id.indexOf(p + ":") === 0) {
+            if (core.sameParticipant(id, p)) {   // 12.1.11: strict (no "x:" prefix)
                 var v = core.mAudioLevels[k]
                 if (v > best) best = v
             }

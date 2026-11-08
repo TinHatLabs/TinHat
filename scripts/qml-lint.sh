@@ -100,8 +100,23 @@ if [ $? -ne 0 ]; then
     fatal=$((fatal + 1))
 fi
 
+# 12.1.11 (assembly-047): AppCore.qml's call identity rules (tileMxid / isParticipantOf / sameParticipant) run by the QML
+# engine against the shared testvectors/identity.json (identity.rs + the web's identity.test.ts run the same groups).
+QMLRUN=${QML6:-$(command -v qml6 || echo /usr/lib/qt6/bin/qml)}
+if [ -x "$QMLRUN" ]; then
+    idq=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/qml-identity-test.qml" -- "$(pwd)" 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "$idq" | grep -E "FAIL" | head -10 | sed "s/^/QMLLINT FAIL: identity: /"
+        fatal=$((fatal + 1))
+    fi
+else
+    echo "QMLLINT FAIL: no qml runtime for qml-identity-test.qml (set QML6)"
+    fatal=$((fatal + 1))
+fi
+
 if [ "$fatal" -eq 0 ]; then
-    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat / window-keys errors (${layout} layout-positioning warnings, non-fatal)"
+    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat / window-keys / identity-rule errors (${layout} layout-positioning warnings, non-fatal)"
     exit 0
 fi
 echo "QMLLINT FAIL: $fatal file(s) would fail to load"

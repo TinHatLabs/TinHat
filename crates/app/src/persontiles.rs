@@ -7,6 +7,11 @@
 //! change its own; a client data packet, its metadata or its name never count) — AND its identity is exactly
 //! `P:<device>` (device `[A-Za-z0-9_+/-]{1,64}`: the server's identity.mjs DEVICE_RE, 0.3.12) with an optional exact `~watch-<16 lowercase hex>`. No attribute (an
 //! older server, a session from before the server's 0.3.13 key rotation) or anything else = nobody's: its own tile.
+//!
+//! Step B (12.1.10 / server 0.3.14): the phone's Mic and Camera modes (`tinhat.mode=mic` + `~pad-mic-<16 hex>`,
+//! `tinhat.mode=camera` + `~pad-cam-<16 hex>`); a person's chips aggregate ("mic+camera"); a Camera-mode phone has no
+//! mic; a Pad camera is the shown camera unless the viewer picked another; my own other devices' mics are never played
+//! ([`play_mic_of`]); the call chimes follow PEOPLE ([`PersonChimes`]).
 use serde_json::Value;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -40,16 +45,36 @@ fn is_mxid(s: &str) -> bool {
     host_ok && port.is_none_or(port_ok)
 }
 
+fn hex16(h: &str) -> bool {
+    h.len() == 16 && h.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+/// The exact Pad suffix `~watch-<16hex>` / `~pad-mic-<16hex>` / `~pad-cam-<16hex>` -> its mode tag ("watch", "mic",
+/// "cam"), or None.
+fn pad_suffix(w: &str) -> Option<&'static str> {
+    if w.strip_prefix("~watch-").is_some_and(hex16) {
+        Some("watch")
+    } else if w.strip_prefix("~pad-mic-").is_some_and(hex16) {
+        Some("mic")
+    } else if w.strip_prefix("~pad-cam-").is_some_and(hex16) {
+        Some("cam")
+    } else {
+        None
+    }
+}
+
 fn device_part_ok(s: &str) -> bool {
-    let (dev, watch) = match s.find('~') {
+    let (dev, suffix) = match s.find('~') {
         Some(i) => (&s[..i], Some(&s[i..])),
         None => (s, None),
     };
     let dev_ok = (1..=64).contains(&dev.len()) && dev.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'+' | b'/' | b'-'));
-    let watch_ok = watch.is_none_or(|w| {
-        w.strip_prefix("~watch-").is_some_and(|h| h.len() == 16 && h.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
-    });
-    dev_ok && watch_ok
+    dev_ok && suffix.is_none_or(|w| pad_suffix(w).is_some())
+}
+
+/// The Pad suffix of an identity by the identity alone (the last '~' on): its tag, or None.
+fn suffix_tag(identity: &str) -> Option<&'static str> {
+    identity.rfind('~').and_then(|i| pad_suffix(&identity[i..]))
 }
 
 /// The person the server vouches for (its mxid), or "" (nobody's).
@@ -64,19 +89,32 @@ pub fn person_of(identity: &str, attrs: &HashMap<String, String>) -> String {
     }
 }
 
-/// The Pad chip of one participant ("" = none, "watch").
+/// The Pad chip of one participant ("" = none, "watch", "mic", "camera"): `tinhat.pad=phone` + a `tinhat.mode` whose
+/// identity suffix matches (watch ↔ `~watch-`, mic ↔ `~pad-mic-`, camera ↔ `~pad-cam-`).
 pub fn chip_of(identity: &str, attrs: &HashMap<String, String>) -> &'static str {
     if person_of(identity, attrs).is_empty() {
         return "";
     }
-    if attrs.get("tinhat.pad").map(String::as_str) != Some("phone") || attrs.get("tinhat.mode").map(String::as_str) != Some("watch") {
+    if attrs.get("tinhat.pad").map(String::as_str) != Some("phone") {
         return "";
     }
-    let tail_ok = identity.rfind("~watch-").is_some_and(|i| {
-        let h = &identity[i + 7..];
-        h.len() == 16 && h.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-    });
-    if tail_ok { "watch" } else { "" }
+    match (attrs.get("tinhat.mode").map(String::as_str), suffix_tag(identity)) {
+        (Some("watch"), Some("watch")) => "watch",
+        (Some("mic"), Some("mic")) => "mic",
+        (Some("camera"), Some("cam")) => "camera",
+        _ => "",
+    }
+}
+
+/// A person's chips, each once, in the order watch, mic, camera, joined by "+".
+pub fn pad_modes_of<'a>(chips: impl IntoIterator<Item = &'a str>) -> String {
+    let set: HashSet<&str> = chips.into_iter().collect();
+    ["watch", "mic", "camera"].iter().filter(|c| set.contains(**c)).copied().collect::<Vec<_>>().join("+")
+}
+
+/// A device publishing no microphone by its mode (a watcher, a Camera-mode phone).
+fn no_mic(c: &str) -> bool {
+    c == "watch" || c == "camera"
 }
 
 fn s<'a>(t: &'a Value, k: &str) -> &'a str {
@@ -122,7 +160,8 @@ pub fn fold_persons(
     };
     let has_self = tiles.iter().any(|t| s(t, "participant") == "You");
     let mut members: HashMap<String, BTreeSet<String>> = HashMap::new();
-    let mut chip: HashMap<String, &'static str> = HashMap::new();
+    let mut chips: HashMap<String, Vec<&'static str>> = HashMap::new();
+    let mut cam_chip: HashMap<String, &'static str> = HashMap::new();
     let mut all_muted: HashMap<String, bool> = HashMap::new();
     let mut any_live: HashMap<String, bool> = HashMap::new();
     let mut sm_all: HashMap<String, bool> = HashMap::new();
@@ -135,10 +174,11 @@ pub fn fold_persons(
             continue;
         }
         let p = s(t, "participant").to_string();
-        let watcher = chip_of(&p, &attrs_of(&p)) == "watch";
-        if watcher {
-            chip.insert(k.clone(), "watch");
+        let c = chip_of(&p, &attrs_of(&p));
+        if !c.is_empty() {
+            chips.entry(k.clone()).or_default().push(c);
         }
+        let watcher = no_mic(c); // a watcher / a Camera-mode phone: no microphone
         // a watcher publishes nothing (the server's token): never a live mic (review r2)
         let mic = !b(t, "muted") && !watcher;
         let e = all_muted.entry(k.clone()).or_insert(true);
@@ -160,9 +200,13 @@ pub fn fold_persons(
         }
         if s(t, "kind") == "video" {
             cams.entry(k.clone()).or_default().push(s(t, "id").to_string());
+            cam_chip.insert(s(t, "id").to_string(), c);
         }
         members.entry(k).or_default().insert(p);
     }
+    let chip: HashMap<String, String> = chips.iter().map(|(k, v)| (k.clone(), pad_modes_of(v.iter().copied()))).collect();
+    // Step B: a Pad Camera-mode camera first (the lowest such tile id)
+    let pad_cam = |sorted: &[String]| -> Option<String> { sorted.iter().find(|x| cam_chip.get(x.as_str()).copied() == Some("camera")).cloned() };
     // MY cameras (review r2): my self-view ("You") is one of them, shown unless I picked another
     let self_cam: String = if !own.is_empty() && has_self {
         tiles.iter().find(|t| s(t, "participant") == "You" && s(t, "kind") == "video").map(|t| s(t, "id").to_string()).unwrap_or_default()
@@ -174,9 +218,9 @@ pub fn fold_persons(
         let mut sorted = ids.clone();
         sorted.sort();
         let chosen = if *k == own && !self_cam.is_empty() {
-            pick.get(k).filter(|p| **p == self_cam || sorted.contains(p)).cloned().unwrap_or_else(|| self_cam.clone())
+            pick.get(k).filter(|p| **p == self_cam || sorted.contains(p)).cloned().or_else(|| pad_cam(&sorted)).unwrap_or_else(|| self_cam.clone())
         } else {
-            pick.get(k).filter(|p| sorted.contains(p)).cloned().unwrap_or_else(|| sorted[0].clone())
+            pick.get(k).filter(|p| sorted.contains(p)).cloned().or_else(|| pad_cam(&sorted)).unwrap_or_else(|| sorted[0].clone())
         };
         shown_cam.insert(k.clone(), chosen);
     }
@@ -191,11 +235,11 @@ pub fn fold_persons(
         v
     };
     let my_members: Vec<String> = if !own.is_empty() && has_self { members.get(&own).map(|b| b.iter().cloned().collect()).unwrap_or_default() } else { vec![] };
-    let my_pad = if own.is_empty() { "" } else { chip.get(&own).copied().unwrap_or("") };
+    let my_pad: String = if own.is_empty() { String::new() } else { chip.get(&own).cloned().unwrap_or_default() };
     let my_live = !own.is_empty() && any_live.get(&own).copied().unwrap_or(false);
     let mine = |x: &mut Value| {
         set(x, "members", Value::from(my_members.clone()));
-        set(x, "pad", Value::from(my_pad));
+        set(x, "pad", Value::from(my_pad.as_str()));
         set(x, "othersLive", Value::from(my_live));
     };
     let mut anchored: HashSet<String> = HashSet::new();
@@ -278,7 +322,7 @@ pub fn fold_persons(
         let muted = all_muted.get(&k).copied();
         let mut x = base(t);
         set(&mut x, "members", Value::from(m));
-        set(&mut x, "pad", Value::from(chip.get(&k).copied().unwrap_or("")));
+        set(&mut x, "pad", Value::from(chip.get(&k).cloned().unwrap_or_default()));
         if let Some(mu) = muted {
             set(&mut x, "muted", Value::from(mu));
         }
@@ -289,6 +333,105 @@ pub fn fold_persons(
         out.push(x);
     }
     out
+}
+
+// ---- Step B: what is played, and the call chimes ---------------------------------------------------------------------
+
+/// Is a remote MICROPHONE track of this participant played here? Not when it is one of MY other devices (server-vouched:
+/// tinhat.person = my mxid and the exact identity form). Everyone else's: yes.
+pub fn play_mic_of(identity: &str, attrs: &HashMap<String, String>, own_identity: &str) -> bool {
+    let own = own_identity.rfind(':').filter(|&i| i > 0).map(|i| &own_identity[..i]).unwrap_or("");
+    !(!own.is_empty() && identity != own_identity && person_of(identity, attrs) == own)
+}
+
+/// Whether this identity is a Pad connection (Watch, Mic, Camera), by the identity alone.
+pub fn is_pad_identity(identity: &str) -> bool {
+    suffix_tag(identity).is_some()
+}
+
+/// The person a call chime is about: the server-vouched person; else the identity's own mxid (a Pad suffix dropped,
+/// everything before the LAST ':' while that still holds a ':'); else the identity.
+pub fn chime_person(identity: &str, attrs: &HashMap<String, String>) -> String {
+    let p = person_of(identity, attrs);
+    if !p.is_empty() {
+        return p;
+    }
+    let base = match identity.rfind('~') {
+        Some(i) if pad_suffix(&identity[i..]).is_some() => &identity[..i],
+        _ => identity,
+    };
+    match base.rfind(':') {
+        Some(i) if i > 0 && base[..i].contains(':') => base[..i].to_string(),
+        _ => identity.to_string(),
+    }
+}
+
+/// Step B: a server-vouched Pad Mic / Camera connection (`chip_of` mic | camera) sends its media keys to-device under its
+/// device's own identity `<mxid>:<device>`, so the receiver installs that base identity's keys (every slot, now and
+/// later) under the Pad identity too. -> the base identity, or "" (not an alias: a watcher publishes nothing).
+pub fn key_alias_base(identity: &str, attrs: &HashMap<String, String>) -> String {
+    match chip_of(identity, attrs) {
+        "mic" | "camera" => identity.rfind('~').map(|i| identity[..i].to_string()).unwrap_or_default(),
+        _ => String::new(),
+    }
+}
+
+/// How long a Pad connection's leave waits for the same person's next connection (ms).
+pub const PAD_LEAVE_GRACE_MS: u64 = 5_000;
+
+/// The call chimes follow PEOPLE (persontiles.ts PersonChimes, 2026-11-06): a join chimes only for a person with
+/// no other connection in the call (me included), a leave only for their last one; a Pad connection that was their last
+/// waits [`PAD_LEAVE_GRACE_MS`] and their return in that time cancels both chimes.
+#[derive(Default, Debug)]
+pub struct PersonChimes {
+    /// person -> when their held-back leave chime is due
+    pub pending: HashMap<String, u64>,
+    /// leave chimes owed by people who came back only AFTER their grace (a late timer): tick plays them
+    pub owed: u32,
+}
+
+impl PersonChimes {
+    pub fn join(&mut self, identity: &str, attrs_of: &dyn Fn(&str) -> HashMap<String, String>, present: &[String], now: u64) -> &'static str {
+        let p = chime_person(identity, &attrs_of(identity));
+        if let Some(due) = self.pending.remove(&p) {
+            if now < due {
+                return ""; // back within the grace: a switch, not a new arrival
+            }
+            self.owed += 1; // back after it: their leave was real (owed to tick) and so is this arrival
+            return "join";
+        }
+        if present.iter().any(|o| o != identity && chime_person(o, &attrs_of(o)) == p) { "" } else { "join" }
+    }
+
+    pub fn leave(&mut self, identity: &str, attrs_of: &dyn Fn(&str) -> HashMap<String, String>, present: &[String], now: u64) -> &'static str {
+        let p = chime_person(identity, &attrs_of(identity));
+        if present.iter().any(|o| o != identity && chime_person(o, &attrs_of(o)) == p) {
+            return "";
+        }
+        if is_pad_identity(identity) {
+            self.pending.insert(p, now + PAD_LEAVE_GRACE_MS);
+            return "";
+        }
+        "leave"
+    }
+
+    /// The held-back leaves that are due: each person still away = one leave chime.
+    pub fn tick(&mut self, attrs_of: &dyn Fn(&str) -> HashMap<String, String>, present: &[String], now: u64) -> u32 {
+        let due: Vec<String> = self.pending.iter().filter(|(_, d)| **d <= now).map(|(p, _)| p.clone()).collect();
+        let mut n = std::mem::take(&mut self.owed);
+        for p in due {
+            self.pending.remove(&p);
+            if !present.iter().any(|o| chime_person(o, &attrs_of(o)) == p) {
+                n += 1;
+            }
+        }
+        n
+    }
+
+    pub fn clear(&mut self) {
+        self.pending.clear();
+        self.owed = 0;
+    }
 }
 
 #[cfg(test)]
@@ -342,6 +485,43 @@ mod tests {
                 assert_eq!(&b[..], &mine[..], "{p}");
                 return;
             }
+        }
+    }
+
+    #[test]
+    fn play_mic_every_vector() {
+        for c in vectors()["play"].as_array().unwrap() {
+            let a = attrs(&c["attrs"]);
+            assert_eq!(play_mic_of(c["identity"].as_str().unwrap(), &a, c["own"].as_str().unwrap()), c["expect"].as_bool().unwrap(), "{}", c["name"]);
+        }
+    }
+
+    #[test]
+    fn person_chimes_every_vector() {
+        for c in vectors()["chimes"].as_array().unwrap() {
+            let table: HashMap<String, HashMap<String, String>> =
+                c["attrs"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), attrs(v))).collect();
+            let attrs_of = |id: &str| table.get(id).cloned().unwrap_or_default();
+            let mut ch = PersonChimes::default();
+            for (i, st) in c["steps"].as_array().unwrap().iter().enumerate() {
+                let present: Vec<String> = st["present"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
+                let now = st["now"].as_u64().unwrap();
+                let id = st["id"].as_str().unwrap();
+                let got = match st["op"].as_str().unwrap() {
+                    "join" => Value::from(ch.join(id, &attrs_of, &present, now)),
+                    "leave" => Value::from(ch.leave(id, &attrs_of, &present, now)),
+                    _ => Value::from(ch.tick(&attrs_of, &present, now)),
+                };
+                assert_eq!(got, st["expect"], "{} — step {i}", c["name"]);
+            }
+        }
+    }
+
+    #[test]
+    fn key_alias_every_vector() {
+        for c in vectors()["keyAlias"].as_array().unwrap() {
+            let id = c["identity"].as_str().unwrap();
+            assert_eq!(key_alias_base(id, &attrs(&c["attrs"])), c["expect"].as_str().unwrap(), "{id:?}");
         }
     }
 }

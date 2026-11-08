@@ -64,6 +64,12 @@ pub mod qobject {
         /// Something above changed (rev bumped).
         #[qsignal]
         fn changed(self: Pin<&mut PadController>);
+        // PAD-PHONE Step B: the phone's takeover of the mic ended with its session (QML gives the mic back)
+        #[qsignal]
+        fn take_released(self: Pin<&mut PadController>, sid: QString);
+        // PAD-PHONE Step B: the user took the mic back on this device (no restore)
+        #[qinvokable]
+        fn cancel_takeover(self: Pin<&mut PadController>);
 
         /// QML: attach() — once, from AppCore's Component.onCompleted: events reach this object from now on.
         #[qinvokable]
@@ -291,6 +297,7 @@ fn on_event(mut o: Pin<&mut qobject::PadController>, ev: PadEvent) {
         PadEvent::Failed { seq, op } => o.as_mut().failed(seq as i32, QString::from(&op)),
         PadEvent::Ended(why) => o.as_mut().ended(QString::from(&why)),
         PadEvent::Log(_) => {}
+        PadEvent::TakeReleased(sid) => o.as_mut().take_released(QString::from(&sid)),
     }
 }
 
@@ -337,6 +344,12 @@ impl qobject::PadController {
     pub fn executed(self: Pin<&mut Self>, token: i32) {
         if let Some(n) = node() {
             n.executed(token as i64);
+        }
+    }
+
+    pub fn cancel_takeover(self: Pin<&mut Self>) {
+        if let Some(n) = node() {
+            n.cancel_take();
         }
     }
 

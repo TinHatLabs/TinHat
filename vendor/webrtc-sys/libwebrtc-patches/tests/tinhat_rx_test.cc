@@ -16,6 +16,17 @@
 // A receiver that reads the IV from the raw tail before unescaping (upstream, the 12.1.9 libwebrtc) FAILS the v1 and
 // planted H.264/H.265 sets; a hardened one (tinhat-iv-rx-v1) passes everything.
 // Controls: the v1/planted sets must really carry an escape inside the 14-byte tail (counted).
+// 12.1.11 additions (review notes on the 12.1.10 hotfix):
+//   - TOTAL-LENGTH frames: every total length 1..40 independent of the codec's clear-header length, grown from
+//     truncated seeds (a bare / truncated H.264 or H.265 NAL header such as `00 00 00 01 65`, a one-byte VP8
+//     keyframe, AV1 wrapper and LEB128 prefixes, ...) with three fillers and three trailer variants; nothing may be
+//     delivered and the receiver must survive (one child per seed). A crash-only check: an instrumented (ASAN)
+//     archive would also catch reads that do not crash; none is built.
+//   - KEY STATE after refusals: finite failure_tolerance (0) and a positive ratchet window. A valid frame, then
+//     malformed frames the hardened receiver refuses structurally, then a valid frame: the last one must still be
+//     decrypted, the key must stay valid and unchanged, and the observer must see exactly the expected states.
+//     Controls (both archives must pass them): a REAL decryption failure (flipped tag) under tolerance 0 does
+//     invalidate the key and drops the next frame; under tolerance 1 it does not.
 //
 // Build + run: run-tinhat-rx-test.sh <libwebrtc artifact dir> (the directory with lib/libwebrtc.a and include/).
 // Exit 0 = every expectation held; 1 = a receiver failure (the list is printed); 2 = a harness/control problem.
@@ -27,6 +38,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -50,6 +62,7 @@
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/thread.h"
 #ifdef RTC_ENABLE_H265
 #include "common_video/h265/h265_common.h"
 #endif
@@ -197,10 +210,10 @@ webrtc::scoped_refptr<webrtc::KeyProvider> MakeKeyProvider(const Bytes& material
   return kp;
 }
 
-Cryptor MakeCryptor(webrtc::scoped_refptr<webrtc::KeyProvider> kp, bool audio) {
+Cryptor MakeCryptor(webrtc::scoped_refptr<webrtc::KeyProvider> kp, bool audio, webrtc::Thread* signaling = nullptr) {
   Cryptor c;
   c.t = webrtc::scoped_refptr<webrtc::FrameCryptorTransformer>(new webrtc::FrameCryptorTransformer(
-      nullptr, kPid,
+      signaling, kPid,
       audio ? webrtc::FrameCryptorTransformer::MediaType::kAudioFrame
             : webrtc::FrameCryptorTransformer::MediaType::kVideoFrame,
       webrtc::FrameCryptorTransformer::Algorithm::kAesGcm, kp));
@@ -522,6 +535,290 @@ void ShortInChild(const CodecCase& cc, webrtc::scoped_refptr<webrtc::KeyProvider
   }
 }
 
+
+// ---------------------------------------------------------------------------------------------------------------
+// 12.1.11: generic child runner (same verdicts as ShortInChild: signal = died, exit 1 = receiver failure).
+void InChild(const std::string& label, const std::function<int()>& fn) {
+  std::fflush(stdout);
+  const pid_t pid = fork();
+  if (pid < 0) { std::printf("harness: fork failed (%s)\n", std::strerror(errno)); g_harness++; return; }
+  if (pid == 0) {
+    alarm(60);
+    const int r = fn();
+    std::fflush(stdout);
+    _exit(r);
+  }
+  int st = 0;
+  pid_t w;
+  do { w = waitpid(pid, &st, 0); } while (w < 0 && errno == EINTR);
+  if (w != pid) { std::printf("harness: waitpid failed\n"); g_harness++; return; }
+  if (WIFSIGNALED(st)) {
+    std::printf("%-58s the receiver DIED (signal %d%s)\n", label.c_str(), WTERMSIG(st),
+                WTERMSIG(st) == SIGALRM ? ", hung" : "");
+    g_fail.push_back(label + ": receiver died (signal " + std::to_string(WTERMSIG(st)) + ")");
+  } else if (!WIFEXITED(st) || WEXITSTATUS(st) == 1) {
+    g_fail.push_back(label + ": expectation failed (see above)");
+  } else if (WEXITSTATUS(st) != 0) {
+    g_harness++;
+  }
+}
+
+std::string Hex(const Bytes& b) {
+  std::string s;
+  char x[4];
+  for (size_t i = 0; i < b.size(); i++) { std::snprintf(x, sizeof x, i ? " %02x" : "%02x", b[i]); s += x; }
+  return s;
+}
+
+// --- (1) total lengths 1..40, independent of the clear-header length ---
+struct Seed {
+  Bytes bytes;
+  bool key;  // the frame's keyframe flag (VP8: 10 vs 3 clear bytes; AV1/H.26x: as a receiver would see it)
+};
+std::vector<Seed> SeedsFor(const CodecCase& cc) {
+  switch (cc.kind) {
+    case Kind::kH264:
+      return {{{0, 0, 0, 1, 0x65}, true},          // IDR NAL header, nothing after it
+              {{0, 0, 0, 1, 0x41}, false},         // non-IDR slice NAL header
+              {{0, 0, 1, 0x65}, true},             // 3-byte start code
+              {{0, 0, 0, 1}, true},                // start code only
+              {{0, 0, 0, 1, 0x67, 0x42, 0xc0, 0x1f, 0x8c, 0x8d, 0x40, 0, 0, 0, 1, 0x68, 0xce, 0x3c, 0x80, 0, 0, 0, 1,
+                0x65},
+               true}};                             // SPS + PPS + IDR header, cut anywhere
+    case Kind::kH265:
+      return {{{0, 0, 0, 1, 0x26, 0x01}, true},    // IDR_W_RADL, 2-byte NAL header
+              {{0, 0, 0, 1, 0x26}, true},          // the 2-byte NAL header cut after its first byte
+              {{0, 0, 0, 1, 0x02, 0x01}, false},   // TRAIL_R
+              {{0, 0, 0, 1}, true},
+              {{0, 0, 0, 1, 0x40, 0x01, 0x0c, 0x01, 0xff, 0xff, 0, 0, 0, 1, 0x42, 0x01, 0x01, 0x01, 0x60, 0, 0, 0, 1,
+                0x44, 0x01, 0xc1, 0x72, 0, 0, 0, 1, 0x26, 0x01},
+               true}};                             // VPS SPS PPS + IDR header, cut anywhere
+    case Kind::kVp8:
+      return {{{0x10}, true},                      // a one-byte VP8 keyframe (10 clear bytes expected)
+              {{0x11}, false},                     // delta (3 clear bytes expected)
+              {{0x10, 0x02, 0x00, 0x9d, 0x01, 0x2a, 0x80, 0x02, 0xe0, 0x01}, true}};
+    case Kind::kVp9:
+      return {{{0x82}, true}, {{0x86}, false}};
+    case Kind::kAv1:
+      return {{{0x30}, false},                     // wrapper as sent (no size field)
+              {{0x0a, 0x00, 0x30}, true},          // keyframe: empty sequence header + wrapper
+              {{0x0a}, true},                      // sequence header OBU cut before its size
+              {{0x32, 0x00}, false},               // wrapper with a size field (as depacketized)
+              {{0x32, 0x80}, false},               // LEB128 continuation byte, unterminated
+              {{0x32, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x01}, false},  // LEB128 longer than 8 bytes
+              {{0x32, 0xff, 0xff, 0xff, 0xff, 0x0f}, false},                          // LEB128 size far past the end
+              {{0x0a, 0x80, 0x80, 0x30}, true}};   // sequence header with an unterminated size
+    case Kind::kAudio:
+      return {{{0x78}, false}, {{0xfc}, false}};
+  }
+  return {};
+}
+
+// One child per seed: lengths 1..40 x fillers (no zeros / `00 00 03` runs / zeros) x trailers (as filled /
+// (12, 0) / (12, 15) = an empty key slot). Exit 0 = nothing delivered, 1 = something delivered, 2 = harness.
+int RunTotalLengths(const CodecCase& cc, const Seed& seed, webrtc::scoped_refptr<webrtc::KeyProvider> kp,
+                    const Bytes& key) {
+  Cryptor rx = MakeCryptor(kp, IsAudio(cc));
+  std::map<uint32_t, std::pair<Bytes, bool>> in;
+  uint32_t ts = 1000;
+  for (size_t len = 1; len <= 40; len++) {
+    for (int filler = 0; filler < 3; filler++) {
+      for (int trailer = 0; trailer < 3; trailer++) {
+        if (trailer && len < 2) continue;
+        Bytes f(seed.bytes.begin(), seed.bytes.begin() + std::min(len, seed.bytes.size()));
+        for (size_t i = 0; f.size() < len; i++) {
+          f.push_back(filler == 0 ? static_cast<uint8_t>(0x40 + (i % 0x40)) : filler == 1 ? (i % 3 == 2 ? 3 : 0) : 0);
+        }
+        if (trailer) {
+          f[len - 2] = 12;
+          f[len - 1] = trailer == 2 ? 15 : 0;
+        }
+        in[ts] = {f, seed.key};
+        ts += 3000;
+      }
+    }
+  }
+  auto got = Receive(rx, cc, in, SentinelFor(cc, key));
+  for (const auto& [t, d] : got) std::printf("  delivered: %s\n", Hex(d).c_str());
+  std::printf("%-58s sent %4zu  delivered %4zu\n",
+              (std::string(cc.name) + " len 1-40 from [" + Hex(seed.bytes).substr(0, 30) + "]").c_str(), in.size(),
+              got.size());
+  std::fflush(stdout);
+  return !got.empty() ? 1 : (g_harness ? 2 : 0);
+}
+
+// --- (2) key state after refusals ---
+class StateLog : public webrtc::FrameCryptorTransformerObserver {
+ public:
+  void OnFrameCryptionStateChanged(const std::string, webrtc::FrameCryptionState s) override {
+    std::lock_guard<std::mutex> l(mu_);
+    v_.push_back(s);
+  }
+  std::vector<webrtc::FrameCryptionState> Get() {
+    std::lock_guard<std::mutex> l(mu_);
+    return v_;
+  }
+
+ private:
+  std::mutex mu_;
+  std::vector<webrtc::FrameCryptionState> v_;
+};
+const char* StateName(webrtc::FrameCryptionState s) {
+  switch (s) {
+    case webrtc::kNew: return "New";
+    case webrtc::kOk: return "Ok";
+    case webrtc::kEncryptionFailed: return "EncryptionFailed";
+    case webrtc::kDecryptionFailed: return "DecryptionFailed";
+    case webrtc::kMissingKey: return "MissingKey";
+    case webrtc::kKeyRatcheted: return "KeyRatcheted";
+    case webrtc::kInternalError: return "InternalError";
+  }
+  return "?";
+}
+std::string States(const std::vector<webrtc::FrameCryptionState>& v) {
+  std::string s;
+  for (auto x : v) s += (s.empty() ? "" : " > ") + std::string(StateName(x));
+  return s.empty() ? "(none)" : s;
+}
+
+struct KeyCase {
+  const char* name;
+  int tolerance;
+  int window;
+  bool sender_ratcheted;  // the sender is one ratchet step ahead: the first valid frame makes the receiver ratchet
+  bool bad_tag;           // control: one REAL decryption failure (flipped tag) instead of the malformed batch
+  bool expect_b;          // the valid frame after the batch is delivered
+  bool expect_valid;      // HasValidKey() afterwards
+  std::vector<webrtc::FrameCryptionState> expect_states;
+};
+
+int g_step_dups = 0;
+// Feeds frames, then an EMPTY flush frame (always forwarded: discard_frame_when_cryptor_not_ready is set false) and
+// waits for it: everything before it has been processed. Returns what was delivered (flush removed).
+std::map<uint32_t, Bytes> Step(Cryptor& rx, const CodecCase& cc, const std::vector<std::pair<uint32_t, std::pair<Bytes, bool>>>& in,
+                               uint32_t flush_ts) {
+  rx.sink->Expect(flush_ts);
+  for (const auto& [ts, fk] : in) rx.ft->Transform(MakeFrame(cc, fk.first, fk.second, kSsrc, ts, Dir::kReceiver));
+  rx.ft->Transform(MakeFrame(cc, Bytes{}, false, kSsrc, flush_ts, Dir::kReceiver));
+  if (!rx.sink->Wait()) { std::printf("  harness: the flush frame never came back\n"); g_harness++; }
+  auto got = rx.sink->Take();
+  if (rx.sink->TakeDups()) { std::printf("  FAIL: duplicate deliveries\n"); g_step_dups++; }
+  if (!got.count(flush_ts) || !got[flush_ts].empty()) { std::printf("  harness: flush frame missing\n"); g_harness++; }
+  got.erase(flush_ts);
+  return got;
+}
+
+// Exit 0 = every expectation held, 1 = a key-state / delivery expectation failed, 2 = harness.
+int RunKeyState(const CodecCase& cc, const KeyCase& kc) {
+  auto signaling = webrtc::Thread::Create();
+  signaling->Start();
+  Bytes material(32);
+  for (auto& x : material) x = R8();
+  webrtc::KeyProviderOptions o;
+  o.shared_key = true;
+  o.ratchet_salt = Bytes{'s', 'a', 'l', 't'};
+  o.ratchet_window_size = kc.window;
+  o.failure_tolerance = kc.tolerance;
+  auto kp = webrtc::make_ref_counted<webrtc::DefaultKeyProviderImpl>(o);
+  // after construction: the options copy constructor leaves this flag uninitialized (the flush frames need false)
+  kp->options().discard_frame_when_cryptor_not_ready = false;
+  kp->SetSharedKey(0, material);
+  auto handler = kp->GetSharedKey(kPid);
+  if (!handler || !handler->GetKeySet(0) || !handler->HasValidKey()) { std::printf("  harness: no key handler\n"); return 2; }
+  Bytes tx_material = material;
+  if (kc.sender_ratcheted) tx_material = handler->RatchetKeyMaterial(material);
+  auto tx_set = handler->DeriveKeys(tx_material, o.ratchet_salt, 128);
+  if (!tx_set || tx_set->encryption_key.empty()) { std::printf("  harness: no sender key\n"); return 2; }
+  const Bytes tx_key = tx_set->encryption_key;
+  if (kc.sender_ratcheted && tx_key == handler->GetKeySet(0)->encryption_key) { std::printf("  harness: ratchet\n"); return 2; }
+
+  Cryptor rx = MakeCryptor(kp, IsAudio(cc), signaling.get());
+  auto log = webrtc::make_ref_counted<StateLog>();
+  rx.t->RegisterFrameCryptorTransformerObserver(log);
+  tinhat::IvAllocator alloc(static_cast<uint32_t>(rng()), 11);
+  auto seal_valid = [&](bool kf, Bytes* plain_out) {
+    size_t hl = 0;
+    *plain_out = MakePlain(cc, kf, 200 + rng() % 400, &hl);
+    auto iv = alloc.Next();
+    return Seal(cc, *plain_out, hl, tx_key, Iv(iv->begin(), iv->end()), kf).wire;
+  };
+
+  bool ok = true;
+  std::string why;
+  auto expect = [&](bool cond, const std::string& what) {
+    if (!cond) { why += "  FAIL: " + what + "\n"; ok = false; }
+  };
+  // A: a valid keyframe (the receiver ratchets to the sender's key when the sender is ahead)
+  Bytes plain_a, plain_b;
+  const Bytes wire_a = seal_valid(true, &plain_a);
+  auto got = Step(rx, cc, {{1000, {wire_a, true}}}, 0xffff0001u);
+  expect(got.size() == 1 && got.count(1000) && got[1000] == plain_a, "the first valid frame was not decrypted");
+
+  // the batch: malformed frames the hardened receiver refuses structurally (complete clear header + a 15..29-byte
+  // body ending in a well-formed trailer (12, 0): too short for tag || IV || trailer), or the control
+  std::vector<std::pair<uint32_t, std::pair<Bytes, bool>>> batch;
+  uint32_t ts = 4000;
+  if (kc.bad_tag) {
+    size_t hl = 0;
+    Bytes plain = MakePlain(cc, false, 300, &hl);
+    auto iv = alloc.Next();
+    batch.push_back({ts, {Seal(cc, plain, hl, tx_key, Iv(iv->begin(), iv->end()), false, Corrupt::kTag).wire, false}});
+  } else {
+    size_t hl = 0;
+    const Bytes plain = MakePlain(cc, false, 300, &hl);
+    for (size_t body = 15; body <= 29; body++) {
+      Bytes f(plain.begin(), plain.begin() + hl);
+      if (cc.kind == Kind::kAv1) f = {0x30};
+      for (size_t i = 0; i < body; i++) f.push_back(static_cast<uint8_t>(0x40 + i));
+      f[f.size() - 2] = 12;
+      f[f.size() - 1] = 0;
+      batch.push_back({ts, {f, false}});
+      ts += 3000;
+    }
+  }
+  got = Step(rx, cc, batch, 0xffff0002u);
+  expect(got.empty(), std::to_string(got.size()) + " malformed/forged frames delivered");
+
+  // B: a valid delta frame under the same sender key
+  const Bytes wire_b = seal_valid(false, &plain_b);
+  got = Step(rx, cc, {{900000, {wire_b, false}}}, 0xffff0003u);
+  const bool b_back = got.size() == 1 && got.count(900000) && got[900000] == plain_b;
+  if (kc.expect_b) expect(b_back, "the valid frame after the batch was NOT decrypted");
+  else expect(got.empty(), "the valid frame after a real failure was delivered although the key is invalid");
+
+  signaling->BlockingCall([] {});  // observer callbacks are posted to the signaling thread: drain it
+  const bool valid = handler->HasValidKey();
+  auto ks = handler->GetKeySet(0);
+  const bool key_kept = ks && ks->encryption_key == tx_key && ks->material == tx_material;
+  const auto states = log->Get();
+  expect(valid == kc.expect_valid, std::string("HasValidKey() = ") + (valid ? "true" : "false"));
+  expect(key_kept, "key slot 0 is no longer the sender's key");
+  expect(states == kc.expect_states, "observer saw " + States(states) + ", want " + States(kc.expect_states));
+  std::printf("%-58s B %s  key %s/%s  states %s\n",
+              (std::string(cc.name) + " key state: " + kc.name).c_str(), b_back ? "decrypted" : "dropped  ",
+              valid ? "valid" : "INVALID", key_kept ? "kept" : "CHANGED", States(states).c_str());
+  std::printf("%s", why.c_str());
+  std::fflush(stdout);
+  rx.t->UnRegisterFrameCryptorTransformerObserver();
+  rx.t->SetEnabled(false);
+  return !ok || g_step_dups ? 1 : (g_harness ? 2 : 0);
+}
+
+std::vector<KeyCase> KeyCases() {
+  using webrtc::kDecryptionFailed;
+  using webrtc::kKeyRatcheted;
+  using webrtc::kOk;
+  return {
+      {"tolerance 0, malformed -> valid", 0, 0, false, false, true, true, {kOk, kDecryptionFailed, kOk}},
+      // (a successful ratchet reports KeyRatcheted, then Ok for the same frame: upstream's order)
+      {"tolerance 0, ratchet window 2, malformed -> valid", 0, 2, true, false, true, true,
+       {kKeyRatcheted, kOk, kDecryptionFailed, kOk}},
+      // controls: a real decryption failure is still counted (the assertions can see an invalidated key)
+      {"CONTROL tolerance 0, bad tag -> valid dropped", 0, 0, false, true, false, false, {kOk, kDecryptionFailed}},
+      {"CONTROL tolerance 1, bad tag -> valid", 1, 0, false, true, true, true, {kOk}},
+  };
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -552,6 +849,14 @@ int main(int argc, char** argv) {
 
   // Short/malformed frames first, one child per codec, before this process starts any libwebrtc thread.
   for (const auto& cc : codecs) ShortInChild(cc, kp, key);
+  // 12.1.11: total lengths 1..40 per seed, then key state after refusals (each in its own child)
+  for (const auto& cc : codecs)
+    for (const auto& seed : SeedsFor(cc))
+      InChild(std::string(cc.name) + " len 1-40 from [" + Hex(seed.bytes).substr(0, 30) + "]",
+              [&] { return RunTotalLengths(cc, seed, kp, key); });
+  for (const auto& cc : codecs)
+    for (const auto& kc : KeyCases())
+      InChild(std::string(cc.name) + " key state: " + kc.name, [&] { return RunKeyState(cc, kc); });
 
   uint32_t ts_base = 1000;
   for (const auto& cc : codecs) {

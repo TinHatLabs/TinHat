@@ -183,18 +183,18 @@ Item {
                     }
                 }
             }
-            // 12.1.9 (docs/UI-ZOOM.md "Change size instantly"): only where the size waits for a restart because the live
-            // change isn't proven there (Wayland); off by default. Same as TINHAT_UI_SCALE_LIVE=1, kept per device.
+            // docs/UI-ZOOM.md "Change size instantly": only where the live change isn't on the proven list (Wayland).
+            // 12.1.11: ON by default on Wayland (12.1.9's opt-in ran clean); off = restart-only. Kept per device.
             SettingsRow {
                 app: pane.app
                 visible: liveOffered
                 readonly property bool liveOffered: pane.app.settings.uiScaleLiveOptInOffered()
-                label: "Change size instantly (experimental)"
-                description: "On Wayland a new size normally waits until Tin Hat restarts, because changing it live once crashed Tin Hat on KDE Plasma. Turn this on to see it change straight away. If Tin Hat closes when you change the size, turn it off again."
+                label: "Change size instantly"
+                description: "A new size shows straight away. If Tin Hat ever closes when you change the size, turn this off: a new size then waits until Tin Hat restarts."
                 toggle: liveSw
                 trailing: ThSwitch {
                     id: liveSw
-                    Accessible.name: "Change size instantly (experimental)"
+                    Accessible.name: "Change size instantly"
                     checked: pane.app.settings.uiScaleLiveOptIn()
                     onToggled: pane.app.setUiScaleLiveOptIn(checked)
                 }

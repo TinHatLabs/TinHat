@@ -194,6 +194,15 @@ Tests:
   carry escapes inside the tail. ("upstream" = upstream's IV allocation inside Tin Hat's framing: its AV1 frames
   carry Tin Hat's wrapper.) **Shown able to fail:** on the previous archive (raw-tail receiver) H.264/H.265 v1 come
   back 0/300, planted 24/264, upstream 296/300.
+  12.1.11 additions (review notes on the 12.1.10 hotfix): every TOTAL frame length 1..40 independent of the clear
+  header, grown from truncated seeds (bare/truncated H.264 and H.265 NAL headers such as `00 00 00 01 65`, a one-byte
+  VP8 keyframe, AV1 wrapper and LEB128 prefixes, audio TOC bytes; one child per seed), and the KEY STATE after
+  refusals (failure_tolerance 0, and a ratchet window of 2 with the sender one step ahead: valid, 15 malformed, valid
+  must leave the last frame decrypted, the key valid and unchanged, and the observer at exactly Ok/KeyRatcheted >
+  DecryptionFailed > Ok; controls: a flipped tag under tolerance 0 does invalidate the key, under tolerance 1 it does
+  not). **Shown able to fail:** on 1218d every non-AV1 seed dies (17/25) and the non-AV1 key-state cases fail (10/12:
+  the next valid frame dropped, key invalid); AV1 passes there by nature (its old wrapper check already refused short
+  frames without counting a failure). Crash-only: no instrumented (ASAN) archive is built.
 - `tests/tinhat_iv_test.cc` section 10: `SplitRxTail` as shipped, unescape-first: v1 20000/20000, v2 20000/20000,
   planted 1100/1100, short bodies refused.
 - Rust `the_libwebrtc_patch_carries_the_same_rule`: the receiver lines are in the patch and the raw-tail IV read is

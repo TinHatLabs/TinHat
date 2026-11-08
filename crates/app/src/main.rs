@@ -50,6 +50,7 @@ pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
 pub mod left_words; // 12.1.1: the "already left" words of a kick / Disconnect / Mute (= the web's spaces/leftWords.ts)
 pub mod identity; // identity fix 12.1.8: LiveKit identity → user by the call memberships (= the web's features/calls/identity.ts)
+pub mod mic_handoff; // PAD-PHONE Step B: "my phone has the mic" on this computer (pure; call_ctl carries it out)
 pub mod persontiles; // Pad on the phone, Step A: one tile per person from the server attribute (= web persontiles.ts)
 pub mod companions; // screen share P3: fold a phone's share-only companion into its person (= the web's features/calls/companions.ts)
 pub mod callrules; // the calls-round rules: call host policy, key recipients v2, rotate-on-leave (pure; = the web's features/calls/callrules.ts)
@@ -1856,6 +1857,15 @@ fn main() {
     boot::set_stage("Starting the media engine", "", 20);
     boot::hold();
     let _ = tinhat_streamer::ensure_init();
+    // PAD-PHONE Step B: the media-key alias rule is in place before any call connects (the participants already in a
+    // call are seeded at connect): a server-vouched Pad Mic / Camera connection decrypts under its device's keys
+    tinhat_streamer::call::set_key_alias_rule(std::sync::Arc::new(|id: &str, a: &std::collections::HashMap<String, String>| {
+        crate::persontiles::key_alias_base(id, a)
+    }));
+    // ... and my own other devices' microphones (my phone in Mic mode) are never played on this computer
+    tinhat_streamer::call::set_play_mic_rule(std::sync::Arc::new(|id: &str, a: &std::collections::HashMap<String, String>, own: &str| {
+        crate::persontiles::play_mic_of(id, a, own)
+    }));
     if !boot::safe_mode() {
         video::preinit(); // the qml6glsink GL probe is exactly what safe mode avoids
     }
@@ -1933,4 +1943,9 @@ fn main() {
     // `engine` then `app` drop here -> QObjects (LoginController + its Client + the
     // sqlite pool) drop here, now with a runtime context from `_rt_guard`, which
     // drops last. No abort.
+}
+
+/// Wall-clock ms (PAD-PHONE Step B's handoff clock).
+pub(crate) fn persontiles_now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
 }

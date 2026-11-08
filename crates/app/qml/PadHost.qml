@@ -60,6 +60,9 @@ Item {
         case "setVolume": host._rec("setVolume", [String(c.user), String(c.cat), Number(c.level)]); app.audioPrefsCtl.setVolume(String(c.user), String(c.cat), Number(c.level)); return true
         case "setMuted": host._rec("setMuted", [String(c.user), String(c.cat), c.muted === true]); app.audioPrefsCtl.setMuted(String(c.user), String(c.cat), c.muted === true); return true
         case "leave": host._rec("leaveCall", []); app.callctl.leaveCall(); return true
+        // PAD-PHONE Step B (docs/PAD.md "Phone as Mic / Camera"): a mute REASON of its own — on remembers whether the mic
+        // was on, off lifts only that reason
+        case "takeMic": host.takeMic(c.on === true, String(c.sid || "")); return true
         case "partyJoin": {
             // the call bar's Media Party "Join": join (never re-join: joinParty is destructive) + open the window
             var room = String(app.callctl.roomId || "")
@@ -102,6 +105,35 @@ Item {
         console.warn("[pad] unknown command", JSON.stringify(c))
         return false
     }
+    // ── PAD-PHONE Step B: my phone holds the mic ──
+    // The rules live in Rust (mic_handoff.rs, carried out by call_ctl): the takeover's own mute reason, every unmute
+    // request as ONE deferred handoff while the phone has the mic, the restore only once my phone's Pad Mic publication
+    // is gone or muted, the muted join, the 15 s auto rule, take-back memory. This file only forwards and polls.
+    property bool takeHeld: false
+    onTakeHeldChanged: if (host.app) host.app.mPadTakeHeld = host.takeHeld
+    function takeMic(on, sid) {
+        var c = host.app ? app.callctl : null
+        if (!c) return
+        host._rec("padTake", [on, sid]); c.padTake(on, sid)
+        host.takeHeld = c.handoffTick()
+    }
+    Connections {
+        target: host.app ? host.app.padCtl : null
+        ignoreUnknownSignals: true
+        function onTakeReleased(sid) { if (host.app.callctl) { host.app.callctl.padTakeReleased(String(sid)); host.takeHeld = host.app.callctl.handoffTick() } }
+    }
+    Connections {
+        target: host.app
+        ignoreUnknownSignals: true
+        function onPadTakeBackRequested() { if (host.app.callctl) { host.app.callctl.takeMicBack(); host.takeHeld = host.app.callctl.handoffTick() } }
+    }
+    Timer {
+        interval: 500; repeat: true
+        running: !!host.app && host.app.mInCall === true && !host.recording
+        onTriggered: host.takeHeld = host.app.callctl.handoffTick()
+        onRunningChanged: if (!running) host.takeHeld = false
+    }
+
     // ── Media Party (the call room's) ──
     function _wpParty() { return host._json(app.watchCtl ? app.watchCtl.partyJson : "", {}) }
     function _wpPlayback() { return host._json(app.watchCtl ? app.watchCtl.playbackJson : "", {}) }

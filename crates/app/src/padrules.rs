@@ -61,7 +61,7 @@ pub const PAD_CAP: &str = "pad1";
 pub const PAD_CMD: &str = "dev.tinhat.pad.cmd";
 pub const PAD_STATE: &str = "dev.tinhat.pad.state";
 /// The ops a v1 receiver runs (the state's `ops`; the controller shows only listed controls).
-pub const PAD_OPS: [&str; 14] = [
+pub const PAD_OPS: [&str; 15] = [
     "sound.play",
     "sound.stop",
     "mic",
@@ -77,6 +77,8 @@ pub const PAD_OPS: [&str; 14] = [
     "party.seek",
     "party.next",
     "party.add",
+    // 2026-11-06 (PAD-PHONE Step B, additive): the phone takes the computer's mic (Mic mode) — receiver-owned, leased
+    "takeover.mic",
 ];
 pub const PAD_CATS: [&str; 3] = ["mic", "screenshare", "music"];
 pub const PAD_MIC: [&str; 4] = ["on", "muted", "server", "ptt"];
@@ -513,6 +515,7 @@ pub enum PadCmd {
     PartySeek { url: String, pos: i64 },
     PartyNext { url: String },
     PartyAdd { url: String, now: bool },
+    TakeoverMic { on: bool },
 }
 
 impl PadCmd {
@@ -535,6 +538,7 @@ impl PadCmd {
             PadCmd::PartySeek { .. } => "party.seek",
             PadCmd::PartyNext { .. } => "party.next",
             PadCmd::PartyAdd { .. } => "party.add",
+            PadCmd::TakeoverMic { .. } => "takeover.mic",
         }
     }
     /// The parsed command as JSON (`{op, …fields}`, the web's PadCmd object) — what the executor hands to QML.
@@ -554,7 +558,7 @@ impl PadCmd {
             PadCmd::Mic { muted } => {
                 m.insert("muted".into(), Value::from(*muted));
             }
-            PadCmd::Deafen { on } | PadCmd::Brb { on } => {
+            PadCmd::Deafen { on } | PadCmd::Brb { on } | PadCmd::TakeoverMic { on } => {
                 m.insert("on".into(), Value::from(*on));
             }
             PadCmd::Vol { user, cat, level, muted, live } => {
@@ -693,6 +697,7 @@ fn parse_cmd(c: &Map<String, Value>) -> Option<PadCmd> {
             party_link_ok(url).then_some(())?;
             Some(PadCmd::PartyAdd { url: url.to_string(), now: boolean("now")? })
         }
+        "takeover.mic" => Some(PadCmd::TakeoverMic { on: boolean("on")? }),
         _ => None,
     }
 }
@@ -716,6 +721,8 @@ pub struct PadMe {
     pub brb: bool,
     /// `pad_gate` / `use_soundboard`: this call's roles let me play sounds
     pub sound_role: bool,
+    /// Step B: the Pad session (sid) whose phone holds this receiver's mic ("" = none)
+    pub take_by: String,
 }
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -983,6 +990,11 @@ pub fn check_pad_message(t: &mut PadSessions, typ: &str, content: &Value, f: &Pa
             }
             _ => refuse("no-party"),
         },
+        // Step B: muting is always allowed (no server-mute / PTT refusal); a set — run only when it changes who holds it
+        PadCmd::TakeoverMic { on } => {
+            let run = if *on { me.take_by != sid } else { me.take_by == sid };
+            ok(run, cmd, Vec::new())
+        }
         PadCmd::Open { .. } | PadCmd::Ping { .. } | PadCmd::Close => unreachable!("handled above"),
     }
 }
@@ -1107,6 +1119,10 @@ pub fn build_state(input: &Value) -> (Value, usize) {
     gate.insert("allowed".into(), Value::from(is_true(gi.get("allowed"))));
     gate.insert("hint".into(), Value::from(cp_trunc(str_of(gi.get("hint")), MAX_HINT)));
     me.insert("gate".into(), Value::Object(gate));
+    // additive (Step B): only when this session holds the receiver's mic, so older states are unchanged
+    if is_true(mi.get("take")) {
+        me.insert("take".into(), Value::from(true));
+    }
     let mut more = valid - people.len();
     let party_in = obj(ci.get("party"));
     let mut next: Vec<Value> = Vec::new();
@@ -1253,6 +1269,9 @@ fn valid_state_body(c: &Map<String, Value>) -> bool {
     match obj(me.get("gate")) {
         Some(g) if is_bool(g, "allowed") && str_max(g.get("hint"), MAX_HINT, false) => {}
         _ => return false,
+    }
+    if me.get("take").is_some_and(|t| !t.is_boolean()) {
+        return false;
     }
     let Some(people) = call.get("people").and_then(|x| x.as_array()) else { return false };
     if people.len() > MAX_PEOPLE {

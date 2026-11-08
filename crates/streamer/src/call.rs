@@ -386,6 +386,7 @@ fn participant_attrs() -> &'static Mutex<(u64, HashMap<String, HashMap<String, S
     M.get_or_init(|| Mutex::new((0, HashMap::new())))
 }
 fn set_participant_attrs(identity: &str, attrs: HashMap<String, String>) {
+    refresh_key_alias(identity, &attrs); // PAD-PHONE Step B: a Pad Mic / Camera connection decrypts under its device's keys
     let mut m = participant_attrs().lock().unwrap();
     if m.1.get(identity) != Some(&attrs) {
         m.1.insert(identity.to_string(), attrs);
@@ -393,10 +394,135 @@ fn set_participant_attrs(identity: &str, attrs: HashMap<String, String>) {
     }
 }
 fn drop_participant_attrs(identity: &str) {
+    drop_key_alias(identity);
+    mic_gone(identity);
     let mut m = participant_attrs().lock().unwrap();
     if m.1.remove(identity).is_some() {
         m.0 += 1;
     }
+}
+
+// ---- PAD-PHONE Step B: media-key aliases ------------------------------------------------------------------------------
+// A Pad Mic / Camera connection's LiveKit identity is `<mxid>:<device>~pad-<mic|cam>-<hex>`, but its media keys arrive
+// (to-device / room event) under its device's own identity `<mxid>:<device>`. The app's rule (persontiles.rs
+// key_alias_base: only a SERVER-VOUCHED Pad Mic / Camera participant, from its attributes) names the base; the receiver
+// then installs every key of the base under the Pad identity too — the slots held now, and each later one — and drops
+// the alias when the participant leaves. A watcher (publishes nothing) and anything unvouched get no alias.
+
+type KeyAliasRule = Arc<dyn Fn(&str, &HashMap<String, String>) -> String + Send + Sync>;
+fn key_alias_rule() -> &'static Mutex<Option<KeyAliasRule>> {
+    static R: OnceLock<Mutex<Option<KeyAliasRule>>> = OnceLock::new();
+    R.get_or_init(|| Mutex::new(None))
+}
+/// alias identity (the Pad connection) -> base identity (its device)
+fn key_aliases() -> &'static Mutex<HashMap<String, String>> {
+    static A: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+    A.get_or_init(|| Mutex::new(HashMap::new()))
+}
+/// The app's rule (persontiles::key_alias_base); without one no alias is ever made.
+pub fn set_key_alias_rule(rule: KeyAliasRule) {
+    *key_alias_rule().lock().unwrap() = Some(rule);
+}
+/// The base identity this participant decrypts under ("" = none).
+pub fn key_alias_of(identity: &str) -> String {
+    key_aliases().lock().unwrap().get(identity).cloned().unwrap_or_default()
+}
+fn refresh_key_alias(identity: &str, attrs: &HashMap<String, String>) {
+    let base = key_alias_rule().lock().unwrap().as_ref().map(|r| r(identity, attrs)).unwrap_or_default();
+    if base.is_empty() || base == identity {
+        drop_key_alias(identity);
+        return;
+    }
+    if key_aliases().lock().unwrap().insert(identity.to_string(), base.clone()).as_deref() == Some(base.as_str()) {
+        return; // already aliased to that base
+    }
+    // the base's slots held now (live or buffered) go under the Pad identity too
+    let slots: Vec<(u8, [u8; 16])> = pending_peer_keys().lock().unwrap().iter().filter(|((id, _), _)| *id == base).map(|((_, i), e)| (*i, e.key)).collect();
+    if let Some((_gen, kp)) = active_key_provider().lock().unwrap().as_ref() {
+        for (i, k) in &slots {
+            kp.set_key(&ParticipantIdentity(identity.to_owned()), *i as i32, k.to_vec());
+        }
+    }
+    eprintln!("[recv3-alias] {identity} decrypts under {base}'s keys ({} slot(s) now)", slots.len());
+}
+fn drop_key_alias(identity: &str) {
+    if key_aliases().lock().unwrap().remove(identity).is_some() {
+        eprintln!("[recv3-alias] {identity}: alias dropped");
+    }
+}
+/// PAD-PHONE Step B: the app's receive rule for remote MICROPHONE tracks (persontiles::play_mic_of: never one of MY
+/// OWN other devices', server-vouched — my phone in Mic mode must not come out of this computer). Without a rule: played.
+type PlayMicRule = Arc<dyn Fn(&str, &HashMap<String, String>, &str) -> bool + Send + Sync>;
+fn play_mic_rule() -> &'static Mutex<Option<PlayMicRule>> {
+    static R: OnceLock<Mutex<Option<PlayMicRule>>> = OnceLock::new();
+    R.get_or_init(|| Mutex::new(None))
+}
+pub fn set_play_mic_rule(rule: PlayMicRule) {
+    *play_mic_rule().lock().unwrap() = Some(rule);
+}
+fn play_mic_allowed(identity: &str, attrs: &HashMap<String, String>) -> bool {
+    let me = local_identity_cell().lock().unwrap().clone();
+    play_mic_rule().lock().unwrap().as_ref().map(|r| r(identity, attrs, &me)).unwrap_or(true)
+}
+
+/// PAD-PHONE Step B (clients round 2 #4): every remote participant's MICROPHONE publication as the call server announces
+/// it — existence + muted — independent of whether we subscribed to it (a track we don't, or don't yet, subscribe to
+/// still transmits to everyone else). `known` = participants whose publication list we have seen (seeded at connect and
+/// on join, then kept by TrackPublished / Unpublished / Muted / Unmuted). A participant NOT known has an UNKNOWN mic
+/// state: it never counts as "stopped" (the takeover's restore waits on it).
+#[derive(Default)]
+struct MicReg {
+    /// identity -> its mic publication is muted (absent = no mic publication)
+    pubs: HashMap<String, bool>,
+    known: std::collections::HashSet<String>,
+}
+fn mic_reg() -> &'static Mutex<MicReg> {
+    static M: OnceLock<Mutex<MicReg>> = OnceLock::new();
+    M.get_or_init(|| Mutex::new(MicReg::default()))
+}
+/// The participant's publication list was read: `mic` = its mic publication's muted state (None = no mic publication).
+pub(crate) fn mic_seed(identity: &str, mic: Option<bool>) {
+    let mut r = mic_reg().lock().unwrap();
+    r.known.insert(identity.to_string());
+    match mic {
+        Some(m) => r.pubs.insert(identity.to_string(), m),
+        None => r.pubs.remove(identity),
+    };
+}
+/// TrackPublished / Muted / Unmuted of a mic (each implies the publication exists).
+pub(crate) fn mic_published(identity: &str, muted: bool) {
+    mic_reg().lock().unwrap().pubs.insert(identity.to_string(), muted);
+}
+/// TrackUnpublished of a mic.
+pub(crate) fn mic_unpublished(identity: &str) {
+    mic_reg().lock().unwrap().pubs.remove(identity);
+}
+/// The participant left: nothing of theirs transmits (and nothing is known about a later one of the same identity).
+pub(crate) fn mic_gone(identity: &str) {
+    let mut r = mic_reg().lock().unwrap();
+    r.pubs.remove(identity);
+    r.known.remove(identity);
+}
+/// A remote participant's mic: Some(true) = an UNMUTED mic publication, Some(false) = none or muted, None = unknown (its
+/// publication list was never seen: never proof that it stopped).
+pub fn remote_mic_live(identity: &str) -> Option<bool> {
+    let r = mic_reg().lock().unwrap();
+    if !r.known.contains(identity) && !r.pubs.contains_key(identity) {
+        return None;
+    }
+    Some(r.pubs.get(identity).is_some_and(|m| !*m))
+}
+/// Every remote participant the call server reported (the attribute store's identities), for the app's Pad rules.
+pub fn present_participants() -> Vec<String> {
+    participant_attrs().lock().unwrap().1.keys().cloned().collect()
+}
+fn mic_of(p: &livekit::participant::RemoteParticipant) -> Option<bool> {
+    p.track_publications().values().find(|x| matches!(x.source(), TrackSource::Microphone)).map(|x| x.is_muted())
+}
+
+/// The live aliases of a base identity (each gets the base's keys too).
+fn aliases_of(base: &str) -> Vec<String> {
+    key_aliases().lock().unwrap().iter().filter(|(_, b)| b.as_str() == base).map(|(a, _)| a.clone()).collect()
 }
 /// The attributes the server minted for `identity` (empty: none / not in the call).
 pub fn participant_attributes(identity: &str) -> HashMap<String, String> {
@@ -3578,6 +3704,11 @@ pub fn install_peer_key_at(identity: &str, index: u8, key: [u8; 16], ts_ms: u64,
     match active_key_provider().lock().unwrap().as_ref() {
         Some((_gen, kp)) => {
             kp.set_key(&ParticipantIdentity(identity.to_owned()), index as i32, key.to_vec());
+            // PAD-PHONE Step B: the same key for this device's live Pad Mic / Camera connection(s)
+            for alias in aliases_of(identity) {
+                kp.set_key(&ParticipantIdentity(alias.clone()), index as i32, key.to_vec());
+                eprintln!("[recv3-alias] set_key {alias} index={index} (from {identity})");
+            }
             // Decisive trace: which identity string + index the key landed under, and
             // that the call is live. Compare `identity` here against [recv4-lkid]'s
             // LiveKit-reported identity — a byte mismatch is the classic black-tile bug.
@@ -6719,6 +6850,7 @@ impl CallSession {
         for (id, p) in room.remote_participants() {
             corner_add_participant(&id.0); // 9.4: pull targets resolve against who is here
             set_participant_attrs(&id.0, p.attributes()); // Pad on the phone, Step A
+            mic_seed(&id.0, mic_of(&p)); // Step B: the roster's mic publications, before any mic of ours is published
         }
         // Make every LOCAL sender cryptor encrypt at OUR key index. Upstream creates
         // sender cryptors hardwired to index 0, so any other announced index silently
@@ -6802,6 +6934,11 @@ impl CallSession {
                                 identity: identity.clone(),
                                 sid: sid.clone(),
                             });
+                            continue;
+                        }
+                        // PAD-PHONE Step B: my own other device's microphone (my phone in Mic mode) is never played here
+                        if category == "mic" && !play_mic_allowed(&identity, &participant.attributes()) {
+                            eprintln!("[call] not playing {identity}'s mic sid={sid}: one of my own devices (Pad Mic)");
                             continue;
                         }
                         match build_playback(t.clone(), identity.clone(), category.clone(), sid.clone()) {
@@ -7000,6 +7137,7 @@ impl CallSession {
                         let identity = p.identity().0.clone();
                         eprintln!("[call] participant joined: {identity}");
                         set_participant_attrs(&identity, p.attributes()); // Pad on the phone, Step A
+                        mic_seed(&identity, mic_of(&p)); // Step B
                         corner_add_participant(&identity);
                         crate::hear::participant_present(&identity); // 10.5
                         crate::sameroom::participant_joined(&identity); // 11.3
@@ -7095,6 +7233,17 @@ impl CallSession {
                         // Remove their avatar tile + trigger an E2EE key rotation (forward secrecy).
                         let _ = tx.send(CallEvent::ParticipantLeft { identity });
                     }
+                    // PAD-PHONE Step B (clients round 2 #4): a mic's publication, whether or not we subscribe to it
+                    RoomEvent::TrackPublished { publication, participant } => {
+                        if matches!(publication.source(), TrackSource::Microphone) {
+                            mic_published(&participant.identity().0, publication.is_muted());
+                        }
+                    }
+                    RoomEvent::TrackUnpublished { publication, participant } => {
+                        if matches!(publication.source(), TrackSource::Microphone) {
+                            mic_unpublished(&participant.identity().0);
+                        }
+                    }
                     RoomEvent::TrackMuted { participant, publication } => {
                         let identity = participant.identity().0.clone();
                         let category = category_for_source(publication.source()).to_string();
@@ -7107,6 +7256,9 @@ impl CallSession {
                             eprintln!("[call] remote {category} track MUTED by {identity}");
                         }
                         crate::hear::note_track_muted(&identity, &category, true); // 10.5
+                        if category == "mic" {
+                            mic_published(&identity, true); // Step B: the publication exists, muted
+                        }
                         // 12.1.3: camera mutes get their own category (the tile shows the avatar)
                         let category = if matches!(publication.source(), TrackSource::Camera) { "camera".to_string() } else { category };
                         let _ = tx.send(CallEvent::TrackMuteChanged { identity, category, muted: true });
@@ -7118,6 +7270,9 @@ impl CallSession {
                             eprintln!("[call] remote {category} track UNMUTED by {identity}");
                         }
                         crate::hear::note_track_muted(&identity, &category, false); // 10.5
+                        if category == "mic" {
+                            mic_published(&identity, false); // Step B: the publication exists, unmuted
+                        }
                         let category = if matches!(publication.source(), TrackSource::Camera) { "camera".to_string() } else { category };
                         let _ = tx.send(CallEvent::TrackMuteChanged { identity, category, muted: false });
                     }
@@ -8732,6 +8887,8 @@ impl CallSession {
             if kp.as_ref().map(|(gen, _)| *gen) == Some(self.keyring_gen) {
                 *kp = None;
                 pending_peer_keys().lock().unwrap().clear(); // next call mints fresh keys
+                key_aliases().lock().unwrap().clear(); // PAD-PHONE Step B: no alias outlives its call
+                *mic_reg().lock().unwrap() = MicReg::default();
             } else {
                 eprintln!("[call] close: keyring already re-registered by a newer session — left intact");
             }
@@ -14410,6 +14567,49 @@ mod tests {
         let mut same = vec![123i16; 480];
         smooth_seam(&mut same, 123);
         assert!(same.iter().all(|&s| s == 123));
+    }
+
+    /// PAD-PHONE Step B (clients round 2 #4): a phone's mic state comes from its PUBLICATIONS, not our subscriptions,
+    /// and an unknown participant never reads as stopped.
+    #[test]
+    fn remote_mic_state_follows_publications_and_unknown_is_not_stopped() {
+        let id = "@mictest:unit.test:PHONE~pad-mic-0123456789abcdef";
+        mic_gone(id);
+        assert_eq!(remote_mic_live(id), None, "never seen: unknown");
+        mic_seed(id, Some(false)); // in the roster with an unmuted mic, not subscribed by us
+        assert_eq!(remote_mic_live(id), Some(true));
+        mic_published(id, true);
+        assert_eq!(remote_mic_live(id), Some(false), "muted");
+        mic_published(id, false);
+        assert_eq!(remote_mic_live(id), Some(true));
+        mic_unpublished(id);
+        assert_eq!(remote_mic_live(id), Some(false), "unpublished: stopped (known)");
+        mic_gone(id);
+        assert_eq!(remote_mic_live(id), None);
+        // a publish event alone (known by the event) is live
+        mic_published(id, false);
+        assert_eq!(remote_mic_live(id), Some(true));
+        mic_gone(id);
+    }
+
+    /// PAD-PHONE Step B: a participant the app's rule names gets an alias to its base device; attributes the rule
+    /// refuses (or none) drop it; leaving drops it. (Process-global state: one test fn, its own identities.)
+    #[test]
+    fn key_alias_follows_the_rule_and_the_participant() {
+        set_key_alias_rule(Arc::new(|id: &str, a: &HashMap<String, String>| {
+            if a.get("tinhat.mode").map(String::as_str) == Some("mic") { id.split('~').next().unwrap_or("").to_string() } else { String::new() }
+        }));
+        let pad = "@aliastest:unit.test:PHONE~pad-mic-0123456789abcdef";
+        let mic: HashMap<String, String> = [("tinhat.mode".to_string(), "mic".to_string())].into();
+        set_participant_attrs(pad, mic);
+        assert_eq!(key_alias_of(pad), "@aliastest:unit.test:PHONE");
+        assert_eq!(aliases_of("@aliastest:unit.test:PHONE"), vec![pad.to_string()]);
+        set_participant_attrs(pad, HashMap::new()); // the rule says no: gone
+        assert_eq!(key_alias_of(pad), "");
+        set_participant_attrs(pad, [("tinhat.mode".to_string(), "mic".to_string())].into());
+        drop_participant_attrs(pad);
+        assert_eq!(key_alias_of(pad), "");
+        assert!(aliases_of("@aliastest:unit.test:PHONE").is_empty());
     }
 
     /// The peer-key registry's transport rules — the heart of the join/leave coin-flip

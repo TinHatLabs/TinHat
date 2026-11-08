@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "about": "Pad (your phone as a remote for your call) - shared test vectors for the pure rules, byte-identical in the web repo (src/features/calls/pad/vectors.json) and the desktop repo (crates/app/src/testvectors/pad.json); the contract is docs/PAD.md in both. trust: rules 1-4 on facts (each overrides defaults.receiverFacts); every failure is a silent drop with that reason, run through checkTrust, checkPadMessage (an open) and acceptState. cmds: one command after an implicit open (sid PhoneSession0001, seq 1, ts 1000, now 1000, want [talk], default facts and ctx); the case's msg is merged over the envelope {v:1, sid, seq:2, ts:1500, room, gen:g1}, `drop` removes keys, `raw` replaces the content, `type` the event type, `now` defaults to 1500. sessions: steps against one receiver table; a step's msg is merged over {v:1, sid, ts:<now>, room, gen:g1}; `repeat` runs it n times with seq+1 each time; `do` steps: refuse / clearRefused / clear / sweep (expect.sids = the sids returned) and pushed / pushWait. ctx and facts merge recursively (objects merge, arrays and scalars replace) over defaults, then the scenario's, then the step's. expect on a message: ok, why, reason, reply, run always; evicted (default []); cmd and live (the live sids after the step) when present. state: buildState input -> exact output + its UTF-8 JSON size, or (generated inputs: genPeople {n, len} -> @p<i>[x...]:example.org; genRecent {n, nameLen, urlLen}) a summary. accept: steps against one controller session {sid PhoneSession0001, device PCDEVICE, lastRseq 0}; msg merges over defaults.state. targets: padTargets(me, myDevice, now, selfVerified, trusted, events) with the defaults below. rate: RateBucket.hit, n times each. stale: staleCheck(offset, ts, now); openStale: openStale(ts, now). why: whyText(code, device, op). links (2026-10-31): webSoundOk(url) / partyLinkOk(url) -> expect. cmds may carry ctx (merged over defaults.ctx; ctx.party = the receiver's Media Party in the call room, absent = none). (2026-10-31 review) call.party.add = {sid, re, ok}: the outcome of that session's latest party.add; over 16 KiB the party block always stays (me.sound, then gate.hint go after people).",
+  "about": "Pad (your phone as a remote for your call) - shared test vectors for the pure rules, byte-identical in the web repo (src/features/calls/pad/vectors.json) and the desktop repo (crates/app/src/testvectors/pad.json); the contract is docs/PAD.md in both. trust: rules 1-4 on facts (each overrides defaults.receiverFacts); every failure is a silent drop with that reason, run through checkTrust, checkPadMessage (an open) and acceptState. cmds: one command after an implicit open (sid PhoneSession0001, seq 1, ts 1000, now 1000, want [talk], default facts and ctx); the case's msg is merged over the envelope {v:1, sid, seq:2, ts:1500, room, gen:g1}, `drop` removes keys, `raw` replaces the content, `type` the event type, `now` defaults to 1500. sessions: steps against one receiver table; a step's msg is merged over {v:1, sid, ts:<now>, room, gen:g1}; `repeat` runs it n times with seq+1 each time; `do` steps: refuse / clearRefused / clear / sweep (expect.sids = the sids returned) and pushed / pushWait. ctx and facts merge recursively (objects merge, arrays and scalars replace) over defaults, then the scenario's, then the step's. expect on a message: ok, why, reason, reply, run always; evicted (default []); cmd and live (the live sids after the step) when present. state: buildState input -> exact output + its UTF-8 JSON size, or (generated inputs: genPeople {n, len} -> @p<i>[x...]:example.org; genRecent {n, nameLen, urlLen}) a summary. accept: steps against one controller session {sid PhoneSession0001, device PCDEVICE, lastRseq 0}; msg merges over defaults.state. targets: padTargets(me, myDevice, now, selfVerified, trusted, events) with the defaults below. rate: RateBucket.hit, n times each. stale: staleCheck(offset, ts, now); openStale: openStale(ts, now). why: whyText(code, device, op). links (2026-10-31): webSoundOk(url) / partyLinkOk(url) -> expect. cmds may carry ctx (merged over defaults.ctx; ctx.party = the receiver's Media Party in the call room, absent = none). (2026-10-31 review) call.party.add = {sid, re, ok}: the outcome of that session's latest party.add; over 16 KiB the party block always stays (me.sound, then gate.hint go after people). Step B (2026-11-06, additive): the op takeover.mic {on} — the phone takes the receiver's mic (Mic mode). Muting is always allowed (no server-muted / ptt refusal); a set: on:true runs unless this session already holds it (ctx.me.takeBy = its sid), on:false runs only when this session holds it. The state's call.me.take = true when the state's session holds it (left out otherwise); a non-boolean take is bad.",
   "const": {
     "v": 1,
     "leaseMs": 45000,
@@ -48,7 +48,8 @@
     "party.play",
     "party.seek",
     "party.next",
-    "party.add"
+    "party.add",
+    "takeover.mic"
   ],
   "cats": [
     "mic",
@@ -135,7 +136,8 @@
         "party.play",
         "party.seek",
         "party.next",
-        "party.add"
+        "party.add",
+        "takeover.mic"
       ],
       "call": {
         "room": "!call:example.org",
@@ -3479,6 +3481,216 @@
         "ok": false,
         "why": "no-session",
         "reason": "no-session",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "takeover.mic on:true, nobody holds it -> runs",
+      "msg": {
+        "op": "takeover.mic",
+        "on": true
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "takeover.mic",
+          "on": true
+        }
+      }
+    },
+    {
+      "name": "takeover.mic on:true while a moderator muted me -> still runs (taking the mic only ever mutes)",
+      "ctx": {
+        "me": {
+          "serverMuted": true,
+          "micMuted": true
+        }
+      },
+      "msg": {
+        "op": "takeover.mic",
+        "on": true
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true
+      }
+    },
+    {
+      "name": "takeover.mic on:true with push-to-talk -> runs",
+      "ctx": {
+        "me": {
+          "ptt": true
+        }
+      },
+      "msg": {
+        "op": "takeover.mic",
+        "on": true
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true
+      }
+    },
+    {
+      "name": "takeover.mic on:true, this session already holds it -> nothing to change",
+      "ctx": {
+        "me": {
+          "takeBy": "PhoneSession0001"
+        }
+      },
+      "msg": {
+        "op": "takeover.mic",
+        "on": true
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "takeover.mic on:true, another session holds it -> runs (moves to this one)",
+      "ctx": {
+        "me": {
+          "takeBy": "OtherSession0001"
+        }
+      },
+      "msg": {
+        "op": "takeover.mic",
+        "on": true
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true
+      }
+    },
+    {
+      "name": "takeover.mic on:false, this session holds it -> runs",
+      "ctx": {
+        "me": {
+          "takeBy": "PhoneSession0001"
+        }
+      },
+      "msg": {
+        "op": "takeover.mic",
+        "on": false
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": true,
+        "cmd": {
+          "op": "takeover.mic",
+          "on": false
+        }
+      }
+    },
+    {
+      "name": "takeover.mic on:false, another session holds it -> nothing (not its to give back)",
+      "ctx": {
+        "me": {
+          "takeBy": "OtherSession0001"
+        }
+      },
+      "msg": {
+        "op": "takeover.mic",
+        "on": false
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "takeover.mic on:false, nobody holds it -> nothing",
+      "msg": {
+        "op": "takeover.mic",
+        "on": false
+      },
+      "expect": {
+        "ok": true,
+        "why": "",
+        "reason": "",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "takeover.mic on \"true\" -> bad",
+      "msg": {
+        "op": "takeover.mic",
+        "on": "true"
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "takeover.mic without on -> bad",
+      "msg": {
+        "op": "takeover.mic"
+      },
+      "expect": {
+        "ok": false,
+        "why": "bad",
+        "reason": "bad",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "takeover.mic for another call generation -> other-call",
+      "msg": {
+        "op": "takeover.mic",
+        "on": true,
+        "gen": "g2"
+      },
+      "expect": {
+        "ok": false,
+        "why": "other-call",
+        "reason": "other-call",
+        "reply": true,
+        "run": false
+      }
+    },
+    {
+      "name": "takeover.mic while not in a call -> not-in-call",
+      "ctx": {
+        "call": null
+      },
+      "msg": {
+        "op": "takeover.mic",
+        "on": true
+      },
+      "expect": {
+        "ok": false,
+        "why": "not-in-call",
+        "reason": "not-in-call",
         "reply": true,
         "run": false
       }
@@ -7891,11 +8103,12 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": null
       },
-      "bytes": 272
+      "bytes": 287
     },
     {
       "name": "a call: only non-default volumes, the muted categories, empty vol / mute left out",
@@ -7987,7 +8200,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -8041,7 +8255,7 @@
           ]
         }
       },
-      "bytes": 810
+      "bytes": 825
     },
     {
       "name": "volumes: rounded to 0.01 and clamped to 0-2; a value that rounds to 1 is the default",
@@ -8121,7 +8335,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -8170,7 +8385,7 @@
           "recent": []
         }
       },
-      "bytes": 718
+      "bytes": 733
     },
     {
       "name": "people: invalid ids skipped, each person once (first wins)",
@@ -8244,7 +8459,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -8279,7 +8495,7 @@
           "recent": []
         }
       },
-      "bytes": 586
+      "bytes": 601
     },
     {
       "name": "recent: 8 at most, empty or over-long urls skipped, names cut to 64 and emoji to 16 code points",
@@ -8392,7 +8608,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -8455,7 +8672,7 @@
           ]
         }
       },
-      "bytes": 1214
+      "bytes": 1229
     },
     {
       "name": "me: no sound -> null, an unknown mic -> on, a non-boolean gate -> not allowed, the hint cut to 200",
@@ -8505,7 +8722,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -8527,7 +8745,7 @@
           "recent": []
         }
       },
-      "bytes": 654
+      "bytes": 669
     },
     {
       "name": "me: an over-long sound url -> null; server and ptt pass",
@@ -8579,7 +8797,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -8601,7 +8820,7 @@
           "recent": []
         }
       },
-      "bytes": 457
+      "bytes": 472
     },
     {
       "name": "envelope numbers that are not unsigned integers -> 0, a non-string why -> \"\"",
@@ -8636,11 +8855,12 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": null
       },
-      "bytes": 249
+      "bytes": 264
     },
     {
       "name": "ids that aren't ids are sent as \"\" (the controller then drops the state)",
@@ -8692,7 +8912,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "",
@@ -8714,7 +8935,7 @@
           "recent": []
         }
       },
-      "bytes": 418
+      "bytes": 433
     },
     {
       "name": "the worst case besides people and recent (control characters in the sound url and hint) still fits",
@@ -8758,7 +8979,7 @@
         "more": 57,
         "recent": 0,
         "lastU": "@p7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:example.org",
-        "bytes": 16093
+        "bytes": 16108
       }
     },
     {
@@ -8811,7 +9032,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -8833,7 +9055,7 @@
           "recent": []
         }
       },
-      "bytes": 441
+      "bytes": 456
     },
     {
       "name": "64 people at most, the rest counted in more",
@@ -8871,7 +9093,7 @@
         "more": 6,
         "recent": 0,
         "lastU": "@p64:example.org",
-        "bytes": 4667
+        "bytes": 4682
       }
     },
     {
@@ -8916,7 +9138,7 @@
         "more": 0,
         "recent": 3,
         "lastU": "@p30xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:example.org",
-        "bytes": 15901
+        "bytes": 15916
       }
     },
     {
@@ -8961,7 +9183,7 @@
         "more": 12,
         "recent": 0,
         "lastU": "@p52xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:example.org",
-        "bytes": 16313
+        "bytes": 16328
       }
     },
     {
@@ -9084,7 +9306,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -9165,7 +9388,7 @@
           }
         }
       },
-      "bytes": 1053
+      "bytes": 1068
     },
     {
       "name": "party: null -> no block",
@@ -9258,7 +9481,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -9312,7 +9536,7 @@
           ]
         }
       },
-      "bytes": 810
+      "bytes": 825
     },
     {
       "name": "party: wrong types fall back (flags false, ints 0, strings \"\"); a non-ASCII url -> \"\"; pos/dur capped at 86400",
@@ -9421,7 +9645,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -9493,7 +9718,7 @@
           }
         }
       },
-      "bytes": 942
+      "bytes": 957
     },
     {
       "name": "party: a title cut to 200 code points",
@@ -9596,7 +9821,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -9661,7 +9887,7 @@
           }
         }
       },
-      "bytes": 1761
+      "bytes": 1776
     },
     {
       "name": "share: true is sent (after away), false is left out",
@@ -9755,7 +9981,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -9810,7 +10037,7 @@
           ]
         }
       },
-      "bytes": 823
+      "bytes": 838
     },
     {
       "name": "share: false is left out",
@@ -9904,7 +10131,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -9958,7 +10186,7 @@
           ]
         }
       },
-      "bytes": 810
+      "bytes": 825
     },
     {
       "name": "party.add outcome: {sid, re, ok} after next",
@@ -10085,7 +10313,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -10171,7 +10400,7 @@
           }
         }
       },
-      "bytes": 1104
+      "bytes": 1119
     },
     {
       "name": "party.add outcome with a bad sid is left out",
@@ -10298,7 +10527,8 @@
           "party.play",
           "party.seek",
           "party.next",
-          "party.add"
+          "party.add",
+          "takeover.mic"
         ],
         "call": {
           "room": "!call:example.org",
@@ -10379,7 +10609,452 @@
           }
         }
       },
-      "bytes": 1053
+      "bytes": 1068
+    },
+    {
+      "name": "Step B: this session holds the receiver's mic: me.take = true, after gate",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            },
+            "take": true
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add",
+          "takeover.mic"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            },
+            "take": true
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "bytes": 837
+    },
+    {
+      "name": "Step B: take false is left out (the state is byte-identical to an older one)",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            },
+            "take": false
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add",
+          "takeover.mic"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "bytes": 825
+    },
+    {
+      "name": "Step B: a take that isn't true is left out",
+      "input": {
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": "https://sounds.example.org/fav.mp3",
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            },
+            "take": "yes"
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {
+                "mic": false,
+                "screenshare": false,
+                "music": true
+              }
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true,
+              "vol": {
+                "mic": 1,
+                "screenshare": 1,
+                "music": 1
+              },
+              "muted": {}
+            }
+          ],
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "v": 1,
+        "sid": "PhoneSession0001",
+        "rseq": 7,
+        "rt": 1761400000456,
+        "re": 3,
+        "ok": true,
+        "why": "",
+        "ops": [
+          "sound.play",
+          "sound.stop",
+          "mic",
+          "deafen",
+          "brb",
+          "vol",
+          "vol.reset",
+          "leave",
+          "sound.play.web",
+          "party.join",
+          "party.play",
+          "party.seek",
+          "party.next",
+          "party.add",
+          "takeover.mic"
+        ],
+        "call": {
+          "room": "!call:example.org",
+          "gen": "g1",
+          "since": 1761399000000,
+          "me": {
+            "mic": "on",
+            "deaf": false,
+            "brb": false,
+            "talk": true,
+            "sound": {
+              "url": "https://sounds.example.org/fav.mp3"
+            },
+            "gate": {
+              "allowed": true,
+              "hint": ""
+            }
+          },
+          "people": [
+            {
+              "u": "@bob:example.org",
+              "talk": true,
+              "micOff": false,
+              "away": false,
+              "vol": {
+                "mic": 0.6
+              },
+              "mute": [
+                "music"
+              ]
+            },
+            {
+              "u": "@carol:example.org",
+              "talk": false,
+              "micOff": true,
+              "away": true
+            }
+          ],
+          "more": 0,
+          "recent": [
+            {
+              "name": "Bruh",
+              "url": "https://sounds.example.org/fav.mp3",
+              "emoji": "😐"
+            },
+            {
+              "name": "Airhorn",
+              "url": "https://sounds.example.org/recent.mp3",
+              "emoji": "📯"
+            }
+          ]
+        }
+      },
+      "bytes": 825
     }
   ],
   "accept": [
@@ -10998,7 +11673,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11080,7 +11756,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11152,7 +11829,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11233,7 +11911,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11315,7 +11994,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11416,7 +12096,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11498,7 +12179,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11580,7 +12262,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11652,7 +12335,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11724,7 +12408,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11796,7 +12481,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11883,7 +12569,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -11966,7 +12653,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -12053,7 +12741,8 @@
               "party.play",
               "party.seek",
               "party.next",
-              "party.add"
+              "party.add",
+              "takeover.mic"
             ],
             "call": {
               "room": "!call:example.org",
@@ -12107,6 +12796,51 @@
                   "re": 3,
                   "ok": true
                 }
+              }
+            }
+          },
+          "expect": "bad"
+        }
+      ]
+    },
+    {
+      "name": "Step B: me.take true is accepted",
+      "steps": [
+        {
+          "msg": {
+            "call": {
+              "me": {
+                "take": true
+              }
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "Step B: me.take false is accepted",
+      "steps": [
+        {
+          "msg": {
+            "call": {
+              "me": {
+                "take": false
+              }
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "Step B: me.take that isn't a boolean -> bad",
+      "steps": [
+        {
+          "msg": {
+            "call": {
+              "me": {
+                "take": "yes"
               }
             }
           },
