@@ -84,7 +84,7 @@ remote and EOSes the pipeline; `ScreenCast::close()` closes the portal session.
 The capture pipeline (`lk_publish.rs`, exact current text):
 
 ```text
-pipewiresrc fd={fd} path={node_id} do-timestamp=true keepalive-time=1000 ! \
+pipewiresrc fd={fd} path={node_id} do-timestamp=true ! \
 videorate drop-only=true ! \
 video/x-raw(ANY),framerate={fps}/1 ! \
 videoconvert ! videoscale add-borders=false name=vscale ! \
@@ -123,7 +123,7 @@ portal-like UX.
 Output buffers are **`memory:D3D11Memory`**, not DMABuf. Re-derive the (ANY) trick against
 D3D11: keep `videorate drop-only=true` + `video/x-raw(ANY),framerate={fps}/1`, then
 download with `d3d11download` (or `d3d11convert ! d3d11download`) so the one readback runs
-at `fps`. Drop the `do-timestamp`/`keepalive-time` props (they are `pipewiresrc`-specific).
+at `fps`. Drop the `do-timestamp` prop (it is `pipewiresrc`-specific).
 Read the source size from `QScreen` geometry or the negotiated caps instead of the portal's
 `size()`.
 
@@ -567,7 +567,7 @@ checklist: `d3d11screencapturesrc`, `mediafoundationvideosrc`, `wasapisrc`, `was
 | `pipewiresrc fd= path=` (screen) | `capture.rs`, `lk_publish.rs` | `d3d11screencapturesrc monitor-index=`/`window-handle=` | no fd/node; needs native picker; output = D3D11Memory |
 | portal `ScreenCast` session | `capture.rs` | `ScreenSource` trait + WGC/`d3d11` handle | no session lifecycle to hold |
 | `video/x-raw(ANY)` + `videoconvert` readback | `lk_publish.rs` | `video/x-raw(ANY)` + `d3d11download` (+`d3d11convert`) | preserve the (ANY) anti-hitch trick vs D3D11Memory |
-| `do-timestamp` / `keepalive-time` | `lk_publish.rs` | (drop) | pipewiresrc-specific |
+| `do-timestamp` | `capture.rs` | (drop) | pipewiresrc-specific |
 | `v4l2src device=/dev/videoN` | `camera.rs` | `mediafoundationvideosrc device-path=` / `ksvideosrc` | MF symbolic-link id; jpegdec branch stays |
 | `DeviceMonitor` Video/Source `device.path`/`api.v4l2.path` | `camera.rs` | `DeviceMonitor` Video/Source, MF `device.path` | mfdeviceprovider |
 | `pipewiresrc target-object=` (mic) | `call.rs` | `wasapisrc device=` / `wasapi2src` | bare = default |

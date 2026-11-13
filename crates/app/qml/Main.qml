@@ -1012,6 +1012,8 @@ Kirigami.ApplicationWindow {
         function onCallDeclined(roomId, text, shownMs) { core.notify(text, shownMs); root.playCallChime("leave") }
         // selfhost/firstrun §5: accepting a DM invite (room list or DM strip) opens that DM
         function onDmAccepted(roomId) { root.openRoomId(roomId) }
+        // fix/verify-request: one of my devices asked to verify but its request couldn't be used (a clock, or keys not in yet)
+        function onVerifyNotice(text) { core.notify(text, 15000) }
         function onToastAction(action) {
             if (action === "sound:notify") { root.playUiSound("notify"); return }
             // 10.6 (REACH A5.6): a new DM / DM invite / mention flashes the taskbar button while the
@@ -3336,6 +3338,8 @@ Kirigami.ApplicationWindow {
         sasPeer: login.sasPeer
         sasIncoming: login.sasIncoming
         sasCanStart: login.sasCanStart
+        clockNote: login.clockNote
+        onClockCheckRequested: login.checkClock()
         onVerifyRequested: (key) => login.verify(key)
         onUseAnotherDeviceRequested: login.startDeviceVerification()
         onSasAccepted: login.acceptDeviceVerification()
@@ -3575,6 +3579,16 @@ Kirigami.ApplicationWindow {
                     isChecked: () => root._sqEnc() === modelData.tag
                     onTriggered: callctl.applyShareEncoder(modelData.code)
                 }
+            }
+            Controls.MenuItem {
+                // 12.1.11 (flatpak-nvidia): the GPU choice above can't reach NVENC in this Flatpak; the why + fix
+                // are in Settings -> Calls (callctl.gpuSetupHint)
+                readonly property string hint: callctl.gpuSetupHint()
+                visible: hint.length > 0
+                height: visible ? implicitHeight : 0
+                text: "Fix NVIDIA GPU access…"
+                icon.name: "dialog-warning-symbolic"
+                onTriggered: { settingsWindow.openAt("calls") }
             }
         }
         Controls.MenuItem {

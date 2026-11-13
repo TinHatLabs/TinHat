@@ -47,6 +47,7 @@ pub mod qobject {
         #[qproperty(QString, sas_emoji)] //  QML: sasEmoji — JSON [{"e":"🐶","name":"Dog"}] × 7
         #[qproperty(QString, sas_peer)] //   QML: sasPeer — the other device, so the prompt can name it
         #[qproperty(QString, sas_note)] //   QML: sasNote — human-readable progress / failure reason
+        #[qproperty(QString, clock_note)] // QML: clockNote — fix/verify-request: "This device's clock is about N … off …" ("" = fine / unknown); never blocks
         #[qproperty(bool, sas_incoming)] //  QML: sasIncoming — another device asked US to verify it
         #[qproperty(bool, sas_can_start)] // QML: sasCanStart — S2: the peer lets its user pick (QR too); offer "Start emoji comparison"
         #[qproperty(QString, created_room)] // QML: createdRoom — id of the room just created/reused, so QML can open it
@@ -104,6 +105,16 @@ pub mod qobject {
         /// acceptInvite does the same). Room and space invites don't emit it.
         #[qsignal]
         fn dm_accepted(self: Pin<&mut LoginController>, room_id: QString);
+        /// fix/verify-request: one of our devices asked to verify, but the request could not be used (its clock or
+        /// ours is off, or this device doesn't have its keys yet) — QML shows `text` as a long toast.
+        #[qsignal]
+        fn verify_notice(self: Pin<&mut LoginController>, text: QString);
+
+        /// fix/verify-request — QML: login.checkClock() — compare this device's clock with the server's and set
+        /// clockNote (sign-in, the verify dialog, Settings → Security). Read-only; never blocks anything.
+        #[qinvokable]
+        #[cxx_name = "checkClock"]
+        fn check_clock(self: Pin<&mut LoginController>);
 
         // QML: login.labDriveHooks() — the lab gate's paddrive steps row / find-action / ptt-state may run (never in a release)
         #[qinvokable]
@@ -353,6 +364,7 @@ pub struct LoginControllerRust {
     sas_peer: QString,
     sas_note: QString,
     sas_incoming: bool,
+    clock_note: QString,
     sas_can_start: bool,
     /// The verification flow incarnation the dialog is showing (sas_driver) — its commands name it.
     sas_shown_inc: u64,
@@ -421,6 +433,7 @@ impl Default for LoginControllerRust {
             sas_peer: QString::from(""),
             sas_note: QString::from(""),
             sas_incoming: false,
+            clock_note: QString::default(),
             sas_can_start: false,
             sas_shown_inc: 0,
             created_room: QString::default(),
@@ -708,6 +721,7 @@ impl qobject::LoginController {
 
         self.as_mut().set_busy(true);
         self.as_mut().set_logged_in(false);
+        self.as_mut().set_clock_note(QString::default()); // fix/verify-request: never carried to the next account
         let connecting = if from_user_id { format!("Signing in to {homeserver}, the server in your user ID…") } else { "Connecting…".to_string() };
         self.as_mut().set_status(QString::from(&connecting));
 
@@ -740,6 +754,7 @@ impl qobject::LoginController {
                         eprintln!("[login] failed: {err}");
                         qobject.as_mut().set_status(QString::from(&err));
                         qobject.as_mut().set_logged_in(false);
+                        qobject.as_mut().set_clock_note(QString::default()); // fix/verify-request: never carried to the next account
                     }
                 }
             });
@@ -889,6 +904,7 @@ impl qobject::LoginController {
                         qobject.as_mut().set_status(QString::from(&problem.text()));
                         qobject.as_mut().set_restore_problem(QString::from(problem.kind()));
                         qobject.as_mut().set_logged_in(false);
+                        qobject.as_mut().set_clock_note(QString::default()); // fix/verify-request: never carried to the next account
                     }
                 }
             });
@@ -1016,6 +1032,7 @@ impl qobject::LoginController {
         self.as_mut().set_user_id(QString::default());
         self.as_mut().set_rooms_json(QString::default());
         self.as_mut().set_logged_in(false);
+        self.as_mut().set_clock_note(QString::default()); // fix/verify-request: never carried to the next account
         self.as_mut().set_verified(false);
         self.as_mut().set_backup_ready(false);
         self.as_mut().set_sync_down(false);
@@ -1311,8 +1328,9 @@ impl qobject::LoginController {
                     }
                     Err(e) => {
                         eprintln!("[verify] failed: {e}");
+                        // fix/verify-request: plain words (a wrong key used to show the SDK's "MAC check … failed")
                         o.as_mut()
-                            .set_status(QString::from(&format!("Verification failed: {e}")));
+                            .set_status(QString::from(&crate::clock_policy::key_error_note(&e.to_string())));
                     }
                 }
             });
@@ -1916,15 +1934,15 @@ impl qobject::LoginController {
                             // would silently never fire and "accept on your other
                             // device" would appear to do nothing.
                             if ty == "m.key.verification.request" {
-                                let txn = raw
+                                let content = raw
                                     .deserialize_as::<serde_json::Value>()
                                     .ok()
-                                    .and_then(|v| {
-                                        v.get("content")
-                                            .and_then(|c| c.get("transaction_id"))
-                                            .and_then(|t| t.as_str())
-                                            .map(str::to_owned)
-                                    });
+                                    .and_then(|v| v.get("content").cloned());
+                                let txn = content
+                                    .as_ref()
+                                    .and_then(|c| c.get("transaction_id"))
+                                    .and_then(|t| t.as_str())
+                                    .map(str::to_owned);
                                 if let (Some(txn), Ok(who)) = (
                                     txn,
                                     matrix_sdk::ruma::UserId::parse(sender.as_str()),
@@ -1937,6 +1955,9 @@ impl qobject::LoginController {
                                             .get_verification_request(&who, &txn)
                                             .await
                                         else {
+                                            // fix/verify-request: the SDK dropped it without a word (no cancel
+                                            // goes back). Say why, if it was one of our own devices.
+                                            dropped_request_notice(c2, qt2, who, content).await;
                                             return;
                                         };
                                         // Only surface our OWN devices: this dialog is
@@ -2571,6 +2592,163 @@ async fn new_identity_under_key(client: &Client, key: &str) -> Result<(), String
 async fn account_key_first(client: &Client) -> bool {
     let storage = client.encryption().secret_storage().is_enabled().await.unwrap_or(false);
     crate::moved::key_first(!own_identity_missing(client).await, storage)
+}
+
+fn now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
+/// fix/verify-request — our clock minus the homeserver's, in seconds, from its HTTP `Date` header (the client's own
+/// HTTP stack, so a lab's or a proxy's TLS setup is the same as for every other call). None = couldn't tell.
+async fn server_clock_skew(client: &Client) -> Option<i64> {
+    let url = format!("{}/_matrix/client/versions", client.homeserver().as_str().trim_end_matches('/'));
+    let sent = now_ms();
+    let resp = client
+        .http_client()
+        .get(&url)
+        .timeout(std::time::Duration::from_secs(8))
+        .send()
+        .await
+        .ok()?;
+    let got = now_ms();
+    let date = resp.headers().get("date")?.to_str().ok()?.to_owned();
+    crate::clock_policy::skew_from_date(&date, sent, got)
+}
+
+/// fix/verify-request — run one clock check beside whatever else is going on and publish its clockNote, unless a newer
+/// check started meanwhile or the account on screen changed (a sign-out / another account in between).
+fn spawn_clock_check(client: Client, qt: cxx_qt::CxxQtThread<qobject::LoginController>) {
+    static GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let gen = GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+    runtime().spawn(async move {
+        let me = client.user_id().map(|u| u.to_string()).unwrap_or_default();
+        let skew = server_clock_skew(&client).await;
+        eprintln!("[clock] this device vs server: {skew:?} s");
+        let note = match skew {
+            Some(s) if crate::clock_policy::clock_off(s) => crate::clock_policy::own_clock_note(s, cfg!(windows)),
+            _ => String::new(),
+        };
+        let _ = qt.queue(move |mut o| {
+            if GEN.load(std::sync::atomic::Ordering::SeqCst) == gen && *o.logged_in() && o.user_id().to_string() == me {
+                o.as_mut().set_clock_note(QString::from(&note));
+            }
+        });
+    });
+}
+
+/// fix/verify-request — the own devices that can answer a self-verification (cross-signed, not this one), labelled
+/// "name (active 5 minutes ago)", most recently active first.
+async fn verified_device_labels(client: &Client) -> Vec<String> {
+    let Some(own) = client.user_id().map(|u| u.to_owned()) else { return vec![] };
+    let me = client.device_id().map(|d| d.to_owned());
+    let Ok(devs) = client.encryption().get_user_devices(&own).await else { return vec![] };
+    let verified: std::collections::HashSet<String> = devs
+        .devices()
+        .filter(|d| Some(d.device_id()) != me.as_deref() && d.is_cross_signed_by_owner())
+        .map(|d| d.device_id().to_string())
+        .collect();
+    let now = now_ms();
+    let mut rows: Vec<(i64, String)> = match client.devices().await {
+        Ok(r) => r
+            .devices
+            .iter()
+            .filter(|d| verified.contains(d.device_id.as_str()))
+            .map(|d| {
+                let seen = d.last_seen_ts.map(|t| i64::from(t.0));
+                let label = crate::clock_policy::device_label(
+                    d.display_name.as_deref().unwrap_or(""),
+                    d.device_id.as_str(),
+                    seen.map(|t| (now - t) / 1000),
+                );
+                (seen.unwrap_or(0), label)
+            })
+            .collect(),
+        // no /devices answer: names from the keys, no activity
+        Err(_) => devs
+            .devices()
+            .filter(|d| verified.contains(d.device_id().as_str()))
+            .map(|d| (0, crate::clock_policy::device_label(d.display_name().unwrap_or(""), d.device_id().as_str(), None)))
+            .collect(),
+    };
+    rows.sort_by(|a, b| b.0.cmp(&a.0));
+    rows.into_iter().map(|r| r.1).collect()
+}
+
+/// fix/verify-request — an m.key.verification.request the SDK dropped without a word (no request object exists for
+/// it). If one of OUR other devices sent it, tell the person why, once per request: a clock out of the SDK's window, or
+/// a device this one doesn't have the keys of yet. Anything else (another user, our own echo) stays silent.
+async fn dropped_request_notice(
+    client: Client,
+    qt: cxx_qt::CxxQtThread<qobject::LoginController>,
+    who: matrix_sdk::ruma::OwnedUserId,
+    content: Option<serde_json::Value>,
+) {
+    static SEEN: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+    let Some(c) = content else { return };
+    if client.user_id() != Some(&*who) {
+        return;
+    }
+    let (Some(txn), Some(from)) = (
+        c.get("transaction_id").and_then(|v| v.as_str()),
+        c.get("from_device").and_then(|v| v.as_str()),
+    ) else {
+        return;
+    };
+    if client.device_id().map(|d| d.as_str()) == Some(from) {
+        return;
+    }
+    {
+        let key = format!("{who}|{from}|{txn}");
+        let mut seen = SEEN.lock().unwrap_or_else(|e| e.into_inner());
+        if seen.iter().any(|s| *s == key) {
+            return;
+        }
+        if seen.len() >= 64 {
+            seen.remove(0);
+        }
+        seen.push(key);
+    }
+    let dev_id: matrix_sdk::ruma::OwnedDeviceId = from.into();
+    // a failed lookup proves nothing: say nothing rather than "hasn't caught up"
+    let device = match client.encryption().get_device(&who, &dev_id).await {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("[sas] request from {from} has no request object; device lookup failed ({e}): no notice");
+            return;
+        }
+    };
+    let peer = device
+        .as_ref()
+        .and_then(|d| d.display_name().map(str::to_owned))
+        .filter(|n| !n.trim().is_empty())
+        .unwrap_or_else(|| from.to_owned());
+    let now = now_ms();
+    let stamp = c.get("timestamp").and_then(|v| v.as_i64());
+    let note = match stamp {
+        Some(ts) if crate::clock_policy::request_dropped_for_time(ts, now) => {
+            let own = server_clock_skew(&client).await;
+            eprintln!("[sas] dropped request from {from}: its stamp is {:+} s from our clock (ours vs server: {own:?})", (ts - now) / 1000);
+            crate::clock_policy::peer_clock_note(&peer, (ts - now) / 1000, own, cfg!(windows))
+        }
+        _ if device.is_none() => {
+            eprintln!("[sas] dropped request from {from}: this device doesn't have its keys yet");
+            crate::clock_policy::peer_unknown_note(&peer)
+        }
+        _ => {
+            eprintln!("[sas] request from {from} has no request object (not a clock or unknown-device case)");
+            return;
+        }
+    };
+    let me = who.to_string();
+    let _ = qt.queue(move |mut o| {
+        // still the same account on screen (a sign-out / another account in between drops it)
+        if *o.logged_in() && o.user_id().to_string() == me {
+            o.as_mut().verify_notice(QString::from(&note));
+        }
+    });
 }
 
 async fn is_device_verified(client: &Client) -> bool {
@@ -3556,6 +3734,12 @@ impl crate::sas_driver::SasUi for QtSasUi {
 }
 
 impl qobject::LoginController {
+    /// fix/verify-request — this device's clock vs the server's → clockNote ("" = fine or couldn't tell).
+    pub fn check_clock(self: Pin<&mut Self>) {
+        let Some(client) = self.rust().client.clone() else { return };
+        spawn_clock_check(client, self.qt_thread());
+    }
+
     /// Ask our other signed-in devices to verify this one by comparing emoji.
     pub fn start_device_verification(mut self: Pin<&mut Self>) {
         let client = match self.rust().client.clone() {
@@ -3567,8 +3751,7 @@ impl qobject::LoginController {
         self.as_mut().set_sas_incoming(false);
         self.as_mut().set_sas_can_bootstrap(false);
         self.as_mut().set_sas_can_start(false);
-        self.as_mut()
-            .set_sas_note(QString::from("Open Tin Hat on a device you're already signed in to — it will ask you to compare emoji."));
+        self.as_mut().set_sas_note(QString::from(crate::clock_policy::NOTE_WAITING_OUT));
         // This attempt's flow incarnation, taken NOW on the Qt thread: a Cancel before the request
         // even exists moves it on, and the request is then withdrawn instead of driven.
         let (inc, previous) = crate::sas_driver::reserve();
@@ -3580,6 +3763,10 @@ impl qobject::LoginController {
             previous.cancel_on_wire(false).await;
             crate::sas_driver::end_leftover().await;
             let Some(own) = client.user_id().map(|u| u.to_owned()) else { return };
+            // fix/verify-request: a request stamped by a wrong clock is dropped SILENTLY by the other device
+            // (matrix-sdk-crypto is_timestamp_valid). Launch-gate: never block or delay the request: the clock check
+            // runs beside it and only refreshes clockNote (the sheet shows it on every screen).
+            spawn_clock_check(client.clone(), qt.clone());
             // Test/screenshot hook, unset in every real launch: TINHAT_GUI_VERIFY_DEVICE=<device id>
             // asks that ONE own device, the way Tin Hat Web's sessions list does
             // (startDeviceVerificationWith). The test accounts have no scriptable cross-signed
@@ -3686,10 +3873,27 @@ impl qobject::LoginController {
                         req.is_self_verification(),
                         req.we_started()
                     );
-                    let ui = QtSasUi::arc(qt, client);
+                    let ui = QtSasUi::arc(qt.clone(), client.clone());
                     if !crate::sas_driver::begin_outgoing(req.clone(), inc, ui, crate::sas_driver::Rules::Current) {
                         eprintln!("[sas] the attempt was cancelled while asking — withdrawing the request");
                         let _ = req.cancel().await;
+                        return;
+                    }
+                    // fix/verify-request: no answer in 30 s → say what to check, naming the devices that can answer.
+                    tokio::time::sleep(std::time::Duration::from_millis(crate::clock_policy::NO_ANSWER_MS)).await;
+                    if crate::sas_driver::is_open(inc)
+                        && matches!(req.state(), matrix_sdk::encryption::verification::VerificationRequestState::Created { .. })
+                    {
+                        let names = verified_device_labels(&client).await;
+                        eprintln!("[sas] no answer after {} ms ({} verified devices named)", crate::clock_policy::NO_ANSWER_MS, names.len());
+                        let req2 = req.clone();
+                        queue_sas(&qt, inc, false, move |mut o| {
+                            // re-checked here: an answer may have landed while the devices were listed
+                            let created = matches!(req2.state(), matrix_sdk::encryption::verification::VerificationRequestState::Created { .. });
+                            if created && o.sas_state().to_string() == "waiting" {
+                                o.as_mut().set_sas_note(QString::from(&crate::clock_policy::no_answer_note(&names)));
+                            }
+                        });
                     }
                 }
                 Err(e) => {

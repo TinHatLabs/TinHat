@@ -49,6 +49,10 @@ Controls.Dialog {
     // fix/recovery-escape-desktop (2026-10-26): the screens that carry the way out — login.offersStartOver
     // (start_over::offers_start_over, the web's offersStartOver: same table, same tests)
     property bool offersStartOver: false
+    // fix/verify-request: "This device's clock is about N … off …" from login.checkClock() ("" = fine). Shown on every
+    // screen, never blocks (the other device's SDK drops a request from a wrong clock without a word).
+    property string clockNote: ""
+    signal clockCheckRequested()
 
     signal verifyRequested(string key)      // Security-Key path (fallback)
     signal useAnotherDeviceRequested()      // start emoji verification
@@ -88,7 +92,7 @@ Controls.Dialog {
     readonly property string holdKey: dlg.sasState + "|" + (dlg.sasCanStart ? 1 : 0) + "|" + (dlg.sasIncoming ? 1 : 0) + "|" + dlg.sasEmoji
     function _hold() { dlg.held = true; holdTimer.restart() }
     onHoldKeyChanged: if (dlg.opened) dlg._hold()
-    onOpened: dlg._hold()
+    onOpened: { dlg._hold(); dlg.clockCheckRequested() }
     // the Security Key and the password never stay in the fields once the dialog closes (they used to outlive a
     // sign-out and fill the next session's dialog)
     onClosed: dlg.clearForm()
@@ -128,6 +132,16 @@ Controls.Dialog {
     Column {
         width: dlg.boxWidth - dlg.leftPadding - dlg.rightPadding
         spacing: Kirigami.Units.largeSpacing
+
+        // fix/verify-request: a wrong clock breaks emoji verification in both directions; say so on every screen
+        Controls.Label {
+            width: parent.width
+            visible: dlg.clockNote.length > 0 && dlg.sasState !== "recovery-done"
+            textFormat: Text.PlainText
+            wrapMode: Text.WordWrap
+            color: Th.dialogErrorFg
+            text: dlg.clockNote
+        }
 
         // ---- Method chooser (idle) ----
         Column {

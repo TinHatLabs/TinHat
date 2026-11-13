@@ -127,11 +127,13 @@ pub mod games_model;
 pub mod roles_model; // RBAC: roles + permissions pure model (docs/RBAC.md)
 pub mod roles; // RBAC: async role helpers (container lookup, effective permissions)
 pub mod space; // SpaceController — space settings: overview/members/roles/rooms (docs/RBAC.md)
+pub mod afk_pace; // pacing of the legacy 💤 read in a call (afk_ctl)
 pub mod moved; // "Move to your own domain": relations of a moved server's events by today's ids (shared with the web)
 pub mod moderation; // RBAC: call-moderation client for /api/moderation/call // Game Reel pure fairness model (pool tiers, shares, regret credit, verifiable winner) — no Qt
 pub mod iconpack; // IconPackController — uniform (animated) icon pack discovery + static theme export (0.8.26)
 #[cfg(target_os = "linux")]
 pub mod sas_test; // TINHAT_SASTEST headless two-device emoji-verification harness
+pub mod clock_policy; // device clocks vs verification requests + the verify dialog's plain notes, shared word for word with Tin Hat Web (clockPolicy.ts) — no Qt
 pub mod sas_policy; // emoji-verification rules shared word for word with Tin Hat Web (S1 start policy, S6 cancel notes) — no Qt
 pub mod utd; // selfhost/firstrun §3: the words for a message this device can't read, shared with Tin Hat Web (utd.ts)
 pub mod sas_driver; // Qt-free emoji-verification driver (app + TINHAT_SASTEST harness run the same code)

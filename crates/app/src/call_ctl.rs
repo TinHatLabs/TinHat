@@ -257,6 +257,10 @@ pub mod qobject {
         /// Mirror the persisted screen-share quality into `shareQuality` for QML.
         #[qinvokable]
         fn refresh_share_quality(self: Pin<&mut CallController>);
+        /// QML: callctl.gpuSetupHint() — Settings → Calls note when this machine's NVIDIA GPU can't be reached from
+        /// the Flatpak (GL.nvidia extension for the running driver missing, or no /dev/nvidia-uvm); "" = nothing to say.
+        #[qinvokable]
+        fn gpu_setup_hint(self: &CallController) -> QString;
         /// Set + persist the CAMERA publish quality (resolution / fps / bitrate kbps).
         /// A live camera is re-published so it applies mid-call (encoding is locked at
         /// publish time — a capture-only restart can't change it).
@@ -2462,6 +2466,26 @@ async fn teardown_call_session(
     }
 }
 
+/// 12.1.13 (reconnect-wedge): a share that failed because the call isn't connected waits a moment before it says so,
+/// so its line ("Share failed: the call isn't connected") lands after the drop's own status, as on the web. The drop
+/// itself already went out (the publish sent it); this only orders the two status lines.
+async fn settle_after_not_connected(result: &Result<(), String>) {
+    if matches!(result, Err(e) if e == tinhat_streamer::call_health::NOT_CONNECTED_ERR) {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    }
+}
+
+/// 12.1.13 (Astra r4): the share's late not-connected line replaces only its own "Preparing…" line or the drop's own
+/// status, never "Left call", a newer join's line or anything else that came since (the web's same list).
+fn share_line_may_replace(current: &str) -> bool {
+    matches!(current, "Preparing screen share…" | "Connection lost — reconnecting…" | "Call ended (connection lost)")
+}
+
+/// 12.1.13: the status line of a failed share ("Share failed: the call isn't connected" = call_health::SHARE_NOT_CONNECTED).
+fn share_failed_status(e: &str) -> String {
+    format!("Share failed: {e}")
+}
+
 fn unix_secs() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -3324,6 +3348,9 @@ impl qobject::CallController {
                                         o.as_mut().set_video_tiles(QString::from("[]"));
                                         selfview_active().store(false, std::sync::atomic::Ordering::Relaxed);
                                         o.as_mut().set_camera_on(false);
+                                        // 12.1.13 (reconnect-wedge): a dropped call shares nothing; the teardown below
+                                        // stops the capture + encoder (the given-up engine used to keep encoding for 42 min)
+                                        o.as_mut().set_sharing(false);
                                         // call_failed drives the red "Call ended — Rejoin" banner.
                                         // While auto-rejoin is working, show the RECONNECTING state
                                         // instead — the banner appears only if we give up (the
@@ -3891,6 +3918,10 @@ impl qobject::CallController {
         });
     }
 
+    /// Settings → Calls: the Flatpak + NVIDIA note, as checked once at this start (platform::flatpak_nvidia).
+    pub fn gpu_setup_hint(&self) -> QString {
+        QString::from(&crate::platform::flatpak_nvidia_settings_hint_at_start())
+    }
     /// Load the persisted screen-share quality into the `shareQuality` qproperty.
     pub fn refresh_share_quality(mut self: Pin<&mut Self>) {
         let label = tinhat_streamer::share_quality_label();
@@ -4817,6 +4848,12 @@ impl qobject::CallController {
             self.as_mut().set_status(QString::from(WATCH_HINT));
             return;
         }
+        // 12.1.13 (reconnect-wedge): a share pressed during a reconnect only waited on it (the OS showed it live,
+        // nothing went out). Say so instead, before the portal opens. Same words on web.
+        if let Some(why) = tinhat_streamer::call_health::share_refusal(*self.reconnecting()) {
+            self.as_mut().set_status(QString::from(why));
+            return;
+        }
         self.as_mut().set_status(QString::from("Preparing screen share…"));
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
@@ -4829,9 +4866,10 @@ impl qobject::CallController {
                 let call = guard.as_mut().ok_or_else(|| "not in a call".to_string())?;
                 call.publish_screenshare(screencast)
                     .await
-                    .map_err(|e| format!("share: {e}"))
+                    .map_err(|e| tinhat_streamer::call_health::share_error_text(&e))
             }
             .await;
+            settle_after_not_connected(&result).await;
             let _ = qt.queue(move |mut o| match result {
                 Ok(()) => {
                     o.as_mut().set_sharing(true);
@@ -4839,7 +4877,10 @@ impl qobject::CallController {
                 }
                 Err(e) => {
                     eprintln!("[call] share failed: {e}");
-                    o.as_mut().set_status(QString::from(&format!("Share failed: {e}")));
+                    // 12.1.13 (Astra r3): a late not-connected line never covers a join that runs since
+                    if e != tinhat_streamer::call_health::NOT_CONNECTED_ERR || share_line_may_replace(&o.status().to_string()) {
+                        o.as_mut().set_status(QString::from(&share_failed_status(&e)));
+                    }
                 }
             });
         });
@@ -4883,6 +4924,10 @@ impl qobject::CallController {
                 self.as_mut().set_status(QString::from(WATCH_HINT));
                 return;
             }
+            if let Some(why) = tinhat_streamer::call_health::share_refusal(*self.reconnecting()) {
+                self.as_mut().set_status(QString::from(why)); // 12.1.13, as share_screen
+                return;
+            }
             let kind = kind.to_string();
             let handle: u64 = handle.to_string().parse().unwrap_or(0);
             self.as_mut().set_status(QString::from("Preparing screen share…"));
@@ -4896,9 +4941,10 @@ impl qobject::CallController {
                     let call = guard.as_mut().ok_or_else(|| "not in a call".to_string())?;
                     call.publish_screenshare(screencast)
                         .await
-                        .map_err(|e| format!("share: {e}"))
+                        .map_err(|e| tinhat_streamer::call_health::share_error_text(&e))
                 }
                 .await;
+                settle_after_not_connected(&result).await;
                 let _ = qt.queue(move |mut o| match result {
                     Ok(()) => {
                         o.as_mut().set_sharing(true);
@@ -4906,7 +4952,9 @@ impl qobject::CallController {
                     }
                     Err(e) => {
                         eprintln!("[call] share failed: {e}");
-                        o.as_mut().set_status(QString::from(&format!("Share failed: {e}")));
+                        if e != tinhat_streamer::call_health::NOT_CONNECTED_ERR || share_line_may_replace(&o.status().to_string()) {
+                            o.as_mut().set_status(QString::from(&share_failed_status(&e)));
+                        }
                     }
                 });
             });
@@ -7100,7 +7148,8 @@ mod watch_publish_tests {
         assert!(st_code.contains("crate::capture_lease::end_session(self.keyring_gen);"), "close() ends the session's leases first");
         let rs = &st_code[st_code.find("pub async fn restart_screenshare(").unwrap()..];
         let rs = &rs[..rs.find("pub async fn publish_camera(").unwrap()];
-        assert!(rs.find("lease.filter(|l| l.valid())").unwrap() < rs.find(".publish_track(").unwrap(), "checked before re-publishing");
+        // (12.1.13: the re-publish goes through the bounded publish)
+        assert!(rs.find("lease.filter(|l| l.valid())").unwrap() < rs.find(".publish_bounded(").unwrap(), "checked before re-publishing");
         assert!(rs.contains("if !lease.commit() {"));
         let lk = include_str!("../../streamer/src/lk_publish.rs");
         let cp = &lk[lk.find("pub async fn connection_probe(").unwrap()..];

@@ -191,6 +191,7 @@ Window {
         if (visible) {
             var s = win.app.settings
             s.refresh()
+            win.app.login.checkClock()   // fix/verify-request: Security → This device → Clock
             s.refreshEmails()
             s.refreshDesktopNotifications()
             s.refreshOverlay()
@@ -1269,6 +1270,16 @@ Window {
 
                     SettingsSection {
                         title: "This device"
+                        // fix/verify-request: a wrong clock silently breaks verifying with your other devices
+                        SettingsRow {
+                            app: win.app
+                            anchorId: "security.clock"
+                            visible: win.app.login.clockNote.length > 0
+                            iconName: "dialog-warning"
+                            iconColor: Th.stateWarning
+                            label: "Clock"
+                            description: win.app.login.clockNote
+                        }
                         SettingsRow {
                             app: win.app
                             anchorId: "security.verification"
@@ -2026,6 +2037,15 @@ Window {
                                 currentIndex: win.app._sqEnc() === "vp9" ? 1 : 0
                                 onActivated: (i) => win.app.callctl.applyShareEncoder(model[i].code)
                             }
+                        }
+                        SettingsRow {
+                            // 12.1.11 (flatpak-nvidia): NVIDIA machine, Flatpak, CUDA not reachable (GL.nvidia extension
+                            // for the running driver missing, or no /dev/nvidia-uvm) -> say why shares aren't on the GPU
+                            readonly property string hint: win.app.callctl.gpuSetupHint()
+                            visible: hint.length > 0
+                            app: win.app
+                            label: "NVIDIA GPU not reachable"
+                            description: hint
                         }
                     }
                     SettingsSection {

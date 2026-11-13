@@ -50,6 +50,7 @@ pub mod voicenote; // voice notes (docs/VOICE-NOTES.md §4): the recorder — it
 pub mod hear; // 10.5: "can they hear me?" — mic check, muted talk, receipts, echo
 pub mod sameroom; // 11.3: "same room" — link up, room-mic election, in-room playback mute
 pub mod callstats; // widgets (modular UI step 2): receive stats per remote track, ConnectionQuality, `tinhat.rxq`
+pub mod call_health; // 12.1.13 reconnect-wedge: a call that isn't really connected ends visibly (shared rule with web)
 pub use call::CallSession;
 // Per-track playback gain (Phase 3): the app's AudioPrefsController drives these to
 // adjust a single remote participant's level/mute. NO-OP at unity (volume=1.0).
@@ -296,8 +297,12 @@ pub fn build_screenshare_pipeline_with_token(
     jwt: &str,
     room: &str,
 ) -> Result<gst::Pipeline> {
+    #[cfg(not(windows))]
+    let src = crate::capture::source_head(Some(fd), node_id, 0);
+    #[cfg(windows)]
+    let src = format!("pipewiresrc fd={fd} path={node_id} do-timestamp=true");
     let desc = format!(
-        "pipewiresrc fd={fd} path={node_id} do-timestamp=true keepalive-time=1000 ! \
+        "{src} ! \
          videoconvert ! videoscale ! \
          video/x-raw,format=NV12 ! \
          queue max-size-buffers=4 leaky=downstream ! \

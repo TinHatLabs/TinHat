@@ -16,8 +16,9 @@ const CAPTURE_ELEMENTS: [&str; 21] = [
     "autovideosrc", "ksvideosrc", "mfvideosrc", "dshowvideosrc", "directsoundsrc", "osxaudiosrc", "avfvideosrc", "libcamerasrc",
     "alsasrc", "dxgiscreencapsrc", "gdiscreencapsrc", "jackaudiosrc", "openalsrc",
 ];
-/// ScreenCast portal starts
-const PORTAL_CALLS: [&str; 2] = ["Screencast::new(", "pick_screencast("];
+/// ScreenCast portal starts, and calls of `source_head(`: the one function that writes the screen share's source
+/// element (capture.rs, 12.1.12), so its callers build a capture source without naming the element
+const PORTAL_CALLS: [&str; 3] = ["Screencast::new(", "pick_screencast(", "source_head("];
 
 /// What an allow-list entry is. Round 10: there is NO exemption class. A capture is listed only with the LEASE gate it
 /// goes through (named in the note, and the note must name `leased_play`, `leased_play_element`, `leased_start` or
@@ -56,6 +57,7 @@ pub const ALLOW_SOURCES: &[(&str, &str, Gate)] = &[
     ("crates/streamer/src/capture.rs", "pick_screencast", Lease("the portal start itself (user press); its frames flow only through a leased_play pipewiresrc start")),
     ("crates/streamer/src/capture.rs", "probe_stream_size", Lease("the size probe: leased_play under its own lease (refused while watching)")),
     ("crates/streamer/src/capture.rs", "src_fragment", Lease("fragment: every screen pipeline starts through leased_play")),
+    ("crates/streamer/src/capture.rs", "source_head", Lease("fragment: the share's source element (src_fragment, the size probe); every screen pipeline starts through leased_play")),
     ("crates/streamer/src/capture_windows.rs", "src_fragment", Lease("fragment: every screen pipeline starts through leased_play")),
     ("crates/streamer/src/lib.rs", "build_screenshare_pipeline_with_token", Lease("builder for the tinhat-publish dev binary: started only in start_screenshare_publish through leased_start")),
     // 12.1.8/12.1.9 share tests, listed at the 12.1.9 merge (they predate the lease on their branches)
@@ -63,6 +65,9 @@ pub const ALLOW_SOURCES: &[(&str, &str, Gate)] = &[
     ("crates/streamer/src/lk_publish.rs", "dmabuf_head_accepts_only_dmabuf", NoCapture("unit test: a launch-line string and caps, never started")),
     ("crates/streamer/src/lk_publish.rs", "dmabuf_capture_gate", Lease("rig gate (TINHAT_DMABUF_GATE): its capture starts through leased_start")),
     ("crates/streamer/src/lk_publish.rs", "rate_cap_gate", Lease("rig gate (TINHAT_RATECAP_GATE): its capture starts through leased_start")),
+    // 12.1.12 share stream-buffer tests
+    ("crates/streamer/src/lk_publish.rs", "share_head_holds_no_compositor_buffer", NoCapture("unit test: the element is made in NULL to read its properties, never started")),
+    ("crates/streamer/src/lk_publish.rs", "buffer_gate_head", Lease("rig gates (TINHAT_BUFGATE, TINHAT_BUFLOCK_NODE, TINHAT_STILL_NODE): their source head; their captures start through leased_play under their own lease")),
 ];
 /// Rule B allow-list: (file, function, its gate)
 pub const ALLOW_PLAYING: &[(&str, &str, Gate)] = &[
@@ -88,6 +93,7 @@ pub const ALLOW_PLAYING: &[(&str, &str, Gate)] = &[
     ("crates/streamer/src/lk_publish.rs", "share_start_gate", NoCapture("unit test (synthetic source)")),
     ("crates/streamer/src/lk_publish.rs", "gl_dmabuf_tail_scales_to_i420", NoCapture("unit test (synthetic source: videotestsrc)")),
     ("crates/streamer/src/lk_publish.rs", "capped_head_negotiates_without_a_max_framerate_field", NoCapture("unit test (synthetic source: videotestsrc)")),
+    ("crates/streamer/src/lk_publish.rs", "presized_cpu_capture_never_renegotiates_its_source", NoCapture("unit test (synthetic source: videotestsrc)")),
     ("crates/streamer/src/voicenote.rs", "decode_with", NoCapture("decoder: reads back a finished voice-note file (filesrc ! oggdemux ! opusdec)")),
     ("crates/streamer/src/voicenote.rs", "decode_failure_after_valid_audio_is_refused", NoCapture("unit test (synthetic source: audiotestsrc encoded into a file)")),
 ];

@@ -31,14 +31,9 @@ pub struct ScreenCast {
 
 impl ScreenCast {
     /// The GStreamer source-head fragment for this capture — the platform seam
-    /// shared with the Windows module (`d3d11screencapturesrc` there). The
-    /// string here is EXACTLY the head the capture builders always used.
+    /// shared with the Windows module (`d3d11screencapturesrc` there): [`source_head`].
     pub(crate) fn src_fragment(&self) -> String {
-        format!(
-            "pipewiresrc fd={} path={} do-timestamp=true keepalive-time=1000",
-            self.raw_fd(),
-            self.node_id()
-        )
+        source_head(Some(self.raw_fd()), self.node_id(), share_min_buffers())
     }
 
     /// 12.1.8: the source head with the share's frame rate as the stream's MAXIMUM, negotiated with the compositor
@@ -79,6 +74,82 @@ impl ScreenCast {
         let _ = self.session.close().await;
         // self.fd drops here.
     }
+}
+
+/// The share's PipeWire source element: `pipewiresrc [fd=N] path=NODE do-timestamp=true [min-buffers=N]`.
+///
+/// A PipeWire consumer hands a buffer back through the stream one delivered frame late, and a compositor that
+/// records on a fixed schedule skips the frame when it has no free buffer: KWin 6.8 does (a fixed grid at the
+/// negotiated rate, 3 buffers), and so does the wlroots portal (2 buffers). So the capture must let go of every
+/// buffer as soon as its frame is converted:
+///   - NO `keepalive-time` and NO `resend-last` (12.1.12): with either set, pipewiresrc keeps a reference to the
+///     NEWEST frame until the next one arrives. A 60 fps share then locked at 48, 45 or 30 fps against KWin 6.8 for
+///     its whole life, on every capture path and at any size, and ran at about 1 fps through the wlroots portal.
+///     A still screen needs no resend from here: the feeder re-pushes the last frame itself (lk_publish.rs, the
+///     keepalive repeater). The one thing the source's keepalive still did: a still screen whose single start
+///     frame arrived before the lease's source gate opened got it again a second later. Such a start now shows
+///     its first picture when the screen first changes (a mouse move is one); see call.rs wait_first_frame.
+///   - `min-buffers` only where [`share_min_buffers`] says so (KWin), 0 = no buffer count at all.
+/// The other holder was the CPU capture's mid-stream re-pin (lk_publish.rs cpu_presized_desc).
+pub(crate) fn source_head(fd: Option<i32>, node: u32, min_buffers: u32) -> String {
+    let fd = fd.map(|fd| format!("fd={fd} ")).unwrap_or_default();
+    let buffers = if min_buffers > 0 { format!(" min-buffers={min_buffers}") } else { String::new() };
+    format!("pipewiresrc {fd}path={node} do-timestamp=true{buffers}")
+}
+
+/// How many stream buffers a share asks KWin for. KWin's own 3 are exactly enough when nothing is late: one frame
+/// with the capture, one on its way back, one to record into. A capture thread that is held up for a frame interval
+/// (a game loading every core) then costs a frame each time; measured on KWin 6.8.2 under CPU load, 3 buffers ran a
+/// 60 fps share at 43 to 55 fps in most starts and 4 kept it at the cap. Every KWin since 5.27 allows 4 (2 to 16
+/// up to 6.0, 2 to 4 since 6.1).
+pub(crate) const KWIN_MIN_BUFFERS: u32 = 4;
+
+/// The `min-buffers` of a share's head on this desktop: [`KWIN_MIN_BUFFERS`] on KDE Plasma (where the compositor
+/// behind the portal is KWin), no buffer count anywhere else. Asking for one makes pipewiresrc renegotiate its
+/// buffers right after the stream started; KWin takes that, but the wlroots portal backend does not survive it in
+/// about half the starts (no frames at all, or the portal exits), and mutter's own 8 need no help.
+/// TINHAT_SHARE_MIN_BUFFERS=N overrides it (0 = never ask). A compositor that refused the request once
+/// ([`note_buffer_refusal`]) is not asked again in this run.
+pub(crate) fn share_min_buffers() -> u32 {
+    if BUFFER_REQUEST_REFUSED.load(std::sync::atomic::Ordering::SeqCst) {
+        return 0;
+    }
+    min_buffers_for(std::env::var("XDG_CURRENT_DESKTOP").ok().as_deref(), std::env::var("TINHAT_SHARE_MIN_BUFFERS").ok().as_deref())
+}
+
+/// [`share_min_buffers`] for a desktop name list (XDG_CURRENT_DESKTOP, colon-separated) and the override's text.
+pub(crate) fn min_buffers_for(xdg_current_desktop: Option<&str>, switch: Option<&str>) -> u32 {
+    if let Some(n) = switch.and_then(|v| v.trim().parse::<u32>().ok()) {
+        return n.min(16);
+    }
+    let kde = xdg_current_desktop.is_some_and(|d| d.split(':').any(|p| p.trim().eq_ignore_ascii_case("KDE")));
+    if kde {
+        KWIN_MIN_BUFFERS
+    } else {
+        0
+    }
+}
+
+static BUFFER_REQUEST_REFUSED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// `why` is a capture error's text. When it is the compositor refusing the stream buffers we asked for, later heads
+/// of this run stop asking ([`share_min_buffers`]): the share that hit it fails, the next one starts. True = it was.
+/// PipeWire words the refusal "error alloc buffers: Invalid argument" and pipewiresrc posts it as
+/// "stream error: error alloc buffers: …"; an allocation failure further down the pipeline is worded differently.
+pub(crate) fn note_buffer_refusal(why: &str) -> bool {
+    if !buffer_request_refused(why) {
+        return false;
+    }
+    if !BUFFER_REQUEST_REFUSED.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        eprintln!("[capture] the compositor refused the stream buffers this share asked for ({why}) — later shares take its own count");
+    }
+    true
+}
+
+/// Is this capture error PipeWire refusing the stream buffers that were asked for?
+pub(crate) fn buffer_request_refused(why: &str) -> bool {
+    let w = why.to_ascii_lowercase();
+    w.contains("stream error") && w.contains("alloc buffers")
 }
 
 /// Drive the KDE portal picker and start a single-source cast. Async — run on the
@@ -150,15 +221,13 @@ pub async fn pick_screencast() -> Result<ScreenCast> {
 /// None on any failure — the caller keeps the old behaviour (CPU path).
 ///
 /// Later: on a KDE desktop this probe had returned None on EVERY share since 0.8.26 (all of its logs), so every
-/// such share took the CPU path. It now uses the capture's own source head (keepalive included) and reads the caps at the
+/// such share took the CPU path. It now uses the capture's own source element ([`source_head`]) and reads the caps at the
 /// first BUFFER (they are final by then), for up to 4 s, and says why it failed — the caps it saw, or that no frame came.
 /// The capture no longer depends on it (the GPU path learns the size from its first frame, call.rs start_share_capture).
 fn probe_stream_size(fd: i32, node_id: u32) -> Option<(u32, u32)> {
     use gst::prelude::*;
     use gstreamer as gst;
-    let desc = format!(
-        "pipewiresrc fd={fd} path={node_id} do-timestamp=true keepalive-time=1000 ! fakesink name=fs sync=false"
-    );
+    let desc = format!("{} ! fakesink name=fs sync=false", source_head(Some(fd), node_id, 0));
     let pipeline = match gst::parse::launch(&desc).map(|e| e.downcast::<gst::Pipeline>()) {
         Ok(Ok(p)) => p,
         _ => {

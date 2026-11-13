@@ -783,6 +783,17 @@ pub(crate) fn flatpak_nvidia() -> &'static FlatpakNvidia {
     })
 }
 
+/// The test override's states (see [`flatpak_nvidia`]); anything else = no override.
+#[cfg(not(windows))]
+#[cfg_attr(not(tinhat_env_selftests), allow(dead_code))]
+fn test_flatpak_nvidia(v: Option<&str>) -> Option<FlatpakNvidia> {
+    match v? {
+        "missing" => Some(FlatpakNvidia::ExtensionMissing { driver: "615.78.08".into(), others: vec![] }),
+        "uvm" => Some(FlatpakNvidia::UvmMissing { driver: "615.78.08".into() }),
+        _ => None,
+    }
+}
+
 /// The startup log line for a [`FlatpakNvidia`] (None when there is nothing to say).
 #[cfg(not(windows))]
 pub(crate) fn flatpak_nvidia_note(plan: &FlatpakNvidia) -> Option<String> {
@@ -803,6 +814,51 @@ pub(crate) fn flatpak_nvidia_note(plan: &FlatpakNvidia) -> Option<String> {
              `sudo nvidia-modprobe -u -c=0`, then restart Tin Hat"
         )),
     }
+}
+/// The plain-language note for Settings → Calls ("" = nothing to show). Desktop only: a browser has no Flatpak.
+#[cfg(not(windows))]
+pub(crate) fn flatpak_nvidia_settings_hint(plan: &FlatpakNvidia) -> String {
+    match plan {
+        FlatpakNvidia::NotApplicable | FlatpakNvidia::Ready => String::new(),
+        FlatpakNvidia::ExtensionMissing { driver, .. } => format!(
+            "Tin Hat can't use your NVIDIA GPU's encoder: the Flatpak add-on for NVIDIA driver {driver} \
+             (org.freedesktop.Platform.GL.{}) isn't installed, so shares use another encoder. \
+             Run \"flatpak update\" in a terminal, then restart Tin Hat.",
+            nvidia_gl_extension_dir(driver)
+        ),
+        FlatpakNvidia::UvmMissing { .. } => "Tin Hat can't use your NVIDIA GPU's encoder yet: its CUDA device \
+             (/dev/nvidia-uvm) isn't there, so shares use another encoder. Run \"sudo nvidia-modprobe -u -c=0\" in a \
+             terminal (outside Tin Hat), then restart Tin Hat."
+            .to_owned(),
+    }
+}
+
+/// Settings → Calls note, as checked once at this start ("" = none; the advice is "restart Tin Hat" anyway).
+/// TINHAT_TEST_FLATPAK_NVIDIA=missing|uvm (lab builds only) changes ONLY this note (screenshots on a rig with no Flatpak and no NVIDIA):
+/// the startup line, the registry key and the heal always use the real check, so the override can't hide a report.
+#[cfg(not(windows))]
+pub(crate) fn flatpak_nvidia_settings_hint_at_start() -> String {
+    static HINT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    HINT.get_or_init(|| {
+        // compiled only outside a release (cfg tinhat_env_selftests, build.rs); scripts/release-binary-check.sh
+        // refuses a binary that names the variable
+        #[cfg(tinhat_env_selftests)]
+        let fake = test_flatpak_nvidia(std::env::var("TINHAT_TEST_FLATPAK_NVIDIA").ok().as_deref());
+        #[cfg(tinhat_env_selftests)]
+        if let Some(f) = &fake {
+            eprintln!("[flatpak] TINHAT_TEST_FLATPAK_NVIDIA: the Settings note shows {f:?} (test override; the real check is unchanged)");
+        }
+        #[cfg(not(tinhat_env_selftests))]
+        let fake: Option<FlatpakNvidia> = None;
+        flatpak_nvidia_settings_hint(fake.as_ref().unwrap_or_else(|| flatpak_nvidia()))
+    })
+    .clone()
+}
+
+/// Windows: NVIDIA's driver is the system's own there, no sandbox in between.
+#[cfg(windows)]
+pub(crate) fn flatpak_nvidia_settings_hint_at_start() -> String {
+    String::new()
 }
 
 
@@ -1949,6 +2005,16 @@ fn rename_retry(from: &Path, to: &Path) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    /// The call menu is a fixed width: a longer entry is cut off with "…", as the first version of this one was.
+    #[test]
+    fn the_call_menu_entry_fits_the_menu() {
+        const LONGEST_THAT_FITS: usize = 26; // "GPU · force H.264 (compat)", the longest neighbour shown whole
+        let qml = include_str!("../qml/Main.qml");
+        let entry = qml.find("callctl.gpuSetupHint()").and_then(|at| qml[at..].find("text: \"").map(|t| at + t + 7)).expect("the call-menu entry");
+        let label = qml[entry..].split('"').next().unwrap();
+        assert!(label.chars().count() <= LONGEST_THAT_FITS, "{label:?}");
+    }
+
     use super::*;
 
     /// M10: the private-folder and private-file helpers (Unix modes; a temp folder of the test's own).
@@ -2161,5 +2227,38 @@ mod tests {
     #[test]
     fn host_rules_match_the_build_target() {
         assert_eq!(DirRules::HOST, if cfg!(windows) { DirRules::Windows } else { DirRules::Unix });
+    }
+}
+
+#[cfg(all(test, not(windows)))]
+mod flatpak_nvidia_hint_tests {
+    use super::{flatpak_nvidia_plan, flatpak_nvidia_settings_hint, FlatpakNvidia, SandboxCuda};
+
+    fn cuda(dirs: &[&str], uvm: bool) -> SandboxCuda {
+        SandboxCuda { libcuda_dirs: dirs.iter().map(|s| s.to_string()).collect(), uvm }
+    }
+
+    /// Settings → Calls / the call menu: the note names the fix, and stays empty when there is nothing to fix.
+    #[test]
+    fn settings_hint_says_the_fix_and_only_when_needed() {
+        let missing = flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&[], true));
+        let hint = flatpak_nvidia_settings_hint(&missing);
+        assert!(hint.contains("flatpak update") && hint.contains("615.78.08"), "{hint}");
+        let uvm = flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&["nvidia-615-78-08"], false));
+        assert!(flatpak_nvidia_settings_hint(&uvm).contains("nvidia-modprobe -u"));
+        let ready = flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&["nvidia-615-78-08"], true));
+        for p in [ready, FlatpakNvidia::NotApplicable] {
+            assert_eq!(flatpak_nvidia_settings_hint(&p), "");
+        }
+    }
+
+    #[test]
+    fn test_override_has_two_states_and_nothing_else() {
+        use super::test_flatpak_nvidia;
+        assert!(matches!(test_flatpak_nvidia(Some("missing")), Some(FlatpakNvidia::ExtensionMissing { .. })));
+        assert!(matches!(test_flatpak_nvidia(Some("uvm")), Some(FlatpakNvidia::UvmMissing { .. })));
+        for v in [None, Some(""), Some("1"), Some("ready"), Some("MISSING")] {
+            assert_eq!(test_flatpak_nvidia(v), None, "{v:?}");
+        }
     }
 }

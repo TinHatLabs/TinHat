@@ -1690,6 +1690,71 @@ pub(crate) fn cpu_capture_desc(src: &str, download: &str, fps: u32, threads: u32
     )
 }
 
+/// The launch line of the PRE-SIZED CPU capture (12.1.12): [`cpu_capture_desc`] with its output caps final at build
+/// time, so nothing changes mid-stream. The first-frame re-pin of [`cpu_capture_desc`] sends a reconfigure upstream;
+/// pipewiresrc answers that by disconnecting and reconnecting its stream, and from then on it gives each compositor
+/// buffer back only when the next frame arrives (gstpipewire 1.4.9 and 1.6.11). That starves a compositor with few
+/// stream buffers exactly like a source keepalive does (capture.rs `source_head`): the CPU path, which always
+/// re-pinned, ran a 60 fps share at 30 or 25 fps against KWin 6.8.
+pub(crate) fn cpu_presized_desc(src: &str, download: &str, out_w: u32, out_h: u32, fps: u32, threads: u32) -> String {
+    let convert_scale = cpu_convert_scale(threads);
+    format!(
+        "{src} ! \
+         videorate drop-only=true ! \
+         video/x-raw(ANY),framerate={fps}/1 ! \
+         {download}{convert_scale} ! \
+         video/x-raw,format=I420,width={out_w},height={out_h},pixel-aspect-ratio=1/1 ! \
+         queue name=outq max-size-buffers=4 leaky=downstream ! \
+         appsink name=sink emit-signals=false max-buffers=2 drop=true sync=false"
+    )
+}
+
+/// The launch line of the size-learning run (12.1.12): the share's own source head into a sink that only reads the
+/// first frame's caps. Nothing is converted and nothing is re-pinned, so the source is never asked to renegotiate:
+/// stopping a pipeline whose pipewiresrc is in the middle of the reconnect a re-pin causes took 4 to 5 s in the lab
+/// in two starts of five. The `video/x-raw` filter is needed: straight into a sink that takes anything, pipewiresrc
+/// fails to negotiate ("No supported formats found") and the pipeline never starts.
+pub(crate) fn size_probe_desc(src: &str) -> String {
+    format!("{src} ! video/x-raw ! fakesink name=sink sync=false async=false")
+}
+
+/// The size-learning run for a cast whose size nobody told us (Linux, the CPU path): [`size_probe_desc`] with a
+/// probe that records the REAL source size in the cast's memo on the first frame and flips the returned flag.
+#[cfg(not(windows))]
+pub(crate) fn build_size_probe_pipeline(screencast: &ScreenCast, fps: u32) -> Result<gst::Pipeline> {
+    let pipeline = gst::parse::launch(&size_probe_desc(&screencast.src_fragment_paced(fps)))?
+        .downcast::<gst::Pipeline>()
+        .map_err(|_| anyhow::anyhow!("size probe: parsed element is not a Pipeline"))?;
+    install_size_probe(&pipeline, screencast.size_memo()).context("size probe: no sink")?;
+    Ok(pipeline)
+}
+
+/// On the first buffer at `sink`'s pad: the frame's size from its caps into `memo`. None = no such sink.
+pub(crate) fn install_size_probe(pipeline: &gst::Pipeline, memo: std::sync::Arc<std::sync::Mutex<Option<(u32, u32)>>>) -> Option<()> {
+    let pad = pipeline.by_name("sink")?.static_pad("sink")?;
+    pad.add_probe(gst::PadProbeType::BUFFER, move |pad, _| {
+        let size = pad.current_caps().as_ref().and_then(|c| c.structure(0)).and_then(|s| match (s.get::<i32>("width"), s.get::<i32>("height")) {
+            (Ok(w), Ok(h)) if w > 0 && h > 0 => Some((w as u32, h as u32)),
+            _ => None,
+        });
+        if let Some(size) = size {
+            *memo.lock().unwrap_or_else(|e| e.into_inner()) = Some(size);
+        }
+        gst::PadProbeReturn::Remove
+    });
+    Some(())
+}
+
+/// The Linux CPU capture for a source whose real size is known (from the portal, or learned by the size-learning
+/// run, call.rs start_share_capture): [`cpu_presized_desc`], nothing re-pinned mid-stream.
+#[cfg(not(windows))]
+pub(crate) fn build_capture_pipeline_presized(screencast: &ScreenCast, out_w: u32, out_h: u32, fps: u32) -> Result<gst::Pipeline> {
+    let desc = cpu_presized_desc(&screencast.src_fragment_paced(fps), "", out_w, out_h, fps, cpu_capture_threads());
+    gst::parse::launch(&desc)?
+        .downcast::<gst::Pipeline>()
+        .map_err(|_| anyhow::anyhow!("cpu capture: parsed element is not a Pipeline"))
+}
+
 /// Log gst bus errors/EOS for the capture pipeline (otherwise silent). Returns a stop
 /// flag the OWNER MUST flip on teardown: every watched pipeline is torn down via
 /// set_state(Null), which posts NO EOS, so without the flag the thread polls the
@@ -1723,6 +1788,8 @@ pub(crate) fn watch_pipeline_bus_notify(
             match msg.view() {
                 MessageView::Error(e) => {
                     eprintln!("[lk] capture gst ERROR: {} ({:?})", e.error(), e.debug());
+                    #[cfg(not(windows))]
+                    crate::capture::note_buffer_refusal(&format!("error: {} ({:?})", e.error(), e.debug()));
                     if !stop_w.load(std::sync::atomic::Ordering::Relaxed) {
                         if let Some(cb) = on_dead.take() {
                             cb();
@@ -2846,11 +2913,676 @@ mod share_capture_tests {
         }
     }
 
+    /// 12.1.12: the share's source element keeps none of the compositor's stream buffers. 12.1.11's head carried a
+    /// keepalive: pipewiresrc then holds the newest frame until the next arrives, and a 60 fps share locked at 48,
+    /// 45 or 30 fps against KWin 6.8 (about 1 fps through the wlroots portal). A buffer count only when asked.
+    #[cfg(not(windows))]
+    #[test]
+    fn share_head_holds_no_compositor_buffer() {
+        use crate::capture::source_head;
+        assert_eq!(source_head(Some(3), 7, 0), "pipewiresrc fd=3 path=7 do-timestamp=true");
+        assert_eq!(source_head(None, 7, 0), "pipewiresrc path=7 do-timestamp=true");
+        // (the property's name is split so the source scan below sees no head with a count of its own)
+        assert_eq!(source_head(Some(3), 7, 4), format!("pipewiresrc fd=3 path=7 do-timestamp=true {}=4", ["min", "buffers"].join("-")));
+        // The element itself, where this machine has it: neither property that makes it keep the newest frame is
+        // set, and without a request the buffer count is left to the compositor.
+        let _ = gst::init();
+        if gst::ElementFactory::find("pipewiresrc").is_none() {
+            eprintln!("skipping the element half: no pipewiresrc here");
+            return;
+        }
+        let plain = gst::ElementFactory::make("pipewiresrc").build().expect("pipewiresrc");
+        let el = gst::parse::launch(&source_head(None, 7, 0)).expect("the head parses");
+        assert_eq!(el.property::<i32>("keepalive-time"), 0, "a keepalive makes pipewiresrc hold the newest buffer");
+        assert!(!el.property::<bool>("resend-last"), "resend-last holds it too");
+        for count in ["min-buffers", "max-buffers"] {
+            assert_eq!(el.property::<i32>(count), plain.property::<i32>(count), "{count} must stay the element's default");
+        }
+        let kwin = gst::parse::launch(&source_head(None, 7, crate::capture::KWIN_MIN_BUFFERS)).expect("the KWin head parses");
+        assert_eq!(kwin.property::<i32>("min-buffers"), 4);
+        assert_eq!(kwin.property::<i32>("keepalive-time"), 0);
+        // 12.1.11's head, to show this is the property it set (the name is split so the source scan below stays clean)
+        let old = gst::parse::launch(&format!("pipewiresrc path=7 do-timestamp=true {}=1000", ["keepalive", "time"].join("-"))).unwrap();
+        assert_eq!(old.property::<i32>("keepalive-time"), 1000);
+    }
+
+    /// The spare stream buffer is asked of KWin only: the wlroots portal backend does not survive the buffer
+    /// renegotiation a request causes, and mutter needs none. The override wins; 0 never asks.
+    #[cfg(not(windows))]
+    #[test]
+    fn only_kwin_is_asked_for_a_spare_buffer() {
+        use crate::capture::{buffer_request_refused, min_buffers_for, KWIN_MIN_BUFFERS};
+        assert_eq!(KWIN_MIN_BUFFERS, 4, "every KWin since 5.27 allows 4 (2..16 up to 6.0, 2..4 since 6.1)");
+        for kde in ["KDE", "kde", "plasma:KDE", "KDE:plasma"] {
+            assert_eq!(min_buffers_for(Some(kde), None), 4, "{kde}");
+        }
+        for other in [Some("GNOME"), Some("ubuntu:GNOME"), Some("sway"), Some("Hyprland"), Some("wlroots"), Some("COSMIC"), Some("niri"), Some("KDEX"), Some(""), None] {
+            assert_eq!(min_buffers_for(other, None), 0, "{other:?}");
+        }
+        assert_eq!(min_buffers_for(Some("KDE"), Some("0")), 0, "the override switches the request off");
+        assert_eq!(min_buffers_for(Some("sway"), Some("3")), 3, "or sets it");
+        assert_eq!(min_buffers_for(Some("KDE"), Some("999")), 16, "bounded");
+        assert_eq!(min_buffers_for(Some("KDE"), Some("yes")), 4, "not a number: ignored");
+        // the refusal as PipeWire words it (1.6 server; pipewiresrc 1.4.9 and 1.6.11 post it the same)
+        assert!(buffer_request_refused("error: stream error: error alloc buffers: Invalid argument (Some(\"../src/gst/gstpipewiresrc.c(748): on_state_changed (): /GstPipeline:pipeline0/GstPipeWireSrc:pipewiresrc0\"))"));
+        for other in [
+            "no frame in 4 s",
+            "error: Internal data stream error. (Some(\"streaming stopped, reason not-negotiated (-4)\"))",
+            "error: stream error: target not found (None)",
+            "error: Failed to allocate required memory. (Some(\"gstvideofilter.c: Buffer pool activation failed: no buffers\"))",
+        ] {
+            assert!(!buffer_request_refused(other), "not a buffer refusal: {other}");
+        }
+    }
+
+    /// No capture line may bring the keepalive back, or set a buffer count of its own: every share head comes from
+    /// capture.rs `source_head`. Scans the code (not comments) of the files that build capture lines.
+    #[cfg(not(windows))]
+    #[test]
+    fn no_capture_line_sets_a_source_keepalive_or_buffer_count() {
+        let needles = [["keepalive", "time="].join("-"), ["resend", "last="].join("-"), ["min", "buffers="].join("-"), ["max", "buffers="].join("-")];
+        let files = [
+            ("capture.rs", include_str!("capture.rs")),
+            ("lk_publish.rs", include_str!("lk_publish.rs")),
+            ("call.rs", include_str!("call.rs")),
+            ("lib.rs", include_str!("lib.rs")),
+            ("bin/captest.rs", include_str!("bin/captest.rs")),
+        ];
+        for (name, src) in files {
+            for (i, line) in src.lines().enumerate() {
+                let code = line.trim_start();
+                if code.starts_with("//") {
+                    continue;
+                }
+                for n in &needles {
+                    // not a share head's own count: appsink's max-buffers (the output side), call.rs's audio heads
+                    // (the microphone asks for its own buffer count; the share's head is not written in call.rs),
+                    // and source_head itself (the one place that writes the count it is given)
+                    let count = n.contains("buffers");
+                    let allowed = count && (code.contains("appsink") || name == "call.rs" || (name == "capture.rs" && code.contains("{min_buffers}")));
+                    assert!(!(code.contains(n.as_str()) && !allowed), "{name}:{}: a capture line sets {n} on the source (see capture.rs source_head)", i + 1);
+                }
+            }
+        }
+    }
+
+    /// The pre-sized CPU line never asks its source to renegotiate; 12.1.11's line (size pinned on the first frame)
+    /// does, once, and that is what made pipewiresrc reconnect its stream and hold every buffer until the next frame
+    /// (cpu_presized_desc). Counted as RECONFIGURE events arriving at the source's pad after its first buffer; the
+    /// old line is the control that shows the count can be non-zero.
+    #[test]
+    fn presized_cpu_capture_never_renegotiates_its_source() {
+        let _ = gst::init();
+        let head = "videotestsrc is-live=true num-buffers=45 ! video/x-raw,format=BGRx,width=640,height=360,framerate=30/1";
+        let reconfigures_after_the_first_frame = |desc: &str, repin: bool| -> (u32, Option<(i32, i32)>) {
+            let pipeline = gst::parse::launch(desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+            if repin {
+                install_first_frame_repin(&pipeline, 320, 180, None, Default::default(), "test");
+            }
+            let src_pad = pipeline.iterate_sources().into_iter().flatten().next().and_then(|e| e.static_pad("src")).expect("source pad");
+            let flowing = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let count = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
+            {
+                let flowing = flowing.clone();
+                src_pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+                    flowing.store(true, std::sync::atomic::Ordering::SeqCst);
+                    gst::PadProbeReturn::Ok
+                });
+            }
+            {
+                let (flowing, count) = (flowing.clone(), count.clone());
+                src_pad.add_probe(gst::PadProbeType::EVENT_UPSTREAM, move |_, info| {
+                    if let Some(gst::PadProbeData::Event(ev)) = &info.data {
+                        if ev.type_() == gst::EventType::Reconfigure && flowing.load(std::sync::atomic::Ordering::SeqCst) {
+                            count.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                        }
+                    }
+                    gst::PadProbeReturn::Ok
+                });
+            }
+            let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+            pipeline.set_state(gst::State::Playing).unwrap();
+            let mut last = None;
+            while let Some(sample) = sink.try_pull_sample(gst::ClockTime::from_seconds(3)) {
+                last = sample.caps().and_then(|c| c.structure(0).map(|s| (s.get::<i32>("width").unwrap_or(0), s.get::<i32>("height").unwrap_or(0))));
+            }
+            let _ = pipeline.set_state(gst::State::Null);
+            (count.load(std::sync::atomic::Ordering::SeqCst), last)
+        };
+        // the size the share would publish for this source in a 320x180 box (what the first-frame line pins itself to)
+        let (ow, oh) = fit_even(640, 360, 320, 180);
+        let want = Some((ow as i32, oh as i32));
+        let presized = reconfigures_after_the_first_frame(&cpu_presized_desc(head, "", ow, oh, 30, 2), false);
+        assert_eq!(presized.1, want, "the pre-sized line delivers its size");
+        assert_eq!(presized.0, 0, "the pre-sized line must never make its source renegotiate");
+        let repinned = reconfigures_after_the_first_frame(&cpu_capture_desc(head, "", 30, 2), true);
+        assert_eq!(repinned.1, want, "the first-frame line ends at the same size");
+        assert!(repinned.0 >= 1, "control: the first-frame re-pin reaches the source as a reconfigure ({} seen)", repinned.0);
+    }
+
+    /// The planted faults of the gates below, from their PLANT variable: "keepalive" = 12.1.11's source head,
+    /// "repin" = 12.1.11's CPU chain (output size pinned on the first frame), anything else = both (12.1.11 as it was).
+    #[cfg(not(windows))]
+    fn buffer_gate_plants(var: &str) -> (bool, bool) {
+        match std::env::var(var).ok().as_deref() {
+            None => (false, false),
+            Some("keepalive") => (true, false),
+            Some("repin") => (false, true),
+            Some(_) => (true, true),
+        }
+    }
+
+    /// The source head of a gate run on `node`: the app's for this desktop (XDG_CURRENT_DESKTOP decides whether it
+    /// asks for KWin's spare buffer, as in the app), or 12.1.11's when planted.
+    #[cfg(not(windows))]
+    fn buffer_gate_head(node: u32, plant_keepalive: bool) -> String {
+        if plant_keepalive {
+            format!("pipewiresrc path={node} do-timestamp=true {}=1000", ["keepalive", "time"].join("-"))
+        } else {
+            crate::capture::source_head(None, node, crate::capture::share_min_buffers())
+        }
+    }
+
+    /// How long a capture's source keeps each compositor buffer, in microseconds: from the buffer leaving the source's
+    /// pad to the last reference to its memory being dropped (when pipewiresrc can hand the buffer back). A source
+    /// keepalive keeps every buffer until the NEXT frame arrives (a whole frame interval); the app's chain lets go
+    /// when the frame is converted (a few ms). It measures the first memory of the buffers this source hands out
+    /// (shared memory here), not what the source may keep inside its own pool: see [`watch_source_reconfigures`].
+    #[cfg(not(windows))]
+    fn watch_source_holds(pipeline: &gst::Pipeline) -> std::sync::Arc<std::sync::Mutex<Vec<u64>>> {
+        struct Ctx {
+            t0: std::time::Instant,
+            out: std::sync::Arc<std::sync::Mutex<Vec<u64>>>,
+        }
+        unsafe extern "C" fn freed(data: gst::glib::ffi::gpointer, _obj: *mut gst::ffi::GstMiniObject) {
+            // SAFETY: `data` is the Box leaked for exactly this notify, which GStreamer calls once
+            let ctx = unsafe { Box::from_raw(data as *mut Ctx) };
+            let us = ctx.t0.elapsed().as_micros() as u64;
+            let out = ctx.out.clone();
+            let mut v = out.lock().unwrap_or_else(|e| e.into_inner());
+            v.push(us);
+        }
+        let held = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let Some(pad) = pipeline.iterate_sources().into_iter().flatten().next().and_then(|e| e.static_pad("src")) else {
+            return held;
+        };
+        let out = held.clone();
+        pad.add_probe(gst::PadProbeType::BUFFER, move |_, info| {
+            if let Some(gst::PadProbeData::Buffer(buf)) = &info.data {
+                if buf.n_memory() > 0 {
+                    let ctx = Box::into_raw(Box::new(Ctx { t0: std::time::Instant::now(), out: out.clone() }));
+                    // SAFETY: the memory is alive (the buffer holds it); the weak ref only registers a notify
+                    unsafe {
+                        gst::ffi::gst_mini_object_weak_ref(
+                            buf.peek_memory(0).as_ptr() as *mut gst::ffi::GstMiniObject,
+                            Some(freed),
+                            ctx as gst::glib::ffi::gpointer,
+                        )
+                    };
+                }
+            }
+            gst::PadProbeReturn::Ok
+        });
+        held
+    }
+
+    /// How often a capture's source was asked to renegotiate after its first buffer (RECONFIGURE events reaching its
+    /// pad). pipewiresrc answers one by reconnecting its stream, and then gives every buffer back a frame late (which
+    /// [`watch_source_holds`] cannot see: the late part is inside its own pool). 12.1.11's first-frame re-pin sends one.
+    #[cfg(not(windows))]
+    fn watch_source_reconfigures(pipeline: &gst::Pipeline) -> std::sync::Arc<std::sync::atomic::AtomicU32> {
+        let count = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
+        let Some(pad) = pipeline.iterate_sources().into_iter().flatten().next().and_then(|e| e.static_pad("src")) else {
+            return count;
+        };
+        let flowing = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        {
+            let flowing = flowing.clone();
+            pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+                flowing.store(true, std::sync::atomic::Ordering::SeqCst);
+                gst::PadProbeReturn::Ok
+            });
+        }
+        let c = count.clone();
+        pad.add_probe(gst::PadProbeType::EVENT_UPSTREAM, move |_, info| {
+            if let Some(gst::PadProbeData::Event(ev)) = &info.data {
+                if ev.type_() == gst::EventType::Reconfigure && flowing.load(std::sync::atomic::Ordering::SeqCst) {
+                    c.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }
+            }
+            gst::PadProbeReturn::Ok
+        });
+        count
+    }
+
+    /// The longest a capture may keep a compositor buffer in the gates below, as the median over a run: under 10 ms
+    /// is well inside a 60 fps frame interval (16.7 ms). Measured: the app's chain 1-5 ms, a source keepalive 13-16 ms
+    /// (one frame interval, whatever the rate).
+    #[cfg(not(windows))]
+    const MAX_HOLD_MS: f64 = 10.0;
+
+    /// What one gate run measured: the share's fps, the median time the source kept a compositor buffer (ms), and
+    /// how often the source was asked to renegotiate mid-stream.
+    #[cfg(not(windows))]
+    #[derive(Debug, Clone, Copy)]
+    struct GateRun {
+        fps: f64,
+        hold_ms: f64,
+        reconfigures: u32,
+    }
+
+    #[cfg(not(windows))]
+    impl GateRun {
+        /// The two cause-level checks, true for the app's capture against ANY producer: buffers come back within
+        /// MAX_HOLD_MS (fails on a source keepalive) and the source is never renegotiated mid-stream (fails on the
+        /// first-frame re-pin).
+        fn holds_nothing(&self) -> bool {
+            self.hold_ms < MAX_HOLD_MS && self.reconfigures == 0
+        }
+    }
+
+    /// One capture run for the gates below: the app's CPU capture line on `head`, started like the app's (under a
+    /// lease, gated at the source). The source is 1920x1080 and the share's
+    /// box 1280x720: the app's pre-sized chain, or (`repin`) 12.1.11's chain that pins the size on the first frame.
+    /// What it measured over `secs` after a 2 s warm-up.
+    #[cfg(not(windows))]
+    fn buffer_gate_run(head: &str, secs: f64, repin: bool) -> GateRun {
+        let head = crate::capture::source_head_with_cap(head, 60, true);
+        let desc = if repin {
+            cpu_capture_desc(&head, "", 60, cpu_capture_threads())
+        } else {
+            cpu_presized_desc(&head, "", 1280, 720, 60, cpu_capture_threads())
+        };
+        let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+        install_first_frame_repin(&pipeline, 1280, 720, None, Default::default(), "gate"); // no-op on the pre-sized chain
+        let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        let holds = watch_source_holds(&pipeline);
+        let reconfigures = watch_source_reconfigures(&pipeline);
+        let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None).expect("a screen lease");
+        assert!(crate::call::leased_play(&lease, &pipeline, 8000, "buffer gate"), "the gate's capture did not start");
+        let t0 = std::time::Instant::now();
+        let (mut n, mut first) = (0u32, None);
+        while t0.elapsed().as_secs_f64() < secs + 2.0 {
+            if sink.try_pull_sample(gst::ClockTime::from_mseconds(200)).is_some() && t0.elapsed().as_secs_f64() >= 2.0 {
+                first.get_or_insert_with(std::time::Instant::now);
+                n += 1;
+            }
+        }
+        let fps = n as f64 / first.map(|f| f.elapsed().as_secs_f64()).unwrap_or(1.0).max(0.001);
+        // the median, read while the capture still runs (the teardown frees the last buffers late)
+        let mut h = holds.lock().unwrap().clone();
+        h.sort_unstable();
+        let hold_ms = h.get(h.len() / 2).map(|us| *us as f64 / 1000.0).unwrap_or(f64::MAX);
+        let reconfigures = reconfigures.load(std::sync::atomic::Ordering::SeqCst);
+        let _ = pipeline.set_state(gst::State::Null);
+        GateRun { fps, hold_ms, reconfigures }
+    }
+
+    /// The lab producer of the gates below (kwin68like-src): started with `args`, its PipeWire node id, and its
+    /// output lines so far. [`LabProducer::finish`] stops it and returns its output; dropping it (a failed assertion,
+    /// no node id in time) kills and reaps the child too.
+    #[cfg(not(windows))]
+    struct LabProducer {
+        child: std::process::Child,
+        reader: Option<std::thread::JoinHandle<()>>,
+        lines: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
+        node: u32,
+    }
+
+    #[cfg(not(windows))]
+    impl Drop for LabProducer {
+        fn drop(&mut self) {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+            if let Some(r) = self.reader.take() {
+                let _ = r.join();
+            }
+        }
+    }
+
+    #[cfg(not(windows))]
+    impl LabProducer {
+        fn start(bin: &std::ffi::OsStr, args: &[&str]) -> LabProducer {
+            let mut child = std::process::Command::new(bin).args(args).stdout(std::process::Stdio::piped()).spawn().expect("kwin68like-src");
+            let out = child.stdout.take().unwrap();
+            let lines = std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+            let (tx, rx) = std::sync::mpsc::channel::<u32>();
+            let reader = {
+                let lines = lines.clone();
+                std::thread::spawn(move || {
+                    use std::io::BufRead;
+                    for l in std::io::BufReader::new(out).lines().map_while(Result::ok) {
+                        if let Some(id) = l.strip_prefix("node id: ").and_then(|v| v.trim().parse().ok()) {
+                            let _ = tx.send(id);
+                        }
+                        lines.lock().unwrap().push(l);
+                    }
+                })
+            };
+            // owned from here on, so a missing node id below still kills and reaps the child (Drop)
+            let mut producer = LabProducer { child, reader: Some(reader), lines, node: 0 };
+            producer.node = rx.recv_timeout(std::time::Duration::from_secs(10)).expect("no node id from kwin68like-src");
+            producer
+        }
+        /// Stop it; its whole output.
+        fn finish(mut self) -> String {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+            if let Some(r) = self.reader.take() {
+                let _ = r.join();
+            }
+            let log = self.lines.lock().unwrap().join("\n");
+            log
+        }
+    }
+
+    /// 12.1.12 stream-buffer gate, opt-in: TINHAT_BUFGATE=<path to the kwin68like-src lab producer> (a PipeWire
+    /// daemon must run). The producer hands out frames like KWin 6.8 (a fixed grid, 3 buffers by default and 2 to 4
+    /// on request, a skipped tick when none is free) and says how many buffers it allocated.
+    ///   - the app's head and chain: every compositor buffer back within MAX_HOLD_MS, no mid-stream renegotiation
+    ///     of the source, the share at the cap; with XDG_CURRENT_DESKTOP=KDE the producer allocates 4 buffers, on
+    ///     any other desktop its own 3;
+    ///   - TINHAT_BUFGATE_PLANT=keepalive = 12.1.11's head: the hold assertion must fire;
+    ///     TINHAT_BUFGATE_PLANT=repin = 12.1.11's chain: the renegotiation assertion must fire.
+    /// The 48/45/30/25 fps lock itself needs a real KWin (this producer never starves): `share_buffer_lock_probe`.
+    #[cfg(not(windows))]
+    #[test]
+    fn share_buffer_gate() {
+        let Some(bin) = std::env::var_os("TINHAT_BUFGATE") else {
+            eprintln!("skipping: TINHAT_BUFGATE not set");
+            return;
+        };
+        let _ = gst::init();
+        let (plant_keepalive, plant_repin) = buffer_gate_plants("TINHAT_BUFGATE_PLANT");
+        let producer = LabProducer::start(&bin, &["1920", "1080", "165", "14", "kwin"]);
+        let run = buffer_gate_run(&buffer_gate_head(producer.node, plant_keepalive), 6.0, plant_repin);
+        let log = producer.finish();
+        let starts: Vec<u32> = log
+            .lines()
+            .filter_map(|l| l.strip_prefix("[kwin68like] streaming with ")?.split_whitespace().next()?.parse().ok())
+            .collect();
+        eprintln!(
+            "[buffer-gate]{}{}: {} stream start(s), buffers per start {starts:?}, {run:?}",
+            if plant_keepalive { " (PLANTED 12.1.11 head)" } else { "" },
+            if plant_repin { " (PLANTED 12.1.11 re-pin chain)" } else { "" },
+            starts.len()
+        );
+        assert!(run.holds_nothing(), "the source kept compositor buffers too long, or was renegotiated mid-stream: {run:?}");
+        if !plant_keepalive {
+            let want = if crate::capture::share_min_buffers() > 0 { crate::capture::share_min_buffers() } else { 3 };
+            assert_eq!(starts.last().copied(), Some(want), "the buffers the producer allocated (4 when the head asks KWin for its spare, else its own 3)");
+        }
+        assert!(run.fps >= 54.0, "the share got {:.1} fps", run.fps);
+    }
+
+    /// 12.1.12 lock probe, opt-in, against a REAL compositor stream: TINHAT_BUFLOCK_NODE=<the PipeWire node id of a
+    /// running 1920x1080 screencast> (KWin 6.8, mutter, a wlroots portal). Starts the app's CPU capture
+    /// TINHAT_BUFLOCK_STARTS times (default 12) and requires of every start: each compositor buffer back within
+    /// MAX_HOLD_MS, no mid-stream renegotiation of the source, and at least TINHAT_BUFLOCK_MIN_FPS. The default floor
+    /// is 50 of the 60 fps cap: a starved stream locks at 4/5 of the cap or less (48, 45, 30, 25 measured), while a
+    /// software-rendered lab compositor on a busy machine dips to 52-58 without being starved; set it lower for a
+    /// compositor whose own rate is lower. Planted with TINHAT_BUFLOCK_PLANT=keepalive (12.1.11's head: buffers held
+    /// a whole frame interval in every start, a lock in some), =repin (12.1.11's chain: one renegotiation and a lock
+    /// in every start) or =1 (both).
+    #[cfg(not(windows))]
+    #[test]
+    fn share_buffer_lock_probe() {
+        let Some(node) = std::env::var("TINHAT_BUFLOCK_NODE").ok().and_then(|v| v.trim().parse::<u32>().ok()) else {
+            eprintln!("skipping: TINHAT_BUFLOCK_NODE not set");
+            return;
+        };
+        let _ = gst::init();
+        let (plant_keepalive, plant_repin) = buffer_gate_plants("TINHAT_BUFLOCK_PLANT");
+        let planted = match (plant_keepalive, plant_repin) {
+            (false, false) => "",
+            (true, false) => " (PLANTED 12.1.11 head)",
+            (false, true) => " (PLANTED 12.1.11 re-pin chain)",
+            (true, true) => " (PLANTED 12.1.11 head + re-pin chain)",
+        };
+        let starts: u32 = std::env::var("TINHAT_BUFLOCK_STARTS").ok().and_then(|v| v.parse().ok()).unwrap_or(12);
+        let min_fps: f64 = std::env::var("TINHAT_BUFLOCK_MIN_FPS").ok().and_then(|v| v.parse().ok()).unwrap_or(50.0);
+        let (mut rates, mut holds, mut renegotiated) = (Vec::new(), Vec::new(), 0u32);
+        for i in 0..starts {
+            let r = buffer_gate_run(&buffer_gate_head(node, plant_keepalive), 7.0, plant_repin);
+            eprintln!(
+                "[buffer-lock] start {i}{planted}: {:.1} fps (cap 60), compositor buffers held {:.1} ms (median), source renegotiated {}x",
+                r.fps, r.hold_ms, r.reconfigures
+            );
+            rates.push(r.fps);
+            holds.push(r.hold_ms);
+            renegotiated += u32::from(r.reconfigures > 0);
+            std::thread::sleep(std::time::Duration::from_millis(400));
+        }
+        let low: Vec<String> = rates.iter().filter(|f| **f < min_fps).map(|f| format!("{f:.1}")).collect();
+        let held: Vec<String> = holds.iter().filter(|h| **h >= MAX_HOLD_MS).map(|h| format!("{h:.1}")).collect();
+        let all = |v: &[f64]| v.iter().map(|x| format!("{x:.1}")).collect::<Vec<_>>().join(", ");
+        eprintln!("[buffer-lock] {} starts{planted}: fps [{}]; buffers held ms [{}]", rates.len(), all(&rates), all(&holds));
+        eprintln!(
+            "[buffer-lock] {} below {min_fps} fps, {} held a buffer {MAX_HOLD_MS} ms or longer, {renegotiated} renegotiated the source mid-stream",
+            low.len(),
+            held.len()
+        );
+        assert!(held.is_empty(), "{} of {} starts kept compositor buffers too long (ms): [{}]", held.len(), holds.len(), held.join(", "));
+        assert_eq!(renegotiated, 0, "{renegotiated} of {} starts renegotiated the source mid-stream (pipewiresrc reconnects and then returns buffers a frame late)", rates.len());
+        assert!(low.is_empty(), "{} of {} starts ran below {min_fps} fps: [{}]", low.len(), rates.len(), low.join(", "));
+    }
+
+    /// 12.1.12 start-time probe, opt-in, against a REAL compositor stream (TINHAT_BUFLOCK_NODE): how long a CPU
+    /// share takes from building its capture to the first frame at the encoder's door, TINHAT_START_ROUNDS (default
+    /// 7) starts each:
+    ///   - 12.1.11: the first-frame pipeline IS the share;
+    ///   - the app, size unknown: the size-learning run to its first frame, stopped, then the pre-sized pipeline
+    ///     (what start_share_capture does);
+    ///   - the app, size known: the pre-sized pipeline alone.
+    /// Neither may cost more than 1 s over 12.1.11's, as the median AND in its slowest start.
+    #[cfg(not(windows))]
+    #[test]
+    fn share_start_time_probe() {
+        let Some(node) = std::env::var("TINHAT_BUFLOCK_NODE").ok().and_then(|v| v.trim().parse::<u32>().ok()) else {
+            eprintln!("skipping: TINHAT_BUFLOCK_NODE not set");
+            return;
+        };
+        let _ = gst::init();
+        // one capture start, up to its first frame at the appsink: the running pipeline, its lease, the ms it took
+        let start = |head: &str, presized: bool| -> (gst::Pipeline, crate::capture_lease::Lease, f64) {
+            let t0 = std::time::Instant::now();
+            let head = crate::capture::source_head_with_cap(head, 60, true);
+            let desc = if presized {
+                cpu_presized_desc(&head, "", 1280, 720, 60, cpu_capture_threads())
+            } else {
+                cpu_capture_desc(&head, "", 60, cpu_capture_threads())
+            };
+            let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+            install_first_frame_repin(&pipeline, 1280, 720, None, Default::default(), "probe");
+            let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+            let flowing = crate::call::first_frame_flag(&sink);
+            let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None).expect("a screen lease");
+            assert!(crate::call::leased_play(&lease, &pipeline, 8000, "start-time probe"), "the probe's capture did not start");
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(6);
+            while !flowing.load(std::sync::atomic::Ordering::SeqCst) {
+                assert!(std::time::Instant::now() < deadline, "no first frame in 6 s");
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+            (pipeline, lease, t0.elapsed().as_secs_f64() * 1000.0)
+        };
+        let stop = |p: gst::Pipeline| {
+            let _ = crate::call::set_state_bounded(p.upcast_ref(), gst::State::Null, 4000, "start-time probe");
+        };
+        let median = |v: &mut Vec<f64>| {
+            v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            v[v.len() / 2]
+        };
+        // the app's size-learning run: Ok((ms to its first frame, ms its stop took, the size it learned))
+        let learn = || -> (f64, f64, Option<(u32, u32)>) {
+            let t0 = std::time::Instant::now();
+            let head = crate::capture::source_head_with_cap(&buffer_gate_head(node, false), 60, true);
+            let pipeline = gst::parse::launch(&size_probe_desc(&head)).unwrap().downcast::<gst::Pipeline>().unwrap();
+            let memo: std::sync::Arc<std::sync::Mutex<Option<(u32, u32)>>> = Default::default();
+            install_size_probe(&pipeline, memo.clone()).expect("the probe's sink");
+            let flowing = crate::call::first_frame_flag(&pipeline.by_name("sink").expect("the probe's sink"));
+            let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None).expect("a screen lease");
+            assert!(crate::call::leased_play(&lease, &pipeline, 6000, "start-time probe"), "the size-learning run did not start");
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(4);
+            while !flowing.load(std::sync::atomic::Ordering::SeqCst) {
+                assert!(std::time::Instant::now() < deadline, "the size-learning run got no frame in 4 s");
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+            let first = t0.elapsed().as_secs_f64() * 1000.0;
+            let t1 = std::time::Instant::now();
+            let _ = crate::call::set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 4000, "start-time probe");
+            let size = *memo.lock().unwrap();
+            (first, t1.elapsed().as_secs_f64() * 1000.0, size)
+        };
+        let rounds: u32 = std::env::var("TINHAT_START_ROUNDS").ok().and_then(|v| v.parse().ok()).unwrap_or(7);
+        let (mut old, mut learned, mut known) = (Vec::new(), Vec::new(), Vec::new());
+        for i in 0..rounds {
+            let (p, lease, ms) = start(&buffer_gate_head(node, true), false);
+            old.push(ms);
+            stop(p);
+            drop(lease);
+            std::thread::sleep(std::time::Duration::from_millis(300));
+
+            let t0 = std::time::Instant::now();
+            let (learn_ms, stop_ms, size) = learn();
+            assert_eq!(size, Some((1920, 1080)), "the size-learning run must record the source's real size");
+            let (p, lease, pre_ms) = start(&buffer_gate_head(node, false), true);
+            let total = t0.elapsed().as_secs_f64() * 1000.0;
+            eprintln!("[start-time] round {i}: learn {learn_ms:.0} ms + stop {stop_ms:.0} ms + pre-sized {pre_ms:.0} ms = {total:.0} ms");
+            learned.push(total);
+            stop(p);
+            drop(lease);
+            std::thread::sleep(std::time::Duration::from_millis(300));
+
+            let (p, lease, ms) = start(&buffer_gate_head(node, false), true);
+            known.push(ms);
+            stop(p);
+            drop(lease);
+            std::thread::sleep(std::time::Duration::from_millis(300));
+        }
+        let fmt = |v: &[f64]| v.iter().map(|x| format!("{x:.0}")).collect::<Vec<_>>().join(", ");
+        eprintln!("[start-time] 12.1.11 (first-frame pipeline is the share): [{}] ms", fmt(&old));
+        eprintln!("[start-time] the app, size unknown (learn, stop, pre-sized): [{}] ms", fmt(&learned));
+        eprintln!("[start-time] the app, size known (pre-sized): [{}] ms", fmt(&known));
+        let worst = |v: &[f64]| v.iter().copied().fold(0.0, f64::max);
+        let (w_learned, w_known) = (worst(&learned), worst(&known));
+        let (m_old, m_learned, m_known) = (median(&mut old), median(&mut learned), median(&mut known));
+        eprintln!(
+            "[start-time] medians: 12.1.11 {m_old:.0} ms, size unknown {m_learned:.0} ms ({:+.0}; slowest {w_learned:.0}), size known {m_known:.0} ms ({:+.0}; slowest {w_known:.0})",
+            m_learned - m_old,
+            m_known - m_old
+        );
+        assert!(m_learned - m_old <= 1000.0, "the learning start costs {:.0} ms more than 12.1.11's", m_learned - m_old);
+        assert!(m_known - m_old <= 1000.0, "the pre-sized start costs {:.0} ms more than 12.1.11's", m_known - m_old);
+        assert!(w_learned - m_old <= 1000.0, "the slowest learning start took {w_learned:.0} ms (12.1.11's median {m_old:.0})");
+        assert!(w_known - m_old <= 1000.0, "the slowest pre-sized start took {w_known:.0} ms (12.1.11's median {m_old:.0})");
+    }
+
+    /// 12.1.12 still-screen probe, opt-in, against a REAL compositor stream whose screen does not change:
+    /// TINHAT_STILL_NODE=<node id>, TINHAT_STILL_SECS (default 130). The share's source carries no keepalive, so the
+    /// feeder's own repeater must keep handing frames to the encoder for the whole run with the compositor silent
+    /// (at least 5 a second in every 5 s window), from the one frame the compositor sends when the stream starts.
+    /// TINHAT_STILL_FIRST_MS (default 3000) is how long that first frame may take: a compositor that sends nothing
+    /// until its screen changes (the wlroots portal) is given one change by the lab script within that time.
+    /// TINHAT_STILL_STARTS=N instead runs N short starts and only counts how many got their first frame within
+    /// TINHAT_STILL_FIRST_MS: how often a still screen's one start frame is lost before the lease's gate opens.
+    #[cfg(not(windows))]
+    #[test]
+    fn still_screen_share_stays_live() {
+        let Some(node) = std::env::var("TINHAT_STILL_NODE").ok().and_then(|v| v.trim().parse::<u32>().ok()) else {
+            eprintln!("skipping: TINHAT_STILL_NODE not set");
+            return;
+        };
+        let _ = gst::init();
+        let secs: u64 = std::env::var("TINHAT_STILL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(130);
+        let first_ms: u64 = std::env::var("TINHAT_STILL_FIRST_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(3000);
+        // NativeVideoSource::new spawns onto the LiveKit runtime: give this thread one
+        let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+        let _guard = rt.enter();
+        // one start of the app's pre-sized CPU capture into the app's feeder: the running pipeline, its lease, the
+        // count of buffers that left the source, and the ms to the first frame at the feeder's door (None = none)
+        let start = || {
+            let head = crate::capture::source_head_with_cap(&buffer_gate_head(node, false), 60, true);
+            let desc = cpu_presized_desc(&head, "", 1280, 720, 60, cpu_capture_threads());
+            let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+            let seen = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
+            {
+                let seen = seen.clone();
+                let pad = pipeline.iterate_sources().into_iter().flatten().next().and_then(|e| e.static_pad("src")).expect("source pad");
+                pad.add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+                    seen.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    gst::PadProbeReturn::Ok
+                });
+            }
+            let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+            let source = NativeVideoSource::new(livekit::webrtc::video_source::VideoResolution { width: 1280, height: 720 }, true);
+            wire_appsink_to_source(&sink, source);
+            let flowing = crate::call::first_frame_flag(&sink);
+            let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None).expect("a screen lease");
+            assert!(crate::call::leased_play(&lease, &pipeline, 8000, "still-screen probe"), "the probe's capture did not start");
+            let t0 = std::time::Instant::now();
+            let mut first = None;
+            while first.is_none() && t0.elapsed() < std::time::Duration::from_millis(first_ms) {
+                if flowing.load(std::sync::atomic::Ordering::SeqCst) {
+                    first = Some(t0.elapsed().as_millis() as u64);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+            (pipeline, lease, seen, first)
+        };
+        if let Some(starts) = std::env::var("TINHAT_STILL_STARTS").ok().and_then(|v| v.parse::<u32>().ok()) {
+            let (mut got, mut lost_at_the_gate, mut nothing_sent) = (0, 0, 0);
+            for _ in 0..starts {
+                let (pipeline, lease, seen, first) = start();
+                match (first, seen.load(std::sync::atomic::Ordering::SeqCst)) {
+                    (Some(_), _) => got += 1,
+                    (None, 0) => nothing_sent += 1,
+                    (None, _) => lost_at_the_gate += 1,
+                }
+                let _ = pipeline.set_state(gst::State::Null);
+                drop(lease);
+                std::thread::sleep(std::time::Duration::from_millis(300));
+            }
+            eprintln!(
+                "[still] {starts} starts on a still screen: {got} got their first frame within {first_ms} ms, {lost_at_the_gate} lost it before the gate opened, {nothing_sent} were sent none"
+            );
+            return;
+        }
+        let (pipeline, _lease, seen, first) = start();
+        eprintln!(
+            "[still] first frame {} ({} buffer(s) left the source so far)",
+            first.map(|ms| format!("through after {ms} ms")).unwrap_or_else(|| format!("MISSING after {first_ms} ms")),
+            seen.load(std::sync::atomic::Ordering::SeqCst)
+        );
+        if first.is_none() {
+            let _ = pipeline.set_state(gst::State::Null);
+        }
+        assert!(first.is_some(), "no first frame within {first_ms} ms");
+        let mut worst = u64::MAX;
+        let mut total = 0;
+        let windows = (secs / 5).max(1);
+        for w in 0..windows {
+            let before = video_frames_fed();
+            let at_source = seen.load(std::sync::atomic::Ordering::SeqCst);
+            std::thread::sleep(std::time::Duration::from_secs(5));
+            let fed = video_frames_fed() - before;
+            let fresh = seen.load(std::sync::atomic::Ordering::SeqCst) - at_source;
+            worst = worst.min(fed);
+            total += fed;
+            if w % 6 == 0 || fed < 25 {
+                eprintln!("[still] {:>3} s: {fed} frames to the encoder in 5 s ({fresh} new from the compositor)", (w + 1) * 5);
+            }
+        }
+        let _ = pipeline.set_state(gst::State::Null);
+        eprintln!("[still] {} s: {total} frames to the encoder, worst 5 s window {worst}", windows * 5);
+        assert!(worst >= 25, "a 5 s window got only {worst} frames: the share would freeze for the receiver");
+    }
+
     /// 12.1.8: the capped head offers max-framerate EXACTLY fps first, then anything; no cap = the plain head.
     #[cfg(not(windows))]
     #[test]
     fn source_head_carries_the_max_framerate() {
-        let head = "pipewiresrc fd=3 path=7 do-timestamp=true keepalive-time=1000";
+        let head = crate::capture::source_head(Some(3), 7, 0);
+        let head = head.as_str();
         assert_eq!(
             crate::capture::source_head_with_cap(head, 60, true),
             format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(ANY),max-framerate=(fraction)60/1; video/x-raw(ANY)\"")
@@ -2864,7 +3596,8 @@ mod share_capture_tests {
     #[cfg(not(windows))]
     #[test]
     fn dmabuf_head_accepts_only_dmabuf() {
-        let head = "pipewiresrc fd=3 path=7 do-timestamp=true keepalive-time=1000";
+        let head = crate::capture::source_head(Some(3), 7, 0);
+        let head = head.as_str();
         let capped = crate::capture::source_head_dmabuf(head, 60, true);
         assert_eq!(
             capped,
@@ -3008,7 +3741,7 @@ mod share_capture_tests {
             );
             (chose, fps, total, errors)
         };
-        let src = |node: u32| format!("pipewiresrc path={node} do-timestamp=true keepalive-time=1000");
+        let src = |node: u32| crate::capture::source_head(None, node, 0);
         // TINHAT_DMABUF_GATE_PLANT=1 = the planted fault that shows the gate can fail: a head that asks for system
         // memory (what 12.1.8 effectively negotiated), so the producer hands over shm and the DMA-BUF assertion must fire.
         let plant = std::env::var_os("TINHAT_DMABUF_GATE_PLANT").is_some();
@@ -3103,7 +3836,7 @@ mod share_capture_tests {
                 })
             };
             let node = rx.recv_timeout(std::time::Duration::from_secs(10)).expect("no node id from kwinlike-src");
-            let head = crate::capture::source_head_with_cap(&format!("pipewiresrc path={node} do-timestamp=true keepalive-time=1000"), 60, cap);
+            let head = crate::capture::source_head_with_cap(&crate::capture::source_head(None, node, 0), 60, cap);
             let desc = cpu_capture_desc(&head, "", 60, cpu_capture_threads());
             let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
             install_first_frame_repin(&pipeline, 1920, 1080, None, Default::default(), "gate");

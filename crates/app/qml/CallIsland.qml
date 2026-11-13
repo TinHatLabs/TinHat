@@ -84,13 +84,16 @@ ColumnLayout {
                     id: inCallDot
                     Layout.alignment: Qt.AlignVCenter
                     width: 10; height: 10; radius: 5
-                    color: island.app.mConnecting ? Th.callStatusBarDot : Th.callStatusBarDotLive
+                    // 12.1.13 (reconnect-wedge): lit only while really in the call (the web's rule; after a drop or a
+                    // failed join the strip used to keep a live dot and "In call" over the red banner)
+                    color: (island.app.mInCall && !island.app.mConnecting) ? Th.callStatusBarDotLive : Th.callStatusBarDot
                     // 11.0 (GPU.md §2.2, R6): STATIC — shown lit. Its 1.2 s blink (9.2, itself the fix for a
                     // 60 fps fade) still redrew the window ~5 times a second for the whole call, audio-only
                     // calls included, focused or not (the 10.6 GPU baseline).
                 }
                 Controls.Label {
-                    text: island.app.mConnecting ? "Connecting…" : "In call"
+                    text: island.app.mConnecting ? "Connecting…" : island.app.mInCall ? "In call"
+                        : island.app.mReconnecting ? "Reconnecting…" : "Disconnected"
                     color: Th.callStatusBarFg
                     font.bold: true
                 }
@@ -2301,7 +2304,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: Kirigami.Units.largeSpacing
             horizontalAlignment: Text.AlignHCenter
-            visible: island.app.callShown && island.app.callTiles.length === 0
+            visible: island.app.callShown && island.app.callTiles.length === 0 && (island.app.mConnecting || island.app.mInCall)
             text: island.app.mConnecting ? "Connecting to the call…"
                 : "You're in the call. Turn on your camera or wait for others."
             color: Th.callEmptyFg

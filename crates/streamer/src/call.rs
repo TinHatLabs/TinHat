@@ -1964,8 +1964,9 @@ fn set_sink_target(el: &gst::Element, target: &str) {
     }
 }
 
-/// A flag that flips when the first buffer reaches `appsink` (install BEFORE the pipeline plays).
-fn first_frame_flag(appsink: &gstreamer_app::AppSink) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
+/// A flag that flips when the first buffer reaches `appsink` (install BEFORE the pipeline plays). Any sink element
+/// will do (the size-learning run ends in a fakesink).
+pub(crate) fn first_frame_flag(appsink: &impl IsA<gst::Element>) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
     let flowing = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     if let Some(pad) = appsink.static_pad("sink") {
         let f = flowing.clone();
@@ -1978,7 +1979,10 @@ fn first_frame_flag(appsink: &gstreamer_app::AppSink) -> std::sync::Arc<std::syn
 }
 
 /// Wait up to `ms` for [`first_frame_flag`] to flip, failing early on a bus error. Err = the reason (the caller stops
-/// the pipeline). pipewiresrc's keepalive resends the last frame every second, so a still screen passes too.
+/// the pipeline). A compositor sends a frame when a stream starts, so a still screen passes too. (Until 12.1.11
+/// pipewiresrc's keepalive also resent the last frame every second; the share heads no longer carry it, see
+/// capture.rs `source_head`. What it covered at a start: a still screen whose one start frame arrived before the
+/// lease's source gate opened. Such a start now gets its first frame when the screen first changes.)
 fn wait_first_frame(pipeline: &gst::Pipeline, flowing: &std::sync::atomic::AtomicBool, ms: u64) -> std::result::Result<(), String> {
     let bus = pipeline.bus();
     let deadline = std::time::Instant::now() + std::time::Duration::from_millis(ms);
@@ -1988,18 +1992,24 @@ fn wait_first_frame(pipeline: &gst::Pipeline, flowing: &std::sync::atomic::Atomi
         }
         let err = bus.as_ref().and_then(|b| b.timed_pop_filtered(gst::ClockTime::from_mseconds(50), &[gst::MessageType::Error]));
         if let Some(msg) = err {
-            return Err(match msg.view() {
+            let why = match msg.view() {
                 gst::MessageView::Error(e) => format!("error: {} ({:?})", e.error(), e.debug()),
                 _ => "error".to_string(),
-            });
+            };
+            #[cfg(not(windows))]
+            crate::capture::note_buffer_refusal(&why);
+            return Err(why);
         }
     }
     // a frame came through, but the pipeline may have failed right after it: a queued error still rejects it
     if let Some(msg) = bus.as_ref().and_then(|b| b.pop_filtered(&[gst::MessageType::Error])) {
-        return Err(match msg.view() {
+        let why = match msg.view() {
             gst::MessageView::Error(e) => format!("error after the first frame: {} ({:?})", e.error(), e.debug()),
             _ => "error".to_string(),
-        });
+        };
+        #[cfg(not(windows))]
+        crate::capture::note_buffer_refusal(&why);
+        return Err(why);
     }
     Ok(())
 }
@@ -4116,6 +4126,12 @@ pub struct CallSession {
     camera_quiet_hook: Option<Arc<dyn Fn(u64) + Send + Sync>>,
     /// 10.5: the "can they hear me?" analyzer (hear.rs); None for the Memories recorder.
     hear_task: Option<tokio::task::JoinHandle<()>>,
+    /// 12.1.13 (reconnect-wedge): this call's link watch (call_health) — fed by the watchdog (the room's real
+    /// connection state once a second), by every bounded publish, and latched by the room's own terminal drop,
+    /// so the terminal state reaches the app exactly once. `link_tx` = this session's own event channel.
+    link: Arc<Mutex<crate::call_health::LinkWatch>>,
+    link_tx: tokio::sync::mpsc::UnboundedSender<CallEvent>,
+    link_stop: Arc<std::sync::atomic::AtomicBool>,
 }
 
 /// Process-global remote-video render pipelines, keyed by tile id. Created by the app
@@ -6874,6 +6890,46 @@ impl CallSession {
         let (tx, rx) = unbounded_channel::<CallEvent>();
         forget_all_moderation(); // a new call starts with nobody server-muted
         *event_sender().lock().unwrap() = Some(tx.clone());
+        // 12.1.13 (reconnect-wedge): the link watchdog. Once a second it reads the room's REAL connection state
+        // (not the events, which both field failures lost) into the call_health rule: reconnecting for 60 s
+        // without a break, or Disconnected with no terminal drop 3 s later = the call is over. It then sends the
+        // same recoverable terminal drop the room would have (auto-rejoin, or "Call ended — connection lost" +
+        // Rejoin), and the teardown stops the capture and the encoders. Never keeps the room alive.
+        let link = Arc::new(Mutex::new(crate::call_health::LinkWatch::new()));
+        let link_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        {
+            let reader = room.state_reader();
+            let link = link.clone();
+            let stop = link_stop.clone();
+            let tx_w = tx.clone();
+            tokio::spawn(async move {
+                use crate::call_health::Link;
+                let mut tick = tokio::time::interval(std::time::Duration::from_secs(1));
+                tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+                loop {
+                    tick.tick().await;
+                    if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                        break;
+                    }
+                    let Some(state) = reader.get() else { break };
+                    let l = match state {
+                        livekit::ConnectionState::Connected => Link::Connected,
+                        livekit::ConnectionState::Reconnecting => Link::Reconnecting,
+                        livekit::ConnectionState::Disconnected => Link::Disconnected,
+                    };
+                    // the verdict and its send under the watch's lock: the room's own connection events check
+                    // the same lock before they send, so nothing reaches the app after the terminal drop
+                    let mut w = link.lock().unwrap();
+                    if let Some(why) = w.observe(crate::call_health::now_ms(), l) {
+                        eprintln!("[call] the call is no longer connected ({}): ending it so it can be rejoined", why.as_str());
+                        let _ = tx_w.send(CallEvent::ConnectionState { reconnecting: false, disconnected: true, recoverable: true });
+                    }
+                    if w.is_done() {
+                        break;
+                    }
+                }
+            });
+        }
         // Test gate (TINHAT_TEST_TERMINAL_DROP_AFTER_S=N): inject a recoverable TERMINAL
         // disconnect N seconds after connect, to exercise the app's auto-rejoin chain
         // (decision → teardown → fresh join → mute restore) on demand. The real trigger
@@ -6902,6 +6958,8 @@ impl CallSession {
             crate::callstats::spawn(room.local_participant()); // widgets: receive stats + `tinhat.rxq`
         }
         let pb = playback.clone();
+        let loop_link = link.clone();
+        let tx_link = tx.clone();
         let event_task = tokio::spawn(async move {
             while let Some(ev) = events.recv().await {
                 match ev {
@@ -7290,13 +7348,27 @@ impl CallSession {
                         set_active_speakers(speakers.iter().map(|p| p.identity().0.clone()).collect());
                     }
                     RoomEvent::Reconnecting => {
+                        if loop_link.lock().unwrap().is_done() {
+                            continue; // 12.1.13: this call was already ended (the link watch or the terminal drop)
+                        }
                         eprintln!("[call] SFU connection lost — reconnecting…");
                         crate::hear::set_reconnecting(true); // 10.5: not "your fault" while the link is down
                         set_active_speakers(Vec::new()); // don't freeze a stale "speaking" ring
                         speakers_log_guard().store(usize::MAX, std::sync::atomic::Ordering::Relaxed); // first post-resume delta always logs
-                        let _ = tx.send(CallEvent::ConnectionState { reconnecting: true, disconnected: false, recoverable: true });
+                        let w = loop_link.lock().unwrap(); // 12.1.13: checked and sent under the watch's lock
+                        if !w.is_done() {
+                            let _ = tx.send(CallEvent::ConnectionState { reconnecting: true, disconnected: false, recoverable: true });
+                        }
                     }
                     RoomEvent::Reconnected => {
+                        // 12.1.13: checked, fed to the watch (a short reconnect between two polls resets its clock,
+                        // Astra r1) and sent under the watch's lock: never after the terminal drop
+                        let mut w = loop_link.lock().unwrap();
+                        if w.is_done() {
+                            eprintln!("[call] SFU reconnected after the call was ended — ignored");
+                            continue;
+                        }
+                        w.observe(crate::call_health::now_ms(), crate::call_health::Link::Connected);
                         eprintln!("[call] SFU reconnected");
                         crate::hear::set_reconnecting(false);
                         let _ = tx.send(CallEvent::ConnectionState { reconnecting: false, disconnected: false, recoverable: true });
@@ -7333,7 +7405,13 @@ impl CallSession {
                                 | DR::UserRejected
                                 | DR::UserUnavailable
                         );
-                        let _ = tx.send(CallEvent::ConnectionState { reconnecting: false, disconnected: true, recoverable });
+                        // 12.1.13: exactly one terminal drop per call (the link watch may have sent it already)
+                        let mut w = loop_link.lock().unwrap();
+                        if w.terminal() {
+                            let _ = tx.send(CallEvent::ConnectionState { reconnecting: false, disconnected: true, recoverable });
+                        } else {
+                            eprintln!("[call] (the link watch had already ended this call)");
+                        }
                     }
                     RoomEvent::Connected { participants_with_tracks } => {
                         // Peers ALREADY in the call when WE join are surfaced here ONCE (not via
@@ -7425,9 +7503,47 @@ impl CallSession {
                 camera_dead_hook: None,
                 camera_quiet_hook: None,
                 hear_task,
+                link,
+                link_tx: tx_link,
+                link_stop,
             },
             rx,
         ))
+    }
+
+    /// 12.1.13 (reconnect-wedge): `publish_track`, bounded by call_health::PUBLISH_TIMEOUT_MS. The SDK sends
+    /// AddTrack only once a reconnect has ended, so a publish that can't finish means the call isn't connected:
+    /// the call is ended visibly (the terminal drop a lost connection gives), and the caller gets
+    /// [`crate::call_health::NOT_CONNECTED_ERR`] (the share path shows it as "Share failed: the call isn't connected").
+    async fn publish_bounded(
+        &self,
+        track: LocalTrack,
+        opts: TrackPublishOptions,
+        what: &str,
+    ) -> Result<livekit::publication::LocalTrackPublication> {
+        let limit = std::time::Duration::from_millis(crate::call_health::PUBLISH_TIMEOUT_MS);
+        // the call is lost: latched and sent under the watch's lock (one terminal drop per call)
+        let lost = |why: String| -> Result<livekit::publication::LocalTrackPublication> {
+            eprintln!("[call] the {what} publish {why}: the call isn't connected — ending it");
+            let mut w = self.link.lock().unwrap();
+            if w.publish_timed_out().is_some() {
+                let _ = self.link_tx.send(CallEvent::ConnectionState { reconnecting: false, disconnected: true, recoverable: true });
+            }
+            Err(anyhow::anyhow!(crate::call_health::NOT_CONNECTED_ERR))
+        };
+        match tokio::time::timeout(limit, self.room.local_participant().publish_track(track, opts)).await {
+            Ok(Ok(p)) => Ok(p),
+            // the SDK's own publish timeout (10 s, the server never answered AddTrack): the same as ours, often
+            // before the room even notices the link is gone
+            Ok(Err(e)) if e.to_string().contains("no response received from the server") => lost(format!("got no answer ({e})")),
+            // a publish the SDK gave up on while the link is down: the same words (the link watch ends the call)
+            Ok(Err(e)) if self.room.connection_state() != livekit::ConnectionState::Connected => {
+                eprintln!("[call] the {what} publish failed while the call isn't connected: {e}");
+                Err(anyhow::anyhow!(crate::call_health::NOT_CONNECTED_ERR))
+            }
+            Ok(Err(e)) => Err(e.into()),
+            Err(_) => lost(format!("did not finish in {} s", limit.as_secs())),
+        }
     }
 
     /// Install the capture-died hook for screen shares (see `share_dead_hook`).
@@ -7465,6 +7581,14 @@ impl CallSession {
         #[cfg(not(windows))]
         if crate::capture::source_rate_cap_on() {
             eprintln!("[call] screen-share: asking the compositor for at most {fps} fps (max-framerate)");
+        }
+        // whether the caller's tw x th came from a known source size (a GPU learning run below may record one later)
+        #[cfg(not(windows))]
+        let size_known_at_entry = screencast.size().is_some();
+        // 12.1.12: KWin is asked for a spare stream buffer (capture.rs share_min_buffers)
+        #[cfg(not(windows))]
+        if crate::capture::share_min_buffers() > 0 {
+            eprintln!("[call] screen-share: asking the compositor for at least {} stream buffers", crate::capture::share_min_buffers());
         }
         // GPU scale-path policy:
         //   Linux   — CUDA convert/scale when the portal reported a size (unchanged).
@@ -7614,8 +7738,51 @@ impl CallSession {
             eprintln!("[call] no GPU capture candidate negotiated — falling back to CPU");
         }
 
-        // CPU path: videoconvert + lanczos videoscale (threaded since 10.8), with the one-shot re-pin probe.
-        let pipeline = crate::lk_publish::build_capture_pipeline(screencast, box_w, box_h, fps)?;
+        // CPU path: convert + lanczos scale on the CPU (threaded since 10.8).
+        // 12.1.12, Linux: PRE-SIZED like the GPU paths, never the first-frame pipeline as the share. Its mid-stream
+        // re-pin makes pipewiresrc reconnect its stream and then hold every compositor buffer until the next frame,
+        // which starves a compositor with few stream buffers (lk_publish.rs cpu_presized_desc: a 60 fps share at 30 or
+        // 25 fps against KWin 6.8, on every share of the CPU path). Size known → the pre-sized pipeline at once; not
+        // known → a size-learning run reads it off the first frame, is stopped, and the pre-sized pipeline starts
+        // (the same cast, so the same portal session, as the GPU path has done since 12.1.2). Only when that run
+        // gets no frame (a still screen on a compositor that sends none at a stream's start) does the first-frame
+        // pipeline become the share, as before.
+        #[cfg(not(windows))]
+        let presized: Option<(u32, u32)> = if size_known_at_entry {
+            Some((tw, th))
+        } else if let Some((rw, rh)) = screencast.size() {
+            // recorded by a GPU learning run above, even one that failed after its first frame's caps: fit the REAL
+            // size (the caller's tw x th were a guess; equal to this when that run succeeded)
+            Some(crate::lk_publish::fit_even(rw, rh, box_w, box_h))
+        } else {
+            match Self::learn_share_size_cpu(screencast, fps, lease) {
+                Ok((rw, rh)) => {
+                    let (w, h) = crate::lk_publish::fit_even(rw, rh, box_w, box_h);
+                    eprintln!("[call] screen-share: learned the source size {rw}x{rh} -> {w}x{h}; starting the pre-sized CPU pipeline");
+                    Some((w, h))
+                }
+                // the run may have recorded the size before it failed (an error queued behind its first frame): still
+                // pre-sized then; the first-frame pipeline only when the size is really unknown
+                Err(why) => match screencast.size() {
+                    Some((rw, rh)) => {
+                        let (w, h) = crate::lk_publish::fit_even(rw, rh, box_w, box_h);
+                        eprintln!("[call] CPU capture, size from the first frame: {why} — but it recorded {rw}x{rh} -> {w}x{h}; starting the pre-sized CPU pipeline");
+                        Some((w, h))
+                    }
+                    None => {
+                        eprintln!("[call] CPU capture, size from the first frame: {why} — starting the first-frame pipeline as the share");
+                        None
+                    }
+                },
+            }
+        };
+        #[cfg(windows)]
+        let presized: Option<(u32, u32)> = None;
+        let pipeline = match presized {
+            #[cfg(not(windows))]
+            Some((w, h)) => crate::lk_publish::build_capture_pipeline_presized(screencast, w, h, fps)?,
+            _ => crate::lk_publish::build_capture_pipeline(screencast, box_w, box_h, fps)?,
+        };
         let appsink = pipeline
             .by_name("sink")
             .context("screenshare appsink missing")?
@@ -7625,6 +7792,9 @@ impl CallSession {
         if !leased_play(lease, &pipeline, 8000, "screen capture start") {
             set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "screen capture");
             anyhow::bail!("screenshare pipeline start failed or revoked (the capture is not running)");
+        }
+        if let Some((w, h)) = presized {
+            eprintln!("[call] screen-share: CPU capture pre-sized {w}x{h} (nothing re-pinned mid-stream)");
         }
         eprintln!("[call] screen-share capture: CPU scale path");
         Ok(pipeline)
@@ -7660,6 +7830,40 @@ impl CallSession {
             return Err("did not start (or revoked)".into());
         }
         if let Err(why) = wait_first_frame(&pipeline, &flowing, 4000) {
+            stop(&pipeline);
+            return Err(why);
+        }
+        stop(&pipeline);
+        let learned = *screencast.size_memo().lock().unwrap_or_else(|e| e.into_inner());
+        learned.filter(|&(w, h)| w > 0 && h > 0).ok_or_else(|| "the first frame carried no size".to_string())
+    }
+
+    /// 12.1.12 (Linux): learn a share's real source size for the CPU path with the size-learning run
+    /// ([`crate::lk_publish::build_size_probe_pipeline`]: the share's source head into a sink that reads the first
+    /// frame's caps; no conversion, nothing re-pinned), then stop it (bounded, like every capture stop here: 1 ms in
+    /// the lab; should a stop ever outlast its 4 s, the next pipeline starts anyway, as on a re-publish). The size is
+    /// in the cast's memo afterwards, and the caller starts the pre-sized pipeline. Err = the reason; stop requested.
+    #[cfg(not(windows))]
+    fn learn_share_size_cpu(
+        screencast: &ScreenCast,
+        fps: u32,
+        lease: &crate::capture_lease::Lease,
+    ) -> std::result::Result<(u32, u32), String> {
+        let pipeline = crate::lk_publish::build_size_probe_pipeline(screencast, fps).map_err(|e| format!("unavailable ({e})"))?;
+        let Some(sink) = pipeline.by_name("sink") else { return Err("no sink".into()) };
+        let flowing = first_frame_flag(&sink);
+        let stop = |p: &gst::Pipeline| {
+            if !set_state_bounded(p.upcast_ref(), gst::State::Null, 4000, "screen capture size probe stop") {
+                eprintln!("[call] screen-share: the size probe's teardown is still running; starting the next pipeline anyway (as a re-publish does)");
+            }
+        };
+        if !leased_play(lease, &pipeline, 6000, "screen capture size probe") {
+            stop(&pipeline);
+            return Err("did not start (or revoked)".into());
+        }
+        // 2 s: a compositor that sends a frame when a stream starts does so within a few frames (40 ms in the lab);
+        // one that sends none until its screen changes (the wlroots portal) costs this wait at every such start
+        if let Err(why) = wait_first_frame(&pipeline, &flowing, 2000) {
             stop(&pipeline);
             return Err(why);
         }
@@ -7770,9 +7974,7 @@ impl CallSession {
         std::env::set_var("LK_BWE_START_KBPS", seed_kbps.to_string());
         eprintln!("[call] seeding BWE at {seed_kbps} kbps for the share publish");
         let publish_result = self
-            .room
-            .local_participant()
-            .publish_track(
+            .publish_bounded(
                 LocalTrack::Video(track),
                 TrackPublishOptions {
                     video_codec: codec,
@@ -7787,6 +7989,7 @@ impl CallSession {
                     simulcast: false, // single sharp layer for screen text
                     ..Default::default()
                 },
+                "screen-share",
             )
             .await;
         // Clear the seed on a 3s DELAY: the engine debounces publisher renegotiation,
@@ -7798,7 +8001,14 @@ impl CallSession {
             tokio::time::sleep(std::time::Duration::from_secs(3)).await;
             std::env::remove_var("LK_BWE_START_KBPS");
         });
-        let publication = publish_result.context("publish screenshare failed")?;
+        // 12.1.13: a failed publish ends the portal session too (the OS stopped showing a share that never went out)
+        let publication = match publish_result {
+            Ok(p) => p,
+            Err(e) => {
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(3), screencast.close()).await;
+                return Err(e.context("publish screenshare failed"));
+            }
+        };
 
         let pipeline = match Self::start_share_capture(&screencast, q, tw, th, fps, source, &lease) {
             Ok(p) => {
@@ -7997,10 +8207,8 @@ impl CallSession {
         let track =
             LocalVideoTrack::create_video_track("screen", RtcVideoSource::Native(source.clone()));
         let stats_track = track.clone();
-        let publication = self
-            .room
-            .local_participant()
-            .publish_track(
+        let publication = match self
+            .publish_bounded(
                 LocalTrack::Video(track),
                 TrackPublishOptions {
                     video_codec: codec,
@@ -8013,9 +8221,17 @@ impl CallSession {
                     simulcast: false,
                     ..Default::default()
                 },
+                "screen-share restart",
             )
             .await
-            .context("re-publish screenshare failed")?;
+        {
+            Ok(p) => p,
+            Err(e) => {
+                // 12.1.13: the share is over; so is its portal session (bounded: the call's mutex is held)
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(3), screencast.close()).await;
+                return Err(e.context("re-publish screenshare failed"));
+            }
+        };
         if !lease.valid() {
             eprintln!("[call] screen-share restart: revoked while re-publishing — taken back, not restarted");
             self.unpublish_orphaned_track(publication.sid(), "screen-share restart (revoked)").await;
@@ -8142,9 +8358,7 @@ impl CallSession {
         // Publish FIRST (negotiates from config, not frames), THEN start capture —
         // same ordering the screen-share publish proved necessary.
         let publication = self
-            .room
-            .local_participant()
-            .publish_track(
+            .publish_bounded(
                 LocalTrack::Video(track),
                 TrackPublishOptions {
                     video_codec: codec,
@@ -8160,6 +8374,7 @@ impl CallSession {
                         .then(|| camera_simulcast_layers(cam_w, cam_h)),
                     ..Default::default()
                 },
+                "camera",
             )
             .await
             .context("publish camera failed")?;
@@ -8796,6 +9011,7 @@ impl CallSession {
         // Layer 2 (Astra r3 #3): the session ends for its leases FIRST — capture work still starting for it can no
         // longer register (an aux capture that finishes after the drain below is NULLed instead of stored)
         crate::capture_lease::end_session(self.keyring_gen);
+        self.link_stop.store(true, Ordering::Relaxed); // 12.1.13: the link watchdog ends with the session
         // ── Phase 1: synchronous local teardown (no awaits) ──────────────────────────
         // 10.5: the "can they hear me?" analyzer and its bookkeeping go first (the UI shows nothing
         // outside a call), and a mic we no longer want must not be re-published by anyone.

@@ -57,6 +57,65 @@ pub(crate) type EngineResult<T> = Result<T, EngineError>;
 pub const RECONNECT_ATTEMPTS: u32 = 10;
 pub const RECONNECT_INTERVAL: Duration = Duration::from_secs(5);
 
+// TINHAT PATCH (reconnect-wedge, 12.1.13): no step of a reconnect may wait forever. A resume over a
+// black-holed link (Wi-Fi freeze, SFU unreachable) used to sit in its first attempt for 14+ minutes:
+// closing the old signal websocket waits for its read task, which never ends until TCP gives up. The
+// reconnect holds `reconnecting_lock` the whole time and every add_track / create_sender waits on that
+// lock, so a screen share pressed meanwhile hung too, with no error. Each attempt is now bounded; a
+// timed-out resume escalates to a full reconnect like any failed resume, a timed-out restart counts as a
+// failed attempt. The bounds sit above the SDK's own inner timeouts (signal connect 5 s + reconnect
+// response 5 s + ICE 15 s), so a slow but live link still resumes.
+pub const RESUME_ATTEMPT_TIMEOUT: Duration = Duration::from_secs(30);
+pub const RESTART_ATTEMPT_TIMEOUT: Duration = Duration::from_secs(35);
+/// Closing a session (signal + PCs) on the way to a restart or on close(): bounded, the old link may be dead. Above the
+/// session's own three CLOSE_STEP_TIMEOUT steps, so its transports are always closed before this cuts in.
+pub const SESSION_CLOSE_TIMEOUT: Duration = Duration::from_secs(8);
+/// The room task's answer to Resuming / Restarting / SignalResumed / SignalRestarted / Resumed / Restarted.
+pub const ROOM_HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// TINHAT PATCH (reconnect-wedge, Astra r1 P1): a session a restart attempt made that never became the engine's. Dropped
+/// uncommitted (the attempt failed, timed out or was cancelled by close()) it is closed, bounded, so it can't stay on the
+/// SFU under our identity (a ghost the next join would collide with: DUPLICATE_IDENTITY). Upstream leaked it on every
+/// failed wait_pc_connection too.
+struct ProvisionalSession(Option<RtcSession>);
+
+impl ProvisionalSession {
+    fn get(&self) -> &RtcSession {
+        self.0.as_ref().expect("provisional session present until committed")
+    }
+
+    fn commit(mut self) -> RtcSession {
+        self.0.take().expect("provisional session committed once")
+    }
+}
+
+impl Drop for ProvisionalSession {
+    fn drop(&mut self) {
+        if let Some(session) = self.0.take() {
+            log::warn!("closing the session of a restart attempt that did not complete");
+            livekit_runtime::spawn(async move {
+                bounded(
+                    SESSION_CLOSE_TIMEOUT,
+                    "closing an unused restart session",
+                    session.close(DisconnectReason::ClientInitiated),
+                )
+                .await;
+            });
+        }
+    }
+}
+
+/// TINHAT PATCH (reconnect-wedge): await `fut` for at most `limit`; None = it timed out (logged with `what`).
+async fn bounded<F: std::future::Future>(limit: Duration, what: &str, fut: F) -> Option<F::Output> {
+    match tokio::time::timeout(limit, fut).await {
+        Ok(v) => Some(v),
+        Err(_) => {
+            log::error!("{} took longer than {:?}; going on without it", what, limit);
+            None
+        }
+    }
+}
+
 /// Settling delay before checking PeerConnection state on the resume path.
 ///
 /// Lets a freshly issued ICE-restart offer/answer round-trip take effect when the
@@ -687,11 +746,20 @@ impl EngineInner {
             let engine_task = running_handle.engine_task.take();
             (session, engine_task)
         };
+        // TINHAT PATCH (reconnect-wedge): upstream never fired close_notifier, so closing the room left a
+        // running reconnect alive: a wedged resume could come back later with the same identity and the SFU
+        // closed the NEWER session (the rejoined call) with DUPLICATE_IDENTITY. Cancel it now. close() is
+        // never called from inside reconnect_task itself (its give-up reasons go back to the caller).
+        self.close_notifier.notify_waiters();
 
         if let Some((engine_task, close_tx)) = engine_task {
-            session.close(reason).await;
+            bounded(SESSION_CLOSE_TIMEOUT, "closing the session", session.close(reason)).await;
             let _ = close_tx.send(());
-            let _ = engine_task.await;
+            bounded(SESSION_CLOSE_TIMEOUT, "stopping the engine task", engine_task).await;
+        } else {
+            // TINHAT PATCH (Astra r2): a restart took the engine task and was closing this session when we cancelled it:
+            // close it here (a second close of a closed session only closes what is still open)
+            bounded(SESSION_CLOSE_TIMEOUT, "closing the session", session.close(reason)).await;
         }
 
         // Always emit Disconnected, even when the engine_task was already taken by a
@@ -754,13 +822,21 @@ impl EngineInner {
         livekit_runtime::spawn({
             let inner = self.clone();
             async move {
-                // Hold the reconnection lock for the whole reconnection time
-                let _r_lock = inner.reconnecting_lock.write().await;
-                // The close function can send a signal to cancel the reconnection
-
+                // The close function can send a signal to cancel the reconnection.
+                // TINHAT PATCH (reconnect-wedge): listen BEFORE waiting for the lock (Notified receives
+                // notify_waiters from its creation on), so a close() while we wait for it cancels us too.
                 let close_notifier = inner.close_notifier.clone();
                 let close_receiver = close_notifier.notified();
                 tokio::pin!(close_receiver);
+
+                // Hold the reconnection lock for the whole reconnection time
+                let _r_lock = tokio::select! {
+                    _ = &mut close_receiver => {
+                        log::debug!("reconnection cancelled before it started");
+                        return;
+                    }
+                    l = inner.reconnecting_lock.write() => l,
+                };
 
                 tokio::select! {
                     _ = &mut close_receiver => {
@@ -768,9 +844,9 @@ impl EngineInner {
                         return;
                     }
                     res = inner.reconnect_task() => {
-                        if res.is_err() {
+                        if let Err(reason) = res {
                             log::error!("failed to reconnect to the livekit room");
-                            inner.close(DisconnectReason::UnknownReason).await;
+                            inner.close(reason).await;
                         } else {
                             log::info!("RtcEngine successfully recovered")
                         }
@@ -788,7 +864,10 @@ impl EngineInner {
     /// Runned every time the PeerConnection or the SignalClient is closed
     /// We first try to resume the connection, if it fails, we start a full reconnect.
     /// NOTE: The reconnect_task must be canncellation safe
-    async fn reconnect_task(self: &Arc<Self>) -> EngineResult<()> {
+    /// TINHAT PATCH (reconnect-wedge): Err carries the reason the caller closes the engine with (the
+    /// server's for a Leave, UnknownReason otherwise); reconnect_task never calls close() itself, so the
+    /// close notification can't cancel it halfway through its own close.
+    async fn reconnect_task(self: &Arc<Self>) -> Result<(), DisconnectReason> {
         // Get the latest connection info from the signal_client (including the refreshed token
         // because the initial join token may have expired)
         let (url, token, e2ee_manager) = {
@@ -809,40 +888,37 @@ impl EngineInner {
             };
 
             if is_closed {
-                return Err(EngineError::Connection("attempt canncelled, engine is closed".into()));
+                log::warn!("reconnect attempt cancelled, engine is closed");
+                return Err(DisconnectReason::UnknownReason);
             }
 
             if full_reconnect {
                 if i == 1 {
                     let (tx, rx) = oneshot::channel();
                     let _ = self.engine_tx.send(EngineEvent::Restarting(tx));
-                    let _ = rx.await;
+                    bounded(ROOM_HANDSHAKE_TIMEOUT, "the room's Restarting", rx).await;
                 }
 
                 log::error!("restarting connection... attempt: {}", i);
-                match self
-                    .try_restart_connection(
-                        &url,
-                        &token,
-                        self.options.clone(),
-                        e2ee_manager.clone(),
-                    )
-                    .await
-                {
+                let attempt = bounded(
+                    RESTART_ATTEMPT_TIMEOUT,
+                    "a restart attempt",
+                    self.try_restart_connection(&url, &token, self.options.clone(), e2ee_manager.clone()),
+                )
+                .await
+                .unwrap_or_else(|| Err(EngineError::Connection("restart attempt timed out".into())));
+                match attempt {
                     Ok(()) => {
                         let (tx, rx) = oneshot::channel();
                         let _ = self.engine_tx.send(EngineEvent::Restarted(tx));
-                        let _ = rx.await;
+                        bounded(ROOM_HANDSHAKE_TIMEOUT, "the room's Restarted", rx).await;
                         return Ok(());
                     }
                     Err(err) => {
                         if let Some(reason) = leave_disconnect_reason(&err) {
                             log::warn!("server requested disconnect during restart: {:?}", reason);
                             self.running_handle.write().can_reconnect = false;
-                            self.close(reason).await;
-                            return Err(EngineError::Connection(
-                                "server requested disconnect during restart".into(),
-                            ));
+                            return Err(reason);
                         }
                         log::error!("restarting connection failed: {}", err);
                     }
@@ -851,25 +927,25 @@ impl EngineInner {
                 if i == 1 {
                     let (tx, rx) = oneshot::channel();
                     let _ = self.engine_tx.send(EngineEvent::Resuming(tx));
-                    let _ = rx.await;
+                    bounded(ROOM_HANDSHAKE_TIMEOUT, "the room's Resuming", rx).await;
                 }
 
                 log::error!("resuming connection... attempt: {}", i);
-                match self.try_resume_connection().await {
+                let attempt = bounded(RESUME_ATTEMPT_TIMEOUT, "a resume attempt", self.try_resume_connection())
+                    .await
+                    .unwrap_or_else(|| Err(EngineError::Connection("resume attempt timed out".into())));
+                match attempt {
                     Ok(()) => {
                         let (tx, rx) = oneshot::channel();
                         let _ = self.engine_tx.send(EngineEvent::Resumed(tx));
-                        let _ = rx.await;
+                        bounded(ROOM_HANDSHAKE_TIMEOUT, "the room's Resumed", rx).await;
                         return Ok(());
                     }
                     Err(err) => {
                         if let Some(reason) = leave_disconnect_reason(&err) {
                             log::warn!("server requested disconnect during resume: {:?}", reason);
                             self.running_handle.write().can_reconnect = false;
-                            self.close(reason).await;
-                            return Err(EngineError::Connection(
-                                "server requested disconnect during resume".into(),
-                            ));
+                            return Err(reason);
                         }
                         log::error!("resuming connection failed: {}", err);
                         let mut running_handle = self.running_handle.write();
@@ -881,9 +957,8 @@ impl EngineInner {
             self.reconnecting_interval.lock().await.tick().await;
         }
 
-        Err(EngineError::Connection(
-            format!("failed to reconnect after {}", RECONNECT_ATTEMPTS).into(),
-        ))
+        log::error!("failed to reconnect after {} attempts", RECONNECT_ATTEMPTS);
+        Err(DisconnectReason::UnknownReason)
     }
 
     /// Try to recover the connection by doing a full reconnect.
@@ -905,21 +980,26 @@ impl EngineInner {
         };
 
         if let Some((engine_task, close_tx)) = engine_task {
-            session.close(DisconnectReason::ClientInitiated).await;
+            // TINHAT PATCH (reconnect-wedge): the old session's link may be dead; never wait on it forever
+            bounded(SESSION_CLOSE_TIMEOUT, "closing the old session", session.close(DisconnectReason::ClientInitiated)).await;
             let _ = close_tx.send(());
-            let _ = engine_task.await;
+            bounded(SESSION_CLOSE_TIMEOUT, "stopping the old engine task", engine_task).await;
         }
 
         let (new_session, join_response, session_events) =
             RtcSession::connect(url, token, options, e2ee_manager).await?;
+        let new_session = ProvisionalSession(Some(new_session));
 
         // On SignalRestarted, the room will try to unpublish the local tracks
         // NOTE: Doing operations that use rtc_session will not use the new one
         let (tx, rx) = oneshot::channel();
         let _ = self.engine_tx.send(EngineEvent::SignalRestarted { join_response, tx });
-        let _ = rx.await;
+        // TINHAT PATCH (Astra r1 P2): no answer = a failed attempt, never "the room took it"
+        if !matches!(bounded(ROOM_HANDSHAKE_TIMEOUT, "the room's SignalRestarted", rx).await, Some(Ok(()))) {
+            return Err(EngineError::Connection("the room did not take the restarted signal".into()));
+        }
 
-        new_session.wait_pc_connection().await?;
+        new_session.get().wait_pc_connection().await?;
 
         // Only replace the current session if the new one succeed
         // This is important so we can still use the old session if the new one failed
@@ -927,7 +1007,7 @@ impl EngineInner {
         // This has the drawback to not being able to use the new session on the SignalRestarted
         // event.
         let mut handle = self.running_handle.write();
-        handle.session = Arc::new(new_session);
+        handle.session = Arc::new(new_session.commit());
 
         let (close_tx, close_rx) = oneshot::channel();
         let task = livekit_runtime::spawn(self.clone().engine_task(session_events, close_rx));
@@ -947,7 +1027,10 @@ impl EngineInner {
         // With SignalResumed, the room will send a SyncState message to the server.
         // SyncState is a pass-through signal so it goes out immediately even though
         // the SignalClient is still in `reconnecting=true` state.
-        let _ = rx.await;
+        // TINHAT PATCH (Astra r1 P2): no answer = no SyncState sent; the publisher offer must not go before it
+        if !matches!(bounded(ROOM_HANDSHAKE_TIMEOUT, "the room's SignalResumed", rx).await, Some(Ok(()))) {
+            return Err(EngineError::Connection("the room did not send its sync state".into()));
+        }
 
         // The publisher offer must be sent AFTER the SyncState message
         session.restart_publisher().await?;

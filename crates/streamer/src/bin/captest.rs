@@ -137,7 +137,8 @@ fn main() -> Result<()> {
         pinned_wh.0, pinned_wh.1
     );
 
-    let head = format!("pipewiresrc {fd_part}path={node} do-timestamp=true keepalive-time=1000");
+    // the app's head (capture.rs source_head): no source keepalive, no buffer count
+    let head = format!("pipewiresrc {fd_part}path={node} do-timestamp=true");
     let desc = match variant.as_str() {
         // App verbatim: videorate drop-only + (ANY) caps + the one-shot re-pin probe.
         "appexact" => format!("{head} ! videorate drop-only=true ! video/x-raw(ANY),framerate={fps}/1 ! {tail_probe}"),

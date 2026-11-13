@@ -448,6 +448,16 @@ pub struct Room {
     inner: Arc<RoomSession>,
 }
 
+/// TINHAT PATCH (reconnect-wedge): see [`Room::state_reader`].
+#[derive(Clone)]
+pub struct RoomStateReader(std::sync::Weak<RoomSession>);
+
+impl RoomStateReader {
+    pub fn get(&self) -> Option<ConnectionState> {
+        self.0.upgrade().map(|inner| inner.info.read().state)
+    }
+}
+
 impl Debug for Room {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.debug_struct("Room")
@@ -873,6 +883,12 @@ impl Room {
 
     pub fn connection_state(&self) -> ConnectionState {
         self.inner.info.read().state
+    }
+
+    /// TINHAT PATCH (reconnect-wedge): reads the connection state from a task that must not keep the room
+    /// alive (the app's link watchdog). `get()` = None once the room is gone.
+    pub fn state_reader(&self) -> RoomStateReader {
+        RoomStateReader(Arc::downgrade(&self.inner))
     }
 
     /// Returns whether the room is currently using single peer connection signaling.

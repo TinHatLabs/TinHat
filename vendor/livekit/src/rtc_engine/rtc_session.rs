@@ -64,6 +64,9 @@ use crate::{
 };
 
 pub const ICE_CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
+/// TINHAT PATCH (reconnect-wedge): each step of a session close (its tasks, the Leave, the websocket close) waits at
+/// most this long; the engine's SESSION_CLOSE_TIMEOUT sits above all three.
+pub const CLOSE_STEP_TIMEOUT: Duration = Duration::from_secs(2);
 pub const TRACK_PUBLISH_TIMEOUT: Duration = Duration::from_secs(10);
 pub const LOSSY_DC_LABEL: &str = "_lossy";
 pub const RELIABLE_DC_LABEL: &str = "_reliable";
@@ -799,10 +802,17 @@ impl RtcSession {
         let handle = self.handle.lock().take();
         if let Some(handle) = handle {
             let _ = handle.close_tx.send(true);
-            let _ = handle.rtc_task.await;
-            let _ = handle.signal_task.await;
-            let _ = handle.dc_task.await;
-            let _ = handle.dt_sender_task.await;
+            // TINHAT PATCH (reconnect-wedge, Astra r2): bounded, so the transports below are always closed (a task
+            // stuck on a dead link used to keep the PeerConnections open; a timed-out task is left to end by itself)
+            let tasks = async {
+                let _ = handle.rtc_task.await;
+                let _ = handle.signal_task.await;
+                let _ = handle.dc_task.await;
+                let _ = handle.dt_sender_task.await;
+            };
+            if tokio::time::timeout(CLOSE_STEP_TIMEOUT, tasks).await.is_err() {
+                log::warn!("session tasks did not stop within {:?}; closing the transports anyway", CLOSE_STEP_TIMEOUT);
+            }
         }
 
         // Close the PeerConnections after the task
@@ -1950,18 +1960,23 @@ impl SessionInner {
         self.closed.store(true, Ordering::Release);
         self.pc_state_notify.notify_waiters();
 
-        self.signal_client
-            .send(proto::signal_request::Message::Leave(proto::LeaveRequest {
-                action: proto::leave_request::Action::Disconnect.into(),
-                reason: reason as i32,
-                ..Default::default()
-            }))
-            .await;
-
-        self.signal_client.close().await;
+        // TINHAT PATCH (reconnect-wedge, Astra r2): on a dead link the Leave and the websocket close never finish (the
+        // close waits for a read task that only ends when TCP gives up). Both are bounded, and the PeerConnections
+        // close in between, so media always stops even when the signal side hangs.
+        let leave = self.signal_client.send(proto::signal_request::Message::Leave(proto::LeaveRequest {
+            action: proto::leave_request::Action::Disconnect.into(),
+            reason: reason as i32,
+            ..Default::default()
+        }));
+        if tokio::time::timeout(CLOSE_STEP_TIMEOUT, leave).await.is_err() {
+            log::warn!("the Leave did not go out within {:?}", CLOSE_STEP_TIMEOUT);
+        }
         self.publisher_pc.close();
         if let Some(ref sub_pc) = self.subscriber_pc {
             sub_pc.close();
+        }
+        if tokio::time::timeout(CLOSE_STEP_TIMEOUT, self.signal_client.close()).await.is_err() {
+            log::warn!("the signal connection did not close within {:?}; left to end by itself", CLOSE_STEP_TIMEOUT);
         }
     }
 

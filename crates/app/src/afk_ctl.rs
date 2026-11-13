@@ -70,6 +70,12 @@ static RELATIONS_403_UNTIL: std::sync::Mutex<Option<std::time::Instant>> =
 /// How long a 403 suppresses the reaction transport before one probe request is allowed.
 const RELATIONS_REPROBE: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 
+/// Pacing of the poll's reaction reads on a server that DOES serve them: without it, every
+/// member event of the call cost one request per 3 s poll for the whole call, all answering
+/// an empty chunk (the 403 latch above never fires on a 200).
+static RELATIONS_PACE: std::sync::LazyLock<std::sync::Mutex<crate::afk_pace::RelationsPace>> =
+    std::sync::LazyLock::new(Default::default);
+
 /// May we spend a relations request right now?
 fn relations_usable() -> bool {
     match *RELATIONS_403_UNTIL.lock().unwrap() {
@@ -324,11 +330,21 @@ async fn own_member_event_id(room: &Room) -> Option<OwnedEventId> {
 /// type Annotation and looks for the 💤 key from that same sender. Tolerant: returns
 /// false on any error so a HS that rejects state-annotations just yields "not away here".
 async fn away_via_reaction(room: &Room, member_eid: &OwnedEventId, sender: &str) -> bool {
-    // This is the ONLY network request in the 3s AFK poll (call_participants,
-    // away_via_state and member_event_ids are all local state-store reads), so the latch
-    // here is what turns 40 wasted requests/min into two per re-probe window.
+    read_away_via_reaction(room, member_eid, sender).await.unwrap_or(false)
+}
+
+/// The read behind `away_via_reaction`; `None` = the request failed, so nothing was learned.
+async fn read_away_via_reaction(
+    room: &Room,
+    member_eid: &OwnedEventId,
+    sender: &str,
+) -> Option<bool> {
+    // Through `away_via_reaction_paced`, this is the ONLY network request in the 3s AFK poll
+    // (call_participants, away_via_state and member_event_ids are all local state-store
+    // reads), so the latch here is what turns 40 wasted requests/min into two per re-probe
+    // window.
     if !relations_usable() {
-        return false;
+        return None;
     }
     let opts = RelationsOptions {
         from: None,
@@ -343,7 +359,7 @@ async fn away_via_reaction(room: &Room, member_eid: &OwnedEventId, sender: &str)
             if is_forbidden(&e) {
                 note_relations_forbidden();
             }
-            return false;
+            return None;
         }
     };
     for ev in &relations.chunk {
@@ -361,10 +377,25 @@ async fn away_via_reaction(room: &Room, member_eid: &OwnedEventId, sender: &str)
             .and_then(|r| r.get("key"))
             .and_then(|k| k.as_str());
         if key == Some(ZZZ) {
-            return true;
+            return Some(true);
         }
     }
-    false
+    Some(false)
+}
+
+/// `away_via_reaction` for the 3 s poll: spends a request only when the pacing allows it,
+/// otherwise the event's last answer stands.
+async fn away_via_reaction_paced(room: &Room, member_eid: &OwnedEventId, sender: &str) -> bool {
+    if !relations_usable() {
+        return false;
+    }
+    let pace = RELATIONS_PACE.lock().unwrap().decide(member_eid.as_str(), std::time::Instant::now());
+    let ticket = match pace {
+        crate::afk_pace::Pace::Known(away) => return away,
+        crate::afk_pace::Pace::Read(ticket) => ticket,
+    };
+    let outcome = read_away_via_reaction(room, member_eid, sender).await;
+    RELATIONS_PACE.lock().unwrap().settle(member_eid.as_str(), ticket, outcome, std::time::Instant::now())
 }
 
 /// Away set for the FALLBACK path: userIds whose `dev.tinhat.afk` state has away=true.
@@ -388,6 +419,10 @@ async fn load_away(room_id: &str) -> (String, bool) {
     let me = room.own_user_id().to_string();
     let state_away = away_via_state(&room).await;
     let members = member_event_ids(&room).await;
+    RELATIONS_PACE
+        .lock()
+        .unwrap()
+        .retain(&members.iter().map(|(eid, _)| eid.as_str()).collect());
 
     let mut away: Vec<String> = Vec::new();
     for uid in &in_call {
@@ -398,7 +433,7 @@ async fn load_away(room_id: &str) -> (String, bool) {
             // (last-published) event, so reading only the FIRST match missed the 💤
             // whenever an older device's event sorted first, and peers never saw AFK.
             for (eid, _) in members.iter().filter(|(_, s)| s == uid) {
-                if away_via_reaction(&room, eid, uid).await {
+                if away_via_reaction_paced(&room, eid, uid).await {
                     is_away = true;
                     break;
                 }
@@ -452,6 +487,9 @@ async fn set_own_afk(room: &Room, on: bool) -> matrix_sdk::Result<()> {
             } else if let Some(rid) = own_reaction_id(room, &eid).await {
                 let _ = room.redact(&rid, None, None).await;
             }
+            // Only now has our own 💤 changed: the next poll must look, and a read that
+            // started before the change no longer counts.
+            RELATIONS_PACE.lock().unwrap().forget(eid.as_str());
         }
     }
     state_result
