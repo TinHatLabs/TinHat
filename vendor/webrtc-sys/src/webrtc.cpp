@@ -152,7 +152,13 @@ std::shared_ptr<VideoTrack> RtcRuntime::get_or_create_video_track(
 LogSink::LogSink(
     rust::Fn<void(rust::String message, LoggingSeverity severity)> fnc)
     : fnc_(fnc) {
-  webrtc::LogMessage::AddLogToStream(this, webrtc::LoggingSeverity::LS_VERBOSE);
+  // PATCH (Tin Hat): WARNING and up only. libwebrtc's frame-crypto key derivation logs the secret and the derived
+  // key at LS_INFO; with no stream below WARNING those lines are never formatted. The Rust side
+  // (libwebrtc native_log_line_forwarded) filters again.
+  // libwebrtc's own stderr/debug output (LS_INFO by default in a debug libwebrtc build, LS_NONE in release) would
+  // bypass this sink and land in the session log: off.
+  webrtc::LogMessage::LogToDebug(webrtc::LoggingSeverity::LS_NONE);
+  webrtc::LogMessage::AddLogToStream(this, webrtc::LoggingSeverity::LS_WARNING);
 }
 
 LogSink::~LogSink() {

@@ -195,6 +195,9 @@ Item {
                 focusPolicy: Qt.TabFocus
                 background: Rectangle { radius: 6; color: (newBtn.hovered || newBtn.visualFocus) ? Th.widgetUpNextTbdBgHover : "transparent" }
                 contentItem: WidgetText { id: newTxt; role: "meta"; semibold: true; text: "+ New event"; color: Th.widgetUpNextTbdFg; horizontalAlignment: Text.AlignHCenter }
+                // a11y pass: the label lives in contentItem, so the button had no name for a screen reader
+                Accessible.role: Accessible.Button
+                Accessible.name: newTxt.text   // the web button reads its own text
                 onClicked: if (w.app && !w.preview) w.app.openCalendarNew()
             }
         }

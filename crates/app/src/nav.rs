@@ -11,8 +11,8 @@
 //!   • `roomsJson`   — the rooms inside the active space, recency-sorted, a shape
 //!     identical to `LoginController.roomsJson` BUT a **distinct model** so the
 //!     dock and the legacy room-list pillar never fight over one list.
-//!   • `globalBadge` — total unread-notification count across all rooms (badge text;
-//!     "" when zero).
+//!   • `globalBadge` — total unread-notification count across all rooms plus 1 per pending DM
+//!     invite (badge text; "" when zero; app_badge::global_badge = the web's globalBadge).
 //!
 //! Meta-space membership mirrors the fork / element-web `MetaSpace`:
 //!   home → every joined non-space room · favourites → `is_favourite()` ·
@@ -201,6 +201,7 @@ impl qobject::NavController {
         let active = self.active_space().to_string();
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
+            let generation = crate::session::generation(); // A5.10: a snapshot of an ended session publishes nothing
             let Some(client) = crate::session::client() else {
                 return;
             };
@@ -210,6 +211,8 @@ impl qobject::NavController {
                 // spaces rail + global badge are independent of the active space — always safe.
                 o.as_mut().set_spaces_json(QString::from(&snap.spaces_json));
                 o.as_mut().set_global_badge(QString::from(&snap.global_badge));
+                // A5.10: the taskbar / dock count (rooms waiting on you; the web's setAppBadge number)
+                crate::app_badge::publish_for(generation, snap.app_badge);
                 // 10.6 (REACH §1.4): the DM strip is built from ALL rooms, never the active space.
                 if o.dm_strip_json().to_string() != snap.dm_strip_json {
                     o.as_mut().set_dm_strip_json(QString::from(&snap.dm_strip_json));
@@ -269,11 +272,15 @@ impl qobject::NavController {
     pub fn refresh_badge(self: Pin<&mut Self>) {
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
+            let generation = crate::session::generation();
             let Some(client) = crate::session::client() else {
                 return;
             };
-            let badge = global_badge_text(&client).await;
-            let _ = qt.queue(move |mut o| o.as_mut().set_global_badge(QString::from(&badge)));
+            let (badge, app_badge) = global_badges(&client).await;
+            let _ = qt.queue(move |mut o| {
+                o.as_mut().set_global_badge(QString::from(&badge));
+                crate::app_badge::publish_for(generation, app_badge);
+            });
         });
     }
 
@@ -304,6 +311,8 @@ struct NavSnapshot {
     rooms_json: String,
     active_label: String,
     global_badge: String,
+    /// REACH A5.10: the taskbar / dock count (app_badge.rs).
+    app_badge: u32,
     /// 10.6 (REACH §1): the rail's DM strip, `dm_strip_json()` of every joined + invited room.
     dm_strip_json: String,
     /// 10.1 (TH-NAV-02): room id → owning space id.
@@ -449,10 +458,11 @@ async fn nav_status_values(room: &Room) -> Vec<Value> {
 
 /// Resolve a live call's participants to `[{mxid,name,avatar}]` (member display name +
 /// avatar, best-effort, cache-only — falls back to the bare mxid).
-/// 10.1 (TH-NAV-03): public read receipt + fully-read marker on each room's newest event.
+/// 10.1 (TH-NAV-03): read receipt + fully-read marker on each room's newest event, through
+/// `receipts::send_read_markers` (public `m.read` only in a room of my own server, else `m.read.private`).
 /// The server recomputes the unread counts and the next sync redraws the badges.
 pub(crate) async fn mark_rooms_read(client: &Client, ids: Vec<String>) {
-    use matrix_sdk::room::{MessagesOptions, Receipts};
+    use matrix_sdk::room::MessagesOptions;
     for id in ids {
         let Ok(rid) = matrix_sdk::ruma::RoomId::parse(&id) else { continue };
         let Some(room) = client.get_room(&rid) else { continue };
@@ -462,9 +472,7 @@ pub(crate) async fn mark_rooms_read(client: &Client, ids: Vec<String>) {
         let Some(ev) = resp.chunk.first() else { continue };
         let Ok(v) = ev.raw().deserialize_as::<Value>() else { continue };
         let Some(eid) = v.get("event_id").and_then(|e| e.as_str()) else { continue };
-        let Ok(eid) = matrix_sdk::ruma::OwnedEventId::try_from(eid) else { continue };
-        let receipts = Receipts::new().fully_read_marker(eid.clone()).public_read_receipt(eid);
-        if let Err(e) = room.send_multiple_receipts(receipts).await {
+        if let Err(e) = crate::receipts::send_read_markers(&room, eid).await {
             eprintln!("[nav] mark read failed for {id}: {e}");
         }
     }
@@ -878,7 +886,7 @@ pub(crate) fn rollup(
     })
 }
 
-fn badge_text(total: u64) -> String {
+pub(crate) fn badge_text(total: u64) -> String {
     if total == 0 {
         String::new()
     } else if total > 99 {
@@ -935,10 +943,13 @@ fn meta_member(f: &RoomFact, key: &str) -> bool {
     }
 }
 
-/// The global / dock badge (10.6, A5.3): the sum of what the rows show, as badge text ("" at 0).
-async fn global_badge_text(client: &Client) -> String {
-    let mut total: u64 = 0;
+/// The global / dock badge (10.6, A5.3): the sum of what the rows show, as badge text ("" at 0); and the taskbar /
+/// dock count (A5.10, app_badge.rs: the rooms waiting on you, pending DM invites included). The same numbers
+/// build_nav computes, without the rest of the snapshot; both count a pending DM invite as 1 in the global badge, as the
+/// web does (app_badge::global_badge).
+async fn global_badges(client: &Client) -> (String, u32) {
     let settings = client.notification_settings().await; // once per pass (notify::mode_in)
+    let mut ids: Vec<(String, u64)> = Vec::new();
     for r in client.joined_rooms() {
         if r.is_space() {
             continue;
@@ -946,9 +957,33 @@ async fn global_badge_text(client: &Client) -> String {
         let is_dm = r.is_direct().await.unwrap_or(false);
         let mode = crate::notify::mode_in(&settings, &r, is_dm).await;
         let u = crate::notify::badge_counts(&r).await;
-        total += adjusted_unread(mode, u.notification_count, u.highlight_count, false);
+        let unread = adjusted_unread(mode, u.notification_count, u.highlight_count, false);
+        ids.push((r.room_id().to_string(), unread));
     }
-    badge_text(total)
+    let mut dm_invites: Vec<String> = Vec::new();
+    for room in client.invited_rooms() {
+        if !room.is_space() && invite_is_direct(&room).await {
+            dm_invites.push(room.room_id().to_string());
+        }
+    }
+    let rows: Vec<crate::app_badge::BadgeRow<'_>> = ids
+        .iter()
+        .map(|(id, unread)| crate::app_badge::BadgeRow {
+            id,
+            membership: crate::app_badge::Membership::Join,
+            is_space: false,
+            dm: false,
+            unread: *unread,
+        })
+        .chain(dm_invites.iter().map(|id| crate::app_badge::BadgeRow {
+            id,
+            membership: crate::app_badge::Membership::Invite,
+            is_space: false,
+            dm: true,
+            unread: 0,
+        }))
+        .collect();
+    (crate::app_badge::global_badge(&rows), crate::app_badge::app_badge_count(&rows))
 }
 
 /// Rooms in `space_id` that we have NOT joined and WOULD be allowed to join.
@@ -1234,7 +1269,6 @@ async fn build_nav(client: &Client, active_space: &str) -> NavSnapshot {
     // ---- precompute per-room facts once (is_direct is async → do it a single time). ----
     let mut facts: Vec<RoomFact> = Vec::with_capacity(joined.len());
     let mut unread_by_id: HashMap<String, (u64, bool)> = HashMap::new();
-    let mut total: u64 = 0;
     for room in &joined {
         let id = room.room_id().to_string();
         let u = crate::notify::badge_counts(room).await;
@@ -1244,7 +1278,6 @@ async fn build_nav(client: &Client, active_space: &str) -> NavSnapshot {
         let mode = crate::notify::mode_in(&settings, room, is_dm).await;
         let unread = adjusted_unread(mode, u.notification_count, u.highlight_count, is_space);
         let highlight = adjusted_highlight(mode, u.highlight_count, is_space);
-        total += unread;
         unread_by_id.insert(id.clone(), (unread, highlight));
         facts.push(RoomFact {
             parented: parented.contains(&id),
@@ -1256,14 +1289,37 @@ async fn build_nav(client: &Client, active_space: &str) -> NavSnapshot {
             id,
         });
     }
-    let global_badge = badge_text(total);
-    // A5.1: a pending DM invite adds 1 to the People bubble (it is waiting on you).
+    // A5.1: a pending DM invite adds 1 to the People bubble (it is waiting on you), and to the global badge.
     let mut dm_invites: u64 = 0;
+    let mut dm_invite_ids: Vec<String> = Vec::new();
     for room in client.invited_rooms() {
         if !room.is_space() && invite_is_direct(&room).await {
             dm_invites += 1;
+            dm_invite_ids.push(room.room_id().to_string());
         }
     }
+    // A5.10: the taskbar / dock count over the same rows (app_badge.rs; the web's setAppBadge number)
+    let (app_badge, global_badge) = {
+        let rows: Vec<crate::app_badge::BadgeRow<'_>> = facts
+            .iter()
+            .map(|f| crate::app_badge::BadgeRow {
+                id: &f.id,
+                membership: crate::app_badge::Membership::Join,
+                is_space: f.is_space,
+                dm: f.is_dm,
+                unread: f.unread,
+            })
+            .chain(dm_invite_ids.iter().map(|id| crate::app_badge::BadgeRow {
+                id,
+                membership: crate::app_badge::Membership::Invite,
+                is_space: false,
+                dm: true,
+                unread: 0,
+            }))
+            .collect();
+        // the corner / global badge over the same rows: DM invites included, as on the web (app_badge::global_badge)
+        (crate::app_badge::app_badge_count(&rows), crate::app_badge::global_badge(&rows))
+    };
 
     // ---- the space rail: meta-spaces (with rollups) + real spaces (per-space rollups). ----
     let mut spaces: Vec<Value> = Vec::new();
@@ -1380,6 +1436,7 @@ async fn build_nav(client: &Client, active_space: &str) -> NavSnapshot {
         rooms_json: serde_json::to_string(&rooms_arr).unwrap_or_else(|_| "[]".into()),
         active_label,
         global_badge,
+        app_badge,
         dm_strip_json: dm_strip_json(&strip),
         room_space,
     }

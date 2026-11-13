@@ -167,7 +167,7 @@ Item {
                 anchors.centerIn: parent
                 spacing: 2
                 WidgetText { anchors.horizontalCenter: parent.horizontalCenter; role: "text"; text: "Nobody's around right now"; color: Th.widgetMetaFg }
-                WidgetText { anchors.horizontalCenter: parent.horizontalCenter; role: "meta"; text: "Friends who share their status show up here."; color: Th.widgetMutedFg }
+                WidgetText { anchors.horizontalCenter: parent.horizontalCenter; role: "meta"; text: "People who share their status show up here."; color: Th.widgetMutedFg }
             }
         }
         // Playing

@@ -54,8 +54,9 @@ Kirigami.OverlaySheet {
         {
             icon: "preferences-desktop-color",
             title: "Make it yours",
-            body: "Two hand-tuned themes — OLED and Goose — "
-                + "all under ☰ → Theme. The chrome recolors to match, instantly."
+            // QA 12.1.11 W10: the theme library, not the two themes of 10.x (= Tin Hat Web's Tour.tsx)
+            body: "Hundreds of themes, from OLED black to Goose — pick one under ☰ → Theme, or make your own in "
+                + "Settings → Appearance. The chrome recolors to match, instantly."
         },
         {
             icon: "call-start-symbolic",
@@ -81,7 +82,7 @@ Kirigami.OverlaySheet {
         {
             icon: "applications-games-symbolic",
             title: "Game on",
-            body: "Set what you're playing and a \"looking to play\" status so friends know "
+            body: "Set what you're playing and a \"looking to play\" status so people know "
                 + "you're up for a game. That's the tour — you're all set! Take it again any "
                 + "time from Settings → About & help."
         }

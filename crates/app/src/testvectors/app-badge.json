@@ -1,0 +1,1366 @@
+{
+ "v": 1,
+ "about": "Tin Hat app badge (REACH A5.10): the taskbar / dock / home-screen unread count. Byte-identical copies: desktop crates/app/src/testvectors/app-badge.json (the owner) and web src/features/nav/testvectors/app-badge.json. Rule: the rooms (in input order) that are not spaces and either are joined with a settings-adjusted unread (A5.3: 0 when muted, the highlight count when mentions-only, else the notification count) above 0, or are a pending DM invite. The badge is the number of those rooms. Row fields: id; membership join|invite|leave; space; dm; mode all|mentions|mute; notif = the server's notification_count; highlight = its highlight_count. An invite's counts are ignored (its row shows 0). want = the ids the badge counts. global = the corner/global badge text (REACH A5.3 + A5.1): the sum of the joined non-space rows' adjusted unread plus 1 per pending DM invite (not a space), \"\" at 0, \"99+\" above 99.",
+ "cases": [
+  {
+   "name": "empty",
+   "rows": [],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "a53_rows",
+   "note": "the A5.3 rollup_adjusted rows: a muted room and a space never count; one room is one, whatever its number",
+   "rows": [
+    {
+     "id": "!muted",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "mute",
+     "notif": 5,
+     "highlight": 0
+    },
+    {
+     "id": "!mentions",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "mentions",
+     "notif": 10,
+     "highlight": 1
+    },
+    {
+     "id": "!dm",
+     "membership": "join",
+     "space": false,
+     "dm": true,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!space",
+     "membership": "join",
+     "space": true,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    }
+   ],
+   "want": [
+    "!mentions",
+    "!dm"
+   ],
+   "global": "4"
+  },
+  {
+   "name": "mentions_only_without_highlight",
+   "note": "a mentions-only room with messages but no mention shows 0",
+   "rows": [
+    {
+     "id": "!m",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "mentions",
+     "notif": 7,
+     "highlight": 0
+    }
+   ],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "all_messages_counts_notifications",
+   "note": "all-messages rooms count the notification count, not highlights",
+   "rows": [
+    {
+     "id": "!a",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 2
+    },
+    {
+     "id": "!b",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    }
+   ],
+   "want": [
+    "!b"
+   ],
+   "global": "1"
+  },
+  {
+   "name": "muted_dm_with_mentions",
+   "note": "muted is 0 even with mentions",
+   "rows": [
+    {
+     "id": "!d",
+     "membership": "join",
+     "space": false,
+     "dm": true,
+     "mode": "mute",
+     "notif": 4,
+     "highlight": 3
+    }
+   ],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "pending_dm_invite",
+   "note": "a pending DM invite counts 1",
+   "rows": [
+    {
+     "id": "!inv",
+     "membership": "invite",
+     "space": false,
+     "dm": true,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    }
+   ],
+   "want": [
+    "!inv"
+   ],
+   "global": "1"
+  },
+  {
+   "name": "pending_room_invite",
+   "note": "a room invite (not a DM) never counts",
+   "rows": [
+    {
+     "id": "!inv",
+     "membership": "invite",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    }
+   ],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "invited_space",
+   "note": "spaces never count, invited or joined",
+   "rows": [
+    {
+     "id": "!sp",
+     "membership": "invite",
+     "space": true,
+     "dm": true,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    }
+   ],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "joined_space_with_unread",
+   "rows": [
+    {
+     "id": "!sp",
+     "membership": "join",
+     "space": true,
+     "dm": false,
+     "mode": "all",
+     "notif": 9,
+     "highlight": 9
+    }
+   ],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "left_room",
+   "note": "only joined rooms and invites",
+   "rows": [
+    {
+     "id": "!gone",
+     "membership": "leave",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    }
+   ],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "invite_unread_ignored",
+   "note": "an invite's own counts never matter; only the DM flag does",
+   "rows": [
+    {
+     "id": "!inv",
+     "membership": "invite",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 5,
+     "highlight": 0
+    }
+   ],
+   "want": [],
+   "global": ""
+  },
+  {
+   "name": "input_order_kept",
+   "rows": [
+    {
+     "id": "!c",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!a",
+     "membership": "invite",
+     "space": false,
+     "dm": true,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    },
+    {
+     "id": "!b",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "mentions",
+     "notif": 2,
+     "highlight": 2
+    }
+   ],
+   "want": [
+    "!c",
+    "!a",
+    "!b"
+   ],
+   "global": "4"
+  },
+  {
+   "name": "no_cap",
+   "note": "no cap: 101 rooms → 101 (the OS draws its own '99+' if it wants one)",
+   "rows": [
+    {
+     "id": "!r000",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r001",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r002",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r003",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r004",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r005",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r006",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r007",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r008",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r009",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r010",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r011",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r012",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r013",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r014",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r015",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r016",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r017",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r018",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r019",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r020",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r021",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r022",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r023",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r024",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r025",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r026",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r027",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r028",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r029",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r030",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r031",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r032",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r033",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r034",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r035",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r036",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r037",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r038",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r039",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r040",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r041",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r042",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r043",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r044",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r045",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r046",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r047",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r048",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r049",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r050",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r051",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r052",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r053",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r054",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r055",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r056",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r057",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r058",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r059",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r060",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r061",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r062",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r063",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r064",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r065",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r066",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r067",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r068",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r069",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r070",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r071",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r072",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r073",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r074",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r075",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r076",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r077",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r078",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r079",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r080",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r081",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r082",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r083",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r084",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r085",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r086",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r087",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r088",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r089",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r090",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r091",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r092",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r093",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r094",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r095",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r096",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r097",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!r098",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!r099",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 1,
+     "highlight": 0
+    },
+    {
+     "id": "!r100",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 2,
+     "highlight": 0
+    },
+    {
+     "id": "!x",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "mute",
+     "notif": 8,
+     "highlight": 0
+    }
+   ],
+   "want": [
+    "!r000",
+    "!r001",
+    "!r002",
+    "!r003",
+    "!r004",
+    "!r005",
+    "!r006",
+    "!r007",
+    "!r008",
+    "!r009",
+    "!r010",
+    "!r011",
+    "!r012",
+    "!r013",
+    "!r014",
+    "!r015",
+    "!r016",
+    "!r017",
+    "!r018",
+    "!r019",
+    "!r020",
+    "!r021",
+    "!r022",
+    "!r023",
+    "!r024",
+    "!r025",
+    "!r026",
+    "!r027",
+    "!r028",
+    "!r029",
+    "!r030",
+    "!r031",
+    "!r032",
+    "!r033",
+    "!r034",
+    "!r035",
+    "!r036",
+    "!r037",
+    "!r038",
+    "!r039",
+    "!r040",
+    "!r041",
+    "!r042",
+    "!r043",
+    "!r044",
+    "!r045",
+    "!r046",
+    "!r047",
+    "!r048",
+    "!r049",
+    "!r050",
+    "!r051",
+    "!r052",
+    "!r053",
+    "!r054",
+    "!r055",
+    "!r056",
+    "!r057",
+    "!r058",
+    "!r059",
+    "!r060",
+    "!r061",
+    "!r062",
+    "!r063",
+    "!r064",
+    "!r065",
+    "!r066",
+    "!r067",
+    "!r068",
+    "!r069",
+    "!r070",
+    "!r071",
+    "!r072",
+    "!r073",
+    "!r074",
+    "!r075",
+    "!r076",
+    "!r077",
+    "!r078",
+    "!r079",
+    "!r080",
+    "!r081",
+    "!r082",
+    "!r083",
+    "!r084",
+    "!r085",
+    "!r086",
+    "!r087",
+    "!r088",
+    "!r089",
+    "!r090",
+    "!r091",
+    "!r092",
+    "!r093",
+    "!r094",
+    "!r095",
+    "!r096",
+    "!r097",
+    "!r098",
+    "!r099",
+    "!r100"
+   ],
+   "global": "99+"
+  },
+  {
+   "name": "dm_invite_in_the_global_badge",
+   "note": "the corner/global badge (the sum the rows show, as text) counts a pending DM invite as 1, like the People bubble; a room invite and an invited space add nothing (QA 12.1.12 parity: the desktop left DM invites out)",
+   "rows": [
+    {
+     "id": "!room",
+     "membership": "join",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 3,
+     "highlight": 0
+    },
+    {
+     "id": "!dminvite",
+     "membership": "invite",
+     "space": false,
+     "dm": true,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    },
+    {
+     "id": "!roominvite",
+     "membership": "invite",
+     "space": false,
+     "dm": false,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    },
+    {
+     "id": "!spaceinvite",
+     "membership": "invite",
+     "space": true,
+     "dm": false,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    }
+   ],
+   "want": [
+    "!room",
+    "!dminvite"
+   ],
+   "global": "4"
+  },
+  {
+   "name": "dm_invites_only_global_badge",
+   "note": "two pending DM invites and nothing unread: the global badge reads 2",
+   "rows": [
+    {
+     "id": "!a",
+     "membership": "invite",
+     "space": false,
+     "dm": true,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    },
+    {
+     "id": "!b",
+     "membership": "invite",
+     "space": false,
+     "dm": true,
+     "mode": "all",
+     "notif": 0,
+     "highlight": 0
+    }
+   ],
+   "want": [
+    "!a",
+    "!b"
+   ],
+   "global": "2"
+  }
+ ]
+}

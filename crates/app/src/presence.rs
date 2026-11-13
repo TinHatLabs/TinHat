@@ -67,7 +67,7 @@ pub mod qobject {
         #[qproperty(QString, palette_json)] //   QML: paletteJson — A4.3 palette [{key,hex}] (constant)
         #[qproperty(QString, last_error)] // QML: lastError — a failed preference write, user-facing
         #[qproperty(i32, error_rev)] //      QML: errorRev — bumps with every lastError
-        #[qproperty(QString, zones_json)] // QML: zonesJson — A7: {"@a:hs": "America/New_York"} (only while a Friends' clocks widget wants it)
+        #[qproperty(QString, zones_json)] // QML: zonesJson — A7: {"@a:hs": "America/New_York"} (only while a People's clocks widget wants it)
         #[qproperty(QString, tz_json)] //    QML: tzJson — A7: {known, share (null = absent), tz, auto, device, busy, error}
         type PresenceController = super::PresenceControllerRust;
 
@@ -104,7 +104,7 @@ pub mod qobject {
         /// QML: clearStatus() — A4.6 "Clear status" (writes `{}`).
         #[qinvokable]
         fn clear_status(self: Pin<&mut PresenceController>);
-        /// QML: wantZones(on) — A7: a Friends' clocks widget is shown (on) / gone (off); counted. While any wants
+        /// QML: wantZones(on) — A7: a People's clocks widget is shown (on) / gone (off); counted. While any wants
         /// them, the reader asks `GET /presence?tz=1` and zonesJson carries the zones.
         #[qinvokable]
         fn want_zones(self: Pin<&mut PresenceController>, on: bool);
@@ -224,7 +224,7 @@ struct Engine {
     read_in_flight: bool,
     read_failing: bool,
     map: BTreeMap<String, model::Seen>,
-    /// A7: mxid → zone from the last `?tz=1` read (empty while no Friends' clocks widget wants it)
+    /// A7: mxid → zone from the last `?tz=1` read (empty while no People's clocks widget wants it)
     zones: BTreeMap<String, String>,
     // A7: the time zone's account data (`dev.tinhat.presence_tz`) as this device knows it
     tz_known: bool,
@@ -660,7 +660,7 @@ fn publish() {
     });
 }
 
-// ───────────────────────────────────── A7: the time zone (Friends' clocks) ─────────────────────────────────────
+// ───────────────────────────────────── A7: the time zone (People's clocks) ─────────────────────────────────────
 // 2026-09-28: the time zone is not secret, but sharing it can be opted out of. The global account data
 // `dev.tinhat.presence_tz` = {share, tz, auto, v: 1}, opt-OUT: after the first sync, an absent key is written by this
 // device itself (sharing on, the device's zone, automatic); while `auto` the zone follows the device (start / focus,
@@ -1917,7 +1917,7 @@ impl qobject::PresenceController {
         let emoji = if emoji.len() > 16 { String::new() } else { emoji };
         let content = model::status_content(&id.to_string(), &text, &emoji, &color, until);
         if turn_on_sharing {
-            // The "Show your status to friends? This turns on sharing." answer: consent first —
+            // The "Share your status with people? This turns on sharing." answer: consent first —
             // the status writer waits for the "on" to land (A4.6).
             self.choose_sharing(true);
         }

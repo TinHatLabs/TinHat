@@ -600,35 +600,102 @@ static SERVER_FOCUS: std::sync::Mutex<Option<(String, Option<String>)>> = std::s
 pub async fn focus_service_url(client: &matrix_sdk::Client) -> String {
     let fallback = fallback_focus_url(&crate::session::origin_of(client.homeserver().as_str()));
     let Some(server) = client.user_id().map(|u| u.server_name().to_string()) else { return fallback };
-    if let Some(known) = crate::server_offer::focus_url_for(&server) {
-        return known.unwrap_or(fallback);
-    }
-    if let Some((s, url)) = SERVER_FOCUS.lock().unwrap().clone() {
-        if s == server {
-            return url.unwrap_or(fallback);
+    let known = crate::server_offer::focus_url_for(&server);
+    // 12.1.9 (the web's rtc.ts wellKnownDocRetried, assembly-044 observation): any answer but a 2xx JSON document is a
+    // failure, retried (now, +1 s, +3 s) and never kept as "names none" — a 404/5xx in the middle of a server update
+    // used to send every new call of the run to the homeserver fallback instead of the server's own call service.
+    let read = || {
+        let url = format!("https://{server}/.well-known/matrix/client");
+        async move {
+            let Ok(resp) = matrix_sdk::reqwest::Client::new().get(&url).timeout(std::time::Duration::from_secs(8)).send().await
+            else {
+                return FocusRead::Failed;
+            };
+            let status = resp.status().as_u16();
+            if !(200..300).contains(&status) {
+                return FocusRead::Failed;
+            }
+            focus_read_of(status, &resp.text().await.unwrap_or_default())
         }
-    }
-    let read = async {
-        let resp = matrix_sdk::reqwest::Client::new()
-            .get(format!("https://{server}/.well-known/matrix/client"))
-            .timeout(std::time::Duration::from_secs(8))
-            .send()
-            .await
-            .ok()?;
-        if !resp.status().is_success() {
-            return Some(None); // answered without a well-known: names none
-        }
-        let text = resp.text().await.ok()?;
-        let wk = serde_json::from_str::<serde_json::Value>(&text).ok()?;
-        Some(focus_from_wellknown(&wk))
     };
-    match read.await {
-        Some(url) => {
-            *SERVER_FOCUS.lock().unwrap() = Some((server, url.clone()));
-            url.unwrap_or(fallback)
-        }
-        None => fallback,
+    resolve_focus(&server, known, &SERVER_FOCUS, &FOCUS_READ_WAITS_MS, read).await.unwrap_or(fallback)
+}
+
+/// [`focus_service_url`]'s choice once the server is known (None = the homeserver fallback): the offer store's answer
+/// (`known`: Some = it read a document), else this run's cached read of `server`, else a retried read — whose answer,
+/// and only an answer, is cached.
+pub(crate) async fn resolve_focus<F, Fut>(
+    server: &str,
+    known: Option<Option<String>>,
+    cache: &std::sync::Mutex<Option<(String, Option<String>)>>,
+    waits: &[u64],
+    read: F,
+) -> Option<String>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = FocusRead>,
+{
+    if let Some(known) = known {
+        return known;
     }
+    let cached = cache.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    if let Some((s, url)) = cached {
+        if s == server {
+            return url;
+        }
+    }
+    match focus_read_retried(waits, read).await {
+        Some(url) => {
+            *cache.lock().unwrap_or_else(|e| e.into_inner()) = Some((server.to_string(), url.clone()));
+            url
+        }
+        None => {
+            eprintln!("[call] {server}'s well-known didn't answer ({} tries): the homeserver's call service for now", waits.len());
+            None
+        }
+    }
+}
+
+/// What one read of a server's `.well-known/matrix/client` said (12.1.9; the web's focus.ts wellKnownAnswered +
+/// rtc.ts wellKnownDoc): `Named` = a 2xx JSON document and the call service it names (or none); `Failed` = no answer,
+/// any other status (a 404 or 5xx in the middle of an update too) or a body that isn't a JSON object. Only `Named` is
+/// kept.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum FocusRead {
+    Named(Option<String>),
+    Failed,
+}
+
+/// One answer, classified (pure; the read in [`focus_service_url`] and the tests both go through it).
+pub(crate) fn focus_read_of(status: u16, body: &str) -> FocusRead {
+    if !(200..300).contains(&status) {
+        return FocusRead::Failed;
+    }
+    match serde_json::from_str::<serde_json::Value>(body) {
+        Ok(wk) if wk.is_object() => FocusRead::Named(focus_from_wellknown(&wk)),
+        _ => FocusRead::Failed,
+    }
+}
+
+/// The waits before each well-known read: now, +1 s, +3 s (the web's focus.ts WELL_KNOWN_WAITS_MS, same numbers).
+pub(crate) const FOCUS_READ_WAITS_MS: [u64; 3] = [0, 1000, 3000];
+
+/// Up to `waits.len()` reads, each after its wait; the first `Named` answer wins, None = every read failed (the web's
+/// focus.ts firstWellKnown).
+pub(crate) async fn focus_read_retried<F, Fut>(waits: &[u64], mut read: F) -> Option<Option<String>>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = FocusRead>,
+{
+    for &wait in waits {
+        if wait > 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(wait)).await;
+        }
+        if let FocusRead::Named(url) = read().await {
+            return Some(url);
+        }
+    }
+    None
 }
 
 /// The EC session-membership state key: `_@user:server_DEVICEID_m.call`.
@@ -887,5 +954,100 @@ mod tests {
         ] {
             assert_eq!(focus_from_wellknown(&none), None, "{none}");
         }
+    }
+
+    // 12.1.9: mirrored in the web's focus.test.ts ("well-known: …")
+    #[test]
+    fn well_known_only_a_2xx_json_document_is_an_answer() {
+        let doc = r#"{"org.matrix.msc4143.rtc_foci":[{"type":"livekit","livekit_service_url":"https://call.crew.test/livekit/jwt"}]}"#;
+        assert_eq!(focus_read_of(200, doc), FocusRead::Named(Some("https://call.crew.test/livekit/jwt".into())));
+        assert_eq!(focus_read_of(200, "{}"), FocusRead::Named(None), "a document that names no call service");
+        assert_eq!(focus_read_of(204, "{}"), FocusRead::Named(None), "any 2xx");
+        for status in [404u16, 500, 502, 503, 301, 199] {
+            assert_eq!(focus_read_of(status, doc), FocusRead::Failed, "HTTP {status}");
+        }
+        assert_eq!(focus_read_of(200, "<html>updating</html>"), FocusRead::Failed, "not JSON");
+        for body in ["null", "[]", "\"updating\"", "7"] {
+            assert_eq!(focus_read_of(200, body), FocusRead::Failed, "a 2xx non-object body {body}");
+        }
+        assert_eq!(focus_read_of(200, ""), FocusRead::Failed, "an empty body");
+        assert_eq!(FOCUS_READ_WAITS_MS, [0, 1000, 3000], "the web's WELL_KNOWN_WAITS_MS");
+    }
+
+    fn replay(answers: Vec<FocusRead>) -> (Option<Option<String>>, usize) {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_time().build().unwrap();
+        let mut left = answers.into_iter();
+        let mut reads = 0usize;
+        let got = rt.block_on(focus_read_retried(&[0, 0, 0], || {
+            reads += 1;
+            let a = left.next().unwrap_or(FocusRead::Failed);
+            async move { a }
+        }));
+        (got, reads)
+    }
+
+    #[test]
+    fn well_known_a_failed_read_is_retried_not_kept() {
+        let url = "https://call.crew.test/livekit/jwt".to_string();
+        // a 503 mid-update, then the document: the call service, not the fallback
+        let (got, reads) = replay(vec![focus_read_of(503, ""), FocusRead::Named(Some(url.clone()))]);
+        assert_eq!((got, reads), (Some(Some(url.clone())), 2));
+        // two failures then the document: still found on the third read
+        let (got, reads) = replay(vec![FocusRead::Failed, FocusRead::Failed, FocusRead::Named(Some(url.clone()))]);
+        assert_eq!((got, reads), (Some(Some(url)), 3));
+        // every read fails: None (= the fallback, nothing kept), and no fourth read
+        assert_eq!(replay(vec![FocusRead::Failed; 5]), (None, 3));
+        // a document naming none is an answer at once (kept: no retry)
+        assert_eq!(replay(vec![FocusRead::Named(None)]), (Some(None), 1));
+    }
+
+    // 12.1.9, the call site (Astra review): what focus_service_url keeps for the run and when it reads again
+    #[test]
+    fn well_known_only_an_answer_is_kept_for_the_run() {
+        use std::cell::Cell;
+        use std::sync::Mutex;
+        let rt = tokio::runtime::Builder::new_current_thread().enable_time().build().unwrap();
+        let url = "https://call.crew.test/livekit/jwt".to_string();
+        let reads = Cell::new(0usize);
+        let run = |known: Option<Option<String>>, cache: &Mutex<Option<(String, Option<String>)>>, answers: Vec<FocusRead>| {
+            let mut left = answers.into_iter();
+            let before = reads.get();
+            let got = rt.block_on(resolve_focus("crew.test", known, cache, &[0, 0, 0], || {
+                reads.set(reads.get() + 1);
+                let a = left.next().unwrap_or(FocusRead::Failed);
+                async move { a }
+            }));
+            (got, reads.get() - before)
+        };
+        // the offer store's document decides, nothing is read
+        let c = Mutex::new(None);
+        assert_eq!(run(Some(Some(url.clone())), &c, vec![]), (Some(url.clone()), 0));
+        assert_eq!(run(Some(None), &c, vec![]), (None, 0));
+        // three failures: the fallback, nothing kept, and the next call reads again
+        assert_eq!(run(None, &c, vec![FocusRead::Failed; 3]), (None, 3));
+        assert_eq!(*c.lock().unwrap(), None, "a failure is never kept");
+        assert_eq!(run(None, &c, vec![FocusRead::Failed, FocusRead::Named(Some(url.clone()))]), (Some(url.clone()), 2));
+        // the answer is kept: the next call reads nothing
+        assert_eq!(run(None, &c, vec![]), (Some(url.clone()), 0));
+        // a document naming none is kept too (no read, no retry on the next call)
+        let c = Mutex::new(None);
+        assert_eq!(run(None, &c, vec![FocusRead::Named(None)]), (None, 1));
+        assert_eq!(run(None, &c, vec![]), (None, 0));
+        // another server's kept answer is never used
+        let c = Mutex::new(Some(("other.test".to_string(), Some("https://call.other.test/livekit/jwt".to_string()))));
+        assert_eq!(run(None, &c, vec![FocusRead::Named(Some(url.clone()))]), (Some(url), 1));
+    }
+
+    /// Negative control: 12.1.8's rule (any non-2xx answer = "names none", kept for the run) on the same 503-then-document
+    /// sequence keeps None, so the tests above can fail.
+    #[test]
+    fn well_known_the_old_rule_kept_a_failure() {
+        let old = |status: u16, body: &str| {
+            if !(200..300).contains(&status) { FocusRead::Named(None) } else { focus_read_of(status, body) }
+        };
+        let doc = r#"{"org.matrix.msc4143.rtc_foci":[{"type":"livekit","livekit_service_url":"https://call.crew.test/livekit/jwt"}]}"#;
+        let (got, reads) = replay(vec![old(503, ""), old(200, doc)]);
+        assert_eq!((got, reads), (Some(None), 1), "the old rule stops at the 503");
+        assert_ne!(replay(vec![focus_read_of(503, ""), focus_read_of(200, doc)]).0, Some(None));
     }
 }

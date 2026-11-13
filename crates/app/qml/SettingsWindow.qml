@@ -277,8 +277,12 @@ Window {
         if (!win.searching || !win.app) return []
         var all = []
         try { all = JSON.parse(String(win.app.settings.searchSettings(win.query, win.isOperator))) } catch (e) { return [] }
-        // only rows of the panes this window shows (Settings → Guests: where the server offers it, never for a guest)
-        return all.filter(function (r) { return win.paneKeys.indexOf(String(r.pane)) >= 0 })
+        // only rows of the panes this window shows (Settings → Guests: where the server offers it, never for a guest);
+        // "Change size instantly" only where Appearance → Size shows that switch (AppearancePane liveOffered)
+        var liveOffered = win.app.settings.uiScaleLiveOptInOffered()
+        return all.filter(function (r) {
+            return win.paneKeys.indexOf(String(r.pane)) >= 0 && (String(r.id) !== "appearance.app-size-live" || liveOffered)
+        })
     }
     property int selIndex: 0
     function openResult(i) { if (i >= 0 && i < win.results.length) win.jumpTo(String(win.results[i].id)) }
@@ -1072,7 +1076,7 @@ Window {
                     SettingsSection {
                         visible: win.app.serverOn("presence")   // selfhost: Reach statuses are the server's
                         title: "Your status"
-                        hint: "Turning it off stops it at once — it leaves friends' screens within about 20 seconds and nothing is kept. Messages, typing and read receipts are separate; other Matrix apps may share a status on their own."
+                        hint: "Turning it off stops it at once — it leaves other people's screens within about 20 seconds and nothing is kept. Messages, typing and read receipts are separate; other Matrix apps may share a status on their own."
                         SettingsRow {
                             app: win.app
                             anchorId: "privacy.share-status"
@@ -1109,16 +1113,16 @@ Window {
                             ]
                         }
                     }
-                    // A7 (docs/REACH.md): the time zone Friends' clocks shows — opt-OUT, on by default (the web's
+                    // A7 (docs/REACH.md): the time zone People's clocks shows — opt-OUT, on by default (the web's
                     // TimeZoneSection); absent after the first sync = the first-run write is on its way, so it reads on
                     SettingsSection {
-                        visible: win.app.serverOn("presence")   // selfhost: Friends' clocks ride on Reach
+                        visible: win.app.serverOn("presence")   // selfhost: People's clocks ride on Reach
                         title: "Time zone"
                         SettingsRow {
                             app: win.app
                             anchorId: "privacy.share-time-zone"
                             label: "Share my time zone"
-                            description: "Friends see your local time in Friends' clocks."
+                            description: "Others see your local time in People's clocks."
                             toggle: shareTzSw
                             trailing: ThSwitch {
                                 id: shareTzSw
@@ -1816,7 +1820,7 @@ Window {
                             anchorId: "calls.push-to-talk"
                             label: "Push to talk"
                             description: "Hold " + (win.app.actions && win.app.actions.pttKeys.length > 0 ? win.app.actions.pttKeys[0] : "Ctrl")
-                                         + " to speak while Tin Hat is the focused window (not yet while you're tabbed into a game on this platform)."
+                                         + " to speak while Tin Hat is the focused window (not yet while you're tabbed into a game on this platform). Ctrl, Alt or Shift on their own don't work while you're typing a message; pick another key to talk while typing."
                             toggle: pttSw
                             trailing: ThSwitch {
                                 id: pttSw

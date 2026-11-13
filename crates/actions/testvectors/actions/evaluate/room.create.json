@@ -73,9 +73,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "desktop: all on"
@@ -114,91 +112,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": false
-          }
-        }
-      },
-      "name": "desktop: all on, ui.spaceSelected flipped"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": true,
-        "exists": true,
-        "hold": false,
-        "icon": "folder-new-symbolic",
-        "label": "New room…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": null,
-        "whyTarget": null
-      },
-      "input": {
-        "action": "room.create",
-        "app": "desktop",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
-        }
-      },
-      "name": "desktop: only ui.spaceSelected=true"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": true,
-        "exists": true,
-        "hold": false,
-        "icon": "folder-new-symbolic",
-        "label": "New room…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": null,
-        "whyTarget": null
-      },
-      "input": {
-        "action": "room.create",
-        "app": "desktop",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "desktop: random 0"
@@ -237,9 +151,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "desktop: random 1"
@@ -278,9 +190,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": false
-          }
+          "values": {}
         }
       },
       "name": "desktop: random 2"
@@ -319,9 +229,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         },
         "target": {
           "room": "!room:example.com"
@@ -366,9 +274,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "desktop: invocation params on an action without params"
@@ -408,9 +314,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "desktop: in a button island"
@@ -451,9 +355,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "desktop: menu new[1] desktop, all on"
@@ -464,7 +366,7 @@
         "confirm": null,
         "danger": false,
         "emoji": null,
-        "enabled": false,
+        "enabled": true,
         "exists": true,
         "hold": false,
         "icon": "folder-new-symbolic",
@@ -480,7 +382,7 @@
         "targetName": null,
         "tip": null,
         "visible": true,
-        "why": "when",
+        "why": null,
         "whyTarget": null
       },
       "input": {
@@ -572,9 +474,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "web: all on"
@@ -613,91 +513,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": false
-          }
-        }
-      },
-      "name": "web: all on, ui.spaceSelected flipped"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": true,
-        "exists": true,
-        "hold": false,
-        "icon": "folder-new-symbolic",
-        "label": "New room…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": null,
-        "whyTarget": null
-      },
-      "input": {
-        "action": "room.create",
-        "app": "web",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
-        }
-      },
-      "name": "web: only ui.spaceSelected=true"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": true,
-        "exists": true,
-        "hold": false,
-        "icon": "folder-new-symbolic",
-        "label": "New room…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": null,
-        "whyTarget": null
-      },
-      "input": {
-        "action": "room.create",
-        "app": "web",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "web: random 0"
@@ -736,9 +552,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "web: random 1"
@@ -777,9 +591,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "web: random 2"
@@ -818,9 +630,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         },
         "target": {
           "room": "!room:example.com"
@@ -865,9 +675,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "web: invocation params on an action without params"
@@ -907,9 +715,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "web: in a button island"
@@ -950,9 +756,7 @@
             "room": "!room:example.com"
           },
           "subjects": {},
-          "values": {
-            "ui.spaceSelected": true
-          }
+          "values": {}
         }
       },
       "name": "web: menu new[1] desktop, all on"
@@ -963,7 +767,7 @@
         "confirm": null,
         "danger": false,
         "emoji": null,
-        "enabled": false,
+        "enabled": true,
         "exists": true,
         "hold": false,
         "icon": "folder-new-symbolic",
@@ -979,7 +783,7 @@
         "targetName": null,
         "tip": null,
         "visible": true,
-        "why": "when",
+        "why": null,
         "whyTarget": null
       },
       "input": {

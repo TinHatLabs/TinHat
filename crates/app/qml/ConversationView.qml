@@ -203,6 +203,133 @@ Item {
     property bool mLoadingOlder: false
     property bool mHasMore: false
     property bool mCanPin: false
+    property bool mCanSendMessage: false   // voice notes: the mic button hides where we may not send messages
+
+    // ---- voice notes (docs/VOICE-NOTES.md §2): one voice draft per room, the recorder row replaces the composer box
+    // while one exists. VoiceNoteController's state is process-wide; this view polls its snapshot for the shown room
+    // (fast while a draft is live, slowly when idle) and hands a send request to its RoomController.
+    VoiceNoteController { id: voiceCtl }
+    property var vs: ({ state: "idle" })
+    property string _vnRoom: ""
+    readonly property bool vnActive: String(conv.vs.state || "idle") !== "idle"
+    readonly property bool vnInCall: conv.vs.inCall === true || (!!conv.app && conv.app.mInCall === true)
+    readonly property bool vnShowMic: !!conv.room && conv.room.roomId.length > 0 && conv.mCanSendMessage
+                                      && composer.text.length === 0 && conv.staged.length === 0 && conv.editToId.length === 0
+    property string _vnPrevState: "idle"
+    // review r1 #7: the controller follows the shown room at once (room change → vnSync), and every action names its room
+    function vnSync() {
+        var rid = conv.room ? String(conv.room.roomId || "") : ""
+        if (rid !== conv._vnRoom) { conv._vnRoom = rid; voiceCtl.show(rid) }
+        return rid
+    }
+    function vnRefresh() {
+        var rid = conv.vnSync()
+        if (rid.length === 0) { conv.vs = ({ state: "idle" }); return }
+        var v = {}
+        try { v = JSON.parse(voiceCtl.snapshot()) } catch (e) { return }
+        var evs = v.events || []
+        for (var i = 0; i < evs.length; i++) conv._vnEvent(evs[i])
+        conv.vs = v
+        if (v.state === "sending") {
+            var req = voiceCtl.takeSendRequest(rid)
+            if (req.length > 0) conv.room.sendVoiceNote(req)
+        }
+        if (v.state !== conv._vnPrevState) {
+            var was = conv._vnPrevState
+            conv._vnPrevState = v.state
+            if (v.state === "recording") Qt.callLater(voiceRow.focusStop)
+            else if (v.state === "review" && was !== "sending") Qt.callLater(voiceRow.focusPlay)
+            else if (v.state === "idle" && was !== "idle") Qt.callLater(composer.forceActiveFocus)
+        }
+    }
+    function _vnEvent(ev) {
+        var text = String(ev.text || "")
+        if (ev.kind === "toast") conv._toast(text, "short")
+        if (ev.kind === "sent" && conv.app && conv.app.playUiSound) conv.app.playUiSound("send")
+        if (text.length > 0) conv._vnAnnounce(text)
+        if (conv._vnGate.on) conv._vnGateEvent(ev)
+    }
+    // a polite announcement for screen readers ("Recording", "Recording stopped, 7 seconds", "Voice message sent", errors)
+    function _vnAnnounce(text) {
+        vnLive.text = text
+        try { vnLive.Accessible.announce(text) } catch (e) { /* Qt < 6.8: the name change is all there is */ }
+    }
+    function vnStart() {
+        if (conv.vnInCall) { conv._toast("You're in a call — voice messages are off until you leave", "short"); return }
+        if (conv.vs.busyElsewhere === true) { conv._toast("A voice message is being recorded in another room", "short"); return }
+        voiceCtl.start(conv.vnSync()); conv.vnRefresh()
+    }
+    function vnStop() { voiceCtl.stop(conv.vnSync()); conv.vnRefresh() }
+    function vnCancel() { voiceCtl.cancel(conv.vnSync()); conv.vnRefresh() }
+    function vnSend() { voiceCtl.send(conv.vnSync()); conv.vnRefresh(); msgView.stickBottom = true; Qt.callLater(msgView.positionViewAtEnd) }
+    function vnDelete() {
+        var txn = voiceCtl.deleteDraft(conv.vnSync())
+        if (txn.length > 0 && conv.room) conv.room.discardEcho(txn)   // the failed echo row of this note goes with it
+        conv.vnRefresh()
+    }
+    function vnEscape() { msgView.forceActiveFocus() }   // review: Escape only moves focus away; the draft stays
+    Timer {
+        interval: conv.vnActive ? 100 : 1000
+        running: conv.visible && !conv.hidden && !!conv.room
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: conv.vnRefresh()
+    }
+    Item {
+        id: vnLive
+        property string text: ""
+        width: 0; height: 0
+        Accessible.role: Accessible.StaticText
+        Accessible.name: vnLive.text
+    }
+    // Gate hook (TINHAT_GUI_VOICENOTE="<roomId>,<secs>", unset in every real launch): in the primary view, once that
+    // room is shown, record <secs> s from the selected input, SEND it as a voice note, log the event id, close the app.
+    readonly property var _vnGate: {
+        var g = String(voiceCtl.autoGate || "")
+        var i = g.lastIndexOf(",")
+        if (!conv.primary || i <= 0) return { on: false }
+        return { on: true, room: g.substring(0, i), secs: Number(g.substring(i + 1)) || 5 }
+    }
+    property int _vnGateStep: 0     // 0 = waiting for the room, 1 = recording, 2 = sending, 3 = done
+    property double _vnGateT0: 0
+    function _vnGateEvent(ev) {
+        if (ev.kind === "sent") {
+            console.log("[voicenote-gate] SENT " + ev.eventId + " room=" + conv._vnGate.room)
+            conv._vnGateStep = 3
+            vnGateQuit.start()
+        } else if (ev.kind === "toast" || ev.kind === "error") {
+            console.log("[voicenote-gate] FAILED: " + ev.text)
+            conv._vnGateStep = 3
+            vnGateQuit.start()
+        }
+    }
+    Timer {
+        interval: 500
+        repeat: true
+        running: conv._vnGate.on && conv._vnGateStep < 3
+        onTriggered: {
+            if (!conv.room || conv.room.roomId !== conv._vnGate.room) {
+                if (conv._vnGateT0 === 0) conv._vnGateT0 = Date.now()
+                if (Date.now() - conv._vnGateT0 > 180000) { console.log("[voicenote-gate] FAILED: the room never opened"); conv._vnGateStep = 3; vnGateQuit.start() }
+                return
+            }
+            if (conv._vnGateStep === 0 && conv.vs.state === "idle" && conv.mCanSendMessage) {
+                console.log("[voicenote-gate] recording " + conv._vnGate.secs + " s in " + conv._vnGate.room)
+                conv._vnGateStep = 1
+                conv._vnGateT0 = Date.now()
+                conv.vnStart()
+            } else if (conv._vnGateStep === 1 && conv.vs.state === "recording" && Number(conv.vs.elapsedMs) >= conv._vnGate.secs * 1000) {
+                console.log("[voicenote-gate] sending (" + conv.vs.elapsedMs + " ms captured)")
+                conv._vnGateStep = 2
+                conv.vnSend()
+            } else if (Date.now() - conv._vnGateT0 > (conv._vnGate.secs + 90) * 1000) {
+                console.log("[voicenote-gate] FAILED: timed out in state " + conv.vs.state)
+                conv._vnGateStep = 3
+                vnGateQuit.start()
+            }
+        }
+    }
+    Timer { id: vnGateQuit; interval: 3000; onTriggered: if (conv.app && conv.app.close) conv.app.close() }
     property var mTyping: []
     property string _typingRaw: ""
     property var mMembers: []
@@ -349,7 +476,10 @@ Item {
         if (conv.app && conv.app.persistChatMemory) conv.app.persistChatMemory()   // 10.1 (TH-CONV-22)
     }
     // Different controller object => a fresh view of whatever room it holds.
-    onRoomChanged: if (msgModel && msgView && conv.room) conv._switchRoom(conv.room.roomId)
+    onRoomChanged: {
+        if (msgModel && msgView && conv.room) conv._switchRoom(conv.room.roomId)
+        conv.vnRefresh()   // voice notes: another RoomController (or none) — the voice controller follows at once
+    }
 
     // Diff one parsed poll into msgModel. An unchanged event keeps its payload INSTANCE so its
     // delegate re-evaluates nothing; only an event whose own JSON changed gets a new payload +
@@ -437,7 +567,7 @@ Item {
     // instead of on the next 120 ms tick (the header switched, the old messages lingered).
     Connections {
         target: conv.room
-        function onRoomIdChanged() { if (conv.room && msgModel && msgView && conv.room.roomId !== conv._roomIdSeen) conv._switchRoom(conv.room.roomId) }
+        function onRoomIdChanged() { if (conv.room && msgModel && msgView && conv.room.roomId !== conv._roomIdSeen) conv._switchRoom(conv.room.roomId); conv.vnRefresh() }
     }
     Timer {
         // 11.0 (GPU.md §2.8, R14): 120 ms while the window is focused, 1 s otherwise (lowgpu interval_for)
@@ -460,6 +590,7 @@ Item {
             conv.mLoadingOlder = conv.room.loadingOlder
             conv.mHasMore = conv.room.hasMore
             conv.mCanPin = conv.room.canPin === true
+            conv.mCanSendMessage = conv.room.canSendMessage === true
             if (conv.room.typingJson !== conv._typingRaw) {
                 conv._typingRaw = conv.room.typingJson
                 conv.mTyping = conv._typingRaw.length > 0 ? JSON.parse(conv._typingRaw) : []
@@ -477,7 +608,8 @@ Item {
             }
             if (conv.room.pinnedJson !== conv._pinnedRaw) {
                 conv._pinnedRaw = conv.room.pinnedJson
-                try { conv.mPinned = conv._pinnedRaw.length > 0 ? JSON.parse(conv._pinnedRaw) : [] } catch (e) { conv.mPinned = [] }
+                // QA W1: a deleted pin is not counted or listed here (pins.rs shown_pins); the Pinned widget still shows it
+                try { conv.mPinned = conv._pinnedRaw.length > 0 ? JSON.parse(conv._pinnedRaw).filter(function (r) { return r.deleted !== true }) : [] } catch (e) { conv.mPinned = [] }
             }
             if (conv.room.messagesJson !== conv._messagesRaw) {
                 conv._messagesRaw = conv.room.messagesJson
@@ -645,7 +777,7 @@ Item {
         onAccepted: { for (var i = 0; i < selectedFiles.length; i++) conv.stageFile(String(selectedFiles[i])) }
     }
 
-    function _openMenuFor(md, mine) {
+    function _openMenuFor(md, mine, at) {
         var mt = md.msgtype !== undefined ? md.msgtype : "m.text"
         conv.ctxMsgId = md.id !== undefined ? String(md.id) : ""
         conv.ctxMsgBody = md.body !== undefined ? String(md.body) : ""
@@ -659,11 +791,19 @@ Item {
         conv.ctxMsgEcho = md.echo === true
         conv.ctxMsgIsDice = md.dice !== undefined && md.dice !== null && md.redacted !== true
         conv.ctxMsgIsPoll = md.poll !== undefined && md.poll !== null && md.redacted !== true
-        if (conv.ctxMsgId.length > 0) msgMenu.popup()
+        if (conv.ctxMsgId.length === 0) return
+        // from the keyboard (a11y pass): at the message, not at the mouse pointer
+        if (at) {
+            msgMenu.popup(at, Math.min(24, at.width / 2), Math.min(16, at.height / 2))
+            // opened from a key: the menu must HAVE the keyboard (it showed, but Up/Down/Escape stayed with the list)
+            msgMenu.forceActiveFocus(Qt.PopupFocusReason)
+            msgMenu.currentIndex = 0
+        } else msgMenu.popup()
     }
     // 10.1 (TH-CONV-07): the bar names WHO you are replying to (three people said "yeah").
     property string replyToName: ""
     function startReply(id, body, name) {
+        msgView.kbHold = false   // a11y pass: the composer takes the focus on purpose
         conv.editToId = ""; conv.editToBody = ""
         conv.replyToId = id
         conv.replyToBody = body
@@ -671,12 +811,24 @@ Item {
         composer.forceActiveFocus()
     }
     function startEdit(id, body) {
+        msgView.kbHold = false   // a11y pass: the composer takes the focus on purpose
         conv.replyToId = ""; conv.replyToBody = ""
         conv.editToBody = body
         conv.editToId = id
     }
     Controls.Menu {
         id: msgMenu
+        // a11y pass: a keyboard-opened menu hands the focus back to the message list; if an action took it elsewhere
+        // (Reply → the composer), the keyboard row is cleared as when the focus leaves the list
+        onClosed: Qt.callLater(function () {   // after the popup handed the focus back
+            // Qt gives a closing popup's focus to the window's focus chain (it lands in the composer): a menu opened
+            // from the list hands it back to the list — unless the action put it somewhere on purpose (Reply / Edit
+            // clear kbHold; a dialog it opened keeps its focus)
+            var a = conv.Window.activeFocusItem
+            if (msgView.kbHold && (!a || a === composer || a === conv.Window.contentItem)) msgView.forceActiveFocus(Qt.PopupFocusReason)
+            msgView.kbHold = false
+            if (!msgView.activeFocus) { msgView.kbIndex = -1; msgView.kbEventId = "" }
+        })
         Controls.Menu {
             id: reactSub
             title: "React"
@@ -856,6 +1008,62 @@ Item {
             // Big rooms: keep delegates around while scrolling back and forth.
             cacheBuffer: 600
 
+            // a11y pass (the web's message list does the same, ConversationView.tsx onLogKey): the list is a Tab stop of
+            // its own (controls inside messages keep theirs); Up/Down walk the messages (Up into the list = the newest),
+            // Home/End the ends, Return / Menu key / Shift+F10 opens the message's action menu at it, Escape goes back
+            // to the composer. Tabbing in selects nothing and scrolls nothing (as on the web); the keyboard row follows its
+            // MESSAGE (kbEventId) when history loads above it, and clears when the focus leaves the list (not for its own
+            // menu). Its own index, not currentIndex (the view's scroll logic never moves for it), painted as the
+            // active-row wash (ChatBubble kbCurrent) and read out through an accessibility announcement.
+            property int kbIndex: -1
+            property string kbEventId: ""
+            property bool kbHold: false      // the keyboard row's menu is open: the focus comes back to the list
+            activeFocusOnTab: true
+            keyNavigationEnabled: false
+            // no current item: a ListView is a focus scope that hands its focus to the current delegate (a plain Item
+            // with no accessibility interface), so the list's own focus was never reported to a screen reader
+            currentIndex: -1
+            Accessible.role: Accessible.List
+            Accessible.name: "Messages"
+            onActiveFocusChanged: if (!activeFocus && !kbHold) { kbIndex = -1; kbEventId = "" }
+            function kbResolve() {   // the keyboard row's index from its message (history prepends shift the rows)
+                if (kbEventId.length === 0) return
+                for (var i = 0; i < count; i++) if (msgModel.get(i).eventId === kbEventId) { kbIndex = i; return }
+                kbIndex = -1; kbEventId = ""
+            }
+            function kbGo(i) {
+                if (count === 0) return
+                kbIndex = Math.max(0, Math.min(count - 1, i))
+                kbEventId = msgModel.get(kbIndex).eventId
+                positionViewAtIndex(kbIndex, ListView.Contain)
+                _afterScroll()
+                var it = itemAtIndex(kbIndex)
+                if (it && typeof Accessible.announce === "function") Accessible.announce(it.spoken)
+            }
+            function _kbKey(event) {   // the keys this list consumes (Keys.onShortcutOverride and Keys.onPressed agree)
+                if (event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier)) return false
+                var k = event.key
+                return k === Qt.Key_Up || k === Qt.Key_Down || k === Qt.Key_Home || k === Qt.Key_End || k === Qt.Key_Escape
+                    || k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Menu || (k === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))
+            }
+            // the window's Home/End/Escape shortcuts (paging, back to the bottom) yield while the list has the keyboard
+            Keys.onShortcutOverride: (event) => { if (_kbKey(event)) event.accepted = true }
+            Keys.onPressed: (event) => {
+                if (!_kbKey(event)) return
+                var k = event.key
+                if (k === Qt.Key_Up) kbGo(kbIndex < 0 ? count - 1 : kbIndex - 1)
+                else if (k === Qt.Key_Down) kbGo(kbIndex < 0 ? count - 1 : kbIndex + 1)
+                else if (k === Qt.Key_Home) kbGo(0)
+                else if (k === Qt.Key_End) kbGo(count - 1)
+                else if (k === Qt.Key_Escape) composer.forceActiveFocus()
+                else if (kbIndex >= 0) {   // Return / Menu / Shift+F10: the row's menu (scrolled back into view first)
+                    positionViewAtIndex(kbIndex, ListView.Contain)
+                    var it = itemAtIndex(kbIndex)
+                    if (it) { kbHold = true; it.openMenuFromKeys() }
+                }
+                event.accepted = true
+            }
+
             // 9.3.2: scrolling with energy. Qt's Flickable turns every wheel notch into a flick
             // IMPULSE (velocity + 1500 px/s² deceleration) — "trekking through mud" — and the raw
             // ListView lost Kirigami's ScrollablePage wheel handling and scroll bar when the room
@@ -1014,6 +1222,7 @@ Item {
             // change of the FIRST row (a prepend / rebuild) needs the top row re-anchored.
             property string _firstId: ""
             onCountChanged: {
+                kbResolve()   // a11y pass: the keyboard row stays on its message
                 var first = count > 0 ? msgModel.get(0).eventId : ""
                 var prepended = _firstId.length > 0 && first !== _firstId
                 _firstId = first
@@ -1147,6 +1356,9 @@ Item {
                 required property string eventId
                 required property int rev
                 required property int index
+                // a11y pass: the keyboard row (msgView.kbIndex) — its menu opens at the bubble, and what is read out
+                readonly property string spoken: conv._name(modelData.senderName, modelData.sender) + ": " + (modelData.body !== undefined ? String(modelData.body) : "")
+                function openMenuFromKeys() { conv._openMenuFor(modelData, mine, msgBubble) }
                 readonly property var modelData: (rev, conv._msgById[eventId] ? conv._msgById[eventId].payload : ({}))
                 width: ListView.view ? ListView.view.width - ListView.view.barGutter : 0   // 10.0.3: clear the scroll bar
                 implicitHeight: col.implicitHeight
@@ -1211,8 +1423,10 @@ Item {
                     }
 
                     ChatBubble {
+                        id: msgBubble
                         app: conv.app
                         width: parent.width
+                        kbCurrent: msgView.activeFocus && msgView.kbIndex === msgDelegate.index
                         // 11.0 (GPU.md §2.6): in the viewport (not only in ListView's cache) — GIFs play only then
                         inView: msgDelegate.y + msgDelegate.height > msgView.contentY && msgDelegate.y < msgView.contentY + msgView.height
                         mine: msgDelegate.mine
@@ -1229,6 +1443,8 @@ Item {
                         mimetype: msgDelegate.modelData.mimetype !== undefined ? msgDelegate.modelData.mimetype : ""
                         canOpen: msgDelegate.modelData.canOpen === true   // security review 2026-10-26 (viewer.rs)
                         durationMs: msgDelegate.modelData.durationMs !== undefined ? msgDelegate.modelData.durationMs : 0
+                        voiceNote: msgDelegate.modelData.voice === true   // voice notes (MSC3245)
+                        voiceProbe: voiceCtl.probe === true               // TINHAT_GUI_VOICEPROBE=1: the player logs its load
                         fileSize: msgDelegate.modelData.size !== undefined ? msgDelegate.modelData.size : 0
                         imageW: msgDelegate.modelData.w !== undefined ? msgDelegate.modelData.w : 0
                         imageH: msgDelegate.modelData.h !== undefined ? msgDelegate.modelData.h : 0
@@ -1516,9 +1732,24 @@ Item {
                 }
             }
 
+            // ---- voice notes: the recorder / review row replaces the composer box while a voice draft exists ----
+            VoiceRecorderRow {
+                id: voiceRow
+                app: conv.app
+                conv: conv
+                vs: conv.vs
+                visible: conv.vnActive
+                Layout.fillWidth: true
+                Layout.leftMargin: conv._islandBox ? 0 : Kirigami.Units.smallSpacing
+                Layout.rightMargin: conv._islandBox ? 0 : Kirigami.Units.smallSpacing
+                Layout.topMargin: (conv.composing || conv.staged.length > 0) ? 4 : 1
+                Layout.bottomMargin: conv._islandBox ? 0 : 9
+            }
+
             // ---- Composer box: the toolbar (attach + emoji + GIF + Send) and the input. ----
             Rectangle {
                 id: composerBox
+                visible: !conv.vnActive
                 // 10.0.3 gate hook: --tinhat-layoutlog prints where the box sits relative to the window.
                 Timer {
                     interval: 2500; running: Qt.application.arguments.indexOf("--tinhat-layoutlog") >= 0
@@ -1693,6 +1924,8 @@ Item {
                     wrapMode: TextEdit.Wrap
                     placeholderText: conv.editToId.length > 0 ? "Edit your message…"
                         : (conv.replyToId.length > 0 ? "Reply…" : "Message " + conv._shownName)
+                    // a11y pass: a screen reader names the field after what it is for (the web's aria-label)
+                    Accessible.name: placeholderText
                     Keys.onUpPressed: (event) => {
                         if (mentionPopup.visible && mentionList.count > 0) {
                             mentionList.currentIndex = (mentionList.currentIndex - 1 + mentionList.count) % mentionList.count
@@ -1718,7 +1951,16 @@ Item {
                             composer._pickMention(mentionList.model[mentionList.currentIndex]); event.accepted = true
                         } else if (emojiPopup.visible && emojiList.count > 0) {
                             composer._pickEmoji(emojiList.model[emojiList.currentIndex]); event.accepted = true
-                        } else event.accepted = false
+                        } else composer._tabOut(event, true)
+                    }
+                    // a11y pass: Tab / Shift+Tab LEAVE the composer, like the web's message field. A TextArea types a tab
+                    // character instead, and the composer has the focus whenever a room opens — the keyboard could
+                    // never leave it (a keyboard trap: the room header, the message list, the nav were unreachable).
+                    Keys.onBacktabPressed: (event) => composer._tabOut(event, false)
+                    function _tabOut(event, forward) {
+                        var next = composer.nextItemInFocusChain(forward)
+                        if (next && next !== composer) { next.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason); event.accepted = true }
+                        else event.accepted = false
                     }
                     Keys.onEscapePressed: {
                         if (mentionPopup.visible) mentionPopup.close()
@@ -2052,9 +2294,25 @@ Item {
                     }
                 }
 
+                // voice notes (§2 "Entry"): the mic sits where Send is while the composer is empty; typing swaps Send back
+                ThToolButton {
+                    id: vnMicButton
+                    Layout.row: 0; Layout.column: Math.max(0, crowEnd.colOf("composer.send"))
+                    visible: crowEnd.shows("composer.send") && conv.vnShowMic
+                    // "disabled" in a call keeps its tooltip (a disabled control gets no hover): dimmed, a press explains
+                    opacity: (conv.vnInCall || conv.vs.busyElsewhere === true) ? 0.5 : 1
+                    app: conv.app
+                    iconName: "audio-input-microphone-symbolic"
+                    tip: conv.vnInCall ? "You're in a call — voice messages are off until you leave"
+                         : (conv.vs.busyElsewhere === true ? "A voice message is being recorded in another room" : "Record a voice message")
+                    Accessible.name: "Record a voice message"
+                    Accessible.description: conv.vnInCall ? "You're in a call — voice messages are off until you leave"
+                                            : (conv.vs.busyElsewhere === true ? "A voice message is being recorded in another room" : "")
+                    onClicked: conv.vnStart()
+                }
                 GlowButton {
                     Layout.row: 0; Layout.column: Math.max(0, crowEnd.colOf("composer.send"))
-                    visible: crowEnd.shows("composer.send")
+                    visible: crowEnd.shows("composer.send") && !conv.vnShowMic
                     app: conv.app
                     text: conv.width < 360 ? "" : (conv.editToId.length > 0 ? "Save" : "Send")
                     icon.name: "document-send-symbolic"
@@ -2189,5 +2447,5 @@ Item {
         typingStopTimer.stop()
     }
     Timer { id: typingStopTimer; interval: 4000; onTriggered: conv.stopTyping() }
-    Component.onDestruction: { if (conv.primary) conv.stopTyping(); conv._remember(conv._roomIdSeen) }
+    Component.onDestruction: { if (conv.primary) conv.stopTyping(); conv._remember(conv._roomIdSeen); voiceCtl.show("") }   // voice notes: detach
 }

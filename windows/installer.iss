@@ -847,7 +847,7 @@ begin
   R := RootDir();
   // (The same list as tinhat-maint.ps1 $KnownDataNames; 'run' goes last, after the lock is let go.)
   Names := StringSplit('session.json|store|config|theme|themes|themesync|layoutsync|sameroom_pairs.json|nav_mode|' +
-    'tour_seen|space_order|room_recency.json|calendar-seen.json|audio_prefs.json|presence-pending-off.json|' +
+    'tour_seen|voice-drafts|space_order|room_recency.json|calendar-seen.json|audio_prefs.json|presence-pending-off.json|' +
     'widgets-history.json|mentions.json|dice.json|clocks-tz.json|memories-thumbs|assets|avatars|iconpack|logs|' +
     'gstregistry.bin|install-prompt-seen|tinhat-maint.ps1|tinhat-bundle-files.txt|current|backup|staging|' +
     'setup-previous|setup-interrupted|setup-interrupted-1|setup-interrupted-2|setup-interrupted-3', ['|'], stExcludeEmpty);
@@ -936,6 +936,8 @@ begin
   DeleteOneFile(R + '\tinhat-maint.ps1');
   DeleteOneFile(R + '\tinhat-bundle-files.txt');
   DeleteOneFile(R + '\config\tinhat\boot-state');
+  // voice notes: drafts live in memory only, so their recordings always go (also when the sign-in is kept)
+  DeleteTree(R + '\voice-drafts');
 
   SetStatus('Removing caches...');
   // The Rust caches (timeline, members, media, avatars, link previews) and Qt's local
@@ -989,6 +991,7 @@ end;
 procedure RepairFootprint();
 begin
   DeleteTree(AddBackslash(GetTempDir()) + 'tinhat-mpv-stub');
+  DeleteTree(RootDir() + '\voice-drafts'); // voice notes: drafts are in memory only — stale recordings go
   if ClearCaches then begin
     DeleteTree(ExpandConstant('{localappdata}\TinHat'));
     Done.Add('Cleared the picture and message caches');

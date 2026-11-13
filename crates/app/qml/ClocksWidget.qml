@@ -1,4 +1,4 @@
-// ClocksWidget.qml — widgets W1 (2026-09-28): Friends' clocks (`clocks`, contract WIDGETS.md §15, WIDGETS-UI.md §15;
+// ClocksWidget.qml — widgets W1 (2026-09-28): People's clocks (`clocks`, contract WIDGETS.md §15, WIDGETS-UI.md §15;
 // the web's features/widgets/clocks/Clocks.tsx).
 //
 // The local time of everyone who shares a room with you and shares their time zone (REACH A7: opt-out, on by default),

@@ -1,6 +1,6 @@
 [package]
 name = "tinhat-app"
-version = "12.1.11"
+version = "12.1.12"
 edition.workspace = true
 license.workspace = true
 description = "Tin Hat native KDE/Kirigami app (Qt6/QML + Rust core via CXX-Qt)"
@@ -100,6 +100,10 @@ flate2 = { version = "1.1", default-features = false, features = ["rust_backend"
 # WinRT toast transport for notify.rs (the Windows twin of the zbus/freedesktop
 # path below — PLATFORM_AUDIT.md §6).
 tauri-winrt-notification = "0.7"
+# docs/NOTIF-ACTIONS.md: message toasts with a text box (Reply) + Mark as read — the toast crate has no input, so
+# notify.rs builds the XML itself on the same windows / windows-version the crate already pulls in (no new versions).
+windows = { version = "0.61", features = ["Foundation", "Foundation_Collections", "Data_Xml_Dom", "UI_Notifications"] }
+windows-version = "0.1"
 
 # Desktop notifications: talk straight to org.freedesktop.Notifications on the session
 # bus. zbus is ALREADY in the tree via ashpd (the screencast portal); declared directly

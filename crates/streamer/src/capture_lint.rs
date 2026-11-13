@@ -45,7 +45,7 @@ pub const ALLOW_SOURCES: &[(&str, &str, Gate)] = &[
     ("crates/app/src/stream.rs", "do_start_share", Lease("portal start of the StreamController share; its capture starts through leased_play (start_e2ee_screenshare)")),
     ("crates/streamer/src/bin/captest.rs", "main", Lease("dev binary captest: its capture pipeline starts through leased_start")),
     ("crates/streamer/src/bin/captest.rs", "portal_cast", Lease("dev binary captest: the cast feeds only main's pipeline, started through leased_start")),
-    ("crates/streamer/src/call.rs", "audio_src_fragment", Lease("fragment: its pipelines start through leased_play (the mic, the mic meter, aux PipeWire, the speaker meter) or leased_start (the CLI self-tests)")),
+    ("crates/streamer/src/call.rs", "audio_src_fragment", Lease("fragment: its pipelines start through leased_play (the mic, the mic meter, aux PipeWire, the speaker meter, the voice-note recorder) or leased_start (the CLI self-tests, the voice-note self-test)")),
     ("crates/streamer/src/call.rs", "build_mic_pipeline", Lease("builder: started only through leased_play (start_mic_capture) or leased_start (the CLI self-tests)")),
     ("crates/streamer/src/call.rs", "pipewiresrc_has_provide_clock", NoCapture("capability probe: element made in NULL to read a property, never started")),
     ("crates/streamer/src/call.rs", "wasapi2_process_loopback_fragment", NoCapture("capability probe: element made in NULL to read a property, never started")),
@@ -88,7 +88,50 @@ pub const ALLOW_PLAYING: &[(&str, &str, Gate)] = &[
     ("crates/streamer/src/lk_publish.rs", "share_start_gate", NoCapture("unit test (synthetic source)")),
     ("crates/streamer/src/lk_publish.rs", "gl_dmabuf_tail_scales_to_i420", NoCapture("unit test (synthetic source: videotestsrc)")),
     ("crates/streamer/src/lk_publish.rs", "capped_head_negotiates_without_a_max_framerate_field", NoCapture("unit test (synthetic source: videotestsrc)")),
+    ("crates/streamer/src/voicenote.rs", "decode_with", NoCapture("decoder: reads back a finished voice-note file (filesrc ! oggdemux ! opusdec)")),
+    ("crates/streamer/src/voicenote.rs", "decode_failure_after_valid_audio_is_refused", NoCapture("unit test (synthetic source: audiotestsrc encoded into a file)")),
 ];
+
+/// Voice notes (docs/VOICE-NOTES.md §4): the recorder builds its capture head from a capture FRAGMENT (no element name,
+/// so rules A/B never see it). Rule C: in the voice-note file every function that calls a capture fragment is listed
+/// here with its lease gate, the file starts its pipelines only through those gates, and no function in it starts
+/// anything else that captures (rule B covers the PLAYING lines).
+pub const VOICENOTE_FILE: &str = "crates/streamer/src/voicenote.rs";
+pub const ALLOW_FRAGMENT_CALLERS: &[(&str, &str, Gate)] = &[
+    ("crates/streamer/src/voicenote.rs", "build_recorder", Lease("builder of the voice-note recorder (Kind::VoiceNote lease): started only by start through leased_play (refused while watching / in a call), or by headless_voicenote_test through leased_start")),
+];
+/// the voice-note functions that start a recorder build, and the gate each must call
+const VOICENOTE_STARTS: &[(&str, &str)] = &[("start", "leased_play("), ("headless_voicenote_test", "leased_start(")];
+
+/// Rule C over the bodies: the failures.
+pub fn voicenote_failures(bodies: &[(String, String, String)]) -> Vec<String> {
+    let mut bad = class_failures_of(ALLOW_FRAGMENT_CALLERS, &[], bodies);
+    let mine: Vec<&(String, String, String)> = bodies.iter().filter(|(f, _, _)| f == VOICENOTE_FILE).collect();
+    for (f, func, body) in &mine {
+        let calls = CAPTURE_FRAGMENTS.iter().any(|x| body.contains(x));
+        let listed = ALLOW_FRAGMENT_CALLERS.iter().any(|(lf, ln, _)| lf == f && ln == func);
+        if calls && !listed {
+            bad.push(format!("C: {f} {func} builds a capture head but is not a listed, lease-gated builder"));
+        }
+        if body.contains("build_recorder(") && !body.contains("fn build_recorder(") {
+            match VOICENOTE_STARTS.iter().find(|(n, _)| n == func) {
+                Some((_, gate)) if body.contains(gate) => {}
+                _ => bad.push(format!("C: {f} {func} starts a recorder build outside its lease gate")),
+            }
+        }
+    }
+    for (lf, ln, _) in ALLOW_FRAGMENT_CALLERS {
+        if !mine.iter().any(|(f, n, b)| f == lf && n == ln && CAPTURE_FRAGMENTS.iter().any(|x| b.contains(x))) {
+            bad.push(format!("C: stale entry {lf} {ln} (no capture fragment call in it)"));
+        }
+    }
+    for (n, gate) in VOICENOTE_STARTS {
+        if !mine.iter().any(|(_, f, b)| f == n && b.contains("build_recorder(") && b.contains(gate)) {
+            bad.push(format!("C: {VOICENOTE_FILE} {n} no longer starts the recorder through {gate}..)"));
+        }
+    }
+    bad
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Hit {
@@ -364,6 +407,8 @@ mod tests {
             }
             std::fs::write(p, s).expect("dump");
         }
+        let vn = voicenote_failures(&all_bodies);
+        assert!(vn.is_empty(), "voice-note recorder not proven lease-gated (rule C):\n  {}", vn.join("\n  "));
         let rt = remote_tap_failures(&all_bodies);
         assert!(rt.is_empty(), "remote-track taps not proven fed only by received tracks:\n  {}", rt.join("\n  "));
         let bad = class_failures(&all_bodies);
@@ -456,6 +501,26 @@ pub fn new_camera_preview() {
         }).collect();
         assert_eq!(n, 1, "the plant `{from}` in {func} applies once");
         out
+    }
+
+    #[test]
+    fn selftest_voicenote_an_ungated_recorder_start_fails_the_lint() {
+        let real = real_bodies();
+        assert!(voicenote_failures(&real).is_empty(), "{:?}", voicenote_failures(&real));
+        // a new function in the voice-note file building its own capture head
+        let mut planted = real.clone();
+        planted.push((VOICENOTE_FILE.into(), "quick_record".into(), "    let src = crate::call::audio_src_fragment(None);\n".into()));
+        assert!(voicenote_failures(&planted).iter().any(|x| x.contains("quick_record")));
+        // the recorder started without its lease gate
+        let planted = mutate(&real, "start", "crate::call::leased_play(&lease, &pipeline, 6000, \"voice note start\")", "pipeline.set_state(gst::State::Playing).is_ok()");
+        assert!(!voicenote_failures(&planted).is_empty());
+        // and the same plant as text is a rule-B violation too
+        let v = violations(&scan(VOICENOTE_FILE, "pub fn start() {\n    let _ = pipeline.set_state(gst::State::Playing);\n}\n"));
+        assert_eq!(v.len(), 1, "{v:?}");
+        // a second caller starting a build through no gate
+        let mut planted = real.clone();
+        planted.push((VOICENOTE_FILE.into(), "preview".into(), "    let (p, l) = build_recorder(&path)?;\n".into()));
+        assert!(voicenote_failures(&planted).iter().any(|x| x.contains("preview")));
     }
 
     #[test]

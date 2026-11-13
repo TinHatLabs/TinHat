@@ -22,6 +22,11 @@ shares can wait or never start at the SFU.
 
 ## Release builds
 
+Every Linux and Flatpak release candidate also passes the clean-exit gate: stop the app with SIGTERM and by ending its
+session scope, while it is in a call, then run `scripts/clean-exit-gate.sh <log>` on each run's log. It needs the signal
+setup's `Threads=1` line, the signal, the call leave and the clean end. A thread started before the signal setup in
+`main()` keeps SIGTERM's default action, so the app would die without leaving the call.
+
 Every release train builds with `TINHAT_RELEASE_BUILD=1` and runs `scripts/release-binary-check.sh <binary>` on the
 result. It requires the four libwebrtc stamps and refuses the pre-rename ones and the developer self-test hooks
 `TINHAT_LKTEST` / `TINHAT_CALLTEST` / `TINHAT_CAMTEST`. Those hooks seal with a throwaway test key and exist only outside
@@ -38,6 +43,14 @@ variable for this: it replaces the repository's own rustflags.
 of the candidate → the same build as the next version, on a local feed signed by `scripts/update-swap-feed.sh`) must
 print PASS, and `TINHAT_SAFE_UNZIP_BUNDLE=<the final win64 zip> cargo test --release -p tinhat-app
 safe_unzip::tests::real_bundle -- --ignored` must pass (it fails once the bundle uses half of an unzip limit).
+
+## Logs
+
+`RUST_LOG` picks what the app writes to its session log (unset = errors only). libwebrtc's own messages arrive under
+the target `libwebrtc`, and only its WARNING and ERROR lines are ever forwarded: its INFO and VERBOSE lines are never
+passed on and libwebrtc's own stderr output is switched off, so `RUST_LOG=libwebrtc=debug` (or `trace`) shows nothing
+below WARNING from it. Some of those lines carry key material. Lines that mention key derivation are dropped at any
+level, and the log-share redactor removes long decimal byte lists.
 
 ## Flatpak
 

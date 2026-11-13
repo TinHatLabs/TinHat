@@ -1804,7 +1804,7 @@ pub fn set_playback_target(node: Option<String>) {
 // cross-platform and shared verbatim. Pure string builders → cfg! not #[cfg].
 
 /// Audio capture head. `None` = system default capture device.
-fn audio_src_fragment(node: Option<&str>) -> String {
+pub(crate) fn audio_src_fragment(node: Option<&str>) -> String {
     // 10.0.3: the PulseAudio-compat head, once the healer decided pipewiresrc is dead here.
     if !cfg!(windows) && pulse_head_wanted() {
         match node {
@@ -11766,6 +11766,12 @@ fn start_mic_capture(
     // 12.1.7: the lowest layer of every call mic capture (publish, re-publish, restart): never while barred
     if capture_barred() {
         anyhow::bail!("watching — no microphone captured (Talk here turns it on)");
+    }
+    // voice notes (docs/VOICE-NOTES.md §2 "Calls"): a voice-note recording stops into review (a pending start is
+    // cancelled) and the call waits, at most 2 s, for the recorder's CONFIRMED release of the microphone. Not released in
+    // time: this capture fails (the mic start's retries / healer try again) instead of sharing the device.
+    if !crate::voicenote::release_for_call() {
+        anyhow::bail!("the voice-message recorder has not released the microphone yet");
     }
     let (pipeline, appsink) = build_mic_pipeline()?;
     // 0.8.28: which rung this chain is (so a never-primed stall can block the right one).

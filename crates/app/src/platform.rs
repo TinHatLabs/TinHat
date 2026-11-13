@@ -569,7 +569,16 @@ fn use_bundled_nvrtc(lib_dir: &std::path::Path) {
             .map(std::path::PathBuf::from)
             .or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".cache")));
         if let Some(cache) = cache {
-            let reg = cache.join("gstreamer-1.0").join(nvrtc_registry_name(&nvrtc, nvidia_driver_version().as_deref()));
+            let cuda = sandbox_cuda_state(&flatpak_gl_dir(), std::path::Path::new("/dev"));
+            let dir = cache.join("gstreamer-1.0");
+            let name = nvrtc_registry_name(&nvrtc, nvidia_driver_version().as_deref(), &cuda);
+            // only the current one is kept: an old state's file must not come back (it may hold a scan made while
+            // CUDA was unreachable), and each one is a full registry (a few MB)
+            for old in stale_app_registries(&dir, &name) {
+                let _ = std::fs::remove_file(dir.join(old));
+            }
+            let reg = dir.join(&name);
+            let _ = APP_GST_REGISTRY.set(reg.clone());
             std::env::set_var("GST_REGISTRY", reg);
         }
     }
@@ -579,17 +588,234 @@ fn use_bundled_nvrtc(lib_dir: &std::path::Path) {
 /// a new NVRTC in an update rescans) and the NVIDIA driver version (nvcodec registers nothing CUDA without a driver and
 /// caches that, so installing or updating the driver must rescan too). Neither changes the runtime's plugin file,
 /// which is all GStreamer itself watches.
+///
+/// 12.1.11 (flatpak-nvidia): also keyed by what the SANDBOX can reach of CUDA ([`SandboxCuda::key`]): which
+/// GL.nvidia extension carries libcuda.so.1 and whether /dev/nvidia-uvm exists. A scan made while either was
+/// missing (driver updated + PC restarted before its extension arrived, or the app started before nvidia-uvm was
+/// loaded) cached nvcodec with no CUDA elements under the driver's key, and every later start kept that empty answer,
+/// even after `flatpak update` installed the extension: no GPU scaling and no nvcodec decode until the cache was deleted.
 #[cfg(not(windows))]
-fn nvrtc_registry_name(nvrtc: &std::path::Path, driver: Option<&str>) -> String {
+fn nvrtc_registry_name(nvrtc: &std::path::Path, driver: Option<&str>, cuda: &SandboxCuda) -> String {
     let real = std::fs::canonicalize(nvrtc).unwrap_or_else(|_| nvrtc.to_path_buf());
     let lib = real.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
     let drv: String = driver.unwrap_or("nodriver").chars().filter(|c| c.is_ascii_alphanumeric() || *c == '.').collect();
-    format!("registry.{lib}.nv-{drv}.{}.bin", std::env::consts::ARCH)
+    format!("registry.{lib}.nv-{drv}.{}.{}.bin", cuda.key(), std::env::consts::ARCH)
 }
+
+/// The app's own GStreamer registry file, when [`use_bundled_nvrtc`] chose one (the Flatpak with a bundled NVRTC).
+#[cfg(not(windows))]
+static APP_GST_REGISTRY: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+
+/// The app's registry files in `dir` other than `current` (and their heal markers): only names this app writes
+/// ("registry.libnvrtc.….bin"), never GStreamer's default registry.<arch>.bin.
+#[cfg(not(windows))]
+fn stale_app_registries(dir: &std::path::Path, current: &str) -> Vec<String> {
+    let marker = format!("{current}{HEAL_MARKER_SUFFIX}");
+    let mut v: Vec<String> = std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.starts_with("registry.libnvrtc.") && (n.ends_with(".bin") || n.ends_with(HEAL_MARKER_SUFFIX)))
+        .filter(|n| n != current && *n != marker)
+        .collect();
+    v.sort();
+    v
+}
+
+/// Marker next to a registry file: it was cleared once already because it held no CUDA elements (see [`heal_plan`]).
+#[cfg(not(windows))]
+const HEAL_MARKER_SUFFIX: &str = ".cleared-once";
+
+/// What to do about a registry with no CUDA elements on a machine whose sandbox looks ready for CUDA.
+#[cfg(not(windows))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Heal {
+    /// Nothing wrong (or nothing we can tell).
+    Nothing,
+    /// Delete the registry (and leave the marker): the next start rescans nvcodec. Once per registry name.
+    Clear,
+    /// Already cleared once and a fresh scan still registered no CUDA elements: CUDA itself fails here; say so.
+    GiveUp,
+}
+
+/// The decision, pure. A transient CUDA failure during the scan (e.g. the GPU not ready yet) caches nvcodec without
+/// its CUDA elements under the healthy-looking name, and every later start would keep it: clear it once, never loop.
+#[cfg(not(windows))]
+pub(crate) fn heal_plan(plan: &FlatpakNvidia, nvcodec_loaded: bool, cuda_elements: bool, marker: bool) -> Heal {
+    if *plan != FlatpakNvidia::Ready || !nvcodec_loaded || cuda_elements {
+        return Heal::Nothing;
+    }
+    if marker { Heal::GiveUp } else { Heal::Clear }
+}
+
+/// Run after startup on a worker thread (Linux Flatpak): check the app's GStreamer registry for nvcodec's CUDA elements
+/// and apply [`heal_plan`]. Logs one line when it acts.
+#[cfg(not(windows))]
+pub(crate) fn heal_app_gst_registry() {
+    let Some(reg) = APP_GST_REGISTRY.get() else { return };
+    let (nvcodec, cuda) = tinhat_streamer::lk_publish::nvcodec_cuda_state();
+    let marker = std::path::PathBuf::from(format!("{}{HEAL_MARKER_SUFFIX}", reg.display()));
+    if cuda && marker.exists() {
+        let _ = std::fs::remove_file(&marker); // healthy again: a later transient failure gets its one clear too
+    }
+    match heal_plan(flatpak_nvidia(), nvcodec, cuda, marker.exists()) {
+        Heal::Nothing => {}
+        Heal::Clear => {
+            // marker first: without it a clear could repeat every start; a clear that fails takes the marker back so
+            // the next start tries again. (One instance at a time: the single-instance lock is held before
+            // early_startup; the directory is the Flatpak's own cache.)
+            if std::fs::write(&marker, b"").is_err() {
+                return;
+            }
+            if std::fs::remove_file(reg).is_err() {
+                let _ = std::fs::remove_file(&marker);
+                return;
+            }
+            eprintln!(
+                "[flatpak] the GStreamer scan holds no CUDA elements although the NVIDIA extension and /dev/nvidia-uvm \
+                 are there (nvcodec registered none when it was scanned): cleared it, the next start of Tin Hat rescans"
+            );
+        }
+        Heal::GiveUp => eprintln!(
+            "[flatpak] nvcodec still registered no CUDA elements after a fresh GStreamer scan, with the NVIDIA extension \
+             and /dev/nvidia-uvm present: CUDA or NVIDIA's encode/decode libraries didn't load in this sandbox (check \
+             nvidia-smi on the host, then the cuInit error with GST_DEBUG=cuda*:4,nvcodec:4)"
+        ),
+    }
+}
+
+/// Where the Flatpak runtime mounts GL extensions (org.freedesktop.Platform.GL.*): `/usr/lib/<multiarch>/GL/<name>`,
+/// e.g. `/usr/lib/x86_64-linux-gnu/GL/nvidia-615-78-08/lib/libcuda.so.1`. NVIDIA's CUDA (libcuda) and NVENC
+/// (libnvidia-encode) libraries reach a Flatpak ONLY through that extension, never from the host.
+#[cfg(not(windows))]
+fn flatpak_gl_dir() -> std::path::PathBuf {
+    std::path::PathBuf::from(format!("/usr/lib/{}-linux-gnu/GL", std::env::consts::ARCH))
+}
+
+/// The GL.nvidia extension directory Flatpak mounts for a kernel driver version: "615.78.08" -> "nvidia-615-78-08"
+/// (Flatpak reads the loaded kernel module's version and uses `org.freedesktop.Platform.GL.nvidia-615-78-08`).
+#[cfg(not(windows))]
+pub(crate) fn nvidia_gl_extension_dir(driver: &str) -> String {
+    format!("nvidia-{}", driver.replace('.', "-"))
+}
+
+/// What of NVIDIA's CUDA stack a sandboxed process can reach.
+#[cfg(not(windows))]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub(crate) struct SandboxCuda {
+    /// GL extension directories that carry `lib/libcuda.so.1` (normally one: "nvidia-615-78-08"), sorted.
+    pub libcuda_dirs: Vec<String>,
+    /// /dev/nvidia-uvm exists. CUDA (so NVENC through CUDA and every nvcodec element) fails without it, and a
+    /// sandbox cannot load the nvidia-uvm module itself (the host's setuid nvidia-modprobe does that).
+    pub uvm: bool,
+}
+
+#[cfg(not(windows))]
+impl SandboxCuda {
+    /// A filename-safe token for the GStreamer registry name: "cuda-nvidia-615-78-08-uvm", "cuda-none-nouvm".
+    fn key(&self) -> String {
+        let dirs = if self.libcuda_dirs.is_empty() { "none".to_owned() } else { self.libcuda_dirs.join("+") };
+        let dirs: String = dirs.chars().filter(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '+' | '.')).collect();
+        format!("cuda-{dirs}-{}", if self.uvm { "uvm" } else { "nouvm" })
+    }
+}
+
+/// Read [`SandboxCuda`] from a GL extension root (see [`flatpak_gl_dir`]) and a /dev directory.
+#[cfg(not(windows))]
+fn sandbox_cuda_state(gl_dir: &std::path::Path, dev: &std::path::Path) -> SandboxCuda {
+    let mut libcuda_dirs: Vec<String> = std::fs::read_dir(gl_dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter(|e| e.path().join("lib").join("libcuda.so.1").exists())
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .collect();
+    libcuda_dirs.sort();
+    SandboxCuda { libcuda_dirs, uvm: dev.join("nvidia-uvm").exists() }
+}
+
+/// The Flatpak + NVIDIA check (12.1.11, flatpak-nvidia). An NVIDIA machine whose sandbox cannot reach CUDA shares on
+/// VAAPI or the CPU instead of NVENC, scales on the CPU and decodes in software, and until now only said
+/// "CUDA elements not registered" deep in the log.
+#[cfg(not(windows))]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum FlatpakNvidia {
+    /// Not a Flatpak, or no NVIDIA kernel driver loaded: nothing to say.
+    NotApplicable,
+    /// The matching GL.nvidia extension carries libcuda and /dev/nvidia-uvm exists.
+    Ready,
+    /// No GL.nvidia extension for the running driver carries libcuda: it is not installed (e.g. the driver was updated
+    /// and the PC restarted before `flatpak update` fetched the new extension). `others` = GL.nvidia directories that
+    /// ARE there (an older driver's), for the log.
+    ExtensionMissing { driver: String, others: Vec<String> },
+    /// The extension is there but /dev/nvidia-uvm is not (the nvidia-uvm module is not loaded).
+    UvmMissing { driver: String },
+}
+
+/// The decision, pure: `in_flatpak` = /.flatpak-info exists, `driver` = the loaded NVIDIA kernel module's version.
+#[cfg(not(windows))]
+pub(crate) fn flatpak_nvidia_plan(in_flatpak: bool, driver: Option<&str>, cuda: &SandboxCuda) -> FlatpakNvidia {
+    let Some(driver) = driver.filter(|_| in_flatpak) else { return FlatpakNvidia::NotApplicable };
+    let want = nvidia_gl_extension_dir(driver);
+    // a libcuda from a non-"nvidia-<version>" GL directory (FLATPAK_GL_DRIVERS=host, a custom extension) is the
+    // user's own setup: we can't tell its version from the name, so we don't second-guess it
+    let custom = cuda.libcuda_dirs.iter().any(|d| !d.starts_with("nvidia-"));
+    if !custom && !cuda.libcuda_dirs.iter().any(|d| *d == want) {
+        return FlatpakNvidia::ExtensionMissing { driver: driver.to_owned(), others: cuda.libcuda_dirs.clone() };
+    }
+    if !cuda.uvm {
+        return FlatpakNvidia::UvmMissing { driver: driver.to_owned() };
+    }
+    FlatpakNvidia::Ready
+}
+
+/// The check for this process (cached; reads /.flatpak-info, /proc/driver/nvidia/version, the GL dir and /dev).
+#[cfg(not(windows))]
+pub(crate) fn flatpak_nvidia() -> &'static FlatpakNvidia {
+    static PLAN: std::sync::OnceLock<FlatpakNvidia> = std::sync::OnceLock::new();
+    PLAN.get_or_init(|| {
+        flatpak_nvidia_plan(
+            std::path::Path::new("/.flatpak-info").exists(),
+            nvidia_driver_version().as_deref(),
+            &sandbox_cuda_state(&flatpak_gl_dir(), std::path::Path::new("/dev")),
+        )
+    })
+}
+
+/// The startup log line for a [`FlatpakNvidia`] (None when there is nothing to say).
+#[cfg(not(windows))]
+pub(crate) fn flatpak_nvidia_note(plan: &FlatpakNvidia) -> Option<String> {
+    match plan {
+        FlatpakNvidia::NotApplicable | FlatpakNvidia::Ready => None,
+        FlatpakNvidia::ExtensionMissing { driver, others } => Some(format!(
+            "[flatpak] NVIDIA driver {driver} is loaded but no org.freedesktop.Platform.GL.{ext} extension with \
+             libcuda.so.1 is mounted in this Flatpak (GL.nvidia with libcuda here: {}): NVENC, CUDA scaling and NVIDIA \
+             hardware decode can't work, other encoders are used. Fix: `flatpak update` (or `flatpak install flathub \
+             org.freedesktop.Platform.GL.{ext}//1.4`), then restart Tin Hat",
+            if others.is_empty() { "none".to_owned() } else { others.join(", ") },
+            ext = nvidia_gl_extension_dir(driver),
+        )),
+        FlatpakNvidia::UvmMissing { driver } => Some(format!(
+            "[flatpak] NVIDIA driver {driver}: /dev/nvidia-uvm is missing (the nvidia-uvm module isn't loaded or its \
+             device node wasn't created), so CUDA can't start in this sandbox: NVENC, CUDA scaling and NVIDIA hardware \
+             decode can't work, other encoders are used. Fix: on the host (not in the Flatpak) \
+             `sudo nvidia-modprobe -u -c=0`, then restart Tin Hat"
+        )),
+    }
+}
+
 
 /// The loaded NVIDIA kernel driver's version ("595.45.04"), from /proc (visible inside the Flatpak); None without one.
 #[cfg(not(windows))]
 fn nvidia_driver_version() -> Option<String> {
+    // /sys/module/nvidia/version is what Flatpak reads to pick the GL.nvidia extension (flatpak-nvidia, 2026-11-07)
+    if let Ok(v) = std::fs::read_to_string("/sys/module/nvidia/version") {
+        let v = v.trim();
+        if !v.is_empty() && v.contains('.') && v.chars().all(|c| c.is_ascii_digit() || c == '.') {
+            return Some(v.to_owned());
+        }
+    }
     let s = std::fs::read_to_string("/proc/driver/nvidia/version").ok()?;
     // "NVRM version: NVIDIA UNIX x86_64 Kernel Module  595.45.04  <date>"
     s.lines()
@@ -653,11 +879,164 @@ mod nvrtc_tests {
         assert_eq!(super::bundled_nvrtc(&dir), Some(dir.join("libnvrtc.so.12")));
         // the registry follows the real file and the driver
         let nvrtc = dir.join("libnvrtc.so.12");
-        let a = super::nvrtc_registry_name(&nvrtc, Some("595.45.04"));
+        let ok = super::SandboxCuda { libcuda_dirs: vec!["nvidia-595-45-04".into()], uvm: true };
+        let a = super::nvrtc_registry_name(&nvrtc, Some("595.45.04"), &ok);
         assert!(a.starts_with("registry.libnvrtc.so.12.9.86.nv-595.45.04."), "{a}");
-        assert_ne!(a, super::nvrtc_registry_name(&nvrtc, None));
-        assert_ne!(a, super::nvrtc_registry_name(&nvrtc, Some("600.10")));
+        assert_ne!(a, super::nvrtc_registry_name(&nvrtc, None, &ok));
+        assert_ne!(a, super::nvrtc_registry_name(&nvrtc, Some("600.10"), &ok));
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// flatpak-nvidia (2026-11-07): the same driver with and without a reachable CUDA must not share a registry, or a
+    /// scan made while the GL.nvidia extension (or /dev/nvidia-uvm) was missing is kept forever: nvcodec with no
+    /// CUDA elements after the extension is installed ("GStreamer nvcodec plugin loaded, CUDA elements not registered").
+    #[test]
+    fn registry_rescans_when_cuda_becomes_reachable() {
+        use super::{nvrtc_registry_name, SandboxCuda};
+        let nvrtc = std::path::Path::new("/nonexistent/libnvrtc.so.12");
+        let drv = Some("615.78.08");
+        let ok = SandboxCuda { libcuda_dirs: vec!["nvidia-615-78-08".into()], uvm: true };
+        let no_ext = SandboxCuda { libcuda_dirs: vec![], uvm: true };
+        let old_ext = SandboxCuda { libcuda_dirs: vec!["nvidia-610-12-01".into()], uvm: true };
+        let no_uvm = SandboxCuda { libcuda_dirs: vec!["nvidia-615-78-08".into()], uvm: false };
+        let names: Vec<String> = [&ok, &no_ext, &old_ext, &no_uvm].iter().map(|c| nvrtc_registry_name(nvrtc, drv, c)).collect();
+        for i in 0..names.len() {
+            for j in i + 1..names.len() {
+                assert_ne!(names[i], names[j], "states {i} and {j} share a registry");
+            }
+        }
+        assert_eq!(names[0], "registry.libnvrtc.so.12.nv-615.78.08.cuda-nvidia-615-78-08-uvm.x86_64.bin".replace("x86_64", std::env::consts::ARCH));
+        // a file name: no path separators whatever a directory is called
+        let odd = SandboxCuda { libcuda_dirs: vec!["../x/y".into()], uvm: false };
+        assert!(!nvrtc_registry_name(nvrtc, drv, &odd).contains('/'));
+    }
+
+    #[test]
+    fn sandbox_cuda_state_reads_the_gl_extensions_and_dev() {
+        let root = std::env::temp_dir().join(format!("tinhat-sbcuda-test-{}", std::process::id()));
+        let gl = root.join("GL");
+        let dev = root.join("dev");
+        for d in ["default/lib", "nvidia-615-78-08/lib", "nvidia-610-12-01/lib"] {
+            std::fs::create_dir_all(gl.join(d)).unwrap();
+        }
+        std::fs::create_dir_all(&dev).unwrap();
+        // Mesa's "default" has no libcuda; an old driver's directory without libcuda doesn't count either
+        std::fs::write(gl.join("nvidia-615-78-08/lib/libcuda.so.1"), b"").unwrap();
+        let s = super::sandbox_cuda_state(&gl, &dev);
+        assert_eq!(s, super::SandboxCuda { libcuda_dirs: vec!["nvidia-615-78-08".into()], uvm: false });
+        std::fs::write(dev.join("nvidia-uvm"), b"").unwrap();
+        std::fs::write(gl.join("nvidia-610-12-01/lib/libcuda.so.1"), b"").unwrap();
+        let s = super::sandbox_cuda_state(&gl, &dev);
+        assert_eq!(s.libcuda_dirs, vec!["nvidia-610-12-01".to_string(), "nvidia-615-78-08".to_string()], "sorted");
+        assert!(s.uvm);
+        // no GL directory at all (not a Flatpak runtime): nothing, no panic
+        assert_eq!(super::sandbox_cuda_state(&root.join("missing"), &dev).libcuda_dirs, Vec::<String>::new());
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+}
+
+#[cfg(all(test, not(windows)))]
+mod flatpak_nvidia_tests {
+    use super::{flatpak_nvidia_note, flatpak_nvidia_plan, FlatpakNvidia, SandboxCuda};
+
+    fn cuda(dirs: &[&str], uvm: bool) -> SandboxCuda {
+        SandboxCuda { libcuda_dirs: dirs.iter().map(|s| s.to_string()).collect(), uvm }
+    }
+
+    #[test]
+    fn extension_name_follows_the_driver() {
+        assert_eq!(super::nvidia_gl_extension_dir("615.78.08"), "nvidia-615-78-08");
+        assert_eq!(super::nvidia_gl_extension_dir("580.95"), "nvidia-580-95");
+    }
+
+    /// The 2026-11-07 desktop: NVIDIA 615.78.08 loaded, Flatpak, and the sandbox could not reach CUDA.
+    #[test]
+    fn nvidia_flatpak_without_its_extension_is_reported() {
+        let p = flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&[], true));
+        assert_eq!(p, FlatpakNvidia::ExtensionMissing { driver: "615.78.08".into(), others: vec![] });
+        let line = flatpak_nvidia_note(&p).expect("a log line");
+        assert!(line.starts_with("[flatpak] NVIDIA driver 615.78.08"), "{line}");
+        assert!(line.contains("org.freedesktop.Platform.GL.nvidia-615-78-08"), "{line}");
+        assert!(line.contains("flatpak update"), "{line}");
+        // only an OLDER driver's extension present (driver updated, extension not yet): still missing, and named
+        let p = flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&["nvidia-610-12-01"], true));
+        assert_eq!(p, FlatpakNvidia::ExtensionMissing { driver: "615.78.08".into(), others: vec!["nvidia-610-12-01".into()] });
+        assert!(flatpak_nvidia_note(&p).unwrap().contains("nvidia-610-12-01"));
+    }
+
+    #[test]
+    fn missing_uvm_node_is_reported() {
+        let p = flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&["nvidia-615-78-08"], false));
+        assert_eq!(p, FlatpakNvidia::UvmMissing { driver: "615.78.08".into() });
+        assert!(flatpak_nvidia_note(&p).unwrap().contains("nvidia-modprobe -u"));
+    }
+
+    #[test]
+    fn a_custom_libcuda_is_not_second_guessed() {
+        // FLATPAK_GL_DRIVERS=host or a custom extension: libcuda reachable from a directory we can't version
+        assert_eq!(flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&["host"], true)), FlatpakNvidia::Ready);
+        // but an older driver's extension alone is a mismatch, not a custom setup
+        assert!(matches!(
+            flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&["nvidia-610-12-01"], true)),
+            FlatpakNvidia::ExtensionMissing { .. }
+        ));
+    }
+
+    #[test]
+    fn a_poisoned_scan_is_cleared_once_never_in_a_loop() {
+        use super::{heal_plan, Heal};
+        let ready = FlatpakNvidia::Ready;
+        assert_eq!(heal_plan(&ready, true, false, false), Heal::Clear, "ready sandbox, nvcodec without CUDA elements");
+        assert_eq!(heal_plan(&ready, true, false, true), Heal::GiveUp, "already cleared once: no loop");
+        assert_eq!(heal_plan(&ready, true, true, false), Heal::Nothing, "healthy");
+        assert_eq!(heal_plan(&ready, false, false, false), Heal::Nothing, "no nvcodec plugin at all: not ours to fix");
+        // a sandbox that can't reach CUDA has its own key and its own message: never cleared over and over
+        let missing = FlatpakNvidia::ExtensionMissing { driver: "615.78.08".into(), others: vec![] };
+        assert_eq!(heal_plan(&missing, true, false, false), Heal::Nothing);
+        assert_eq!(heal_plan(&FlatpakNvidia::UvmMissing { driver: "615.78.08".into() }, true, false, false), Heal::Nothing);
+        assert_eq!(heal_plan(&FlatpakNvidia::NotApplicable, true, false, false), Heal::Nothing);
+    }
+
+    #[test]
+    fn only_the_current_app_registry_is_kept() {
+        let dir = std::env::temp_dir().join(format!("tinhat-regclean-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let cur = "registry.libnvrtc.so.12.nv-615.78.08.cuda-nvidia-615-78-08-uvm.x86_64.bin";
+        for f in [
+            cur,
+            "registry.libnvrtc.so.12.nv-615.78.08.cuda-nvidia-615-78-08-uvm.x86_64.bin.cleared-once",
+            "registry.libnvrtc.so.12.nv-615.78.08.cuda-none-uvm.x86_64.bin",
+            "registry.libnvrtc.so.12.nv-610.12.01.x86_64.bin",
+            "registry.libnvrtc.so.12.nv-610.12.01.x86_64.bin.cleared-once",
+            "registry.x86_64.bin",
+            "something-else.bin",
+        ] {
+            std::fs::write(dir.join(f), b"").unwrap();
+        }
+        assert_eq!(
+            super::stale_app_registries(&dir, cur),
+            vec![
+                "registry.libnvrtc.so.12.nv-610.12.01.x86_64.bin".to_string(),
+                "registry.libnvrtc.so.12.nv-610.12.01.x86_64.bin.cleared-once".to_string(),
+                "registry.libnvrtc.so.12.nv-615.78.08.cuda-none-uvm.x86_64.bin".to_string(),
+            ],
+            "the current file + its marker stay; GStreamer's own registry and other files are never touched"
+        );
+        assert!(super::stale_app_registries(&dir.join("missing"), cur).is_empty());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn silent_when_ready_or_not_applicable() {
+        let ready = flatpak_nvidia_plan(true, Some("615.78.08"), &cuda(&["nvidia-615-78-08"], true));
+        assert_eq!(ready, FlatpakNvidia::Ready);
+        // not a Flatpak (the .bin / a distro package): the host's own libcuda is used, nothing to say
+        assert_eq!(flatpak_nvidia_plan(false, Some("615.78.08"), &cuda(&[], false)), FlatpakNvidia::NotApplicable);
+        // no NVIDIA kernel driver (AMD/Intel machine): nothing to say, even with no extension
+        assert_eq!(flatpak_nvidia_plan(true, None, &cuda(&[], false)), FlatpakNvidia::NotApplicable);
+        for p in [ready, FlatpakNvidia::NotApplicable] {
+            assert_eq!(flatpak_nvidia_note(&p), None);
+        }
     }
 }
 

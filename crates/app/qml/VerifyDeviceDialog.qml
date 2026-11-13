@@ -104,6 +104,10 @@ Controls.Dialog {
            : (dlg.sasIncoming && dlg.sasState !== "" && dlg.sasState.indexOf("recovery") !== 0)
            ? "Verify the other device" : "Verify this device"
     modal: true
+    // D3 (QA 12.1.11): the theme's veil, the web's (dialog.overlay.bg). The style's own veil is 7 % black under Fusion
+    // (the style Qt picks on a Linux desktop without KDE) — invisible on a dark theme, so nothing showed the sheet was
+    // still modal, and the click that closed it (it is consumed, on the web too) looked lost.
+    Controls.Overlay.modal: Rectangle { color: Th.dialogOverlayBg }
     parent: Controls.Overlay.overlay
     anchors.centerIn: parent
     readonly property real boxWidth: Math.min(Kirigami.Units.gridUnit * 26,
@@ -113,6 +117,13 @@ Controls.Dialog {
     // the user says they have it somewhere (Escape still works; this is a nudge, not a lock).
     standardButtons: (dlg.sasState === "recovery-done" && !savedCheck.checked) ? Controls.Dialog.NoButton : Controls.Dialog.Close
     onRejected: if (dlg.sasState !== "" && dlg.sasState !== "done") dlg.sasCancelled()
+    // D3 (QA 12.1.11): verifying ANOTHER device is over at "done" (this side gets no keys; the requester's sheet closes
+    // when its keys arrive, Main.qml onMVerifiedChanged). The finished sheet used to stay open and modal, and the next
+    // click (Join in the call banner) only closed it. It closes now, as Close at "done" did (no cancel, no reset: the
+    // driver still counts a done flow as live); Main.qml toasts the note. The rule = sas_policy::done_closes (the web's
+    // sasPolicy.sasDoneCloses, shared vectors); scripts/dialog-first-click.sh drives this sheet through it.
+    // (visible, not opened: opened is false during an enter transition; Astra review)
+    onSasStateChanged: if (dlg.visible && dlg.sasIncoming && dlg.sasState === "done") dlg.close()
 
     Column {
         width: dlg.boxWidth - dlg.leftPadding - dlg.rightPadding

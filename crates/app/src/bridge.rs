@@ -105,9 +105,18 @@ pub mod qobject {
         #[qsignal]
         fn dm_accepted(self: Pin<&mut LoginController>, room_id: QString);
 
+        // QML: login.labDriveHooks() — the lab gate's paddrive steps row / find-action / ptt-state may run (never in a release)
+        #[qinvokable]
+        #[cxx_name = "labDriveHooks"]
+        fn lab_drive_hooks(self: &LoginController) -> bool;
+
         // QML: login.dmTarget(text) — what the New DM field means ("blake" → "@blake:<our server>"), "" = not a user
         #[qinvokable]
         fn dm_target(self: &LoginController, text: &QString) -> QString;
+        // QML: login.serverNameHint(text) — the line under the Server field while a bare name is typed ("Opens
+        // crew.tinhat.me", server_name.rs; the web's serverNameHint, the phones' words); "" = no line
+        #[qinvokable]
+        fn server_name_hint(self: &LoginController, text: &QString) -> QString;
         // QML: login.newRoomHint(isPrivate, isSpace, parentSpace) — New room's line: encrypted or not (new_room.rs hint,
         // the web's newRoomHint — shared vectors); "" = no line
         #[qinvokable]
@@ -629,6 +638,22 @@ pub const LAST_SERVER_PREF: &str = "ui-last-server";
 /// What the Server field says before anything was typed.
 pub const SERVER_FIELD_HINT: &str = "Type your server's address first (like yourname.tinhat.me).";
 
+/// The server a sign-in goes to (QA 12.1.11 D6; Tin Hat Web's core/signInServer.ts is the same rule): the Server
+/// field; else the server part of a full `@name:server` user ID (Ok(.., true): the card says so and fills the field);
+/// else SERVER_FIELD_HINT (the Sign in button stays lit with an empty field, so a click always gets an answer).
+pub fn sign_in_server(field: &str, username: &str) -> Result<(String, bool), &'static str> {
+    let f = field.trim();
+    if !f.is_empty() {
+        return Ok((f.to_string(), false));
+    }
+    if let Some((local, server)) = username.trim().strip_prefix('@').and_then(|r| r.split_once(':')) {
+        if !local.is_empty() && !server.is_empty() && server.chars().all(|c| c.is_ascii_alphanumeric() || ".-:[]".contains(c)) {
+            return Ok((server.to_ascii_lowercase(), true));
+        }
+    }
+    Err(SERVER_FIELD_HINT)
+}
+
 /// The homeserver a headless harness signs in to: `TINHAT_HS` (a URL or a server name; `TINHAT_SERVER` too). No
 /// default — the app has no server of its own (selfhost, 2026-10-21).
 pub fn env_homeserver() -> Result<String, String> {
@@ -649,21 +674,42 @@ fn remember_server(client: &Client) {
 }
 
 impl qobject::LoginController {
+    /// The push-to-talk gate's paddrive steps (review round 4): compiled only outside a release (cfg
+    /// tinhat_env_selftests, build.rs) and only with the variable set. scripts/release-binary-check.sh refuses a binary
+    /// that names the variable.
+    pub fn lab_drive_hooks(&self) -> bool {
+        #[cfg(tinhat_env_selftests)]
+        {
+            std::env::var_os("TINHAT_LABDRIVE_PTT").is_some()
+        }
+        #[cfg(not(tinhat_env_selftests))]
+        {
+            false
+        }
+    }
+
     pub fn login(mut self: Pin<&mut Self>, username: &QString, password: &QString) {
         if *self.busy() {
             return;
         }
-        let homeserver = self.homeserver().to_string();
-        if homeserver.trim().is_empty() {
-            self.as_mut().set_status(QString::from(SERVER_FIELD_HINT));
-            return;
-        }
         let username = username.to_string();
+        // QA 12.1.11 D6: an empty Server field takes the server of a full @name:server user ID (and says so)
+        let (homeserver, from_user_id) = match sign_in_server(&self.homeserver().to_string(), &username) {
+            Ok(x) => x,
+            Err(hint) => {
+                self.as_mut().set_status(QString::from(hint));
+                return;
+            }
+        };
+        if from_user_id {
+            self.as_mut().set_homeserver(QString::from(&homeserver));
+        }
         let password = password.to_string();
 
         self.as_mut().set_busy(true);
         self.as_mut().set_logged_in(false);
-        self.as_mut().set_status(QString::from("Connecting…"));
+        let connecting = if from_user_id { format!("Signing in to {homeserver}, the server in your user ID…") } else { "Connecting…".to_string() };
+        self.as_mut().set_status(QString::from(&connecting));
 
         let qt_thread = self.qt_thread();
         runtime().spawn(async move {
@@ -1154,11 +1200,13 @@ impl qobject::LoginController {
     /// ("Go to <new address>"); signing in at the old name would
     /// work too (its well-known's base_url is the new address), but the app would keep the old name.
     pub fn check_moved(mut self: Pin<&mut Self>, server: &QString) {
-        let host = server.to_string().trim().trim_start_matches("https://").trim_start_matches("http://")
-            .trim_end_matches('/').to_ascii_lowercase();
-        if host.is_empty() || host.contains('/') || host.contains(' ') {
+        // server_name.rs: a bare name is a tinhat.me name, so "crew" asks crew.tinhat.me
+        let Some(host) = crate::server_name::host(&server.to_string()) else {
+            // nothing usable typed: an earlier server's note no longer applies
+            self.as_mut().set_moved_note(QString::default());
+            self.as_mut().set_moved_to(QString::default());
             return;
-        }
+        };
         if self.moved_to().to_string() != host {  // another server typed: the note was about the one before
             self.as_mut().set_moved_note(QString::default());
             self.as_mut().set_moved_to(QString::default());
@@ -1176,7 +1224,7 @@ impl qobject::LoginController {
             let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else { return };
             let Some(to) = crate::moved::parse_move(&v).moved_to.filter(|to| *to != host) else { return };
             let _ = qt.queue(move |mut o| {
-                let now = o.homeserver().to_string().trim().trim_start_matches("https://").trim_end_matches('/').to_ascii_lowercase();
+                let now = crate::server_name::host(&o.homeserver().to_string()).unwrap_or_default();
                 if now != host {
                     return; // typed another server meanwhile
                 }
@@ -1289,6 +1337,7 @@ impl qobject::LoginController {
     pub fn leave_room(self: Pin<&mut Self>, room_id: &QString) {
         let Some(client) = self.rust().client.clone() else { return };
         let rid = room_id.to_string();
+        crate::voicenote_ctl::discard_room(&rid); // voice notes: leaving the room discards its voice draft
         let qt = self.qt_thread();
         runtime().spawn(async move {
             if let Ok(id) = matrix_sdk::ruma::RoomId::parse(&rid) {
@@ -1333,6 +1382,10 @@ impl qobject::LoginController {
     /// which is how clients end up with duplicate threads that split your history. So
     /// look first: any joined DM whose only other member is them gets reused.
     /// 2026-09-29: the New DM field's rule (dm_target.rs; the web's dmTarget.ts) against this account's server.
+    pub fn server_name_hint(&self, text: &QString) -> QString {
+        QString::from(&crate::server_name::hint(&text.to_string()))
+    }
+
     pub fn dm_target(&self, text: &QString) -> QString {
         let own = self.user_id().to_string();
         QString::from(crate::dm_target::dm_target(&text.to_string(), crate::dm_target::server_of(&own)).unwrap_or_default().as_str())
@@ -1350,7 +1403,8 @@ impl qobject::LoginController {
         let Some(client) = self.rust().client.clone() else { return };
         // a plain username works too ("blake" → @blake:<our server>, dm_target.rs); a full ID passes through
         let own = self.user_id().to_string();
-        let mxid = crate::dm_target::dm_target(&mxid.to_string(), crate::dm_target::server_of(&own)).unwrap_or_else(|| mxid.to_string());
+        // 2026-11-12: a picked id is kept exactly (people::exact_or_typed; the web's personTarget)
+        let mxid = crate::people::exact_or_typed(&mxid.to_string(), &own).unwrap_or_else(|| mxid.to_string());
         self.as_mut().set_status(QString::from("Opening…"));
         let qt = self.qt_thread();
         runtime().spawn(async move {
@@ -1594,7 +1648,11 @@ impl qobject::LoginController {
     /// Invite someone to any room or space by id.
     pub fn invite_to_room(mut self: Pin<&mut Self>, room_id: &QString, mxid: &QString) {
         let Some(client) = self.rust().client.clone() else { return };
-        let (rid, who) = (room_id.to_string(), mxid.to_string());
+        // 2026-11-12 (feat/people-search): a plain username means your own server (dm_target.rs; it used to be refused)
+        let own = self.user_id().to_string();
+        let typed = mxid.to_string();
+        let who = crate::people::exact_or_typed(&typed, &own).unwrap_or_else(|| typed.trim().to_string());
+        let rid = room_id.to_string();
         self.as_mut().set_status(QString::from("Inviting…"));
         let qt = self.qt_thread();
         runtime().spawn(async move {
@@ -1612,7 +1670,7 @@ impl qobject::LoginController {
                     },
                     None => "That room isn't loaded yet".to_string(),
                 },
-                _ => format!("{who} doesn't look like a user id"),
+                _ => format!("{who} isn't a username or an address like @name:their.server"),
             };
             let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&msg)));
         });
@@ -3046,6 +3104,30 @@ pub fn normalize_invite_code(typed: &str) -> String {
 }
 
 #[cfg(test)]
+mod sign_in_server_tests {
+    use super::{sign_in_server as s, SERVER_FIELD_HINT};
+
+    /// QA 12.1.11 D6: an empty Server field with a full `@name:server` user ID did nothing at all. The web's
+    /// core/signInServer.test.ts has the same cases.
+    #[test]
+    fn the_field_else_the_user_ids_server_else_the_hint() {
+        assert_eq!(s("example.org", "ana"), Ok(("example.org".to_string(), false)));
+        assert_eq!(s("  example.org ", "@ana:other.example"), Ok(("example.org".to_string(), false)));
+        assert_eq!(s("", "@ana:example.org"), Ok(("example.org".to_string(), true)));
+        assert_eq!(s("   ", " @ana:Example.ORG "), Ok(("example.org".to_string(), true)));
+        assert_eq!(s("", "@ana:example.org:8448"), Ok(("example.org:8448".to_string(), true)));
+        assert_eq!(s("", "ana"), Err(SERVER_FIELD_HINT));
+        assert_eq!(s("", "@ana"), Err(SERVER_FIELD_HINT));
+        assert_eq!(s("", "@ana:"), Err(SERVER_FIELD_HINT));
+        assert_eq!(s("", "@:example.org"), Err(SERVER_FIELD_HINT));
+        assert_eq!(s("", "ana:example.org"), Err(SERVER_FIELD_HINT));
+        assert_eq!(s("", "@ana:exa mple.org"), Err(SERVER_FIELD_HINT));
+        assert_eq!(s("", "@ana:example.org/x"), Err(SERVER_FIELD_HINT));
+        assert_eq!(s("", ""), Err(SERVER_FIELD_HINT));
+    }
+}
+
+#[cfg(test)]
 mod invite_code_tests {
     use super::normalize_invite_code as n;
 
@@ -3319,6 +3401,9 @@ async fn build_client(server: &str) -> Result<Client, String> {
 /// concrete homeserver URL. Discovery uses a throwaway storeless client; falls back
 /// to `https://<input>` when there's no `.well-known` (a bare homeserver host).
 async fn resolve_homeserver(server: &str) -> Result<String, String> {
+    // a bare name is a tinhat.me name ("crew" → crew.tinhat.me), as the phone apps (server_name.rs, shared table)
+    let server = crate::server_name::expand(server);
+    let server = server.as_str();
     if server.starts_with("http://") || server.starts_with("https://") {
         return Ok(server.to_string());
     }

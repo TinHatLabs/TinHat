@@ -26,6 +26,11 @@ Controls.AbstractButton {
     hoverEnabled: true
     opacity: enabled ? 1.0 : 0.5
 
+    // a11y pass (TH-A11Y-13): an icon-only button — its tooltip is its name for a screen reader (the web's aria-label)
+    Accessible.role: Accessible.Button
+    Accessible.name: btn.tip
+    Accessible.onPressAction: btn.clicked()
+
     Controls.ToolTip.text: btn.tip
     Controls.ToolTip.visible: btn.hovered && btn.tip.length > 0
     Controls.ToolTip.delay: 400

@@ -219,8 +219,7 @@ pub async fn ship_bug_report(user: &str, note: &str) -> Result<String, String> {
         .as_ref()
         .and_then(|p| std::fs::read(p).ok())
         .map(|b| {
-            let start = b.len().saturating_sub(TAIL_BYTES);
-            String::from_utf8_lossy(&b[start..]).into_owned()
+            crate::diagnostics::tail_text(&b, TAIL_BYTES)
         })
         .unwrap_or_default();
     let live_prov = if mixed {
@@ -238,8 +237,7 @@ pub async fn ship_bug_report(user: &str, note: &str) -> Result<String, String> {
     let old = old_log_path();
     let prev = if prev_log_is(user, prev_owner()) { std::fs::read(&old).ok() } else { None }
         .map(|b| {
-            let start = b.len().saturating_sub(TAIL_BYTES / 2);
-            String::from_utf8_lossy(&b[start..]).into_owned()
+            crate::diagnostics::tail_text(&b, TAIL_BYTES / 2)
         })
         .unwrap_or_default();
     let prev_prov = if prev.trim().is_empty() {
@@ -423,6 +421,130 @@ pub fn ship_previous_session_log(user: &str) {
 
 #[cfg(test)]
 mod tests {
+
+    /// A call key installed through the real native key provider, with RUST_LOG forced as wide as it goes, never
+    /// reaches the session log (stderr → a file, as in the app) nor what "share logs" / "Report a problem" / the
+    /// diagnostics report would send. Runs the child below in fresh processes, once per RUST_LOG.
+    #[test]
+    fn a_call_key_never_reaches_the_session_log_or_a_shared_log() {
+        let exe = std::env::current_exe().expect("test binary");
+        let dir = std::env::temp_dir().join(format!("tinhat-keylog-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut failures = Vec::new();
+        for (n, spec) in ["trace", "libwebrtc=trace"].iter().enumerate() {
+            let log_path = dir.join(format!("session-{n}.log"));
+            let log = std::fs::File::create(&log_path).unwrap();
+            let mut child = std::process::Command::new(&exe)
+                .args(["--exact", "logship::tests::keylog_child_installs_a_call_key", "--ignored", "--nocapture", "--test-threads=1"])
+                .env("RUST_LOG", spec)
+                .env("TINHAT_KEYLOG_CHILD", "1")
+                .stdout(std::process::Stdio::null())
+                .stderr(log)
+                .spawn()
+                .expect("child run");
+            let status = {
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(180);
+                loop {
+                    if let Some(st) = child.try_wait().expect("child wait") {
+                        break st;
+                    }
+                    if std::time::Instant::now() > deadline {
+                        let _ = child.kill();
+                        let _ = child.wait();
+                        panic!("RUST_LOG={spec}: the child hung");
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                }
+            };
+            let session = std::fs::read_to_string(&log_path).unwrap_or_default();
+            let _ = std::fs::remove_file(&log_path);
+            assert!(status.success(), "RUST_LOG={spec}: the child failed");
+            // positive control: the capture works (the bridge and this RUST_LOG let a libwebrtc-target line through)
+            assert!(session.contains(KEYLOG_ALIVE), "RUST_LOG={spec}: the session log captured nothing");
+            let leaks = |text: &str| -> Vec<&'static str> {
+                planted_key_forms().into_iter().filter(|(_, needle)| text.contains(needle.as_str())).map(|(form, _)| form).collect()
+            };
+            let mut in_log = leaks(&session);
+            if session.contains("derived_key") {
+                in_log.push("a key-derivation line");
+            }
+            // any key in decimal form, the derived one included (16+ small numbers in a list)
+            if crate::diagnostics::redact(&session).contains("[<REDACTED>]") {
+                in_log.push("a decimal byte list");
+            }
+            if !in_log.is_empty() {
+                failures.push(format!("RUST_LOG={spec}: session log holds the key ({})", in_log.join(", ")));
+            }
+            // what leaves the machine: the bug report / log upload (scrub) and the diagnostics report (redact)
+            for (what, text) in [("shared log", scrub(&session)), ("diagnostics report", crate::diagnostics::redact(&session))] {
+                let found = leaks(&text);
+                if !found.is_empty() {
+                    failures.push(format!("RUST_LOG={spec}: {what} holds the key ({})", found.join(", ")));
+                }
+            }
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(failures.is_empty(), "call key material reached the logs:\n{}", failures.join("\n"));
+    }
+
+    /// The upload scrubbers on their own: a log that DID carry libwebrtc's two key-derivation messages (the exact
+    /// pre-fix shape, secret and derived key) loses every key byte in the shared log and the diagnostics report.
+    #[test]
+    fn the_shared_log_scrubbers_remove_a_logged_key_derivation() {
+        let list = |k: &[u8]| format!("[{}]", k.iter().map(|b| format!("{b},")).collect::<String>());
+        let secret = planted_key();
+        let derived: Vec<u8> = (0..16u8).map(|i| 0x3Cu8.wrapping_add(i.wrapping_mul(53))).collect();
+        let salt = b"LKFrameEncryptionKey";
+        let log = format!(
+            "2026-11-07T00:00:00Z DEBUG libwebrtc: (frame_crypto_transformer.cc:349): secret {} len 32 slat << {} len 20\n derived_key {} len 16\n\
+             2026-11-07T00:00:01Z DEBUG libwebrtc: (frame_crypto_transformer.cc:373): raw_key {} len 32 slat << {} len 20\n derived_key {} len 16\n",
+            list(&secret), list(salt), list(&derived), list(&secret), list(salt), list(&derived),
+        );
+        let window = |k: &[u8], at: usize| k[at..at + 4].iter().map(|b| format!("{b},")).collect::<String>();
+        for (what, text) in [("shared log", scrub(&log)), ("diagnostics report", crate::diagnostics::redact(&log))] {
+            for k in [&secret[..], &derived[..]] {
+                for at in 0..=k.len() - 4 {
+                    assert!(!text.contains(&window(k, at)), "{what}: key bytes at {at} survive");
+                }
+            }
+        }
+    }
+
+    const KEYLOG_ALIVE: &str = "keylog self-test: log bridge alive";
+
+    /// A recognisable 32-byte key (never a real one).
+    fn planted_key() -> Vec<u8> {
+        (0..32u8).map(|i| 0xA7u8.wrapping_add(i.wrapping_mul(29))).collect()
+    }
+
+    /// The forms a byte key takes in a log line: libwebrtc's "[a,b,…,]", Rust's "[a, b, …]", hex, base64.
+    fn planted_key_forms() -> Vec<(&'static str, String)> {
+        use base64::Engine as _;
+        let k = planted_key();
+        let dec = |sep: &str| k[..8].iter().map(|b| b.to_string()).collect::<Vec<_>>().join(sep);
+        let hex: String = k.iter().map(|b| format!("{b:02x}")).collect();
+        vec![
+            ("decimal list", dec(",")),
+            ("decimal list (spaced)", dec(", ")),
+            ("hex", hex[..16].to_string()),
+            ("HEX", hex[..16].to_uppercase()),
+            ("base64", base64::engine::general_purpose::STANDARD.encode(&k)[..16].to_string()),
+        ]
+    }
+
+    /// Child half of the test above (fresh process: the log bridge is process-global). The app's own logging
+    /// setup, then a call key installed the way a call installs it.
+    #[test]
+    #[ignore = "run by a_call_key_never_reaches_the_session_log_or_a_shared_log"]
+    fn keylog_child_installs_a_call_key() {
+        if std::env::var_os("TINHAT_KEYLOG_CHILD").is_none() {
+            return;
+        }
+        crate::diagnostics::init_rust_logging();
+        tracing_log::log::warn!(target: "libwebrtc", "{KEYLOG_ALIVE}");
+        assert!(tinhat_streamer::lk_publish::install_key_for_log_selftest("@alice:example.org|ALICEDEVICE", &planted_key()));
+        eprintln!("[keylog] key installed");
+    }
     use super::*;
 
     /// 12.1.4: the share cadence stamp survives the scrub (12.1.3's "19:47:24Z" came out as "[ip]24Z").

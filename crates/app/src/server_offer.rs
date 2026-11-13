@@ -105,7 +105,7 @@ impl ServerFeature {
             ServerFeature::Games => "the Game Reel's games catalogue (search, add by name, covers)",
             ServerFeature::Steam => "importing a Steam library into My games",
             ServerFeature::Gameservers => "the Game servers widget",
-            ServerFeature::Presence => "Reach: online / away / in-a-call statuses, custom statuses, Who's around, Friends' clocks, Is it just me?",
+            ServerFeature::Presence => "Reach: online / away / in-a-call statuses, custom statuses, Who's around, People's clocks, Is it just me?",
             ServerFeature::Push => "push notifications on phones and closed browsers",
             ServerFeature::Memories => "Memories, the call recorder (and its recorder account)",
             ServerFeature::Reports => "Report a problem",
@@ -415,7 +415,7 @@ pub fn apply_action_gates(table: &mut Value) -> usize {
 pub const SETTING_GATES: &[(&str, ServerFeature)] = &[
     ("privacy.never-record", ServerFeature::Memories),
     ("profile.join-sound", ServerFeature::Soundboard),
-    // Reach: "Your status" and the time zone Friends' clocks shows (both live in the presence service)
+    // Reach: "Your status" and the time zone People's clocks shows (both live in the presence service)
     ("privacy.share-status", ServerFeature::Presence),
     ("privacy.share-time-zone", ServerFeature::Presence),
     ("privacy.time-zone", ServerFeature::Presence),
@@ -582,6 +582,11 @@ fn read_cache_former() -> Vec<String> {
 }
 
 fn write_cache(o: &ServerOffer, focus: &Option<Option<String>>, former: &[String]) {
+    // the unit tests drive set() and forget() with made-up servers: they never write or delete the cache file of the
+    // account on the machine that runs them (12.1.9, Astra review)
+    if cfg!(test) {
+        return;
+    }
     if *o == no_offer() && focus.is_none() && former.is_empty() {
         let _ = std::fs::remove_file(crate::settings::overlay_pref_path(CACHE_PREF));
         return;
@@ -721,7 +726,10 @@ pub fn api_base() -> Option<String> {
 /// The call service of `server`'s last read well-known: Some(Some(url)) = it names one; Some(None) = a document
 /// was read and names none; None = this server's document was never read (or the answer belongs to another).
 pub fn focus_url_for(server: &str) -> Option<Option<String>> {
-    let s = lock();
+    focus_in(&lock(), server)
+}
+
+fn focus_in(s: &State, server: &str) -> Option<Option<String>> {
     if s.server == server || (s.server.is_empty() && s.focus.is_some()) {
         s.focus.clone()
     } else {
@@ -755,7 +763,9 @@ pub fn forget() {
     // and it must not keep the next account's first read waiting
     s.epoch += 1;
     s.in_flight = false;
-    let _ = std::fs::remove_file(crate::settings::overlay_pref_path(CACHE_PREF));
+    if !cfg!(test) {
+        let _ = std::fs::remove_file(crate::settings::overlay_pref_path(CACHE_PREF));
+    }
     apply_side_effects(&s.offer);
     REV.fetch_add(1, Ordering::SeqCst);
 }
@@ -774,6 +784,18 @@ enum Read {
     NotFound,
     /// a network error, another status, not JSON: keep the last answer
     Keep,
+}
+
+/// The call service a read says (`State::focus`): only a document says anything, Some(None) = it names none. 12.1.9: a
+/// 404 is no offer but says nothing about the call service (it used to be kept as Some(None), so a 404 in the middle of a
+/// server update sent new calls to the homeserver fallback until the next read); rtc.rs focus_service_url asks again,
+/// with retries, as the web does.
+fn focus_of_read(r: &Read) -> Option<Option<String>> {
+    match r {
+        // a JSON object only (rtc.rs focus_read_of's rule): a 200 `null` or `[]` says nothing either
+        Read::Doc(v) if v.is_object() => Some(crate::rtc::focus_from_wellknown(v)),
+        _ => None,
+    }
 }
 
 async fn read_well_known(server: &str) -> Read {
@@ -829,22 +851,27 @@ pub async fn refresh(client: &matrix_sdk::Client, force: bool) -> bool {
         return false;
     }
     s.in_flight = false;
+    apply_read(&mut s, &server, &homeserver, outcome)
+}
+
+/// What a finished read does to the store (refresh, under the lock); true when the answer changed.
+fn apply_read(s: &mut State, server: &str, homeserver: &str, outcome: Read) -> bool {
+    let focus = focus_of_read(&outcome);
     match outcome {
         Read::NotFound => {
             s.former.clear();
-            set(&mut s, &server, no_offer(), Some(None))
+            set(s, server, no_offer(), focus)
         }
         Read::Doc(v) => {
-            let focus = Some(crate::rtc::focus_from_wellknown(&v));
             let mut offer = parse_offer(&v);
-            if !offer.api.is_empty() && !api_allowed(&offer.api, &homeserver, &server) {
+            if !offer.api.is_empty() && !api_allowed(&offer.api, homeserver, server) {
                 eprintln!("[server-offer] ignoring the announced api {} (not this server's host); using <homeserver>/api", offer.api);
                 offer.api.clear();
             }
             let former = crate::moved::parse_move(&v).moved_from;
             let former_changed = former != s.former;
             s.former = former;
-            let changed = set(&mut s, &server, offer, focus);
+            let changed = set(s, server, offer, focus);
             if former_changed && !changed {
                 write_cache(&s.offer, &s.focus, &s.former);
             }
@@ -862,6 +889,47 @@ mod tests {
     //! offer.test.ts's cases (Tin Hat Web, branch selfhost), one test per web test where the web has one, plus the
     //! desktop's own: the store and the real engine through actions_ctl.
     use super::*;
+
+    // 12.1.9: a 404 is no offer but no word about the call service (rtc.rs asks again); only a document names one
+    #[test]
+    fn a_404_says_nothing_about_the_call_service() {
+        assert_eq!(focus_of_read(&Read::NotFound), None);
+        assert_eq!(focus_of_read(&Read::Keep), None);
+        assert_eq!(focus_of_read(&Read::Doc(json!({}))), Some(None));
+        let doc = json!({ "org.matrix.msc4143.rtc_foci": [{ "type": "livekit", "livekit_service_url": "https://call.crew.test/livekit/jwt" }] });
+        assert_eq!(focus_of_read(&Read::Doc(doc)), Some(Some("https://call.crew.test/livekit/jwt".to_string())));
+        // negative control: 12.1.8 kept a 404 as Some(None), which focus_url_for hands rtc.rs as "names none"
+        let old = |r: &Read| if matches!(r, Read::NotFound) { Some(None) } else { focus_of_read(r) };
+        assert_ne!(old(&Read::NotFound), focus_of_read(&Read::NotFound));
+        for v in [json!(null), json!([]), json!("updating"), json!(7)] {
+            assert_eq!(focus_of_read(&Read::Doc(v.clone())), None, "a non-object document {v}");
+        }
+    }
+
+    /// The store tests that move the global change counter (set → REV) run one at a time.
+    static STORE_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    // 12.1.9, the call site (Astra review): refresh's arms through apply_read, and what focus_url_for then hands rtc.rs
+    #[test]
+    fn a_404_after_a_document_leaves_the_call_service_to_rtc() {
+        let _one = STORE_TEST.lock().unwrap_or_else(|e| e.into_inner());
+        let mut s = State { offer: no_offer(), focus: None, server: String::new(), last_read: None, in_flight: false, pinned: false, former: Vec::new(), epoch: 0 };
+        let (server, hs) = ("crew.test", "https://crew.test/");
+        let url = "https://call.crew.test/livekit/jwt".to_string();
+        let doc = json!({ "org.matrix.msc4143.rtc_foci": [{ "type": "livekit", "livekit_service_url": url }] });
+        apply_read(&mut s, server, hs, Read::Doc(doc));
+        assert_eq!(focus_in(&s, server), Some(Some(url.clone())), "a document names the call service");
+        apply_read(&mut s, server, hs, Read::Keep);
+        assert_eq!(focus_in(&s, server), Some(Some(url.clone())), "a failed read keeps the last answer");
+        apply_read(&mut s, server, hs, Read::NotFound);
+        assert_eq!(focus_in(&s, server), None, "a 404 says nothing: rtc.rs reads (and retries) itself");
+        assert_eq!(s.offer, no_offer(), "… and is no offer");
+        apply_read(&mut s, server, hs, Read::Doc(json!({})));
+        assert_eq!(focus_in(&s, server), Some(None), "a document naming none is an answer");
+        apply_read(&mut s, server, hs, Read::Doc(json!(null)));
+        assert_eq!(focus_in(&s, server), None, "a 200 null is not a document");
+        assert_eq!(focus_in(&s, "other.test"), None, "another server's answer is never handed out");
+    }
 
     // the announcement Tin Hat Server 0.2.21 sends (docs/API.md's example, byte for byte: a Giphy key, no YouTube key,
     // no Steam key, no game-servers panel, Memories on with its recorder)
@@ -1453,6 +1521,7 @@ mod tests {
 
     #[test]
     fn the_store_keeps_an_answer_and_forgets_it() {
+        let _one = STORE_TEST.lock().unwrap_or_else(|e| e.into_inner());
         // the store is process-wide; this test owns it for its duration (other tests here don't touch it)
         let o = parse_offer(&json!({ "dev.tinhat.server": {
             "server": "0.2.21", "api": "https://maplehouse.tinhat.me/api",

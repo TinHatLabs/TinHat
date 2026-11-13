@@ -26,6 +26,7 @@ Controls.Dialog {
 
     title: LinkGate.plain(dlg.words.title || "")   // the header draws AutoText (textformat-lint)
     modal: true
+    Controls.Overlay.modal: Rectangle { color: Th.dialogOverlayBg }   // D3: the theme's veil (VerifyDeviceDialog.qml)
     parent: Controls.Overlay.overlay
     anchors.centerIn: parent
     closePolicy: dlg.busy ? Controls.Popup.NoAutoClose : Controls.Popup.CloseOnEscape

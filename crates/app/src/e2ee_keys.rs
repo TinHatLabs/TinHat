@@ -315,10 +315,7 @@ pub fn parse_encryption_keys_any(sender: &str, content: &serde_json::Value) -> V
     match content.get("keys") {
         Some(k) if k.is_object() => take(k),
         Some(k) if k.is_array() => k.as_array().unwrap().iter().for_each(|e| take(e)),
-        other => eprintln!(
-            "[e2ee] parse: no usable 'keys' field (got {})",
-            other.map(|v| v.to_string()).unwrap_or_else(|| "absent".into())
-        ),
+        other => eprintln!("[e2ee] parse: no usable 'keys' field (got {})", describe_keys_field(other)),
     }
 
     let mut out = Vec::new();
@@ -380,4 +377,29 @@ pub fn parse_keys_event(sender: &str, content: &serde_json::Value) -> Vec<Receiv
             })
         })
         .collect()
+}
+
+/// What the log says about an unusable `keys` field.
+fn describe_keys_field(v: Option<&serde_json::Value>) -> String {
+    match v {
+        None => "absent".into(),
+        Some(serde_json::Value::Null) => "null".into(),
+        Some(serde_json::Value::Bool(_)) => "a boolean".into(),
+        Some(serde_json::Value::Number(_)) => "a number".into(),
+        Some(serde_json::Value::String(s)) => format!("a string of {} characters", s.len()),
+        Some(_) => "an unexpected value".into(),
+    }
+}
+
+#[cfg(test)]
+mod keys_field_log_tests {
+    /// launch-gate 2026-11-07 (review item 5): an event whose `keys` is a bare string may be a key; the log (and so a
+    /// shared bundle, under TINHAT_DUMP_ROOMKEYS or in a call) says only what kind of value it was.
+    #[test]
+    fn an_unusable_keys_field_is_never_printed() {
+        let value = "q83vEjRWeJCrze8SNFZ4kA";
+        let d = super::describe_keys_field(Some(&serde_json::Value::String(value.into())));
+        assert!(!d.contains(value), "{d}");
+        assert_eq!(super::describe_keys_field(None), "absent");
+    }
 }

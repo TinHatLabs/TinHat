@@ -372,4 +372,41 @@ mod tests {
         eve["sender"] = json!("@eve:example.org");
         assert!(!super::answered_elsewhere(ME, "PHONE", now, &[eve]), "a state key that isn't the sender's");
     }
+
+    /// QA W3 (2026-11-07): an incoming call rings only in a room I have JOINED — never one I am only invited to (or
+    /// left, knocked on, was banned from). scan() walks `client.joined_rooms()` and nothing else, a card whose room is
+    /// no longer joined drops out of `presented`, and bridge.rs raises incomingCall only from scan's edges. Mirrors the
+    /// web's features/calls/invitering.test.ts (callwatch.ts scan's `getMyMembership() !== "join"` gate).
+    #[test]
+    fn rings_only_in_joined_rooms() {
+        let strip = |src: &str| src.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
+        let cw = strip(include_str!("callwatch.rs"));
+        let at = cw.find("pub async fn scan(client: &Client)").expect("scan");
+        let body = &cw[at..at + cw[at..].find("\n}").expect("end of scan")];
+        assert!(body.contains("let rooms = client.joined_rooms();"), "scan walks the joined rooms");
+        assert_eq!(body.matches("let rooms").count(), 1, "rooms is never rebound");
+        assert!(body.contains("for r in &rooms {"), "the edges come from that set");
+        for pushed in ["rising.push(", "falling.push(", "seed_active.push("] {
+            let first = body.find(pushed).expect(pushed);
+            assert!(first > body.find("for r in &rooms {").unwrap() && first < body.find("st.seeded = true;").unwrap(), "{pushed} only inside the joined-rooms loop");
+            assert_eq!(body.matches(pushed).count(), if pushed == "rising.push(" { 2 } else { 1 }, "{pushed}");
+        }
+        for other in ["client.rooms()", "invited_rooms", "rooms_filtered", "knocked_rooms", "left_rooms"] {
+            assert!(!body.contains(other), "scan must not walk {other}");
+        }
+        assert!(body.contains("st.presented.retain(|id| seen.get(id).copied().unwrap_or(false));"), "a card for a room no longer joined goes");
+        let bridge = strip(include_str!("bridge.rs"));
+        assert_eq!(bridge.matches(".incoming_call(").count(), 1, "one place raises incomingCall");
+        let emit = bridge.find(".incoming_call(").unwrap();
+        let scan_at = bridge[..emit].rfind("let edges = crate::callwatch::scan(&client).await;").expect("raised from callwatch::scan's edges");
+        let wiring = &bridge[scan_at..emit];
+        assert!(wiring.contains("for e in edges {") && wiring.contains("if e.started {"), "each raise is one of scan's edges");
+        assert!(bridge[emit..].starts_with(".incoming_call(QString::from(&e.room_id)"), "for the edge's own room");
+        // and the QML toast is raised from that signal alone
+        let main_qml = include_str!("../qml/Main.qml");
+        // (the other present() is the GPU gate's ring probe: a fixed test card, only under its env switch)
+        assert_eq!(main_qml.matches("incomingToast.present(").count(), 2);
+        assert!(main_qml.contains("incomingToast.present(\"!gpugate-ring:test\", \"Ring test\", \"jordan\")"));
+        assert!(main_qml.contains("function onIncomingCall(roomId, roomName, who) { incomingToast.present(roomId, roomName, who) }"));
+    }
 }

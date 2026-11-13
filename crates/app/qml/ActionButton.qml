@@ -25,6 +25,50 @@ Item {
     signal run(Item anchor)
     signal hold(Item anchor, bool down)          // a hold action (push to talk): the press and the release
 
+    // ---- the hold latch (security review round 4, UI-1 round 2) ----------------------------------------------------------
+    // A held push-to-talk button that was destroyed, re-parented, hidden, dimmed or put into edit mode mid-hold never sent
+    // its release (the release was gated on the state at release time), so the mic stayed open. The latch keeps the
+    // press's own release and runs it exactly once, whatever happens to the button. Shared with the web's
+    // src/actions/ui/holdLatch.ts; both replay testvectors/hold-latch/vectors.json (tools/hold-latch-test.mjs).
+    // BEGIN hold-latch pure
+    function holdStep(st, op) {
+        var held = !!(st && st.held), disposed = !!(st && st.disposed)
+        if (op === "down") {
+            if (held || disposed) return { st: { held: held, disposed: disposed }, emit: null }
+            return { st: { held: true, disposed: disposed }, emit: "down" }
+        }
+        var gone = disposed || op === "unmount"
+        if (held) return { st: { held: false, disposed: gone }, emit: "up" }
+        return { st: { held: false, disposed: gone }, emit: null }
+    }
+    // END hold-latch pure
+    property var _latch: ({ held: false, disposed: false })
+    property var _holdAnchor: null
+    property string _holdAction: ""
+    readonly property bool holdable: item.hold === true && !editing && !dimmed
+    function _hold(op, anchor) {
+        var r = ab.holdStep(ab._latch, op)
+        ab._latch = r.st
+        if (r.emit === "down") {
+            ab._holdAnchor = anchor || null
+            ab._holdAction = String(ab.item.a || "")
+            ab.hold(anchor, true)
+        } else if (r.emit === "up") {
+            var a = ab._holdAnchor, id = ab._holdAction
+            ab._holdAnchor = null
+            ab._holdAction = ""
+            try { ab.hold(a, false) } catch (e) { console.warn("[actions] hold release:", e) }
+            // the button is going away / changing under the finger: its host's handler may already be gone with it, so
+            // the release also goes straight to the run path (a release always runs there; a second one does nothing)
+            if (op !== "up" && op !== "cancel" && id.length > 0 && ab.app && ab.app.actions)
+                ab.app.actions.run(id, { source: "button", anchor: null, hold: "up" })
+        }
+    }
+    onHoldableChanged: if (!holdable) ab._hold("disable")
+    onVisibleChanged: if (!visible) ab._hold("hide")
+    onParentChanged: ab._hold("reparent")
+    Component.onDestruction: ab._hold("unmount")
+
     readonly property bool known: item.known === true
     readonly property bool dimmed: item.state !== "shown" || !known
     readonly property bool faint: item.state === "hidden"
@@ -117,7 +161,8 @@ Item {
                                                       implicitContentHeight + topPadding + bottomPadding)
             Binding on padding { when: ab.compact || ab.rowScale === "M"; value: ab.compact ? 0 : 8 }
             onClicked: if (!ab.editing && !ab.dimmed && ab.item.hold !== true) ab.run(this)
-            onPressedChanged: if (ab.item.hold === true && !ab.editing && !ab.dimmed) ab.hold(this, pressed)
+            onPressedChanged: if (pressed) { if (ab.holdable) ab._hold("down", this) } else ab._hold("up")
+            onCanceled: ab._hold("cancel")
             contentItem: RowLayout {
                 spacing: ab.rowScale === "M" ? 6 : Kirigami.Units.smallSpacing
                 Avatar {

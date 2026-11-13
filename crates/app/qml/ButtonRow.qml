@@ -37,9 +37,21 @@ Item {
     readonly property string contextJson: JSON.stringify(context === undefined ? null : context)
     readonly property string resultJson: ctl ? ctl.row(rowKind, valueJson, snapshotJson, contextJson) : ""
     property var result: ({ items: [], look: "icon", scale: "S", style: "tool" })
+    // a live hold keeps its button (RowModel's rule): only a change of the row's shape or of a hold item publishes
+    property bool _holding: false
+    property string _itemsKey: ""
+    function _holdKey(r) {
+        return (r.items || []).map(function (x) { return x.a + ":" + x.state + (x.hold === true ? ":" + JSON.stringify(x) : "") }).join(",")
+    }
     function _parse() {
-        try { result = resultJson.length > 0 ? JSON.parse(resultJson) : ({ items: [], look: "icon", scale: "S", style: "tool" }) }
-        catch (e) { result = ({ items: [], look: "icon", scale: "S", style: "tool" }) }
+        var next
+        try { next = resultJson.length > 0 ? JSON.parse(resultJson) : ({ items: [], look: "icon", scale: "S", style: "tool" }) }
+        catch (e) { next = ({ items: [], look: "icon", scale: "S", style: "tool" }) }
+        var k = br._holdKey(next)
+        if (br._holding && k === br._itemsKey) return
+        br._holding = false
+        br._itemsKey = k
+        result = next
     }
     onResultJsonChanged: _parse()
     Component.onCompleted: _parse()
@@ -111,7 +123,11 @@ Item {
                     toggleLook: br.rowKind === "buttons.main" ? "checked" : "pose"
                     editing: br.editing
                     onRun: (anchor) => br.runItem(cell.it, anchor)
-                    onHold: (anchor, down) => { if (br.app && br.app.actions) br.app.actions.run(cell.it.a, { source: "button", target: cell.it.target, context: br.context, anchor: anchor, hold: down ? "down" : "up" }) }
+                    onHold: (anchor, down) => {
+                        if (down) br._holding = true
+                        if (br.app && br.app.actions) br.app.actions.run(cell.it.a, { source: "button", target: cell.it.target, context: br.context, anchor: anchor, hold: down ? "down" : "up" })
+                        if (!down) { br._holding = false; br._parse() }
+                    }
                 }
             }
         }

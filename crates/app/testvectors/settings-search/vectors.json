@@ -388,21 +388,52 @@
    "q": "zoom",
    "operator": true,
    "want": [
-    "appearance.app-size"
+    "appearance.app-size",
+    "appearance.app-size-live"
    ]
   },
   {
    "q": "zoom",
    "operator": false,
    "want": [
-    "appearance.app-size"
+    "appearance.app-size",
+    "appearance.app-size-live"
    ]
   },
   {
    "q": "app size",
    "operator": false,
    "want": [
-    "appearance.app-size"
+    "appearance.app-size",
+    "appearance.app-size-live"
+   ]
+  },
+  {
+   "q": "instantly",
+   "operator": true,
+   "want": [
+    "appearance.app-size-live"
+   ]
+  },
+  {
+   "q": "instantly",
+   "operator": false,
+   "want": [
+    "appearance.app-size-live"
+   ]
+  },
+  {
+   "q": "change size",
+   "operator": true,
+   "want": [
+    "appearance.app-size-live"
+   ]
+  },
+  {
+   "q": "change size",
+   "operator": false,
+   "want": [
+    "appearance.app-size-live"
    ]
   }
  ]

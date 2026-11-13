@@ -5,9 +5,13 @@
 // window next to the app. Diagnostics still reach a dev terminal (parent-console
 // attach) or the log file: platform::redirect_stderr_to_log decides at startup.
 #![cfg_attr(windows, windows_subsystem = "windows")]
+pub mod ptt_rules; // push to talk key rules (shared vectors with the web)
 pub mod activity; // "What we're playing" per-room activity (dev.tinhat.activity)
+pub mod app_badge; // REACH A5.10: the taskbar / dock unread count (Unity LauncherEntry on Linux, overlay icon on Windows)
 pub mod afk_ctl; // AfkController — #7 BRB/AFK presence in a call (Matrix reactions/state)
 pub mod assets; // bundled app assets (icon layers + chimes) -> runtime dir
+pub mod notif_actions; // Reply / Mark as read on message notifications (docs/NOTIF-ACTIONS.md)
+pub mod receipts; // every read receipt / read marker the app sends: public m.read only in a room of my own server
 pub mod callwatch; // 10.0: incoming-call edges per sync -> LoginController signals
 pub mod ringglue; // DM ringing glue: dev.tinhat.call.decline → "<name> declined" / the card goes (RINGING.md §5)
 pub mod quietrules; // 10.3: account push rules that keep call joins / room housekeeping out of the unread counts
@@ -35,6 +39,7 @@ pub mod ui_scale; // 2026-10-31 App size: Ctrl+= / Ctrl+- / Ctrl+0 + Settings �
 pub mod callstats_ctl; // widgets (step 2): CallStatsController — the Call stats widget's live data (streamer callstats.rs)
 pub mod widgets_ctl; // widgets (step 2): WidgetsController — call history, Up next's events, the shared formatters
 pub mod mentions_ctl; // widgets W1: MentionsController — this device's list of recent highlights (Mentions widget)
+pub mod voicenote_ctl; // voice notes (docs/VOICE-NOTES.md): VoiceNoteController — record, review, send a voice message
 pub mod note_ctl; // widgets W1: NoteController — the space's Sticky note (dev.tinhat.note, edit_space_note)
 pub mod dice_ctl; // widgets W3: DiceController — rolling (OS CSPRNG), the private rolls, the Dice widget's history
 pub mod polls_ctl; // widgets W3: PollsController + the poll card's JSON (the shared polls logic for QML)
@@ -43,8 +48,11 @@ pub mod layout_ctl; // islands (C1): LayoutController — the layout engine (cra
 pub mod layout_store; // 11.0 edit mode: your layouts across your devices (dev.tinhat.layouts, EDITMODE-UI §16)
 pub mod actions_ctl; // 11.0 step 3 (buttons): ActionsController — the actions engine (crates/actions) as JSON in / JSON out
 pub mod dm_target; // 2026-09-29: the New DM field — a plain username → @name:<our server> (shared vectors with the web)
+pub mod people; // 2026-11-12 feat/people-search: the add-people picker's rules (shared vectors with the web's people.ts)
+pub mod people_ctl; // PeopleController — the add-people picker's data (room Invite, New DM, space Invite)
 pub mod new_room; // 2026-10-23: what New room starts with — encrypted rooms, unencrypted spaces (shared vectors with the web)
 pub mod diagnostics; // opt-in, redacted, user-inspectable bug report (never auto-sent)
+pub mod memlog; // 12.1.12: the [mem] line every 60 s (rss/pss/anon/heap, growth per minute and per fed video frame)
 pub mod logship; // opt-OUT scrubbed log upload + problem reports, to the user's OWN server (consent popup; Settings → Privacy)
 pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
@@ -81,6 +89,7 @@ pub mod joinsound; // per-user join sounds published over the soundboard bridge 
 pub mod livekit; // OpenID -> lk-jwt-service LiveKit token (used by stream)
 pub mod proxy; // the user's server's Tin Hat API client (gif/soundboard/watch — keys stay server-side; the base from its well-known)
 pub mod share_link; // 12.0.6: the links Tin Hat hands out (Copy link / Share / message links): the server's own web app, matrix.to for other servers; shared vectors with the web
+pub mod pins; // QA W1: a deleted message is not a pin (count, list, bubble; Delete unpins; = the web's features/chat/lib/pins.ts)
 pub mod server_offer; // selfhost: what the user's server offers (dev.tinhat.server in its well-known): API base, features, recorder, call service
 pub mod trust_device; // 12.0.4: trust the phone's native device — Devices → "Trust…" (the web's features/native/trust.ts)
 pub mod restore_err; // 12.1.1 (desktop-gates-night): a saved session that does not open is never deleted on its own: newer store / keyring / unreadable, the card offers the way out
@@ -88,6 +97,7 @@ pub mod replace_confirm; // 12.1.1 (polish-night): a sign-in that would replace 
 pub mod login_swap; // 12.1.1 (login-order-night): a sign-in sets the saved store aside and deletes it only after the server said yes
 pub mod start_over; // 12.0.1: "Lost your Security Key? Start over" — a new identity, backup and Security Key (password first)
 pub mod safety; // account safety: ignore / report / delete my account (shared vectors with the web; docs/ACCOUNT-SAFETY.md)
+pub mod server_name; // a bare name typed in the Server field is a tinhat.me name (shared table with the web + phones)
 pub mod password; // selfhost: a forgotten password (the server's owner resets it: account.password_reset) and Change password (UIA)
 #[cfg(windows)]
 pub mod qvideo; // FFI to the QVideoSink prototype shim + TINHAT_QVS_TEST (Windows video tail)
@@ -519,6 +529,9 @@ mod single_instance_tests {
 /// is what makes it safe to do real work — the same work the window-close path does.
 #[cfg(unix)]
 fn install_clean_exit_signals() {
+    // The fence for the rule above, at run time: this must be the only thread (the release gate reads this line).
+    let status = std::fs::read_to_string("/proc/self/status").unwrap_or_default();
+    eprintln!("{}", memlog::signal_setup_report(memlog::parse_threads(&status)).0);
     unsafe {
         let mut set: libc::sigset_t = std::mem::zeroed();
         libc::sigemptyset(&mut set);
@@ -701,6 +714,12 @@ fn main() {
     if let Some(note) = platform::cuda_perf_boost_note() {
         eprintln!("{note}");
     }
+    // 12.1.11 (flatpak-nvidia): an NVIDIA machine whose Flatpak can't reach CUDA (no GL.nvidia extension for the
+    // running driver, or no /dev/nvidia-uvm) says so in one line, with the fix; silent everywhere else
+    #[cfg(not(windows))]
+    if let Some(note) = platform::flatpak_nvidia_note(platform::flatpak_nvidia()) {
+        eprintln!("{note}");
+    }
     // Windows: the safe-mode decision above ran before stderr reached the log file (a shortcut
     // or Explorer start has no stderr at all), so its lines were lost. One summary line here:
     // marker path, what the previous start left, this start's mode.
@@ -710,7 +729,6 @@ fn main() {
     for line in &private_dirs {
         eprintln!("[main] private folders: {line}");
     }
-
     // TERM/INT/HUP: run the SAME clean-exit path as a window close, so a `kill`, a logout,
     // or a session teardown doesn't strand us in the call. Without this the app dies with its
     // MatrixRTC membership still published, and every peer's room keeps showing a phantom
@@ -720,6 +738,10 @@ fn main() {
     // the thread just does the normal bounded leave (LiveKit close + membership withdrawal,
     // which also NULLs the capture pipelines) and then exits.
     install_clean_exit_signals();
+
+    // 12.1.12: memory figures in every log (a "Tin Hat takes 8 GB" report carried none). After the signal setup above:
+    // a thread started before it would take SIGTERM with the default action and skip the clean exit.
+    memlog::spawn();
 
     // Log panics (with a backtrace) to the diagnostics log instead of letting them vanish.
     // A panic that unwinds out of a CXX-Qt `extern "RustQt"` invokable aborts the process; the
@@ -769,11 +791,7 @@ fn main() {
 
     // Bridge the `log` crate (livekit/libwebrtc) into tracing, then RUST_LOG-driven
     // logging (also surfaces matrix-sdk's tracing).
-    let _ = tracing_log::LogTracer::init();
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_writer(std::io::stderr)
-        .try_init();
+    diagnostics::init_rust_logging();
 
     // Headless self-test of the self-update cycle (TEST_PLAN.md §2.8) against a TEST
     // manifest (point TINHAT_UPDATE_URL at a local server — NEVER the real channel):
@@ -816,6 +834,12 @@ fn main() {
     //   TINHAT_AEC_ERLE_TEST=<secs> [TINHAT_AEC_ERLE_EC=0|1] [TINHAT_AEC_ERLE_OUT=<sink>] TINHAT_AEC_ERLE_FILE=<path> ./tinhat
     if std::env::var_os("TINHAT_AEC_ERLE_TEST").is_some() {
         tinhat_streamer::call::headless_aec_erle_test(); // exits the process
+    }
+    // Voice notes (docs/VOICE-NOTES.md §4): headless recorder self-test — the PRODUCTION recorder chain on the app's
+    // chosen input (started through leased_start), N seconds into an Ogg/Opus file; prints the finished note as JSON:
+    //   TINHAT_VOICENOTE_TEST=<secs> [TINHAT_VOICENOTE_OUT=<path.ogg>] ./tinhat
+    if std::env::var_os("TINHAT_VOICENOTE_TEST").is_some() {
+        tinhat_streamer::voicenote::headless_voicenote_test(); // exits the process
     }
 
     // Headless self-test of the LiveKit connect+publish path in THIS binary's
@@ -1381,6 +1405,8 @@ fn main() {
     // Headless verification (no GUI): dump the peer keys the ROOM transport exposes
     // for a room, to confirm they parse under the live peer's identity.
     //   TINHAT_DUMP_ROOMKEYS='!room:server' ./tinhat
+    // Prints the room's call keys: never in a release (the same fence as the self-tests above; release-binary-check.sh).
+    #[cfg(tinhat_env_selftests)]
     if let Ok(room) = std::env::var("TINHAT_DUMP_ROOMKEYS") {
         let _g = bridge::runtime().enter();
         bridge::runtime().block_on(async {
@@ -1908,6 +1934,18 @@ fn main() {
         engine.load(&QUrl::from(qml.as_str()));
     }
 
+    // Push to talk's hold key, whatever has the keyboard (ptt_bridge.cpp). After the load: it finds Main.qml's window.
+    extern "C" {
+        fn tinhat_install_ptt_key_filter();
+    }
+    unsafe { tinhat_install_ptt_key_filter() };
+
+    // 12.1.11 (flatpak-nvidia): a GStreamer scan cached while CUDA failed (on a sandbox that looks ready for it) is
+    // cleared once so the next start rescans. A worker thread: gst::init reads the registry; every startup env
+    // write (early_startup, pin_gstgl_for_qpa) is done by now. No-op outside the Flatpak's bundled-NVRTC registry.
+    #[cfg(not(windows))]
+    std::thread::Builder::new().name("gst-registry-heal".into()).spawn(platform::heal_app_gst_registry).ok();
+
     // Dark DWM title bars (main window exists now; future windows hook focus-changed).
     #[cfg(windows)]
     video::dark_titlebars();
@@ -1948,4 +1986,24 @@ fn main() {
 /// Wall-clock ms (PAD-PHONE Step B's handoff clock).
 pub(crate) fn persontiles_now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+
+/// QA 12.1.11 W10: the tour's "Make it yours" card still said "Two hand-tuned themes — OLED and Goose" next to an
+/// Appearance pane of hundreds. Tin Hat Web's Tour.tsx shows the same sentence (its nav/tour.test.ts compares the two).
+#[cfg(test)]
+mod tour_copy_tests {
+    const TOUR: &str = include_str!("../qml/Tour.qml");
+    pub const MAKE_IT_YOURS: &str = "Hundreds of themes, from OLED black to Goose — pick one under ☰ → Theme, or make your own in Settings → Appearance. The chrome recolors to match, instantly.";
+
+    /// The QML string literals joined (the card bodies are split over lines with `+`).
+    fn joined() -> String {
+        TOUR.replace("\"\n                + \"", "")
+    }
+
+    #[test]
+    fn make_it_yours_card_matches_the_theme_library() {
+        let t = joined();
+        assert!(!t.contains("Two hand-tuned themes"), "the old two-theme sentence is gone");
+        assert!(t.contains(&format!("body: \"{MAKE_IT_YOURS}\"")), "the card says the shared sentence");
+    }
 }

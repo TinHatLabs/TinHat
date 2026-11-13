@@ -236,14 +236,14 @@ fn plural(ids: &[&str]) -> bool {
 
 fn note_down(id: &str) -> &'static str {
     match id {
-        "chat" => "Chat isn't reachable from here. If friends can chat, it's your connection.",
-        "calls" => "Calls aren't reachable from here. If friends can call, it's your connection.",
-        "media" => "Pictures and files aren't loading from here. If friends can see them, it's your connection.",
-        "tinhat" => "The extras (sounds, GIFs, Memories) aren't reachable from here. If they work for friends, it's your connection.",
+        "chat" => "Chat isn't reachable from here. If other people can chat, it's your connection.",
+        "calls" => "Calls aren't reachable from here. If other people can call, it's your connection.",
+        "media" => "Pictures and files aren't loading from here. If other people can see them, it's your connection.",
+        "tinhat" => "The extras (sounds, GIFs, Memories) aren't reachable from here. If they work for other people, it's your connection.",
         _ => "",
     }
 }
-const NOTE_STUCK: &str = "New messages aren't arriving here. If friends can chat, it's your connection.";
+const NOTE_STUCK: &str = "New messages aren't arriving here. If other people can chat, it's your connection.";
 const NOTE_ALL: &str = "The server isn't reachable from here. If other websites work, the server itself may be down.";
 const NOTE_SLOW: &str = "Your connection to the server is slow right now, so calls may stutter.";
 
@@ -296,7 +296,7 @@ pub fn check_of(input: &CheckInput) -> Check {
         } else if red.iter().all(|x| x.cause == "error") {
             format!("{} are having problems on the server's side. It's not just you.", names_of(&red_ids))
         } else {
-            format!("{} aren't reachable from here. If they work for friends, it's your connection.", names_of(&red_ids))
+            format!("{} aren't reachable from here. If they work for other people, it's your connection.", names_of(&red_ids))
         };
         ("poor", v, n)
     } else if ping.ms.is_none() {
@@ -384,6 +384,6 @@ mod tests {
         assert_eq!(c.rows[1].reason, "reachable · 84 ms");
         let down = check_of(&CheckInput { calls: p(None, None), ..good });
         assert_eq!(down.verdict, "Calls look down");
-        assert_eq!(down.note, "Calls aren't reachable from here. If friends can call, it's your connection.");
+        assert_eq!(down.note, "Calls aren't reachable from here. If other people can call, it's your connection.");
     }
 }

@@ -35,6 +35,18 @@ lazy_static! {
     static ref LOG_SINK: Mutex<Option<UniquePtr<sys_rtc::ffi::LogSink>>> = Default::default();
 }
 
+/// PATCH (Tin Hat): may this native libwebrtc log line reach the app's log at all?
+///
+/// libwebrtc's frame-crypto key derivation (DeriveHkdfSha256FromSecret / DerivePBKDF2KeyFromRawKey) logs the input
+/// secret and the derived key as decimal byte lists at LS_INFO ("secret [..] ... derived_key [..]",
+/// "raw_key [..] ... derived_key [..]"). Whatever RUST_LOG says, only WARNING and ERROR are forwarded, and a line
+/// naming key material is dropped at any severity. The sink is also registered at LS_WARNING (webrtc.cpp), so the
+/// INFO lines are not even formatted; this check is the second wall. (Tested in tinhat-streamer, lk_publish.)
+pub fn native_log_line_forwarded(msg: &str, warning_or_worse: bool) -> bool {
+    const KEY_MARKERS: [&str; 3] = ["derived_key", "secret [", "raw_key "];
+    warning_or_worse && !KEY_MARKERS.iter().any(|m| msg.contains(m))
+}
+
 #[derive(Clone)]
 pub struct PeerConnectionFactory {
     pub(crate) sys_handle: SharedPtr<sys_pcf::ffi::PeerConnectionFactory>,
@@ -44,7 +56,11 @@ impl Default for PeerConnectionFactory {
     fn default() -> Self {
         let mut log_sink = LOG_SINK.lock();
         if log_sink.is_none() {
-            *log_sink = Some(sys_rtc::ffi::new_log_sink(|msg, _| {
+            *log_sink = Some(sys_rtc::ffi::new_log_sink(|msg, severity| {
+                use sys_rtc::ffi::LoggingSeverity as S;
+                if !native_log_line_forwarded(&msg, severity == S::Warning || severity == S::Error) {
+                    return;
+                }
                 let msg = msg.strip_suffix("\r\n").or(msg.strip_suffix('\n')).unwrap_or(&msg);
                 log::debug!(target: "libwebrtc", "{}", msg);
             }));

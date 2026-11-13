@@ -239,11 +239,6 @@ Window {
         var pt = item.mapToItem(win.contentItem, Kirigami.Units.gridUnit * 2.5, item.height)
         memberMenu.popup(win.contentItem, pt.x, pt.y)
     }
-    function inviteFromQuery() {
-        var q = inviteQuery.text.trim()
-        if (/^@[^:\s]+:[^\s]+$/.test(q)) { win.invite(q); inviteQuery.text = ""; return }
-        for (var i = 0; i < userSearch.length; i++) if (userSearch[i].alreadyMember !== true) { win.invite(String(userSearch[i].mxid)); inviteQuery.text = ""; return }
-    }
 
     // ======================================================================================
     // Roles editor state
@@ -533,76 +528,22 @@ Window {
             border.color: Th.invitePopoverBorder
             shadow.size: 18; shadow.color: Th.invitePopoverShadow; shadow.yOffset: 4
         }
-        onOpened: { inviteQuery.text = ""; inviteQuery.forceActiveFocus() }
-        Timer { id: searchDebounce; interval: 250; onTriggered: win.searchUsers(inviteQuery.text.trim()) }
+        // 2026-11-12 (feat/people-search): the add-people picker (PeoplePicker.qml), the same one as room Invite and New
+        // DM: People you know, the directory, a looked-up address; "already a member" dimmed; Enter invites and goes on.
+        onOpened: spacePicker.reset("")
         ColumnLayout {
             anchors.fill: parent
             spacing: Kirigami.Units.smallSpacing
             Kirigami.Heading { textFormat: Text.PlainText; level: 3; text: "Invite to " + (win.spaceName.length > 0 ? win.spaceName : "the space"); color: Th.invitePopoverFg; elide: Text.ElideRight; Layout.fillWidth: true }
-            HintLabel { app: win.app; Layout.fillWidth: true; text: "Search the directory, or paste a full @user:server id and press Enter." }
-            ThTextField {
-                id: inviteQuery
+            HintLabel { app: win.app; Layout.fillWidth: true; font.pointSize: spacePicker.smallSize; text: "Search by name or username, or type someone's full address, like @name:their.server." }
+            PeoplePicker {
+                id: spacePicker
+                app: win.app
+                verb: "Invite"
+                roomId: win.spaceId
                 Layout.fillWidth: true
                 Layout.topMargin: Kirigami.Units.smallSpacing
-                placeholderText: "Name or @user:server"
-                onTextChanged: searchDebounce.restart()
-                onAccepted: win.inviteFromQuery()
-            }
-            ListView {
-                id: inviteResults
-                Layout.fillWidth: true
-                Layout.preferredHeight: Math.min(Kirigami.Units.gridUnit * 14, Math.max(Kirigami.Units.gridUnit * 4, count * (Kirigami.Units.gridUnit * 2.4) + 4))
-                clip: true
-                spacing: 2
-                model: win.userSearch
-                Controls.ScrollBar.vertical: FoxScrollBar { app: win.app }
-                delegate: Item {
-                    id: hit
-                    required property var modelData
-                    width: inviteResults.width
-                    height: Kirigami.Units.gridUnit * 2.4
-                    readonly property bool taken: modelData.alreadyMember === true
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: win.theme.radiusSm
-                        color: hitMa.containsMouse && !hit.taken ? Th.inviteResultBgHover : "transparent"
-                        Behavior on color { ColorAnimation { duration: win.dur } }
-                    }
-                    MouseArea {
-                        id: hitMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: hit.taken ? Qt.ArrowCursor : Qt.PointingHandCursor
-                        enabled: !hit.taken
-                        onClicked: { win.invite(String(hit.modelData.mxid)); inviteQuery.text = "" }
-                    }
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: Kirigami.Units.smallSpacing
-                        anchors.rightMargin: Kirigami.Units.smallSpacing
-                        spacing: Kirigami.Units.smallSpacing
-                        opacity: hit.taken ? 0.55 : 1.0
-                        Avatar { app: win.theme; size: 28; name: hit.modelData.name || hit.modelData.mxid; seed: hit.modelData.mxid || ""; imageSource: hit.modelData.avatar || "" }
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 0
-                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: hit.modelData.name || win.localpart(hit.modelData.mxid); color: Th.invitePopoverFg; font.bold: true; elide: Text.ElideRight }
-                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: hit.modelData.mxid || ""; color: Th.inviteHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideMiddle }
-                        }
-                        Controls.Label { visible: hit.taken; text: "already a member"; color: Th.inviteHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.italic: true }
-                        ThIcon { visible: !hit.taken; app: win.app; name: "list-add-user"; width: 16; height: 16; color: Th.inviteResultIcon; hovered: hitMa.containsMouse }
-                    }
-                }
-                Controls.Label {
-                    anchors.centerIn: parent
-                    width: parent.width - Kirigami.Units.largeSpacing * 2
-                    visible: inviteResults.count === 0
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                    text: inviteQuery.text.trim().length === 0 ? "Type a name to search" : "No one by that name yet — a full @user:server id always works"
-                    color: Th.inviteHintFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
-                }
+                onPicked: (mxid) => win.invite(mxid)
             }
             RowLayout {
                 Layout.fillWidth: true

@@ -983,7 +983,9 @@ async fn do_apply_join_rule(space_id: &str, rule: &str) -> Result<String, String
 async fn do_invite(space_id: &str, mxid: &str) -> Result<String, String> {
     let c = Ctx::load(space_id).await?;
     c.need("invite", "invite people")?;
-    let uid = UserId::parse(mxid.trim()).map_err(|_| format!("{mxid} doesn't look like a user id"))?;
+    // 2026-11-12 (feat/people-search): a plain username means your own server (dm_target.rs, every picker)
+    let typed = crate::people::own_target(mxid).unwrap_or_else(|| mxid.trim().to_string());
+    let uid = UserId::parse(typed.as_str()).map_err(|_| format!("{mxid} isn't a username or an address like @name:their.server"))?;
     if let Ok(Some(m)) = c.space.get_member_no_sync(&uid).await {
         match m.membership() {
             MembershipState::Join => return Err(format!("{} is already a member", m.name())),

@@ -25,6 +25,9 @@ pub enum Kind {
     /// hears what the computer plays, other apps included — leased and gated like every capture. Follows the capture
     /// bar only (not the meter bar: the call's own echo reference must run in a normal call).
     OutputTap,
+    /// voice notes (docs/VOICE-NOTES.md §4): the voice-message recorder — outside calls only; refused while watching
+    /// (the capture bar) like the meters, and by the meters' own bar.
+    VoiceNote,
 }
 
 impl Kind {
@@ -41,11 +44,12 @@ impl Kind {
             "settings-meter" => Kind::SettingsMeter,
             "aec" => Kind::Aec,
             "output-tap" => Kind::OutputTap,
+            "voice-note" => Kind::VoiceNote,
             _ => return None,
         })
     }
     fn is_meter(self) -> bool {
-        matches!(self, Kind::Meter | Kind::SettingsMeter)
+        matches!(self, Kind::Meter | Kind::SettingsMeter | Kind::VoiceNote)
     }
 }
 

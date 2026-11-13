@@ -1,5 +1,6 @@
 // PadBar.qml — Pad's bar at the top of the room list (DESIGN §1 "Where Pad appears"; the web's Entry.tsx room-list bar):
-// one of my OTHER devices is in a call this device isn't in → "You're in **{room}**'s call on **{device}** · [Pad] [Join]".
+// one of my OTHER devices is in a call this device isn't in → "You're in **{room}**'s call on **{device}** · [Pad] [Join]";
+// with more than one such call, a "1/2" button steps through them (QA 12.1.11 D2).
 // Pad opens the Pad window for that device's call; Join joins it here too (the existing Join). A Pad that can't work is
 // greyed: its reason as the tooltip, a click shows it as a toast ("Verify this device to use Pad." with Devices &
 // security). Data: AppCore's mPadTargets (pad_ctl.rs refreshTargets: every 3 s from the local room state, no network).
@@ -12,19 +13,34 @@ import dev.tinhat.app   // Th: pad.listBar.* (defaults = the call join banner's 
 Rectangle {
     id: bar
     required property var app
-    // the NEWEST call (room) with one of my other devices in it (pad_engine::calls_newest_first = the web's
-    // callsNewestFirst: the room whose newest membership is newest; ties by room id), unless this device is in or
-    // joining that call itself
-    readonly property var entry: {
+    // the calls (rooms) with one of my other devices in them, in pad_engine::calls_newest_first's order (= the web's
+    // callsNewestFirst: a call the Pad can drive first, then the room whose newest membership is newest; ties by room id),
+    // minus the call this device is in or joining itself
+    readonly property var calls: {
         var order = (bar.app.mPadTargets && bar.app.mPadTargets.order) ? bar.app.mPadTargets.order : []
+        var out = []
         for (var i = 0; i < order.length; i++) {
             var room = String(order[i])
             if ((bar.app.mInCall || bar.app.mConnecting) && bar.app.mCallRoomId === room) continue
             var t = bar.app.padTargetIn(room)
-            if (t) return { room: room, t: t }
+            if (t) out.push({ room: room, t: t })
         }
-        return null
+        return out
     }
+    // QA 12.1.11 D2: the bar shows one call at a time; with more than one, "1/2" steps to the next (the web's
+    // order.ts shownCall / nextCall / keptPick: the picked room while it is still there, else the first; next wraps)
+    property string picked: ""
+    // a picked call that ended is forgotten (the web's keptPick): a later call in that room never takes the bar back
+    onCallsChanged: {
+        if (bar.picked.length === 0) return
+        for (var i = 0; i < bar.calls.length; i++) if (bar.calls[i].room === bar.picked) return
+        bar.picked = ""
+    }
+    readonly property int shown: {
+        for (var i = 0; i < bar.calls.length; i++) if (bar.picked.length > 0 && bar.calls[i].room === bar.picked) return i
+        return 0
+    }
+    readonly property var entry: bar.calls.length > 0 ? bar.calls[bar.shown] : null
     readonly property string roomName: { var n = bar.entry ? String(bar.app.roomNameOf(bar.entry.room) || "") : ""; return n.length > 0 ? n : "a room" }
     function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") }
     visible: bar.app.mLoggedIn === true && bar.entry !== null
@@ -56,6 +72,17 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 6
             Item { Layout.fillWidth: true }
+            ThButton {
+                app: bar.app
+                visible: bar.calls.length > 1
+                text: (bar.shown + 1) + "/" + bar.calls.length
+                icon.name: "go-next-symbolic"
+                Controls.ToolTip.text: "You're in " + bar.calls.length + " calls on your other devices — show the next one"
+                Controls.ToolTip.visible: hovered
+                Controls.ToolTip.delay: 500
+                Accessible.name: "Show your next call (" + (bar.shown + 1) + " of " + bar.calls.length + ")"
+                onClicked: bar.picked = bar.calls[(bar.shown + 1) % bar.calls.length].room
+            }
             ThButton {
                 app: bar.app
                 text: "Pad"

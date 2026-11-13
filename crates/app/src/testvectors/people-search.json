@@ -1,0 +1,1717 @@
+{
+ "about": "Shared vectors for the add-people picker (room Invite, New DM, space Invite). Tin Hat Web src/features/people/people.ts and the desktop crates/app/src/people.rs replay this file byte for byte.",
+ "query": [
+  {
+   "input": "",
+   "server": "home.example",
+   "want": {
+    "kind": "empty",
+    "term": "",
+    "target": null
+   }
+  },
+  {
+   "input": "   ",
+   "server": "home.example",
+   "want": {
+    "kind": "empty",
+    "term": "",
+    "target": null
+   }
+  },
+  {
+   "input": "alex",
+   "server": "home.example",
+   "want": {
+    "kind": "username",
+    "term": "alex",
+    "target": "@alex:home.example"
+   }
+  },
+  {
+   "input": " Alex ",
+   "server": "home.example",
+   "want": {
+    "kind": "username",
+    "term": "Alex",
+    "target": "@alex:home.example"
+   }
+  },
+  {
+   "input": "@alex",
+   "server": "home.example",
+   "want": {
+    "kind": "username",
+    "term": "alex",
+    "target": "@alex:home.example"
+   }
+  },
+  {
+   "input": "Alex Smith",
+   "server": "home.example",
+   "want": {
+    "kind": "name",
+    "term": "Alex Smith",
+    "target": null
+   }
+  },
+  {
+   "input": "Zoë",
+   "server": "home.example",
+   "want": {
+    "kind": "name",
+    "term": "Zoë",
+    "target": null
+   }
+  },
+  {
+   "input": "@alex:elsewhere.example",
+   "server": "home.example",
+   "want": {
+    "kind": "address",
+    "term": "alex:elsewhere.example",
+    "target": "@alex:elsewhere.example"
+   }
+  },
+  {
+   "input": "alex:elsewhere.example",
+   "server": "home.example",
+   "want": {
+    "kind": "address",
+    "term": "alex:elsewhere.example",
+    "target": "@alex:elsewhere.example"
+   }
+  },
+  {
+   "input": "@Alex:ElseWhere.example",
+   "server": "home.example",
+   "want": {
+    "kind": "address",
+    "term": "Alex:ElseWhere.example",
+    "target": "@alex:elsewhere.example"
+   }
+  },
+  {
+   "input": "@sam:home.example",
+   "server": "home.example",
+   "want": {
+    "kind": "address",
+    "term": "sam:home.example",
+    "target": "@sam:home.example"
+   }
+  },
+  {
+   "input": "https://matrix.to/#/@x:y.com",
+   "server": "home.example",
+   "want": {
+    "kind": "address",
+    "term": "x:y.com",
+    "target": "@x:y.com"
+   }
+  },
+  {
+   "input": "alex:8448",
+   "server": "home.example",
+   "want": {
+    "kind": "name",
+    "term": "alex:8448",
+    "target": null
+   }
+  },
+  {
+   "input": "alex:host.example:8448",
+   "server": "home.example",
+   "want": {
+    "kind": "address",
+    "term": "alex:host.example:8448",
+    "target": "@alex:host.example:8448"
+   }
+  },
+  {
+   "input": "@",
+   "server": "home.example",
+   "want": {
+    "kind": "name",
+    "term": "",
+    "target": null
+   }
+  },
+  {
+   "input": "al!ex",
+   "server": "home.example",
+   "want": {
+    "kind": "name",
+    "term": "al!ex",
+    "target": null
+   }
+  }
+ ],
+ "label": [
+  {
+   "mxid": "@alex:home.example",
+   "name": "Alex",
+   "server": "home.example",
+   "want": {
+    "server": "",
+    "line": "Alex"
+   }
+  },
+  {
+   "mxid": "@alex:elsewhere.example",
+   "name": "Alex",
+   "server": "home.example",
+   "want": {
+    "server": "elsewhere.example",
+    "line": "Alex · elsewhere.example"
+   }
+  },
+  {
+   "mxid": "@alex:elsewhere.example",
+   "name": "",
+   "server": "home.example",
+   "want": {
+    "server": "elsewhere.example",
+    "line": "alex · elsewhere.example"
+   }
+  },
+  {
+   "mxid": "@alex:HOME.example",
+   "name": "Alex",
+   "server": "home.example",
+   "want": {
+    "server": "",
+    "line": "Alex"
+   }
+  },
+  {
+   "mxid": "@a:host.example:8448",
+   "name": "A",
+   "server": "home.example",
+   "want": {
+    "server": "host.example:8448",
+    "line": "A · host.example:8448"
+   }
+  },
+  {
+   "mxid": "@sam:home.example",
+   "name": "  ",
+   "server": "home.example",
+   "want": {
+    "server": "",
+    "line": "sam"
+   }
+  }
+ ],
+ "score": [
+  {
+   "name": "Alex Smith",
+   "mxid": "@alex:home.example",
+   "term": "alex",
+   "want": 4
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "alex smith",
+   "want": 4
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "ale",
+   "want": 3
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "AS",
+   "want": 4
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "smi",
+   "want": 2
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "mit",
+   "want": 1
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@asmith99:home.example",
+   "term": "99",
+   "want": 1
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "bob",
+   "want": 0
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "",
+   "want": 0
+  },
+  {
+   "name": "Alex Smith",
+   "mxid": "@as:home.example",
+   "term": "@as",
+   "want": 4
+  },
+  {
+   "name": "Alex",
+   "mxid": "@alex:elsewhere.example",
+   "term": "alex:elsewhere.example",
+   "want": 4
+  },
+  {
+   "name": "Alex",
+   "mxid": "@alex:elsewhere.example",
+   "term": "alex:else",
+   "want": 3
+  },
+  {
+   "name": "Alex",
+   "mxid": "@alex:elsewhere.example",
+   "term": "alex:other.org",
+   "want": 0
+  },
+  {
+   "name": "Zoë Park",
+   "mxid": "@zp:home.example",
+   "term": "zoë",
+   "want": 3
+  },
+  {
+   "name": "Zoë Park",
+   "mxid": "@zp:home.example",
+   "term": "ZOË",
+   "want": 3
+  },
+  {
+   "name": "Bryn-Lee",
+   "mxid": "@b:home.example",
+   "term": "lee",
+   "want": 1
+  },
+  {
+   "name": "AliceSmith",
+   "mxid": "@al:home.example",
+   "term": "smi",
+   "want": 1
+  },
+  {
+   "name": "Alice Smith",
+   "mxid": "@al:home.example",
+   "term": "smi",
+   "want": 1
+  },
+  {
+   "name": " Alice\tSmith ",
+   "mxid": "@al:home.example",
+   "term": "smi",
+   "want": 2
+  }
+ ],
+ "rank": [
+  {
+   "what": "DM partners first, then rooms by match then shared rooms; me never; the directory without people already listed; outsiders carry their server; a username that is already listed adds no lookup row",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "al",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [
+    {
+     "mxid": "@alex:home.example",
+     "name": "Alex (here)",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": ""
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexis:far.example",
+     "name": "Alexis",
+     "avatar": ""
+    }
+   ],
+   "members": [
+    "@alexandra:home.example"
+   ],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@al:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@alex:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@alexandra:home.example",
+      "server": "",
+      "member": true,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@alex:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@alexis:far.example",
+      "server": "far.example",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": 0,
+    "fallback": 0
+   }
+  },
+  {
+   "what": "a plain username nobody listed: a lookup row on your server, last",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "zed",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "server",
+      "mxid": "@zed:home.example",
+      "server": "",
+      "member": false,
+      "lookup": true
+     }
+    ],
+    "pick": 0,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "an address on another server: a lookup row in its own section; Enter picks it over a name match",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "@kim:elsewhere.example",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "other",
+      "mxid": "@kim:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": false,
+      "lookup": true
+     }
+    ],
+    "pick": 0,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "an address of someone you know: their known row, no lookup",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "alex:elsewhere.example",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@alex:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": 0,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "Enter picks the exact username over earlier rows; the fallback is the first listed person on your server",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "alex",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [
+    {
+     "mxid": "@alex:home.example",
+     "name": "Alex (here)",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": ""
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexis:far.example",
+     "name": "Alexis",
+     "avatar": ""
+    }
+   ],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@alex:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@alexandra:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@alex:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@alexis:far.example",
+      "server": "far.example",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": 2,
+    "fallback": 1
+   }
+  },
+  {
+   "what": "everyone listed is already a member: nothing to pick",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "tom",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [
+    "@tom:home.example"
+   ],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@tom:home.example",
+      "server": "",
+      "member": true,
+      "lookup": false
+     }
+    ],
+    "pick": -1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "your own username: no row for yourself",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "me",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": ""
+    }
+   ],
+   "members": [],
+   "want": {
+    "rows": [],
+    "pick": -1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "a name with a space: no lookup row",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "sam riv",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@sam:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": 0,
+    "fallback": 0
+   }
+  },
+  {
+   "what": "empty: nothing",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [
+    {
+     "mxid": "@alex:home.example",
+     "name": "Alex (here)",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": ""
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexis:far.example",
+     "name": "Alexis",
+     "avatar": ""
+    }
+   ],
+   "members": [],
+   "want": {
+    "rows": [],
+    "pick": -1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "Enter means the typed username (its look-up row; if that fails, the first listed person on your server); the directory keeps its own order and stops at 10",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "u",
+   "known": [],
+   "directory": [
+    {
+     "mxid": "@u00:home.example",
+     "name": "U00",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u01:home.example",
+     "name": "U01",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u02:home.example",
+     "name": "U02",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u03:home.example",
+     "name": "U03",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u04:home.example",
+     "name": "U04",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u05:home.example",
+     "name": "U05",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u06:home.example",
+     "name": "U06",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u07:home.example",
+     "name": "U07",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u08:home.example",
+     "name": "U08",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u09:home.example",
+     "name": "U09",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u10:home.example",
+     "name": "U10",
+     "avatar": ""
+    },
+    {
+     "mxid": "@u11:home.example",
+     "name": "U11",
+     "avatar": ""
+    }
+   ],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "server",
+      "mxid": "@u00:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u01:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u02:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u03:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u04:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u05:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u06:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u07:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u08:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u09:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@u:home.example",
+      "server": "",
+      "member": false,
+      "lookup": true
+     }
+    ],
+    "pick": 10,
+    "fallback": 0
+   }
+  },
+  {
+   "what": "people you know stop at 8",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "k",
+   "known": [
+    {
+     "mxid": "@k0:home.example",
+     "name": "K0",
+     "avatar": "",
+     "dm": false,
+     "shared": 0
+    },
+    {
+     "mxid": "@k1:home.example",
+     "name": "K1",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@k2:home.example",
+     "name": "K2",
+     "avatar": "",
+     "dm": false,
+     "shared": 2
+    },
+    {
+     "mxid": "@k3:home.example",
+     "name": "K3",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@k4:home.example",
+     "name": "K4",
+     "avatar": "",
+     "dm": false,
+     "shared": 4
+    },
+    {
+     "mxid": "@k5:home.example",
+     "name": "K5",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@k6:home.example",
+     "name": "K6",
+     "avatar": "",
+     "dm": false,
+     "shared": 6
+    },
+    {
+     "mxid": "@k7:home.example",
+     "name": "K7",
+     "avatar": "",
+     "dm": false,
+     "shared": 7
+    },
+    {
+     "mxid": "@k8:home.example",
+     "name": "K8",
+     "avatar": "",
+     "dm": false,
+     "shared": 8
+    },
+    {
+     "mxid": "@k9:home.example",
+     "name": "K9",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@k9:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@k8:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@k7:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@k6:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@k5:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@k4:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@k3:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@k2:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@k:home.example",
+      "server": "",
+      "member": false,
+      "lookup": true
+     }
+    ],
+    "pick": 8,
+    "fallback": 0
+   }
+  },
+  {
+   "what": "a look-alike on another server never takes Enter from the username you typed (and is no fallback)",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "alex",
+   "known": [
+    {
+     "mxid": "@mallory:evil.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 4
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@mallory:evil.example",
+      "server": "evil.example",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@alex:home.example",
+      "server": "",
+      "member": false,
+      "lookup": true
+     }
+    ],
+    "pick": 1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "the typed person is already a member: Enter never falls to someone on another server",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "alex",
+   "known": [
+    {
+     "mxid": "@alex:home.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex B",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [
+    "@alex:home.example"
+   ],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@alex:home.example",
+      "server": "",
+      "member": true,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@alex:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": -1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "names compare by code point (the same order in Rust and JavaScript)",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "a",
+   "known": [
+    {
+     "mxid": "@p2:home.example",
+     "name": "A😀",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@p1:home.example",
+     "name": "A",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@p1:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@p2:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@a:home.example",
+      "server": "",
+      "member": false,
+      "lookup": true
+     }
+    ],
+    "pick": 2,
+    "fallback": 0
+   }
+  },
+  {
+   "what": "a full address whose look-up fails has no fallback: a local person the directory lists (here by a display name that copies the address) never takes Enter; Enter waits for a row picked by hand",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "@alice:remote.example",
+   "known": [],
+   "directory": [
+    {
+     "mxid": "@mallory:home.example",
+     "name": "@alice:remote.example",
+     "avatar": ""
+    }
+   ],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "server",
+      "mxid": "@mallory:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "other",
+      "mxid": "@alice:remote.example",
+      "server": "remote.example",
+      "member": false,
+      "lookup": true
+     }
+    ],
+    "pick": 1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "a full address of someone already a member: Enter picks no one else",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "@alex:elsewhere.example",
+   "known": [
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    }
+   ],
+   "directory": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "alex:elsewhere.example fan",
+     "avatar": ""
+    }
+   ],
+   "members": [
+    "@alex:elsewhere.example"
+   ],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@alex:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": true,
+      "lookup": false
+     },
+     {
+      "section": "server",
+      "mxid": "@sam:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": -1,
+    "fallback": -1
+   }
+  }
+ ],
+ "lookup": [
+  {
+   "status": 200,
+   "errcode": "",
+   "message": "",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "found",
+    "pickable": true,
+    "text": ""
+   }
+  },
+  {
+   "status": 404,
+   "errcode": "M_NOT_FOUND",
+   "message": "Profile was not found",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "notfound",
+    "pickable": false,
+    "text": "elsewhere.example has no one called kim. Check the spelling."
+   }
+  },
+  {
+   "status": 404,
+   "errcode": "M_NOT_FOUND",
+   "message": "Profile was not found",
+   "target": "@zed:home.example",
+   "own": "home.example",
+   "want": {
+    "kind": "notfound",
+    "pickable": false,
+    "text": "There's no one called zed on your server. Check the spelling."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "Federation denied with elsewhere.example.",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "nofederation",
+    "pickable": false,
+    "text": "Your server doesn't connect to elsewhere.example, so people there can't be reached from here. The owner of your server can change that."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "You are not allowed to view this profile",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "refused",
+    "pickable": true,
+    "text": "elsewhere.example only shows profiles to people who already share a room. You can still invite them."
+   }
+  },
+  {
+   "status": 401,
+   "errcode": "M_MISSING_TOKEN",
+   "message": "",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "refused",
+    "pickable": true,
+    "text": "elsewhere.example only shows profiles to people who already share a room. You can still invite them."
+   }
+  },
+  {
+   "status": 502,
+   "errcode": "M_UNKNOWN",
+   "message": "Failed to fetch profile",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "unreachable",
+    "pickable": false,
+    "text": "Couldn't reach elsewhere.example right now. Their server may be down; try again later."
+   }
+  },
+  {
+   "status": 0,
+   "errcode": "",
+   "message": "",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "unreachable",
+    "pickable": false,
+    "text": "Couldn't reach elsewhere.example right now. Their server may be down; try again later."
+   }
+  },
+  {
+   "status": 0,
+   "errcode": "",
+   "message": "",
+   "target": "@zed:home.example",
+   "own": "home.example",
+   "want": {
+    "kind": "unreachable",
+    "pickable": false,
+    "text": "Couldn't reach your server right now. Try again in a moment."
+   }
+  },
+  {
+   "status": 504,
+   "errcode": "",
+   "message": "",
+   "target": "@zed:home.example",
+   "own": "home.example",
+   "want": {
+    "kind": "unreachable",
+    "pickable": false,
+    "text": "Couldn't reach your server right now. Try again in a moment."
+   }
+  },
+  {
+   "status": 429,
+   "errcode": "M_LIMIT_EXCEEDED",
+   "message": "Too Many Requests",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "ratelimited",
+    "pickable": false,
+    "text": "Too many look-ups at once. Try again in a moment."
+   }
+  },
+  {
+   "status": 400,
+   "errcode": "M_LIMIT_EXCEEDED",
+   "message": "",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "ratelimited",
+    "pickable": false,
+    "text": "Too many look-ups at once. Try again in a moment."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "",
+   "target": "@zed:home.example",
+   "own": "home.example",
+   "want": {
+    "kind": "refused",
+    "pickable": true,
+    "text": "Your server only shows profiles to people who already share a room. You can still invite them."
+   }
+  },
+  {
+   "status": 500,
+   "errcode": "M_UNKNOWN",
+   "message": "Internal error",
+   "target": "@kim:elsewhere.example",
+   "own": "home.example",
+   "want": {
+    "kind": "unreachable",
+    "pickable": false,
+    "text": "Couldn't reach elsewhere.example right now. Their server may be down; try again later."
+   }
+  }
+ ],
+ "sections": [
+  {
+   "section": "known",
+   "own": "home.example",
+   "want": "People you know"
+  },
+  {
+   "section": "server",
+   "own": "home.example",
+   "want": "On home.example"
+  },
+  {
+   "section": "other",
+   "own": "home.example",
+   "want": "On another server"
+  }
+ ]
+}

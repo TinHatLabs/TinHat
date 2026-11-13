@@ -311,9 +311,10 @@ Item {
         return out
     }
     readonly property var pttKeys: host.keysFor("call.pushToTalk.hold")
+    property var labPttKeys: []   // lab gates only (paddrive ptt-key-override, refused in a release)
     /** Push to talk's key as a Qt key code test (a modifier held alone, or an F-key). */
     function isPttKey(qtKey) {
-        var ks = host.pttKeys
+        var ks = host.labPttKeys.length > 0 ? host.labPttKeys : host.pttKeys
         for (var i = 0; i < ks.length; i++) {
             var k = ks[i]
             if ((k === "Ctrl" && qtKey === Qt.Key_Control) || (k === "Alt" && qtKey === Qt.Key_Alt) || (k === "Shift" && qtKey === Qt.Key_Shift)
@@ -443,6 +444,11 @@ Item {
     function run(id, inv) {
         if (!app || !app.actionsCtl) return "unavailable"
         inv = inv || ({ source: "host" })
+        // a hold's RELEASE always runs (review round 4, UI-1 r2): it can only end what its press began, so an action that
+        // went unavailable, dimmed or would ask to confirm meanwhile must never keep it (push to talk: the mic) open
+        if (inv.hold === "up" && host.holdActions.indexOf(id) >= 0)
+            return host._exec({ id: id, subject: null, params: ({}), target: inv.target || null, context: inv.context || null,
+                                anchor: inv.anchor || null, source: inv.source || "host", hold: "up" }, inv.handler || null)
         var snap = host.snapshotJson
         var p = JSON.parse(app.actionsCtl.present(id, snap, inv.target ? JSON.stringify(inv.target) : "",
                                                   inv.context ? JSON.stringify(inv.context) : "", inv.source === "palette"))
@@ -464,6 +470,8 @@ Item {
         }
         return host._exec(ctx, inv.handler || null)
     }
+    /** the hold actions (actions.json `hold: true`) — the web asks its table (run.ts); the same list */
+    readonly property var holdActions: ["call.pushToTalk.hold"]
     function _exec(ctx, handler) {
         try {
             if (handler) handler(ctx)
@@ -603,8 +611,9 @@ Item {
         case "call.output.set": app.callctl.setOutput(ctx.subject || ""); return true
         case "call.overlay.toggle": { var ov = !app.mOverlayEnabled; app.settings.applyOverlayEnabled(ov); if (ov) app.ensureOverlay(); return true }
         case "call.pin.clear": app.pinnedTile = ""; return true
-        // a hold action: the button's press and release (ActionButton) — never from the palette
-        case "call.pushToTalk.hold": app.callctl.pttHold(ctx.hold !== "up"); return true
+        // a hold action: the button's press and release (ActionButton) — never from the palette. Only an explicit
+        // "down" opens the mic; a run without a press/release (a menu row, a click) does nothing (review round 4, UI-1)
+        case "call.pushToTalk.hold": if (ctx.hold === "down" || ctx.hold === "up") app.callctl.pttHold(ctx.hold === "down"); return true
         case "call.pushToTalk.toggle": app.callctl.applyPushToTalk(!app.callctl.pushToTalk); return true
         case "call.screenShare.toggle": if (app.mCallSharing) app.callctl.stopScreen(); else ui.streamPopover.open(); return true
         case "call.share.panel": if (ui.streamPopover.visible) ui.streamPopover.close(); else ui.streamPopover.open(); return true
@@ -629,7 +638,7 @@ Item {
         case "nav.unread.next": app.stepRoom(1, true); return true
         case "nav.unread.previous": app.stepRoom(-1, true); return true
         // ---- rooms ----
-        case "dm.new": ui.newDmField.text = ""; ui.newDmDialog.open(); return true
+        case "dm.new": ui.newDmDialog.open(); return true
         case "person.message": if (ctx.subject) app.login.createDm(ctx.subject); return true
         case "room.create":
             ui.newRoomName.text = ""; ui.newRoomTopic.text = ""; ui.newRoomPrivate.checked = true; ui.newRoomIsSpace.checked = false
@@ -651,7 +660,7 @@ Item {
         case "room.info.toggle": if (ui.rightPanel) { if (ui.rightPanel.opened) ui.rightPanel.close(); else ui.rightPanel.open() } return true
         case "room.invite":
             r = host._room(ctx)
-            app.ctxRoomId = r; app.ctxRoomName = host._nameOf("room", r); ui.inviteField.text = ""; ui.inviteDialog.open()
+            app.ctxRoomId = r; app.ctxRoomName = host._nameOf("room", r); ui.inviteDialog.open()
             return true
         case "room.inviteLink.copy": {
             r = host._room(ctx); var lr = host._roomRow(r)
@@ -702,7 +711,7 @@ Item {
             ui.newRoomDialog.spaceId = ""; ui.newRoomDialog.spaceName = ""; ui.newRoomDialog.open()
             return true
         case "space.invite":
-            if (ctx.subject) { app.ctxRoomId = ctx.subject; app.ctxRoomName = host._nameOf("space", ctx.subject); ui.inviteField.text = ""; ui.inviteDialog.open() }
+            if (ctx.subject) { app.ctxRoomId = ctx.subject; app.ctxRoomName = host._nameOf("space", ctx.subject); ui.inviteDialog.open() }
             return true
         case "space.joinOrCreate": ui.joinOrCreateDialog.open(); return true
         // the table asked "Leave space?"
@@ -756,7 +765,7 @@ Item {
         case "presence.sharing.toggle": app.presenceCtl.chooseSharing(!app.mPresenceSharing); return true
         case "status.clear": app.presenceCtl.clearStatus(); return true
         case "status.open": if (ui.navState && ui.navState.listState && ui.navState.listState.statusPopObj) ui.navState.listState.statusPopObj.open(); return true
-        // the table asked "Show your status to friends?" when sharing is off: the last argument turns it on
+        // the table asked "Share your status with people?" when sharing is off: the last argument turns it on
         case "status.set": {
             var sid = host._param(ctx, "status")
             if (sid === "custom") {

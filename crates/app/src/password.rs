@@ -52,13 +52,9 @@ pub const CHECK_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// The host of what the Server field says (the moved check's rule, bridge.rs check_moved / the web's hostOf): trimmed,
 /// no scheme, no trailing slash, lowercase. None = nothing usable typed (empty, a path, a space).
+/// A bare name is a tinhat.me name ("crew" → crew.tinhat.me): server_name.rs, the shared table.
 pub fn server_host(typed: &str) -> Option<String> {
-    let host = typed.trim().trim_start_matches("https://").trim_start_matches("http://").trim_end_matches('/').to_ascii_lowercase();
-    if host.is_empty() || host.contains('/') || host.contains(' ') {
-        None
-    } else {
-        Some(host)
-    }
+    crate::server_name::host(typed)
 }
 
 /// The status line while the face asks the server.
@@ -304,6 +300,7 @@ mod tests {
         assert_eq!(server_host("maplehouse.tinhat.me").as_deref(), Some("maplehouse.tinhat.me"));
         assert_eq!(server_host("  https://MapleHouse.tinhat.me/ ").as_deref(), Some("maplehouse.tinhat.me"));
         assert_eq!(server_host("http://localhost:8008").as_deref(), Some("localhost:8008"));
+        assert_eq!(server_host("maplehouse").as_deref(), Some("maplehouse.tinhat.me"), "a bare name is a tinhat.me name");
         for bad in ["", "   ", "https://", "x.test/path", "two words"] {
             assert_eq!(server_host(bad), None, "{bad:?}");
         }

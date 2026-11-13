@@ -1,0 +1,32 @@
+{
+ "_doc": "Tin Hat: what a typed Server field means. A bare name (letters, digits and inner hyphens, ASCII; no dot, no colon, no scheme) is a tinhat.me name: 'crew' -> crew.tinhat.me, lower-cased; anything else is left as typed. Trimming = Unicode White_Space (Rust char::is_whitespace; U+FEFF is not white space). A host is ASCII letters, digits and . - : [ ] (IPv6), not starting with - . : and not ending with -; lower case is ASCII-only. Byte-identical in tinhat-web src/core/ and the desktop repo (Tin Hat desktop) crates/app/src/; sha256 pinned in both tests. Phone apps may adopt it: their resolver's origin() must give 'origin' (null = refused). Fields: expanded = expandServerName / server_name::expand (desktop + web); host = the name the sign-in screen asks for its moved and password-reset checks (null = nothing usable typed); origin = the phone apps' ServerResolver.origin (https only, a host with a dot).",
+ "zone": "tinhat.me",
+ "cases": [
+  { "name": "a bare name", "input": "crew", "expanded": "crew.tinhat.me", "host": "crew.tinhat.me", "origin": "https://crew.tinhat.me" },
+  { "name": "spaces and capitals", "input": "  Crew  ", "expanded": "crew.tinhat.me", "host": "crew.tinhat.me", "origin": "https://crew.tinhat.me" },
+  { "name": "digits and an inner hyphen", "input": "CREW-42", "expanded": "crew-42.tinhat.me", "host": "crew-42.tinhat.me", "origin": "https://crew-42.tinhat.me" },
+  { "name": "all digits", "input": "123", "expanded": "123.tinhat.me", "host": "123.tinhat.me", "origin": "https://123.tinhat.me" },
+  { "name": "the full name already", "input": "crew.tinhat.me", "expanded": "crew.tinhat.me", "host": "crew.tinhat.me", "origin": "https://crew.tinhat.me" },
+  { "name": "a bare name with a link after it", "input": "crew/#/invite/abc", "expanded": "crew.tinhat.me/#/invite/abc", "host": null, "origin": "https://crew.tinhat.me" },
+  { "name": "a full https link", "input": "https://crew.tinhat.me/#/invite/abc", "expanded": "https://crew.tinhat.me/#/invite/abc", "host": null, "origin": "https://crew.tinhat.me" },
+  { "name": "an https name with a trailing slash", "input": "https://Crew.tinhat.me/", "expanded": "https://Crew.tinhat.me/", "host": "crew.tinhat.me", "origin": "https://crew.tinhat.me" },
+  { "name": "an https bare name is not expanded", "input": "https://crew", "expanded": "https://crew", "host": "crew", "origin": null },
+  { "name": "a domain of its own", "input": "chat.example.com", "expanded": "chat.example.com", "host": "chat.example.com", "origin": "https://chat.example.com" },
+  { "name": "a domain with a port", "input": "Chat.Example.com:8443", "expanded": "Chat.Example.com:8443", "host": "chat.example.com:8443", "origin": "https://chat.example.com:8443" },
+  { "name": "a host with a port is not a name", "input": "localhost:8008", "expanded": "localhost:8008", "host": "localhost:8008", "origin": null },
+  { "name": "plain http (desktop keeps it, phones refuse it)", "input": "http://chat.example.com", "expanded": "http://chat.example.com", "host": "chat.example.com", "origin": null },
+  { "name": "another scheme", "input": "ftp://chat.example.com", "expanded": "ftp://chat.example.com", "host": null, "origin": null },
+  { "name": "a space inside", "input": "my crew", "expanded": "my crew", "host": null, "origin": null },
+  { "name": "a leading hyphen", "input": "-crew", "expanded": "-crew", "host": null, "origin": null },
+  { "name": "a trailing hyphen", "input": "crew-", "expanded": "crew-", "host": null, "origin": null },
+  { "name": "an underscore", "input": "my_crew", "expanded": "my_crew", "host": null, "origin": null },
+  { "name": "a non-ASCII letter (a DNS label is ASCII)", "input": "crêpe", "expanded": "crêpe", "host": null, "origin": null },
+  { "name": "a user and password", "input": "https://user:pw@chat.example.com", "expanded": "https://user:pw@chat.example.com", "host": null, "origin": null },
+  { "name": "nothing typed", "input": "   ", "expanded": "", "host": null, "origin": null },
+  { "name": "an IPv6 address with a port", "input": "[::1]:8008", "expanded": "[::1]:8008", "host": "[::1]:8008", "origin": null },
+  { "name": "a leading colon", "input": ":443", "expanded": ":443", "host": null, "origin": null },
+  { "name": "a KELVIN SIGN that lower-cases to k in some languages", "input": "\u212arew", "expanded": "\u212arew", "host": null, "origin": null },
+  { "name": "Unicode white space around a name (no-break space, next line)", "input": "\u00a0crew\u0085", "expanded": "crew.tinhat.me", "host": "crew.tinhat.me", "origin": "https://crew.tinhat.me" },
+  { "name": "a byte order mark is not white space", "input": "\ufeffcrew", "expanded": "\ufeffcrew", "host": null, "origin": null }
+ ]
+}

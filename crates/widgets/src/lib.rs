@@ -34,6 +34,7 @@ pub mod registry;
 pub mod rxq;
 pub mod soundpad; // widgets W2: the Soundboard pad (WIDGETS.md §22)
 pub mod time;
+pub mod voicenote; // voice notes: waveform, duration, the event content (docs/VOICE-NOTES.md §5)
 
 pub use tinhat_theme::canon::js_number;
 

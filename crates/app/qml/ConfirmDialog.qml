@@ -34,6 +34,7 @@ Controls.Dialog {
 
     title: LinkGate.plain(dlg.dialogTitle)
     modal: true
+    Controls.Overlay.modal: Rectangle { color: Th.dialogOverlayBg }   // D3: the theme's veil (VerifyDeviceDialog.qml)
     parent: Controls.Overlay.overlay
     anchors.centerIn: parent
     // Content width is a stable constant (NOT the dialog's own negotiated width) so the

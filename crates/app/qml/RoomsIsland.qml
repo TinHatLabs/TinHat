@@ -463,6 +463,7 @@ ColumnLayout {
                     visible: row.isOpenRow
                     icon.name: "document-edit-symbolic"
                     Layout.preferredHeight: 22
+                    Accessible.name: "Edit now playing"   // a11y pass: icon-only (the tooltip is its name)
                     Controls.ToolTip.text: "Edit now playing"
                     Controls.ToolTip.visible: hovered
                     Controls.ToolTip.delay: 400
@@ -494,6 +495,7 @@ ColumnLayout {
                 }
                 Controls.ToolButton {
                     icon.name: "edit-clear-symbolic"
+                    Accessible.name: "Clear now playing"   // a11y pass: icon-only (the tooltip is its name)
                     Controls.ToolTip.text: "Clear now playing"
                     Controls.ToolTip.visible: hovered
                     Controls.ToolTip.delay: 400

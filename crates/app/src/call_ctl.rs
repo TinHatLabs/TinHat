@@ -162,6 +162,13 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "pttHold"]
         fn ptt_hold(self: Pin<&mut CallController>, down: bool);
+        /// QML: push to talk's key rules (ptt_rules.rs).
+        #[qinvokable]
+        #[cxx_name = "pttPressStarts"]
+        fn ptt_press_starts(self: &CallController, key: &QString, text_focus: bool) -> bool;
+        #[qinvokable]
+        #[cxx_name = "pttChordEnds"]
+        fn ptt_chord_ends(self: &CallController, held: &QString) -> bool;
         /// Explicitly set mic muted (NOT a toggle) + apply to the live call — idempotent, and
         /// always drives the gst pipeline to the right state (a force-unmute guarantees Playing,
         /// so AFK/BRB return reliably resumes capture). QML: forceMicMuted(bool).
@@ -2616,6 +2623,7 @@ impl qobject::CallController {
             // a meter still running from before the watch stops now (off the Qt thread: NULLing can block)
             crate::bridge::runtime().spawn_blocking(tinhat_streamer::retire_mic_monitor_if_barred);
             crate::bridge::runtime().spawn_blocking(tinhat_streamer::retire_output_taps_if_barred); // round 10
+            crate::bridge::runtime().spawn_blocking(tinhat_streamer::voicenote::retire_if_barred); // voice notes: into review
         }
         WATCHING.store(watch, std::sync::atomic::Ordering::SeqCst);
         self.as_mut().set_watching(watch);
@@ -5086,6 +5094,12 @@ impl qobject::CallController {
 
     /// The hold key changed state. Idempotent: a key repeat that slips through, or a
     /// release we already handled, must not toggle anything.
+    pub fn ptt_press_starts(&self, key: &QString, text_focus: bool) -> bool {
+        crate::ptt_rules::press_starts_hold(&key.to_string(), text_focus)
+    }
+    pub fn ptt_chord_ends(&self, held: &QString) -> bool {
+        crate::ptt_rules::chord_ends_hold(&held.to_string(), false, false)
+    }
     pub fn ptt_hold(mut self: Pin<&mut Self>, down: bool) {
         if !*self.push_to_talk() || *self.ptt_speaking() == down {
             return;
@@ -5132,6 +5146,7 @@ impl qobject::CallController {
             // round 10: the speaker-output taps (meter, hear sniffer) close their devices now, off the Qt thread (their
             // gates closed in the revoke); playback is untouched — the watcher keeps hearing the call
             crate::bridge::runtime().spawn_blocking(tinhat_streamer::retire_output_taps_if_barred);
+            crate::bridge::runtime().spawn_blocking(tinhat_streamer::voicenote::retire_if_barred); // voice notes: into review
             set_keys_receive_only(true); // no media key leaves this device from the press on (a queued watch too)
         }
         self.as_mut().run_watch_decision(d, "watch");
@@ -6203,6 +6218,11 @@ async fn do_join(
     // moderator muted me, join WITHOUT a mic track — the streamer marks me server-muted (mic
     // button locked, soundboard refused) until an `unmute` packet / the SFU says otherwise,
     // and a present moderator's client re-enforces the SFU side on our ParticipantJoined.
+    // One owner of the microphone: a running voice note ends here, also on a join that publishes no mic (server-muted).
+    // (not for an attempt that was cancelled meanwhile: it would stop a recording started since)
+    if !join_gen_stale(my_gen) {
+        let _ = tokio::task::spawn_blocking(tinhat_streamer::voicenote::release_for_call).await;
+    }
     let mic_result = match crate::moderation::read_muted_by(room_id, &user_id).await {
         Some(by) => {
             refresh_call_names(room_id).await; // so "muted by <name>" resolves at once
@@ -6631,7 +6651,7 @@ async fn install_peer_keys_loop(room_id: String) {
 
 /// Headless verification (no GUI): dump the peer keys the ROOM transport currently
 /// exposes for a room, so we can confirm they parse into a key under the live peer's
-/// identity. Run via `TINHAT_DUMP_ROOMKEYS=<room_id>`.
+/// identity. Run via `TINHAT_DUMP_ROOMKEYS=<room_id>` (not in a release build).
 pub async fn dump_room_keys(room_id: &str) {
     let Some(client) = crate::session::client() else {
         eprintln!("[dumpkeys] not signed in");
@@ -6959,6 +6979,16 @@ mod watch_publish_tests {
     //! assembly-042 review (launch-gate): a watching device captures and publishes nothing until Talk here. Each
     //! publish entry point refuses while capture is barred; the join sound is skipped. Wiring test (the entry points
     //! are Qt-bound or need a live call): every one of them checks the guard before it starts anything.
+    /// launch-gate 2026-11-07 (review item 2): every join ends a running voice note first, also one that publishes no mic
+    /// (server-muted): the release used to happen only inside the mic start.
+    #[test]
+    fn a_join_ends_a_running_voice_note_before_the_mic_decision() {
+        let ctl = include_str!("call_ctl.rs");
+        let dj = &ctl[ctl.find("async fn do_join(").unwrap()..];
+        let dec = dj.find("let mic_result = match crate::moderation::read_muted_by").unwrap();
+        let rel = dj[..dec].rfind("voicenote::release_for_call").expect("do_join releases the recorder before deciding about the mic");
+        assert!(dec - rel < 500, "right before the decision");
+    }
     fn body_of(src: &str, sig: &str) -> String {
         let at = src.find(sig).unwrap_or_else(|| panic!("{sig} not found"));
         src[at..].chars().take(2400).collect()

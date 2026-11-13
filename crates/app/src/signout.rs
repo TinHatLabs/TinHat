@@ -32,6 +32,7 @@ pub(crate) fn forget_account() {
         crate::settings::avatar_cache_dir(),
         crate::bridge::data_dir().join("avatars"), // bridge.rs resolve_avatar's
         crate::memories_ctl::thumbs_dir(),
+        crate::voicenote_ctl::voice_dir(), // voice notes: any recording left by a draft
     ] {
         gone(std::fs::remove_dir_all(&dir), &dir);
     }
@@ -52,10 +53,12 @@ pub(crate) fn forget_account() {
         }
     }
     crate::room::forget_session();
+    crate::voicenote_ctl::forget_session(); // voice notes: drafts + a running recording (their files went with the media cache)
     crate::mentions_ctl::forget_session();
     crate::dice_ctl::forget_session();
     crate::widgets_ctl::forget_session();
     crate::linkpreview::forget_session();
+    crate::app_badge::publish(0); // the taskbar / dock count goes with the account
     eprintln!("[signout] the account's caches, lists and drafts are gone from this device");
 }
 

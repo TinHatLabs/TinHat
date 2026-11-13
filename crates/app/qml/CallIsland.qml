@@ -690,7 +690,7 @@ ColumnLayout {
             // until the user un-maximized).
             readonly property real chromeH:
                 callStatusBar.height + callControlBar.height
-                + Kirigami.Units.smallSpacing            // callControlBar.Layout.topMargin
+                + Kirigami.Units.smallSpacing            // callBarLine.Layout.topMargin
                 + (afkBanner.visible ? afkBanner.height + Kirigami.Units.smallSpacing : 0)
                 + (connBanner.visible ? connBanner.height + Kirigami.Units.smallSpacing : 0)
                 + Kirigami.Units.smallSpacing * 2        // panel Layout.margins (top+bottom)
@@ -2311,876 +2311,980 @@ ColumnLayout {
         // Floating control bar (per request): mute · deafen · camera · share ·
         // BRB · hang-up. Device pickers + soundboard + noise-cancel moved to the
         // header Settings ▾ / composer, keeping the bar to the six core actions.
-        Rectangle {
-            id: callControlBar
-            Layout.alignment: Qt.AlignHCenter
+        // two-pane band (docs/TWO-PANE.md §3): the bar's line takes the column's width and never more (the web's
+        // CallBar wrapLine) — the bar sat in the column directly, and its natural width widened the whole call
+        // column past the island's edge in a narrow window, so it never knew it did not fit
+        Item {
+            id: callBarLine
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
             Layout.topMargin: Kirigami.Units.smallSpacing
-            implicitHeight: 64
-            implicitWidth: ctlRow.implicitWidth + Kirigami.Units.largeSpacing * 2
-            // 10.1 (TH-CALL-05): twelve buttons + a now-playing pill can want ~900 px; in a
-            // narrower column the centred bar used to overflow BOTH edges. Scale it down
-            // to fit (down to 0.7) instead — every action stays reachable.
-            scale: parent ? Math.max(0.7, Math.min(1, (parent.width - Kirigami.Units.largeSpacing) / Math.max(1, implicitWidth))) : 1
-            transformOrigin: Item.Center
-            radius: height / 2
-            color: Th.callbarBg
-            border.width: 1
-            border.color: Th.callbarBorder
-            // 0.8.33: hidden until the window is focused and the pointer is over the call. 11.0.2: or pinned (callBarShown:
-            // "Keep call buttons visible" keeps it, its pin below)
-            opacity: island.app.callBarShown ? 1.0 : 0.0
-            enabled: island.app.callBarShown
-            Behavior on opacity { NumberAnimation { duration: island.app.dur } }
-            transform: Translate {
-                y: island.app.callBarShown ? 0 : 10
-                Behavior on y { NumberAnimation { duration: island.app.dur; easing.type: Easing.OutCubic } }
-            }
-            HoverHandler { id: callBarHover; onHoveredChanged: island.app.callBarHovered = hovered }
-            Binding { target: island.app; property: "callMenuHold"; value: island.devicesMenuRef.opened || statsPopup.opened || gamePopup.opened }
-            // 0.8.33 gate hook (lives HERE: the bar's ids are page-scoped): --tinhat-callopts=…
-            // opens that face 20 s after the (fake) call shows, after the verify prompt is gone.
-            Timer {
-                running: island.app.callOptsProbe.length > 0 && island.app.callShown
-                interval: 20000; repeat: false
-                onTriggered: {
-                    var s = island.app.callOptsProbe
-                    console.log("[callopts] opening " + s)
-                    if (s === "outputs") island.app.openEcOutputs()
-                    else if (s === "mic") island.callOptionsRef.toggleFor(micBtn, "mic")
-                    else if (s === "speaker") island.callOptionsRef.toggleFor(deafenBtn, "speaker")
-                    else if (s === "camera") island.callOptionsRef.toggleFor(camBtn, "camera")
+            implicitHeight: callControlBar.implicitHeight
+            Rectangle {
+                id: callControlBar
+                anchors.horizontalCenter: parent.horizontalCenter
+                implicitHeight: 64
+                implicitWidth: ctlRow.implicitWidth + Kirigami.Units.largeSpacing * 2
+                // 10.1 (TH-CALL-05): twelve buttons + a now-playing pill can want ~900 px; in a
+                // narrower column the centred bar used to overflow BOTH edges. Scale it down
+                // to fit (down to 0.7) instead — every action stays reachable.
+                scale: parent ? Math.max(0.7, Math.min(1, (parent.width - Kirigami.Units.largeSpacing) / Math.max(1, implicitWidth))) : 1
+                // two-pane band (docs/TWO-PANE.md §3; the web's CallBar + barfit.ts): when even 0.7 is too wide, the last
+                // buttons before Leave move into a More menu (Main.qml barFit; RowModel foldCount). Re-checked after a change
+                // settles (a fold changes the row, which changes implicitWidth: one more pass, never a binding loop).
+                // the movable cells' widths as last drawn ("<i>:<action>" → px incl. the row spacing and the cell's divider;
+                // astra review: measured, not 54 each — a wider cell looped fold / unfold)
+                property var cellWidths: ({})
+                property int refitRetries: 0
+                function measureCells() {
+                    // the drawn children left to right ↔ the columns that should be drawn (the row's cells, More, the pin's
+                    // divider and the pin); measured only when the two lists agree, else the last widths (or 54) stand
+                    var kids = []
+                    for (var c = 0; c < ctlRow.children.length; c++) {
+                        var ch = ctlRow.children[c]
+                        if (ch.visible && ch.width > 0) kids.push(ch)
+                    }
+                    kids.sort(function (x, y) { return x.x - y.x })
+                    var cols = []
+                    for (var e = 0; e < brow.cells.length; e++) cols.push({ cell: brow.cells[e] })
+                    if (brow.moreCol >= 0) cols.push({ more: true, col: brow.moreCol })
+                    cols.sort(function (x, y) { return (x.cell ? x.cell.col : x.col) - (y.cell ? y.cell.col : y.col) })
+                    if (kids.length !== cols.length + 2) return -1
+                    var gap = ctlRow.columnSpacing, w = Object.assign({}, cellWidths), moreW = -1, sepW = 0
+                    for (var k = 0; k < cols.length; k++) {
+                        var cc = cols[k]
+                        if (cc.more) { moreW = kids[k].width + gap; sepW = 0; continue }
+                        if (cc.cell.sep) { sepW = kids[k].width + gap; continue }
+                        var kept = island.app && typeof island.app.foldKeeps === "function" ? island.app.foldKeeps(cc.cell.item, brow.keep) : true
+                        if (!kept) w[cc.cell.i + ":" + cc.cell.a] = kids[k].width + gap + sepW
+                        sepW = 0
+                    }
+                    cellWidths = w
+                    return moreW
                 }
-            }
-            // 11.0 buttons: the bar is a row of the actions table (call.bar) — the stored row or the preset's default
-            // (today's buttons, same order). Each action keeps its element here, placed in the row's order
-            // (Layout.column; hidden ones leave the grid); anything else in the row is an ActionButton (generics).
-            // The call's room is the row's context; it reads ActionsHost.callRowSnapshotJson (product decision 2: the
-            // controls dim while the call connects). Right-click the bar → "Edit buttons…".
-            RowModel {
-                id: brow
-                app: island.app
-                islandRef: "call"
-                rowId: "bar"
-                context: String(island.app.mCallRoomId || "").length > 0 ? ({ room: String(island.app.mCallRoomId) }) : null
-                snapshotOverride: island.app.actions ? island.app.actions.callRowSnapshotJson : ""
-                bespoke: ["call.mic.toggle", "call.gameChat.toggle", "call.corner.leave", "call.deafen.toggle", "call.camera.toggle",
-                          "call.screenShare.toggle", "call.audioShare.toggle", "call.health.open", "soundboard.open", "sound.stop",
-                          "watchParty.open", "room.activity.open", "call.afk.toggle", "call.devices.open", "call.leave"]
-            }
-            TapHandler {
-                acceptedButtons: Qt.RightButton
-                onTapped: callBarMenu.popup()
-            }
-            Controls.Menu {
-                id: callBarMenu
-                Controls.MenuItem { text: "Edit buttons…"; icon.name: "document-edit-symbolic"; onTriggered: brow.edit("Call controls") }
-            }
-            // (a one-row GridLayout — was a RowLayout; the same geometry: hidden items and empty columns take no room)
-            GridLayout {
-                id: ctlRow
-                anchors.centerIn: parent
-                rows: 1
-                rowSpacing: 0
-                columnSpacing: Kirigami.Units.smallSpacing
-                CallButton { // mute mic
+                function refitBar() {
+                    if (!parent) return
+                    var k0 = brow.foldCount
+                    var moreW = measureCells()
+                    if (moreW < 0) {
+                        // the drawn children did not match the row's columns (mid-layout): a rebuilt width could be
+                        // wrong, so nothing changes now — try again once the layout settles (astra round 3)
+                        if (k0 > 0 || brow.moreCol >= 0) { if (refitRetries++ < 5) refitTimer.restart(); return }
+                        moreW = 54
+                    }
+                    refitRetries = 0
+                    var cur = ctlRow.implicitWidth + Kirigami.Units.largeSpacing * 2
+                    var widths = []
+                    for (var q = 0; q < brow.foldKeys.length; q++) {
+                        var fk = brow.foldKeys[q]
+                        widths.push(cellWidths[fk.key] !== undefined ? cellWidths[fk.key] : 54 + (fk.sep ? 5 : 0))
+                    }
+                    // the natural width with nothing moved: what is drawn + the moved cells − the More cell
+                    var full = cur
+                    if (k0 > 0) { for (var j = Math.max(0, widths.length - k0); j < widths.length; j++) full += widths[j]; full -= moreW }
+                    var r = island.app.barFit({ fullW: full, availW: parent.width - Kirigami.Units.largeSpacing,
+                                                minScale: 0.7, widths: widths, more: moreW, fold0: k0 })
+                    if (r.fold !== k0) brow.foldCount = r.fold
+                }
+                Timer { id: refitTimer; interval: 0; onTriggered: callControlBar.refitBar() }
+                onImplicitWidthChanged: refitTimer.restart()
+                Connections { target: callControlBar.parent; function onWidthChanged() { refitTimer.restart() } }
+                Component.onCompleted: refitTimer.restart()
+                transformOrigin: Item.Center
+                radius: height / 2
+                color: Th.callbarBg
+                border.width: 1
+                border.color: Th.callbarBorder
+                // 0.8.33: hidden until the window is focused and the pointer is over the call. 11.0.2: or pinned (callBarShown:
+                // "Keep call buttons visible" keeps it, its pin below)
+                opacity: island.app.callBarShown ? 1.0 : 0.0
+                enabled: island.app.callBarShown
+                Behavior on opacity { NumberAnimation { duration: island.app.dur } }
+                transform: Translate {
+                    y: island.app.callBarShown ? 0 : 10
+                    Behavior on y { NumberAnimation { duration: island.app.dur; easing.type: Easing.OutCubic } }
+                }
+                HoverHandler { id: callBarHover; onHoveredChanged: island.app.callBarHovered = hovered }
+                Binding { target: island.app; property: "callMenuHold"; value: island.devicesMenuRef.opened || statsPopup.opened || gamePopup.opened }
+                // 0.8.33 gate hook (lives HERE: the bar's ids are page-scoped): --tinhat-callopts=…
+                // opens that face 20 s after the (fake) call shows, after the verify prompt is gone.
+                Timer {
+                    running: island.app.callOptsProbe.length > 0 && island.app.callShown
+                    interval: 20000; repeat: false
+                    onTriggered: {
+                        var s = island.app.callOptsProbe
+                        console.log("[callopts] opening " + s)
+                        if (s === "outputs") island.app.openEcOutputs()
+                        else if (s === "mic") island.callOptionsRef.toggleFor(micBtn, "mic")
+                        else if (s === "speaker") island.callOptionsRef.toggleFor(deafenBtn, "speaker")
+                        else if (s === "camera") island.callOptionsRef.toggleFor(camBtn, "camera")
+                    }
+                }
+                // 11.0 buttons: the bar is a row of the actions table (call.bar) — the stored row or the preset's default
+                // (today's buttons, same order). Each action keeps its element here, placed in the row's order
+                // (Layout.column; hidden ones leave the grid); anything else in the row is an ActionButton (generics).
+                // The call's room is the row's context; it reads ActionsHost.callRowSnapshotJson (product decision 2: the
+                // controls dim while the call connects). Right-click the bar → "Edit buttons…".
+                RowModel {
+                    id: brow
                     app: island.app
-                    id: micBtn
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.mic.toggle"))
-                    visible: brow.shows("call.mic.toggle")
-                    live: !brow.dimmed("call.mic.toggle")
-                    hasMenu: true
-                    menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "mic"
-                    onMenuClicked: island.callOptionsRef.toggleFor(micBtn, "mic")
-                    iconName: (app.mMicMuted || app.mServerMuted) ? "microphone-sensitivity-muted-symbolic" : "audio-input-microphone-symbolic"
-                    // Muted = danger-red FILL (danger wins over active in the fill
-                    // logic) with the default onAccent glyph — the bar, tile pill,
-                    // and overlay warn state all agree on what "muted" looks like,
-                    // and the glyph keeps >=3:1 contrast on every theme.
-                    // In game chat the live mic is BLUE (not red): it is
-                    // live to the room, silent only to the other game-chat people.
-                    // RBAC §7.4: server-muted = the same red, but LOCKED (clicks explain instead of toggling).
-                    active: app.mMicMuted || app.mServerMuted
-                    danger: app.mMicMuted || app.mServerMuted
-                    // 10.1 (TH-GAP-24): push-to-talk key down = a green mic (the cue callctl
-                    // always shipped and nothing drew).
-                    tinted: app.callctl.pttSpeaking || (app.mGameChat && !app.mMicMuted)
-                    variant: app.callctl.pttSpeaking ? "ptt" : "gameChat"
-                    badge: app.mGameChat ? "🎮" : ""
-                    tip: app.mServerMuted ? app.serverMutedText() + " — ask them to unmute you"
-                       : (app.callctl.pttSpeaking ? "Transmitting (push-to-talk)\n" : "") + (app.mMicMuted ? "Unmute" : "Mute") + " — Ctrl+Shift+M"
-                         + (app.mGameChat && !app.mMicMuted ? "\nGame chat: people in the game's voice chat don't hear this mic here; everyone else does" : "")
-                         + (app.heardSummary().length > 0 ? "\n" + app.heardSummary() : "")
-                    // 10.5: red ring + pulse while you talk into a muted mic; amber ring while the call isn't getting it.
-                    pulse: island.coreRef.mutedTalkNow   // 11.0: one pulse per warning, only while the motion switch is on
-                    ringColor: island.coreRef.mutedTalkNow ? Th.callbarButtonRingMuted
-                        : (app.mInCall && !app.mMicMuted && app.mHear && app.mHear.tx && app.mHear.tx.state === "notsent") ? Th.callbarButtonRingError
-                        : "transparent"
-                    onClicked: { if (app.mServerMuted) app.showPassiveNotification(LinkGate.plain(app.serverMutedText()), 3000); else app.callctl.toggleMic() }
-                    // 10.5: "You're muted" — the reminder every voice app should have (it lived only in the
-                    // overlay HUD, off by default). Above the button, one action, never steals focus.
-                    Controls.Popup {
-                        id: mutedTalkBubble
-                        visible: island.app.mMutedTalkBubble && island.app.mInCall
-                        x: Math.round((micBtn.width - width) / 2)
-                        y: -height - 16
-                        padding: 0
-                        modal: false
-                        focus: false
-                        closePolicy: Controls.Popup.NoAutoClose
-                        background: Rectangle {
-                            radius: 12
-                            color: Th.callbarMutedBubbleBg
+                    islandRef: "call"
+                    rowId: "bar"
+                    context: String(island.app.mCallRoomId || "").length > 0 ? ({ room: String(island.app.mCallRoomId) }) : null
+                    snapshotOverride: island.app.actions ? island.app.actions.callRowSnapshotJson : ""
+                    bespoke: ["call.mic.toggle", "call.gameChat.toggle", "call.corner.leave", "call.deafen.toggle", "call.camera.toggle",
+                              "call.screenShare.toggle", "call.audioShare.toggle", "call.health.open", "soundboard.open", "sound.stop",
+                              "watchParty.open", "room.activity.open", "call.afk.toggle", "call.devices.open", "call.leave"]
+                    keep: ["call.mic.toggle", "call.leave"]   // never move into More (the web's FOLD_KEEP)
+                    onFoldableChanged: refitTimer.restart()
+                }
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: callBarMenu.popup()
+                }
+                Controls.Menu {
+                    id: callBarMenu
+                    Controls.MenuItem { text: "Edit buttons…"; icon.name: "document-edit-symbolic"; onTriggered: brow.edit("Call controls") }
+                }
+                // (a one-row GridLayout — was a RowLayout; the same geometry: hidden items and empty columns take no room)
+                GridLayout {
+                    id: ctlRow
+                    anchors.centerIn: parent
+                    rows: 1
+                    rowSpacing: 0
+                    columnSpacing: Kirigami.Units.smallSpacing
+                    CallButton { // mute mic
+                        app: island.app
+                        id: micBtn
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.mic.toggle"))
+                        visible: brow.shows("call.mic.toggle")
+                        live: !brow.dimmed("call.mic.toggle")
+                        hasMenu: true
+                        menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "mic"
+                        onMenuClicked: island.callOptionsRef.toggleFor(micBtn, "mic")
+                        iconName: (app.mMicMuted || app.mServerMuted) ? "microphone-sensitivity-muted-symbolic" : "audio-input-microphone-symbolic"
+                        // Muted = danger-red FILL (danger wins over active in the fill
+                        // logic) with the default onAccent glyph — the bar, tile pill,
+                        // and overlay warn state all agree on what "muted" looks like,
+                        // and the glyph keeps >=3:1 contrast on every theme.
+                        // In game chat the live mic is BLUE (not red): it is
+                        // live to the room, silent only to the other game-chat people.
+                        // RBAC §7.4: server-muted = the same red, but LOCKED (clicks explain instead of toggling).
+                        active: app.mMicMuted || app.mServerMuted
+                        danger: app.mMicMuted || app.mServerMuted
+                        // 10.1 (TH-GAP-24): push-to-talk key down = a green mic (the cue callctl
+                        // always shipped and nothing drew).
+                        tinted: app.callctl.pttSpeaking || (app.mGameChat && !app.mMicMuted)
+                        variant: app.callctl.pttSpeaking ? "ptt" : "gameChat"
+                        badge: app.mGameChat ? "🎮" : ""
+                        tip: app.mServerMuted ? app.serverMutedText() + " — ask them to unmute you"
+                           : (app.callctl.pttSpeaking ? "Transmitting (push-to-talk)\n" : "") + (app.mMicMuted ? "Unmute" : "Mute") + " — Ctrl+Shift+M"
+                             + (app.mGameChat && !app.mMicMuted ? "\nGame chat: people in the game's voice chat don't hear this mic here; everyone else does" : "")
+                             + (app.heardSummary().length > 0 ? "\n" + app.heardSummary() : "")
+                        // 10.5: red ring + pulse while you talk into a muted mic; amber ring while the call isn't getting it.
+                        pulse: island.coreRef.mutedTalkNow   // 11.0: one pulse per warning, only while the motion switch is on
+                        ringColor: island.coreRef.mutedTalkNow ? Th.callbarButtonRingMuted
+                            : (app.mInCall && !app.mMicMuted && app.mHear && app.mHear.tx && app.mHear.tx.state === "notsent") ? Th.callbarButtonRingError
+                            : "transparent"
+                        onClicked: { if (app.mServerMuted) app.showPassiveNotification(LinkGate.plain(app.serverMutedText()), 3000); else app.callctl.toggleMic() }
+                        // 10.5: "You're muted" — the reminder every voice app should have (it lived only in the
+                        // overlay HUD, off by default). Above the button, one action, never steals focus.
+                        Controls.Popup {
+                            id: mutedTalkBubble
+                            visible: island.app.mMutedTalkBubble && island.app.mInCall
+                            x: Math.round((micBtn.width - width) / 2)
+                            y: -height - 16
+                            padding: 0
+                            modal: false
+                            focus: false
+                            closePolicy: Controls.Popup.NoAutoClose
+                            background: Rectangle {
+                                radius: 12
+                                color: Th.callbarMutedBubbleBg
+                                border.width: 1
+                                border.color: Th.callbarMutedBubbleBorder
+                            }
+                            contentItem: RowLayout {
+                                spacing: 8
+                                ThIcon {
+                                    Layout.leftMargin: 12
+                                    app: island.app
+                                    name: "microphone-sensitivity-muted-symbolic"
+                                    Layout.preferredWidth: 16; Layout.preferredHeight: 16
+                                    color: Th.callbarMutedBubbleIcon
+                                    isMask: true
+                                }
+                                Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                    Layout.topMargin: 9; Layout.bottomMargin: 9
+                                    text: island.app.callctl.pushToTalk ? "You're muted — hold " + (island.app.actions && island.app.actions.pttKeys.length > 0 ? island.app.actions.pttKeys[0] : "Ctrl") + " to talk" : "You're muted"
+                                    color: Th.callbarMutedBubbleFg
+                                    font.bold: true
+                                }
+                                ThButton {
+                                    visible: !app.callctl.pushToTalk
+                                    app: island.app
+                                    text: "Unmute"
+                                    onClicked: { app.mMutedTalkBubble = false; app.callctl.toggleMic() }
+                                }
+                                Controls.Label {
+                                    Layout.rightMargin: 10
+                                    text: "✕"
+                                    color: bubbleCloseHover.hovered ? Th.callbarMutedBubbleCloseFgHover : Th.callbarMutedBubbleCloseFg
+                                    HoverHandler { id: bubbleCloseHover; cursorShape: Qt.PointingHandCursor }
+                                    TapHandler { onTapped: island.coreRef.dismissMutedTalk() }
+                                    Accessible.role: Accessible.Button
+                                    Accessible.name: "Dismiss"
+                                }
+                            }
+                        }
+                    }
+                    CallButton { // game chat toggle (0.8.23): my mic stays live to the room,
+                        app: island.app
+                        // 11.0: one element for two actions — game chat, or "Leave the corner" while aside (the row shows one)
+                        Layout.row: 0
+                        Layout.column: Math.max(0, brow.shows("call.gameChat.toggle") ? brow.colOf("call.gameChat.toggle") : brow.colOf("call.corner.leave"))
+                        visible: brow.shows("call.gameChat.toggle") || brow.shows("call.corner.leave")
+                        live: !(brow.shows("call.gameChat.toggle") ? brow.dimmed("call.gameChat.toggle") : brow.dimmed("call.corner.leave"))
+                                 // but peers who are ALSO in game chat don't hear it here — we hear
+                                 // each other in-game, so nobody is heard twice. Hangers-on still
+                                 // hear and talk to everyone. Per-call; off at every join.
+                                 // 9.4: while pulled aside (a corner) this button is YELLOW and
+                                 // means "leave the corner" — game chat and a corner never overlap.
+                        // 10.1 (TH-CALL-07): its own glyph — it sat next to Mute wearing the same microphone.
+                        iconName: app.mAside ? "audio-input-microphone-symbolic" : "applications-games-symbolic"
+                        badge: app.mAside ? "🤫" : "🎮"
+                        active: app.mGameChat || app.mAside
+                        tinted: app.mGameChat || app.mAside
+                        busy: app.mAside && !app.mCorner.active   // 10.1 (TH-FLOAT-15): a pending pull spins; it used to look identical to active
+                        variant: app.mAside ? "aside" : "gameChat"
+                        iconColor: app.mAside ? Th.callbarButtonAsideIcon : Th.callbarButtonIcon
+                        tip: app.mAside
+                             ? (app.mCorner.active
+                                ? "Aside with " + app.cornerNames(app.mCorner.members) + " — everyone else is at 10 % and can't hear your mics. Click to go back to everyone"
+                                : "Pulling them aside… (click to cancel)")
+                             : (app.mGameChat
+                                ? "Leave game chat — everyone in the call hears your mic again"
+                                : "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does")
+                        onClicked: app.mAside ? app.callctl.leaveCorner() : app.callctl.applyGameChat(!app.mGameChat)
+                    }
+                    CallButton { // deafen — mute ALL incoming call audio (output)
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.deafen.toggle"))
+                        visible: brow.shows("call.deafen.toggle")
+                        live: !brow.dimmed("call.deafen.toggle")
+                        id: deafenBtn
+                        hasMenu: true
+                        menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "speaker"
+                        onMenuClicked: island.callOptionsRef.toggleFor(deafenBtn, "speaker")
+                        iconName: app.mDeafened ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
+                        active: app.mDeafened
+                        danger: app.mDeafened // deafened = you hear nothing; warn like mute
+                        tip: (app.mDeafened ? "Undeafen (restore audio)" : "Deafen (mute all output)") + " — Ctrl+Shift+D"
+                        onClicked: app.callctl.applyDeafen(!app.mDeafened)
+                    }
+                    CallButton { // camera toggle
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.camera.toggle"))
+                        visible: brow.shows("call.camera.toggle")
+                        live: !brow.dimmed("call.camera.toggle")
+                        id: camBtn
+                        hasMenu: true
+                        menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "camera"
+                        onMenuClicked: island.callOptionsRef.toggleFor(camBtn, "camera")
+                        // "camera-disabled-symbolic" is an Adwaita name absent from Breeze
+                        // (renders BLANK). Use the known-good "camera-video-symbolic" for
+                        // both states; OFF gets the CallButton slash overlay (friends
+                        // couldn't tell fill-vs-no-fill apart — live feedback).
+                        iconName: "camera-video-symbolic"
+                        active: app.mCameraOn
+                        slashed: !app.mCameraOn
+                        tip: app.mCameraOn ? "Turn camera off" : "Turn camera on"
+                        onClicked: app.callctl.toggleCamera()
+                    }
+                    CallButton { // share screen — 10.1 (TH-POP-13): one click STOPS a live share; the ▴ opens the popover
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.screenShare.toggle"))
+                        visible: brow.shows("call.screenShare.toggle")
+                        live: !brow.dimmed("call.screenShare.toggle")
+                        iconName: "video-display-brightness-symbolic"
+                        active: app.mCallSharing
+                        hasMenu: true
+                        menuOpen: island.streamPopoverRef.opened
+                        onMenuClicked: island.streamPopoverRef.visible ? island.streamPopoverRef.close() : island.streamPopoverRef.open()
+                        tip: app.mCallSharing
+                             ? "Stop sharing" + (app.mShareRecOnly ? " (recording only)" : "") + " — ▴ for preview & options"
+                             : "Share your screen…"
+                        onClicked: {
+                            if (app.mCallSharing) app.callctl.stopScreen()
+                            else if (island.streamPopoverRef.visible) island.streamPopoverRef.close()
+                            else island.streamPopoverRef.open()
+                        }
+                    }
+                    CallButton { // share audio — capture an output sink's .monitor (desktop/app/game audio)
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.audioShare.toggle"))
+                        visible: brow.shows("call.audioShare.toggle")
+                        live: !brow.dimmed("call.audioShare.toggle")
+                        hasMenu: true // 0.8.33: the source picker lives in the stream popover
+                        menuOpen: island.streamPopoverRef.opened
+                        onMenuClicked: island.streamPopoverRef.visible ? island.streamPopoverRef.close() : island.streamPopoverRef.open()
+                        iconName: "audio-speakers-symbolic"
+                        active: app.mMusicPlaying
+                        tip: app.mMusicPlaying ? "Stop sharing audio (" + island.streamPopoverRef.audioLabelFor(app.mMusicSourceName) + ")"
+                            : (app.mMusicSourceName.length > 0
+                               ? "Share audio (" + island.streamPopoverRef.audioLabelFor(app.mMusicSourceName) + ")"
+                               : "Share audio — pick an app in the share popover first")
+                        onClicked: app.mMusicPlaying ? app.callctl.stopMusic()
+                                                      : app.callctl.startMusicSource(app.mMusicSourceName)
+                    }
+                    CallButton { // stream health — what's actually going OUT (encoder, res/fps,
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.health.open"))
+                        visible: brow.shows("call.health.open")
+                        live: !brow.dimmed("call.health.open")
+                                  // bitrate, SFU-reported loss/RTT), one card per outgoing stream.
+                        id: healthChip
+                        // view-statistics-symbolic: present in Breeze (verified on
+                        // disk) — network-transmit-symbolic is an Adwaita-only name
+                        // that rendered as the blank fallback glyph, same trap as
+                        // camera-disabled-symbolic above.
+                        iconName: "view-statistics-symbolic"
+                        active: statsPopup.opened
+                        tip: "Stream health — what you're sending"
+
+                        // Worst-of health across the outgoing streams: "" (fine/nothing),
+                        // "warn" (encoder limited or 1-3% loss), "bad" (>=3% loss).
+                        // lossPct is -1 until the SFU's first receiver report — never
+                        // counted as loss. Colors are GLYPH-ON-DARK tokens by design
+                        // (a 7px dot on the dark bar, not a fill under onAccent).
+                        readonly property string worst: {
+                            var w = ""
+                            for (var i = 0; i < app.mPublishStats.length; ++i) {
+                                var e = app.mPublishStats[i]
+                                if (e.lossPct >= 3) return "bad"
+                                if ((e.qlim && e.qlim !== "none") || e.lossPct >= 1) w = "warn"
+                            }
+                            return w
+                        }
+                        Rectangle { // degradation dot (hidden while everything is healthy,
+                                    // and while the popup is open: active turns the button
+                                    // into an ACCENT fill, where warning/dangerBright are
+                                    // exactly the glyph-on-dark tokens that fail as fills —
+                                    // the open popup shows per-stream status anyway)
+                            visible: healthChip.worst !== "" && !statsPopup.opened
+                            width: 9; height: 9; radius: 4.5
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.margins: 3
+                            color: healthChip.worst === "bad" ? Th.callbarHealthDotBadFill : Th.callbarHealthDotWarnFill
                             border.width: 1
-                            border.color: Th.callbarMutedBubbleBorder
+                            border.color: Th.callbarHealthDotBorder
                         }
-                        contentItem: RowLayout {
-                            spacing: 8
-                            ThIcon {
-                                Layout.leftMargin: 12
-                                app: island.app
-                                name: "microphone-sensitivity-muted-symbolic"
-                                Layout.preferredWidth: 16; Layout.preferredHeight: 16
-                                color: Th.callbarMutedBubbleIcon
-                                isMask: true
-                            }
-                            Controls.Label {
-                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                Layout.topMargin: 9; Layout.bottomMargin: 9
-                                text: island.app.callctl.pushToTalk ? "You're muted — hold " + (island.app.actions && island.app.actions.pttKeys.length > 0 ? island.app.actions.pttKeys[0] : "Ctrl") + " to talk" : "You're muted"
-                                color: Th.callbarMutedBubbleFg
-                                font.bold: true
-                            }
-                            ThButton {
-                                visible: !app.callctl.pushToTalk
-                                app: island.app
-                                text: "Unmute"
-                                onClicked: { app.mMutedTalkBubble = false; app.callctl.toggleMic() }
-                            }
-                            Controls.Label {
-                                Layout.rightMargin: 10
-                                text: "✕"
-                                color: bubbleCloseHover.hovered ? Th.callbarMutedBubbleCloseFgHover : Th.callbarMutedBubbleCloseFg
-                                HoverHandler { id: bubbleCloseHover; cursorShape: Qt.PointingHandCursor }
-                                TapHandler { onTapped: island.coreRef.dismissMutedTalk() }
-                                Accessible.role: Accessible.Button
-                                Accessible.name: "Dismiss"
-                            }
-                        }
-                    }
-                }
-                CallButton { // game chat toggle (0.8.23): my mic stays live to the room,
-                    app: island.app
-                    // 11.0: one element for two actions — game chat, or "Leave the corner" while aside (the row shows one)
-                    Layout.row: 0
-                    Layout.column: Math.max(0, brow.shows("call.gameChat.toggle") ? brow.colOf("call.gameChat.toggle") : brow.colOf("call.corner.leave"))
-                    visible: brow.shows("call.gameChat.toggle") || brow.shows("call.corner.leave")
-                    live: !(brow.shows("call.gameChat.toggle") ? brow.dimmed("call.gameChat.toggle") : brow.dimmed("call.corner.leave"))
-                             // but peers who are ALSO in game chat don't hear it here — we hear
-                             // each other in-game, so nobody is heard twice. Hangers-on still
-                             // hear and talk to everyone. Per-call; off at every join.
-                             // 9.4: while pulled aside (a corner) this button is YELLOW and
-                             // means "leave the corner" — game chat and a corner never overlap.
-                    // 10.1 (TH-CALL-07): its own glyph — it sat next to Mute wearing the same microphone.
-                    iconName: app.mAside ? "audio-input-microphone-symbolic" : "applications-games-symbolic"
-                    badge: app.mAside ? "🤫" : "🎮"
-                    active: app.mGameChat || app.mAside
-                    tinted: app.mGameChat || app.mAside
-                    busy: app.mAside && !app.mCorner.active   // 10.1 (TH-FLOAT-15): a pending pull spins; it used to look identical to active
-                    variant: app.mAside ? "aside" : "gameChat"
-                    iconColor: app.mAside ? Th.callbarButtonAsideIcon : Th.callbarButtonIcon
-                    tip: app.mAside
-                         ? (app.mCorner.active
-                            ? "Aside with " + app.cornerNames(app.mCorner.members) + " — everyone else is at 10 % and can't hear your mics. Click to go back to everyone"
-                            : "Pulling them aside… (click to cancel)")
-                         : (app.mGameChat
-                            ? "Leave game chat — everyone in the call hears your mic again"
-                            : "Game chat — I'm in the game's own voice chat: people who are too won't hear my mic twice; everyone else still does")
-                    onClicked: app.mAside ? app.callctl.leaveCorner() : app.callctl.applyGameChat(!app.mGameChat)
-                }
-                CallButton { // deafen — mute ALL incoming call audio (output)
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.deafen.toggle"))
-                    visible: brow.shows("call.deafen.toggle")
-                    live: !brow.dimmed("call.deafen.toggle")
-                    id: deafenBtn
-                    hasMenu: true
-                    menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "speaker"
-                    onMenuClicked: island.callOptionsRef.toggleFor(deafenBtn, "speaker")
-                    iconName: app.mDeafened ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
-                    active: app.mDeafened
-                    danger: app.mDeafened // deafened = you hear nothing; warn like mute
-                    tip: (app.mDeafened ? "Undeafen (restore audio)" : "Deafen (mute all output)") + " — Ctrl+Shift+D"
-                    onClicked: app.callctl.applyDeafen(!app.mDeafened)
-                }
-                CallButton { // camera toggle
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.camera.toggle"))
-                    visible: brow.shows("call.camera.toggle")
-                    live: !brow.dimmed("call.camera.toggle")
-                    id: camBtn
-                    hasMenu: true
-                    menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "camera"
-                    onMenuClicked: island.callOptionsRef.toggleFor(camBtn, "camera")
-                    // "camera-disabled-symbolic" is an Adwaita name absent from Breeze
-                    // (renders BLANK). Use the known-good "camera-video-symbolic" for
-                    // both states; OFF gets the CallButton slash overlay (friends
-                    // couldn't tell fill-vs-no-fill apart — live feedback).
-                    iconName: "camera-video-symbolic"
-                    active: app.mCameraOn
-                    slashed: !app.mCameraOn
-                    tip: app.mCameraOn ? "Turn camera off" : "Turn camera on"
-                    onClicked: app.callctl.toggleCamera()
-                }
-                CallButton { // share screen — 10.1 (TH-POP-13): one click STOPS a live share; the ▴ opens the popover
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.screenShare.toggle"))
-                    visible: brow.shows("call.screenShare.toggle")
-                    live: !brow.dimmed("call.screenShare.toggle")
-                    iconName: "video-display-brightness-symbolic"
-                    active: app.mCallSharing
-                    hasMenu: true
-                    menuOpen: island.streamPopoverRef.opened
-                    onMenuClicked: island.streamPopoverRef.visible ? island.streamPopoverRef.close() : island.streamPopoverRef.open()
-                    tip: app.mCallSharing
-                         ? "Stop sharing" + (app.mShareRecOnly ? " (recording only)" : "") + " — ▴ for preview & options"
-                         : "Share your screen…"
-                    onClicked: {
-                        if (app.mCallSharing) app.callctl.stopScreen()
-                        else if (island.streamPopoverRef.visible) island.streamPopoverRef.close()
-                        else island.streamPopoverRef.open()
-                    }
-                }
-                CallButton { // share audio — capture an output sink's .monitor (desktop/app/game audio)
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.audioShare.toggle"))
-                    visible: brow.shows("call.audioShare.toggle")
-                    live: !brow.dimmed("call.audioShare.toggle")
-                    hasMenu: true // 0.8.33: the source picker lives in the stream popover
-                    menuOpen: island.streamPopoverRef.opened
-                    onMenuClicked: island.streamPopoverRef.visible ? island.streamPopoverRef.close() : island.streamPopoverRef.open()
-                    iconName: "audio-speakers-symbolic"
-                    active: app.mMusicPlaying
-                    tip: app.mMusicPlaying ? "Stop sharing audio (" + island.streamPopoverRef.audioLabelFor(app.mMusicSourceName) + ")"
-                        : (app.mMusicSourceName.length > 0
-                           ? "Share audio (" + island.streamPopoverRef.audioLabelFor(app.mMusicSourceName) + ")"
-                           : "Share audio — pick an app in the share popover first")
-                    onClicked: app.mMusicPlaying ? app.callctl.stopMusic()
-                                                  : app.callctl.startMusicSource(app.mMusicSourceName)
-                }
-                CallButton { // stream health — what's actually going OUT (encoder, res/fps,
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.health.open"))
-                    visible: brow.shows("call.health.open")
-                    live: !brow.dimmed("call.health.open")
-                              // bitrate, SFU-reported loss/RTT), one card per outgoing stream.
-                    id: healthChip
-                    // view-statistics-symbolic: present in Breeze (verified on
-                    // disk) — network-transmit-symbolic is an Adwaita-only name
-                    // that rendered as the blank fallback glyph, same trap as
-                    // camera-disabled-symbolic above.
-                    iconName: "view-statistics-symbolic"
-                    active: statsPopup.opened
-                    tip: "Stream health — what you're sending"
+                        onClicked: statsPopup.opened ? statsPopup.close() : statsPopup.open()
 
-                    // Worst-of health across the outgoing streams: "" (fine/nothing),
-                    // "warn" (encoder limited or 1-3% loss), "bad" (>=3% loss).
-                    // lossPct is -1 until the SFU's first receiver report — never
-                    // counted as loss. Colors are GLYPH-ON-DARK tokens by design
-                    // (a 7px dot on the dark bar, not a fill under onAccent).
-                    readonly property string worst: {
-                        var w = ""
-                        for (var i = 0; i < app.mPublishStats.length; ++i) {
-                            var e = app.mPublishStats[i]
-                            if (e.lossPct >= 3) return "bad"
-                            if ((e.qlim && e.qlim !== "none") || e.lossPct >= 1) w = "warn"
-                        }
-                        return w
-                    }
-                    Rectangle { // degradation dot (hidden while everything is healthy,
-                                // and while the popup is open: active turns the button
-                                // into an ACCENT fill, where warning/dangerBright are
-                                // exactly the glyph-on-dark tokens that fail as fills —
-                                // the open popup shows per-stream status anyway)
-                        visible: healthChip.worst !== "" && !statsPopup.opened
-                        width: 9; height: 9; radius: 4.5
-                        anchors.top: parent.top
-                        anchors.right: parent.right
-                        anchors.margins: 3
-                        color: healthChip.worst === "bad" ? Th.callbarHealthDotBadFill : Th.callbarHealthDotWarnFill
-                        border.width: 1
-                        border.color: Th.callbarHealthDotBorder
-                    }
-                    onClicked: statsPopup.opened ? statsPopup.close() : statsPopup.open()
-
-                    Controls.Popup {
-                        id: statsPopup
-                        width: 340
-                        x: healthChip.width / 2 - width / 2
-                        // 10.1 (TH-CALL-08): above the bar when there is room, below it otherwise; never off-window.
-                        y: (healthChip.mapToItem(Controls.Overlay.overlay, 0, 0).y > height + 16) ? -height - 8 : healthChip.height + 8
-                        margins: 6
-                        modal: false
-                        padding: Kirigami.Units.largeSpacing
-                        background: Rectangle {
-                            color: Th.callbarPopupBg; radius: island.app.radius
-                            border.width: 1; border.color: Th.callbarPopupBorder
-                        }
-                        // Human labels for the registry keys ("screen", "camera/<rid>", "mic").
-                        function kindLabel(k) {
-                            if (k === "screen") return "Screen share"
-                            if (k === "mic") return "Microphone"
-                            if (String(k).indexOf("camera") === 0) {
-                                var rid = String(k).indexOf("/") > 0 ? String(k).split("/")[1] : ""
-                                var names = { f: "high", h: "medium", q: "low" }
-                                return "Camera" + (rid ? " — " + (names[rid] || rid) + " layer" : "")
+                        Controls.Popup {
+                            id: statsPopup
+                            width: 340
+                            x: healthChip.width / 2 - width / 2
+                            // 10.1 (TH-CALL-08): above the bar when there is room, below it otherwise; never off-window.
+                            y: (healthChip.mapToItem(Controls.Overlay.overlay, 0, 0).y > height + 16) ? -height - 8 : healthChip.height + 8
+                            margins: 6
+                            modal: false
+                            padding: Kirigami.Units.largeSpacing
+                            background: Rectangle {
+                                color: Th.callbarPopupBg; radius: island.app.radius
+                                border.width: 1; border.color: Th.callbarPopupBorder
                             }
-                            return k
-                        }
-                        function fmtRate(kbps) {
-                            if (kbps >= 1000) return (kbps / 1000).toFixed(1) + " Mbps"
-                            return kbps + " kbps"
-                        }
-                        // 10.1 (TH-CALL-21): a sentence a person can act on first; the numbers after it.
-                        function plainStatus(e) {
-                            // 10.5 (audio review #3): "Looking good" needs something to actually be leaving.
-                            if (e.kind === "mic" && island.app.mMicMuted) return "Muted"
-                            if (e.sendKnown === false) return "Measuring…"
-                            if (e.active === false || e.sendKbps <= 0) return "Nothing is being sent right now"
-                            if (e.qlim === "cpu") return "Your computer can't keep up — try 30 fps or a lower resolution"
-                            if (e.qlim === "bandwidth" || e.lossPct >= 3) return "Your connection can't keep up — lower the bitrate"
-                            if (e.qlim && e.qlim !== "none") return "Limited by " + e.qlim
-                            if (e.lossPct >= 1) return "A little packet loss — should be fine"
-                            return "Looking good"
-                        }
-                        function statusText(e) {
-                            var parts = []
-                            if (e.lossPct >= 0) parts.push("loss " + e.lossPct.toFixed(1) + "%")
-                            if (e.rttMs >= 0) parts.push("RTT " + e.rttMs + " ms")
-                            return plainStatus(e) + (parts.length ? "  ·  " + parts.join(" · ") : "")
-                        }
-                        function statusColor(e) {
-                            if (e.sendKnown !== false && !(e.kind === "mic" && island.app.mMicMuted) && (e.active === false || e.sendKbps <= 0)) return Th.healthStatusBadFg
-                            if (e.lossPct >= 3) return Th.healthStatusBadFg
-                            if ((e.qlim && e.qlim !== "none") || e.lossPct >= 1) return Th.healthStatusWarnFg
-                            return Th.healthStatusGoodFg
-                        }
-                        ColumnLayout {
-                            anchors.fill: parent
-                            spacing: Kirigami.Units.smallSpacing
-                            Controls.Label {
-                                text: "Outgoing streams"
-                                font.bold: true
-                                color: Th.callbarPopoverTitleFg
+                            // Human labels for the registry keys ("screen", "camera/<rid>", "mic").
+                            function kindLabel(k) {
+                                if (k === "screen") return "Screen share"
+                                if (k === "mic") return "Microphone"
+                                if (String(k).indexOf("camera") === 0) {
+                                    var rid = String(k).indexOf("/") > 0 ? String(k).split("/")[1] : ""
+                                    var names = { f: "high", h: "medium", q: "low" }
+                                    return "Camera" + (rid ? " — " + (names[rid] || rid) + " layer" : "")
+                                }
+                                return k
                             }
-                            Controls.Label {
-                                visible: island.app.mPublishStats.length === 0
-                                text: "Nothing is being sent right now."
-                                color: Th.callbarPopoverHintFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            function fmtRate(kbps) {
+                                if (kbps >= 1000) return (kbps / 1000).toFixed(1) + " Mbps"
+                                return kbps + " kbps"
                             }
-                            Repeater {
-                                model: island.app.mPublishStats
-                                delegate: Rectangle {
-                                    required property var modelData
-                                    Layout.fillWidth: true
-                                    implicitHeight: cardCol.implicitHeight + Kirigami.Units.smallSpacing * 2
-                                    radius: island.app.radiusSm
-                                    color: Th.healthCardBg
-                                    opacity: modelData.active === false ? 0.55 : 1.0
-                                    ColumnLayout {
-                                        id: cardCol
-                                        anchors.fill: parent
-                                        anchors.margins: Kirigami.Units.smallSpacing
-                                        spacing: 1
-                                        RowLayout {
-                                            Layout.fillWidth: true
-                                            spacing: Kirigami.Units.smallSpacing
+                            // 10.1 (TH-CALL-21): a sentence a person can act on first; the numbers after it.
+                            function plainStatus(e) {
+                                // 10.5 (audio review #3): "Looking good" needs something to actually be leaving.
+                                if (e.kind === "mic" && island.app.mMicMuted) return "Muted"
+                                if (e.sendKnown === false) return "Measuring…"
+                                if (e.active === false || e.sendKbps <= 0) return "Nothing is being sent right now"
+                                if (e.qlim === "cpu") return "Your computer can't keep up — try 30 fps or a lower resolution"
+                                if (e.qlim === "bandwidth" || e.lossPct >= 3) return "Your connection can't keep up — lower the bitrate"
+                                if (e.qlim && e.qlim !== "none") return "Limited by " + e.qlim
+                                if (e.lossPct >= 1) return "A little packet loss — should be fine"
+                                return "Looking good"
+                            }
+                            function statusText(e) {
+                                var parts = []
+                                if (e.lossPct >= 0) parts.push("loss " + e.lossPct.toFixed(1) + "%")
+                                if (e.rttMs >= 0) parts.push("RTT " + e.rttMs + " ms")
+                                return plainStatus(e) + (parts.length ? "  ·  " + parts.join(" · ") : "")
+                            }
+                            function statusColor(e) {
+                                if (e.sendKnown !== false && !(e.kind === "mic" && island.app.mMicMuted) && (e.active === false || e.sendKbps <= 0)) return Th.healthStatusBadFg
+                                if (e.lossPct >= 3) return Th.healthStatusBadFg
+                                if ((e.qlim && e.qlim !== "none") || e.lossPct >= 1) return Th.healthStatusWarnFg
+                                return Th.healthStatusGoodFg
+                            }
+                            ColumnLayout {
+                                anchors.fill: parent
+                                spacing: Kirigami.Units.smallSpacing
+                                Controls.Label {
+                                    text: "Outgoing streams"
+                                    font.bold: true
+                                    color: Th.callbarPopoverTitleFg
+                                }
+                                Controls.Label {
+                                    visible: island.app.mPublishStats.length === 0
+                                    text: "Nothing is being sent right now."
+                                    color: Th.callbarPopoverHintFg
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                }
+                                Repeater {
+                                    model: island.app.mPublishStats
+                                    delegate: Rectangle {
+                                        required property var modelData
+                                        Layout.fillWidth: true
+                                        implicitHeight: cardCol.implicitHeight + Kirigami.Units.smallSpacing * 2
+                                        radius: island.app.radiusSm
+                                        color: Th.healthCardBg
+                                        opacity: modelData.active === false ? 0.55 : 1.0
+                                        ColumnLayout {
+                                            id: cardCol
+                                            anchors.fill: parent
+                                            anchors.margins: Kirigami.Units.smallSpacing
+                                            spacing: 1
+                                            RowLayout {
+                                                Layout.fillWidth: true
+                                                spacing: Kirigami.Units.smallSpacing
+                                                Controls.Label {
+                                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                                    text: statsPopup.kindLabel(modelData.kind)
+                                                    font.bold: true
+                                                    color: Th.healthCardTitleFg
+                                                    elide: Text.ElideRight
+                                                    Layout.fillWidth: true
+                                                }
+                                                Rectangle {
+                                                    width: 8; height: 8; radius: 4
+                                                    color: statsPopup.statusColor(modelData)
+                                                }
+                                            }
                                             Controls.Label {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                                text: statsPopup.kindLabel(modelData.kind)
-                                                font.bold: true
-                                                color: Th.healthCardTitleFg
+                                                // What actually ENGAGED (libwebrtc's implementation
+                                                // string), with the requested pick alongside when the
+                                                // stats haven't reported yet / differ.
+                                                text: {
+                                                    var enc = String(modelData.enc || "")
+                                                    var pick = String(modelData.encPick || "")
+                                                    if (pick.length > 0 && enc !== pick) return enc + "  (" + pick + ")"
+                                                    return enc
+                                                }
+                                                color: Th.healthCardDetailFg
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
-                                            Rectangle {
-                                                width: 8; height: 8; radius: 4
+                                            Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                                visible: modelData.w > 0
+                                                text: modelData.w + "×" + modelData.h + " @ " + modelData.fps + " fps"
+                                                color: Th.healthCardValueFg
+                                            }
+                                            Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                                text: statsPopup.fmtRate(modelData.sendKbps)
+                                                      + (modelData.targetKbps > 0
+                                                         ? "  ·  cap " + statsPopup.fmtRate(modelData.targetKbps) : "")
+                                                color: Th.healthCardValueFg
+                                            }
+                                            Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                                text: statsPopup.statusText(modelData)
                                                 color: statsPopup.statusColor(modelData)
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
                                             }
-                                        }
-                                        Controls.Label {
-                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                            // What actually ENGAGED (libwebrtc's implementation
-                                            // string), with the requested pick alongside when the
-                                            // stats haven't reported yet / differ.
-                                            text: {
-                                                var enc = String(modelData.enc || "")
-                                                var pick = String(modelData.encPick || "")
-                                                if (pick.length > 0 && enc !== pick) return enc + "  (" + pick + ")"
-                                                return enc
+                                            Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                                visible: modelData.w > 0
+                                                text: "keyframes " + modelData.key + " · nack " + modelData.nack + " · pli " + modelData.pli
+                                                color: Th.healthCardDetailFg
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
                                             }
-                                            color: Th.healthCardDetailFg
-                                            font.pointSize: Kirigami.Theme.smallFont.pointSize
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-                                        Controls.Label {
-                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                            visible: modelData.w > 0
-                                            text: modelData.w + "×" + modelData.h + " @ " + modelData.fps + " fps"
-                                            color: Th.healthCardValueFg
-                                        }
-                                        Controls.Label {
-                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                            text: statsPopup.fmtRate(modelData.sendKbps)
-                                                  + (modelData.targetKbps > 0
-                                                     ? "  ·  cap " + statsPopup.fmtRate(modelData.targetKbps) : "")
-                                            color: Th.healthCardValueFg
-                                        }
-                                        Controls.Label {
-                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                            text: statsPopup.statusText(modelData)
-                                            color: statsPopup.statusColor(modelData)
-                                            font.pointSize: Kirigami.Theme.smallFont.pointSize
-                                        }
-                                        Controls.Label {
-                                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                            visible: modelData.w > 0
-                                            text: "keyframes " + modelData.key + " · nack " + modelData.nack + " · pli " + modelData.pli
-                                            color: Th.healthCardDetailFg
-                                            font.pointSize: Kirigami.Theme.smallFont.pointSize
                                         }
                                     }
                                 }
-                            }
-                            HintLabel {
-                                app: island.app
-                                visible: app.mPublishStats.length > 0
-                                Layout.fillWidth: true
-                                text: "Loss and RTT are what the server reports receiving from you. Updates every 3 s."
-                            }
-                        }
-                    }
-                }
-                CallButton { // soundboard — opens (or re-raises) the soundboard window
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("soundboard.open"))
-                    visible: brow.shows("soundboard.open")
-                    live: !brow.dimmed("soundboard.open")
-                    iconName: "emblem-music-symbolic"
-                    active: app.soundboardPanel.visible || app.soundboardPanel.playingUrl.length > 0
-                    tip: app.soundboardPanel.playingUrl.length > 0
-                         ? "Soundboard — playing " + app.soundboardPanel.playingName : "Soundboard"
-                    onClicked: { app.soundboardCtl.refresh(app.room.roomId); app.soundboardPanel.openOrRaise() }
-                }
-                // Now playing (0.8.21): the clip's name + a stop, right in the
-                // call bar. The clicker had no sign anything fired — the panel is a
-                // separate window and was usually behind the app.
-                Rectangle {
-                    id: sbNowPlaying
-                    // 11.0: the row's "Stop the sound" (hidden while nothing plays — the default row's hideWhenOff; a
-                    // row that keeps it shows it dimmed then)
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("sound.stop"))
-                    visible: brow.shows("sound.stop") && (brow.dimmed("sound.stop") || island.app.soundboardPanel.playingUrl.length > 0)
-                    opacity: brow.dimmed("sound.stop") ? 0.5 : 1
-                    enabled: !brow.dimmed("sound.stop")
-                    implicitHeight: 34
-                    implicitWidth: sbNpRow.implicitWidth + 20
-                    radius: 17
-                    color: Th.callbarNowPlayingBg
-                    border.width: 1
-                    border.color: Th.callbarNowPlayingBorder
-                    RowLayout {
-                        id: sbNpRow
-                        anchors.centerIn: parent
-                        spacing: 6
-                        Kirigami.Icon {
-                            id: sbNpIcon
-                            source: "media-playback-start"
-                            color: Th.callbarNowPlayingIcon
-                            implicitWidth: 16
-                            implicitHeight: 16
-                            // 11.0 (GPU.md §2.2, R6): STATIC — shown lit (it blinked every 700 ms while a sound played).
-                        }
-                        Controls.Label {
-                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                            text: island.app.soundboardPanel.playingName.length > 0 ? island.app.soundboardPanel.playingName : "Sound"
-                            color: Th.callbarNowPlayingFg
-                            font.bold: true
-                            elide: Text.ElideRight
-                            Layout.maximumWidth: 180
-                        }
-                        Controls.ToolButton {
-                            icon.name: "media-playback-stop"
-                            implicitWidth: 26
-                            implicitHeight: 26
-                            Controls.ToolTip.text: "Stop the sound (for everyone)"
-                            Controls.ToolTip.visible: hovered
-                            Controls.ToolTip.delay: 400
-                            onClicked: island.app.soundboardPanel.stopCurrent()
-                        }
-                    }
-                }
-                // 11.4 (Media Party): one click from the call — the bespoke `watchParty.open` button (join + open) with a
-                // dot while a party is live in the call's room, and beside it the now-playing strip (art · title · who
-                // queued it · play/pause for me · click opens). Both sit in the action's own cell; the strip mirrors
-                // sbNowPlaying's pill. `mCallParty` is Rust's 3 s poll of the call room (whether or not I'm in).
-                RowLayout {
-                    id: mpCell
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("watchParty.open"))
-                    visible: brow.shows("watchParty.open")
-                    spacing: Kirigami.Units.smallSpacing
-                    readonly property var party: island.app.mCallParty || ({})
-                    readonly property string npUrl: String(party.url || "")
-                    readonly property bool npShown: !!party.live && mpCell.npUrl.length > 0 && mpCell.npUrl.indexOf("tinhat-memory://") !== 0
-                    readonly property var npItem: party.item || ({})
-                    readonly property string npNext: String(party.next || "")   // 11.3 QOL: the url after the playing one
-                    readonly property string hostId: island.app.mWatchInParty ? String((island.app.mWatchParty && island.app.mWatchParty.hostId) || "")
-                                                                              : String(party.hostId || "")
-                    readonly property bool canControl: island.app.mWatchInParty && (hostId.length === 0 || hostId === String(island.app.mUserId || ""))
-                    function openParty() {
-                        if (island.app.actions) island.app.actions.exec("watchParty.open", { subject: String(island.app.mCallRoomId || "") })
-                    }
-                    CallButton {
-                        id: mpBtn
-                        app: island.app
-                        live: !brow.dimmed("watchParty.open")
-                        iconName: "video-television-symbolic"
-                        active: island.app.mWatchInParty
-                        tip: island.app.mWatchInParty ? "Media Party — you're in it (click to show the window)"
-                           : (mpCell.party.live ? "Media Party — " + mpCell.party.viewers + (mpCell.party.viewers === 1 ? " person is" : " people are") + " in it · click to join"
-                                                 : "Media Party — watch videos and listen to music together")
-                        onClicked: mpCell.openParty()
-                        // the live dot: lit while a party runs in this room; ONE pulse on its rising edge (GPU.md §2.2/§2.4:
-                        // nothing loops while the call sits idle), like the muted-talk ring
-                        Rectangle {
-                            id: mpDot
-                            anchors.right: parent.right; anchors.top: parent.top
-                            anchors.rightMargin: 2; anchors.topMargin: 2
-                            width: 12; height: 12; radius: 6
-                            visible: !!mpCell.party.live && !island.app.mWatchInParty
-                            color: Th.callbarNowPlayingIcon
-                            border.width: 2; border.color: Th.callbarNowPlayingBorder
-                            Rectangle {
-                                id: mpDotPulse
-                                anchors.centerIn: parent; width: parent.width; height: width; radius: width / 2
-                                color: "transparent"; border.width: 2; border.color: Th.callbarNowPlayingIcon
-                                opacity: 0; visible: mpDotPulseAnim.running
-                                ParallelAnimation {
-                                    id: mpDotPulseAnim
-                                    onStopped: { mpDotPulse.opacity = 0; mpDotPulse.scale = 1.0 }
-                                    NumberAnimation { target: mpDotPulse; property: "scale"; from: 1.0; to: 2.4; duration: Motion.durVeryLong; easing.type: Easing.OutCubic }
-                                    NumberAnimation { target: mpDotPulse; property: "opacity"; from: 0.9; to: 0.0; duration: Motion.durVeryLong; easing.type: Easing.OutCubic }
+                                HintLabel {
+                                    app: island.app
+                                    visible: app.mPublishStats.length > 0
+                                    Layout.fillWidth: true
+                                    text: "Loss and RTT are what the server reports receiving from you. Updates every 3 s."
                                 }
                             }
-                            onVisibleChanged: if (visible && Motion.animate) mpDotPulseAnim.restart()
                         }
                     }
+                    CallButton { // soundboard — opens (or re-raises) the soundboard window
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("soundboard.open"))
+                        visible: brow.shows("soundboard.open")
+                        live: !brow.dimmed("soundboard.open")
+                        iconName: "emblem-music-symbolic"
+                        active: app.soundboardPanel.visible || app.soundboardPanel.playingUrl.length > 0
+                        tip: app.soundboardPanel.playingUrl.length > 0
+                             ? "Soundboard — playing " + app.soundboardPanel.playingName : "Soundboard"
+                        onClicked: { app.soundboardCtl.refresh(app.room.roomId); app.soundboardPanel.openOrRaise() }
+                    }
+                    // Now playing (0.8.21): the clip's name + a stop, right in the
+                    // call bar. The clicker had no sign anything fired — the panel is a
+                    // separate window and was usually behind the app.
                     Rectangle {
-                        id: mpNowPlaying
-                        visible: mpCell.npShown
-                        opacity: brow.dimmed("watchParty.open") ? 0.5 : 1
-                        enabled: !brow.dimmed("watchParty.open")
+                        id: sbNowPlaying
+                        // 11.0: the row's "Stop the sound" (hidden while nothing plays — the default row's hideWhenOff; a
+                        // row that keeps it shows it dimmed then)
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("sound.stop"))
+                        visible: brow.shows("sound.stop") && (brow.dimmed("sound.stop") || island.app.soundboardPanel.playingUrl.length > 0)
+                        opacity: brow.dimmed("sound.stop") ? 0.5 : 1
+                        enabled: !brow.dimmed("sound.stop")
                         implicitHeight: 34
-                        implicitWidth: mpNpRow.implicitWidth + 20
+                        implicitWidth: sbNpRow.implicitWidth + 20
                         radius: 17
                         color: Th.callbarNowPlayingBg
                         border.width: 1
                         border.color: Th.callbarNowPlayingBorder
-                        // 11.3 QOL (QOL.md §7): the tooltip names what plays — "title — artist"
-                        Controls.ToolTip.text: String(mpCell.npItem.title || "").length > 0
-                            ? String(mpCell.npItem.title) + (String(mpCell.npItem.artist || "").length > 0 ? " — " + String(mpCell.npItem.artist) : "")
-                            : "Media Party — open the window"
-                        Controls.ToolTip.visible: mpNpMa.containsMouse
-                        Controls.ToolTip.delay: 400
-                        MouseArea { id: mpNpMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: mpCell.openParty() }
                         RowLayout {
-                            id: mpNpRow
+                            id: sbNpRow
                             anchors.centerIn: parent
                             spacing: 6
-                            // art 24 px (the item's thumbnail / cover), else the party glyph
+                            Kirigami.Icon {
+                                id: sbNpIcon
+                                source: "media-playback-start"
+                                color: Th.callbarNowPlayingIcon
+                                implicitWidth: 16
+                                implicitHeight: 16
+                                // 11.0 (GPU.md §2.2, R6): STATIC — shown lit (it blinked every 700 ms while a sound played).
+                            }
+                            Controls.Label {
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                text: island.app.soundboardPanel.playingName.length > 0 ? island.app.soundboardPanel.playingName : "Sound"
+                                color: Th.callbarNowPlayingFg
+                                font.bold: true
+                                elide: Text.ElideRight
+                                Layout.maximumWidth: 180
+                            }
+                            Controls.ToolButton {
+                                icon.name: "media-playback-stop"
+                                implicitWidth: 26
+                                implicitHeight: 26
+                                Controls.ToolTip.text: "Stop the sound (for everyone)"
+                                Controls.ToolTip.visible: hovered
+                                Controls.ToolTip.delay: 400
+                                onClicked: island.app.soundboardPanel.stopCurrent()
+                            }
+                        }
+                    }
+                    // 11.4 (Media Party): one click from the call — the bespoke `watchParty.open` button (join + open) with a
+                    // dot while a party is live in the call's room, and beside it the now-playing strip (art · title · who
+                    // queued it · play/pause for me · click opens). Both sit in the action's own cell; the strip mirrors
+                    // sbNowPlaying's pill. `mCallParty` is Rust's 3 s poll of the call room (whether or not I'm in).
+                    RowLayout {
+                        id: mpCell
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("watchParty.open"))
+                        visible: brow.shows("watchParty.open")
+                        spacing: Kirigami.Units.smallSpacing
+                        readonly property var party: island.app.mCallParty || ({})
+                        readonly property string npUrl: String(party.url || "")
+                        readonly property bool npShown: !!party.live && mpCell.npUrl.length > 0 && mpCell.npUrl.indexOf("tinhat-memory://") !== 0
+                        readonly property var npItem: party.item || ({})
+                        readonly property string npNext: String(party.next || "")   // 11.3 QOL: the url after the playing one
+                        readonly property string hostId: island.app.mWatchInParty ? String((island.app.mWatchParty && island.app.mWatchParty.hostId) || "")
+                                                                                  : String(party.hostId || "")
+                        readonly property bool canControl: island.app.mWatchInParty && (hostId.length === 0 || hostId === String(island.app.mUserId || ""))
+                        function openParty() {
+                            if (island.app.actions) island.app.actions.exec("watchParty.open", { subject: String(island.app.mCallRoomId || "") })
+                        }
+                        CallButton {
+                            id: mpBtn
+                            app: island.app
+                            live: !brow.dimmed("watchParty.open")
+                            iconName: "video-television-symbolic"
+                            active: island.app.mWatchInParty
+                            tip: island.app.mWatchInParty ? "Media Party — you're in it (click to show the window)"
+                               : (mpCell.party.live ? "Media Party — " + mpCell.party.viewers + (mpCell.party.viewers === 1 ? " person is" : " people are") + " in it · click to join"
+                                                     : "Media Party — watch videos and listen to music together")
+                            onClicked: mpCell.openParty()
+                            // the live dot: lit while a party runs in this room; ONE pulse on its rising edge (GPU.md §2.2/§2.4:
+                            // nothing loops while the call sits idle), like the muted-talk ring
                             Rectangle {
-                                implicitWidth: 24; implicitHeight: 24; radius: 4; clip: true
-                                color: Th.callbarNowPlayingBorder
-                                Image {
-                                    anchors.fill: parent
-                                    source: LinkGate.imageSrc(mpCell.npItem.art)   // review #5: https only
-                                    visible: status === Image.Ready
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                    sourceSize.width: 48; sourceSize.height: 48
+                                id: mpDot
+                                anchors.right: parent.right; anchors.top: parent.top
+                                anchors.rightMargin: 2; anchors.topMargin: 2
+                                width: 12; height: 12; radius: 6
+                                visible: !!mpCell.party.live && !island.app.mWatchInParty
+                                color: Th.callbarNowPlayingIcon
+                                border.width: 2; border.color: Th.callbarNowPlayingBorder
+                                Rectangle {
+                                    id: mpDotPulse
+                                    anchors.centerIn: parent; width: parent.width; height: width; radius: width / 2
+                                    color: "transparent"; border.width: 2; border.color: Th.callbarNowPlayingIcon
+                                    opacity: 0; visible: mpDotPulseAnim.running
+                                    ParallelAnimation {
+                                        id: mpDotPulseAnim
+                                        onStopped: { mpDotPulse.opacity = 0; mpDotPulse.scale = 1.0 }
+                                        NumberAnimation { target: mpDotPulse; property: "scale"; from: 1.0; to: 2.4; duration: Motion.durVeryLong; easing.type: Easing.OutCubic }
+                                        NumberAnimation { target: mpDotPulse; property: "opacity"; from: 0.9; to: 0.0; duration: Motion.durVeryLong; easing.type: Easing.OutCubic }
+                                    }
                                 }
-                                Kirigami.Icon {
-                                    anchors.centerIn: parent
-                                    visible: LinkGate.imageSrc(mpCell.npItem.art) === ""
-                                    source: "video-television-symbolic"
-                                    color: Th.callbarNowPlayingIcon
-                                    implicitWidth: 16; implicitHeight: 16
-                                }
+                                onVisibleChanged: if (visible && Motion.animate) mpDotPulseAnim.restart()
                             }
-                            ColumnLayout {
-                                spacing: 0
-                                Controls.Label {
-                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                    text: String(mpCell.npItem.title || "").length > 0 ? String(mpCell.npItem.title) : "Media Party"
-                                    color: Th.callbarNowPlayingFg
-                                    font.bold: true
-                                    elide: Text.ElideRight
-                                    Layout.maximumWidth: 180
+                        }
+                        Rectangle {
+                            id: mpNowPlaying
+                            visible: mpCell.npShown
+                            opacity: brow.dimmed("watchParty.open") ? 0.5 : 1
+                            enabled: !brow.dimmed("watchParty.open")
+                            implicitHeight: 34
+                            implicitWidth: mpNpRow.implicitWidth + 20
+                            radius: 17
+                            color: Th.callbarNowPlayingBg
+                            border.width: 1
+                            border.color: Th.callbarNowPlayingBorder
+                            // 11.3 QOL (QOL.md §7): the tooltip names what plays — "title — artist"
+                            Controls.ToolTip.text: String(mpCell.npItem.title || "").length > 0
+                                ? String(mpCell.npItem.title) + (String(mpCell.npItem.artist || "").length > 0 ? " — " + String(mpCell.npItem.artist) : "")
+                                : "Media Party — open the window"
+                            Controls.ToolTip.visible: mpNpMa.containsMouse
+                            Controls.ToolTip.delay: 400
+                            MouseArea { id: mpNpMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: mpCell.openParty() }
+                            RowLayout {
+                                id: mpNpRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                // art 24 px (the item's thumbnail / cover), else the party glyph
+                                Rectangle {
+                                    implicitWidth: 24; implicitHeight: 24; radius: 4; clip: true
+                                    color: Th.callbarNowPlayingBorder
+                                    Image {
+                                        anchors.fill: parent
+                                        source: LinkGate.imageSrc(mpCell.npItem.art)   // review #5: https only
+                                        visible: status === Image.Ready
+                                        fillMode: Image.PreserveAspectCrop
+                                        asynchronous: true
+                                        sourceSize.width: 48; sourceSize.height: 48
+                                    }
+                                    Kirigami.Icon {
+                                        anchors.centerIn: parent
+                                        visible: LinkGate.imageSrc(mpCell.npItem.art) === ""
+                                        source: "video-television-symbolic"
+                                        color: Th.callbarNowPlayingIcon
+                                        implicitWidth: 16; implicitHeight: 16
+                                    }
                                 }
-                                Controls.Label {
-                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                    visible: String(mpCell.npItem.addedBy || "").length > 0
-                                    text: "queued by " + island.app.localpart(String(mpCell.npItem.addedBy || ""))
-                                    color: Th.callbarNowPlayingFg
-                                    opacity: 0.75
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
-                                    elide: Text.ElideRight
-                                    Layout.maximumWidth: 180
+                                ColumnLayout {
+                                    spacing: 0
+                                    Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                        text: String(mpCell.npItem.title || "").length > 0 ? String(mpCell.npItem.title) : "Media Party"
+                                        color: Th.callbarNowPlayingFg
+                                        font.bold: true
+                                        elide: Text.ElideRight
+                                        Layout.maximumWidth: 180
+                                    }
+                                    Controls.Label {
+                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                        visible: String(mpCell.npItem.addedBy || "").length > 0
+                                        text: "queued by " + island.app.localpart(String(mpCell.npItem.addedBy || ""))
+                                        color: Th.callbarNowPlayingFg
+                                        opacity: 0.75
+                                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                        elide: Text.ElideRight
+                                        Layout.maximumWidth: 180
+                                    }
                                 }
-                            }
-                            Controls.ToolButton {
-                                icon.name: mpCell.party.playing ? "media-playback-pause" : "media-playback-start"
-                                implicitWidth: 26
-                                implicitHeight: 26
-                                enabled: !island.app.mWatchInParty || mpCell.canControl
-                                Controls.ToolTip.text: !island.app.mWatchInParty ? "Join the Media Party"
-                                    : (!mpCell.canControl ? "Only the host (" + island.app.localpart(mpCell.hostId) + ") controls playback"
-                                       : (mpCell.party.playing ? "Pause for everyone" : "Play for everyone"))
-                                Controls.ToolTip.visible: hovered
-                                Controls.ToolTip.delay: 400
-                                onClicked: {
-                                    if (!island.app.mWatchInParty) { mpCell.openParty(); return }
-                                    if (mpCell.party.playing) island.app.watchCtl.pause(); else island.app.watchCtl.play()
+                                Controls.ToolButton {
+                                    icon.name: mpCell.party.playing ? "media-playback-pause" : "media-playback-start"
+                                    implicitWidth: 26
+                                    implicitHeight: 26
+                                    enabled: !island.app.mWatchInParty || mpCell.canControl
+                                    Controls.ToolTip.text: !island.app.mWatchInParty ? "Join the Media Party"
+                                        : (!mpCell.canControl ? "Only the host (" + island.app.localpart(mpCell.hostId) + ") controls playback"
+                                           : (mpCell.party.playing ? "Pause for everyone" : "Play for everyone"))
+                                    Controls.ToolTip.visible: hovered
+                                    Controls.ToolTip.delay: 400
+                                    onClicked: {
+                                        if (!island.app.mWatchInParty) { mpCell.openParty(); return }
+                                        if (mpCell.party.playing) island.app.watchCtl.pause(); else island.app.watchCtl.play()
+                                    }
                                 }
-                            }
-                            // 11.3 QOL (QOL.md §7): next — shown when there is a next item, host-gated like ▶/⏸ (not in the
-                            // party yet: opens it, like ▶)
-                            Controls.ToolButton {
-                                visible: mpCell.npNext.length > 0
-                                icon.name: "media-skip-forward"
-                                implicitWidth: 26
-                                implicitHeight: 26
-                                enabled: !island.app.mWatchInParty || mpCell.canControl
-                                Controls.ToolTip.text: !island.app.mWatchInParty ? "Join the Media Party"
-                                    : (!mpCell.canControl ? "Only the host (" + island.app.localpart(mpCell.hostId) + ") controls playback"
-                                       : "Play next in queue")
-                                Controls.ToolTip.visible: hovered
-                                Controls.ToolTip.delay: 400
-                                onClicked: {
-                                    if (!island.app.mWatchInParty) { mpCell.openParty(); return }
-                                    island.app.watchCtl.playUrl(mpCell.npNext)
+                                // 11.3 QOL (QOL.md §7): next — shown when there is a next item, host-gated like ▶/⏸ (not in the
+                                // party yet: opens it, like ▶)
+                                Controls.ToolButton {
+                                    visible: mpCell.npNext.length > 0
+                                    icon.name: "media-skip-forward"
+                                    implicitWidth: 26
+                                    implicitHeight: 26
+                                    enabled: !island.app.mWatchInParty || mpCell.canControl
+                                    Controls.ToolTip.text: !island.app.mWatchInParty ? "Join the Media Party"
+                                        : (!mpCell.canControl ? "Only the host (" + island.app.localpart(mpCell.hostId) + ") controls playback"
+                                           : "Play next in queue")
+                                    Controls.ToolTip.visible: hovered
+                                    Controls.ToolTip.delay: 400
+                                    onClicked: {
+                                        if (!island.app.mWatchInParty) { mpCell.openParty(); return }
+                                        island.app.watchCtl.playUrl(mpCell.npNext)
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                CallButton { // game / join code — free-text "what are we playing" + a
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("room.activity.open"))
-                    visible: brow.shows("room.activity.open")
-                    live: !brow.dimmed("room.activity.open")
-                              // join code, both broadcast to the whole room (synced state).
-                    id: gameChip
-                    iconName: "applications-games-symbolic"
-                    active: app.mActivity && String(app.mActivity.code || "").length > 0
-                    tip: (app.mActivity && String(app.mActivity.game || "").length > 0)
-                         ? ("Playing " + String(app.mActivity.game) + (active ? " — join code shared" : ""))
-                         : "Game / join code"
-                    onClicked: gamePopup.opened ? gamePopup.close() : gamePopup.open()
+                    CallButton { // game / join code — free-text "what are we playing" + a
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("room.activity.open"))
+                        visible: brow.shows("room.activity.open")
+                        live: !brow.dimmed("room.activity.open")
+                                  // join code, both broadcast to the whole room (synced state).
+                        id: gameChip
+                        iconName: "applications-games-symbolic"
+                        active: app.mActivity && String(app.mActivity.code || "").length > 0
+                        tip: (app.mActivity && String(app.mActivity.game || "").length > 0)
+                             ? ("Playing " + String(app.mActivity.game) + (active ? " — join code shared" : ""))
+                             : "Game / join code"
+                        onClicked: gamePopup.opened ? gamePopup.close() : gamePopup.open()
 
-                    Controls.Popup {
-                        id: gamePopup
-                        width: 320
-                        x: gameChip.width / 2 - width / 2
-                        y: (gameChip.mapToItem(Controls.Overlay.overlay, 0, 0).y > height + 16) ? -height - 8 : gameChip.height + 8   // 10.1 (TH-CALL-08)
-                        margins: 6
-                        modal: false
-                        focus: true
-                        padding: Kirigami.Units.largeSpacing
-                        background: Rectangle {
-                            color: Th.callbarPopupBg; radius: island.app.radius
-                            border.width: 1; border.color: Th.callbarPopupBorder
-                        }
-                        function apply() {
-                            // Game name required, code optional. Writes the SYNCED activity
-                            // state event so the whole room sees both (no local-only codes).
-                            var g = gameField.text.trim()
-                            if (g.length === 0) return
-                            island.app.activityCtl.setActivity(g, "", codeField.text.trim())
-                            gamePopup.close()
-                        }
-                        onOpened: {
-                            gameField.text = (island.app.mActivity && island.app.mActivity.game) ? String(island.app.mActivity.game) : ""
-                            codeField.text = (island.app.mActivity && island.app.mActivity.code) ? String(island.app.mActivity.code) : ""
-                            gameField.forceActiveFocus()
-                        }
-                        ColumnLayout {
-                            anchors.fill: parent
-                            spacing: Kirigami.Units.smallSpacing
-                            Controls.Label { text: "What are we playing?"; font.bold: true; color: Th.callbarPopoverTitleFg }
-                            ThSwitch { // second entry point for game chat
-                                text: "I'm in the game's voice chat"
-                                checked: island.app.mGameChat
-                                onToggled: island.app.callctl.applyGameChat(checked)
-                                Controls.ToolTip.text: "People who also switch this on won't hear your mic here (you hear each other in-game); everyone else still does"
-                                Controls.ToolTip.visible: hovered
+                        Controls.Popup {
+                            id: gamePopup
+                            width: 320
+                            x: gameChip.width / 2 - width / 2
+                            y: (gameChip.mapToItem(Controls.Overlay.overlay, 0, 0).y > height + 16) ? -height - 8 : gameChip.height + 8   // 10.1 (TH-CALL-08)
+                            margins: 6
+                            modal: false
+                            focus: true
+                            padding: Kirigami.Units.largeSpacing
+                            background: Rectangle {
+                                color: Th.callbarPopupBg; radius: island.app.radius
+                                border.width: 1; border.color: Th.callbarPopupBorder
                             }
-                            Controls.TextField {
-                                id: gameField
-                                Layout.fillWidth: true
-                                placeholderText: "Game name (e.g. Helldivers 2)"
-                                onAccepted: codeField.forceActiveFocus()
+                            function apply() {
+                                // Game name required, code optional. Writes the SYNCED activity
+                                // state event so the whole room sees both (no local-only codes).
+                                var g = gameField.text.trim()
+                                if (g.length === 0) return
+                                island.app.activityCtl.setActivity(g, "", codeField.text.trim())
+                                gamePopup.close()
                             }
-                            Controls.Label { text: "Join / lobby code (optional)"; color: Th.callbarPopoverHintFg }
-                            RowLayout {
-                                Layout.fillWidth: true
+                            onOpened: {
+                                gameField.text = (island.app.mActivity && island.app.mActivity.game) ? String(island.app.mActivity.game) : ""
+                                codeField.text = (island.app.mActivity && island.app.mActivity.code) ? String(island.app.mActivity.code) : ""
+                                gameField.forceActiveFocus()
+                            }
+                            ColumnLayout {
+                                anchors.fill: parent
                                 spacing: Kirigami.Units.smallSpacing
+                                Controls.Label { text: "What are we playing?"; font.bold: true; color: Th.callbarPopoverTitleFg }
+                                ThSwitch { // second entry point for game chat
+                                    text: "I'm in the game's voice chat"
+                                    checked: island.app.mGameChat
+                                    onToggled: island.app.callctl.applyGameChat(checked)
+                                    Controls.ToolTip.text: "People who also switch this on won't hear your mic here (you hear each other in-game); everyone else still does"
+                                    Controls.ToolTip.visible: hovered
+                                }
                                 Controls.TextField {
-                                    id: codeField
+                                    id: gameField
                                     Layout.fillWidth: true
-                                    placeholderText: "Paste a join code"
-                                    onAccepted: gamePopup.apply()
+                                    placeholderText: "Game name (e.g. Helldivers 2)"
+                                    onAccepted: codeField.forceActiveFocus()
                                 }
-                                Controls.Button {
-                                    text: "Set"
-                                    enabled: gameField.text.trim().length > 0
-                                    onClicked: gamePopup.apply()
-                                }
-                            }
-                            // Currently shared with the room (everyone sees it) — copy / clear.
-                            Rectangle {
-                                visible: island.app.mActivity && String(island.app.mActivity.game || "").length > 0
-                                Layout.fillWidth: true
-                                implicitHeight: sharedCol.implicitHeight + Kirigami.Units.smallSpacing * 2
-                                radius: island.app.radiusSm
-                                color: Th.callbarGamePopupSharedBg
-                                ColumnLayout {
-                                    id: sharedCol
-                                    anchors.fill: parent
-                                    anchors.margins: Kirigami.Units.smallSpacing
-                                    spacing: 2
-                                    Controls.Label {
-                                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                Controls.Label { text: "Join / lobby code (optional)"; color: Th.callbarPopoverHintFg }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: Kirigami.Units.smallSpacing
+                                    Controls.TextField {
+                                        id: codeField
                                         Layout.fillWidth: true
-                                        text: (island.app.mActivity && island.app.mActivity.game) ? ("🎮  " + String(app.mActivity.game)) : ""
-                                        color: Th.callbarGamePopupSharedFg; font.bold: true; elide: Text.ElideRight
+                                        placeholderText: "Paste a join code"
+                                        onAccepted: gamePopup.apply()
                                     }
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        visible: island.app.mActivity && String(island.app.mActivity.code || "").length > 0
-                                        spacing: Kirigami.Units.smallSpacing
+                                    Controls.Button {
+                                        text: "Set"
+                                        enabled: gameField.text.trim().length > 0
+                                        onClicked: gamePopup.apply()
+                                    }
+                                }
+                                // Currently shared with the room (everyone sees it) — copy / clear.
+                                Rectangle {
+                                    visible: island.app.mActivity && String(island.app.mActivity.game || "").length > 0
+                                    Layout.fillWidth: true
+                                    implicitHeight: sharedCol.implicitHeight + Kirigami.Units.smallSpacing * 2
+                                    radius: island.app.radiusSm
+                                    color: Th.callbarGamePopupSharedBg
+                                    ColumnLayout {
+                                        id: sharedCol
+                                        anchors.fill: parent
+                                        anchors.margins: Kirigami.Units.smallSpacing
+                                        spacing: 2
                                         Controls.Label {
                                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
-                                            text: (island.app.mActivity && island.app.mActivity.code) ? String(island.app.mActivity.code) : ""
-                                            font.family: Th.fontMono; color: Th.callbarGamePopupSharedFg; elide: Text.ElideRight
+                                            text: (island.app.mActivity && island.app.mActivity.game) ? ("🎮  " + String(app.mActivity.game)) : ""
+                                            color: Th.callbarGamePopupSharedFg; font.bold: true; elide: Text.ElideRight
+                                        }
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            visible: island.app.mActivity && String(island.app.mActivity.code || "").length > 0
+                                            spacing: Kirigami.Units.smallSpacing
+                                            Controls.Label {
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                                Layout.fillWidth: true
+                                                text: (island.app.mActivity && island.app.mActivity.code) ? String(island.app.mActivity.code) : ""
+                                                font.family: Th.fontMono; color: Th.callbarGamePopupSharedFg; elide: Text.ElideRight
+                                            }
+                                            Controls.ToolButton {
+                                                icon.name: "edit-copy-symbolic"
+                                                Controls.ToolTip.text: "Copy code"; Controls.ToolTip.visible: hovered
+                                                onClicked: if (island.app.mActivity && island.app.mActivity.code) island.app.copyToClipboard(String(island.app.mActivity.code))
+                                            }
                                         }
                                         Controls.ToolButton {
-                                            icon.name: "edit-copy-symbolic"
-                                            Controls.ToolTip.text: "Copy code"; Controls.ToolTip.visible: hovered
-                                            onClicked: if (island.app.mActivity && island.app.mActivity.code) island.app.copyToClipboard(String(island.app.mActivity.code))
+                                            Layout.alignment: Qt.AlignRight
+                                            text: "Clear"
+                                            icon.name: "edit-clear-all-symbolic"
+                                            onClicked: { island.app.activityCtl.setActivity("", "", ""); gamePopup.close() }
                                         }
-                                    }
-                                    Controls.ToolButton {
-                                        Layout.alignment: Qt.AlignRight
-                                        text: "Clear"
-                                        icon.name: "edit-clear-all-symbolic"
-                                        onClicked: { island.app.activityCtl.setActivity("", "", ""); gamePopup.close() }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                CallButton { // BRB / AFK (peers see our tile dimmed + 💤)
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.afk.toggle"))
-                    visible: brow.shows("call.afk.toggle")
-                    live: !brow.dimmed("call.afk.toggle")
-                    iconName: "appointment-missed-symbolic"
-                    active: app.mLocalAfk
-                    tip: app.mLocalAfk ? "I'm back — your mic and what you hear come back (your camera stays off until you turn it on)"
-                                        : "Be right back — mutes your mic, turns your camera off and mutes everyone for you; peers see 💤 on your tile"
-                    onClicked: app.afkCtl.setAfk(!app.mLocalAfk)
-                }
-                CallButton { // call & device settings — the gear menu was
-                    app: island.app
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.devices.open"))
-                    visible: brow.shows("call.devices.open")
-                    live: !brow.dimmed("call.devices.open")
-                             // unreachable while the call is maximized (its other
-                             // opener lives in the room header, hidden then).
-                    iconName: "settings-configure-symbolic"
-                    tip: "Call & device settings"
-                    onClicked: { app.refreshDeviceMenus(); island.devicesMenuRef.popup() }
-                }
-                CallButton { // hang up — 10.1 (TH-CALL-06): a wider pill, so the one irreversible button never reads like the mute/deafen circles
-                    app: island.app
-                    implicitWidth: 72
-                    // (its own busy face while hanging up — never dimmed twice)
-                    Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.leave"))
-                    visible: brow.shows("call.leave")
-                    iconName: "call-stop-symbolic"
-                    danger: true
-                    live: !app.mHangingUp
-                    busy: app.mHangingUp
-                    tip: app.mHangingUp ? "Hanging up…" : "Leave call"
-                    onClicked: app.callctl.leaveCall()
-                }
-                // the row's other buttons (added from the editor, or all of them in another look / size) and its dividers
-                // (sepBefore: the default row's before Leave — the bar's own divider)
-                Repeater {
-                    model: brow.generics
-                    delegate: ActionButton {
-                        required property var modelData
-                        Layout.row: 0
-                        Layout.column: modelData.col
-                        Layout.alignment: Qt.AlignVCenter
+                    CallButton { // BRB / AFK (peers see our tile dimmed + 💤)
                         app: island.app
-                        item: modelData.item
-                        rowStyle: brow.result.style
-                        rowScale: brow.result.scale
-                        onRun: (anchor) => brow.run(modelData.item, anchor)
-                        onHold: (anchor, down) => brow.run(modelData.item, anchor, { hold: down ? "down" : "up" })
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.afk.toggle"))
+                        visible: brow.shows("call.afk.toggle")
+                        live: !brow.dimmed("call.afk.toggle")
+                        iconName: "appointment-missed-symbolic"
+                        active: app.mLocalAfk
+                        tip: app.mLocalAfk ? "I'm back — your mic and what you hear come back (your camera stays off until you turn it on)"
+                                            : "Be right back — mutes your mic, turns your camera off and mutes everyone for you; peers see 💤 on your tile"
+                        onClicked: app.afkCtl.setAfk(!app.mLocalAfk)
                     }
-                }
-                Repeater {
-                    model: brow.seps
-                    delegate: Rectangle {
-                        required property var modelData
+                    CallButton { // call & device settings — the gear menu was
+                        app: island.app
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.devices.open"))
+                        visible: brow.shows("call.devices.open")
+                        live: !brow.dimmed("call.devices.open")
+                                 // unreachable while the call is maximized (its other
+                                 // opener lives in the room header, hidden then).
+                        iconName: "settings-configure-symbolic"
+                        tip: "Call & device settings"
+                        onClicked: { app.refreshDeviceMenus(); island.devicesMenuRef.popup() }
+                    }
+                    // two-pane band: More — the buttons that did not fit (brow.foldedItems), before Leave
+                    CallButton {
+                        id: moreBtn
+                        app: island.app
+                        objectName: "callBarMore"
+                        Layout.row: 0; Layout.column: Math.max(0, brow.moreCol)
+                        visible: brow.moreCol >= 0
+                        iconName: "view-more-symbolic"
+                        tip: "More call buttons"
+                        active: moreMenu.opened
+                        onClicked: moreMenu.opened ? moreMenu.close() : moreMenu.popup(moreBtn, 0, -moreMenu.implicitHeight - 4)
+                        Controls.Menu {
+                            id: moreMenu
+                            Instantiator {
+                                model: brow.foldedItems
+                                delegate: Controls.MenuItem {
+                                    required property var modelData
+                                    // (&& = a literal & — Qt reads a single one as a mnemonic: "Call & device settings")
+                                    text: LinkGate.plain(modelData.item.label || modelData.item.tip || modelData.a).replace(/&/g, "&&")
+                                    icon.name: modelData.item.icon || modelData.item.targetIcon || ""
+                                    checkable: modelData.item.active !== null && modelData.item.active !== undefined
+                                    checked: modelData.item.active === true
+                                    // a hold item never folds (Main.qml foldKeeps); if one ever got here it stays inert —
+                                    // a click is a press with no release
+                                    enabled: modelData.item.state !== "dimmed" && modelData.item.hold !== true
+                                    onTriggered: if (modelData.item.hold !== true) brow.run(modelData.item, moreBtn)
+                                }
+                                onObjectAdded: (index, object) => moreMenu.insertItem(index, object)
+                                onObjectRemoved: (index, object) => moreMenu.removeItem(object)
+                            }
+                        }
+                    }
+                    CallButton { // hang up — 10.1 (TH-CALL-06): a wider pill, so the one irreversible button never reads like the mute/deafen circles
+                        app: island.app
+                        implicitWidth: 72
+                        // (its own busy face while hanging up — never dimmed twice)
+                        Layout.row: 0; Layout.column: Math.max(0, brow.colOf("call.leave"))
+                        visible: brow.shows("call.leave")
+                        iconName: "call-stop-symbolic"
+                        danger: true
+                        live: !app.mHangingUp
+                        busy: app.mHangingUp
+                        tip: app.mHangingUp ? "Hanging up…" : "Leave call"
+                        onClicked: app.callctl.leaveCall()
+                    }
+                    // the row's other buttons (added from the editor, or all of them in another look / size) and its dividers
+                    // (sepBefore: the default row's before Leave — the bar's own divider)
+                    Repeater {
+                        model: brow.generics
+                        delegate: ActionButton {
+                            required property var modelData
+                            Layout.row: 0
+                            Layout.column: modelData.col
+                            Layout.alignment: Qt.AlignVCenter
+                            app: island.app
+                            item: modelData.item
+                            rowStyle: brow.result.style
+                            rowScale: brow.result.scale
+                            onRun: (anchor) => brow.run(modelData.item, anchor)
+                            onHold: (anchor, down) => brow.run(modelData.item, anchor, { hold: down ? "down" : "up" })
+                        }
+                    }
+                    Repeater {
+                        model: brow.seps
+                        delegate: Rectangle {
+                            required property var modelData
+                            Layout.row: 0
+                            Layout.column: modelData.col
+                            Layout.alignment: Qt.AlignVCenter
+                            implicitWidth: 1
+                            implicitHeight: 30
+                            color: Th.callbarDivider
+                        }
+                    }
+                    // 11.0.2 (2026-09-28): the bar's own pin — "Keep call buttons visible" (call.bar.pin.toggle, the same
+                    // preference as Settings → Calls). Not a row item: after the row, behind its own divider, in every stored
+                    // row; small, so it never reads like a call control. Tooltip = the action's short faces; pressed = pinned.
+                    Rectangle {
                         Layout.row: 0
-                        Layout.column: modelData.col
+                        Layout.column: brow.lastColumn + 1
                         Layout.alignment: Qt.AlignVCenter
                         implicitWidth: 1
                         implicitHeight: 30
                         color: Th.callbarDivider
                     }
-                }
-                // 11.0.2 (2026-09-28): the bar's own pin — "Keep call buttons visible" (call.bar.pin.toggle, the same
-                // preference as Settings → Calls). Not a row item: after the row, behind its own divider, in every stored
-                // row; small, so it never reads like a call control. Tooltip = the action's short faces; pressed = pinned.
-                Rectangle {
-                    Layout.row: 0
-                    Layout.column: brow.lastColumn + 1
-                    Layout.alignment: Qt.AlignVCenter
-                    implicitWidth: 1
-                    implicitHeight: 30
-                    color: Th.callbarDivider
-                }
-                CallButton {
-                    app: island.app
-                    objectName: "callBarPin"
-                    Layout.row: 0
-                    Layout.column: brow.lastColumn + 2
-                    Layout.alignment: Qt.AlignVCenter
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    glyphSize: 16
-                    iconName: "window-pin-symbolic"
-                    active: island.app.callBarPinned
-                    tip: island.app.callBarPinned ? "Let buttons hide" : "Keep buttons visible"
-                    onClicked: island.app.setCallBarPinned(!island.app.callBarPinned)
+                    CallButton {
+                        app: island.app
+                        objectName: "callBarPin"
+                        Layout.row: 0
+                        Layout.column: brow.lastColumn + 2
+                        Layout.alignment: Qt.AlignVCenter
+                        implicitWidth: 32
+                        implicitHeight: 32
+                        glyphSize: 16
+                        iconName: "window-pin-symbolic"
+                        active: island.app.callBarPinned
+                        tip: island.app.callBarPinned ? "Let buttons hide" : "Keep buttons visible"
+                        onClicked: island.app.setCallBarPinned(!island.app.callBarPinned)
+                    }
                 }
             }
         }

@@ -189,6 +189,7 @@ Item {
                 app: pane.app
                 visible: liveOffered
                 readonly property bool liveOffered: pane.app.settings.uiScaleLiveOptInOffered()
+                anchorId: "appearance.app-size-live"
                 label: "Change size instantly"
                 description: "A new size shows straight away. If Tin Hat ever closes when you change the size, turn this off: a new size then waits until Tin Hat restarts."
                 toggle: liveSw

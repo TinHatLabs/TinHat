@@ -46,6 +46,7 @@ mod remote_audio; // Pad Watch round 13: the remote-track taps take only a Remot
 #[cfg(test)]
 mod capture_lint; // round 9: the closed capture set (every source / start gated or listed)
 pub mod call;
+pub mod voicenote; // voice notes (docs/VOICE-NOTES.md §4): the recorder — its own capture lease, started through leased_play
 pub mod hear; // 10.5: "can they hear me?" — mic check, muted talk, receipts, echo
 pub mod sameroom; // 11.3: "same room" — link up, room-mic election, in-room playback mute
 pub mod callstats; // widgets (modular UI step 2): receive stats per remote track, ConnectionQuality, `tinhat.rxq`

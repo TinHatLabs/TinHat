@@ -24,6 +24,15 @@ QtObject {
     property var bespoke: []              // the action ids the host draws itself
     property int firstColumn: 0
     property string snapshotOverride: ""   // evaluate against this snapshot (the call rows: decision 2), "" = the live one
+    // the two-pane band (docs/TWO-PANE.md §3; the web's CallBar fold): the last `foldCount` shown items other than `keep`
+    // move into the host's More menu — they get no column; `moreCol` = the More button's column (before the first `keep`
+    // item that comes after them — the call bar's Leave —, else after the row), -1 = no More button
+    property int foldCount: 0
+    property var keep: []
+    property int foldable: 0              // shown items that may fold
+    property var foldKeys: []             // [{key: "<i>:<action>", sep}] — those items in row order (the host measures them)
+    property var foldedItems: []          // [{a, i, item}] in row order (the More menu)
+    property int moreCol: -1
 
     readonly property string kind: String(islandRef).split(":")[0] + "." + rowId
     readonly property var ctl: app && app.actionsCtl ? app.actionsCtl : null
@@ -56,6 +65,11 @@ QtObject {
         var rk = t && t.rows ? t.rows[rm.kind] : null
         return rk ? rk : { look: "icon", scale: "S" }
     }
+    property bool _holding: false
+    property string _gensKey: ""
+    function _genericsKey(gens) {
+        return gens.map(function (g) { return g.col + ":" + g.i + ":" + g.a + (g.item && g.item.hold === true ? ":" + JSON.stringify(g.item) : "") }).join(",")
+    }
     function _parse() {
         var r
         try { r = resultJson.length > 0 ? JSON.parse(resultJson) : null } catch (e) { r = null }
@@ -64,20 +78,41 @@ QtObject {
         var dl = r.look === rk.look && r.scale === rk.scale
         var cells = [], gens = [], seps = [], cols = ({}), items = ({})
         var col = rm.firstColumn
+        // the fold (foldCount): the last foldCount shown items the shared rule lets move (Main.qml foldKeeps: not in
+        // `keep`, never a hold item); without the rule nothing folds
+        var keeps = function (x) { return rm.app && typeof rm.app.foldKeeps === "function" ? rm.app.foldKeeps(x, rm.keep) : true }
+        var canFold = []
+        for (var f = 0; f < r.items.length; f++)
+            if (r.items[f].state !== "hidden" && !keeps(r.items[f])) canFold.push(f)
+        var nFold = Math.max(0, Math.min(rm.foldCount, canFold.length))
+        var foldedIdx = canFold.slice(canFold.length - nFold)
+        var folded = [], moreCol = -1
         for (var i = 0; i < r.items.length; i++) {
             var it = r.items[i]
             if (it.state === "hidden") continue
+            if (foldedIdx.indexOf(i) >= 0) { folded.push({ a: it.a, i: i, item: it }); continue }
+            if (nFold > 0 && moreCol < 0 && folded.length > 0 && rm.keep.indexOf(it.a) >= 0) moreCol = col++
             if (it.sepBefore === true) { var sc = { col: col++, sep: true, a: "", i: i, item: null, bespoke: false }; cells.push(sc); seps.push(sc) }
             var own = dl && it.known === true && it.target === null && rm.bespoke.indexOf(it.a) >= 0 && cols[it.a] === undefined
             var c = { col: col++, sep: false, a: it.a, i: i, item: it, bespoke: own }
             cells.push(c)
             if (own) { cols[it.a] = c.col; items[it.a] = it } else gens.push(c)
         }
+        if (nFold > 0 && moreCol < 0) moreCol = col++
+        rm.foldable = canFold.length
+        var fks = []
+        for (var g = 0; g < canFold.length; g++) fks.push({ key: canFold[g] + ":" + r.items[canFold[g]].a, sep: r.items[canFold[g]].sepBefore === true })
+        rm.foldKeys = fks
+        rm.foldedItems = folded
+        rm.moreCol = moreCol
         rm.defaultLook = dl
         rm._cols = cols
         rm._items = items
         rm.cells = cells
-        rm.generics = gens
+        // A live hold keeps its button: a press changes the snapshot (push to talk flips the mic state), and a new model
+        // would recreate every delegate and end the hold. Only a change of the row's shape or of a hold item publishes.
+        var gkey = rm._genericsKey(gens)
+        if (!rm._holding || gkey !== rm._gensKey) { rm._holding = false; rm._gensKey = gkey; rm.generics = gens }
         rm.seps = seps
         rm.lastColumn = col - 1
         rm.result = r
@@ -85,6 +120,8 @@ QtObject {
     onResultJsonChanged: _parse()
     onBespokeChanged: _parse()
     onFirstColumnChanged: _parse()
+    onFoldCountChanged: _parse()
+    onKeepChanged: _parse()
     Component.onCompleted: _parse()
 
     /** Run one item of this row through the one run path (its stored target, the row's context, the button as the anchor). */
@@ -92,7 +129,9 @@ QtObject {
         if (!app || !app.actions || !it) return
         var inv = { source: "button", target: it.target || null, context: rm.context || null, anchor: anchor || null }
         if (extra) for (var k in extra) inv[k] = extra[k]
+        if (inv.hold === "down") rm._holding = true
         app.actions.run(it.a, inv)
+        if (inv.hold === "up") { rm._holding = false; rm._parse() }
     }
     /** "Edit buttons…" — the row editor (ActionsHost.openRowEditor). */
     function edit(title) { if (app && app.actions) app.actions.openRowEditor({ island: rm.islandRef, row: rm.rowId, form: rm.form, title: title }) }

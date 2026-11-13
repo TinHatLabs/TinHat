@@ -152,6 +152,12 @@ pub mod qobject {
         /// file/image (E2EE-safe via the SDK's encrypting send-queue helper).
         #[qinvokable]
         fn send_attachment(self: Pin<&mut RoomController>, local_path: &QString);
+        /// QML: room.sendVoiceNote(requestJson) — voice notes (docs/VOICE-NOTES.md §1): the draft's
+        /// {room, path, durationMs, waveform, size, txn} (VoiceNoteController.takeSendRequest). One local echo (m.audio,
+        /// playable from the local file); upload (encrypted in an E2EE room: `file`, never `url`) → voice_content →
+        /// send_raw with the draft's transaction id. A retry passes the same txn: the same row, the finished upload reused.
+        #[qinvokable]
+        fn send_voice_note(self: Pin<&mut RoomController>, request_json: &QString);
         /// QML: room.clipboardAttachments() — JSON ["file://…"] of what a Ctrl+V should attach
         /// instead of typing: an image on the clipboard (a screenshot, a browser's "Copy image")
         /// saved as a PNG in the media cache, or files copied in a file manager. "[]" when the
@@ -583,14 +589,9 @@ impl qobject::RoomController {
             // is drawn after this event; QML freezes the value per room open so our own later
             // receipts never move the line while the room is on screen.
             {
-                use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
-                let marker = room
-                    .load_user_receipt(ReceiptType::Read, &ReceiptThread::Unthreaded, room.own_user_id())
-                    .await
-                    .ok()
-                    .flatten()
-                    .map(|(e, _)| e.to_string())
-                    .unwrap_or_default();
+                // public or private: a room on another server gets private receipts (receipts.rs)
+                // boxed: the event fetch inside is a deep future (rustc's query depth limit in this task)
+                let marker = Box::pin(crate::receipts::own_read_up_to(&room)).await;
                 let started = room_id.clone();
                 let _ = qt.queue(move |mut o| {
                     if is_current(&o, gen, &started) {
@@ -938,11 +939,8 @@ impl qobject::RoomController {
             }
             let Ok(room) = room_by_id(&room_id).await else { return };
             if let Ok(eid) = matrix_sdk::ruma::EventId::parse(&id) {
-                use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType as SendReceiptType;
-                use matrix_sdk::ruma::events::receipt::ReceiptThread;
-                let _ = room
-                    .send_single_receipt(SendReceiptType::Read, ReceiptThread::Unthreaded, eid)
-                    .await;
+                // public m.read only in a room of my own server, else m.read.private (receipts.rs)
+                let _ = crate::receipts::send_read_receipt(&room, &eid).await;
             }
         });
     }
@@ -1170,6 +1168,44 @@ impl qobject::RoomController {
         self.as_mut().start_echo(echo);
     }
 
+    pub fn send_voice_note(mut self: Pin<&mut Self>, request_json: &QString) {
+        let room_id = self.room_id().to_string();
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(&request_json.to_string()) else { return };
+        let txn = v.get("txn").and_then(|x| x.as_str()).unwrap_or("").to_string();
+        let path = v.get("path").and_then(|x| x.as_str()).unwrap_or("").to_string();
+        if txn.is_empty() {
+            return;
+        }
+        if room_id.is_empty() || path.is_empty() || v.get("room").and_then(|x| x.as_str()) != Some(room_id.as_str()) {
+            // the view moved on between the request and here: the draft goes back to review, nothing is sent
+            crate::voicenote_ctl::report_send(&txn, Err("Couldn't send — try again".into()));
+            return;
+        }
+        let send = VoiceSend {
+            path: path.clone(),
+            duration_ms: v.get("durationMs").and_then(|x| x.as_u64()).unwrap_or(0),
+            waveform: v.get("waveform").and_then(|x| x.as_array()).map(|a| a.iter().filter_map(|w| w.as_u64()).map(|w| w.min(1024) as u32).collect()).unwrap_or_default(),
+            size: v.get("size").and_then(|x| x.as_u64()).unwrap_or(0),
+        };
+        self.as_mut().set_status(QString::default());
+        // a retry: the row this transaction already has goes again (one local echo per note)
+        if let Some(mut e) = echo_store_take(&room_id, &txn) {
+            e.failed = None;
+            e.event_id = None;
+            e.kind = EchoKind::Voice(send);
+            self.as_mut().start_echo(e);
+            return;
+        }
+        let mut echo = Echo::new(EchoKind::Voice(send.clone()), tinhat_widgets::voicenote::VOICE_BODY);
+        echo.txn = txn;
+        echo.msgtype = "m.audio".into();
+        echo.mime = "audio/ogg".into();
+        echo.size = send.size;
+        echo.duration_ms = send.duration_ms;
+        echo.media = crate::platform::file_url(std::path::Path::new(&path));
+        self.as_mut().start_echo(echo);
+    }
+
     pub fn send(mut self: Pin<&mut Self>, text: &QString) {
         let text = text.to_string();
         if text.trim().is_empty() || self.room_id().is_empty() {
@@ -1351,9 +1387,14 @@ impl qobject::RoomController {
         }
         self.as_mut().set_messages_json(QString::from(&next));
         let qt = self.qt_thread();
+        let is_voice = matches!(echo.kind, EchoKind::Voice(_));
         crate::bridge::runtime().spawn(async move {
             let res = perform_echo(&room_id, &echo).await;
             let txn = echo.txn.clone();
+            if is_voice {
+                // voice notes: the recorder row learns the outcome (sent → the draft is done; failed → review + retry)
+                crate::voicenote_ctl::report_send(&txn, res.clone().map_err(|e| friendly_send_error(&e)));
+            }
             let key = format!("~{txn}");
             let _ = qt.queue(move |mut o| match res {
                 Ok(eid) => {
@@ -1363,6 +1404,10 @@ impl qobject::RoomController {
                         if let Some(u) = patch_row(&cur, &key, |m| {
                             m["pending"] = serde_json::json!(false);
                             m["sentId"] = serde_json::json!(eid);
+                            if is_voice {
+                                // privacy: the local recording is deleted on success — the row shows the server's copy
+                                m["media"] = serde_json::json!("");
+                            }
                         }) {
                             if is_dice {
                                 o.as_mut().set_dice_json(QString::from(&dice_rows_json(&u)));
@@ -1586,6 +1631,7 @@ impl qobject::RoomController {
         let cur = self.messages_json().to_string();
         if let Some(u) = patch_row(&cur, &eid, |m| {
             m["redacted"] = serde_json::json!(true);
+            m["pinned"] = serde_json::json!(false); // QA W1: a deleted message carries no 📌
         }) {
             self.as_mut().set_messages_json(QString::from(&u));
         }
@@ -1595,6 +1641,28 @@ impl qobject::RoomController {
                 let _ = qt.queue(move |mut o| {
                     o.as_mut().set_status(QString::from(&format!("Delete failed: {e}")));
                     o.as_mut().refresh();
+                });
+                return;
+            }
+            // QA W1: deleting a pinned message also unpins it, when I may edit the room's pins (pins::pins_after_delete;
+            // a pin I may not take back is only hidden). After the delete went through, so a failed delete never loses
+            // the pin.
+            let Ok(room) = room_by_id(&room_id).await else { return };
+            let may = load_permissions(&room).await.can_pin;
+            // the list as it is right before the write (not before the permission read's await)
+            let pins: Vec<String> = room.pinned_event_ids().unwrap_or_default().iter().map(|e| e.to_string()).collect();
+            if let Some(ids) = crate::pins::pins_after_delete(&pins, &eid, may) {
+                let res = room
+                    .send_state_event_raw("m.room.pinned_events", "", serde_json::json!({ "pinned": ids }))
+                    .await
+                    .map(|_| ())
+                    .map_err(|e| e.to_string());
+                let _ = qt.queue(move |mut o| match res {
+                    Ok(_) => o.as_mut().refresh(),
+                    Err(e) => {
+                        eprintln!("[room] unpin after delete failed: {e}");
+                        o.as_mut().set_status(QString::from(&format!("Couldn't unpin that message: {}", mod_err("pin", &e))));
+                    }
                 });
             }
         });
@@ -2003,6 +2071,8 @@ impl qobject::RoomController {
         if room_id.is_empty() || uid.trim().is_empty() {
             return;
         }
+        // 2026-11-12 (feat/people-search): a plain username means your own server (dm_target.rs, every picker)
+        let uid = crate::people::own_target(&uid).unwrap_or(uid);
         self.as_mut().set_mod_error(QString::default());
         let qt = self.qt_thread();
         let started = room_id.clone();
@@ -2077,6 +2147,8 @@ impl qobject::RoomController {
         if room_id.is_empty() || uid.trim().is_empty() {
             return;
         }
+        // 2026-11-12 (feat/people-search): a plain username means your own server (dm_target.rs, every picker)
+        let uid = crate::people::own_target(&uid).unwrap_or(uid);
         self.as_mut().set_mod_error(QString::default());
         let qt = self.qt_thread();
         let started = room_id.clone();
@@ -2355,6 +2427,48 @@ pub(crate) enum EchoKind {
     Dice(serde_json::Value),
     /// widgets W3: a new poll — the shared start content (Element's shape), sent as the poll start event.
     Poll(serde_json::Value),
+    /// voice notes (docs/VOICE-NOTES.md): a finished recording (upload + voice_content + send_raw, same txn on retry).
+    Voice(VoiceSend),
+}
+
+/// voice notes: what the echo engine needs to send a finished recording.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct VoiceSend {
+    pub path: String,
+    pub duration_ms: u64,
+    pub waveform: Vec<u32>,
+    pub size: u64,
+}
+
+/// voice notes (§1 "retry reuses the finished upload"): the finished uploads per txn are kept by the voice-note
+/// machine (voicenote_ctl), under the drafts' own lock (review r2 #4).
+pub(crate) fn voice_upload_get(txn: &str) -> Option<(tinhat_widgets::voicenote::VoiceMedia, u64)> {
+    crate::voicenote_ctl::upload_get(txn)
+}
+pub(crate) fn voice_upload_forget(txn: &str) {
+    crate::voicenote_ctl::upload_forget(txn)
+}
+/// review r1 #1: may a cached upload be sent in a room whose encryption is `encrypted`? A plaintext (`url`) upload never
+/// goes into an encrypted room; an encrypted one is fine anywhere (rooms cannot turn encryption off).
+/// Security review round 4 (VN-1 parity, VN-2): a voice note's upload is encrypted when the read at send time OR a
+/// synchronous re-read right before the upload starts says so (the file read and the limit lookup awaited between
+/// them: this closes that window; sync runs on other tasks, so a change landing during the upload itself or between the
+/// post-upload check and send_raw is only narrowed, not excluded — the post-upload check re-uploads encrypted when it
+/// sees it); a state the SDK can't tell (Unknown) uploads nothing. matrix-sdk's encryption state is sticky (a known m.room.encryption is never forgotten by sync; the server
+/// is asked only while it is unknown) and send_raw asks the same state, so the upload and the event can't disagree the
+/// way the web's room-state-only check could (the web asks js-sdk's crypto store too: core/matrix/uploadCrypto.ts).
+pub(crate) fn voice_upload_encrypt(at_send: &matrix_sdk::EncryptionState, at_upload: &matrix_sdk::EncryptionState) -> Result<bool, String> {
+    if at_send.is_unknown() || at_upload.is_unknown() {
+        return Err("voice: the room's encryption can't be checked, so nothing was uploaded".into());
+    }
+    Ok(at_send.is_encrypted() || at_upload.is_encrypted())
+}
+pub(crate) fn voice_upload_fits(media: &tinhat_widgets::voicenote::VoiceMedia, encrypted: bool) -> bool {
+    !encrypted || matches!(media, tinhat_widgets::voicenote::VoiceMedia::File(_))
+}
+/// §6: refuse before uploading only when the server's limit is KNOWN (a missing / unreadable / zero limit = unknown).
+pub(crate) fn voice_over_limit(size: u64, limit: Option<u64>) -> bool {
+    limit.is_some_and(|l| l > 0 && size > l)
 }
 
 #[derive(Clone, Debug)]
@@ -2374,6 +2488,8 @@ pub(crate) struct Echo {
     /// the m.image `info.w/h` sent with it, so every timeline reserves the height up front.
     pub w: u32,
     pub h: u32,
+    /// voice notes: the note's duration (the echo row's `durationMs`); 0 for everything else
+    pub duration_ms: u64,
     pub ts: u64,
     /// Set once the server accepted it (the send's response).
     pub event_id: Option<String>,
@@ -2401,6 +2517,7 @@ impl Echo {
             size: 0,
             w: 0,
             h: 0,
+            duration_ms: 0,
             ts: now_ms(),
             event_id: None,
             failed: None,
@@ -2689,7 +2806,7 @@ fn echo_row(e: &Echo, my_id: &str, my_name: &str, my_avatar: &str, cur_json: &st
         "sender": my_id, "senderName": my_name, "avatar": my_avatar,
         "body": e.body, "ts": e.ts, "msgtype": e.msgtype, "formatted": formatted,
         "media": e.media, "mxc": "", "mimetype": e.mime, "w": e.w, "h": e.h,
-        "durationMs": 0, "size": e.size,
+        "durationMs": e.duration_ms, "size": e.size, "voice": matches!(e.kind, EchoKind::Voice(_)),
         "replyTo": e.reply_to, "replyToSender": reply_sender, "replyToBody": reply_body,
         "redacted": false, "edited": false, "mentionsMe": false, "pinned": false,
         "embeds": crate::embeds::extract_embeds(&e.body),
@@ -2818,11 +2935,108 @@ async fn perform_echo(room_id: &str, e: &Echo) -> Result<String, String> {
                 .map_err(|x| x.to_string())?;
             Ok(r.event_id.to_string())
         }
+        EchoKind::Voice(v) => {
+            use tinhat_widgets::voicenote::{voice_content, VoiceMedia};
+            let client = room.client();
+            // review r1 #5 / r2 #4: the draft's send token (None = discarded already); a discarded draft (leave,
+            // sign-out, Delete, another account) stops here after every await, and send_raw races the token
+            let token = crate::voicenote_ctl::send_token(&e.txn).ok_or_else(|| "voice: discarded".to_string())?;
+            let alive = |what: &str| -> Result<(), String> {
+                if !token.is_cancelled() && crate::voicenote_ctl::send_allowed(&e.txn) {
+                    Ok(())
+                } else {
+                    eprintln!("[voicenote] send of {} stopped ({what}): the draft was discarded", e.txn);
+                    Err("voice: discarded".into())
+                }
+            };
+            alive("start")?;
+            // review r1 #1: the room's encryption is read at send time (and again right before the event goes out): a
+            // plaintext upload cached from an earlier try is never reused once the room is encrypted — the note is
+            // uploaded again, encrypted, under the same transaction id
+            let mut tries = 0;
+            let (media, size) = loop {
+                tries += 1;
+                let at_send = room.latest_encryption_state().await.map_err(|x| format!("voice: {x}"))?;
+                // (Unknown after asking = can't tell: nothing is uploaded — voice_upload_encrypt)
+                let encrypted = voice_upload_encrypt(&at_send, &at_send)?;
+                alive("encryption state")?;
+                let cached = voice_upload_get(&e.txn).filter(|(m, _)| voice_upload_fits(m, encrypted));
+                let (media, size) = match cached {
+                    Some(m) => m,
+                    None => {
+                        let data = tokio::fs::read(&v.path).await.map_err(|x| format!("voice: read {}: {x}", v.path))?;
+                        alive("read")?;
+                        let size = data.len() as u64;
+                        // §6: the server's m.upload.size (cached by the SDK); unknown = no refusal
+                        let limit = client.load_or_fetch_max_upload_size().await.ok().map(u64::from);
+                        alive("media config")?;
+                        if voice_over_limit(size, limit) {
+                            return Err(format!("voice: M_TOO_LARGE ({size} bytes over the server's {} byte limit)", limit.unwrap_or(0)));
+                        }
+                        // VN-2: read again right before the upload starts (no await from here to the request)
+                        let encrypted = voice_upload_encrypt(&at_send, &room.encryption_state())?;
+                        let media = if encrypted {
+                            // AES-CTR-256 + SHA-256 (the SDK's attachment path): the event carries `file`, never `url`
+                            let mut cur = std::io::Cursor::new(data);
+                            let f = client.upload_encrypted_file(&mut cur).await.map_err(|x| format!("voice: {x}"))?;
+                            VoiceMedia::File(serde_json::to_value(&f).map_err(|x| format!("voice: {x}"))?)
+                        } else {
+                            let mime: mime::Mime = "audio/ogg".parse().map_err(|_| "voice: mime".to_string())?;
+                            let r = client.media().upload(&mime, data, None).await.map_err(|x| format!("voice: {x}"))?;
+                            VoiceMedia::Url(r.content_uri.to_string())
+                        };
+                        // cached only while the draft may still send — checked and inserted under the drafts' lock, so a
+                        // discard can never slip in between and leave this upload behind
+                        if !crate::voicenote_ctl::upload_put_if_alive(&e.txn, media.clone(), size) {
+                            alive("upload")?;
+                            return Err("voice: discarded".into());
+                        }
+                        (media, size)
+                    }
+                };
+                // the room turned encrypted while a plaintext note was uploading: once more, encrypted
+                let now_state = room.latest_encryption_state().await.map_err(|x| format!("voice: {x}"))?;
+                let now = voice_upload_encrypt(&now_state, &room.encryption_state())?;
+                alive("encryption recheck")?;
+                if voice_upload_fits(&media, now) || tries >= 3 {
+                    if !voice_upload_fits(&media, now) {
+                        return Err("voice: the room's encryption changed during the upload".into());
+                    }
+                    break (media, size);
+                }
+            };
+            let content = voice_content(&media, "audio/ogg", size, v.duration_ms, &v.waveform);
+            alive("send")?;
+            // send_raw encrypts in an E2EE room (matrix-sdk: SendRawMessageLikeEvent checks the room's encryption state).
+            // Its preparation (room keys) and request race the draft's token: a discard stops it there too. The txn is
+            // the draft's, so a send that did reach the server is never doubled by a retry.
+            let send = std::future::IntoFuture::into_future(room.send_raw("m.room.message", content).with_transaction_id(&txn));
+            // review r3 #3: `biased`, the token FIRST — a discard that is already in is seen before the send is polled
+            // (again); a request already on the wire cannot be called back, which the txn makes safe to retry
+            let r = tokio::select! {
+                biased;
+                _ = token.cancelled() => {
+                    eprintln!("[voicenote] send of {} stopped (in send_raw): the draft was discarded", e.txn);
+                    return Err("voice: discarded".into());
+                }
+                r = send => r.map_err(|x| format!("voice: {x}"))?,
+            };
+            voice_upload_forget(&e.txn);
+            Ok(r.response.event_id.to_string())
+        }
     }
 }
 
 /// Short, human wording for a failed send (the raw SDK error is logged, not shown).
 fn friendly_send_error(raw: &str) -> String {
+    // voice notes: the note's own words for "too large" (§6); everything else as for any send
+    if let Some(r) = raw.strip_prefix("voice: ") {
+        let l = r.to_lowercase();
+        if l.contains("m_too_large") || l.contains("413") {
+            return "This voice message is too large for the server".into();
+        }
+        return friendly_send_error(r);
+    }
     let l = raw.to_lowercase();
     if l.contains("m_forbidden") || l.contains("403") {
         "You don't have permission to send here".into()
@@ -3627,6 +3841,10 @@ fn stamp_redaction(win: &mut TimelineWindow, redaction: &serde_json::Value) {
     else {
         return;
     };
+    // QA W1: an older pin fetched before it was deleted is fetched again (and then reads as deleted)
+    if let Ok(mut m) = pinned_rows().lock() {
+        m.remove(target);
+    }
     for v in win.events.iter_mut() {
         if v.get("event_id").and_then(|e| e.as_str()) == Some(target) {
             let was_row = is_rendered_row(v);
@@ -4134,7 +4352,7 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
                 let body = question.map_or(String::new(), |q| format!("Poll: {q}"));
                 msgs.push(serde_json::json!({
                     "sender": sender, "senderName": sender_name, "body": body, "ts": ts, "id": id,
-                    "avatar": avatar, "mentionsMe": false, "pinned": pinned_ids.contains(&id),
+                    "avatar": avatar, "mentionsMe": false, "pinned": !redacted && pinned_ids.contains(&id),
                     "serverTxn": server_txn,
                     "msgtype": POLL_MSGTYPE, "formatted": "", "media": "",
                     "mxc": "", "mimetype": "", "w": 0, "h": 0, "durationMs": 0, "size": 0,
@@ -4305,11 +4523,13 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
             // whether the body is only a media link (so QML can hide the raw URL).
             msgs.push(serde_json::json!({
                 "sender": sender, "senderName": sender_name, "body": body, "ts": ts, "id": id,
-                "avatar": avatar, "mentionsMe": mentions_me, "pinned": pinned_ids.contains(id),
+                "avatar": avatar, "mentionsMe": mentions_me, "pinned": !redacted && pinned_ids.contains(id), // QA W1: no 📌 once deleted
                 "serverTxn": server_txn,
                 "msgtype": msgtype, "formatted": formatted, "media": "",
                 "mxc": media_url, "mimetype": mimetype, "w": w, "h": h,
                 "durationMs": duration_ms, "size": size_bytes,
+                // voice notes: an MSC3245 voice message (ChatBubble's player reports its load for the interop gate)
+                "voice": content.is_some_and(tinhat_widgets::voicenote::is_voice_note),
                 // security review 2026-10-26: Open only for viewer types (viewer.rs: the OS opener) and text-like files
                 // (shown in the app as plain text, launch-gate's web review #8); everything else is Save as only
                 "canOpen": open_as(msgtype, !media_url.is_empty(), mimetype, &content.map(attachment_name).unwrap_or_default()) != OpenAs::SaveOnly,
@@ -4428,16 +4648,21 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
     // 9.3: pinned messages present in the window, for the header popover. Widgets W1: + the sender's id and avatar, the
     // shared snippet (kind, text) and the pin's place in the shared order (pinIndex, 0 = the newest pin) for the widget.
     let pin_index = |id: &str| pin_order.iter().position(|p| p == id).map(|i| i as i64).unwrap_or(-1);
+    // QA W1: a deleted pin stays a row with "deleted": true — the Pinned widget shows it as "Message deleted" (its
+    // contract, as on the web); the composer's 📌 N and its list leave it out (ConversationView.qml, pins::shown_pins).
     let mut pinned_rows: Vec<serde_json::Value> = msgs
         .iter()
-        .filter(|m| m.get("pinned") == Some(&serde_json::json!(true)))
+        .filter(|m| m.get("id").and_then(|i| i.as_str()).is_some_and(|id| pinned_ids.contains(id)))
         .map(|m| {
             let id = m.get("id").and_then(|i| i.as_str()).unwrap_or("");
             let sn = m.get("pinSnippet").cloned().unwrap_or_default();
+            let deleted = m.get("redacted") == Some(&serde_json::json!(true));
+            let text = m.get("body").and_then(|b| b.as_str()).unwrap_or("");
             serde_json::json!({
                 "id": m.get("id").cloned().unwrap_or_default(),
                 "senderName": m.get("senderName").cloned().unwrap_or_default(),
-                "body": m.get("body").cloned().unwrap_or_default(),
+                "body": crate::pins::pin_row_body(false, deleted, text),
+                "deleted": deleted,
                 "ts": m.get("ts").cloned().unwrap_or_default(),
                 "sender": m.get("sender").cloned().unwrap_or_default(),
                 "avatar": m.get("avatar").cloned().unwrap_or_default(),
@@ -5630,11 +5855,10 @@ async fn pinned_row_fetch(room: &Room, event_id: &str) -> Option<serde_json::Val
     let v = ev.raw().deserialize_as::<serde_json::Value>().ok()?;
     let sender = v.get("sender").and_then(|s| s.as_str()).unwrap_or("").to_string();
     let raw_body = v.get("content").and_then(|c| c.get("body")).and_then(|b| b.as_str()).unwrap_or("");
-    let body = if raw_body.is_empty() && v.get("type").and_then(|t| t.as_str()) == Some("m.room.encrypted") {
-        "Encrypted message — open the room around it to read it".to_string()
-    } else {
-        crate::embeds::strip_reply_fallback(raw_body)
-    };
+    // QA W1: deleted before encrypted (a redacted encrypted event keeps its type and loses its content)
+    let deleted = v.get("unsigned").and_then(|u| u.get("redacted_because")).is_some();
+    let encrypted = raw_body.is_empty() && v.get("type").and_then(|t| t.as_str()) == Some("m.room.encrypted");
+    let body = crate::pins::pin_row_body(encrypted, deleted, &crate::embeds::strip_reply_fallback(raw_body));
     let ts = v.get("origin_server_ts").and_then(|t| t.as_u64()).unwrap_or(0);
     let name = resolve_member_name(room, &sender).await;
     // widgets W1: the sender's avatar and the shared snippet (the event as decrypted here; still encrypted = no key)
@@ -5642,10 +5866,10 @@ async fn pinned_row_fetch(room: &Room, event_id: &str) -> Option<serde_json::Val
     let sn = tinhat_widgets::recent::snippet_of(&serde_json::json!({
         "type": v.get("type").cloned().unwrap_or_default(),
         "content": v.get("content").cloned().unwrap_or_default(),
-        "redacted": v.get("unsigned").and_then(|u| u.get("redacted_because")).is_some(),
+        "redacted": deleted,
     }));
     let row = serde_json::json!({
-        "id": event_id, "senderName": name, "body": body, "ts": ts,
+        "id": event_id, "senderName": name, "body": body, "ts": ts, "deleted": deleted,
         "sender": sender, "avatar": avatar, "kind": sn.kind, "text": sn.text,
     });
     if let Ok(mut m) = cache.lock() {

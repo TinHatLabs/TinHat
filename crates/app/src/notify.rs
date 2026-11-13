@@ -73,6 +73,22 @@ pub fn toast_action(action: String) {
     eprintln!("[notify] toast action: {action}");
     let _ = t.queue(move |mut o| o.as_mut().toast_action(cxx_qt_lib::QString::from(&action)));
 }
+/// Bumped whenever org.freedesktop.Notifications changes hands: an id the OLD server answered after the change must
+/// never land in the map (the new server may reuse it for another app's notification — Astra review, notif-actions).
+#[cfg(target_os = "linux")]
+static OWNER_EPOCH: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+#[cfg(target_os = "linux")]
+fn owner_epoch() -> u64 {
+    OWNER_EPOCH.load(std::sync::atomic::Ordering::SeqCst)
+}
+/// Remember a posted notification's action — unless the server changed hands while the Notify call was out.
+#[cfg(target_os = "linux")]
+fn remember(id: u32, epoch: u64, action: String) {
+    let mut g = pending_actions().lock().unwrap();
+    if owner_epoch() == epoch {
+        g.insert(id, action);
+    }
+}
 #[cfg(target_os = "linux")]
 fn pending_actions() -> &'static Mutex<HashMap<u32, String>> {
     static P: OnceLock<Mutex<HashMap<u32, String>>> = OnceLock::new();
@@ -259,7 +275,24 @@ pub(crate) fn tally_actions<'a>(room_id: &str, events: impl IntoIterator<Item = 
 pub fn record_sync(notifications: &std::collections::BTreeMap<matrix_sdk::ruma::OwnedRoomId, Vec<matrix_sdk::sync::Notification>>) {
     for (room_id, list) in notifications {
         tally_actions(room_id.as_str(), list.iter().map(|n| n.actions.as_slice()));
+        // docs/NOTIF-ACTIONS.md: the newest event that notified = what Mark as read targets (the SDK's latest event is
+        // not known in an encrypted room; the event id is outside the encryption)
+        let newest = list.iter().rev().filter(|n| n.actions.iter().any(|a| a.should_notify())).find_map(|n| match &n.event {
+            matrix_sdk_base::deserialized_responses::RawAnySyncOrStrippedTimelineEvent::Sync(raw) => raw.get_field::<String>("event_id").ok().flatten(),
+            _ => None,
+        });
+        if let Some(id) = newest {
+            if let Ok(mut m) = last_notified().lock() {
+                m.insert(room_id.to_string(), id);
+            }
+        }
     }
+}
+
+/// Each room's newest event that notified under the push rules (from [`record_sync`]); cleared with the session.
+fn last_notified() -> &'static Mutex<HashMap<String, String>> {
+    static L: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+    L.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 fn tally_of(room_id: &str) -> Tally {
@@ -446,7 +479,7 @@ async fn body_for_server(conn: &zbus::Connection, body: &str) -> String {
 #[cfg(target_os = "linux")]
 pub async fn notify_call(summary: &str, body: &str, room_id: &str) {
     let Some(conn) = connection().await else { return };
-    ensure_action_listener(conn.clone()).await;
+    ensure_action_listener(conn.clone());
     let mut hints: HashMap<&str, zbus::zvariant::Value<'_>> = HashMap::new();
     hints.insert("desktop-entry", zbus::zvariant::Value::from("dev.tinhat.TinHat"));
     hints.insert("urgency", zbus::zvariant::Value::from(2u8));
@@ -454,13 +487,14 @@ pub async fn notify_call(summary: &str, body: &str, room_id: &str) {
     let actions: Vec<&str> = vec!["default", "Join", "join", "Join"];
     let body = body_for_server(&conn, body).await;
     let body_tuple = ("Tin Hat", 0u32, "dev.tinhat.TinHat", summary, body.as_str(), actions, hints, CALL_EXPIRE_MS);
+    let epoch = owner_epoch();
     match conn
         .call_method(Some("org.freedesktop.Notifications"), "/org/freedesktop/Notifications", Some("org.freedesktop.Notifications"), "Notify", &body_tuple)
         .await
     {
         Ok(reply) => {
             if let Ok(id) = reply.body().deserialize::<u32>() {
-                pending_actions().lock().unwrap().insert(id, format!("join:{room_id}"));
+                remember(id, epoch, format!("join:{room_id}"));
             }
         }
         Err(e) => log_bus_unavailable_once(&e),
@@ -469,7 +503,9 @@ pub async fn notify_call(summary: &str, body: &str, room_id: &str) {
 
 /// Listen once for ActionInvoked on the session bus; map the notification id back to its action.
 #[cfg(target_os = "linux")]
-async fn ensure_action_listener(conn: zbus::Connection) {
+// A plain fn (it only spawns): the listener's task spawns notif_actions::run, whose failure note posts through
+// notify_action → here again; an async fn here made that a cycle the Send check can't resolve.
+fn ensure_action_listener(conn: zbus::Connection) {
     static STARTED: OnceLock<()> = OnceLock::new();
     if STARTED.set(()).is_err() {
         return;
@@ -491,6 +527,7 @@ async fn ensure_action_listener(conn: zbus::Connection) {
         // anyone but the current owner — else a click on ANOTHER app's notification that reused an
         // old id could run a stale "join:<room>".
         let mut closed = proxy.receive_signal("NotificationClosed").await.ok();
+        let mut replied = proxy.receive_signal("NotificationReplied").await.ok();
         let dbus = zbus::fdo::DBusProxy::new(&conn).await.ok();
         // Subscribe to owner changes BEFORE reading the owner: a restart in between is then a
         // queued change, not a missed one (Astra review).
@@ -521,9 +558,31 @@ async fn ensure_action_listener(conn: zbus::Connection) {
                     if let Ok((id, key)) = msg.body().deserialize::<(u32, String)>() {
                         let action = pending_actions().lock().unwrap().remove(&id);
                         if let Some(a) = action {
-                            if key == "join" || key == "default" {
+                            // docs/NOTIF-ACTIONS.md: a message notification's Reply / Mark as read / click
+                            if let Some((gen, room, event)) = crate::notif_actions::parse_pending(&a) {
+                                if matches!(key.as_str(), "default" | "reply" | "inline-reply" | "read") {
+                                    // an inline field the server could not show arrives here without text: Compose
+                                    crate::bridge::runtime().spawn(crate::notif_actions::run(gen, room, event, key.clone(), String::new()));
+                                    if key == "read" {
+                                        crate::bridge::runtime().spawn(close_notification(id));
+                                    }
+                                }
+                            } else if key == "join" || key == "default" {
                                 toast_action(a);
                             }
+                        }
+                    }
+                }
+                // KDE's inline reply (`inline-reply` capability): the typed text. Precedes its NotificationClosed.
+                m = async { match replied.as_mut() { Some(s) => s.next().await, None => std::future::pending().await } } => {
+                    let Some(msg) = m else { replied = None; continue };
+                    if !from_owner(&msg, &owner) {
+                        continue;
+                    }
+                    if let Ok((id, text)) = msg.body().deserialize::<(u32, String)>() {
+                        let action = pending_actions().lock().unwrap().remove(&id);
+                        if let Some((gen, room, event)) = action.as_deref().and_then(crate::notif_actions::parse_pending) {
+                            crate::bridge::runtime().spawn(crate::notif_actions::run(gen, room, event, "inline-reply".into(), text));
                         }
                     }
                 }
@@ -533,9 +592,11 @@ async fn ensure_action_listener(conn: zbus::Connection) {
                         continue;
                     }
                     if let Ok((id, _reason)) = msg.body().deserialize::<(u32, u32)>() {
-                        // …and the entry outlives the close by a moment, for a click still in flight.
+                        // …and the entry outlives the close by a while, for a click — or a KDE inline reply, which
+                        // arrives on its own signal stream and may be handled after the close — still in flight. Ids
+                        // only grow within one server; a new server clears the map (owner change).
                         crate::bridge::runtime().spawn(async move {
-                            tokio::time::sleep(Duration::from_secs(2)).await;
+                            tokio::time::sleep(Duration::from_secs(30)).await;
                             pending_actions().lock().unwrap().remove(&id);
                         });
                     }
@@ -547,7 +608,12 @@ async fn ensure_action_listener(conn: zbus::Connection) {
                         continue;
                     }
                     owner = args.new_owner().as_ref().map(|u| u.to_string());
-                    pending_actions().lock().unwrap().clear();
+                    {
+                        let mut g = pending_actions().lock().unwrap();
+                        OWNER_EPOCH.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                        g.clear();
+                        *caps_cell().lock().unwrap() = None; // the new server may do different things
+                    }
                     eprintln!("[notify] notification service changed hands — pending actions cleared");
                 }
             }
@@ -567,7 +633,7 @@ pub async fn notify_action(summary: &str, body: &str, icon: Option<String>, acti
 pub async fn notify_action_id(summary: &str, body: &str, icon: Option<String>, action: &str) -> Option<u32> {
     let conn = connection().await?;
     if !action.is_empty() {
-        ensure_action_listener(conn.clone()).await;
+        ensure_action_listener(conn.clone());
     }
 
     // hints: tie the notification to our desktop entry so the shell can group it and
@@ -588,6 +654,7 @@ pub async fn notify_action_id(summary: &str, body: &str, icon: Option<String>, a
     // "default" = the click on the toast itself (no button drawn); the listener maps the id back.
     let actions: Vec<&str> = if action.is_empty() { Vec::new() } else { vec!["default", "Open"] };
     let body = body_for_server(&conn, body).await;
+    let epoch = owner_epoch();
     let body_tuple = (
         "Tin Hat", // app_name
         0u32,          // replaces_id (0 = new notification each time)
@@ -612,7 +679,7 @@ pub async fn notify_action_id(summary: &str, body: &str, icon: Option<String>, a
         Ok(reply) => {
             let id = reply.body().deserialize::<u32>().ok();
             if let Some(id) = id.filter(|_| !action.is_empty()) {
-                pending_actions().lock().unwrap().insert(id, action.to_string());
+                remember(id, epoch, action.to_string());
             }
             id
         }
@@ -643,6 +710,177 @@ pub async fn close_notification(id: u32) {
         .await
     {
         eprintln!("[notify] close {id}: {e}");
+    }
+}
+
+/// What the notification server can do (asked once per server: dropped when the name changes hands).
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, Debug)]
+struct Caps {
+    actions: bool,
+    inline_reply: bool,
+}
+
+#[cfg(target_os = "linux")]
+fn caps_cell() -> &'static Mutex<Option<Caps>> {
+    static C: OnceLock<Mutex<Option<Caps>>> = OnceLock::new();
+    C.get_or_init(|| Mutex::new(None))
+}
+
+#[cfg(target_os = "linux")]
+async fn caps(conn: &zbus::Connection) -> Caps {
+    if let Some(c) = *caps_cell().lock().unwrap() {
+        return c;
+    }
+    let epoch = owner_epoch();
+    let c = match conn
+        .call_method(Some("org.freedesktop.Notifications"), "/org/freedesktop/Notifications", Some("org.freedesktop.Notifications"), "GetCapabilities", &())
+        .await
+    {
+        Ok(reply) => {
+            let list = reply.body().deserialize::<Vec<String>>().unwrap_or_default();
+            Caps { actions: list.iter().any(|x| x == "actions"), inline_reply: list.iter().any(|x| x == "inline-reply") }
+        }
+        // can't tell: plain notifications (as before), asked again next time
+        Err(_) => return Caps { actions: false, inline_reply: false },
+    };
+    eprintln!("[notify] notification server: actions={} inline-reply={}", c.actions, c.inline_reply);
+    // kept only if the server didn't change hands while we asked (the answer was the old server's)
+    let g = pending_actions().lock().unwrap();
+    if owner_epoch() == epoch {
+        *caps_cell().lock().unwrap() = Some(c);
+    }
+    drop(g);
+    c
+}
+
+/// docs/NOTIF-ACTIONS.md: a MESSAGE notification — the click opens the room; Reply (inline where the server has a
+/// field and this device is trusted, else it opens the room with the composer focused); Mark as read (when the
+/// notified event is known). Everything else as [`notify_action`].
+#[cfg(target_os = "linux")]
+pub async fn notify_message(summary: &str, body: &str, icon: Option<String>, room_id: &str, event_id: &str, trusted: bool, gen: u64) {
+    use crate::notif_actions as na;
+    let Some(conn) = connection().await else { return };
+    let caps = caps(&conn).await;
+    let keys = na::offer(&na::OfferCtx { actions_cap: caps.actions, inline_field: caps.inline_reply, trusted, event: event_id });
+    // a stable line for the gates (tools/README-gates.md): which actions this notification carries
+    eprintln!("[notify] message notification: keys={keys:?} trusted={trusted}");
+    if crate::session::generation() != gen {
+        return; // the session the scan began in ended meanwhile
+    }
+    if keys.len() <= 1 {
+        return notify_action(summary, body, icon, &format!("open:{room_id}")).await;
+    }
+    ensure_action_listener(conn.clone());
+    let mut hints: HashMap<&str, zbus::zvariant::Value<'_>> = HashMap::new();
+    hints.insert("desktop-entry", zbus::zvariant::Value::from("dev.tinhat.TinHat"));
+    hints.insert("category", zbus::zvariant::Value::from("im.received"));
+    let icon_path = icon.map(|u| crate::platform::path_from_file_url(&u));
+    if let Some(p) = icon_path.as_deref().filter(|p| !p.is_empty()) {
+        hints.insert("image-path", zbus::zvariant::Value::from(p));
+    }
+    if keys.contains(&"inline-reply") {
+        hints.insert("x-kde-reply-placeholder-text", zbus::zvariant::Value::from(na::WORD_PLACEHOLDER));
+        hints.insert("x-kde-reply-submit-button-text", zbus::zvariant::Value::from(na::WORD_SEND));
+    }
+    // [key, label] pairs; "default" = the click (no button drawn)
+    let mut actions: Vec<&str> = Vec::new();
+    for k in &keys {
+        actions.push(k);
+        actions.push(match *k {
+            "default" => "Open",
+            "read" => na::WORD_MARK_READ,
+            _ => na::WORD_REPLY,
+        });
+    }
+    let body = body_for_server(&conn, body).await;
+    // the session the scan began in (passed down, never re-read here): a sign-out meanwhile posts nothing
+    if crate::session::generation() != gen {
+        return;
+    }
+    let body_tuple = ("Tin Hat", 0u32, "dev.tinhat.TinHat", summary, body.as_str(), actions, hints, EXPIRE_MS);
+    let epoch = owner_epoch();
+    match conn
+        .call_method(Some("org.freedesktop.Notifications"), "/org/freedesktop/Notifications", Some("org.freedesktop.Notifications"), "Notify", &body_tuple)
+        .await
+    {
+        Ok(reply) => {
+            if let Ok(id) = reply.body().deserialize::<u32>() {
+                remember(id, epoch, na::pending_entry(gen, room_id, event_id));
+            }
+        }
+        Err(e) => {
+            log_bus_unavailable_once(&e);
+            if let Ok(mut g) = conn_cell().try_lock() {
+                *g = None;
+            }
+        }
+    }
+}
+
+/// docs/NOTIF-ACTIONS.md (Windows): our own toast XML ([`crate::notif_actions::toast_xml`]) through the same WinRT
+/// notifier the toast crate uses — the crate has no text box. Activated (in-process) carries the button's arguments
+/// and, for Send, the typed text in `UserInput["reply"]` (Windows 10 1903+, so the box is offered only there).
+#[cfg(windows)]
+pub async fn notify_message(summary: &str, body: &str, icon: Option<String>, room_id: &str, event_id: &str, trusted: bool, gen: u64) {
+    use crate::notif_actions as na;
+    let inline = windows_version::OsVersion::current().build >= 18362;
+    let keys = na::offer(&na::OfferCtx { actions_cap: true, inline_field: inline, trusted, event: event_id });
+    eprintln!("[notify] message notification: keys={keys:?} trusted={trusted}");
+    let icon = icon.map(|u| crate::platform::path_from_file_url(&u)).filter(|p| !p.is_empty() && std::path::Path::new(p).exists());
+    let xml = na::toast_xml(summary, body, icon.as_deref(), &keys);
+    if crate::session::generation() != gen {
+        return; // the session the scan began in ended meanwhile
+    }
+    let room_id = room_id.to_string();
+    let event_id = event_id.to_string();
+    let _ = tokio::task::spawn_blocking(move || {
+        use windows::core::{Interface, HSTRING};
+        use windows::Data::Xml::Dom::XmlDocument;
+        use windows::Foundation::{IPropertyValue, TypedEventHandler};
+        use windows::UI::Notifications::{ToastActivatedEventArgs, ToastNotification, ToastNotificationManager};
+        let show = || -> windows::core::Result<()> {
+            let doc = XmlDocument::new()?;
+            doc.LoadXml(&HSTRING::from(xml.as_str()))?;
+            let toast = ToastNotification::CreateToastNotification(&doc)?;
+            let (r, e) = (room_id.clone(), event_id.clone());
+            toast.Activated(&TypedEventHandler::new(move |_, insp| {
+                let insp: &Option<windows::core::IInspectable> = &insp;
+                let Some(args) = insp.as_ref().and_then(|i| i.cast::<ToastActivatedEventArgs>().ok()) else { return Ok(()) };
+                let key = args.Arguments().map(|a| a.to_string()).unwrap_or_default();
+                let text = if key == "inline-reply" {
+                    args.UserInput()
+                        .and_then(|set| set.Lookup(&HSTRING::from("reply")))
+                        .and_then(|v| v.cast::<IPropertyValue>())
+                        .and_then(|v| v.GetString())
+                        .map(|h| h.to_string())
+                        .unwrap_or_default()
+                } else {
+                    String::new()
+                };
+                crate::bridge::runtime().spawn(na::run(gen, r.clone(), e.clone(), key, text));
+                Ok(())
+            }))?;
+            if crate::session::generation() != gen {
+                return Ok(()); // signed out while this waited for its thread
+            }
+            ToastNotificationManager::CreateToastNotifierWithId(&HSTRING::from(crate::platform::AUMID))?.Show(&toast)
+        };
+        if let Err(e) = show() {
+            static ONCE: OnceLock<()> = OnceLock::new();
+            if ONCE.set(()).is_ok() {
+                eprintln!("[notify] WinRT message toast failed: {e}; silent from here");
+            }
+        }
+    })
+    .await;
+}
+
+/// Elsewhere (macOS dev builds): the plain click-to-open notification.
+#[cfg(not(any(windows, target_os = "linux")))]
+pub async fn notify_message(summary: &str, body: &str, icon: Option<String>, room_id: &str, _event_id: &str, _trusted: bool, gen: u64) {
+    if crate::session::generation() == gen {
+        notify_action(summary, body, icon, &format!("open:{room_id}")).await
     }
 }
 
@@ -928,7 +1166,14 @@ pub async fn scan_highlights(client: &Client) {
         // In a GROUP room the sender is prefixed ("Alex: ..."), because "who" is the
         // first thing you want from a room toast; in a DM the summary is already the
         // person, so prefixing would just say their name twice.
-        let (body, icon) = latest_preview(&room, !is_dm).await.unwrap_or_else(|| {
+        // docs/NOTIF-ACTIONS.md: the event this notification is about — the room's newest event that notified (what
+        // the tally rose by), else the SDK's latest event; Mark as read targets it, nothing newer
+        let event_id = last_notified().lock().ok().and_then(|m| m.get(&room_id).cloned()).unwrap_or_else(|| latest_event_id(&room));
+        // the preview must show the event Mark as read targets: when the room's latest event is a different one
+        // (something newer that didn't notify), the generic text instead
+        let latest_id = latest_event_id(&room);
+        let preview = if latest_id.is_empty() || latest_id == event_id { latest_preview(&room, !is_dm).await } else { None };
+        let (body, icon) = preview.unwrap_or_else(|| {
             (
                 if rise > 1 {
                     format!("{rise} new messages")
@@ -948,7 +1193,10 @@ pub async fn scan_highlights(client: &Client) {
         // meanwhile never gets its notification posted over the next one.
         if notify_on && crate::session::generation() == gen {
             // 10.1 (TH-GAP-06): clicking the toast opens the room (the most-performed gesture in a chat app).
-            notify_action(&summary, &body, icon, &format!("open:{room_id}")).await;
+            // docs/NOTIF-ACTIONS.md: plus Reply and Mark as read.
+            let trusted = crate::notif_actions::own_device_trusted(client).await;
+            // the scan's own generation (checked again inside after every await): never re-read after this await
+            notify_message(&summary, &body, icon, &room_id, &event_id, trusted, gen).await;
         }
     }
 }
@@ -1009,6 +1257,9 @@ pub fn forget_session() {
         t.clear();
     }
     if let Ok(mut l) = last_highlight().lock() {
+        l.clear();
+    }
+    if let Ok(mut l) = last_notified().lock() {
         l.clear();
     }
     #[cfg(target_os = "linux")]
@@ -1093,6 +1344,15 @@ pub async fn scan_invites(client: &Client) {
 ///
 /// `latest_event()` is a local read of the cached `LatestEventValue`; only the
 /// `Remote` variant carries a real received event whose `content.body` we preview.
+/// The id of the event the notification's preview comes from ("" when unknown or not a server event).
+fn latest_event_id(room: &matrix_sdk::Room) -> String {
+    use matrix_sdk_base::latest_event::LatestEventValue;
+    match room.latest_event() {
+        LatestEventValue::Remote(event) => event.event_id().map(|e| e.to_string()).unwrap_or_default(),
+        _ => String::new(),
+    }
+}
+
 async fn latest_preview(
     room: &matrix_sdk::Room,
     with_sender: bool,

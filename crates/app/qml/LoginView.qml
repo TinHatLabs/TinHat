@@ -30,6 +30,9 @@ Item {
     property bool busy: false
     property string status: ""
     property string homeserver: ""
+    // QA 12.1.11 D6: sign-in took the server from a full @name:server user ID (bridge.rs sign_in_server) — the emptied
+    // field shows it
+    onHomeserverChanged: if (homeserverField.text.trim().length === 0 && loginView.homeserver.length > 0) homeserverField.text = Qt.binding(function () { return loginView.homeserver })
     // a server that moved to its own domain (moved.rs): "OLD says it moved to NEW…" (the field changes only on a click)
     property string movedNote: ""
     // 12.1.1 (restore_err.rs): the saved session didn't open and was KEPT — "newer" (written by a newer Tin Hat: Quit /
@@ -38,6 +41,7 @@ Item {
     signal retryRestore()
     signal startFresh()
     signal quitApp()
+    property string serverHint: ""   // "Opens crew.tinhat.me" while a bare name is typed (bridge.rs server_name_hint)
     property string movedTo: ""   // the address the note offers (bridge.rs check_moved); the field changes only on a click
     // "" idle | "sent" (link is in their inbox) | "done" (password changed)
     property string resetStage: ""
@@ -273,6 +277,16 @@ Item {
                     }
                     onAccepted: usernameField.focusField()
                 }
+                // a bare name is a tinhat.me name: say which server it opens (the phone apps' "Opens <host>")
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    Layout.fillWidth: true
+                    visible: loginView.serverHint.length > 0
+                    horizontalAlignment: Text.AlignHCenter
+                    text: loginView.serverHint
+                    color: Th.loginSubtitleFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
@@ -336,7 +350,9 @@ Item {
                     // Stays lit while busy (the spinner shows progress); tryLogin()
                     // guards re-submission.
                     busy: loginView.busy
-                    enabled: usernameField.text.length > 0 && passwordField.text.length > 0 && loginView.homeserver.trim().length > 0
+                    // QA 12.1.11 D6: lit without a server too — the click answers (bridge.rs sign_in_server: the server
+                    // of a full @name:server user ID, else "Type your server's address first")
+                    enabled: usernameField.text.length > 0 && passwordField.text.length > 0
                     text: "Sign in"
                     onClicked: loginView.tryLogin()
                 }
@@ -761,7 +777,7 @@ Item {
 
     // Submit helper — read both fields at call time (works regardless of bindings).
     function tryLogin(selfTest, confirmed) {
-        if (usernameField.text.length > 0 && passwordField.text.length > 0 && !loginView.busy && loginView.homeserver.trim().length > 0) {
+        if (usernameField.text.length > 0 && passwordField.text.length > 0 && !loginView.busy) {
             // replace_confirm::needed(saved_session, self_test); `confirmed` = Continue on the question just asked
             if (selfTest !== true && confirmed !== true && loginView.hasSavedSession()) { loginView._pendingKind = "login"; loginView.confirmReplace = true; return }
             loginView.submit(usernameField.text, passwordField.text)

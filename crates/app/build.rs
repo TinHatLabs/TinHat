@@ -200,6 +200,7 @@ fn main() {
                 "qml/EmptyState.qml",
                 "qml/ConfirmDialog.qml",
                 "qml/TextViewerDialog.qml",   // launch-gate's web review #8: text-like attachments shown in the app
+                "qml/PeoplePicker.qml",   // 2026-11-12: the add-people picker (people_ctl.rs; the web's PeoplePicker.tsx)
                 "qml/ChangePasswordDialog.qml",   // selfhost: Settings → Devices & security → Password (password.rs)
                 "qml/CallHostDialog.qml",     // calls round M1: "Join a call hosted elsewhere?" (call_ctl.rs callHostPrompt)
                 "qml/TrustDeviceDialog.qml",   // 12.0.4: Settings → Devices & security → the phone's "Trust…" (trust_device.rs)
@@ -297,12 +298,14 @@ fn main() {
                 "qml/WidgetHeaderText.qml", // widgets W1: an elided header line whose implicitWidth is the text's own
                 "qml/MentionsWidget.qml", // widgets W1: Mentions
                 "qml/NoteWidget.qml", // widgets W1: Sticky note
-                "qml/ClocksWidget.qml", // widgets W1: Friends' clocks
+                "qml/ClocksWidget.qml", // widgets W1: People's clocks
                 "qml/DiceWidget.qml", // widgets W3: Dice
                 "qml/DiceCard.qml", // widgets W3: a roll as a card (the widget's last roll, the chat card)
                 "qml/PollsWidget.qml", // widgets W3: Polls
                 "qml/PollCard.qml", // widgets W3: a poll as a card (the chat)
+                "qml/VoiceRecorderRow.qml", // voice notes: the composer's recorder / review row (docs/VOICE-NOTES.md §2)
                 "qml/NewPollDialog.qml", // widgets W3: the New poll dialog
+                "qml/NewMenu.qml", // QA D21: the room column's + (contract menus.new)
                 "qml/JustMeWidget.qml", // widgets W2: "Is it just me?" (WIDGETS.md §20)
                 "qml/MemoriesWidget.qml", // widgets W2: Memories (WIDGETS.md §21)
                 "qml/SoundPadWidget.qml", // widgets W2: the Soundboard pad (WIDGETS.md §22)
@@ -376,6 +379,8 @@ fn main() {
         .file("src/callstats_ctl.rs") // CallStatsController (widgets, step 2: the Call stats widget's live data)
         .file("src/widgets_ctl.rs") // WidgetsController (widgets, step 2: call history, Up next's events, the shared formatters)
         .file("src/mentions_ctl.rs") // MentionsController (widgets W1: the Mentions widget's per-device highlight list)
+        .file("src/voicenote_ctl.rs") // VoiceNoteController (voice notes: record, review, send — docs/VOICE-NOTES.md)
+        .file("src/people_ctl.rs") // PeopleController (the add-people picker: room Invite, New DM, space Invite)
         .file("src/note_ctl.rs") // NoteController (widgets W1: the Sticky note — the space's dev.tinhat.note)
         .file("src/dice_ctl.rs") // DiceController (widgets W3: rolling with the OS CSPRNG, private rolls, the Dice history)
         .file("src/polls_ctl.rs") // PollsController (widgets W3: the Polls widget's Small line + samples; the poll card's JSON)
@@ -407,6 +412,7 @@ fn main() {
         .file("src/clipboard_bridge.cpp") // Ctrl+V attachments: clipboard image/files (9.3.2)
         .file("src/theme_bridge.cpp") // 11.0 step 5: the theme editor review harness's window grab
         .file("src/ui_scale_bridge.cpp") // 2026-10-31 App size: Qt's scale factor at run time (docs/UI-ZOOM.md)
+        .file("src/ptt_bridge.cpp") // push to talk's hold key, whatever has the keyboard
         .std("c++17")
         .flag_if_supported("-fPIC"); // no-op on MSVC
     // Same MSVC narrow-literal hazard as the QML units above: keep the shim's
@@ -602,5 +608,6 @@ fn main() {
     println!("cargo:rerun-if-changed=src/clipboard_bridge.cpp");
     println!("cargo:rerun-if-changed=src/theme_bridge.cpp");
     println!("cargo:rerun-if-changed=src/ui_scale_bridge.cpp");
+    println!("cargo:rerun-if-changed=src/ptt_bridge.cpp");
     println!("cargo:rerun-if-env-changed=TINHAT_NO_QT_PRIVATE");
 }

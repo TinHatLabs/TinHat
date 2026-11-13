@@ -71,6 +71,16 @@ fn opted_in() -> bool {
     std::fs::read_to_string(opt_in_path()).map(|s| s.trim() == "1").unwrap_or(false)
 }
 
+/// Bridge the `log` crate (livekit/libwebrtc) into tracing, then RUST_LOG-driven logging to stderr (also surfaces
+/// matrix-sdk's tracing). stderr is the session log file (main.rs / platform redirect it).
+pub(crate) fn init_rust_logging() {
+    let _ = tracing_log::LogTracer::init();
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_writer(std::io::stderr)
+        .try_init();
+}
+
 /// Strip anything that could impersonate the user or decrypt their media. Deliberately
 /// aggressive: it is better to redact a harmless string than to leak a session.
 pub(crate) fn redact(input: &str) -> String {
@@ -87,6 +97,13 @@ pub(crate) fn redact(input: &str) -> String {
         .unwrap()
     });
     let hex_re = HEX_RE.get_or_init(|| regex::Regex::new(r"\b[0-9a-fA-F]{32,}\b").unwrap());
+    // A list of 16+ small decimal numbers ("[12,34,…]", "[12, 34, …]", trailing comma, cut off before the `]`, or
+    // spread over several lines as a pretty `{:#?}` prints it): how libwebrtc's key derivation and a Rust `{:?}` of
+    // a key print raw key bytes. Run over the whole text first, so a list broken across lines goes too.
+    static BYTE_LIST_RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let byte_list_re = BYTE_LIST_RE
+        .get_or_init(|| regex::Regex::new(r"(?:\[\s*)?\b\d{1,3}\b(?:\s*,\s*\d{1,3}\b){15,}(?:\s*,)?(?:\s*\])?").unwrap());
+    let input = byte_list_re.replace_all(input, "[<REDACTED>]");
     let mut out = String::with_capacity(input.len());
     for line in input.lines() {
         let line = param_re.replace_all(line, "${1}<REDACTED>");
@@ -113,7 +130,8 @@ pub(crate) fn redact(input: &str) -> String {
                 l = l.replace(t, "<REDACTED>");
             }
         }
-        let lower = l.to_lowercase();
+        // ASCII-only lowering keeps every byte offset valid for `l` (to_lowercase can change a character's length)
+        let lower = l.to_ascii_lowercase();
         for key in ["access_token", "password", "secret", "jwt", "recovery", "media key", "sender_key"] {
             if lower.contains(key) {
                 // Keep the fact that the line happened; drop everything after the marker.
@@ -202,7 +220,8 @@ impl qobject::DiagnosticsController {
         let tail: String = {
             let lines: Vec<&str> = log.lines().collect();
             let start = lines.len().saturating_sub(3000);
-            lines[start..].join("\n")
+            let joined = lines[start..].join("\n");
+            if start == 0 { joined } else { drop_cut_lead(&joined).to_string() }
         };
         let body = format!(
             "Tin Hat diagnostic report\n\
@@ -237,9 +256,63 @@ impl qobject::DiagnosticsController {
     }
 }
 
+/// The last `max` bytes of a log as text. A cut lands anywhere, so unless the whole log fits, the first partial line
+/// goes, and so do the bare-number lines after it (the rest of a pretty-printed list cut in the middle): a piece of a
+/// key list shorter than the redactor's 16 numbers would otherwise reach a report.
+/// A tail starts mid-way through a pretty-printed list: its bare-number lines (and the `]`) go, or a piece of a key list
+/// shorter than the redactor's 16 numbers would reach a report.
+pub(crate) fn drop_cut_lead(mut rest: &str) -> &str {
+    loop {
+        let (line, more) = rest.split_once('\n').unwrap_or((rest, ""));
+        let t = line.trim().trim_end_matches(',');
+        if t == "]" || (!t.is_empty() && t.len() <= 3 && t.bytes().all(|c| c.is_ascii_digit())) {
+            rest = more;
+        } else {
+            return rest;
+        }
+    }
+}
+
+pub(crate) fn tail_text(b: &[u8], max: usize) -> String {
+    let start = b.len().saturating_sub(max);
+    let text = String::from_utf8_lossy(&b[start..]);
+    if start == 0 {
+        return text.into_owned();
+    }
+    drop_cut_lead(text.split_once('\n').map(|(_, r)| r).unwrap_or("")).to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::redact;
+
+    #[test]
+    fn a_marker_after_text_that_changes_length_when_lowercased_is_still_cut() {
+        for n in 0..40 {
+            let line = format!("{} password hunter2-secret-value", "\u{130}".repeat(n));
+            let out = redact(&line);
+            assert!(!out.contains("hunter2"), "n={n}: {out}");
+        }
+    }
+
+    #[test]
+    fn a_redaction_never_panics_on_a_non_ascii_line_cut_anywhere() {
+        let line = "\u{130}\u{e9}name \u{1f600} password caf\u{e9} \u{130}\u{130} secret \u{1f600}\u{e9} recovery \u{130} tail";
+        for cut in 0..=line.len() {
+            if line.is_char_boundary(cut) {
+                let _ = redact(&line[..cut]);
+                let _ = redact(&line[cut..]);
+            }
+        }
+    }
+
+    #[test]
+    fn the_report_tail_drops_a_cut_number_list_at_its_start() {
+        let kept = "1,\n2,\n3,\n],\n[main] a real line\nnext";
+        assert_eq!(super::drop_cut_lead(kept), "[main] a real line\nnext");
+        assert_eq!(super::drop_cut_lead("[main] whole\n1,"), "[main] whole\n1,");
+        assert_eq!(super::drop_cut_lead("1,\n2,\n3,"), "", "a list that runs to the end of the tail goes too");
+    }
 
     #[test]
     fn lowercase_hex_secrets_and_secret_url_parameters_are_redacted() {
@@ -262,5 +335,74 @@ mod tests {
         // the earlier rules still hold
         assert!(!redact("Authorization: Bearer syt_abc_def").contains("syt_abc_def"));
         assert!(redact("access_token=xyz").ends_with("<REDACTED>\n"));
+    }
+
+    /// Key bytes printed as a decimal list (libwebrtc's key derivation: "[12,34,…,]"; a Rust `{:?}`: "[12, 34, …]"),
+    /// A log tail can start anywhere: a key list cut at any offset of its first 32 bytes must not survive into a report,
+    /// on one line or pretty-printed over many.
+    #[test]
+    fn a_key_list_cut_by_the_log_tail_never_survives() {
+        let nums: Vec<String> = (200..216).map(|n: u32| n.to_string()).collect();
+        let one = format!("[{}]", nums.join(", "));
+        let pretty = format!("[\n    {},\n]", nums.join(",\n    "));
+        for list in [one, pretty] {
+            let log = format!("first line\n[webrtc] derived {list}\nnext line\n");
+            let at = log.find('[').unwrap();
+            let at = log[at + 1..].find('[').map(|i| i + at + 1).unwrap_or(at);
+            for off in 0..32 {
+                let keep = log.len() - (at + off);
+                let out = redact(&super::tail_text(log.as_bytes(), keep));
+                for n in &nums {
+                    assert!(!out.contains(n.as_str()), "offset {off}: {n} survived in {out:?}");
+                }
+                assert!(out.contains("next line"), "offset {off}: the following line is kept");
+            }
+        }
+    }
+
+    #[test]
+    fn a_long_number_run_without_its_bracket_is_redacted() {
+        let run = (200..216).map(|n: u32| n.to_string()).collect::<Vec<_>>().join(", ");
+        let out = redact(&format!("derived {run} end"));
+        assert!(!out.contains("207"), "{out}");
+    }
+
+    /// 16 numbers or more, any spacing, with or without the closing bracket (a cut-off tail).
+    #[test]
+    fn decimal_byte_lists_of_sixteen_or_more_are_redacted() {
+        let key: Vec<u8> = (0..32u8).map(|i| i.wrapping_mul(37).wrapping_add(11)).collect();
+        let tight = format!("[{}]", key.iter().map(|b| format!("{b},")).collect::<String>());
+        let debug = format!("{key:?}");
+        let spaced = format!("[ {} ]", key.iter().map(|b| b.to_string()).collect::<Vec<_>>().join(" ,  "));
+        let cut = format!("[{}", key[..20].iter().map(|b| b.to_string()).collect::<Vec<_>>().join(","));
+        let sixteen = format!("{:?}", &key[..16]);
+        for (name, list) in [("tight", &tight), ("debug", &debug), ("spaced", &spaced), ("cut", &cut), ("sixteen", &sixteen)] {
+            let r = redact(&format!("2026-11-07T00:00:00Z DEBUG libwebrtc: (x.cc:1): blob {list} len 32"));
+            assert!(!r.contains(&list[1..12]), "{name}: {r}");
+            assert!(r.contains("[<REDACTED>]") && r.contains("len 32"), "{name}: the rest of the line stays: {r}");
+        }
+        // a pretty `{:#?}` list, one number per line
+        let pretty = format!("{key:#?}");
+        let r = redact(&format!("blob {pretty}\nnext line"));
+        assert!(!key.iter().any(|b| r.lines().any(|l| l.trim() == format!("{b},"))), "{r}");
+        assert!(r.contains("next line"), "{r}");
+        // a cut-off list never swallows the line break (nor the next record)
+        let r = redact(&format!("blob {cut}\n2026-11-07 INFO connected"));
+        assert_eq!(r, "blob [<REDACTED>]\n2026-11-07 INFO connected\n");
+        // the second line of libwebrtc's HKDF message (the first one names "secret" and was already cut)
+        let r = redact(&format!(" derived_key {tight} len 16"));
+        assert!(!r.contains(&tight[1..12]), "{r}");
+        // negative controls: short lists, 15 numbers, larger numbers, timestamps and version lists stay readable
+        let fifteen = format!("{:?}", &key[..15]);
+        for keep in [
+            "[1, 2, 3]".to_string(),
+            fifteen.clone(),
+            "[1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 1100, 1200, 1300, 1400, 1500, 1600, 1700]".to_string(),
+            "[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1000]".to_string(),
+            "[2026-11-07 10:00:01] [call] joined, 3 peers, layers [0, 1, 2]".to_string(),
+            "[main] Tin Hat 12.1.11 · build 12.1.11 (3e8e3ce5)".to_string(),
+        ] {
+            assert_eq!(redact(&keep), format!("{keep}\n"), "must stay: {keep}");
+        }
     }
 }

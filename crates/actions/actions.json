@@ -6010,8 +6010,8 @@
         "onlyWhen": {
           "not": "presence.sharing"
         },
-        "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
-        "title": "Show your status to friends?"
+        "text": "This turns on sharing: people who share theirs see your status and when you're around.",
+        "title": "Share your status with people?"
       },
       "group": "you",
       "icon": "tag-symbolic",
@@ -7220,7 +7220,7 @@
       "label": "React"
     },
     "new": {
-      "doc": "The room column's + (2026-09-29): New DM, and New room only while a space is selected.",
+      "doc": "The room column's + (2026-09-29): New DM and New room (QA D21, 12.1.12: New room everywhere; in a space the room goes into it).",
       "items": [
         {
           "a": "dm.new",
@@ -7228,8 +7228,7 @@
         },
         {
           "a": "room.create",
-          "hideWhenOff": true,
-          "when": "ui.spaceSelected"
+          "hideWhenOff": true
         }
       ]
     },
@@ -8081,7 +8080,7 @@
       "type": "bool"
     },
     "presence.sharing": {
-      "doc": "You share your status with friends (Reach).",
+      "doc": "You share your status with people (Reach).",
       "scope": "global",
       "type": "bool"
     },
@@ -8985,7 +8984,7 @@
       "type": "text"
     },
     "presence.sharing": {
-      "doc": "You share your status with friends (Reach).",
+      "doc": "You share your status with people (Reach).",
       "scope": "global",
       "type": "bool"
     },

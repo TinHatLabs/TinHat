@@ -444,7 +444,7 @@ Item {
     ConfirmDialog {
         id: shareForStatus
         app: panel._a
-        dialogTitle: "Show your status to friends?"
+        dialogTitle: "Share your status with people?"
         message: "This turns on sharing."
         confirmText: "Turn on"
         onConfirmed: {

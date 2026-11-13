@@ -1,0 +1,821 @@
+{
+  "v": 1,
+  "about": "Tin Hat notification actions (docs/NOTIF-ACTIONS.md): Reply and Mark as read on a message notification. Byte-identical copies: web src/features/push/testvectors/notifactions.json (the owner), desktop crates/app/src/testvectors/notifactions.json. whitespace = the code points trimmed from both ends of a reply after CRLF and lone CR became LF. replyContent: the typed text -> the m.room.message content to send (null = nothing is sent). readMarkers: the notified event in a room of my own server -> the POST /rooms/{room}/read_markers body (null = no Mark as read; event id rule: '$' + 1..254 more UTF-8 bytes, no control, white-space or listed white-space characters). offer: what a message notification carries (keys in order; 'default' = the click). outcome: an invoked key (publicReceipt = the receiptRule answer for the room) -> what the app does (open = open the room; compose = open it with the composer focused; send = send content then thenRead when present; read = send markers; failed = post the failure note with that body; none = nothing). failedNote: the failure note's body for a typed text (first failedTextMax code points of the trimmed text). receiptRule: which read receipt a room gets (Mark as read, and every receipt both apps send): a public m.read only when the room is mine = isManaged(create, own) (the m.room.create sender and every v12 additional_creators entry on my own server); anything else, a missing create event (null) included, gets m.read.private next to m.fully_read. Fail-private on purpose: rooms on connected Tin Hat servers get m.read.private too until the connected-servers list exists. The phone apps (iOS, Android) adopt these cases too.",
+  "words": {
+    "reply": "Reply",
+    "markRead": "Mark as read",
+    "send": "Send",
+    "placeholder": "Message",
+    "failedTitle": "Your reply wasn't sent",
+    "failedBody": "Open Tin Hat to send it: “{text}”",
+    "failedTextMax": 120
+  },
+  "whitespace": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    32,
+    133,
+    160,
+    5760,
+    8192,
+    8193,
+    8194,
+    8195,
+    8196,
+    8197,
+    8198,
+    8199,
+    8200,
+    8201,
+    8202,
+    8232,
+    8233,
+    8239,
+    8287,
+    12288,
+    65279
+  ],
+  "replyContent": [
+    {
+      "text": "ok",
+      "want": {
+        "msgtype": "m.text",
+        "body": "ok",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "  hi there  ",
+      "want": {
+        "msgtype": "m.text",
+        "body": "hi there",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "\n\nline one\r\nline two\r\n",
+      "want": {
+        "msgtype": "m.text",
+        "body": "line one\nline two",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "a\rb",
+      "want": {
+        "msgtype": "m.text",
+        "body": "a\nb",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": " 　padded﻿",
+      "want": {
+        "msgtype": "m.text",
+        "body": "padded",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "nel",
+      "want": {
+        "msgtype": "m.text",
+        "body": "nel",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "   ",
+      "want": null
+    },
+    {
+      "text": "",
+      "want": null
+    },
+    {
+      "text": "\t\r\n",
+      "want": null
+    },
+    {
+      "text": "@room look",
+      "want": {
+        "msgtype": "m.text",
+        "body": "@room look",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "**not markdown** _x_ <b>no</b>",
+      "want": {
+        "msgtype": "m.text",
+        "body": "**not markdown** _x_ <b>no</b>",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "mixed sep",
+      "want": {
+        "msgtype": "m.text",
+        "body": "mixed sep",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "inner  spaces\tkept",
+      "want": {
+        "msgtype": "m.text",
+        "body": "inner  spaces\tkept",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "emoji 😀 ok",
+      "want": {
+        "msgtype": "m.text",
+        "body": "emoji 😀 ok",
+        "m.mentions": {}
+      }
+    },
+    {
+      "text": "​zero width stays​",
+      "want": {
+        "msgtype": "m.text",
+        "body": "​zero width stays​",
+        "m.mentions": {}
+      }
+    }
+  ],
+  "readMarkers": [
+    {
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read": "$abc123:example.com"
+      }
+    },
+    {
+      "event": "$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "want": {
+        "m.fully_read": "$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "m.read": "$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "event": "$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "want": null
+    },
+    {
+      "event": "$",
+      "want": null
+    },
+    {
+      "event": "abc",
+      "want": null
+    },
+    {
+      "event": "",
+      "want": null
+    },
+    {
+      "event": "$has space",
+      "want": null
+    },
+    {
+      "event": "$ctl\u0001",
+      "want": null
+    },
+    {
+      "event": "$tab\t",
+      "want": null
+    },
+    {
+      "event": null,
+      "want": null
+    },
+    {
+      "event": "$é$é$é$é$é$é$é$é$é$é",
+      "want": {
+        "m.fully_read": "$é$é$é$é$é$é$é$é$é$é",
+        "m.read": "$é$é$é$é$é$é$é$é$é$é"
+      }
+    }
+  ],
+  "receiptRule": [
+    {
+      "name": "a room on another server",
+      "own": "home.example",
+      "create": {
+        "sender": "@friend:friend.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "a room on my own server (the control)",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "no create event known",
+      "own": "home.example",
+      "create": null,
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "v12, an additional creator on another server",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": [
+            "@b:home.example",
+            "@x:friend.example"
+          ]
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "v12, every additional creator on my own server",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": [
+            "@b:home.example"
+          ]
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "v12, additional_creators not a list",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": "@b:home.example"
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "a room on a connected Tin Hat server (private until the connected-servers list)",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:other-tinhat.example",
+        "content": {
+          "room_version": "12"
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "my own server on another port is another server",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example:8448",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "my own server unknown",
+      "own": "",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "a create event without a sender",
+      "own": "home.example",
+      "create": {
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "v12, an empty additional_creators list",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": []
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "v12, an additional creator that isn't a user id",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "12",
+          "additional_creators": [
+            "@b:home.example",
+            7
+          ]
+        }
+      },
+      "event": "$abc123:example.com",
+      "want": {
+        "m.fully_read": "$abc123:example.com",
+        "m.read.private": "$abc123:example.com"
+      }
+    },
+    {
+      "name": "not an event id in a room on another server: no Mark as read",
+      "own": "home.example",
+      "create": {
+        "sender": "@friend:friend.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "event": "",
+      "want": null
+    },
+    {
+      "name": "not an event id: no Mark as read",
+      "own": "home.example",
+      "create": {
+        "sender": "@owner:home.example",
+        "content": {
+          "room_version": "10"
+        }
+      },
+      "event": "nope",
+      "want": null
+    }
+  ],
+  "offer": [
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": true,
+        "trusted": true,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default",
+        "inline-reply",
+        "read"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": true,
+        "trusted": true,
+        "event": ""
+      },
+      "want": [
+        "default",
+        "inline-reply"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": true,
+        "trusted": false,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default",
+        "reply",
+        "read"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": true,
+        "trusted": false,
+        "event": ""
+      },
+      "want": [
+        "default",
+        "reply"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": false,
+        "trusted": true,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default",
+        "reply",
+        "read"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": false,
+        "trusted": true,
+        "event": ""
+      },
+      "want": [
+        "default",
+        "reply"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": false,
+        "trusted": false,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default",
+        "reply",
+        "read"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": true,
+        "inlineField": false,
+        "trusted": false,
+        "event": ""
+      },
+      "want": [
+        "default",
+        "reply"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": true,
+        "trusted": true,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": true,
+        "trusted": true,
+        "event": ""
+      },
+      "want": [
+        "default"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": true,
+        "trusted": false,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": true,
+        "trusted": false,
+        "event": ""
+      },
+      "want": [
+        "default"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": false,
+        "trusted": true,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": false,
+        "trusted": true,
+        "event": ""
+      },
+      "want": [
+        "default"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": false,
+        "trusted": false,
+        "event": "$abc123:example.com"
+      },
+      "want": [
+        "default"
+      ]
+    },
+    {
+      "ctx": {
+        "actionsCap": false,
+        "inlineField": false,
+        "trusted": false,
+        "event": ""
+      },
+      "want": [
+        "default"
+      ]
+    }
+  ],
+  "outcome": [
+    {
+      "case": {
+        "key": "default",
+        "event": "$abc123:example.com",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "open"
+      }
+    },
+    {
+      "case": {
+        "key": "reply",
+        "event": "$abc123:example.com",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "compose"
+      }
+    },
+    {
+      "case": {
+        "key": "inline-reply",
+        "text": " hello \r\n",
+        "event": "$abc123:example.com",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "send",
+        "content": {
+          "msgtype": "m.text",
+          "body": "hello",
+          "m.mentions": {}
+        },
+        "thenRead": {
+          "m.fully_read": "$abc123:example.com",
+          "m.read": "$abc123:example.com"
+        }
+      }
+    },
+    {
+      "case": {
+        "key": "inline-reply",
+        "text": "hello",
+        "event": "",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "send",
+        "content": {
+          "msgtype": "m.text",
+          "body": "hello",
+          "m.mentions": {}
+        }
+      }
+    },
+    {
+      "case": {
+        "key": "inline-reply",
+        "text": "hello",
+        "event": "$abc123:example.com",
+        "trustedNow": false,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "failed",
+        "note": "Open Tin Hat to send it: “hello”"
+      }
+    },
+    {
+      "case": {
+        "key": "inline-reply",
+        "text": "   ",
+        "event": "$abc123:example.com",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "compose"
+      }
+    },
+    {
+      "case": {
+        "key": "inline-reply",
+        "text": "",
+        "event": "$abc123:example.com",
+        "trustedNow": false,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "compose"
+      }
+    },
+    {
+      "case": {
+        "key": "read",
+        "event": "$abc123:example.com",
+        "trustedNow": false,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "read",
+        "markers": {
+          "m.fully_read": "$abc123:example.com",
+          "m.read": "$abc123:example.com"
+        }
+      }
+    },
+    {
+      "case": {
+        "key": "read",
+        "event": "",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "none"
+      }
+    },
+    {
+      "case": {
+        "key": "read",
+        "event": "nope",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "none"
+      }
+    },
+    {
+      "case": {
+        "key": "join",
+        "event": "$abc123:example.com",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "none"
+      }
+    },
+    {
+      "case": {
+        "key": "",
+        "event": "$abc123:example.com",
+        "trustedNow": true,
+        "publicReceipt": true
+      },
+      "want": {
+        "do": "none"
+      }
+    },
+    {
+      "case": {
+        "key": "read",
+        "event": "$abc123:example.com",
+        "trustedNow": false,
+        "publicReceipt": false
+      },
+      "want": {
+        "do": "read",
+        "markers": {
+          "m.fully_read": "$abc123:example.com",
+          "m.read.private": "$abc123:example.com"
+        }
+      }
+    },
+    {
+      "case": {
+        "key": "inline-reply",
+        "text": "hello",
+        "event": "$abc123:example.com",
+        "trustedNow": true,
+        "publicReceipt": false
+      },
+      "want": {
+        "do": "send",
+        "content": {
+          "msgtype": "m.text",
+          "body": "hello",
+          "m.mentions": {}
+        },
+        "thenRead": {
+          "m.fully_read": "$abc123:example.com",
+          "m.read.private": "$abc123:example.com"
+        }
+      }
+    }
+  ],
+  "failedNote": [
+    {
+      "text": "short",
+      "want": "Open Tin Hat to send it: “short”"
+    },
+    {
+      "text": " spaced \r\n",
+      "want": "Open Tin Hat to send it: “spaced”"
+    },
+    {
+      "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀tail",
+      "want": "Open Tin Hat to send it: “xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀”"
+    },
+    {
+      "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "want": "Open Tin Hat to send it: “xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx”"
+    }
+  ]
+}

@@ -503,7 +503,8 @@ Item {
                         if (!l || !w.wc) return ""
                         var names = lastRow.withIds.map(function (u) { return w.histPerson(u).name })
                         var who = names.length <= 2 ? names.join(", ") : names.slice(0, 2).join(", ") + " +" + (names.length - 2)
-                        var room = (w.hist.rooms && w.hist.rooms[l.room]) ? w.hist.rooms[l.room] : ""
+                        // the room's name, else "a room you left" (widgets_ctl last_call_room_text; never the room id)
+                        var room = (w.hist.rooms && w.hist.rooms[l.room]) ? w.hist.rooms[l.room] : "a room you left"
                         return who + " · " + String(w.wc.fmtDur(l.myMs)) + " · " + room
                     }
                 }

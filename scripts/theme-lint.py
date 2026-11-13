@@ -44,7 +44,7 @@ MIGRATED = [
     "LoginField.qml", "LoginView.qml", "ThDock.qml", "ThRoomList.qml", "ThSpaceRail.qml", "PresenceLine.qml",
     "QuickSwitcher.qml", "SpaceInviteCard.qml", "StartupWindow.qml", "StatusChip.qml", "TinHatLoader.qml", "Tour.qml",
     # desktop C2 — chat
-    "CalendarCard.qml", "ChatBubble.qml", "ConversationView.qml", "EmojiPicker.qml", "FloatingChats.qml", "Lightbox.qml",
+    "CalendarCard.qml", "ChatBubble.qml", "ConversationView.qml", "VoiceRecorderRow.qml", "EmojiPicker.qml", "FloatingChats.qml", "Lightbox.qml",
     "LinkPreviewCard.qml", "ThEmbedCard.qml", "RoomHeaderBar.qml",
     # desktop C2 — settings
     "BugReportDialog.qml", "RightPanel.qml", "RoleBadge.qml", "SpaceSettingsWindow.qml", "VerifyDeviceDialog.qml",

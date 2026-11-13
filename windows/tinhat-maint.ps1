@@ -93,7 +93,7 @@ $KeepInMixed = @('yt-dlp.exe', 'vc_redist.x64.exe', 'VERSION')
 # Everything Tin Hat writes in its data folder (same list as installer.iss DeleteKnownRootData).
 # Tin Hat owns each of these wholesale (the in-app updater already replaces current\ on every
 # update); a file of the user's own NEXT to them stays.
-$KnownDataNames = @('session.json', 'store', 'config', 'theme', 'themes', 'themesync', 'layoutsync', 'sameroom_pairs.json',
+$KnownDataNames = @('voice-drafts', 'session.json', 'store', 'config', 'theme', 'themes', 'themesync', 'layoutsync', 'sameroom_pairs.json',
     'nav_mode', 'tour_seen', 'space_order', 'room_recency.json', 'calendar-seen.json', 'audio_prefs.json',
     'presence-pending-off.json', 'widgets-history.json', 'mentions.json', 'dice.json', 'clocks-tz.json', 'memories-thumbs',
     'assets', 'avatars', 'iconpack', 'logs', 'gstregistry.bin', 'install-prompt-seen', 'tinhat-maint.ps1',
@@ -934,7 +934,7 @@ function Move-SandboxedData([string]$Data) {
 function Remove-Sandboxed([string]$Package) {
     $data = Join-Path $Package 'LocalCache\Local\TinHatApp'
     $ok = $true
-    foreach ($sub in @('current', 'backup', 'staging', 'setup-previous', 'run', 'logs', 'gstregistry.bin', 'memories-thumbs')) {
+    foreach ($sub in @('current', 'backup', 'staging', 'setup-previous', 'run', 'logs', 'gstregistry.bin', 'memories-thumbs', 'voice-drafts')) {
         if (-not (Remove-OwnedTree (Join-Path $data $sub))) { $ok = $false }
     }
     # The caches and Qt's local folder (TinHat\tinhat: compiled QML, the web view's cache).

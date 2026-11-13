@@ -141,16 +141,16 @@ pub mod qobject {
         /// ahead of UTC).
         #[qinvokable]
         fn when_label(self: &WidgetsController, ts: f64, now_ms: f64, offset_min: f64, clock: &QString) -> QString;
-        /// QML: setZones(zonesJson) — Friends' clocks (W1): the zones (PresenceController.zonesJson) changed; their
+        /// QML: setZones(zonesJson) — People's clocks (W1): the zones (PresenceController.zonesJson) changed; their
         /// people's names and avatars are resolved into aroundJson.people like Who's around's.
         #[qinvokable]
         fn set_zones(self: Pin<&mut WidgetsController>, zones_json: &QString);
-        /// QML: clockRows(zonesJson, myTz, nowMs) — Friends' clocks' rows + header spread (clocks::clock_rows /
+        /// QML: clockRows(zonesJson, myTz, nowMs) — People's clocks' rows + header spread (clocks::clock_rows /
         /// spread_label), the offsets from QTimeZone at `nowMs`: {rows: [{id,tz,label,offsetMin,minutes,night,me,day,
         /// diff}], spread, myOffset}. `myTz` = the zone I share (else this device's).
         #[qinvokable]
         fn clock_rows(self: &WidgetsController, zones_json: &QString, my_tz: &QString, now_ms: f64) -> QString;
-        /// QML: sampleClockRows(key) — Friends' clocks' sample states (the web's samples: a fixed moment, fixed
+        /// QML: sampleClockRows(key) — People's clocks' sample states (the web's samples: a fixed moment, fixed
         /// offsets): data, many, alone, hidden, empty, loading → the same JSON as clockRows.
         #[qinvokable]
         fn sample_clock_rows(self: &WidgetsController, key: &QString) -> QString;
@@ -213,7 +213,7 @@ struct Engine {
     pending: HashMap<(String, String), (String, u64)>,
     /// Who's around: the presence map last handed over, the people / rooms resolved for it
     presence: Value,
-    /// Friends' clocks: mxid → zone (the people resolved with Who's around's)
+    /// People's clocks: mxid → zone (the people resolved with Who's around's)
     zones: BTreeMap<String, String>,
     people: BTreeMap<String, (Value, u64)>,
     covers: HashMap<String, String>,
@@ -485,6 +485,27 @@ async fn fill_gaps(client: &Client) {
     save_cache(&me, &cache);
 }
 
+/// What the Last call row says for a room this device has no name for (QA 12.1.11 D5; the web's callstats/lastRoom.ts).
+pub(crate) const LEFT_ROOM_TEXT: &str = "a room you left";
+
+/// Call stats "Last call": the text for the call's room = its name (trimmed), else LEFT_ROOM_TEXT; never the raw room
+/// id (calendar::room_label falls back to it, which showed "!abc…:server" for a room left or never synced here).
+pub(crate) fn last_call_room_text(name: Option<&str>, room_id: &str) -> String {
+    match name.map(str::trim) {
+        Some(n) if !n.is_empty() && n != room_id => n.to_string(),
+        _ => LEFT_ROOM_TEXT.to_string(),
+    }
+}
+
+/// A room's own name for the Last call row: its name, else its alias, else the name worked out from its members
+/// (a DM); None when it has none of them.
+fn history_room_name(r: &matrix_sdk::Room) -> Option<String> {
+    r.name().or_else(|| r.canonical_alias().map(|a| a.to_string())).or_else(|| match r.cached_display_name() {
+        Some(matrix_sdk::RoomDisplayName::Empty) | None => None,
+        Some(d) => Some(d.to_string()),
+    })
+}
+
 async fn compute_history_json(client: &Client) -> String {
     let (me, cache) = {
         let e = engine().lock().unwrap();
@@ -511,8 +532,9 @@ async fn compute_history_json(client: &Client) -> String {
     let mut rooms = Map::new();
     for (user, room) in people_rooms {
         let Ok(rid) = RoomId::parse(&room) else { continue };
-        let Some(r) = client.get_room(&rid) else { continue };
-        rooms.entry(room.clone()).or_insert_with(|| json!(crate::calendar::room_label(&r)));
+        let r = client.get_room(&rid);
+        rooms.entry(room.clone()).or_insert_with(|| json!(last_call_room_text(r.as_ref().and_then(history_room_name).as_deref(), &room)));
+        let Some(r) = r else { continue };
         if people.contains_key(&user) {
             continue;
         }
@@ -744,7 +766,7 @@ async fn resolve_around(client: &Client) -> String {
             json!({ "name": crate::calendar::room_label(&room), "game": game, "emoji": emoji, "cover": cover }),
         );
     }
-    // Friends' clocks (W1): everyone listed with a zone — me included (my own row)
+    // People's clocks (W1): everyone listed with a zone — me included (my own row)
     for mxid in zones {
         if people.contains_key(&mxid) {
             continue;
@@ -1213,7 +1235,7 @@ fn system_offset_min(now_ms: f64) -> Option<f64> {
     Some(f64::from(z.offset_from_utc(&at)) / 60.0)
 }
 
-/// Friends' clocks' sample states — the web's `sample()` in features/widgets/clocks/Clocks.tsx: 14:30 in Denver on
+/// People's clocks' sample states — the web's `sample()` in features/widgets/clocks/Clocks.tsx: 14:30 in Denver on
 /// 2026-09-28, fixed offsets, the sample people (names from the gallery's sample table).
 pub(crate) fn clocks_sample(key: &str) -> Value {
     use tinhat_widgets::clocks::{clock_rows, spread_label, ClockPerson};
@@ -1284,6 +1306,24 @@ pub(crate) fn scenario_in(spec: &str, id: &str) -> String {
         .find(|(k, _)| k.trim() == id)
         .map(|(_, v)| v.trim().to_string())
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod last_room_tests {
+    use super::{last_call_room_text, LEFT_ROOM_TEXT};
+
+    /// QA 12.1.11 D5: a last call in a room this device isn't in showed "!abc…:server". The web's
+    /// callstats/lastRoom.test.ts has the same cases.
+    #[test]
+    fn never_the_room_id() {
+        assert_eq!(LEFT_ROOM_TEXT, "a room you left");
+        assert_eq!(last_call_room_text(Some("Game lounge"), "!a:example.org"), "Game lounge");
+        assert_eq!(last_call_room_text(Some("  Game lounge "), "!a:example.org"), "Game lounge");
+        assert_eq!(last_call_room_text(None, "!a:example.org"), "a room you left");
+        assert_eq!(last_call_room_text(Some(""), "!a:example.org"), "a room you left");
+        assert_eq!(last_call_room_text(Some("   "), "!a:example.org"), "a room you left");
+        assert_eq!(last_call_room_text(Some("!a:example.org"), "!a:example.org"), "a room you left");
+    }
 }
 
 #[cfg(test)]

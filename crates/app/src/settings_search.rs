@@ -320,6 +320,20 @@ mod tests {
         assert!(!ids(false).iter().any(|i| i.starts_with("invites.")));
     }
 
+    /// QA 12.1.11 D7: "instantly" / "change size" found nothing, though the release notes point people to the
+    /// Size section's "Change size instantly" switch. It is a desktop-only row (the web's size is the browser's zoom).
+    #[test]
+    fn finds_the_change_size_instantly_switch() {
+        let ids = |q: &str| -> Vec<String> { search(q, false).iter().map(|h| index().entries[h.index].id.clone()).collect() };
+        assert_eq!(ids("instantly").first().map(String::as_str), Some("appearance.app-size-live"));
+        assert_eq!(ids("change size").first().map(String::as_str), Some("appearance.app-size-live"));
+        assert!(ids("size").contains(&"appearance.app-size-live".to_string()));
+        let e = index().entries.iter().find(|e| e.id == "appearance.app-size-live").expect("the row is in the index");
+        assert_eq!((e.pane.as_str(), e.section.as_str(), e.label.as_str()), ("appearance", "Size", "Change size instantly"));
+        assert!(e.desktop_only, "the web has no such switch");
+        assert_eq!(pane_of("appearance.app-size-live"), "appearance");
+    }
+
     #[test]
     fn marks_the_matched_part_of_each_word() {
         assert_eq!(mark_label("Input device", "in"), "<b>In</b>put device");

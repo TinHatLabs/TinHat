@@ -73,6 +73,7 @@ pub mod native {
     pub use crate::imp::{
         apm, audio_mixer, audio_resampler, frame_cryptor, packet_trailer, yuv_helper,
     };
+    pub use crate::imp::peer_connection_factory::native_log_line_forwarded;
 }
 
 #[cfg(target_os = "android")]

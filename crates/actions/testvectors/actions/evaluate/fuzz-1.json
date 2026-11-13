@@ -1371,8 +1371,8 @@
           "askReason": false,
           "confirmLabel": "Turn on",
           "kind": "consent",
-          "text": "This turns on sharing: friends who share theirs see your status and when you're around.",
-          "title": "Show your status to friends?"
+          "text": "This turns on sharing: people who share theirs see your status and when you're around.",
+          "title": "Share your status with people?"
         },
         "danger": false,
         "emoji": null,
@@ -17447,7 +17447,7 @@
       "input": {
         "action": "room.create",
         "app": "desktop",
-        "row": "header.phoneEnd",
+        "row": "call.bar",
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
@@ -17469,8 +17469,7 @@
           },
           "values": {
             "prefs.receiveAv1": false,
-            "presence.hasStatus": false,
-            "ui.spaceSelected": false
+            "presence.hasStatus": false
           }
         },
         "target": {
@@ -17488,8 +17487,8 @@
         "enabled": true,
         "exists": true,
         "hold": false,
-        "icon": "checkmark-symbolic",
-        "label": "Mark as read",
+        "icon": "network-disconnect",
+        "label": "Turn off guest calls",
         "look": null,
         "params": {},
         "pick": false,
@@ -17505,14 +17504,23 @@
         "whyTarget": null
       },
       "input": {
-        "action": "room.markRead",
+        "action": "room.guestLink.disable",
         "app": "web",
+        "row": "header.phoneStart",
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
             "room": "!room:example.com"
           },
           "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.pinned": false
+                }
+              }
+            },
             "room": {
               "!other:example.com": {
                 "name": "Valheim",
@@ -17521,20 +17529,93 @@
               "!room:example.com": {
                 "name": "Gaming Central",
                 "values": {
+                  "room.canChangeAvatar": true,
                   "room.canChangePower": false,
-                  "room.hasUnread": true
+                  "room.current": true,
+                  "room.guestLinkOn": true
                 }
               }
             }
           },
           "values": {
-            "app.dev": false,
-            "prefs.formFactor": "auto",
             "watchParty.isHost": true
           }
         }
       },
-      "name": "fuzz 1.265: room.markRead"
+      "name": "fuzz 1.265: room.guestLink.disable"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "applications-games-symbolic",
+        "label": "Game / join code",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": "Playing  — join code shared",
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.activity.open",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.hasEmbed": false
+                }
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.serverMuted": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.hasActivity": true,
+                  "room.hasJoinCode": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.in": true,
+            "prefs.desktopNotifications": true,
+            "reel.editorOpen": false
+          }
+        }
+      },
+      "name": "fuzz 1.266: room.activity.open"
     },
     {
       "expect": {
@@ -17542,11 +17623,232 @@
         "confirm": null,
         "danger": false,
         "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "list-add-user",
+        "label": "Join their corner",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "@zane:example.com:DEVICEZ",
+        "targetIcon": null,
+        "targetName": "Zane (laptop)",
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:unknown-key"
+      },
+      "input": {
+        "action": "call.corner.join",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "room": "!room:example.com",
+          "space": "!space:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.hasEmbed": false
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inCorner": false,
+                  "person.inMyCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.hasJoinCode": true,
+                  "room.pinnedCount": "10.7.0"
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "calendar.reminders": true,
+            "call.in": false
+          }
+        },
+        "target": {
+          "zzz": "1"
+        }
+      },
+      "name": "fuzz 1.267: call.corner.join"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "non-starred-symbolic",
+        "label": "Add to favourites",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": false,
+        "why": "context",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "sound.favourite.toggle",
+        "app": "web",
+        "context": {
+          "room": "!room:example.com"
+        },
+        "row": "header.main",
+        "snapshot": {
+          "current": {
+            "room": "!other:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.hasEmbed": true
+                }
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.serverMuted": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.favourite": true,
+                  "sound.inRoom": false
+                }
+              }
+            }
+          },
+          "values": {
+            "watchParty.in": false
+          }
+        }
+      },
+      "name": "fuzz 1.268: sound.favourite.toggle"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "audio-speakers-symbolic",
+        "label": "Speaker outputs…",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.echoOutputs.open",
+        "app": "web",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "call.musicPlaying": false,
+            "call.sharing": false,
+            "memories.selected": false,
+            "prefs.echoCancel": false,
+            "ui.callCollapsed": false
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "fuzz 1.269: call.echoOutputs.open"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
         "enabled": true,
         "exists": true,
         "hold": false,
-        "icon": "help-hint-symbolic",
-        "label": "Help & tour",
+        "icon": "backup-symbolic",
+        "label": "Send my debug logs automatically",
         "look": null,
         "params": {},
         "pick": false,
@@ -17562,43 +17864,35 @@
         "whyTarget": null
       },
       "input": {
-        "action": "app.tour.start",
-        "app": "web",
+        "action": "app.logship.toggle",
+        "app": "desktop",
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
             "room": "!room:example.com"
           },
-          "subjects": {
-            "person": {
-              "@zane:example.com": {
-                "name": "Zane",
-                "values": {
-                  "person.serverMuted": true
-                }
-              }
-            }
-          },
+          "subjects": {},
           "values": {
-            "call.gameChat": false,
-            "prefs.callAnimate": true,
-            "reel.editorOpen": true
+            "call.shareRecOnly": false,
+            "prefs.logship": false,
+            "prefs.recordOptOut": false,
+            "reel.canSpin": true
           }
         }
       },
-      "name": "fuzz 1.266: app.tour.start"
+      "name": "fuzz 1.270: app.logship.toggle"
     },
     {
       "expect": {
-        "active": null,
+        "active": false,
         "confirm": null,
         "danger": false,
         "emoji": null,
         "enabled": true,
         "exists": true,
         "hold": false,
-        "icon": "audio-input-microphone-symbolic",
-        "label": "Microphone",
+        "icon": "edit-clear-all-symbolic",
+        "label": "Noise suppression",
         "look": null,
         "params": {},
         "pick": true,
@@ -17614,41 +17908,33 @@
         "whyTarget": null
       },
       "input": {
-        "action": "call.input.set",
+        "action": "call.noiseSuppression.set",
         "app": "web",
         "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "local": {},
+          "current": {},
           "subjects": {
-            "device": {
-              "alsa_input.usb-headset": {
-                "name": "Headset",
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
                 "values": {}
-              }
-            },
-            "tile": {
-              "tile-zane-screen": {
-                "name": "Zane's screen",
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
                 "values": {
-                  "tile.pinned": false
+                  "room.guestLinkOn": true
                 }
               }
             }
           },
           "values": {
-            "call.sharing": true,
-            "prefs.callBarPinned": true,
-            "prefs.echoCancel": true
+            "prefs.gifAutoplay": true,
+            "prefs.nsMode": "standard",
+            "reel.adminOpen": false,
+            "ui.soundboardOpen": true
           }
-        },
-        "target": {
-          "local": "l9"
         }
       },
-      "name": "fuzz 1.267: call.input.set"
+      "name": "fuzz 1.271: call.noiseSuppression.set"
     },
     {
       "expect": {
@@ -17656,11 +17942,11 @@
         "confirm": null,
         "danger": false,
         "emoji": null,
-        "enabled": true,
+        "enabled": false,
         "exists": true,
         "hold": false,
-        "icon": "edit-copy-symbolic",
-        "label": "Copy the join address",
+        "icon": "system-users-symbolic",
+        "label": "Change role…",
         "look": null,
         "params": {},
         "pick": false,
@@ -17671,441 +17957,29 @@
         "targetIcon": null,
         "targetName": null,
         "tip": null,
-        "visible": true,
-        "why": null,
+        "visible": false,
+        "why": "context",
         "whyTarget": null
       },
       "input": {
-        "action": "calendar.game.copyAddress",
-        "app": "desktop",
+        "action": "room.member.setRole",
+        "app": "web",
         "context": {
+          "room": "!room:example.com",
           "space": "!space:example.com"
         },
+        "row": "call.tile",
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
             "room": "!room:example.com"
           },
-          "subjects": {
-            "space": {
-              "!space:example.com": {
-                "name": "Example",
-                "values": {}
-              }
-            }
-          },
-          "values": {
-            "call.in": true,
-            "memories.synced": false,
-            "prefs.reduceMotion": true,
-            "ui.navCorner": false
-          }
-        }
-      },
-      "name": "fuzz 1.268: calendar.game.copyAddress"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": null,
-        "label": "Pick tonight's game",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": "target",
-        "whyTarget": "target-missing"
-      },
-      "input": {
-        "action": "reel.pickForEvent",
-        "app": "desktop",
-        "context": {},
-        "snapshot": {
-          "current": {
-            "room": "!other:example.com"
-          },
-          "subjects": {
-            "event": {
-              "$event1": {
-                "name": "Game night",
-                "values": {}
-              }
-            },
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {
-                  "room.canInvite": false
-                }
-              }
-            },
-            "space": {
-              "!space:example.com": {
-                "name": "Example",
-                "values": {
-                  "space.canBan": true
-                }
-              }
-            }
-          },
-          "values": {
-            "calendar.hasContainer": false,
-            "call.deafened": false
-          }
-        }
-      },
-      "name": "fuzz 1.269: reel.pickForEvent"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": {
-          "askReason": false,
-          "confirmLabel": "Create link",
-          "kind": "consent",
-          "text": "Anyone with the link can join calls in \"this room\" from a browser, without an account. The room becomes public.",
-          "title": "Create a guest link?"
-        },
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "network-connect",
-        "label": "Create guest link…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": "target",
-        "whyTarget": "target-missing"
-      },
-      "input": {
-        "action": "room.guestLink",
-        "app": "web",
-        "snapshot": {
-          "current": {},
-          "subjects": {
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {
-                  "room.canChangeAvatar": false,
-                  "room.current": false,
-                  "room.guestLinkOn": false
-                }
-              }
-            }
-          },
-          "values": {
-            "ui.callCollapsed": true,
-            "ui.soundboardOpen": false,
-            "update.state": "ready"
-          }
-        }
-      },
-      "name": "fuzz 1.270: room.guestLink"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": true,
-        "exists": true,
-        "hold": false,
-        "icon": "document-edit-symbolic",
-        "label": "New DM…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": null,
-        "whyTarget": null
-      },
-      "input": {
-        "action": "dm.new",
-        "app": "web",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {
-            "tile": {
-              "tile-zane-screen": {
-                "name": "Zane's screen",
-                "values": {
-                  "tile.pinned": true
-                }
-              }
-            }
-          },
-          "values": {
-            "call.micMuted": true,
-            "prefs.logship": false,
-            "prefs.nsMode": "strong"
-          }
-        }
-      },
-      "name": "fuzz 1.271: dm.new"
-    },
-    {
-      "expect": {
-        "active": true,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "applications-games-symbolic",
-        "label": "Leave game chat",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": "Leave game chat — everyone in the call hears your mic again",
-        "visible": true,
-        "why": "target",
-        "whyTarget": "target-invalid:not-targetable"
-      },
-      "input": {
-        "action": "call.gameChat.toggle",
-        "app": "web",
-        "row": "call.status",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {
-                  "room.hasUnread": false,
-                  "room.inCall": false
-                }
-              }
-            }
-          },
-          "values": {
-            "call.aside": true,
-            "call.gameChat": true,
-            "call.in": false,
-            "call.pinned": false,
-            "ui.healthOpen": false
-          }
-        },
-        "target": {
-          "room": "!room:example.com"
-        }
-      },
-      "name": "fuzz 1.272: call.gameChat.toggle"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": null,
-        "label": "What's new",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": "target",
-        "whyTarget": "target-invalid:not-targetable"
-      },
-      "input": {
-        "action": "app.update.whatsNew",
-        "app": "desktop",
-        "context": {},
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {
-            "message": {
-              "$message1": {
-                "name": "a message",
-                "values": {
-                  "message.hasEmbed": false
-                }
-              }
-            },
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {}
-              }
-            }
-          },
-          "values": {
-            "prefs.formFactor": "desktop",
-            "presence.busy": true,
-            "update.hasNotes": true
-          }
-        },
-        "target": {
-          "room": "!room:example.com"
-        }
-      },
-      "name": "fuzz 1.273: app.update.whatsNew"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": true,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "call-stop-symbolic",
-        "label": "Leave call",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": "Hanging up…",
-        "visible": true,
-        "why": "when",
-        "whyTarget": null
-      },
-      "input": {
-        "action": "call.leave",
-        "app": "web",
-        "snapshot": {
-          "current": {},
           "subjects": {
             "person": {
               "@zane:example.com": {
                 "name": "Zane",
                 "values": {
-                  "person.inMyCorner": false
-                }
-              }
-            }
-          },
-          "values": {
-            "call.connecting": true,
-            "call.hangingUp": true,
-            "call.in": false,
-            "call.pinned": false,
-            "prefs.reduceMotion": false,
-            "reel.canVeto": true
-          }
-        }
-      },
-      "name": "fuzz 1.274: call.leave"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "list-add-user",
-        "label": "Invite people…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": "target",
-        "whyTarget": "target-invalid:bad-value"
-      },
-      "input": {
-        "action": "room.invite",
-        "app": "desktop",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {
-            "message": {
-              "$message1": {
-                "name": "a message",
-                "values": {
-                  "message.pinned": true
+                  "person.serverMuted": true
                 }
               }
             },
@@ -18117,52 +17991,68 @@
               "!room:example.com": {
                 "name": "Gaming Central",
                 "values": {
-                  "room.joined": false
+                  "room.canChangePower": false
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.invited": true
                 }
               }
             }
           },
           "values": {
-            "overlay.available": false,
-            "prefs.callLayout": "speaker"
+            "prefs.callAnimate": true,
+            "presence.hasStatus": true
           }
         },
         "target": {
-          "room": 7
+          "a1": "1",
+          "a2": "2",
+          "a3": "3",
+          "a4": "4",
+          "a5": "5"
         }
       },
-      "name": "fuzz 1.275: room.invite"
+      "name": "fuzz 1.272: room.member.setRole"
     },
     {
       "expect": {
-        "active": null,
-        "confirm": null,
+        "active": false,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Start recording",
+          "kind": "consent",
+          "text": "Everyone in the call sees 🔴 REC. People who chose \"Never record me\" are left out of the recording.",
+          "title": "Record calls here?"
+        },
         "danger": false,
         "emoji": null,
-        "enabled": true,
+        "enabled": false,
         "exists": true,
         "hold": false,
-        "icon": "view-refresh-symbolic",
-        "label": "Refresh this room",
+        "icon": "media-record-symbolic",
+        "label": "Record calls here (Memories)…",
         "look": null,
         "params": {},
         "pick": false,
         "primary": false,
-        "shortLabel": null,
+        "shortLabel": "Rec",
         "split": null,
-        "subject": null,
+        "subject": "!room:example.com",
         "targetIcon": null,
-        "targetName": null,
-        "tip": null,
+        "targetName": "Gaming Central",
+        "tip": "Record this room's calls — REC shows for everyone",
         "visible": true,
-        "why": null,
+        "why": "when",
         "whyTarget": null
       },
       "input": {
-        "action": "room.refresh",
+        "action": "room.recording.toggle",
         "app": "desktop",
-        "context": {},
-        "row": "header.phoneStart",
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
@@ -18177,20 +18067,225 @@
               "!room:example.com": {
                 "name": "Gaming Central",
                 "values": {
-                  "room.canBan": false
+                  "room.current": true,
+                  "room.joined": false,
+                  "room.recordOn": false
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.favourite": true,
+                  "sound.playing": true
                 }
               }
             }
           },
           "values": {
-            "prefs.callBarPinned": false,
-            "ui.callCollapsed": true,
-            "ui.roomOpen": true,
-            "watchParty.canControl": true
+            "crypto.backup": true,
+            "prefs.diagnostics": true
           }
         }
       },
-      "name": "fuzz 1.276: room.refresh"
+      "name": "fuzz 1.273: room.recording.toggle"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "documentinfo-symbolic",
+        "label": "Room info & members",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.info.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "event": {
+              "$event1": {
+                "name": "Game night",
+                "values": {
+                  "event.canEdit": false,
+                  "event.myRsvp": "maybe"
+                }
+              }
+            }
+          },
+          "values": {
+            "call.needsGesture": false,
+            "prefs.diagnostics": true,
+            "ui.rightPanelOpen": false,
+            "ui.roomOpen": false
+          }
+        }
+      },
+      "name": "fuzz 1.274: room.info.toggle"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "appointment-new-symbolic",
+        "label": "New event",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": "New",
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "calendar.event.new",
+        "app": "desktop",
+        "row": "buttons.main",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.pinned": false
+                }
+              }
+            }
+          },
+          "values": {
+            "calendar.hasContainer": true,
+            "prefs.callAnimate": false,
+            "prefs.shareQuality": "sharp",
+            "presence.busy": false
+          }
+        }
+      },
+      "name": "fuzz 1.275: calendar.event.new"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "window-new",
+        "label": "Pop out into its own window",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "tile-zane-screen",
+        "targetIcon": null,
+        "targetName": "Zane's screen",
+        "tip": null,
+        "visible": true,
+        "why": "when",
+        "whyTarget": null
+      },
+      "input": {
+        "action": "tile.popOut",
+        "app": "web",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com",
+          "tile": "tile-zane-screen"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": false
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.self": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.gameChat": false,
+            "prefs.callLayout": "auto",
+            "ui.calendarOpen": true
+          }
+        }
+      },
+      "name": "fuzz 1.276: tile.popOut"
     },
     {
       "expect": {
@@ -18226,27 +18321,34 @@
             "room": "!room:example.com"
           },
           "subjects": {
-            "sound": {
-              "mxc://example.com/bruh": {
-                "name": "Bruh",
+            "event": {
+              "$event1": {
+                "name": "Game night",
                 "values": {
-                  "sound.inRoom": false
+                  "event.cancelled": false
                 }
               }
             },
-            "tile": {
-              "tile-zane-screen": {
-                "name": "Zane's screen",
+            "message": {
+              "$message1": {
+                "name": "a message",
                 "values": {
-                  "tile.share": true
+                  "message.redacted": true
+                }
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canBan": false
                 }
               }
             }
           },
           "values": {
-            "call.recActive": true,
-            "reel.isAdmin": false,
-            "ui.rightPanelTab": "members"
+            "call.recActive": false,
+            "call.sharing": false
           }
         },
         "target": {
@@ -18264,158 +18366,11 @@
         "enabled": true,
         "exists": true,
         "hold": false,
-        "icon": null,
-        "label": "Reset all to 100%",
+        "icon": "view-refresh-symbolic",
+        "label": "Refresh this room",
         "look": null,
         "params": {},
         "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": "@zane:example.com",
-        "targetIcon": null,
-        "targetName": "Zane",
-        "tip": null,
-        "visible": true,
-        "why": null,
-        "whyTarget": null
-      },
-      "input": {
-        "action": "person.volume.reset",
-        "app": "web",
-        "context": {
-          "participant": "@zane:example.com:DEVICEZ",
-          "person": "@zane:example.com",
-          "room": "!room:example.com",
-          "space": "!space:example.com"
-        },
-        "snapshot": {
-          "current": {},
-          "subjects": {
-            "participant": {
-              "@zane:example.com:DEVICEZ": {
-                "name": "Zane (laptop)",
-                "values": {}
-              }
-            },
-            "person": {
-              "@zane:example.com": {
-                "name": "Zane",
-                "values": {}
-              }
-            },
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {
-                  "room.callLive": false
-                }
-              }
-            },
-            "space": {
-              "!space:example.com": {
-                "name": "Example",
-                "values": {}
-              }
-            }
-          },
-          "values": {
-            "prefs.gifAutoplay": false,
-            "prefs.reduceMotion": false,
-            "presence.busy": true
-          }
-        }
-      },
-      "name": "fuzz 1.278: person.volume.reset"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "smartphone-symbolic",
-        "label": "Pad",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": "!other:example.com",
-        "targetIcon": null,
-        "targetName": "Valheim",
-        "tip": "Pad — control your call on your other device from here (sounds, mute, volumes)",
-        "visible": true,
-        "why": "when",
-        "whyTarget": null
-      },
-      "input": {
-        "action": "call.pad.open",
-        "app": "web",
-        "snapshot": {
-          "current": {
-            "room": "!other:example.com"
-          },
-          "subjects": {
-            "event": {
-              "$event1": {
-                "name": "Game night",
-                "values": {
-                  "event.myRsvp": "no"
-                }
-              }
-            },
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {
-                  "room.inCall": true,
-                  "room.padTarget": true
-                }
-              }
-            },
-            "tile": {
-              "tile-zane-screen": {
-                "name": "Zane's screen",
-                "values": {
-                  "tile.recStream": true
-                }
-              }
-            }
-          },
-          "values": {
-            "call.connecting": true
-          }
-        }
-      },
-      "name": "fuzz 1.279: call.pad.open"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": true,
-        "exists": true,
-        "hold": false,
-        "icon": "audio-volume-high-symbolic",
-        "label": "Speaker",
-        "look": null,
-        "params": {},
-        "pick": true,
         "primary": false,
         "shortLabel": null,
         "split": null,
@@ -18428,34 +18383,33 @@
         "whyTarget": null
       },
       "input": {
-        "action": "call.output.set",
-        "app": "web",
+        "action": "room.refresh",
+        "app": "desktop",
+        "context": {},
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
             "room": "!room:example.com"
           },
-          "local": {},
           "subjects": {
-            "device": {
-              "alsa_input.usb-headset": {
-                "name": "Headset",
-                "values": {}
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.invitedHere": false,
+                  "person.serverMuted": false
+                }
               }
             }
           },
           "values": {
-            "memories.synced": true,
-            "prefs.logship": true,
-            "presence.sharing": false,
-            "ui.spaceSelected": false
+            "call.gameChat": false,
+            "call.musicPlaying": false,
+            "ui.roomOpen": true
           }
-        },
-        "target": {
-          "local": "l9"
         }
       },
-      "name": "fuzz 1.280: call.output.set"
+      "name": "fuzz 1.278: room.refresh"
     },
     {
       "expect": {
@@ -18466,92 +18420,75 @@
         "enabled": false,
         "exists": true,
         "hold": false,
-        "icon": null,
-        "label": "Copy message",
+        "icon": "edit-undo-symbolic",
+        "label": "Show all & forget",
         "look": null,
-        "params": {
-          "what": "message"
-        },
+        "params": {},
         "pick": false,
         "primary": false,
         "shortLabel": null,
         "split": null,
-        "subject": "TH-7Q2K",
+        "subject": null,
         "targetIcon": null,
-        "targetName": "TH-7Q2K",
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.hidden.showAll",
+        "app": "web",
+        "context": {},
+        "row": "header.phoneStart",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {},
+          "values": {
+            "calendar.reminders": false,
+            "call.hiddenTiles": false,
+            "call.serverMuted": false,
+            "prefs.callAnimate": false,
+            "update.hasNotes": false
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "fuzz 1.279: call.hidden.showAll"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": "view-refresh-symbolic",
+        "label": "Flip camera",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
         "tip": null,
         "visible": false,
         "why": "requires",
         "whyTarget": null
       },
       "input": {
-        "action": "invites.copy",
+        "action": "call.camera.flip",
         "app": "web",
-        "context": {
-          "inviteCode": "TH-7Q2K"
-        },
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {
-            "inviteCode": {
-              "TH-7Q2K": {
-                "name": "TH-7Q2K",
-                "values": {
-                  "inviteCode.live": true
-                }
-              }
-            }
-          },
-          "values": {
-            "call.sharing": false,
-            "invites.operator": false,
-            "memories.selected": true,
-            "push.enabled": false
-          }
-        },
-        "target": {
-          "what": "message"
-        }
-      },
-      "name": "fuzz 1.281: invites.copy"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": null,
-        "label": "Put a point of view on stage",
-        "look": null,
-        "params": {
-          "n": "1"
-        },
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": "!room:example.com",
-        "targetIcon": null,
-        "targetName": "Gaming Central",
-        "tip": null,
-        "visible": false,
-        "why": "context",
-        "whyTarget": null
-      },
-      "input": {
-        "action": "memories.pov",
-        "app": "web",
-        "context": {
-          "room": "!room:example.com"
-        },
-        "row": "nav.main",
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
@@ -18566,23 +18503,28 @@
               "!room:example.com": {
                 "name": "Gaming Central",
                 "values": {
-                  "room.notifyMode": "mute"
+                  "room.notifyMode": "mentions"
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.roomEntryMine": true
                 }
               }
             }
           },
           "values": {
-            "calendar.hasContainer": false,
-            "memories.selected": true,
-            "prefs.pushToTalk": true,
-            "ui.calendarOpen": true
+            "call.in": true,
+            "push.enabled": true,
+            "ui.phone": false,
+            "watchParty.isHost": false
           }
-        },
-        "target": {
-          "n": "1"
         }
       },
-      "name": "fuzz 1.282: memories.pov"
+      "name": "fuzz 1.280: call.camera.flip"
     },
     {
       "expect": {
@@ -18590,32 +18532,29 @@
         "confirm": null,
         "danger": false,
         "emoji": null,
-        "enabled": false,
+        "enabled": true,
         "exists": true,
         "hold": false,
-        "icon": "edit-copy-symbolic",
-        "label": "Copy text",
+        "icon": null,
+        "label": "Fix the system level",
         "look": null,
         "params": {},
         "pick": false,
         "primary": false,
         "shortLabel": null,
         "split": null,
-        "subject": "$message1",
+        "subject": null,
         "targetIcon": null,
-        "targetName": "a message",
+        "targetName": null,
         "tip": null,
         "visible": true,
-        "why": "when",
+        "why": null,
         "whyTarget": null
       },
       "input": {
-        "action": "message.copyText",
-        "app": "desktop",
-        "context": {
-          "message": "$message1",
-          "room": "!room:example.com"
-        },
+        "action": "call.fix.systemLevel",
+        "app": "web",
+        "context": {},
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
@@ -18626,7 +18565,6 @@
               "$message1": {
                 "name": "a message",
                 "values": {
-                  "message.failed": true,
                   "message.redacted": true
                 }
               }
@@ -18643,176 +18581,63 @@
             }
           },
           "values": {
-            "call.pinned": false,
-            "reel.adminOpen": true,
-            "session.busy": true
+            "call.in": true,
+            "prefs.pushToTalk": false,
+            "ui.callShown": false
           }
         }
       },
-      "name": "fuzz 1.283: message.copyText"
+      "name": "fuzz 1.281: call.fix.systemLevel"
     },
     {
       "expect": {
         "active": null,
-        "confirm": null,
+        "confirm": {
+          "askReason": false,
+          "confirmLabel": "Revoke",
+          "kind": "destructive",
+          "text": "The code stops working for anyone who still has it.",
+          "title": "Revoke this invite?"
+        },
         "danger": true,
         "emoji": null,
         "enabled": false,
         "exists": true,
         "hold": false,
-        "icon": "call-stop-symbolic",
-        "label": "Leave call",
+        "icon": null,
+        "label": "Revoke",
         "look": null,
         "params": {},
         "pick": false,
         "primary": false,
         "shortLabel": null,
         "split": null,
-        "subject": null,
+        "subject": "TH-7Q2K",
         "targetIcon": null,
-        "targetName": null,
-        "tip": "Hanging up…",
-        "visible": true,
-        "why": "when",
-        "whyTarget": null
-      },
-      "input": {
-        "action": "call.leave",
-        "app": "web",
-        "snapshot": {
-          "current": {},
-          "subjects": {
-            "person": {
-              "@zane:example.com": {
-                "name": "Zane",
-                "values": {
-                  "person.bannedHere": false
-                }
-              }
-            },
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {
-                  "room.isDm": false
-                }
-              }
-            }
-          },
-          "values": {
-            "call.canModerate": true,
-            "call.connecting": false,
-            "call.hangingUp": true,
-            "call.hasSavedAudioSource": false,
-            "call.in": false
-          }
-        }
-      },
-      "name": "fuzz 1.284: call.leave"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "insert-image-symbolic",
-        "label": "Change photo…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": "!room:example.com",
-        "targetIcon": null,
-        "targetName": "Gaming Central",
+        "targetName": "TH-7Q2K",
         "tip": null,
         "visible": false,
-        "why": "requires",
+        "why": "context",
         "whyTarget": null
       },
       "input": {
-        "action": "room.photo.change",
-        "app": "web",
-        "row": "call.bar",
+        "action": "invites.revoke",
+        "app": "desktop",
+        "context": {
+          "inviteCode": "TH-7Q2K"
+        },
+        "row": "rooms.header",
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
             "room": "!room:example.com"
           },
           "subjects": {
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
                 "values": {
-                  "room.canChangeAvatar": false,
-                  "room.canChangePower": true,
-                  "room.current": true
-                }
-              }
-            }
-          },
-          "values": {
-            "prefs.fontset": "auto",
-            "presence.known": false,
-            "watchParty.isHost": false
-          }
-        }
-      },
-      "name": "fuzz 1.285: room.photo.change"
-    },
-    {
-      "expect": {
-        "active": null,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "link-symbolic",
-        "label": "Play music from URL…",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": null,
-        "targetIcon": null,
-        "targetName": null,
-        "tip": null,
-        "visible": true,
-        "why": "when",
-        "whyTarget": null
-      },
-      "input": {
-        "action": "call.music.url",
-        "app": "web",
-        "row": "header.phoneStart",
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {
-            "message": {
-              "$message1": {
-                "name": "a message",
-                "values": {
-                  "message.hasEmbed": true
+                  "inviteCode.live": true
                 }
               }
             },
@@ -18824,19 +18649,23 @@
               "!room:example.com": {
                 "name": "Gaming Central",
                 "values": {
-                  "room.padTarget": false
+                  "room.canPin": true
                 }
               }
             }
           },
           "values": {
             "calendar.reminders": true,
-            "call.in": false,
-            "prefs.desktopNotifications": true
+            "invites.operator": true,
+            "reel.canSpin": false,
+            "ui.healthOpen": false
           }
+        },
+        "target": {
+          "zzz": "1"
         }
       },
-      "name": "fuzz 1.286: call.music.url"
+      "name": "fuzz 1.282: invites.revoke"
     },
     {
       "expect": {
@@ -18844,132 +18673,29 @@
         "confirm": null,
         "danger": false,
         "emoji": null,
-        "enabled": false,
-        "exists": true,
-        "hold": false,
-        "icon": "audio-input-microphone-symbolic",
-        "label": "Pull aside",
-        "look": null,
-        "params": {},
-        "pick": false,
-        "primary": false,
-        "shortLabel": null,
-        "split": null,
-        "subject": "@zane:example.com:DEVICEZ",
-        "targetIcon": null,
-        "targetName": "Zane (laptop)",
-        "tip": null,
-        "visible": true,
-        "why": "target",
-        "whyTarget": "target-invalid:too-many-keys"
-      },
-      "input": {
-        "action": "call.pullAside",
-        "app": "web",
-        "context": {
-          "participant": "@zane:example.com:DEVICEZ",
-          "person": "@zane:example.com",
-          "room": "!room:example.com",
-          "space": "!space:example.com"
-        },
-        "snapshot": {
-          "current": {
-            "activeSpace": "!space:example.com",
-            "room": "!room:example.com"
-          },
-          "subjects": {
-            "participant": {
-              "@zane:example.com:DEVICEZ": {
-                "name": "Zane (laptop)",
-                "values": {}
-              }
-            },
-            "person": {
-              "@zane:example.com": {
-                "name": "Zane",
-                "values": {
-                  "person.inCorner": true,
-                  "person.me": false
-                }
-              }
-            },
-            "room": {
-              "!other:example.com": {
-                "name": "Valheim",
-                "values": {}
-              },
-              "!room:example.com": {
-                "name": "Gaming Central",
-                "values": {}
-              }
-            },
-            "space": {
-              "!space:example.com": {
-                "name": "Example",
-                "values": {}
-              }
-            },
-            "tile": {
-              "tile-zane-screen": {
-                "name": "Zane's screen",
-                "values": {
-                  "tile.share": false
-                }
-              }
-            }
-          },
-          "values": {
-            "call.aside": false,
-            "call.in": false,
-            "call.micMuted": false,
-            "call.shareRecOnly": true,
-            "ui.phone": true
-          }
-        },
-        "target": {
-          "a1": "1",
-          "a2": "2",
-          "a3": "3",
-          "a4": "4",
-          "a5": "5"
-        }
-      },
-      "name": "fuzz 1.287: call.pullAside"
-    },
-    {
-      "expect": {
-        "active": false,
-        "confirm": null,
-        "danger": false,
-        "emoji": null,
         "enabled": true,
         "exists": true,
         "hold": false,
-        "icon": "view-restore-symbolic",
-        "label": "Shrink my camera into a corner",
+        "icon": null,
+        "label": "Fix the system level",
         "look": null,
         "params": {},
         "pick": false,
         "primary": false,
         "shortLabel": null,
         "split": null,
-        "subject": "tile-zane-screen",
+        "subject": null,
         "targetIcon": null,
-        "targetName": "Zane's screen",
+        "targetName": null,
         "tip": null,
         "visible": true,
         "why": null,
         "whyTarget": null
       },
       "input": {
-        "action": "tile.selfView.toggle",
-        "app": "desktop",
-        "context": {
-          "participant": "@zane:example.com:DEVICEZ",
-          "person": "@zane:example.com",
-          "room": "!room:example.com",
-          "tile": "tile-zane-screen"
-        },
+        "action": "call.fix.systemLevel",
+        "app": "web",
+        "context": {},
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
@@ -18980,20 +18706,8 @@
               "$message1": {
                 "name": "a message",
                 "values": {
-                  "message.image": true
+                  "message.media": true
                 }
-              }
-            },
-            "participant": {
-              "@zane:example.com:DEVICEZ": {
-                "name": "Zane (laptop)",
-                "values": {}
-              }
-            },
-            "person": {
-              "@zane:example.com": {
-                "name": "Zane",
-                "values": {}
               }
             },
             "room": {
@@ -19007,25 +18721,369 @@
                   "room.recordOn": true
                 }
               }
-            },
-            "tile": {
-              "tile-zane-screen": {
-                "name": "Zane's screen",
+            }
+          },
+          "values": {
+            "call.in": true,
+            "composer.editing": true
+          }
+        }
+      },
+      "name": "fuzz 1.283: call.fix.systemLevel"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Leave “fill the app”",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "call.fill.exit",
+        "app": "desktop",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
                 "values": {
-                  "tile.self": true
+                  "message.hasEmbed": false
                 }
               }
             }
           },
           "values": {
-            "call.cameraOn": true,
-            "composer.hasTarget": true,
-            "ui.healthOpen": false,
-            "ui.selfPip": false
+            "app.dev": false,
+            "ui.calendarOpen": false,
+            "ui.callMaximized": false,
+            "ui.rightPanelOpen": false
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "fuzz 1.284: call.fill.exit"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Forward 1 min",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-invalid:not-targetable"
+      },
+      "input": {
+        "action": "memories.forward60",
+        "app": "web",
+        "context": {},
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "space": {
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canKick": true,
+                  "space.joined": false
+                }
+              }
+            }
+          },
+          "values": {
+            "crypto.backup": true,
+            "memories.selected": false,
+            "ui.phone": true
+          }
+        },
+        "target": {
+          "room": "!room:example.com"
+        }
+      },
+      "name": "fuzz 1.285: memories.forward60"
+    },
+    {
+      "expect": {
+        "active": null,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": false,
+        "exists": true,
+        "hold": false,
+        "icon": null,
+        "label": "Receive quality",
+        "look": null,
+        "params": {},
+        "pick": true,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": "target",
+        "whyTarget": "target-missing"
+      },
+      "input": {
+        "action": "tile.quality.set",
+        "app": "desktop",
+        "context": {
+          "participant": "@zane:example.com:DEVICEZ",
+          "person": "@zane:example.com",
+          "room": "!room:example.com"
+        },
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "inviteCode": {
+              "TH-7Q2K": {
+                "name": "TH-7Q2K",
+                "values": {
+                  "inviteCode.live": false
+                }
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": false
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "person.inMyCorner": true
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {}
+              }
+            }
+          },
+          "values": {
+            "reel.canSpin": true
           }
         }
       },
-      "name": "fuzz 1.288: tile.selfView.toggle"
+      "name": "fuzz 1.286: tile.quality.set"
+    },
+    {
+      "expect": {
+        "active": false,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "non-starred-symbolic",
+        "label": "Favourite",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": null,
+        "split": null,
+        "subject": "!room:example.com",
+        "targetIcon": null,
+        "targetName": "Gaming Central",
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "room.favourite.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.failed": false
+                }
+              }
+            },
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.favourite": false,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {
+                  "sound.inRoom": false
+                }
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.recStream": true
+                }
+              }
+            }
+          },
+          "values": {
+            "prefs.logship": false
+          }
+        }
+      },
+      "name": "fuzz 1.287: room.favourite.toggle"
+    },
+    {
+      "expect": {
+        "active": true,
+        "confirm": null,
+        "danger": false,
+        "emoji": null,
+        "enabled": true,
+        "exists": true,
+        "hold": false,
+        "icon": "window-pin-symbolic",
+        "label": "Let call buttons hide",
+        "look": null,
+        "params": {},
+        "pick": false,
+        "primary": false,
+        "shortLabel": "Let buttons hide",
+        "split": null,
+        "subject": null,
+        "targetIcon": null,
+        "targetName": null,
+        "tip": null,
+        "visible": true,
+        "why": null,
+        "whyTarget": null
+      },
+      "input": {
+        "action": "call.bar.pin.toggle",
+        "app": "desktop",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!room:example.com"
+          },
+          "subjects": {
+            "room": {
+              "!other:example.com": {
+                "name": "Valheim",
+                "values": {}
+              },
+              "!room:example.com": {
+                "name": "Gaming Central",
+                "values": {
+                  "room.recordOn": false
+                }
+              }
+            }
+          },
+          "values": {
+            "call.in": true,
+            "composer.hasTarget": true,
+            "prefs.callBarPinned": true,
+            "ui.healthOpen": true,
+            "ui.phone": false
+          }
+        }
+      },
+      "name": "fuzz 1.288: call.bar.pin.toggle"
     },
     {
       "expect": {
@@ -23550,7 +23608,8 @@
       },
       "input": {
         "action": "room.create",
-        "app": "desktop",
+        "app": "web",
+        "context": {},
         "snapshot": {
           "current": {
             "activeSpace": "!space:example.com",
@@ -23561,16 +23620,14 @@
               "tile-zane-screen": {
                 "name": "Zane's screen",
                 "values": {
-                  "tile.pinned": true
+                  "tile.pinned": false
                 }
               }
             }
           },
           "values": {
             "call.musicPlaying": true,
-            "call.soundName": "10.7.0",
-            "reel.adminOpen": false,
-            "ui.spaceSelected": false
+            "reel.adminOpen": true
           }
         }
       },

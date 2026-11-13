@@ -562,7 +562,7 @@ Item {
             Controls.TextField {
                 id: inviteField
                 Layout.fillWidth: true
-                placeholderText: "Invite @user:server…"
+                placeholderText: "Invite by username or address…"
                 onAccepted: {
                     if (text.trim().length > 0) { panel.inviteUser(text.trim()); text = "" }
                 }

@@ -1193,15 +1193,22 @@ impl Controller {
 }
 
 /// The room-list bar's order (the web's `callsNewestFirst`, features/pad/order.ts): the rooms of `targets()`'s
-/// `rooms` map whose first (= newest, `pad_targets` sorts them) target has the newest `createdTs` first; ties by room
-/// id in code-point order. A room with no target is left out. The bar shows the first one this device isn't in.
+/// `rooms` map with a READY target (one the Pad can drive now) come before the rooms whose every target is greyed; within
+/// each group the room whose first (= newest, `pad_targets` sorts them) target has the newest `createdTs` comes first;
+/// ties by room id in code-point order. A room with no target is left out. (QA 12.1.11 D2: a newer call on a device the
+/// Pad can't drive, e.g. an older Tin Hat or a stale phone, hid the call it can.) The bar shows the first one this
+/// device isn't in, and steps through the rest with its "1/2" button (PadBar.qml = the web's `nextCall`).
 pub fn calls_newest_first(rooms: &Map<String, Value>) -> Vec<String> {
-    let mut v: Vec<(i64, &String)> = rooms
+    let mut v: Vec<(bool, i64, &String)> = rooms
         .iter()
-        .filter_map(|(room, ts)| ts.as_array().and_then(|a| a.first()).map(|t| (t.get("createdTs").and_then(Value::as_i64).unwrap_or(0), room)))
+        .filter_map(|(room, ts)| {
+            let a = ts.as_array()?;
+            let ready = a.iter().any(|t| t.get("ready").and_then(Value::as_bool) == Some(true));
+            a.first().map(|t| (ready, t.get("createdTs").and_then(Value::as_i64).unwrap_or(0), room))
+        })
         .collect();
-    v.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.chars().cmp(b.1.chars())));
-    v.into_iter().map(|(_, r)| r.clone()).collect()
+    v.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| b.1.cmp(&a.1)).then_with(|| a.2.chars().cmp(b.2.chars())));
+    v.into_iter().map(|(_, _, r)| r.clone()).collect()
 }
 
 #[cfg(test)]
@@ -2103,15 +2110,27 @@ mod tests {
     #[test]
     fn the_room_list_bar_shows_the_newest_call() {
         // the same cases as the web's features/pad/order.test.ts
-        let t = |ts: i64| json!([{"device": "PC", "createdTs": ts}]);
+        let t = |ts: i64| json!([{"device": "PC", "createdTs": ts, "ready": true}]);
+        let grey = |ts: i64| json!([{"device": "PHONE", "createdTs": ts, "ready": false}]);
         let m = |pairs: Vec<(&str, Value)>| pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect::<Map<String, Value>>();
         assert_eq!(calls_newest_first(&m(vec![("!a:lab.test", t(1_000)), ("!b:lab.test", t(2_000))])), vec!["!b:lab.test", "!a:lab.test"]);
         assert_eq!(calls_newest_first(&m(vec![("!b:lab.test", t(5)), ("!a:lab.test", t(5))])), vec!["!a:lab.test", "!b:lab.test"], "ties: room id");
         assert_eq!(calls_newest_first(&m(vec![("!a:lab.test", json!([])), ("!b:lab.test", t(1))])), vec!["!b:lab.test"], "no target: left out");
         // the first target of a room is its newest (pad_targets' order): only it counts
-        let two = json!([{"device": "PC", "createdTs": 9_000}, {"device": "LAPTOP", "createdTs": 1}]);
+        let two = json!([{"device": "PC", "createdTs": 9_000, "ready": true}, {"device": "LAPTOP", "createdTs": 1, "ready": true}]);
         assert_eq!(calls_newest_first(&m(vec![("!a:lab.test", t(8_000)), ("!c:lab.test", two)])), vec!["!c:lab.test", "!a:lab.test"]);
         assert!(calls_newest_first(&Map::new()).is_empty());
+        // QA 12.1.11 D2: a newer call on a device the Pad can't drive never hides an older call it can drive
+        assert_eq!(calls_newest_first(&m(vec![("!a:lab.test", grey(9_000)), ("!b:lab.test", t(1_000))])), vec!["!b:lab.test", "!a:lab.test"], "a ready call before a newer greyed one");
+        let mixed = json!([{"device": "PHONE", "createdTs": 5_000, "ready": false}, {"device": "PC", "createdTs": 10, "ready": true}]);
+        assert_eq!(calls_newest_first(&m(vec![("!a:lab.test", grey(9_000)), ("!b:lab.test", mixed)])), vec!["!b:lab.test", "!a:lab.test"], "any ready target counts");
+        assert_eq!(
+            calls_newest_first(&m(vec![("!a:lab.test", grey(1)), ("!b:lab.test", grey(2)), ("!c:lab.test", t(0))])),
+            vec!["!c:lab.test", "!b:lab.test", "!a:lab.test"],
+            "greyed calls: still newest first"
+        );
+        let unknown = json!([{"device": "PC", "createdTs": 9}]);
+        assert_eq!(calls_newest_first(&m(vec![("!a:lab.test", unknown), ("!b:lab.test", t(1))])), vec!["!b:lab.test", "!a:lab.test"], "ready missing = not ready");
     }
 
     // ---- Pad QOL (2026-10-31): the web's receiver.test.ts cases for the new ops ----

@@ -376,9 +376,17 @@ async fn drive(req: VerificationRequest, inc: u64) {
         };
         eprintln!("[sas] request state -> {}", state_name(&state));
         match state {
-            VerificationRequestState::Requested { .. } => {
+            VerificationRequestState::Requested { other_device_data, .. } => {
                 if !req.we_started() {
-                    ui.set_state(inc, "waiting", sas_policy::NOTE_INCOMING_REQUESTED);
+                    // QA 12.1.11 D11: name the device asking before Accept (as Ready does below)
+                    let peer = other_device_data
+                        .display_name()
+                        .map(str::trim)
+                        .filter(|n| !n.is_empty())
+                        .map(str::to_owned)
+                        .unwrap_or_else(|| other_device_data.device_id().to_string());
+                    ui.set_peer(inc, &peer);
+                    ui.set_state(inc, "waiting", &sas_policy::incoming_note(&peer));
                 }
             }
             VerificationRequestState::Ready { their_methods, other_device_data, .. } => {

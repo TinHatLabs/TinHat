@@ -94,6 +94,17 @@ pub const NOTE_DONE_VERIFIER: &str = "Verified. Your other device can read your 
 /// S1 NoSas.
 pub const NOTE_NO_SAS: &str = "The other device did not offer emoji verification.";
 
+/// QA 12.1.11 D11 — the incoming request's note naming the device asking (its display name, else its id; the
+/// request carries it before Accept), so an unexpected request can be declined. Blank = NOTE_INCOMING_REQUESTED.
+/// Tin Hat Web: sasIncomingNote.
+pub fn incoming_note(peer: &str) -> String {
+    let p = peer.trim();
+    if p.is_empty() {
+        return NOTE_INCOMING_REQUESTED.to_string();
+    }
+    format!("{p} is asking to verify. Accept to compare emoji.")
+}
+
 /// S2 — the requester is waiting because the peer offers QR too (its user picks the method).
 pub fn wait_note(peer: &str) -> String {
     format!(
@@ -141,9 +152,40 @@ pub const FIRST_DEVICE_TITLE: &str = "Your Security Key";
 /// F2 — the note above the new Security Key.
 pub const FIRST_DEVICE_NOTE: &str = "Encryption is set up and this device is verified — your other devices verify against it. Save this Security Key somewhere safe: it's shown once, and it's the only way back into your encrypted messages if you ever lose every signed-in device.";
 
+// ---- D3 — a sheet that has finished verifying ANOTHER device closes itself (QA 12.1.11) ----
+// Web mirror: sasPolicy.ts sasDoneCloses. The desktop sheet applies it in VerifyDeviceDialog.qml (onSasStateChanged).
+
+/// D3 — does the verify sheet close by itself at this state? Only on the verifier side (`sas_incoming`) at "done": that
+/// side receives no keys, so nothing is left to happen there. Left open it stayed modal, and the next click elsewhere
+/// (Join in the call banner) only closed it. The requester's sheet closes when its keys arrive; "cancelled" keeps its
+/// note and Try again.
+pub fn done_closes(sas_state: &str, sas_incoming: bool) -> bool {
+    sas_incoming && sas_state == "done"
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// SHARED VECTORS (D3) — identical in tinhat-web src/core/matrix/sasPolicy.test.ts.
+    const DONE_CLOSES: &[(&str, &str, bool, bool)] = &[
+        // (name, sas_state, sas_incoming, want)
+        ("verifier done", "done", true, true),
+        ("requester done", "done", false, false),
+        ("verifier cancelled", "cancelled", true, false),
+        ("verifier emoji", "emoji", true, false),
+        ("verifier confirming", "confirming", true, false),
+        ("verifier waiting", "waiting", true, false),
+        ("idle", "", false, false),
+        ("recovery done", "recovery-done", false, false),
+    ];
+
+    #[test]
+    fn done_closes_shared_vectors() {
+        for (name, state, incoming, want) in DONE_CLOSES {
+            assert_eq!(done_closes(state, *incoming), *want, "{name}");
+        }
+    }
 
     /// SHARED VECTORS (F1) — identical in tinhat-web src/core/matrix/sasPolicy.test.ts.
     const FIRST: &[(&str, bool, bool, bool, bool)] = &[
@@ -249,6 +291,16 @@ mod tests {
     #[test]
     fn auto_start_settle_is_300_ms() {
         assert_eq!(AUTO_START_SETTLE_MS, 300);
+    }
+
+    /// QA 12.1.11 D11: the incoming request names the device asking (its display name, else its id), so an unexpected
+    /// request can be declined before accepting. Same cases as the web's sasPolicy.test.ts sas_incoming_note.
+    #[test]
+    fn incoming_note_names_the_device() {
+        assert_eq!(incoming_note("Tin Hat Web (Safari on iOS)"), "Tin Hat Web (Safari on iOS) is asking to verify. Accept to compare emoji.");
+        assert_eq!(incoming_note("  ABCDEFGHIJ "), "ABCDEFGHIJ is asking to verify. Accept to compare emoji.");
+        assert_eq!(incoming_note(""), NOTE_INCOMING_REQUESTED);
+        assert_eq!(incoming_note("   "), "Another device is asking to verify. Accept to compare emoji.");
     }
 
     #[test]

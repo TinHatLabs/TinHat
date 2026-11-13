@@ -232,7 +232,7 @@ Rectangle {
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
                     color: Th.accountAskFg
-                    text: "Let friends see when you're online? Only Online, Away or In a call — you can turn it off any time."
+                    text: "Let others see when you're online? Only Online, Away or In a call — you can turn it off any time."
                 }
             }
             RowLayout {

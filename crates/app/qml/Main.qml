@@ -24,10 +24,15 @@ import dev.tinhat.app
 
 Kirigami.ApplicationWindow {
     id: root
+    // push to talk: a hold key whose release never reaches us (the window lost focus or was minimised mid-hold) ends the
+    // hold — the web's window blur / page hidden (review round 4, UI-1 r2)
+    onActiveChanged: if (!active) { root._pttHeldKey = ""; if (callctl && callctl.pttSpeaking) callctl.pttHold(false) }
     // 12.1.8 (docs/KEYS-IN-WINDOWS.md): this window's own Shortcuts only while IT has the keyboard. Qt counts the main window
     // as active while one of its transient children (Calendar, Media Party, …) has focus, so an ungated Shortcut here
     // collided with that window's (Escape there was ambiguous: nothing closed).
     readonly property bool keysHere: root.activeFocusItem !== null
+    // (the same for push to talk: a transient child taking the keyboard leaves `active` true, and the key's release goes there)
+    onKeysHereChanged: if (!keysHere) { root._pttHeldKey = ""; if (callctl && callctl.pttSpeaking) callctl.pttHold(false) }
     // ===================== AppCore: controllers + glue (9.0 hoist) =====================
     // Everything that is NOT this window's look lives in AppCore.qml so a second shell could
     // share it. Every moved property/function comes back here as an alias/forwarder so the
@@ -1045,6 +1050,13 @@ Kirigami.ApplicationWindow {
                 root.openRoomId(action.substring(5))
                 return
             }
+            // docs/NOTIF-ACTIONS.md: Reply where no inline field (or not trusted) — the room with the composer focused
+            if (action.indexOf("compose:") === 0) {
+                root.visible = true; root.raise(); root.requestActivate()
+                root.openRoomId(action.substring(8))
+                Qt.callLater(function () { if (root.roomShown && root.conversationView) root.conversationView.focusComposer() })
+                return
+            }
             if (action.indexOf("calendar:") === 0) {
                 var rest = action.substring(9), k = rest.indexOf("/")
                 root.visible = true; root.raise(); root.requestActivate()
@@ -1369,7 +1381,7 @@ Kirigami.ApplicationWindow {
         Controls.MenuItem {
             text: "Invite people…"
             icon.name: "list-add-user"
-            onTriggered: { inviteField.text = ""; inviteDialog.open() }
+            onTriggered: inviteDialog.open()
         }
         Controls.MenuItem {
             text: "Copy space link"
@@ -1651,7 +1663,7 @@ Kirigami.ApplicationWindow {
         Controls.MenuItem {
             text: "Invite people…"
             icon.name: "list-add-user"
-            onTriggered: { inviteField.text = ""; inviteDialog.open() }
+            onTriggered: inviteDialog.open()
         }
         // Per-room notification level. Writes a SERVER push rule, so the choice follows
         // the account everywhere (web included) instead of being a per-install setting.
@@ -1774,15 +1786,46 @@ Kirigami.ApplicationWindow {
     // you are in a game needs the desktop's global-shortcut portal, which is a separate
     // piece of work — so the setting says so rather than implying otherwise.
     Item {
+        id: pttBaseItem
         anchors.fill: parent
         focus: true
         z: -1000
-        // 11.0: the key is push to talk's (Ctrl unless Settings → Shortcuts moved it: a modifier alone or an F-key)
-        Keys.onPressed: (e) => {
-            if (actionsHost.isPttKey(e.key) && !e.isAutoRepeat) callctl.pttHold(true)
+    }
+    // 11.0: the key is push to talk's (Ctrl unless Settings → Shortcuts moved it: a modifier alone or an F-key). Called by
+    // the application key filter (ptt_bridge.cpp), so it sees the key whatever has the keyboard: the message box, a menu.
+    // The key rules are ptt_rules.rs (shared vectors with the web): a modifier alone doesn't start a hold in a text field, and any
+    // other key during a modifier's hold ends it. A release is only ours if the key started the hold (a button hold stays).
+    property string _pttHeldKey: ""
+    function _pttKeyName(k) {
+        return k === Qt.Key_Control ? "Ctrl" : k === Qt.Key_Alt ? "Alt" : k === Qt.Key_Shift ? "Shift" : k === Qt.Key_Meta ? "Meta" : "other"
+    }
+    function _pttTextFocus() {
+        var f = root.activeFocusItem
+        return !!f && f.cursorPosition !== undefined && f.readOnly !== true
+    }
+    function tinhatPttKeyEvent(key, down) {
+        if (!callctl) return
+        if (actionsHost.isPttKey(key)) {
+            if (down === true) {
+                var name = root._pttKeyName(key)
+                if (callctl.pttPressStarts(name, root._pttTextFocus())) { root._pttHeldKey = name; callctl.pttHold(true) }
+            } else if (root._pttHeldKey !== "") {
+                root._pttHeldKey = ""
+                callctl.pttHold(false)
+            }
+        } else if (down === true && root._pttHeldKey !== "" && callctl.pttSpeaking && callctl.pttChordEnds(root._pttHeldKey)) {
+            root._pttHeldKey = ""
+            callctl.pttHold(false)
         }
-        Keys.onReleased: (e) => {
-            if (actionsHost.isPttKey(e.key) && !e.isAutoRepeat) callctl.pttHold(false)
+    }
+
+    // A key Qt offered to its shortcuts (ptt_bridge.cpp): a shortcut takes the key before any press event, so this is how a real
+    // shortcut during a modifier's hold ends it. Only another key ends a hold; it never starts one.
+    function tinhatPttChordKey(key) {
+        if (!callctl || actionsHost.isPttKey(key)) return
+        if (root._pttHeldKey !== "" && callctl.pttSpeaking && callctl.pttChordEnds(root._pttHeldKey)) {
+            root._pttHeldKey = ""
+            callctl.pttHold(false)
         }
     }
 
@@ -1808,16 +1851,17 @@ Kirigami.ApplicationWindow {
         id: newDmDialog
         title: "New DM"
         standardButtons: Kirigami.Dialog.NoButton
-        // 2026-09-29: a plain username is enough ("alex" → @alex:<our server>; login.dmTarget = dm_target.rs,
-        // the web's dmTarget.ts, shared vectors). "" = not a user.
-        readonly property string target: login.dmTarget(newDmField.text)
-        onOpened: newDmField.forceActiveFocus()   // type right away (the web's autoFocus)
+        preferredWidth: Kirigami.Units.gridUnit * 26   // the Invite dialog's size, centred (not window-wide)
+        // 2026-11-12 (feat/people-search): the add-people picker (PeoplePicker.qml; the web's PeoplePicker.tsx). A plain
+        // username still means your server (login.createDm → dm_target.rs, the web's dmTarget.ts, shared vectors).
+        readonly property string target: newDmPicker.selectedMxid
+        onOpened: newDmPicker.reset("")   // type right away (the web's autoFocus)
         customFooterActions: [
             Kirigami.Action {
                 text: "Message"
                 icon.name: "document-edit-symbolic"
                 enabled: newDmDialog.target.length > 0
-                onTriggered: login.createDm(newDmDialog.target)
+                onTriggered: newDmPicker.pickSelected()
             }
         ]
         ColumnLayout {
@@ -1826,31 +1870,23 @@ Kirigami.ApplicationWindow {
                 text: "Who do you want to message?"
                 Layout.fillWidth: true
             }
-            Controls.TextField {
-                id: newDmField
-                implicitWidth: Kirigami.Units.gridUnit * 20
+            PeoplePicker {
+                id: newDmPicker
+                app: root
+                verb: "Message"
+                keepPicking: false
+                placeholder: "Name or username, e.g. alex"
+                implicitWidth: Kirigami.Units.gridUnit * 22
                 Layout.fillWidth: true
-                placeholderText: "Their username, e.g. alex"
-                inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
-                onAccepted: if (newDmDialog.target.length > 0) login.createDm(newDmDialog.target)
+                onPicked: (mxid) => login.createDm(mxid)
             }
             Controls.Label {
-                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                text: newDmField.text.trim().length === 0
-                      ? "Just their username is enough. Someone on another server: @name:their.server."
-                      : (newDmDialog.target.length > 0 ? "Messages " + newDmDialog.target
-                                                        : "That isn't a username — letters, numbers and . _ - only.")
+                text: "Just their username is enough on your server. Someone on another server: their full address, like @name:their.server. If you already have a DM with them, it opens that one instead of starting a second."
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 22   // wraps at the picker's width (doesn't widen the dialog)
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
-            }
-            Controls.Label {
-                text: "If you already have a DM with them, it opens that one instead of starting a second."
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-                color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: newDmPicker.smallSize   // the picker footer's size (Your address), as on the web
             }
         }
     }
@@ -1867,40 +1903,44 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // Invite to whichever room was right-clicked (ctxRoomId), which may be a space.
+    // Invite to whichever room was right-clicked (ctxRoomId), which may be a space. 2026-11-12 (feat/people-search): the
+    // add-people picker; invite several people, then Done.
     Kirigami.PromptDialog {
         id: inviteDialog
         title: LinkGate.plain("Invite to " + root.ctxRoomName)
         standardButtons: Kirigami.Dialog.NoButton
+        preferredWidth: Kirigami.Units.gridUnit * 26
+        onOpened: invitePicker.reset("")
         customFooterActions: [
             Kirigami.Action {
                 text: "Invite"
                 icon.name: "list-add-user"
-                enabled: inviteField.text.trim().length > 0
-                onTriggered: {
-                    login.inviteToRoom(root.ctxRoomId, inviteField.text.trim())
-                    inviteDialog.close()
-                }
+                enabled: invitePicker.selectedMxid.length > 0
+                onTriggered: invitePicker.pickSelected()
+            },
+            Kirigami.Action {
+                text: "Done"
+                onTriggered: inviteDialog.close()
             }
         ]
         ColumnLayout {
             spacing: 8
-            Controls.TextField {
-                id: inviteField
-                implicitWidth: Kirigami.Units.gridUnit * 20
+            PeoplePicker {
+                id: invitePicker
+                app: root
+                verb: "Invite"
+                roomId: root.ctxRoomId
+                implicitWidth: Kirigami.Units.gridUnit * 22
                 Layout.fillWidth: true
-                placeholderText: "@someone:" + (root.myServer().length > 0 ? root.myServer() : "example.com")
-                onAccepted: if (text.trim().length > 0) {
-                    login.inviteToRoom(root.ctxRoomId, text.trim())
-                    inviteDialog.close()
-                }
+                onPicked: (mxid) => login.inviteToRoom(root.ctxRoomId, mxid)
             }
             Controls.Label {
                 text: "They'll get an invite they can accept or decline. Remove someone again from the member list on the right."
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 22   // wraps at the picker's width (doesn't widen the dialog)
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: invitePicker.smallSize   // the picker footer's size (Your address), as on the web
             }
         }
     }
@@ -2162,32 +2202,23 @@ Kirigami.ApplicationWindow {
             onTriggered: logoutConfirm.open()
         }
     }
-    // ---- The room column's + (2026-09-29, contract menus.new): New DM, and New room only while a space is
-    // selected. Tin Hat Web: nav/menus.tsx NewMenu. ----
-    Controls.Menu {
+    // ---- The room column's + (contract menus.new): New DM… and New room… everywhere (QA D21, 12.1.12; until then New
+    // room only while a space was selected) — NewMenu.qml. In a space the room goes into it; on Home it is a room of its
+    // own (spaceId "": no "Put it in", the title says New room). Tin Hat Web: nav/menus.tsx NewMenu. ----
+    NewMenu {
         id: newMenu
-        modal: false
-        Controls.MenuItem {
-            text: "New DM…"
-            icon.name: "document-edit-symbolic"
-            onTriggered: { newDmField.text = ""; newDmDialog.open() }
-        }
-        Controls.MenuItem {
-            text: "New room…"
-            icon.name: "folder-new-symbolic"
-            // only while a space is selected: the room is made in that space (2026-09-29)
-            visible: root.mNavActiveSpace.indexOf("!") === 0
-            height: visible ? implicitHeight : 0
-            onTriggered: {
-                newRoomName.text = ""
-                newRoomTopic.text = ""
-                newRoomPrivate.checked = true
-                newRoomIsSpace.checked = false
-                newRoomDialog.spaceId = root.mNavActiveSpace.indexOf("!") === 0 ? root.mNavActiveSpace : ""
-                newRoomDialog.spaceName = root.mNavActiveLabel
-                newRoomInSpace.checked = true
-                newRoomDialog.open()
-            }
+        onDmRequested: newDmDialog.open()
+        activeSpace: root.mNavActiveSpace
+        activeLabel: root.mNavActiveLabel
+        onRoomRequested: (spaceId, spaceName) => {
+            newRoomName.text = ""
+            newRoomTopic.text = ""
+            newRoomPrivate.checked = true
+            newRoomIsSpace.checked = false
+            newRoomDialog.spaceId = spaceId
+            newRoomDialog.spaceName = spaceName
+            newRoomInSpace.checked = true
+            newRoomDialog.open()
         }
     }
     ConfirmDialog {
@@ -2486,10 +2517,10 @@ Kirigami.ApplicationWindow {
             aboutSheet: aboutSheet, appMenu: appMenu, bugReportDialog: bugReportDialog, calendarWindow: calendarWindow,
             callIsland: callIsland, callOptions: callOptions, chooseTheme: function (id) { return core.chooseTheme(id) },
             conversation: conversation, devicesMenu: devicesMenu, floatingChats: floatingChats, gameReelWindow: gameReelWindow,
-            iconGallery: iconGallery, installDialog: installDialog, inviteDialog: inviteDialog, inviteField: inviteField,
+            iconGallery: iconGallery, installDialog: installDialog, inviteDialog: inviteDialog,
             joinOrCreateDialog: joinOrCreateDialog, memoriesWindow: memoriesWindow, musicFileDialog: musicFileDialog,
             musicUrlDialog: musicUrlDialog, musicUrlField: musicUrlField, navState: navState, newDmDialog: newDmDialog,
-            newDmField: newDmField, newRoomDialog: newRoomDialog, newRoomInSpace: newRoomInSpace, newRoomIsSpace: newRoomIsSpace,
+            newRoomDialog: newRoomDialog, newRoomInSpace: newRoomInSpace, newRoomIsSpace: newRoomIsSpace,
             newRoomName: newRoomName, newRoomPrivate: newRoomPrivate, newRoomTopic: newRoomTopic, noiseTestSheet: noiseTestSheet,
             quickSwitcher: quickSwitcher, rightPanel: rightPanel, roomPhotoDialog: roomPhotoDialog, roomsIsl: roomsIsl,
             settingsSheet: settingsWindow, shortcutsDialog: shortcutsDialog, soundboardPanel: soundboardPanel,
@@ -3339,7 +3370,14 @@ Kirigami.ApplicationWindow {
             // (waiting, emoji, cancelled …), not just on done.
             if (login.sasState === "done") {
                 root._verifyToastArmed = true
-                root.showPassiveNotification("Emoji matched — finishing up…", 3000)
+                // D3: verifying another device ends here — its sheet closes itself, the note goes to the toast (read a
+                // beat later: the bridge sets the state before the note)
+                // (only while that flow is still the one on screen: a reset or a new request in between says nothing)
+                if (login.sasIncoming) Qt.callLater(function () {
+                    if (login.sasState === "done" && login.sasNote.length > 0)
+                        root.showPassiveNotification(LinkGate.plain(login.sasNote), 4000)
+                })
+                else root.showPassiveNotification("Emoji matched — finishing up…", 3000)
             }
         }
         // F1: the first-device check ended. Take the verified flag now (the 120 ms poll would leave the banner up for a
@@ -3885,6 +3923,47 @@ Kirigami.ApplicationWindow {
             x.send()
         }
     }
+    // lab gates: the message box takes the keyboard / the call bar's More button's rect (paddrive focus-composer, find-more)
+    function _labWalk(pred) {
+        var hit = null
+        var walk = function (it, depth) {
+            if (!it || hit || depth > 80) return
+            if (it.visible && it.width > 0 && pred(it)) { hit = it; return }
+            var kids = it.children || []
+            for (var i = 0; i < kids.length && !hit; i++) walk(kids[i], depth + 1)
+        }
+        walk(root.contentItem, 0)
+        return hit
+    }
+    function _labFocusComposer() {
+        var t = root._labWalk(function (it) { return it.cursorPosition !== undefined && it.placeholderText !== undefined && String(it.Accessible.name).indexOf("essage") >= 0 })
+        if (!t) return "not found"
+        t.forceActiveFocus()
+        return String(root.activeFocusItem).slice(0, 80)
+    }
+    function _labFindMore() {
+        var b = root._labWalk(function (it) { return it.objectName === "callBarMore" })
+        if (!b) return "not found"
+        var p = b.mapToItem(null, 0, 0)
+        return { x: Math.round(p.x), y: Math.round(p.y), w: Math.round(b.width), h: Math.round(b.height), winX: root.x, winY: root.y }
+    }
+    // the first visible ActionButton (it has the hold signal) drawing `action`: its rect in window coordinates (paddrive find-action)
+    function _findActionButton(action) {
+        var hit = null
+        var walk = function (it, depth) {
+            if (!it || hit || depth > 80) return
+            if (typeof it.hold === "function" && it.item && it.item.a === action && it.visible && it.width > 0) {
+                var p = it.mapToItem(null, 0, 0)
+                hit = { x: Math.round(p.x), y: Math.round(p.y), w: Math.round(it.width), h: Math.round(it.height), winX: root.x, winY: root.y,
+                        dimmed: it.dimmed === true, holdable: it.holdable === true }
+                return
+            }
+            var kids = it.children || []
+            for (var i = 0; i < kids.length && !hit; i++) walk(kids[i], depth + 1)
+        }
+        walk(root.contentItem, 0)
+        return hit || "not found"
+    }
     function _padDriveStep(n, s) {
         var r
         if (s.do === "open") {
@@ -3933,6 +4012,16 @@ Kirigami.ApplicationWindow {
         else if (s.do === "camera") { callctl.toggleCamera(); r = "camera" }
         else if (s.do === "sound") { soundboardCtl.playSound(String(s.room || root.mCallRoomId), String(s.url || "")); r = "sound" }
         else if (s.do === "status") { r = { status: String(callctl.status), error: String(callctl.lastError || ""), sharing: callctl.sharing === true, camera: callctl.cameraOn === true, watching: callctl.watching === true, noCapture: callctl.noCapture === true, inCall: root.mInCall, room: root.mCallRoomId, hangingUp: callctl.hangingUp === true, reconnecting: callctl.reconnecting === true, connecting: callctl.connecting === true, callFailed: callctl.callFailed === true } }
+        // review round 4 UI-1 (the assembly's real-input PTT gate; lab gates only): a stored button row (null = the
+        // default), where an action's button is on screen (window coordinates + the window's), push to talk's state
+        else if ((s.do === "row" || s.do === "find-action" || s.do === "ptt-state" || s.do === "focus-base" || s.do === "focus-composer" || s.do === "find-more" || s.do === "ptt-key-override") && !login.labDriveHooks()) { r = "refused" }
+        else if (s.do === "row") { r = root.layoutStore.setRow(String(s.island || ""), String(s.row || ""), s.value === undefined ? null : s.value) || "ok" }
+        else if (s.do === "find-action") { r = root._findActionButton(String(s.action || "")) }
+        else if (s.do === "ptt-key-override") { actionsHost.labPttKeys = s.keys || []; r = "ptt keys " + JSON.stringify(s.keys || []) }
+        else if (s.do === "focus-base") { pttBaseItem.forceActiveFocus(); r = String(root.activeFocusItem).slice(0, 80) }
+        else if (s.do === "focus-composer") { r = root._labFocusComposer() }
+        else if (s.do === "find-more") { r = root._labFindMore() }
+        else if (s.do === "ptt-state") { r = { ptt: callctl.pushToTalk === true, speaking: callctl.pttSpeaking === true, micMuted: callctl.micMuted === true, inCall: root.mInCall, winX: root.x, winY: root.y, active: root.active === true, keysHere: root.keysHere === true, focus: String(root.activeFocusItem).slice(0, 80) } }
         else r = padWindow.drive(s)
         console.log("[paddrive] #" + n + " " + s.do + " -> " + (typeof r === "object" ? JSON.stringify(r) : String(r)) + " t=" + Date.now())
     }
@@ -4132,6 +4221,7 @@ Kirigami.ApplicationWindow {
                 homeserver: login.homeserver
                 movedNote: login.movedNote
                 movedTo: login.movedTo
+                serverHint: login.serverNameHint(login.homeserver)
                 restoreProblem: login.restoreProblem   // 12.1.1 (restore_err.rs): a kept session that didn't open
                 onRetryRestore: login.restore()
                 onStartFresh: login.startFresh()
@@ -4744,6 +4834,73 @@ Kirigami.ApplicationWindow {
     // 11.0 edit mode (EDITMODE-UI §2): every placed island is present — a room, the call and the panel as if open
     // (placeholders where the real content is absent), the collapsed column's drawer open — and nothing is maximised;
     // a stack's shown tab = the device-local pref `layout-tabs` (§4.4)
+    // ---- the two-pane band (docs/TWO-PANE.md; Tin Hat Web: app/dock/shellView.ts twoPaneSizes + features/callui/barfit.ts,
+    // same numbers, same vectors testvectors/two-pane/vectors.json, replayed on this block by tools/two-pane-test.mjs) ----
+    // Tablets-sized windows: a dock host narrower than sc(1024) is two panes, the list (rail + rooms) and the room; the
+    // room info panel already overlays there (Classic's collapse step). The list gives the room more width: the rooms
+    // column is drawn 248 wide instead of its stored width, as a device-local view override (LAYOUT.md §6.2 — never
+    // saved, never synced). Only a docked fixed column wider than that; never in edit mode. barFit: the call bar first
+    // scales to fit (down to 0.7), then its last buttons before Leave move into a More menu.
+    // BEGIN two-pane pure
+    function twoPaneSizes(form, hostW, editing, unitPm) {
+        var pm = (typeof unitPm === "number" && unitPm > 0) ? unitPm : 1000
+        if (editing || !(hostW > 0) || hostW >= Math.floor(1024 * pm / 1000)) return null
+        var find = function (n, depth) {
+            if (!n || typeof n !== "object" || depth > 32) return null
+            if (n.id === "roomscol" && (n.t === "col" || n.t === "row")) return n
+            if (Array.isArray(n.c)) for (var k = 0; k < n.c.length; k++) { var hit = find(n.c[k], depth + 1); if (hit) return hit }
+            return null
+        }
+        var col = find(form && typeof form === "object" ? form.root : null, 0)
+        var fixed = col && col.size && typeof col.size.fixed === "number" ? col.size.fixed : null
+        if (fixed === null || fixed <= 248) return null
+        return { roomscol: { fixed: 248 } }
+    }
+    // foldKeeps: a call-bar item that never moves into More — the host's `keep` list (Mute, Leave) and every hold
+    // item (push to talk): a menu row is one click, a hold action needs its press AND its release (security review
+    // round 4, UI-1: a folded "Push to talk (hold)" ran as a press with no release and left the mic open)
+    function foldKeeps(it, keep) {
+        if (!it || typeof it !== "object") return true
+        if (it.hold === true) return true
+        return Array.isArray(keep) && keep.indexOf(it.a) >= 0
+    }
+    function barFit(i) {
+        var num = function (v) { return (typeof v === "number" && isFinite(v)) ? v : 0 }
+        var full = Math.max(0, num(i.fullW)), avail = Math.max(0, num(i.availW))
+        var minScale = Math.min(1, Math.max(0.1, num(i.minScale) || 0.7))
+        var cell = Math.max(1, num(i.cell) || 54)
+        var widths = []
+        if (Array.isArray(i.widths)) { for (var a = 0; a < i.widths.length; a++) widths.push(Math.max(0, num(i.widths[a]))) }
+        else { for (var b = 0; b < Math.max(0, Math.floor(num(i.foldable))); b++) widths.push(cell) }
+        var more = Math.max(0, (i.more === undefined || i.more === null) ? cell : num(i.more))
+        var fold0 = Math.max(0, Math.floor(num(i.fold0)))
+        var limit = avail / minScale
+        // the width drawn with the last k moved (+ More); the fewest from the right that fit (all when none do);
+        // moving buttons back out needs half a More cell to spare (measured widths, no fold / unfold loop)
+        var drawnWith = function (w, k) {
+            if (k <= 0) return w
+            var cut = 0
+            for (var j = widths.length - k; j < widths.length; j++) cut += widths[j]
+            return w - cut + more
+        }
+        var need = function (w) {
+            if (w <= limit + 1e-9) return 0
+            for (var k = 1; k <= widths.length; k++) if (drawnWith(w, k) <= limit + 1e-9) return k
+            return widths.length
+        }
+        var fold = need(full)
+        if (fold0 > 0 && fold < fold0) fold = Math.min(fold0, widths.length, need(full + more / 2))
+        var drawn = drawnWith(full, fold)
+        return { fold: fold, scale: drawn <= 0 ? 1 : Math.max(minScale, Math.min(1, avail / drawn)) }
+    }
+    // END two-pane pure
+    // the band's view override, as text (the view re-solves only when it changes, not on every pixel of a resize)
+    readonly property string twoPaneKey: {
+        var f = null
+        try { f = JSON.parse(root.dockFormJson) } catch (e) { f = null }
+        var r = root.twoPaneSizes(f, dockHost.width, editModeObj.open, dockHost.unitPm)
+        return r ? JSON.stringify(r) : ""
+    }
     readonly property var dockView: {
         var v = editModeObj.open ? ({
             roomOpen: true,
@@ -4760,6 +4917,7 @@ Kirigami.ApplicationWindow {
             forceCollapse: root.navMode === "corner" ? ["navcol"] : [],
             drawer: { open: cornerNav.panelShown ? root.navDrawerId : null }
         })
+        if (!editModeObj.open && root.twoPaneKey.length > 0) v.sizes = JSON.parse(root.twoPaneKey)
         if (Object.keys(root.layoutTabs).length > 0) v.active = root.layoutTabs
         return v
     }

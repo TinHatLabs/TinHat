@@ -52,6 +52,9 @@ Item {
     property bool pinned: false
     property bool canPin: false
     property bool flash: false          // briefly lit after a jump-to
+    // a11y pass: the message the keyboard is on (ConversationView msgView.kbIndex) — the active-row wash, held while
+    // the list has the focus (the web paints the same wash on its focused row)
+    property bool kbCurrent: false
     property var preview: null          // link preview descriptor (LinkPreviewCard)
     signal replyRequested()
     signal editRequested()
@@ -86,6 +89,8 @@ Item {
     /// security review 2026-10-26 (viewer.rs): the attachment is a viewer type the OS may open; else Save as only
     property bool canOpen: false
     property int durationMs: 0
+    property bool voiceNote: false      // voice notes: an MSC3245 voice message (the row's `voice`)
+    property bool voiceProbe: false     // TINHAT_GUI_VOICEPROBE=1 (gate): log this voice note's player load
     property real fileSize: 0
     property string media: ""           // decrypted file:// path for an m.image (else "")
     property int imageW: 0              // event-provided pixel width  (0 = unknown → use decoded size)
@@ -100,6 +105,12 @@ Item {
     readonly property bool videoIsMine: resolvedMedia && resolvedMedia.id === eventId
     readonly property string videoUrl: videoIsMine && resolvedMedia.url ? resolvedMedia.url : ""
     readonly property bool videoLoading: videoIsMine && resolvedMedia.loading === true // file/video/audio chip → download & open
+    /// A video this machine can't decode (an iPhone's HEVC .MOV with no HEVC decoder: Windows without the HEVC
+    /// extension, a Linux without one): the card goes back to its poster, says so and keeps Save — never a black box.
+    /// Keyed on the event id, so a recycled delegate never inherits it. The web's MediaBlocks.tsx VIDEO_CANT_PLAY.
+    property string videoFailedId: ""
+    readonly property bool videoFailed: videoFailedId.length > 0 && videoFailedId === eventId
+    readonly property string videoCantPlay: "Can't play this video here — save it to watch it."
     property var embeds: []             // inline media embeds (youtube/gif/direct media)
     property bool onlyEmbed: false      // body is only an embeddable link → hide raw url
     // 0.8.33: a calendar announcement (dev.tinhat.calendar {container, event}) → live card.
@@ -141,6 +152,12 @@ Item {
                 videoOutput: vout
                 audioOutput: AudioOutput {}
                 Component.onCompleted: play()
+                onErrorOccurred: bubble.videoFailedId = bubble.eventId
+                // no picture: the video track's codec isn't decodable here (the sound alone would play)
+                onMediaStatusChanged: {
+                    if ((mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) && !hasVideo)
+                        bubble.videoFailedId = bubble.eventId
+                }
             }
             MouseArea {
                 anchors.fill: parent
@@ -262,17 +279,17 @@ Item {
         anchors.leftMargin: -Kirigami.Units.smallSpacing
         anchors.rightMargin: -Kirigami.Units.smallSpacing
         radius: 6
-        visible: bubble.mentionsMe || bubble.flash
+        visible: bubble.mentionsMe || bubble.flash || bubble.kbCurrent
         // themes: the tokens carry the wash's alpha; it stays the item's opacity (docs/MIGRATING-THEME.md §3.8 — an
         // alpha colour would move anti-aliased pixels), so the colour is the token at full alpha.
-        color: bubble.flash ? Qt.alpha(Th.timelineRowBgActive, 1) : Qt.alpha(Th.timelineRowBgMention, 1)
-        opacity: bubble.flash ? Th.timelineRowBgActive.a : Th.timelineRowBgMention.a
+        color: (bubble.flash || bubble.kbCurrent) ? Qt.alpha(Th.timelineRowBgActive, 1) : Qt.alpha(Th.timelineRowBgMention, 1)
+        opacity: (bubble.flash || bubble.kbCurrent) ? Th.timelineRowBgActive.a : Th.timelineRowBgMention.a
         Behavior on opacity { NumberAnimation { duration: Motion.durLong } }
         Rectangle {
             anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
             width: 3; radius: 1.5
             // the mention stripe (the wash's colour while a jump flashes it), at the wash's opacity
-            color: bubble.flash ? Qt.alpha(Th.timelineRowBgActive, 1) : Qt.alpha(Th.timelineRowStripeMention, 1)
+            color: (bubble.flash || bubble.kbCurrent) ? Qt.alpha(Th.timelineRowBgActive, 1) : Qt.alpha(Th.timelineRowStripeMention, 1)
             opacity: 1.0
             visible: bubble.mentionsMe
         }
@@ -941,9 +958,9 @@ Item {
                         // player box follows the clip's real aspect ratio when the event carries one.
                         Layout.preferredWidth: bubble.maxBubble - 24
                         Layout.minimumWidth: 220
-                        Layout.preferredHeight: bubble.videoUrl.length > 0
+                        Layout.preferredHeight: bubble.videoUrl.length > 0 && !bubble.videoFailed
                             ? ((bubble.imageW > 0 && bubble.imageH > 0) ? Math.max(120, Math.min(360, Math.round((bubble.maxBubble - 24) * bubble.imageH / bubble.imageW))) : 220)
-                            : 96
+                            : bubble.videoFailed ? Math.max(96, videoPoster.implicitHeight + 20) : 96
                         radius: 8
                         color: Th.bubbleVideoBg
                         border.width: 1
@@ -952,10 +969,11 @@ Item {
 
                         // Poster state: what it is, how big, and an obvious ▶.
                         RowLayout {
+                            id: videoPoster
                             anchors.fill: parent
                             anchors.margins: 10
                             spacing: 10
-                            visible: bubble.videoUrl.length === 0
+                            visible: bubble.videoUrl.length === 0 || bubble.videoFailed
                             Kirigami.Icon {
                                 source: "video-x-generic"
                                 Layout.preferredWidth: 32
@@ -973,17 +991,23 @@ Item {
                                 }
                                 Controls.Label {
                                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                    text: bubble.videoLoading
+                                    text: bubble.videoFailed
+                                          ? bubble.videoCantPlay
+                                          : bubble.videoLoading
                                           ? "Downloading…"
                                           : (bubble.fmtSize(bubble.fileSize)
                                              + (bubble.durationMs > 0
                                                 ? "  ·  " + bubble.fmtTime(bubble.durationMs) : ""))
                                     color: Th.bubbleVideoMetaFg
                                     font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    // the can't-play line wraps; the card grows past 96 px when the words need it (never cut)
+                                    wrapMode: bubble.videoFailed ? Text.WordWrap : Text.NoWrap
+                                    Layout.fillWidth: bubble.videoFailed
                                 }
                             }
                             Controls.ToolButton {
                                 icon.name: "media-playback-start"
+                                visible: !bubble.videoFailed
                                 enabled: !bubble.videoLoading
                                 Controls.ToolTip.text: "Play here"
                                 Controls.ToolTip.visible: hovered
@@ -1001,7 +1025,7 @@ Item {
                         // Playing state: the surface only exists once there is a file.
                         Loader {
                             anchors.fill: parent
-                            active: bubble.videoUrl.length > 0
+                            active: bubble.videoUrl.length > 0 && !bubble.videoFailed
                             sourceComponent: videoSurface
                         }
                     }
@@ -1089,6 +1113,19 @@ Item {
                             id: audioPlayer
                             source: bubble.media
                             audioOutput: AudioOutput { id: audioOut }
+                            // voice-notes gate hook (TINHAT_GUI_VOICEPROBE=1): did a voice note's file load with a duration?
+                            function _probe(what) {
+                                if (!bubble.voiceProbe || !bubble.voiceNote) return
+                                var loaded = audioPlayer.mediaStatus === MediaPlayer.LoadedMedia || audioPlayer.mediaStatus === MediaPlayer.BufferedMedia
+                                console.log("[voiceprobe] " + what + " event=" + bubble.eventId + " echo=" + bubble.pending
+                                            + " status=" + audioPlayer.mediaStatus + " loaded=" + loaded
+                                            + " durationMs=" + audioPlayer.duration + " eventDurationMs=" + bubble.durationMs
+                                            + " ok=" + (loaded && audioPlayer.duration > 0)
+                                            + (audioPlayer.errorString.length > 0 ? " error=" + audioPlayer.errorString : ""))
+                            }
+                            onMediaStatusChanged: _probe("status")
+                            onDurationChanged: _probe("duration")
+                            onErrorOccurred: _probe("error")
                         }
 
                         RowLayout {

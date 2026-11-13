@@ -1,0 +1,23 @@
+{
+  "about": "QA W1: a deleted (redacted) message is not a pin. Shared byte-for-byte by the desktop (crates/app/src/testvectors/pins.json) and the web (src/features/chat/lib/testvectors/pins.json); pins.rs / pins.ts replay it.",
+  "rowBody": [
+    { "why": "a plain message shows its text", "encrypted": false, "redacted": false, "text": "hello", "want": "hello" },
+    { "why": "deleted", "encrypted": false, "redacted": true, "text": "", "want": "Message deleted" },
+    { "why": "deleted in an encrypted room: a redaction keeps the m.room.encrypted type and drops the content, it is gone, not waiting for a key", "encrypted": true, "redacted": true, "text": "", "want": "Message deleted" },
+    { "why": "still encrypted (no key yet)", "encrypted": true, "redacted": false, "text": "", "want": "Encrypted message — open the room around it to read it" }
+  ],
+  "shown": [
+    { "why": "nothing deleted", "pinned": ["$a", "$b"], "deleted": [], "want": ["$a", "$b"] },
+    { "why": "a deleted pin neither counts nor lists", "pinned": ["$a", "$b", "$c"], "deleted": ["$b"], "want": ["$a", "$c"] },
+    { "why": "every pin deleted: no 📌 button", "pinned": ["$a"], "deleted": ["$a"], "want": [] },
+    { "why": "a deleted message that is not pinned changes nothing", "pinned": ["$a"], "deleted": ["$z"], "want": ["$a"] }
+  ],
+  "afterDelete": [
+    { "why": "deleting a pinned message unpins it when I may edit the pins", "pinned": ["$a", "$b", "$c"], "id": "$b", "mayPin": true, "want": ["$a", "$c"] },
+    { "why": "a duplicate id goes too", "pinned": ["$b", "$a", "$b"], "id": "$b", "mayPin": true, "want": ["$a"] },
+    { "why": "the last pin: an empty list is written", "pinned": ["$a"], "id": "$a", "mayPin": true, "want": [] },
+    { "why": "not pinned: no write", "pinned": ["$a"], "id": "$b", "mayPin": true, "want": null },
+    { "why": "no pins at all: no write", "pinned": [], "id": "$b", "mayPin": true, "want": null },
+    { "why": "I may not edit the pins: no write (the deleted pin is only hidden)", "pinned": ["$a", "$b"], "id": "$b", "mayPin": false, "want": null }
+  ]
+}

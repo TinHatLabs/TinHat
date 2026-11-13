@@ -701,6 +701,15 @@ pub(crate) fn matrix_key_provider() -> KeyProvider {
     KeyProvider::new(matrix_key_provider_options())
 }
 
+/// Log self-test hook (the app's tests use it to prove no call key reaches a log): install `key` for `participant`
+/// through the same native key provider a call uses, after the libwebrtc log sink is registered the way a call
+/// registers it, so libwebrtc's key derivation (and anything it logs) runs exactly as in a call.
+#[doc(hidden)]
+pub fn install_key_for_log_selftest(participant: &str, key: &[u8]) -> bool {
+    let _factory = livekit::webrtc::peer_connection_factory::PeerConnectionFactory::default();
+    matrix_key_provider().set_key(&ParticipantIdentity(participant.to_owned()), 0, key.to_vec())
+}
+
 /// The options behind [`matrix_key_provider`] (split out so the unit tests can pin them).
 pub(crate) fn matrix_key_provider_options() -> KeyProviderOptions {
     let mut opts = KeyProviderOptions::default(); // salt already "LKFrameEncryptionKey"
@@ -741,6 +750,24 @@ mod key_provider_tests {
         let (discard, magic_len) = matrix_key_provider().effective_options();
         assert!(discard, "libwebrtc must see discard_frame_when_cryptor_not_ready = true");
         assert_eq!(magic_len, 0, "no SIF / magic trailer may be installed");
+    }
+
+    /// The native log filter in the libwebrtc log sink: below WARNING nothing reaches the app's log, and a line
+    /// naming key material never does (the exact shapes of the two key-derivation lines, frame_crypto_transformer.cc).
+    #[test]
+    fn native_webrtc_log_lines_with_key_material_or_below_warning_are_dropped() {
+        use livekit::webrtc::native::native_log_line_forwarded as fwd;
+        let hkdf = "(frame_crypto_transformer.cc:349): secret [1,2,3,] len 3 slat << [76,75,] len 2\n derived_key [9,8,] len 2";
+        let pbkdf2 = "(frame_crypto_transformer.cc:373): raw_key [1,2,3,] len 3 slat << [76,75,] len 2\n derived_key [9,8,] len 2";
+        for warning_or_worse in [false, true] {
+            assert!(!fwd(hkdf, warning_or_worse));
+            assert!(!fwd(pbkdf2, warning_or_worse));
+            assert!(!fwd(" derived_key [9,8,] len 2", warning_or_worse));
+        }
+        assert!(!fwd("(port.cc:1): Port[x]: connection created", false), "below WARNING nothing passes");
+        // negative control: an ordinary warning / error still reaches the log
+        assert!(fwd("(rtc_event_log.cc:1): something went wrong", true));
+        assert!(fwd("(frame_crypto_transformer.cc:345): Failed to derive HkdfSha256 key from secret.", true));
     }
 
     /// 12.1.5 early receiver attach: receiver cryptors are keyed by the NATIVE receiver object
@@ -1099,6 +1126,16 @@ pub(crate) fn cuda_scale_available() -> bool {
         }
         missing.is_empty()
     })
+}
+
+/// (nvcodec plugin found, its CUDA elements registered) in GStreamer's registry, initialising GStreamer if needed. For
+/// the app's Flatpak registry check (flatpak-nvidia, 2026-11-07): `cudaupload` needs only a working CUDA driver (no
+/// NVRTC), so "plugin found, no cudaupload" means CUDA failed while the registry was scanned.
+pub fn nvcodec_cuda_state() -> (bool, bool) {
+    if gst::init().is_err() {
+        return (false, false);
+    }
+    (gst::Registry::get().find_plugin("nvcodec").is_some(), gst::ElementFactory::find("cudaupload").is_some())
 }
 
 /// Which capture path a share tries, as (GPU with a known size, GPU learning the size from the first frame); neither =
@@ -1900,6 +1937,7 @@ pub(crate) fn wire_appsink_to_source_ext(
                     buffer: dst,
                 };
                 source.capture_frame(&frame);
+                VIDEO_FRAMES_FED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 drop(clock);
                 if let Some(st) = report {
                     let sum = jsum_cb.swap(0, std::sync::atomic::Ordering::Relaxed);
@@ -1991,6 +2029,7 @@ pub(crate) fn wire_appsink_to_source_ext(
                 buffer: dst,
             };
             source_rep.capture_frame(&frame);
+            VIDEO_FRAMES_FED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             drop(clock);
             repeats += 1;
             // Neutral wording — this repeater is wired to BOTH the camera and the
@@ -2002,6 +2041,13 @@ pub(crate) fn wire_appsink_to_source_ext(
             }
         }
     });
+}
+
+/// 12.1.12: every video frame handed to libwebrtc by wire_appsink_to_source_ext (camera + share, keepalive repeats included), for
+/// the app's [mem] log line (memory growth per fed frame).
+static VIDEO_FRAMES_FED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub fn video_frames_fed() -> u64 {
+    VIDEO_FRAMES_FED.load(std::sync::atomic::Ordering::Relaxed)
 }
 
 /// Copy a GStreamer I420 frame (with its strides) into a LiveKit I420Buffer
