@@ -36,7 +36,7 @@ pub mod keys;
 pub mod palette;
 pub mod table;
 
-pub use api::{choices, dispatch, drawer, evaluate, fold, menu, palette, place, row, score, summary, target, KINDS};
+pub use api::{choices, dispatch, drawer, evaluate, fold, menu, palette, place, room_filter, row, score, summary, target, KINDS};
 pub use table::{action_by_id, table, Action, App, Table};
 
 use serde_json::Value;

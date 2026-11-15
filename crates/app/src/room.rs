@@ -32,6 +32,7 @@ pub mod qobject {
         #[qproperty(QString, room_name)] //     QML: roomName
         #[qproperty(QString, messages_json)] // QML: messagesJson — JSON [{sender,body,ts,id}]
         #[qproperty(QString, status)] //        QML: status (errors)
+        #[qproperty(QString, op_failed_json)] // QML: opFailedJson — L1: the last refused edits / deletes, newest last (at most 8: push_failure) [{seq, room, kind ("edit" | "delete"), id, text, cls (fail_class)}]; the view handles each new seq once and puts a refused edit back in the box
         #[qproperty(bool, busy)] //             QML: busy
         #[qproperty(bool, call_active)] //      QML: callActive — room has a live call
         #[qproperty(bool, watch_party_on)] //   QML: watchPartyOn — someone is watching a watch party here right now (10.1 TH-WP-04)
@@ -55,9 +56,15 @@ pub mod qobject {
         #[qproperty(bool, record_on)] //            QML: recordOn — Memories recording marker active in this room (0.8.7)
         #[qproperty(bool, call_record_on)] //       QML: callRecordOn — the recording marker of callRecordRoom (11.0: Rec / Clip act on the call's room)
         #[qproperty(QString, call_record_room)] //  QML: callRecordRoom — the room callRecordOn describes (the call's room; "" = none)
+        #[qproperty(QString, memory_photos_json)] // QML: memoryPhotosJson — Memories photos {room, photos:[…], unavailable, iModerate, canAdd, me, encrypted} (memories_photos.rs)
+        #[qproperty(QString, memory_photos_notice)] // QML: memoryPhotosNotice — "<n>|<words>" of the last photo action, for a toast
         #[qproperty(QString, memories_json)] //     QML: memoriesJson — DVR sessions {sessions:[…]} from the vods API (0.8.8)
         #[qproperty(QString, clips_json)] //        QML: clipsJson — clip bookmarks [{at,by}] (0.8.8)
         #[qproperty(bool, can_change_photo)] //     QML: canChangePhoto — may WE set the room picture?
+        #[qproperty(QString, background_json)] //   QML: backgroundJson — {content, sender} of dev.tinhat.chat.background ("" = absent; docs/AMBIENCE.md)
+        #[qproperty(bool, can_set_background)] //  QML: canSetBackground — may WE change the room's background (its power levels)?
+        #[qproperty(QString, background_image)] //  QML: backgroundImage — file URL of the background's own image when core imageShown said yes ("" = the preset)
+        #[qproperty(QString, background_image_cells)] // QML: backgroundImageCells — its colour cells (every pixel, ambience::image_cells) as JSON
         #[qproperty(QString, media_resolved)] //    QML: mediaResolved — {"id","url"} for INLINE playback (no launch)
         #[qproperty(QString, read_marker_id)] //     QML: readMarkerId — the event my read receipt sat on when the room opened (9.3 unread divider)
         #[qproperty(QString, pinned_json)] //        QML: pinnedJson — [{id,senderName,body,ts, sender,avatar,kind,text,pinIndex}] pinned messages present in the window (9.3; widgets W1 added the last five)
@@ -67,6 +74,9 @@ pub mod qobject {
         #[qproperty(bool, can_send_message)] //      QML: canSendMessage — widgets W3: may we send m.room.message here (Dice: roll to the room)
         #[qproperty(QString, polls_json)] //         QML: pollsJson — widgets W3: the window's open polls [{id, ts, question, line}], newest first (the Polls widget)
         #[qproperty(bool, can_send_poll)] //         QML: canSendPoll — widgets W3: may we start a poll here (the poll start event)
+        #[qproperty(QString, thread_root)] //        QML: threadRoot — threads (docs/THREADS.md): this controller shows that thread (the Threads panel); "" = the room's main timeline. Set before open().
+        #[qproperty(QString, threads_json)] //       QML: threadsJson — threads: the room's threads for the list [{root, rootSender, rootName, rootAvatar, snippet, count, lastName, lastTs, unread, mine}] (loadThreads)
+        #[qproperty(bool, can_redact_others)] //     QML: canRedactOthers — A30.0: may we delete other people's messages (the redact level)
         type RoomController = super::RoomControllerRust;
 
         /// QML: room.linkClaim(formatted, link) — review follow-up (Astra, 2026-10-26): `{"claimed","real"}` when this
@@ -75,9 +85,23 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "linkClaim"]
         fn link_claim(self: &RoomController, formatted: &QString, link: &QString) -> QString;
+        /// QML: roomController.setBackground(contentJson) — write the room's shared background (docs/AMBIENCE.md;
+        /// the content comes from AmbienceController.content).
+        #[qinvokable]
+        fn set_background(self: Pin<&mut RoomController>, content_json: &QString);
+        /// QML: roomController.postBackgroundImage(fileUrl, preset, effect) — re-encode the image (JPEG, ≤ 2560 px,
+        /// ≤ 1.5 MB, no metadata), post it to the chat as a normal image message (encrypted in an encrypted room), then
+        /// set it as the room's background with `preset` as the fallback.
+        #[qinvokable]
+        fn post_background_image(self: Pin<&mut RoomController>, file_url: &QString, preset: &QString, effect: &QString);
         /// QML: roomController.open(roomId) — load a room's timeline.
         #[qinvokable]
         fn open(self: Pin<&mut RoomController>, room_id: &QString);
+        /// QML: roomController.localFileSize(url) — QOL A08.7: a local file's size in bytes for the staged chip
+        /// (0 = unknown).
+        #[qinvokable]
+        #[cxx_name = "localFileSize"]
+        fn local_file_size(self: &RoomController, url: &QString) -> i64;
         /// QML: roomController.refresh() — reload the current room's timeline.
         #[qinvokable]
         fn refresh(self: Pin<&mut RoomController>);
@@ -112,6 +136,10 @@ pub mod qobject {
         /// QML: roomController.editMessage(eventId, text) — edit our message (m.replace).
         #[qinvokable]
         fn edit_message(self: Pin<&mut RoomController>, event_id: &QString, text: &QString);
+        /// QML: roomController.editMessageMentions(eventId, text, mentionsJson) — L1 A09.3: an edit with the people
+        /// picked while editing ([{name,userId}]); the original's own mention links are kept either way (edit_mentions).
+        #[qinvokable]
+        fn edit_message_mentions(self: Pin<&mut RoomController>, event_id: &QString, text: &QString, mentions_json: &QString);
         /// QML: roomController.redactMessage(eventId) — delete/redact a message.
         #[qinvokable]
         fn redact_message(self: Pin<&mut RoomController>, event_id: &QString);
@@ -148,6 +176,10 @@ pub mod qobject {
         /// QML: roomController.loadOlder() — grow the loaded window + prepend older history.
         #[qinvokable]
         fn load_older(self: Pin<&mut RoomController>);
+        /// QML: roomController.trimToLatest() — A35.4: the reader is back at the newest (Jump to latest / End): the
+        /// window goes back to the default depth, so the live loop stops reloading a deep scroll-back on every pass.
+        #[qinvokable]
+        fn trim_to_latest(self: Pin<&mut RoomController>);
         /// QML: roomController.sendAttachment(localPathOrFileUrl) — upload + send a
         /// file/image (E2EE-safe via the SDK's encrypting send-queue helper).
         #[qinvokable]
@@ -188,6 +220,25 @@ pub mod qobject {
         /// focused timeline (NOT from the sync loop), to avoid a receipt-echo storm.
         #[qinvokable]
         fn mark_read(self: Pin<&mut RoomController>);
+        /// QML: room.loadThreads() — threads: the room's threads for the Threads list (the server's /threads + the
+        /// thread replies the window holds) into threadsJson.
+        #[qinvokable]
+        fn load_threads(self: Pin<&mut RoomController>);
+        /// QML: room.loadMoreThreads() — threads: one more page of the server's /threads (the list's "Load more threads").
+        #[qinvokable]
+        fn load_more_threads(self: Pin<&mut RoomController>);
+        /// QML: room.threadSummaryText(count, name, ts) — threads: "12 replies · Ana · 5 min ago" (the shared core's
+        /// words, now = this call's clock; the web prints the same bytes).
+        #[qinvokable]
+        fn thread_summary_text(self: &RoomController, count: i32, name: &QString, ts: f64) -> QString;
+        /// QML: room.threadSummaryLabel(count, name, ts) — the same for screen readers ("…, last from Ana 5 min ago.
+        /// Open thread").
+        #[qinvokable]
+        fn thread_summary_label(self: &RoomController, count: i32, name: &QString, ts: f64) -> QString;
+        /// QML: room.threadOfEvent(eventId) — threads: the thread a loaded event is in ("" = main / not loaded): a
+        /// jump to a thread reply opens its thread (thread replies never show in the main timeline).
+        #[qinvokable]
+        fn thread_of_event(self: &RoomController, event_id: &QString) -> QString;
         /// QML: roomController.applyRoomName(name) — rename the room (m.room.name).
         /// Named apply_room_name (NOT set_room_name) — a set_room_name is already
         /// auto-generated by the room_name qproperty.
@@ -290,6 +341,63 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "fetchClipsFor"]
         fn fetch_clips_for(self: Pin<&mut RoomController>, room_id: &QString);
+        /// QML: room.fetchMemoryPhotos(roomId) — that room's Memories photos into memoryPhotosJson (memories_photos.rs).
+        #[qinvokable]
+        #[cxx_name = "fetchMemoryPhotos"]
+        fn fetch_memory_photos(self: Pin<&mut RoomController>, room_id: &QString);
+        /// QML: room.addToMemories(roomId, eventId, ts) — one of MY image messages onto my Memories list.
+        #[qinvokable]
+        #[cxx_name = "addToMemories"]
+        fn add_to_memories(self: Pin<&mut RoomController>, room_id: &QString, event_id: &QString, ts: f64);
+        /// QML: room.removeFromMemories(roomId, eventId, alsoDelete) — off my list (the message stays unless alsoDelete).
+        #[qinvokable]
+        #[cxx_name = "removeFromMemories"]
+        fn remove_from_memories(self: Pin<&mut RoomController>, room_id: &QString, event_id: &QString, also_delete: bool);
+        /// QML: room.takeDownMemory(roomId, eventId) — a moderator's take-down of someone else's photo.
+        #[qinvokable]
+        #[cxx_name = "takeDownMemory"]
+        fn take_down_memory(self: Pin<&mut RoomController>, room_id: &QString, event_id: &QString);
+        /// QML: room.addMemoryPhotos(roomId, urlsJson) — "Add photos": each image file sent to that room's chat and
+        /// added to my Memories (["file://…"], from the picker, a paste or a drop).
+        #[qinvokable]
+        #[cxx_name = "addMemoryPhotos"]
+        fn add_memory_photos(self: Pin<&mut RoomController>, room_id: &QString, urls_json: &QString);
+        /// QML: room.inMyMemories(roomId, eventId) — the chat menu's Add / Remove label.
+        #[qinvokable]
+        #[cxx_name = "inMyMemories"]
+        fn in_my_memories(self: &RoomController, room_id: &QString, event_id: &QString) -> bool;
+        /// QML: room.memoriesTimeline(sessionsJson, photosJson, filter) — the shared timeline (memphotos::timeline).
+        #[qinvokable]
+        #[cxx_name = "memoriesTimeline"]
+        fn memories_timeline(self: &RoomController, sessions_json: &QString, photos_json: &QString, filter: &QString) -> QString;
+        /// QML: room.memoriesStep(itemsJson, current, dir) — the photo viewer's Previous / Next (memphotos::step).
+        #[qinvokable]
+        #[cxx_name = "memoriesStep"]
+        fn memories_step(self: &RoomController, items_json: &QString, current: &QString, dir: i32) -> QString;
+        /// QML: room.saveMemoryPhoto(mediaUrl, destUrl) — Save: copy the photo's decrypted copy (in the media cache) where
+        /// the user asked (the Memories window's room needn't be the open one, so saveMediaAs can't serve it).
+        #[qinvokable]
+        #[cxx_name = "saveMemoryPhoto"]
+        fn save_memory_photo(self: Pin<&mut RoomController>, media_url: &QString, dest: &QString);
+        /// QML: room.memoryPhotosGate() — the gate hook TINHAT_GUI_MEMPHOTOS (file urls to add once; "" in every real
+        /// launch). MemoriesWindow.qml logs [memphotos] lines while it is set.
+        #[qinvokable]
+        #[cxx_name = "memoryPhotosGate"]
+        fn memory_photos_gate(self: &RoomController) -> QString;
+        /// QML: room.memoriesWindowMode(recorder) — the Memories window on a server with / without a call recorder
+        /// (memphotos::window_mode as JSON: recordings, filters, the empty / subtitle / tip words).
+        #[qinvokable]
+        #[cxx_name = "memoriesWindowMode"]
+        fn memories_window_mode(self: &RoomController, recorder: bool) -> QString;
+        /// QML: room.memoryPhotosRev(roomId) — how many Memories changes the sync brought for that room (2-3: an add,
+        /// a remove, a take-down, a redacted photo); the open window re-reads when it moves.
+        #[qinvokable]
+        #[cxx_name = "memoryPhotosRev"]
+        fn memory_photos_rev(self: &RoomController, room_id: &QString) -> i32;
+        /// QML: room.memoriesCountText(recordings, photos) — "3 recordings · 12 photos".
+        #[qinvokable]
+        #[cxx_name = "memoriesCountText"]
+        fn memories_count_text(self: &RoomController, recordings: i32, photos: i32) -> QString;
 
         /// QML: roomController.inviteUser(userId) — invite a user by mxid.
         #[qinvokable]
@@ -336,6 +444,7 @@ pub struct RoomControllerRust {
     room_name: QString,
     messages_json: QString,
     status: QString,
+    op_failed_json: QString,
     busy: bool,
     call_active: bool,
     watch_party_on: bool,
@@ -358,10 +467,16 @@ pub struct RoomControllerRust {
     media_busy: QString,
     media_resolved: QString,
     can_change_photo: bool,
+    background_json: QString,
+    can_set_background: bool,
+    background_image: QString,
+    background_image_cells: QString,
     record_on: bool,
     call_record_on: bool,
     call_record_room: QString,
     memories_json: QString,
+    memory_photos_json: QString,
+    memory_photos_notice: QString,
     clips_json: QString,
     read_marker_id: QString,
     pinned_json: QString,
@@ -371,6 +486,13 @@ pub struct RoomControllerRust {
     can_send_message: bool,
     polls_json: QString,
     can_send_poll: bool,
+    thread_root: QString,
+    threads_json: QString,
+    // threads: the newest load_threads request of this controller (round 2 #13)
+    threads_seq: u64,
+    // threads: how many /threads pages the list shows (Load more threads adds one; a new room starts at 1)
+    threads_pages: u32,
+    can_redact_others: bool,
     // widgets W3: the window's poll responses and ends ({id, type, sender, ts, content}; my local ones appended until the
     // real ones arrive), who besides a creator may end a poll (the ends' senders who may redact), and whether I may
     poll_rels: Vec<serde_json::Value>,
@@ -388,6 +510,8 @@ pub struct RoomControllerRust {
     // How many messages the timeline window currently wants (grows via load_older).
     // Shared with the live-subscription task so it re-renders at the current depth.
     loaded_limit: Arc<AtomicUsize>,
+    // A35.4: Jump to latest came while an older page was loading — shrink the window once it has landed.
+    trim_pending: bool,
 }
 
 impl qobject::RoomController {
@@ -400,6 +524,8 @@ impl qobject::RoomController {
 
     pub fn open(mut self: Pin<&mut Self>, room_id: &QString) {
         let room_id = room_id.to_string();
+        // threads: a thread's panel (threadRoot set) shows that thread; "" = the room's main timeline
+        let view = self.thread_root().to_string();
         // 10.5.2: a new generation BEFORE anything can observe the new room id.
         let gen = self.rust().open_gen.wrapping_add(1);
         self.as_mut().rust_mut().open_gen = gen;
@@ -407,7 +533,9 @@ impl qobject::RoomController {
         // If this view is currently attended (on screen, focused), the notifier follows it to
         // the new room; otherwise QML's setAttending says when it becomes visible. Receipt-free.
         let token = self.as_mut().attend_token();
-        crate::notify::update_view_room(token, &room_id);
+        // threads: the room and which thread this view shows (review #15), together (1-3: what comes on screen is that
+        // thread, so only its mentions are seen)
+        crate::notify::update_view(token, &room_id, &view);
         // May we set this room's picture? Async (power_levels() awaits), so it is
         // computed here and published into  for the menu to bind to —
         // offering a button that is guaranteed to 403 is worse than not offering it.
@@ -439,6 +567,10 @@ impl qobject::RoomController {
         // offers Stop vs Start. Refreshed at open(); the live
         // in-call cue is the bot's own participant tile (root.recActive in QML).
         self.as_mut().set_record_on(false);
+        self.as_mut().set_background_json(QString::default());
+        self.as_mut().set_can_set_background(false);
+        self.as_mut().set_background_image(QString::default());
+        self.as_mut().set_background_image_cells(QString::default());
         {
             let rid = room_id.clone();
             let qt = self.as_mut().qt_thread();
@@ -465,6 +597,8 @@ impl qobject::RoomController {
         self.as_mut().set_dice_json(QString::default());
         self.as_mut().set_polls_json(QString::default());
         self.as_mut().rust_mut().poll_rels.clear();
+        self.as_mut().set_threads_json(QString::default()); // threads: the list belongs to the room it was loaded for
+        self.as_mut().rust_mut().threads_pages = 1;
         // 9.3: paint the on-disk timeline cache SYNCHRONOUSLY, in the write that used
         // to blank the timeline. The old order (blank -> queued cache paint -> live load) let
         // the QML mirror observe the blank between two polls, so every room switch flashed
@@ -472,7 +606,7 @@ impl qobject::RoomController {
         // delegate rebuilds and a visible flicker. Now the first thing the mirror can see for
         // the new room is its cache (or an empty list while busy, which draws the spinner).
         // 10.5.2: only a snapshot that parses is painted (read_timeline_cache validates it).
-        let snapshot = read_timeline_cache(&room_id);
+        let snapshot = if view.is_empty() { read_timeline_cache(&room_id) } else { None };
         eprintln!(
             "[room] open {room_id} gen={gen} snapshot={}",
             snapshot.as_ref().map_or_else(|| "none".to_string(), |s| format!("{} rows", s.1))
@@ -491,6 +625,7 @@ impl qobject::RoomController {
         // Reset the timeline window to the default depth for the newly-opened room.
         let limit = self.as_mut().rust().loaded_limit.clone();
         limit.store(DEFAULT_WINDOW, Ordering::Relaxed);
+        self.as_mut().rust_mut().trim_pending = false;
 
         // Cancel the previous room's live + typing subscriptions.
         if let Some(t) = self.as_mut().rust_mut().sub_task.take() {
@@ -588,10 +723,12 @@ impl qobject::RoomController {
             // 9.3: where my read receipt sits, published before anything slow. The unread divider
             // is drawn after this event; QML freezes the value per room open so our own later
             // receipts never move the line while the room is on screen.
-            {
+            // threads: a thread's panel has no NEW divider (the main receipt doesn't describe it)
+            if view.is_empty() {
                 // public or private: a room on another server gets private receipts (receipts.rs)
                 // boxed: the event fetch inside is a deep future (rustc's query depth limit in this task)
-                let marker = Box::pin(crate::receipts::own_read_up_to(&room)).await;
+                let fut: std::pin::Pin<Box<dyn std::future::Future<Output = String> + Send + '_>> = Box::pin(crate::receipts::own_read_up_to(&room));
+                let marker = fut.await;
                 let started = room_id.clone();
                 let _ = qt.queue(move |mut o| {
                     if is_current(&o, gen, &started) {
@@ -603,6 +740,12 @@ impl qobject::RoomController {
             // carried STATE (a join, a rename, a power-level change) — not per message. The
             // old loop walked every member and resolved every avatar on each incoming line.
             let mut state_changed = true;
+            // chat backgrounds: the state last read, and when its image was last resolved (None = resolve now). The image
+            // is re-checked every 20 s while it is an image background: a deleted image goes, keys that arrive later bring it.
+            let mut bg_last = String::new();
+            let mut bg_checked: Option<std::time::Instant> = None;
+            // only the newest resolution may publish (an older, slower one could otherwise bring back a deleted image)
+            let bg_seq = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
             let mut first = true;
             let mut fail_streak: u32 = 0;
             loop {
@@ -610,7 +753,9 @@ impl qobject::RoomController {
                 // to QML; `is_current` drops a result that belongs to an earlier open.
                 let want = limit2.load(Ordering::Relaxed).max(DEFAULT_WINDOW);
                 let t_load = std::time::Instant::now();
-                let data = load_room_data(&room, want).await;
+                // type-erased: a deep future (rustc's query depth limit on this task's Send check)
+                let fut: std::pin::Pin<Box<dyn std::future::Future<Output = Result<Loaded, String>> + Send + '_>> = Box::pin(load_room_data(&room, want, &view));
+                let data = fut.await;
                 let failed = data.is_err();
                 if first {
                     eprintln!(
@@ -646,6 +791,34 @@ impl qobject::RoomController {
                 // homeserver only on its first call.
                 if state_changed {
                     state_changed = false;
+                    // the room's shared background (docs/AMBIENCE.md): re-read with every batch that carried state —
+                    // content and sender from ONE state event; the image is resolved in its own task (below)
+                    {
+                        let ty = tinhat_widgets::ambience::BACKGROUND_STATE;
+                        let bg = match crate::appstate::get_state_with_sender(&room, ty, "").await {
+                            Some((content, sender)) => serde_json::json!({ "content": content, "sender": sender }).to_string(),
+                            None => String::new(),
+                        };
+                        let can = match room.power_levels().await {
+                            Ok(pl) => pl.user_can_send_state(room.own_user_id(), matrix_sdk::ruma::events::StateEventType::from(ty)),
+                            Err(_) => false,
+                        };
+                        let started = room_id.clone();
+                        let bg2 = bg.clone();
+                        let _ = qt.queue(move |mut o| {
+                            if is_current(&o, gen, &started) {
+                                if o.background_json().to_string() != bg2 {
+                                    // a new background: the old image never shows under it (its task brings the new one)
+                                    o.as_mut().set_background_image(QString::default());
+                                    o.as_mut().set_background_image_cells(QString::default());
+                                    o.as_mut().set_background_json(QString::from(&bg2));
+                                }
+                                o.as_mut().set_can_set_background(can);
+                            }
+                        });
+                        bg_last = bg;
+                        bg_checked = None;
+                    }
                     let m = load_members(&room).await;
                     let perms = load_permissions(&room).await;
                     let started = room_id.clone();
@@ -656,6 +829,26 @@ impl qobject::RoomController {
                         o.as_mut().set_members_json(QString::from(&m.0));
                         o.as_mut().set_room_summary_json(QString::from(&m.1));
                         perms.apply(o.as_mut());
+                    });
+                }
+                if bg_checked.is_none_or(|t| t.elapsed() > std::time::Duration::from_secs(20)) {
+                    bg_checked = Some(std::time::Instant::now());
+                    let (room2, bg, qt2, started) = (room.clone(), bg_last.clone(), qt.clone(), room_id.clone());
+                    let seq = bg_seq.clone();
+                    let mine = seq.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+                    crate::bridge::runtime().spawn(async move {
+                        let (url, cells) = background_image_file(&room2, &bg).await;
+                        let _ = qt2.queue(move |mut o| {
+                            // only the newest resolution, for the background it was resolved for
+                            if seq.load(std::sync::atomic::Ordering::SeqCst) == mine && is_current(&o, gen, &started) && o.background_json().to_string() == bg {
+                                if o.background_image_cells().to_string() != cells {
+                                    o.as_mut().set_background_image_cells(QString::from(&cells));
+                                }
+                                if o.background_image().to_string() != url {
+                                    o.as_mut().set_background_image(QString::from(&url));
+                                }
+                            }
+                        });
                     });
                 }
                 let mut reload_now = false;
@@ -715,7 +908,7 @@ impl qobject::RoomController {
                         let keys = Box::pin(next_keys_for(&mut keys_rx, &room_id));
                         match select(upd, keys).await {
                             Either::Left((r, _)) => Wake::Update(r),
-                            Either::Right(((), _)) => Wake::Keys,
+                            Either::Right((echo, _)) => Wake::Keys(echo),
                         }
                     };
                     let wake = match deadline {
@@ -726,8 +919,10 @@ impl qobject::RoomController {
                         None => next.await,
                     };
                     let class = match wake {
-                        Wake::Keys if window_has_undecryptable(&room_id).await => UpdateClass::Reload { state: false },
-                        Wake::Keys => UpdateClass::Skip,
+                        // L1 D08.2: this room's local echoes changed (resent after a reconnect): repaint them
+                        Wake::Keys(true) => UpdateClass::Reload { state: false },
+                        Wake::Keys(false) if window_has_undecryptable(&room_id).await => UpdateClass::Reload { state: false },
+                        Wake::Keys(false) => UpdateClass::Skip,
                         Wake::Update(Ok(update)) => {
                             note_newest_nonrow(room.room_id().as_str(), &update); // 10.3
                             classify_update(&update)
@@ -816,8 +1011,9 @@ impl qobject::RoomController {
         let gen = self.rust().open_gen;
         let qt = self.qt_thread();
         let started_for = room_id.clone();
+        let view = self.thread_root().to_string();
         crate::bridge::runtime().spawn(async move {
-            let result = load_room(&room_id, want).await;
+            let result = load_room(&room_id, want, &view).await;
             let mdata = load_members_by_id(&room_id).await;
             let perms = load_permissions_by_id(&room_id).await;
             let _ = qt.queue(move |mut o| {
@@ -880,13 +1076,18 @@ impl qobject::RoomController {
         let gen = self.rust().open_gen;
         let qt = self.qt_thread();
         let started_for = room_id.clone();
+        let view = self.thread_root().to_string();
         crate::bridge::runtime().spawn(async move {
-            let result = load_room(&room_id, want).await;
+            let result = load_room(&room_id, want, &view).await;
             let _ = qt.queue(move |mut o| {
                 if !is_current(&o, gen, &started_for) {
                     return;
                 }
                 o.as_mut().set_loading_older(false);
+                if std::mem::take(&mut o.as_mut().rust_mut().trim_pending) {
+                    let limit = &o.rust().loaded_limit;
+                    limit.store(window_after_jump_to_latest(limit.load(Ordering::Relaxed)), Ordering::Relaxed);
+                }
                 match result {
                     Ok(l) => l.apply(o.as_mut()),
                     Err(e) => {
@@ -899,9 +1100,23 @@ impl qobject::RoomController {
         });
     }
 
+    /// A35.4: see the bridge declaration. A page still loading keeps its depth (it was asked for).
+    pub fn trim_to_latest(mut self: Pin<&mut Self>) {
+        if *self.loading_older() {
+            // the page still loading lands first (it was asked for), then the window shrinks (load_older applies this)
+            self.as_mut().rust_mut().trim_pending = true;
+            return;
+        }
+        let limit = &self.rust().loaded_limit;
+        limit.store(window_after_jump_to_latest(limit.load(Ordering::Relaxed)), Ordering::Relaxed);
+    }
+
     pub fn mark_read(self: Pin<&mut Self>) {
         let room_id = self.room_id().to_string();
         let json = self.messages_json().to_string();
+        // threads (MSC3771): the main timeline's receipt is "main" (reading it never clears a thread); a thread's
+        // panel sends its thread's (thread_id = the root) on its newest event
+        let thread = self.thread_root().to_string();
         if room_id.is_empty() {
             return;
         }
@@ -919,6 +1134,11 @@ impl qobject::RoomController {
                     let id = m.get("id").and_then(|i| i.as_str())?.to_owned();
                     Some((id, m.get("ts").and_then(|t| t.as_u64()).unwrap_or(0)))
                 });
+            // threads: a thread's panel that shows only its root has nothing to read yet (the root sits in the main
+            // timeline; a thread receipt on it would be refused)
+            if !thread.is_empty() && latest.as_ref().map(|(i, _)| i == &thread).unwrap_or(true) {
+                return;
+            }
             let Some((mut id, ts)) = latest else {
                 // 10.6 (REACH A5.6, audit 15a): a room with no chat bubble yet — an accepted DM
                 // nobody has written in — still gets its receipt, on its newest event of any kind
@@ -929,8 +1149,8 @@ impl qobject::RoomController {
                 return;
             };
             // 10.3: housekeeping newer than the newest bubble is read too — the receipt goes there,
-            // or the server keeps counting it (see newest_nonrow).
-            if let Ok(g) = newest_nonrow().lock() {
+            // or the server keeps counting it (see newest_nonrow). threads: never thread events (main view only).
+            if let Ok(g) = newest_nonrow().lock().map_err(|_| ()).and_then(|g| if thread.is_empty() { Ok(g) } else { Err(()) }) {
                 if let Some((nid, nts)) = g.get(&room_id) {
                     if *nts > ts && !nid.is_empty() {
                         id = nid.clone();
@@ -940,8 +1160,65 @@ impl qobject::RoomController {
             let Ok(room) = room_by_id(&room_id).await else { return };
             if let Ok(eid) = matrix_sdk::ruma::EventId::parse(&id) {
                 // public m.read only in a room of my own server, else m.read.private (receipts.rs)
-                let _ = crate::receipts::send_read_receipt(&room, &eid).await;
+                let _ = crate::receipts::send_read_receipt(&room, &eid, if thread.is_empty() { "main" } else { &thread }).await;
             }
+        });
+    }
+
+    pub fn load_more_threads(mut self: Pin<&mut Self>) {
+        let n = self.rust().threads_pages.max(1) + 1;
+        self.as_mut().rust_mut().threads_pages = n;
+        self.load_threads();
+    }
+
+    pub fn thread_summary_text(&self, count: i32, name: &QString, ts: f64) -> QString {
+        QString::from(&tinhat_widgets::threads::summary_text(count as i64, &name.to_string(), ts as i64, now_ms() as i64))
+    }
+    pub fn thread_of_event(&self, event_id: &QString) -> QString {
+        let id = event_id.to_string();
+        let rid = self.room_id().to_string();
+        if id.is_empty() || rid.is_empty() {
+            return QString::default();
+        }
+        let win = timeline_window_for(&rid);
+        let Ok(w) = win.try_lock() else { return QString::default() };
+        let t = w
+            .events
+            .iter()
+            .find(|v| crate::threads_rows::ev_id(v) == id)
+            .map(|v| tinhat_widgets::threads::thread_of(v.get("content").unwrap_or(&serde_json::Value::Null)))
+            .unwrap_or_default();
+        QString::from(&t)
+    }
+
+    pub fn thread_summary_label(&self, count: i32, name: &QString, ts: f64) -> QString {
+        QString::from(&tinhat_widgets::threads::summary_label(count as i64, &name.to_string(), ts as i64, now_ms() as i64))
+    }
+
+    /// threads (docs/THREADS.md): the room's threads for the Threads list → threadsJson
+    /// `{items: [{root, rootSender, rootName, rootAvatar, snippet, count, lastName, lastTs, unread, mine}], all: [root…],
+    /// mine: [root…]}` (the two orders by tinhat_widgets::threads::thread_list, the web's threadList).
+    pub fn load_threads(mut self: Pin<&mut Self>) {
+        let room_id = self.room_id().to_string();
+        if room_id.is_empty() {
+            return;
+        }
+        let gen = self.rust().open_gen;
+        // review #12 / round 2 #13: only this controller's newest request's answer lands (a slow older one never
+        // overwrites it; another controller's requests don't count)
+        let seq = self.rust().threads_seq + 1;
+        self.as_mut().rust_mut().threads_seq = seq;
+        let pages = self.rust().threads_pages.max(1);
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let Ok(room) = room_by_id(&room_id).await else { return };
+            let json = Box::pin(load_threads_json(&room, pages)).await;
+            let started = room_id.clone();
+            let _ = qt.queue(move |mut o| {
+                if is_current(&o, gen, &started) && o.rust().threads_seq == seq {
+                    o.as_mut().set_threads_json(QString::from(&json));
+                }
+            });
         });
     }
 
@@ -1130,6 +1407,11 @@ impl qobject::RoomController {
         });
     }
 
+    pub fn local_file_size(&self, url: &QString) -> i64 {
+        let path = crate::platform::path_from_file_url(&url.to_string());
+        std::fs::metadata(&path).map(|m| m.len().min(i64::MAX as u64) as i64).unwrap_or(0)
+    }
+
     pub fn send_attachment(mut self: Pin<&mut Self>, local_path: &QString) {
         let room_id = self.room_id().to_string();
         let path_or_url = local_path.to_string();
@@ -1159,7 +1441,10 @@ impl qobject::RoomController {
         echo.mime = mime;
         echo.size = size;
         if msgtype == "m.image" {
-            echo.media = crate::platform::file_url(&pb);
+            // HEIC/HEIF/AVIF: no shipped Qt draws them, so the echo shows the same file card the sent message will
+            if !matches!(ext.as_str(), "heic" | "heif" | "hif" | "avif") {
+                echo.media = crate::platform::file_url(&pb);
+            }
             if let Some((w, h)) = crate::clipboard::image_size(&pb) {
                 echo.w = w;
                 echo.h = h;
@@ -1336,6 +1621,7 @@ impl qobject::RoomController {
         let txn = txn.to_string();
         let Some(mut e) = echo_store_take(&room_id, &txn) else { return };
         e.failed = None;
+        e.auto_tries = 0; // L1 D08.2: a Retry starts the automatic count over
         e.event_id = None;
         e.ts = now_ms();
         self.as_mut().start_echo(e);
@@ -1363,6 +1649,20 @@ impl qobject::RoomController {
         if room_id.is_empty() {
             return;
         }
+        // threads: a thread's panel sends into its thread (the fallback reply goes to its newest loaded event); a reply
+        // keeps its parent's thread (A07.3)
+        let mut echo = echo;
+        // voice notes are sent from the main composer only (no relation helper on that path): never filed in a thread
+        if !matches!(echo.kind, EchoKind::Voice(_)) {
+            let rows = self.messages_json().to_string();
+            echo.thread = self.thread_root().to_string();
+            if !echo.thread.is_empty() {
+                echo.thread_latest = newest_server_row(&rows).unwrap_or_else(|| echo.thread.clone());
+            }
+            if !echo.reply_to.is_empty() {
+                echo.reply_thread = row_thread(&rows, &echo.reply_to);
+            }
+        }
         echo_store_push(&room_id, echo.clone());
         let me = crate::session::client()
             .and_then(|c| c.user_id().map(|u| u.to_string()))
@@ -1388,8 +1688,13 @@ impl qobject::RoomController {
         self.as_mut().set_messages_json(QString::from(&next));
         let qt = self.qt_thread();
         let is_voice = matches!(echo.kind, EchoKind::Voice(_));
+        // 4-3: the send goes through the client of the session that made it, never a later one
+        let client = crate::session::client();
         crate::bridge::runtime().spawn(async move {
-            let res = perform_echo(&room_id, &echo).await;
+            let res = match &client {
+                Some(c) => perform_echo(c, &room_id, &echo).await,
+                None => Err("Not signed in".to_string()),
+            };
             let txn = echo.txn.clone();
             if is_voice {
                 // voice notes: the recorder row learns the outcome (sent → the draft is done; failed → review + retry)
@@ -1589,7 +1894,12 @@ impl qobject::RoomController {
         });
     }
 
-    pub fn edit_message(mut self: Pin<&mut Self>, event_id: &QString, text: &QString) {
+    pub fn edit_message(self: Pin<&mut Self>, event_id: &QString, text: &QString) {
+        self.edit_message_mentions(event_id, text, &QString::from("[]"));
+    }
+
+    pub fn edit_message_mentions(mut self: Pin<&mut Self>, event_id: &QString, text: &QString, mentions_json: &QString) {
+        let picks = parse_picks(&mentions_json.to_string());
         let room_id = self.room_id().to_string();
         let eid = event_id.to_string();
         let text = text.to_string();
@@ -1601,6 +1911,12 @@ impl qobject::RoomController {
         // 9.3: the edit shows immediately (plain text until the sync brings the rendered
         // markdown); a failed edit reloads the server's truth.
         let cur = self.messages_json().to_string();
+        // L1 A09.2: an edited /me stays an emote (the row's msgtype before the edit)
+        let emote = row_msgtype(&cur, &eid).as_deref() == Some("m.emote");
+        // L1 A09.3: the original's mention links that are still in the text, plus the picks made while editing
+        let formatted = row_str(&cur, &eid, "formatted").unwrap_or_default();
+        let mentions = edit_mentions(&formatted, &text, &picks);
+        let notify = edit_notify_ids(&formatted, &mentions);
         let t2 = text.clone();
         if let Some(u) = patch_row(&cur, &eid, |m| {
             m["body"] = serde_json::json!(t2);
@@ -1612,10 +1928,13 @@ impl qobject::RoomController {
             self.as_mut().set_messages_json(QString::from(&u));
         }
         crate::bridge::runtime().spawn(async move {
-            if let Err(e) = do_edit(&room_id, &eid, &text).await {
+            if let Err(e) = do_edit(&room_id, &eid, &text, emote, &mentions, &notify).await {
                 eprintln!("[room] edit failed: {e}");
+                // L1 A20.0: no raw SDK error on screen; the view says it in plain words and puts the text back
+                let j = op_failed(&room_id, "edit", &eid, &text, &e);
                 let _ = qt.queue(move |mut o| {
-                    o.as_mut().set_status(QString::from(&format!("Edit failed: {e}")));
+                    let list = push_failure(&o.op_failed_json().to_string(), &j);
+                    o.as_mut().set_op_failed_json(QString::from(&list));
                     o.as_mut().refresh();
                 });
             }
@@ -1638,8 +1957,10 @@ impl qobject::RoomController {
         crate::bridge::runtime().spawn(async move {
             if let Err(e) = do_redact(&room_id, &eid).await {
                 eprintln!("[room] redact failed: {e}");
+                let j = op_failed(&room_id, "delete", &eid, "", &e);
                 let _ = qt.queue(move |mut o| {
-                    o.as_mut().set_status(QString::from(&format!("Delete failed: {e}")));
+                    let list = push_failure(&o.op_failed_json().to_string(), &j);
+                    o.as_mut().set_op_failed_json(QString::from(&list));
                     o.as_mut().refresh();
                 });
                 return;
@@ -1669,6 +1990,103 @@ impl qobject::RoomController {
     }
 
     /// 9.3: pin / unpin a message (m.room.pinned_events, whole-list write).
+    /// The room's shared background (docs/AMBIENCE.md): one state event, written as the picker built it.
+    pub fn set_background(self: Pin<&mut Self>, content_json: &QString) {
+        let room_id = self.room_id().to_string();
+        let Ok(content) = serde_json::from_str::<serde_json::Value>(&content_json.to_string()) else { return };
+        if room_id.is_empty() || !content.is_object() {
+            return;
+        }
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let res: Result<(), String> = async {
+                let room = room_by_id(&room_id).await?;
+                crate::appstate::send_state(&room, tinhat_widgets::ambience::BACKGROUND_STATE, "", content.clone())
+                    .await
+                    .map_err(|e| e.to_string())?;
+                eprintln!("[ambience] background set: {} {}", content.get("kind").and_then(|v| v.as_str()).unwrap_or(""), content.get("preset").and_then(|v| v.as_str()).unwrap_or(""));
+                Ok(())
+            }
+            .await;
+            let _ = qt.queue(move |mut o| match res {
+                Ok(()) => o.as_mut().refresh(),
+                Err(e) => {
+                    eprintln!("[ambience] background write failed: {e}");
+                    o.as_mut().set_status(QString::from("Couldn't change the background"));
+                }
+            });
+        });
+    }
+
+    pub fn post_background_image(self: Pin<&mut Self>, file_url: &QString, preset: &QString, effect: &QString) {
+        use tinhat_widgets::ambience as amb;
+        let room_id = self.room_id().to_string();
+        let src = crate::platform::path_from_file_url(&file_url.to_string());
+        let (preset, effect) = (preset.to_string(), effect.to_string());
+        if room_id.is_empty() || src.is_empty() {
+            return;
+        }
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let res: Result<String, String> = async {
+                let dst = media_cache_dir().join(format!("chat-background-{}.jpg", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0)));
+                let (_reencoded, w, h) = tokio::task::spawn_blocking({
+                    let (src, dst) = (src.clone(), dst.clone());
+                    move || ambience_reencode(&src, &dst)
+                })
+                .await
+                .map_err(|e| e.to_string())??;
+                let room = room_by_id(&room_id).await?;
+                if room.state() != matrix_sdk::RoomState::Joined {
+                    return Err("not joined".into());
+                }
+                let data = tokio::fs::read(&dst).await.map_err(|e| e.to_string())?;
+                // posted in the chat (PRODUCT-CALLS #40d): like every picture sent, it goes up without its location and
+                // identifying metadata (the re-encode is Qt's; this makes it the shared rule's, not Qt's behaviour)
+                let data = photo_bytes_for_upload("image/jpeg", data).map_err(|_| PHOTO_LOCATION_FAIL.to_string())?;
+                let size = data.len() as u64;
+                let client = room.client();
+                let mime = mime::IMAGE_JPEG;
+                let source = attach_upload_checked(
+                    || async { room.latest_encryption_state().await.map_err(|x| x.to_string()) },
+                    || room.encryption_state(),
+                    |encrypted| {
+                        let (client, data, mime) = (&client, &data, &mime);
+                        async move {
+                            use matrix_sdk::ruma::events::room::MediaSource;
+                            if encrypted {
+                                let mut cur = std::io::Cursor::new(data.as_slice());
+                                let f = client.upload_encrypted_file(&mut cur).await.map_err(|x| x.to_string())?;
+                                Ok(MediaSource::Encrypted(Box::new(f)))
+                            } else {
+                                let r = client.media().upload(mime, data.clone(), None).await.map_err(|x| x.to_string())?;
+                                Ok(MediaSource::Plain(r.content_uri))
+                            }
+                        }
+                    },
+                )
+                .await?;
+                let content = attachment_content(&mime, "Chat background.jpg".into(), source, w, h, size);
+                let mut content = serde_json::to_value(content).map_err(|x| x.to_string())?;
+                content["body"] = serde_json::Value::from("Chat background");
+                let r = room.send_raw("m.room.message", content).await.map_err(|x| x.to_string())?;
+                let eid = r.response.event_id.to_string();
+                let state = amb::background_content(amb::BackgroundKind::Image, Some(preset.as_str()).filter(|p| !p.is_empty()), amb::Effect::parse(&effect), Some(eid.as_str()));
+                crate::appstate::send_state(&room, amb::BACKGROUND_STATE, "", state).await.map_err(|e| e.to_string())?;
+                eprintln!("[ambience] background image posted ({w}x{h}, {size} B) and set");
+                Ok(eid)
+            }
+            .await;
+            let _ = qt.queue(move |mut o| match res {
+                Ok(_) => o.as_mut().refresh(),
+                Err(e) => {
+                    eprintln!("[ambience] background image failed: {e}");
+                    o.as_mut().set_status(QString::from("Couldn't post the image"));
+                }
+            });
+        });
+    }
+
     pub fn pin_message(self: Pin<&mut Self>, event_id: &QString, pinned: bool) {
         let room_id = self.room_id().to_string();
         let eid = event_id.to_string();
@@ -1879,6 +2297,190 @@ impl qobject::RoomController {
                 }
             }
         });
+    }
+
+    /// Memories photos: every load takes a ticket; only the newest load's answer (of this session) is published, so a
+    /// slow answer for room A never replaces room B's, and an answer for an account that signed out is dropped.
+    fn memory_photos_ticket() -> u64 {
+        static T: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        T.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1
+    }
+    fn memory_photos_latest() -> &'static std::sync::atomic::AtomicU64 {
+        static L: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        &L
+    }
+
+    /// Memories photos (memories_photos.rs): load that room's photos into memoryPhotosJson.
+    pub fn fetch_memory_photos(self: Pin<&mut Self>, room_id: &QString) {
+        let Some(client) = crate::session::client() else { return };
+        let rid = room_id.to_string();
+        let Ok(id) = matrix_sdk::ruma::RoomId::parse(&rid) else { return };
+        let qt = self.qt_thread();
+        let gen = crate::session::generation();
+        let ticket = Self::memory_photos_ticket();
+        Self::memory_photos_latest().store(ticket, std::sync::atomic::Ordering::SeqCst);
+        crate::bridge::runtime().spawn(async move {
+            let Some(room) = client.get_room(&id) else { return };
+            let json = crate::memories_photos::load(&room).await.to_string();
+            let _ = qt.queue(move |mut o| {
+                if gen == crate::session::generation() && Self::memory_photos_latest().load(std::sync::atomic::Ordering::SeqCst) == ticket {
+                    o.as_mut().set_memory_photos_json(QString::from(&json));
+                }
+            });
+        });
+    }
+
+    /// One photo write, then the words for a toast and a fresh memoryPhotosJson.
+    fn memory_photo_op<F, Fut>(self: Pin<&mut Self>, room_id: &QString, ok_words: &'static str, op: F)
+    where
+        F: FnOnce(matrix_sdk::Room) -> Fut + Send + 'static,
+        Fut: std::future::Future<Output = Result<(), String>> + Send,
+    {
+        let Some(client) = crate::session::client() else { return };
+        let rid = room_id.to_string();
+        let Ok(id) = matrix_sdk::ruma::RoomId::parse(&rid) else { return };
+        let qt = self.qt_thread();
+        let gen = crate::session::generation();
+        crate::bridge::runtime().spawn(async move {
+            let Some(room) = client.get_room(&id) else { return };
+            let words = match op(room.clone()).await {
+                Ok(()) => ok_words.to_string(),
+                Err(e) => e,
+            };
+            let ticket = Self::memory_photos_ticket();
+            Self::memory_photos_latest().store(ticket, std::sync::atomic::Ordering::SeqCst);
+            let json = crate::memories_photos::load(&room).await.to_string();
+            let _ = qt.queue(move |mut o| {
+                if gen != crate::session::generation() {
+                    return; // signed out meanwhile: nothing of that account is shown
+                }
+                let n = o.as_ref().memory_photos_notice().to_string().split('|').next().and_then(|x| x.parse::<u64>().ok()).unwrap_or(0) + 1;
+                o.as_mut().set_memory_photos_notice(QString::from(&format!("{n}|{words}")));
+                if Self::memory_photos_latest().load(std::sync::atomic::Ordering::SeqCst) == ticket {
+                    o.as_mut().set_memory_photos_json(QString::from(&json));
+                }
+            });
+        });
+    }
+
+    pub fn add_to_memories(self: Pin<&mut Self>, room_id: &QString, event_id: &QString, ts: f64) {
+        let eid = event_id.to_string();
+        self.memory_photo_op(room_id, "Added to Memories", move |room| async move { crate::memories_photos::add(&room, &eid, ts).await });
+    }
+
+    pub fn remove_from_memories(self: Pin<&mut Self>, room_id: &QString, event_id: &QString, also_delete: bool) {
+        let eid = event_id.to_string();
+        let words = if also_delete { "Removed from Memories and the chat" } else { "Removed from Memories. It stays in the chat." };
+        self.memory_photo_op(room_id, words, move |room| async move {
+            crate::memories_photos::remove(&room, &eid).await?;
+            if also_delete {
+                let e = matrix_sdk::ruma::EventId::parse(&eid).map_err(|e| e.to_string())?;
+                room.redact(&e, None, None).await.map_err(|e| format!("Couldn't delete it from the chat ({e})"))?;
+                crate::memories_photos::forget(room.room_id().as_str(), &eid);
+            }
+            Ok(())
+        });
+    }
+
+    pub fn take_down_memory(self: Pin<&mut Self>, room_id: &QString, event_id: &QString) {
+        let eid = event_id.to_string();
+        self.memory_photo_op(room_id, "Removed from Memories. It stays in the chat.", move |room| async move { crate::memories_photos::take_down(&room, &eid).await });
+    }
+
+    pub fn add_memory_photos(self: Pin<&mut Self>, room_id: &QString, urls_json: &QString) {
+        let urls: Vec<String> = serde_json::from_str(&urls_json.to_string()).unwrap_or_default();
+        if urls.is_empty() {
+            return;
+        }
+        self.memory_photo_op(room_id, "Added to Memories", move |room| async move {
+            let mut first_err: Option<String> = None;
+            for u in urls {
+                let path = crate::memories_photos::local_path(&u);
+                if let Err(e) = crate::memories_photos::send_photo(&room, &path).await {
+                    eprintln!("[memories] add photo failed: {e}");
+                    first_err.get_or_insert(e);
+                }
+            }
+            first_err.map_or(Ok(()), Err)
+        });
+    }
+
+    pub fn in_my_memories(&self, room_id: &QString, event_id: &QString) -> bool {
+        let (rid, eid) = (room_id.to_string(), event_id.to_string());
+        let known = crate::memories_photos::in_my_memories(&rid, &eid);
+        // read my list in the background so the next menu is current (a room not read yet answers false)
+        if let (Some(client), Ok(id)) = (crate::session::client(), matrix_sdk::ruma::RoomId::parse(&rid)) {
+            crate::bridge::runtime().spawn(async move {
+                if let Some(room) = client.get_room(&id) {
+                    crate::memories_photos::refresh_mine(&room).await;
+                }
+            });
+        }
+        known
+    }
+
+    pub fn memories_timeline(&self, sessions_json: &QString, photos_json: &QString, filter: &QString) -> QString {
+        use tinhat_widgets::memphotos as mp;
+        let sessions: serde_json::Value = serde_json::from_str(&sessions_json.to_string()).unwrap_or(serde_json::Value::Null);
+        let photos: serde_json::Value = serde_json::from_str(&photos_json.to_string()).unwrap_or(serde_json::Value::Null);
+        let recs = sessions.as_array().cloned().unwrap_or_default();
+        let phs = photos.as_array().cloned().unwrap_or_default();
+        let items = mp::timeline(&recs, &phs, mp::Filter::parse(&filter.to_string()));
+        QString::from(&serde_json::Value::Array(items.iter().map(mp::Item::to_json).collect()).to_string())
+    }
+
+    pub fn memories_step(&self, items_json: &QString, current: &QString, dir: i32) -> QString {
+        use tinhat_widgets::memphotos as mp;
+        let v: serde_json::Value = serde_json::from_str(&items_json.to_string()).unwrap_or(serde_json::Value::Null);
+        let items: Vec<mp::Item> = v.as_array().map(|a| a.iter().filter_map(mp::Item::from_json).collect()).unwrap_or_default();
+        QString::from(&mp::step(&items, &current.to_string(), if dir < 0 { -1 } else { 1 }))
+    }
+
+    pub fn save_memory_photo(self: Pin<&mut Self>, media_url: &QString, dest: &QString) {
+        let src = crate::memories_photos::local_path(&media_url.to_string());
+        let dest = crate::memories_photos::local_path(&dest.to_string());
+        // only a file of the media cache (what memories_photos::load handed out), never another path
+        let cache = media_cache_dir();
+        let inside = src.canonicalize().ok().zip(cache.canonicalize().ok()).is_some_and(|(s, c)| s.starts_with(c));
+        if dest.as_os_str().is_empty() || !inside {
+            return;
+        }
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let words = match tokio::fs::copy(&src, &dest).await {
+                Ok(_) => "Saved".to_string(),
+                Err(e) => format!("Couldn't save it ({e})"),
+            };
+            let _ = qt.queue(move |mut o| {
+                let n = o.as_ref().memory_photos_notice().to_string().split('|').next().and_then(|x| x.parse::<u64>().ok()).unwrap_or(0) + 1;
+                o.as_mut().set_memory_photos_notice(QString::from(&format!("{n}|{words}")));
+            });
+        });
+    }
+
+    /// Compiled only outside a release (cfg tinhat_env_selftests, build.rs): a release build never reads the variable,
+    /// and scripts/release-binary-check.sh refuses a binary that names it (it uploads files: never in a real launch).
+    pub fn memory_photos_gate(&self) -> QString {
+        #[cfg(tinhat_env_selftests)]
+        {
+            QString::from(std::env::var("TINHAT_GUI_MEMPHOTOS").unwrap_or_default().as_str())
+        }
+        #[cfg(not(tinhat_env_selftests))]
+        {
+            QString::default()
+        }
+    }
+
+    pub fn memories_window_mode(&self, recorder: bool) -> QString {
+        QString::from(&tinhat_widgets::memphotos::window_mode(recorder).to_string())
+    }
+
+    pub fn memory_photos_rev(&self, room_id: &QString) -> i32 {
+        (crate::memories_photos::rev_of(&room_id.to_string()) % (i32::MAX as u64)) as i32
+    }
+
+    pub fn memories_count_text(&self, recordings: i32, photos: i32) -> QString {
+        QString::from(&tinhat_widgets::memphotos::count_text(recordings.max(0) as u64, photos.max(0) as u64))
     }
 
     /// Mirror clip bookmarks (state events) into clipsJson (0.8.8).
@@ -2165,7 +2767,7 @@ impl qobject::RoomController {
                     eprintln!("[room] set_power failed: {e}");
                     let _ = qt.queue(move |mut o| {
                         if o.room_id().to_string() == started {
-                            o.as_mut().set_mod_error(QString::from(&mod_err("change that power level", &e)));
+                            o.as_mut().set_mod_error(QString::from(&mod_err("change their role", &e)));
                         }
                     });
                 }
@@ -2195,16 +2797,166 @@ async fn do_send_game_code(room_id: &str, game: &str, code: &str) -> Result<(), 
 }
 
 /// Edit our message `target_id` via an `m.replace` relation + `m.new_content`.
-async fn do_edit(room_id: &str, target_id: &str, text: &str) -> Result<(), String> {
+async fn do_edit(room_id: &str, target_id: &str, text: &str, emote: bool, mentions: &[(String, String)], notify: &[String]) -> Result<(), String> {
     let room = room_by_id(room_id).await?;
-    let new_json = serde_json::to_value(RoomMessageEventContent::text_markdown(text))
-        .map_err(|e| e.to_string())?;
+    let content = edit_content(target_id, text, emote, mentions, notify)?;
+    room.send_raw("m.room.message", content).await.map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// The edit's content: markdown(new text) as `m.new_content`, the same with "* " as the fallback body. L1 A09.2: an
+/// emote's edit stays an emote (it always went out as m.text; Tin Hat Web's markdown.ts editContent does the same now).
+/// L1 A09.3: with mentions, the body links them as a new message's picks do (render_mention_html + m.mentions); the top
+/// level pings only `notify` (the newly mentioned, edit_notify_ids — the Matrix spec), m.new_content carries them all.
+fn edit_content(target_id: &str, text: &str, emote: bool, mentions: &[(String, String)], notify: &[String]) -> Result<serde_json::Value, String> {
+    let inner = if mentions.is_empty() {
+        if emote { RoomMessageEventContent::emote_markdown(text) } else { RoomMessageEventContent::text_markdown(text) }
+    } else {
+        use matrix_sdk::ruma::{events::Mentions, OwnedUserId, UserId};
+        let html = render_mention_html(text, mentions);
+        let ids: Vec<OwnedUserId> = mentions.iter().filter_map(|(_, u)| UserId::parse(u).ok()).collect();
+        let c = if emote { RoomMessageEventContent::emote_html(text, html) } else { RoomMessageEventContent::text_html(text, html) };
+        if ids.is_empty() { c } else { c.add_mentions(Mentions::with_user_ids(ids)) }
+    };
+    let new_json = serde_json::to_value(inner).map_err(|e| e.to_string())?;
     let mut content = new_json.clone();
     content["body"] = serde_json::json!(format!("* {text}")); // fallback for old clients
     content["m.new_content"] = new_json;
     content["m.relates_to"] = serde_json::json!({ "rel_type": "m.replace", "event_id": target_id });
-    room.send_raw("m.room.message", content).await.map_err(|e| e.to_string())?;
-    Ok(())
+    if !mentions.is_empty() {
+        content["m.mentions"] = if notify.is_empty() { serde_json::json!({}) } else { serde_json::json!({ "user_ids": notify }) };
+    }
+    Ok(content)
+}
+
+/// The msgtype of the row `id` in a timeline JSON (None = not there / none).
+fn row_msgtype(json: &str, id: &str) -> Option<String> {
+    row_str(json, id, "msgtype")
+}
+
+/// A string field of the row `id` in a timeline JSON.
+fn row_str(json: &str, id: &str, field: &str) -> Option<String> {
+    let v: serde_json::Value = serde_json::from_str(json).ok()?;
+    let m = v.as_array()?.iter().find(|m| m.get("id").and_then(|i| i.as_str()) == Some(id))?;
+    m.get(field).and_then(|t| t.as_str()).map(str::to_string)
+}
+
+/// The composer's picks `[{name, userId}]`.
+fn parse_picks(json: &str) -> Vec<(String, String)> {
+    serde_json::from_str::<Vec<serde_json::Value>>(json)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|v| Some((v.get("name")?.as_str()?.to_string(), v.get("userId")?.as_str()?.to_string())))
+        .collect()
+}
+
+/// L1 A09.3: the people a formatted body links (matrix.to/#/@user anchors): (name without its "@", user id).
+fn linked_mentions(formatted: &str) -> Vec<(String, String)> {
+    static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let re = RE.get_or_init(|| regex::Regex::new(r#"<a href="https://matrix\.to/#/([^"]+)">@([^<]*)</a>"#).unwrap());
+    re.captures_iter(formatted)
+        .filter_map(|c| {
+            let uid = percent_decode_lossy(&c[1]);
+            if !uid.starts_with('@') {
+                return None;
+            }
+            let name = c[2].replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&#39;", "'").replace("&#x27;", "'").replace("&amp;", "&");
+            Some((name, uid))
+        })
+        .collect()
+}
+
+fn percent_decode_lossy(s: &str) -> String {
+    let b = s.as_bytes();
+    let mut out = Vec::with_capacity(b.len());
+    let mut i = 0;
+    while i < b.len() {
+        if b[i] == b'%' && i + 2 < b.len() {
+            let hex = |c: u8| (c as char).to_digit(16);
+            if let (Some(h), Some(l)) = (hex(b[i + 1]), hex(b[i + 2])) {
+                out.push((h * 16 + l) as u8);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(b[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+/// L1 A09.3: the edit's top-level m.mentions: the sorted user ids among `mentions` the original did not link (the Matrix
+/// spec: an edit pings only the newly mentioned). Tin Hat Web's editNotifyIds; testvectors/edit-mentions "notify".
+fn edit_notify_ids(formatted: &str, mentions: &[(String, String)]) -> Vec<String> {
+    let had: std::collections::BTreeSet<String> = linked_mentions(formatted).into_iter().map(|(_, u)| u).collect();
+    let ids: std::collections::BTreeSet<String> = mentions.iter().map(|(_, u)| u.clone()).filter(|u| !had.contains(u)).collect();
+    ids.into_iter().collect()
+}
+
+/// L1 A09.3: an edit's mentions (Tin Hat Web's editMentions; testvectors/edit-mentions): the picks made while editing,
+/// then the people the original linked, each only while its "@name" is in the new text; one per user id, first wins.
+fn edit_mentions(formatted: &str, text: &str, picks: &[(String, String)]) -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = Vec::new();
+    for (name, uid) in picks.iter().cloned().chain(linked_mentions(formatted)) {
+        if out.iter().any(|(_, u)| *u == uid) || !text.contains(&format!("@{name}")) {
+            continue;
+        }
+        out.push((name, uid));
+    }
+    out
+}
+
+#[cfg(test)]
+mod edit_content_tests {
+    #[test]
+    fn edit_mentions_shared_vectors() {
+        let v: serde_json::Value = serde_json::from_str(include_str!("../../../testvectors/edit-mentions/vectors.json")).unwrap();
+        let pairs = |a: &serde_json::Value| -> Vec<(String, String)> {
+            a.as_array().unwrap().iter().map(|m| (m["name"].as_str().unwrap().to_string(), m["userId"].as_str().unwrap().to_string())).collect()
+        };
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 10);
+        for c in cases {
+            let got = super::edit_mentions(c["formatted"].as_str().unwrap(), c["text"].as_str().unwrap(), &pairs(&c["picks"]));
+            assert_eq!(got, pairs(&c["mentions"]), "{}", c["name"]);
+            let notify: Vec<String> = c["notify"].as_array().unwrap().iter().map(|u| u.as_str().unwrap().to_string()).collect();
+            assert_eq!(super::edit_notify_ids(c["formatted"].as_str().unwrap(), &got), notify, "{}: notify", c["name"]);
+        }
+    }
+
+    #[test]
+    fn an_edit_with_mentions_links_them() {
+        let m = vec![("Bo".to_string(), "@bo:x.org".to_string())];
+        let e = super::edit_content("$orig", "hi @Bo", false, &m, &[]).unwrap();
+        assert_eq!(e["m.mentions"], serde_json::json!({}), "an edit doesn't ping the already mentioned again");
+        let n = &e["m.new_content"];
+        assert_eq!(n["msgtype"], "m.text");
+        assert!(n["formatted_body"].as_str().unwrap().contains(r#"<a href="https://matrix.to/#/@bo:x.org">@Bo</a>"#));
+        assert_eq!(n["m.mentions"]["user_ids"][0], "@bo:x.org");
+        let em = super::edit_content("$orig", "pokes @Bo", true, &m, &["@bo:x.org".to_string()]).unwrap();
+        assert_eq!(em["m.new_content"]["msgtype"], "m.emote");
+        assert_eq!(em["m.mentions"]["user_ids"][0], "@bo:x.org");
+    }
+
+    #[test]
+    fn an_emote_edit_stays_an_emote() {
+        let e = super::edit_content("$orig", "waves *hard*", true, &[], &[]).unwrap();
+        assert_eq!(e["msgtype"], "m.emote");
+        assert_eq!(e["m.new_content"]["msgtype"], "m.emote");
+        assert_eq!(e["m.new_content"]["body"], "waves *hard*");
+        assert_eq!(e["body"], "* waves *hard*");
+        assert_eq!(e["m.relates_to"]["rel_type"], "m.replace");
+        let t = super::edit_content("$orig", "plain", false, &[], &[]).unwrap();
+        assert_eq!(t["m.new_content"]["msgtype"], "m.text");
+    }
+
+    #[test]
+    fn the_rows_msgtype_decides() {
+        let rows = r#"[{"id":"$a","msgtype":"m.emote","body":"waves"},{"id":"$b","msgtype":"m.text","body":"hi"}]"#;
+        assert_eq!(super::row_msgtype(rows, "$a").as_deref(), Some("m.emote"));
+        assert_eq!(super::row_msgtype(rows, "$b").as_deref(), Some("m.text"));
+        assert_eq!(super::row_msgtype(rows, "$c"), None);
+    }
 }
 
 /// Redact (delete) a message by event id.
@@ -2467,8 +3219,52 @@ pub(crate) fn voice_upload_fits(media: &tinhat_widgets::voicenote::VoiceMedia, e
     !encrypted || matches!(media, tinhat_widgets::voicenote::VoiceMedia::File(_))
 }
 /// §6: refuse before uploading only when the server's limit is KNOWN (a missing / unreadable / zero limit = unknown).
+/// A voice note's or an attachment's size against the server's m.upload.size (None = unknown: never refused). Shared
+/// vectors src/testvectors/upload-limit.json (the web's overUploadLimit).
 pub(crate) fn voice_over_limit(size: u64, limit: Option<u64>) -> bool {
     limit.is_some_and(|l| l > 0 && size > l)
+}
+
+#[cfg(test)]
+mod react_ids_tests {
+    /// QOL A07.2 review: once my reaction on a chip is taken back (or re-added optimistically), the chip's list of my
+    /// server ids is gone with it — a later take-back must not redact the old ids instead of the new reaction.
+    #[test]
+    fn optimistic_changes_drop_my_ids() {
+        let json = r#"[{"id":"$m","reactions":[{"key":"❤","count":2,"mine":true,"reactionId":"$a","reactionIds":["$a","$b"]}]}]"#;
+        let removed = super::apply_optimistic_react(json, "$m", "❤️", false).expect("removed");
+        let v: serde_json::Value = serde_json::from_str(&removed).unwrap();
+        assert_eq!(v[0]["reactions"][0]["reactionIds"], serde_json::json!([]));
+        let readded = super::apply_optimistic_react(&removed, "$m", "❤", true).expect("re-added");
+        let v: serde_json::Value = serde_json::from_str(&readded).unwrap();
+        assert_eq!(v[0]["reactions"][0]["reactionId"], super::OPTIMISTIC_RID);
+        assert_eq!(v[0]["reactions"][0]["reactionIds"], serde_json::json!([]));
+    }
+}
+
+#[cfg(test)]
+mod upload_limit_tests {
+    /// QOL A08.2: the shared upload-limit vectors.
+    #[test]
+    fn upload_limit_vectors() {
+        let path = format!("{}/src/testvectors/upload-limit.json", env!("CARGO_MANIFEST_DIR"));
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 7);
+        for c in cases {
+            let got = super::voice_over_limit(c["size"].as_u64().unwrap(), c["limit"].as_u64());
+            assert_eq!(got, c["over"].as_bool().unwrap(), "{}", c["name"]);
+        }
+    }
+    /// The attachment send checks the limit before it reads the file (failing-first: the read came first).
+    #[test]
+    fn attachment_checks_the_limit_before_reading() {
+        let src = include_str!("room.rs");
+        let arm = src.split("EchoKind::Attachment(path) => {\n            use matrix_sdk::ruma::events::room::MediaSource;").nth(1).unwrap();
+        let check = arm.find("voice_over_limit(size, limit)").expect("the attachment path checks the upload limit");
+        let read = arm.find("tokio::fs::read(&pb)").unwrap();
+        assert!(check < read, "the limit is checked before the file is read");
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -2495,6 +3291,15 @@ pub(crate) struct Echo {
     pub event_id: Option<String>,
     /// Set when the send failed (a friendly message; retry keeps the row).
     pub failed: Option<String>,
+    /// threads (docs/THREADS.md): the thread it is sent into ("" = the main timeline) and that thread's newest event
+    /// when it was made (the spec's fallback reply target); a reply's parent's thread (A07.3: the reply stays in it)
+    pub thread: String,
+    pub thread_latest: String,
+    pub reply_thread: String,
+    /// L1 D08.2: the failure's class (fail_class) — a "network" one sends itself again when the connection is back.
+    pub fail_cls: &'static str,
+    /// L1 D08.2: automatic resends so far (resendable: at most MAX_AUTO_TRIES; a Retry starts over).
+    pub auto_tries: u8,
 }
 
 impl Echo {
@@ -2521,6 +3326,42 @@ impl Echo {
             ts: now_ms(),
             event_id: None,
             failed: None,
+            thread: String::new(),
+            thread_latest: String::new(),
+            reply_thread: String::new(),
+            fail_cls: "",
+            auto_tries: 0,
+        }
+    }
+}
+
+/// threads: the relation a send gets. A reply: tinhat_widgets::threads::reply_relation (its parent's thread, else the
+/// panel's thread: A07.3). Anything else from a thread's panel: the thread relation (the spec's fallback reply to the
+/// thread's newest event). None = leave the content as built (a main-timeline send).
+pub(crate) fn echo_relation(e: &Echo) -> Option<serde_json::Value> {
+    use tinhat_widgets::threads::{reply_relation, thread_relation};
+    if !e.reply_to.is_empty() {
+        let parent_thread = if e.reply_thread.is_empty() { e.thread.as_str() } else { e.reply_thread.as_str() };
+        return Some(reply_relation(&e.reply_to, parent_thread));
+    }
+    if e.thread.is_empty() {
+        return None;
+    }
+    Some(thread_relation(&e.thread, &e.thread_latest))
+}
+
+/// threads: send `content` (typed) as built, or — for a thread send — as JSON with its relation added.
+async fn send_maybe_threaded(room: &Room, e: &Echo, content: RoomMessageEventContent, txn: &matrix_sdk::ruma::TransactionId) -> Result<String, String> {
+    match echo_relation(e) {
+        None => {
+            let r = room.send(content).with_transaction_id(txn.to_owned()).await.map_err(|x| x.to_string())?;
+            Ok(r.response.event_id.to_string())
+        }
+        Some(rel) => {
+            let mut v = serde_json::to_value(content).map_err(|x| x.to_string())?;
+            v["m.relates_to"] = rel;
+            let r = room.send_raw("m.room.message", v).with_transaction_id(txn).await.map_err(|x| x.to_string())?;
+            Ok(r.response.event_id.to_string())
         }
     }
 }
@@ -2733,13 +3574,99 @@ fn echo_store_failed(room_id: &str, txn: &str, err: &str) {
     if let Some(v) = echo_store().lock().unwrap().get_mut(room_id) {
         if let Some(e) = v.iter_mut().find(|e| e.txn == txn) {
             e.failed = Some(friendly_send_error(err));
+            e.fail_cls = fail_class(err);
         }
     }
 }
 
+/// L1 D08.2: does a failed message send itself again when the connection is back? (testvectors/resend-after-reconnect,
+/// Tin Hat Web's lib/resend.ts.) Only a failure for lack of connection; never a voice note (its draft owns the retry).
+pub(crate) fn resendable(cls: &str, voice: bool, tries: u8) -> bool {
+    cls == "network" && !voice && tries < MAX_AUTO_TRIES
+}
+
+/// L1 D08.2: how many times a message resends by itself (testvectors/resend-after-reconnect maxAutoTries).
+pub(crate) const MAX_AUTO_TRIES: u8 = 5;
+
+/// L1 D08.2: a good sync (the first after an outage, or any later one while such a message waits): every message that
+/// failed for lack of connection is sent again (at most MAX_AUTO_TRIES times by itself), per room oldest first, with its own transaction id (the server drops a duplicate). Each one is marked
+/// pending at once and its room's open view repaints ("echo:<room>" on keys_channel) as it starts and as it ends.
+pub(crate) fn resend_after_reconnect() {
+    // 4-3: the batch belongs to THIS session: its client and generation are taken now; a sign-out (or a switch to another
+    // account) bumps the generation and the batch stops before its next send (resend_batch)
+    let gen = crate::session::generation();
+    let Some(client) = crate::session::client() else { return };
+    let mut todo: Vec<(String, Vec<Echo>)> = Vec::new();
+    {
+        let mut s = echo_store().lock().unwrap();
+        for (room_id, v) in s.iter_mut() {
+            let mut list = Vec::new();
+            for e in v.iter_mut() {
+                if e.failed.is_some() && e.event_id.is_none() && resendable(e.fail_cls, matches!(e.kind, EchoKind::Voice(_)), e.auto_tries) {
+                    e.failed = None;
+                    e.fail_cls = "";
+                    e.auto_tries += 1;
+                    list.push(e.clone());
+                }
+            }
+            if !list.is_empty() {
+                todo.push((room_id.clone(), list));
+            }
+        }
+    }
+    for (room_id, list) in todo {
+        eprintln!("[room] connection back: sending {} failed message(s) again in {room_id}", list.len());
+        let _ = keys_channel().send(format!("echo:{room_id}"));
+        let client = client.clone();
+        crate::bridge::runtime().spawn(async move {
+            let rid = room_id.clone();
+            resend_batch(gen, crate::session::generation, &room_id, list, move |e| {
+                let (c, rid) = (client.clone(), rid.clone());
+                async move { perform_echo(&c, &rid, &e).await }
+            })
+            .await;
+        });
+    }
+}
+
+/// 4-3: one room's resend batch, oldest first. Before each send, and again when its answer comes, the session must
+/// still be the one that queued it (`now_gen() == gen`); otherwise the rest is dropped (sign-out already cleared the
+/// echo store, forget_session) and nothing is recorded. `send` sends through the batch's own client. Returns how many
+/// were sent or failed while the session lasted.
+async fn resend_batch<S, F>(gen: u64, now_gen: impl Fn() -> u64, room_id: &str, list: Vec<Echo>, mut send: S) -> usize
+where
+    S: FnMut(Echo) -> F,
+    F: std::future::Future<Output = Result<String, String>>,
+{
+    let total = list.len();
+    let mut done = 0;
+    for e in list {
+        if now_gen() != gen {
+            eprintln!("[room] the session ended: {} queued resend(s) dropped in {room_id}", total - done);
+            return done;
+        }
+        let res = send(e.clone()).await;
+        if now_gen() != gen {
+            eprintln!("[room] the session ended during a resend: {} queued resend(s) dropped in {room_id}", total - done - 1);
+            return done;
+        }
+        match res {
+            Ok(eid) => echo_store_sent(room_id, &e.txn, &eid),
+            Err(err) => {
+                eprintln!("[room] resend failed ({}): {err}", e.txn);
+                echo_store_failed(room_id, &e.txn, &err);
+            }
+        }
+        done += 1;
+        let _ = keys_channel().send(format!("echo:{room_id}"));
+    }
+    done
+}
+
 /// The echoes of `room_id` the given server rows do NOT yet contain, oldest first. Echoes
 /// the rows DO contain are removed from the store here (delivered).
-fn echo_store_undelivered(room_id: &str, msgs: &[serde_json::Value]) -> Vec<Echo> {
+/// threads: only the echoes sent into `view` ("" = the main timeline, else that thread) are looked at.
+fn echo_store_undelivered(room_id: &str, msgs: &[serde_json::Value], view: &str) -> Vec<Echo> {
     let my_id = crate::session::client()
         .and_then(|c| c.user_id().map(|u| u.to_string()))
         .unwrap_or_default();
@@ -2767,6 +3694,9 @@ fn echo_store_undelivered(room_id: &str, msgs: &[serde_json::Value]) -> Vec<Echo
     };
     let mut out = Vec::new();
     v.retain(|e| {
+        if e.thread != view {
+            return true;
+        }
         if delivered(e) {
             false
         } else {
@@ -2799,6 +3729,7 @@ fn echo_row(e: &Echo, my_id: &str, my_name: &str, my_avatar: &str, cur_json: &st
         "id": format!("~{}", e.txn),
         "txn": e.txn,
         "echo": true,
+        "threadId": e.thread,
         "pending": e.event_id.is_none() && e.failed.is_none(),
         "failed": e.failed.is_some(),
         "error": e.failed.clone().unwrap_or_default(),
@@ -2827,27 +3758,15 @@ fn echo_row(e: &Echo, my_id: &str, my_name: &str, my_avatar: &str, cur_json: &st
 }
 
 /// The real send for an echo; returns the server's event id.
-async fn perform_echo(room_id: &str, e: &Echo) -> Result<String, String> {
+async fn perform_echo(client: &matrix_sdk::Client, room_id: &str, e: &Echo) -> Result<String, String> {
     use matrix_sdk::ruma::OwnedTransactionId;
-    let room = room_by_id(room_id).await?;
+    // 4-3: the room comes from the client the send belongs to (a queued send never resolves through the next session's)
+    let room = client.get_room(&RoomId::parse(room_id).map_err(|x| format!("bad room id: {x}"))?).ok_or_else(|| "Room not found".to_string())?;
     let txn: OwnedTransactionId = e.txn.as_str().into();
     match &e.kind {
-        EchoKind::Text => {
-            let r = room
-                .send(RoomMessageEventContent::text_markdown(&e.body))
-                .with_transaction_id(txn)
-                .await
-                .map_err(|x| x.to_string())?;
-            Ok(r.response.event_id.to_string())
-        }
-        EchoKind::Emote => {
-            let r = room
-                .send(RoomMessageEventContent::emote_markdown(&e.body))
-                .with_transaction_id(txn)
-                .await
-                .map_err(|x| x.to_string())?;
-            Ok(r.response.event_id.to_string())
-        }
+        // threads: a thread's panel sends with the thread relation (send_maybe_threaded); the main timeline as before
+        EchoKind::Text => send_maybe_threaded(&room, e, RoomMessageEventContent::text_markdown(&e.body), &txn).await,
+        EchoKind::Emote => send_maybe_threaded(&room, e, RoomMessageEventContent::emote_markdown(&e.body), &txn).await,
         EchoKind::Reply(picked) => {
             // 10.6 (REACH A5.2): a reply notifies the person replied to — `m.mentions` carries the
             // parent's sender (never yourself) plus the mentions picked in the composer, whose
@@ -2873,7 +3792,8 @@ async fn perform_echo(room_id: &str, e: &Echo) -> Result<String, String> {
                 base = base.add_mentions(Mentions::with_user_ids(uids));
             }
             let mut content = serde_json::to_value(base).map_err(|x| x.to_string())?;
-            content["m.relates_to"] = serde_json::json!({ "m.in_reply_to": { "event_id": e.reply_to } });
+            // A07.3 (threads): a reply to a message in a thread stays in that thread (echo_relation → reply_relation)
+            content["m.relates_to"] = echo_relation(e).unwrap_or_else(|| serde_json::json!({ "m.in_reply_to": { "event_id": e.reply_to } }));
             let r = room
                 .send_raw("m.room.message", content)
                 .with_transaction_id(&txn)
@@ -2889,51 +3809,90 @@ async fn perform_echo(room_id: &str, e: &Echo) -> Result<String, String> {
             if !ids.is_empty() {
                 content = content.add_mentions(Mentions::with_user_ids(ids));
             }
-            let r = room.send(content).with_transaction_id(txn).await.map_err(|x| x.to_string())?;
-            Ok(r.response.event_id.to_string())
+            send_maybe_threaded(&room, e, content, &txn).await
         }
         EchoKind::Dice(content) => {
+            // threads (review #11): a roll from a thread's panel goes into the thread
+            let mut content = content.clone();
+            if let Some(rel) = echo_relation(e) {
+                content["m.relates_to"] = rel;
+            }
             let r = room
-                .send_raw("m.room.message", content.clone())
+                .send_raw("m.room.message", content)
                 .with_transaction_id(&txn)
                 .await
                 .map_err(|x| x.to_string())?;
             Ok(r.response.event_id.to_string())
         }
         EchoKind::Poll(content) => {
+            // threads (review #11): a poll from a thread's panel starts in the thread
+            let mut content = content.clone();
+            if let Some(rel) = echo_relation(e) {
+                content["m.relates_to"] = rel;
+            }
             let r = room
-                .send_raw(tinhat_widgets::polls::START_TYPE, content.clone())
+                .send_raw(tinhat_widgets::polls::START_TYPE, content)
                 .with_transaction_id(&txn)
                 .await
                 .map_err(|x| x.to_string())?;
             Ok(r.response.event_id.to_string())
         }
         EchoKind::Attachment(path) => {
-            use matrix_sdk::attachment::AttachmentConfig;
+            use matrix_sdk::ruma::events::room::MediaSource;
+            // refused before any upload (the SDK's attachment path did the same): nothing is left behind on the server
+            if room.state() != matrix_sdk::RoomState::Joined {
+                return Err("not joined".into());
+            }
             let pb = std::path::PathBuf::from(path);
+            let client = room.client();
+            // QOL A08.2: the server's m.upload.size (cached by the SDK; unknown = no refusal), checked BEFORE the file is
+            // read: a file over it is refused with "too large" and never read into memory or uploaded
+            let size = tokio::fs::metadata(&pb).await.map(|m| m.len()).unwrap_or(e.size);
+            let limit = client.load_or_fetch_max_upload_size().await.ok().map(u64::from);
+            if voice_over_limit(size, limit) {
+                return Err(format!("M_TOO_LARGE ({size} bytes over the server's {} byte limit)", limit.unwrap_or(0)));
+            }
             // tokio::fs — a multi-GB drag-drop must not block one of the 4 async workers.
             let data = tokio::fs::read(&pb).await.map_err(|x| format!("read {}: {x}", pb.display()))?;
             let filename = pb.file_name().and_then(|f| f.to_str()).unwrap_or("file").to_string();
             let mime: mime::Mime = e.mime.parse().unwrap_or(mime::APPLICATION_OCTET_STREAM);
-            // 9.3.2: an image goes out with its pixel size, so receivers reserve the row's
-            // height before the bytes arrive instead of jumping when the picture decodes.
-            let mut cfg = AttachmentConfig::new();
-            if e.w > 0 && e.h > 0 && e.mime.starts_with("image/") {
-                use matrix_sdk::attachment::{AttachmentInfo, BaseImageInfo};
-                cfg = cfg.info(AttachmentInfo::Image(BaseImageInfo {
-                    width: Some(UInt::from(e.w)),
-                    height: Some(UInt::from(e.h)),
-                    size: UInt::new(e.size),
-                    ..Default::default()
-                }));
+            // docs/PHOTO-METADATA.md: an image goes up without its location + identifying metadata (lossless, the
+            // orientation kept); one that can't be cleaned is not sent. The event states the cleaned size.
+            let data = photo_bytes_for_upload(mime.as_ref(), data)?;
+            let size = data.len() as u64;
+            // Our own upload + send_raw instead of Room::send_attachment, which reads the encryption state once, before
+            // the upload: a room that turned encrypted during it got an encrypted event pointing at plaintext media.
+            let source = attach_upload_checked(
+                || async { room.latest_encryption_state().await.map_err(|x| x.to_string()) },
+                || room.encryption_state(),
+                |encrypted| {
+                    let (client, data, mime) = (&client, &data, &mime);
+                    async move {
+                        if encrypted {
+                            let mut cur = std::io::Cursor::new(data.as_slice());
+                            let f = client.upload_encrypted_file(&mut cur).await.map_err(|x| x.to_string())?;
+                            Ok(MediaSource::Encrypted(Box::new(f)))
+                        } else {
+                            let r = client.media().upload(mime, data.clone(), None).await.map_err(|x| x.to_string())?;
+                            Ok(MediaSource::Plain(r.content_uri))
+                        }
+                    }
+                },
+            )
+            .await?;
+            let content = attachment_content(&mime, filename, source, e.w, e.h, size);
+            let mut content = serde_json::to_value(content).map_err(|x| x.to_string())?;
+            // threads: an attachment from a thread's panel goes into the thread
+            if let Some(rel) = echo_relation(e) {
+                content["m.relates_to"] = rel;
             }
-            // Room::send_attachment uploads (encrypting in an E2EE room) and sends in one
-            // go, returning the event id — no send-queue subscription dance.
+            // send_raw encrypts in an E2EE room. The txn is the echo's, so a send that did reach the server is not doubled by a retry.
             let r = room
-                .send_attachment(filename, &mime, data, cfg)
+                .send_raw("m.room.message", content)
+                .with_transaction_id(&txn)
                 .await
                 .map_err(|x| x.to_string())?;
-            Ok(r.event_id.to_string())
+            Ok(r.response.event_id.to_string())
         }
         EchoKind::Voice(v) => {
             use tinhat_widgets::voicenote::{voice_content, VoiceMedia};
@@ -2965,6 +3924,8 @@ async fn perform_echo(room_id: &str, e: &Echo) -> Result<String, String> {
                     Some(m) => m,
                     None => {
                         let data = tokio::fs::read(&v.path).await.map_err(|x| format!("voice: read {}: {x}", v.path))?;
+                        // R3-1: a voice note is never a picture: bytes that sniff as one are not sent
+                        refuse_picture_bytes(&data).map_err(|x| format!("voice: {x}"))?;
                         alive("read")?;
                         let size = data.len() as u64;
                         // §6: the server's m.upload.size (cached by the SDK); unknown = no refusal
@@ -3027,8 +3988,358 @@ async fn perform_echo(room_id: &str, e: &Echo) -> Result<String, String> {
     }
 }
 
+/// May the file go up, and encrypted? Encrypted when either read says so; a state the SDK can't tell (Unknown) uploads
+/// nothing. Rooms cannot turn encryption off, so "either" is the safe side.
+pub(crate) fn attach_upload_encrypt(at_send: &matrix_sdk::EncryptionState, at_upload: &matrix_sdk::EncryptionState) -> Result<bool, String> {
+    if at_send.is_unknown() || at_upload.is_unknown() {
+        return Err("attachment: the room's encryption can't be checked, so nothing was sent".into());
+    }
+    Ok(at_send.is_encrypted() || at_upload.is_encrypted())
+}
+
+/// Upload an attachment so its media matches the room's encryption when the upload ends: `latest` asks (the server only
+/// while the state is unknown), `current` reads synchronously right before the upload starts, `upload(encrypted)` does
+/// the upload. A plaintext upload is re-checked afterwards and done again, encrypted, when the room turned encrypted
+/// meanwhile. Sync runs on other tasks, so a change landing between the last check and send_raw is narrowed, not excluded.
+pub(crate) async fn attach_upload_checked<T, L, LF, U, UF>(
+    mut latest: L,
+    current: impl Fn() -> matrix_sdk::EncryptionState,
+    mut upload: U,
+) -> Result<T, String>
+where
+    L: FnMut() -> LF,
+    LF: std::future::Future<Output = Result<matrix_sdk::EncryptionState, String>>,
+    U: FnMut(bool) -> UF,
+    UF: std::future::Future<Output = Result<T, String>>,
+{
+    for _ in 0..3 {
+        let at_send = latest().await?;
+        attach_upload_encrypt(&at_send, &at_send)?;
+        // no await from this read to the start of the upload
+        let encrypted = attach_upload_encrypt(&at_send, &current())?;
+        let media = upload(encrypted).await?;
+        if encrypted {
+            return Ok(media); // encrypted media is fine in any room
+        }
+        let now = latest().await?;
+        if !attach_upload_encrypt(&now, &current())? {
+            return Ok(media);
+        }
+    }
+    Err("attachment: the room's encryption changed during the upload".into())
+}
+
+/// The m.room.message for an uploaded attachment: the same content Room::send_attachment built. An image carries its
+/// pixel size and byte size when known (receivers reserve the row's height before the bytes arrive).
+pub(crate) fn attachment_content(
+    mime: &mime::Mime,
+    filename: String,
+    source: matrix_sdk::ruma::events::room::MediaSource,
+    w: u32,
+    h: u32,
+    size: u64,
+) -> RoomMessageEventContent {
+    use matrix_sdk::attachment::{AttachmentInfo, BaseImageInfo};
+    use matrix_sdk::ruma::events::room::message::{AudioInfo, AudioMessageEventContent, FileInfo, FileMessageEventContent, ImageMessageEventContent, MessageType, VideoInfo, VideoMessageEventContent};
+    use matrix_sdk::ruma::events::room::ImageInfo;
+    let mimetype = Some(mime.as_ref().to_owned());
+    let msg = match mime.type_() {
+        mime::IMAGE => {
+            let mut info = if w > 0 && h > 0 {
+                ImageInfo::from(AttachmentInfo::Image(BaseImageInfo {
+                    width: Some(UInt::from(w)),
+                    height: Some(UInt::from(h)),
+                    size: UInt::new(size),
+                    ..Default::default()
+                }))
+            } else {
+                ImageInfo::default()
+            };
+            info.mimetype = mimetype;
+            let mut c = ImageMessageEventContent::new(filename, source);
+            c.info = Some(Box::new(info));
+            MessageType::Image(c)
+        }
+        mime::AUDIO => {
+            let mut info = AudioInfo::default();
+            info.mimetype = mimetype;
+            MessageType::Audio(AudioMessageEventContent::new(filename, source).info(Box::new(info)))
+        }
+        mime::VIDEO => {
+            let mut info = VideoInfo::default();
+            info.mimetype = mimetype;
+            let mut c = VideoMessageEventContent::new(filename, source);
+            c.info = Some(Box::new(info));
+            MessageType::Video(c)
+        }
+        _ => {
+            let mut info = FileInfo::default();
+            info.mimetype = mimetype;
+            let mut c = FileMessageEventContent::new(filename, source);
+            c.info = Some(Box::new(info));
+            MessageType::File(c)
+        }
+    };
+    RoomMessageEventContent::new(msg)
+}
+
+/// The words when a photo's metadata couldn't be removed (nothing was uploaded). The web's PHOTO_LOCATION_FAIL.
+pub(crate) const PHOTO_LOCATION_FAIL: &str = "Couldn't remove this photo's location, so it wasn't sent";
+const PHOTO_LOCATION_TAG: &str = "photo location: ";
+
+/// "Location is removed from photos you send" (docs/PHOTO-METADATA.md): the bytes to upload for a file of type `mime`.
+/// An image loses its GPS and every identifying tag, losslessly, keeping only the EXIF orientation
+/// (tinhat_widgets::exifstrip, the shared vectors testvectors/exif-strip); anything that isn't an image goes up exactly
+/// as it is. Err = the image couldn't be cleaned: the caller must not upload it. Every image upload calls this: the chat
+/// attachment (attach, paste, drag-drop), the room photo, the profile photo (settings.rs) and Memories "Add photos".
+/// The web's core/photoUpload.ts photoBytesForUpload.
+/// 12.1.16 2-2: the BYTES decide (tinhat_widgets::exifstrip::sniff_image), never `_mime` or the file's extension: a
+/// JPEG/PNG/WebP/HEIC/HEIF/AVIF is cleaned (or refused) whatever it is called; a TIFF (DNG and the camera RAWs built
+/// on it) is refused: it carries Exif/GPS and isn't cleaned (launch-gate 13:55); anything else, GIF included (the only
+/// pass-through picture format), goes up exactly as it is. Shared table: testvectors/exif-strip/upload-rule.json.
+/// 12.1.16 R3-1: an upload that is NOT a picture (a soundboard clip, a voice note) refuses bytes that sniff as a picture
+/// in ANY format (GIF, TIFF and RAWs included): such a path never sends pictures, and a picture renamed `clip.mp3` could
+/// carry a location. Nothing is cleaned; Err = nothing is uploaded (the words: PHOTO_LOCATION_FAIL). The web's
+/// core/photoUpload.ts refusePictureBytes. The guard every_image_upload_is_covered names every such site.
+pub(crate) fn refuse_picture_bytes(data: &[u8]) -> Result<(), String> {
+    match tinhat_widgets::exifstrip::sniff_image(data) {
+        Some(kind) => Err(format!("{PHOTO_LOCATION_TAG}{kind}: a picture on a non-picture upload, not sent")),
+        None => Ok(()),
+    }
+}
+
+pub(crate) fn photo_bytes_for_upload(_mime: &str, data: Vec<u8>) -> Result<Vec<u8>, String> {
+    if let Some(kind @ ("tiff" | "raw")) = tinhat_widgets::exifstrip::sniff_image(&data) {
+        return Err(format!("{PHOTO_LOCATION_TAG}{kind}: not cleaned, not sent"));
+    }
+    if !tinhat_widgets::exifstrip::is_cleaned_picture(&data) {
+        return Ok(data);
+    }
+    match tinhat_widgets::exifstrip::strip_image_metadata(&data) {
+        // the sniff says picture, the cleaner doesn't recognise it (e.g. a HEIC cut inside its ftyp): fail closed
+        Ok(s) if s.format == tinhat_widgets::exifstrip::StripFormat::Other => Err(format!("{PHOTO_LOCATION_TAG}not a picture the cleaner can read")),
+        Ok(s) if s.bytes == data => Ok(data),
+        Ok(s) => Ok(s.bytes),
+        Err(e) => Err(format!("{PHOTO_LOCATION_TAG}{e}")),
+    }
+}
+
+/// L1: a failed request's class from the SDK's error text (forbidden | too-large | rate | network | other); the words
+/// for it are the view's failText (ConversationView.qml composer-draft pure block). Tin Hat Web's failClass
+/// (src/features/chat/lib/composerDraft.ts) follows the same rules; both replay testvectors/composer-draft "classes".
+pub(crate) fn fail_class(raw: &str) -> &'static str {
+    // a photo that couldn't be cleaned is never a network failure, whatever its error says: it never resends by itself
+    // (the assembly's note; the vectors' "photo location: …" class, the web's ExifStripError)
+    if raw.starts_with(PHOTO_LOCATION_TAG) || raw.contains(PHOTO_LOCATION_FAIL) {
+        return "other";
+    }
+    let l = raw.to_lowercase();
+    if l.contains("m_forbidden") || l.contains("403") {
+        "forbidden"
+    } else if l.contains("m_too_large") || l.contains("413") {
+        "too-large"
+    } else if l.contains("m_limit_exceeded") || l.contains("429") {
+        "rate"
+    } else if ["connect", "timed out", "timeout", "dns", "network", "fetch"].iter().any(|w| l.contains(w)) {
+        "network"
+    } else {
+        "other"
+    }
+}
+
+/// L1: append a failure record (JSON) to a list of them (JSON array; anything else = empty), keeping the last 8 — two
+/// failures between the view's polls are both seen (astra review: one slot lost the first).
+/// The record's seq is set HERE, on the Qt thread, one past the list's newest: the tasks that fail can queue out of
+/// order, and the view handles only seqs above the newest it has handled (astra review round 2).
+pub(crate) fn push_failure(list_json: &str, rec: &str) -> String {
+    let mut v: Vec<serde_json::Value> = serde_json::from_str(list_json).unwrap_or_default();
+    if let Ok(mut r) = serde_json::from_str::<serde_json::Value>(rec) {
+        let next = v.iter().filter_map(|x| x["seq"].as_u64()).max().unwrap_or(0) + 1;
+        r["seq"] = serde_json::json!(next);
+        v.push(r);
+    }
+    let skip = v.len().saturating_sub(8);
+    serde_json::Value::Array(v.into_iter().skip(skip).collect()).to_string()
+}
+
+static OP_FAILED_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The opFailedJson record of a refused edit / delete (a new seq each time, so the same failure twice is seen twice).
+fn op_failed(room_id: &str, kind: &str, id: &str, text: &str, err: &str) -> String {
+    let seq = OP_FAILED_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+    serde_json::json!({ "seq": seq, "room": room_id, "kind": kind, "id": id, "text": text, "cls": fail_class(err) }).to_string()
+}
+
+#[cfg(test)]
+mod resend_photo_tests {
+    // the assembly's note: L1's auto-resend never resends a photo that couldn't be cleaned
+    #[test]
+    fn a_photo_that_could_not_be_cleaned_never_resends_by_itself() {
+        for err in [
+            "photo location: connection reset while reading the image",
+            "photo location: timed out decoding the tiff block",
+            super::PHOTO_LOCATION_FAIL,
+        ] {
+            assert_eq!(super::fail_class(err), "other", "{err}");
+            assert!(!super::resendable(super::fail_class(err), false, 0), "{err}");
+        }
+        // what the cleaner itself returns for a broken image goes the same way
+        if let Err(broken) = super::photo_bytes_for_upload("image/jpeg", vec![0xFF, 0xD8, 0xFF, 0xE1, 0x00, 0x08, 0x45]) {
+            assert!(!super::resendable(super::fail_class(&broken), false, 0), "{broken}");
+        }
+    }
+
+    #[test]
+    fn a_resend_goes_through_the_cleaner_before_any_upload() {
+        let src = include_str!("room.rs");
+        let r = src.find("pub(crate) fn resend_after_reconnect()").unwrap();
+        let rbody = &src[r..r + src[r..].find("\n}\n").unwrap()];
+        assert!(rbody.contains("perform_echo(&c, &rid, &e)"), "a resend is an ordinary send (perform_echo)");
+        let f = src.find("async fn perform_echo(").unwrap();
+        let body = &src[f..f + src[f..].find("\n}\n").unwrap()];
+        let arm = &body[body.find("EchoKind::Attachment(path) => {").unwrap()..];
+        let clean = arm.find("photo_bytes_for_upload(mime.as_ref(), data)?").expect("the attachment is cleaned");
+        let up = arm.find("attach_upload_checked(").expect("the upload");
+        assert!(clean < up, "cleaned before it is uploaded; a failure (?) returns before any upload");
+    }
+}
+
+#[cfg(test)]
+mod resend_session_tests {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::{Arc, Mutex};
+
+    fn echo(txn: &str) -> super::Echo {
+        let mut e = super::Echo::new(super::EchoKind::Text, txn);
+        e.txn = txn.into();
+        e
+    }
+
+    // 4-3: the session ends (sign-out / another account) while the first resend is in flight: nothing after it is sent.
+    #[test]
+    fn a_sign_out_stops_the_batch() {
+        let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
+        let gen = Arc::new(AtomicU64::new(7));
+        let sent = Arc::new(Mutex::new(Vec::<String>::new()));
+        let (g2, s2) = (gen.clone(), sent.clone());
+        let n = rt.block_on(super::resend_batch(7, move || gen.load(Ordering::SeqCst), "!r:x", vec![echo("a"), echo("b"), echo("c")], move |e| {
+            s2.lock().unwrap().push(e.txn.clone());
+            g2.store(8, Ordering::SeqCst); // signed out while "a" was on its way
+            async { Ok::<String, String>("$a".into()) }
+        }));
+        assert_eq!(*sent.lock().unwrap(), vec!["a".to_string()], "b and c must not go out as the next session");
+        assert_eq!(n, 0, "the answer of an ended session is not recorded");
+    }
+
+    #[test]
+    fn the_same_session_sends_them_all_in_order() {
+        let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
+        let sent = Arc::new(Mutex::new(Vec::<String>::new()));
+        let s2 = sent.clone();
+        let n = rt.block_on(super::resend_batch(3, || 3, "!r:x", vec![echo("a"), echo("b")], move |e| {
+            s2.lock().unwrap().push(e.txn.clone());
+            async { Ok::<String, String>("$x".into()) }
+        }));
+        assert_eq!((n, sent.lock().unwrap().clone()), (2, vec!["a".to_string(), "b".to_string()]));
+    }
+
+    #[test]
+    fn a_batch_never_finds_its_room_through_the_global_client() {
+        let src = include_str!("room.rs");
+        let f = src.find("async fn perform_echo(").unwrap();
+        let body = &src[f..f + src[f..].find("\n}\n").unwrap()];
+        assert!(body.starts_with("async fn perform_echo(client: &matrix_sdk::Client,"), "perform_echo takes the session's client");
+        assert!(!body.contains("room_by_id(") && !body.contains("session::client()"), "no lookup of the CURRENT client inside a send");
+        let r = src.find("pub(crate) fn resend_after_reconnect()").unwrap();
+        let rbody = &src[r..r + src[r..].find("\n}\n").unwrap()];
+        assert!(rbody.contains("let gen = crate::session::generation();") && rbody.contains("resend_batch(gen, crate::session::generation,"));
+    }
+}
+
+#[cfg(test)]
+mod resend_tests {
+    #[test]
+    fn shared_vectors() {
+        let v: serde_json::Value = serde_json::from_str(include_str!("../../../testvectors/resend-after-reconnect/vectors.json")).unwrap();
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 30);
+        for c in cases {
+            let (cls, kind, tries) = (c["class"].as_str().unwrap(), c["kind"].as_str().unwrap(), c["tries"].as_u64().unwrap() as u8);
+            assert_eq!(super::resendable(cls, kind == "voice", tries), c["resend"].as_bool().unwrap(), "{cls} {kind} {tries}");
+        }
+        assert_eq!(super::MAX_AUTO_TRIES as u64, v["maxAutoTries"].as_u64().unwrap());
+        // what a network-failed message says while it waits
+        assert_eq!(super::friendly_send_error("error sending request: connection refused"), v["networkText"].as_str().unwrap());
+    }
+
+    #[test]
+    fn a_network_failure_is_marked_resendable_and_resent_pending() {
+        let room = "!resend-test:x";
+        let mut e = super::Echo::new(super::EchoKind::Text, "hi");
+        e.txn = "t-resend-1".into();
+        super::echo_store_push(room, e);
+        super::echo_store_failed(room, "t-resend-1", "error sending request: connection refused");
+        let mut f = super::Echo::new(super::EchoKind::Text, "no");
+        f.txn = "t-resend-2".into();
+        super::echo_store_push(room, f);
+        super::echo_store_failed(room, "t-resend-2", "M_FORBIDDEN");
+        {
+            let s = super::echo_store().lock().unwrap();
+            let v = s.get(room).unwrap();
+            assert_eq!((v[0].fail_cls, v[1].fail_cls), ("network", "forbidden"));
+        }
+        // (no client in a unit test: the send itself fails again; what matters is which ones were picked up)
+        let picked: Vec<String> = {
+            let s = super::echo_store().lock().unwrap();
+            s.get(room).unwrap().iter().filter(|e| e.failed.is_some() && super::resendable(e.fail_cls, false, e.auto_tries)).map(|e| e.txn.clone()).collect()
+        };
+        assert_eq!(picked, vec!["t-resend-1".to_string()]);
+        let _ = super::echo_store_take(room, "t-resend-1");
+        let _ = super::echo_store_take(room, "t-resend-2");
+    }
+}
+
+#[cfg(test)]
+mod fail_class_tests {
+    #[test]
+    fn shared_vectors_classes() {
+        let v: serde_json::Value = serde_json::from_str(include_str!("../../../testvectors/composer-draft/vectors.json")).unwrap();
+        let cases = v["classes"].as_array().unwrap();
+        assert!(cases.len() >= 10);
+        for c in cases {
+            assert_eq!(super::fail_class(c["error"].as_str().unwrap()), c["class"].as_str().unwrap(), "{}", c["error"]);
+        }
+    }
+
+    #[test]
+    fn op_failed_record() {
+        let a: serde_json::Value = serde_json::from_str(&super::op_failed("!r:x", "edit", "$e", "fixed", "error sending request: connection refused")).unwrap();
+        let b: serde_json::Value = serde_json::from_str(&super::op_failed("!r:x", "edit", "$e", "fixed", "M_FORBIDDEN")).unwrap();
+        assert_eq!((a["kind"].as_str(), a["id"].as_str(), a["text"].as_str(), a["cls"].as_str()), (Some("edit"), Some("$e"), Some("fixed"), Some("network")));
+        assert_eq!(b["cls"].as_str(), Some("forbidden"));
+        assert!(b["seq"].as_u64() > a["seq"].as_u64());
+    }
+
+    #[test]
+    fn failures_queue_up_to_eight() {
+        let mut list = String::new();
+        // the seq a task stamped doesn't count (tasks queue out of order): the list numbers its records in order
+        for i in [5u64, 3, 9, 1, 2, 8, 7, 4, 6, 0] {
+            list = super::push_failure(&list, &format!(r#"{{"seq":{i},"n":{i}}}"#));
+        }
+        let v: Vec<serde_json::Value> = serde_json::from_str(&list).unwrap();
+        assert_eq!(v.len(), 8);
+        let seqs: Vec<u64> = v.iter().map(|x| x["seq"].as_u64().unwrap()).collect();
+        assert_eq!(seqs, (3..=10).collect::<Vec<u64>>());
+        assert_eq!(v[7]["n"].as_u64(), Some(0), "newest last");
+    }
+}
+
 /// Short, human wording for a failed send (the raw SDK error is logged, not shown).
 fn friendly_send_error(raw: &str) -> String {
+    if raw.starts_with(PHOTO_LOCATION_TAG) {
+        return PHOTO_LOCATION_FAIL.into();
+    }
     // voice notes: the note's own words for "too large" (§6); everything else as for any send
     if let Some(r) = raw.strip_prefix("voice: ") {
         let l = r.to_lowercase();
@@ -3045,7 +4356,8 @@ fn friendly_send_error(raw: &str) -> String {
     } else if l.contains("m_limit_exceeded") || l.contains("429") {
         "Slow down — the server is rate-limiting sends".into()
     } else if l.contains("connect") || l.contains("timed out") || l.contains("timeout") || l.contains("dns") || l.contains("network") {
-        "No connection — will not retry on its own".into()
+        // L1 D08.2: it does now (resend_after_reconnect)
+        "No connection — it will send when you're back online".into()
     } else {
         "Couldn't send".into()
     }
@@ -3111,9 +4423,11 @@ fn apply_optimistic_react(json: &str, event_id: &str, key: &str, add: bool) -> O
             .and_then(|r| r.as_array_mut())
             .map(std::mem::take);
         let mut chips = arr.unwrap_or_default();
+        // QOL A07.2: ❤ and ❤️ are one chip
+        let nkey = crate::reactions::react_key_norm(key);
         let existing = chips
             .iter()
-            .position(|c| c.get("key").and_then(|k| k.as_str()) == Some(key));
+            .position(|c| c.get("key").and_then(|k| k.as_str()).map(crate::reactions::react_key_norm).as_deref() == Some(nkey.as_str()));
         if add {
             match existing {
                 Some(i) => {
@@ -3123,6 +4437,7 @@ fn apply_optimistic_react(json: &str, event_id: &str, key: &str, add: bool) -> O
                         chips[i]["count"] = serde_json::json!(count);
                         chips[i]["mine"] = serde_json::json!(true);
                         chips[i]["reactionId"] = serde_json::json!(OPTIMISTIC_RID);
+                        chips[i]["reactionIds"] = serde_json::json!([]); // QOL A07.2: my server ids are not this chip's now
                         changed = true;
                     }
                 }
@@ -3143,6 +4458,7 @@ fn apply_optimistic_react(json: &str, event_id: &str, key: &str, add: bool) -> O
                     chips[i]["count"] = serde_json::json!(count - 1);
                     chips[i]["mine"] = serde_json::json!(false);
                     chips[i]["reactionId"] = serde_json::json!("");
+                    chips[i]["reactionIds"] = serde_json::json!([]);
                 }
                 changed = true;
             }
@@ -3185,6 +4501,7 @@ fn remove_optimistic_react(json: &str, reaction_id: &str) -> Option<(String, Str
             arr[i]["count"] = serde_json::json!(count - 1);
             arr[i]["mine"] = serde_json::json!(false);
             arr[i]["reactionId"] = serde_json::json!("");
+            arr[i]["reactionIds"] = serde_json::json!([]);
         }
         let out = serde_json::to_string(&msgs).ok()?;
         return Some((out, target.unwrap_or_default(), key));
@@ -3216,6 +4533,23 @@ async fn do_unreact(room_id: &str, reaction_id: &str) -> Result<(), String> {
 /// Default timeline window (messages) shown on open; grows by WINDOW_STEP via load_older.
 const DEFAULT_WINDOW: usize = 50;
 const WINDOW_STEP: usize = 50;
+
+/// A35.4: the window depth once the reader is back at the newest: the default again (load_older grows it a page at a
+/// time; only a room open used to shrink it, so after a deep scroll-back every live pass reloaded the whole depth).
+fn window_after_jump_to_latest(_current: usize) -> usize {
+    DEFAULT_WINDOW
+}
+
+#[cfg(test)]
+mod window_tests {
+    use super::{window_after_jump_to_latest, DEFAULT_WINDOW, WINDOW_STEP};
+
+    #[test]
+    fn jumping_to_the_latest_shrinks_a_deep_window_back_to_the_default() {
+        assert_eq!(window_after_jump_to_latest(DEFAULT_WINDOW + 12 * WINDOW_STEP), DEFAULT_WINDOW);
+        assert_eq!(window_after_jump_to_latest(DEFAULT_WINDOW), DEFAULT_WINDOW);
+    }
+}
 /// Compute read receipts only for the most recent N messages (store reads on the hot path).
 const RECEIPT_TAIL: usize = 30;
 /// Debounce before a live-update reload — bursts of sync updates collapse into one
@@ -3325,12 +4659,14 @@ fn watch_room_keys(client: &matrix_sdk::Client) {
 }
 
 /// Resolves when `room_id` (or every room) got new keys; never, if the channel is gone.
-async fn next_keys_for(keys_rx: &mut tokio::sync::broadcast::Receiver<String>, room_id: &str) {
+/// `true` = this room's local echoes changed ("echo:<room>", L1 D08.2), `false` = keys arrived.
+async fn next_keys_for(keys_rx: &mut tokio::sync::broadcast::Receiver<String>, room_id: &str) -> bool {
     loop {
         match keys_rx.recv().await {
-            Ok(r) if r == room_id || r == "*" => return,
+            Ok(r) if r == room_id || r == "*" => return false,
+            Ok(r) if r.strip_prefix("echo:") == Some(room_id) => return true,
             Ok(_) => {}
-            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => return,
+            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => return true,
             Err(tokio::sync::broadcast::error::RecvError::Closed) => std::future::pending::<()>().await,
         }
     }
@@ -3339,7 +4675,7 @@ async fn next_keys_for(keys_rx: &mut tokio::sync::broadcast::Receiver<String>, r
 /// What woke the open room's live loop.
 enum Wake {
     Update(Result<matrix_sdk::sync::RoomUpdate, tokio::sync::broadcast::error::RecvError>),
-    Keys,
+    Keys(bool),
 }
 
 /// Rooms whose whole key backup was pulled this session (10.5.2: once, not on every open).
@@ -3401,6 +4737,11 @@ fn note_newest_nonrow(room_id: &str, update: &matrix_sdk::sync::RoomUpdate) {
     for ev in &updates.timeline.events {
         let Ok(v) = ev.raw().deserialize_as::<serde_json::Value>() else { continue };
         if is_rendered_row(&v) {
+            continue;
+        }
+        // threads (MSC3771): the main receipt may never land on a thread event — nor on a relation (an edit or reaction
+        // may belong to a thread; none of them counts as unread anyway)
+        if v.get("content").and_then(|c| c.get("m.relates_to")).and_then(|r| r.get("rel_type")).is_some() {
             continue;
         }
         let id = v.get("event_id").and_then(|e| e.as_str()).unwrap_or("");
@@ -3502,6 +4843,8 @@ impl Loaded {
             r.poll_enders = self.poll_enders;
             r.poll_can_redact = self.poll_can_redact;
         }
+        // A30.0: the same power check (user_can_redact_event_of_other) is the message menu's "Delete" for others' messages
+        o.as_mut().set_can_redact_others(self.poll_can_redact);
         if !self.previews_wanted.is_empty() {
             let gen = o.rust().open_gen;
             spawn_preview_fill(o.qt_thread(), o.room_id().to_string(), gen, self.previews_wanted);
@@ -3545,13 +4888,13 @@ fn spawn_preview_fill(
 
 /// Load room name, recent messages (chronological JSON), live-call state, and whether
 /// older history may still exist, by id. `want` = how many messages to surface.
-async fn load_room(room_id: &str, want: usize) -> Result<Loaded, String> {
+async fn load_room(room_id: &str, want: usize, view: &str) -> Result<Loaded, String> {
     let client = crate::session::client().ok_or_else(|| "Not signed in".to_string())?;
     let rid = RoomId::parse(room_id).map_err(|e| format!("bad room id: {e}"))?;
     let room = client
         .get_room(&rid)
         .ok_or_else(|| "Room not found".to_string())?;
-    load_room_data(&room, want).await
+    load_room_data(&room, want, view).await
 }
 
 /// Joined-room member summary for the right-hand panel's member list.
@@ -3792,6 +5135,11 @@ impl TimelineWindow {
 
 /// True for events that render as their own chat bubble (what `want` counts).
 fn is_rendered_row(v: &serde_json::Value) -> bool {
+    // threads (review #3): a thread reply is no row of the main timeline, so it never fills the main view's quota (a
+    // busy thread would otherwise page the room's own messages out of the window)
+    if !tinhat_widgets::threads::thread_of(v.get("content").unwrap_or(&serde_json::Value::Null)).is_empty() {
+        return false;
+    }
     let ty = v.get("type").and_then(|t| t.as_str());
     // An event still sitting as m.room.encrypted after the SDK's decryption pass is one
     // we hold no key for. It is a real message we simply cannot read, so it occupies a
@@ -3847,15 +5195,25 @@ fn stamp_redaction(win: &mut TimelineWindow, redaction: &serde_json::Value) {
     }
     for v in win.events.iter_mut() {
         if v.get("event_id").and_then(|e| e.as_str()) == Some(target) {
-            let was_row = is_rendered_row(v);
-            v["content"] = serde_json::json!({});
-            v["unsigned"]["redacted_because"] = redaction.clone();
-            if was_row && !is_rendered_row(v) {
-                // still m.room.message type — row count unchanged; kept for clarity
-            }
+            stamp_redacted(v, redaction);
             break;
         }
     }
+}
+
+/// One event redacted in place. threads: a thread reply keeps its thread relation, so a deleted reply stays in its
+/// thread (the main timeline never shows it as a stray "deleted" row).
+fn stamp_redacted(v: &mut serde_json::Value, redaction: &serde_json::Value) {
+    let rel = v
+        .get("content")
+        .and_then(|c| c.get("m.relates_to"))
+        .filter(|r| !tinhat_widgets::threads::thread_of(&serde_json::json!({ "m.relates_to": r })).is_empty())
+        .cloned();
+    v["content"] = match rel {
+        Some(r) => serde_json::json!({ "m.relates_to": r }),
+        None => serde_json::json!({}),
+    };
+    v["unsigned"]["redacted_because"] = redaction.clone();
 }
 
 /// The event types the window pages through (server-side filter).
@@ -4117,7 +5475,9 @@ async fn redecrypt_window(room: &Room, win: &mut TimelineWindow) -> (usize, bool
 }
 
 /// Same, given a resolved Room (used by the live subscription). `want` = window size.
-async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
+async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, String> {
+    // threads (round 2 #12): the session this load belongs to, read before anything awaits
+    let session_gen = crate::session::generation();
     // Use the SDK's computed display name so DMs (no m.room.name) show the partner's
     // name in the header + composer placeholder, not the raw "!roomid:server". Same
     // fallback chain as nav.rs (display_name -> name -> canonical_alias -> room_id).
@@ -4176,7 +5536,19 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
         Ok::<WindowPage, String>(WindowPage { chunk, end: resp.end })
     };
     let pass = sync_window(&mut win, want, fetch).await?;
-    let has_more = win.from_token.is_some();
+    let mut has_more = win.from_token.is_some();
+    // threads (docs/THREADS.md): a thread's panel rows its thread — the window's events in it + the server's
+    // /relations pages of it (thread_window_events) + the root; the main view rows the window minus thread replies
+    let thread_events: Vec<serde_json::Value> = if view.is_empty() {
+        Vec::new()
+    } else {
+        // boxed: a deep future (rustc's query depth limit in the open() task)
+        let (evs, more) = Box::pin(thread_window_events(room, view, want, &win.events, session_gen)).await;
+        has_more = more;
+        evs
+    };
+    let src: &Vec<serde_json::Value> = if view.is_empty() { &win.events } else { &thread_events };
+    let plan = crate::threads_rows::thread_plan(src, if view.is_empty() { None } else { Some(view) });
     eprintln!(
         "[room] {} window: {} pages / {} scanned this pass -> {} events / {} rows (want={want}, more={has_more}, frontier={}){}",
         room.room_id(),
@@ -4198,10 +5570,9 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
     let mut msgs: Vec<serde_json::Value> = Vec::new();
     // Per-sender display-name cache (resolve once per distinct sender, no network).
     let mut names: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    // Reaction aggregation: target_event_id -> key -> (count, mine, my_reaction_event_id,
-    // who — sender display names, 9.3 for the chip tooltip).
-    let mut reactions: std::collections::HashMap<String, std::collections::HashMap<String, (u32, bool, String, Vec<String>)>> =
-        std::collections::HashMap::new();
+    // Reactions: target_event_id -> its reaction events, NEWEST first as scanned (reversed and grouped into chips by
+    // crate::reactions::group_chips below: stable order, one count per sender, ❤ = ❤️ — QOL A07.0/A07.1/A07.2).
+    let mut reactions: std::collections::HashMap<String, Vec<crate::reactions::ReactIn>> = std::collections::HashMap::new();
     // Edits (m.replace): target_event_id -> (new_body, new_formatted). Paginating
     // backward, the first edit seen for a target is the most recent, so keep that.
     let mut edits: std::collections::HashMap<String, (String, String)> = std::collections::HashMap::new();
@@ -4215,6 +5586,20 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
     // 9.3: my display name (mention highlight by name, echo rows) + per-sender avatars
     // (profile pictures on bubbles — the rows never carried one) + the pinned set.
     let my_name = resolve_member_name(room, &my_id).await;
+    // threads: my receipts that count for the summaries' unread dots (the main view's roots: replies seen or a bundle)
+    let thread_receipts = if view.is_empty() {
+        let mut roots: Vec<String> = plan.seen.keys().cloned().collect();
+        for v in src.iter() {
+            if tinhat_widgets::threads::bundle_of(v).is_some() {
+                roots.push(crate::threads_rows::ev_id(v).to_string());
+            }
+        }
+        roots.sort();
+        roots.dedup();
+        if roots.is_empty() { Vec::new() } else { Box::pin(crate::receipts::my_thread_receipts(room, &roots)).await }
+    } else {
+        Vec::new()
+    };
     let my_name_lc = my_name.to_lowercase();
     let mut avatars: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     // widgets W1: the pins in the shared order (newest pin first, each once — tinhat_widgets::recent::pin_order, the
@@ -4226,7 +5611,11 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
     // widgets W3: the window's poll responses and ends (the cards are tallied after the loop)
     let mut poll_rels: Vec<serde_json::Value> = Vec::new();
     {
-        for v in win.events.iter() {
+        for (vi, v) in src.iter().enumerate() {
+            // threads: the main timeline leaves thread replies (and what relates to them) out; a panel its thread's
+            if !plan.in_view[vi] {
+                continue;
+            }
             let ty = v.get("type").and_then(|t| t.as_str()).unwrap_or("?");
             // Reactions (m.annotation): aggregate per target event + emoji key.
             if ty == "m.reaction" {
@@ -4243,21 +5632,13 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
                             names.insert(rsender.to_string(), n.clone());
                             n
                         };
-                        let entry = reactions
-                            .entry(target.to_string())
-                            .or_default()
-                            .entry(key.to_string())
-                            .or_insert((0, false, String::new(), Vec::new()));
-                        // 10.1 (TH-MSG-10): one person counts once (a duplicate annotation the server
-                        // let through used to show "2" against one name).
-                        if !entry.3.contains(&who) {
-                            entry.0 += 1;
-                            entry.3.push(who);
-                        }
-                        if rsender == my_id {
-                            entry.1 = true;
-                            entry.2 = rid.to_string();
-                        }
+                        // 10.1 (TH-MSG-10): one person counts once — by sender since QOL A07.1 (group_chips)
+                        reactions.entry(target.to_string()).or_default().push(crate::reactions::ReactIn {
+                            key: key.to_string(),
+                            sender: rsender.to_string(),
+                            event_id: rid.to_string(),
+                            name: who,
+                        });
                     }
                 }
                 continue;
@@ -4446,14 +5827,18 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
                 n
             };
             // Reply / redaction relation handling.
-            let reply_to = content
+            let reply_to_raw = content
                 .and_then(|c| c.get("m.relates_to"))
                 .and_then(|r| r.get("m.in_reply_to"))
                 .and_then(|i| i.get("event_id"))
                 .and_then(|e| e.as_str())
                 .unwrap_or("");
+            // threads: a thread message's m.in_reply_to with is_falling_back is only for clients without threads: no quote
+            let thread_id = plan.tids[vi].as_str();
+            let reply_to = if crate::threads_rows::fallback_quote(thread_id, content.and_then(|c| c.get("m.relates_to"))) { "" } else { reply_to_raw };
             let redacted = v.get("unsigned").and_then(|u| u.get("redacted_because")).is_some();
-            // Strip the rich-reply quote fallback ("> <@user> …") from the shown body.
+            // Strip the rich-reply quote fallback ("> <@user> …") from the shown body — only on a real reply (a thread
+            // message's fallback m.in_reply_to has no quote text, review #10)
             let body_owned = if reply_to.is_empty() {
                 body.to_string()
             } else {
@@ -4519,6 +5904,35 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
                 .and_then(|u| u.get("transaction_id"))
                 .and_then(|t| t.as_str())
                 .unwrap_or("");
+            // threads: the summary under a root in the main timeline (names + faces resolved here, cached per load)
+            let thread_json = match (view.is_empty() && !redacted).then(|| crate::threads_rows::root_thread(v, &plan.seen, &my_id, &thread_receipts, &plan.ts_of)).flatten() {
+                Some(t) => {
+                    let last_name = match names.get(&t.last_sender) {
+                        Some(n) => n.clone(),
+                        None => {
+                            let n = resolve_member_name(room, &t.last_sender).await;
+                            names.insert(t.last_sender.clone(), n.clone());
+                            n
+                        }
+                    };
+                    let mut repliers = Vec::new();
+                    for u in &t.repliers {
+                        let name = match names.get(u) {
+                            Some(n) => n.clone(),
+                            None => {
+                                let n = resolve_member_name(room, u).await;
+                                names.insert(u.clone(), n.clone());
+                                n
+                            }
+                        };
+                        let av = sender_avatar(room, u, &mut avatars).await;
+                        repliers.push(serde_json::json!({ "id": u, "name": name, "avatar": av }));
+                    }
+                    serde_json::json!({ "count": t.count, "lastSender": t.last_sender, "lastName": last_name, "lastTs": t.last_ts,
+                        "repliers": repliers, "unread": t.unread, "mine": t.mine })
+                }
+                None => serde_json::Value::Null,
+            };
             // Inline media embeds (YouTube/Twitch/GIF/…) parsed from the body, plus
             // whether the body is only a media link (so QML can hide the raw URL).
             msgs.push(serde_json::json!({
@@ -4540,6 +5954,9 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
                 "themeShare": theme_share,
                 "pinSnippet": pin_snippet,
                 "dice": dice,
+                // threads (docs/THREADS.md): the thread this message is in ("" = main) + the summary under a root
+                "threadId": thread_id,
+                "thread": thread_json,
             }));
         }
     }
@@ -4599,14 +6016,9 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
     // Attach aggregated reactions to their target messages (chips render in QML).
     for m in msgs.iter_mut() {
         if let Some(mid) = m.get("id").and_then(|i| i.as_str()).map(|s| s.to_string()) {
-            if let Some(rmap) = reactions.get(&mid) {
-                let arr: Vec<serde_json::Value> = rmap
-                    .iter()
-                    .map(|(k, (c, mine, rid, who))| {
-                        serde_json::json!({ "key": k, "count": c, "mine": mine, "reactionId": rid, "who": who })
-                    })
-                    .collect();
-                m["reactions"] = serde_json::json!(arr);
+            if let Some(newest_first) = reactions.get(&mid) {
+                let oldest_first: Vec<crate::reactions::ReactIn> = newest_first.iter().rev().cloned().collect();
+                m["reactions"] = serde_json::json!(crate::reactions::group_chips(&oldest_first, &my_id));
             }
         }
     }
@@ -4724,8 +6136,10 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
         (enders, mine)
     };
     attach_poll_cards(&mut msgs, &poll_rels, &poll_enders, &my_id, poll_can_redact);
-    let cache_json = serde_json::to_string(&msgs).map_err(|e| e.to_string())?;
-    write_timeline_cache(room.room_id().as_str(), &cache_json);
+    if view.is_empty() {
+        let cache_json = serde_json::to_string(&msgs).map_err(|e| e.to_string())?;
+        write_timeline_cache(room.room_id().as_str(), &cache_json);
+    }
 
     // widgets W3: the gates' sample rows (TINHAT_CHAT_SAMPLES=dice): LOCAL rows after the real ones — never sent, never cached
     for row in chat_sample_rows(&my_id, &my_name) {
@@ -4737,7 +6151,7 @@ async fn load_room_data(room: &Room, want: usize) -> Result<Loaded, String> {
     // + time) is delivered and dropped; the rest render at the tail as pending / sent /
     // failed rows, in the order they were sent.
     let own_avatar = sender_avatar(room, &my_id, &mut avatars).await;
-    let echoes = echo_store_undelivered(room.room_id().as_str(), &msgs);
+    let echoes = echo_store_undelivered(room.room_id().as_str(), &msgs, view);
     if !echoes.is_empty() {
         let cur = serde_json::to_string(&msgs).unwrap_or_else(|_| "[]".into());
         for e in echoes {
@@ -4954,7 +6368,7 @@ fn write_members_cache(room_id: &str, members_json: &str, summary_json: &str) {
 
 /// Map a file extension to a MIME type string (covers the common image/video/audio/doc
 /// types; the SDK picks the right msgtype — m.image/m.video/m.audio/m.file — from it).
-fn mime_for_ext(ext: &str) -> &'static str {
+pub(crate) fn mime_for_ext(ext: &str) -> &'static str {
     match ext {
         "png" => "image/png",
         "jpg" | "jpeg" => "image/jpeg",
@@ -4962,6 +6376,11 @@ fn mime_for_ext(ext: &str) -> &'static str {
         "webp" => "image/webp",
         "bmp" => "image/bmp",
         "svg" => "image/svg+xml",
+        // phone photos: sent as pictures (like the web, whose browser types them), so they lose their location too
+        // (docs/PHOTO-METADATA.md). Not drawn inline (no shipped Qt reads them): a file card, as for any non-inline image.
+        "heic" => "image/heic",
+        "heif" | "hif" => "image/heif",
+        "avif" => "image/avif",
         "mp4" => "video/mp4",
         "webm" => "video/webm",
         "mkv" => "video/x-matroska",
@@ -5043,6 +6462,262 @@ pub(crate) fn reply_mention_ids(parent_sender: Option<&str>, me: &str, picked: &
 }
 
 /// The sender (mxid) of the loaded timeline row `id`, "" when it is not loaded.
+/// threads: the newest row of a timeline that is a server event (not a local echo), for a thread send's fallback reply.
+fn newest_server_row(messages_json: &str) -> Option<String> {
+    let v = serde_json::from_str::<serde_json::Value>(messages_json).ok()?;
+    v.as_array()?
+        .iter()
+        .rev()
+        .filter(|m| m.get("echo").and_then(|e| e.as_bool()) != Some(true))
+        .find_map(|m| m.get("id").and_then(|i| i.as_str()).filter(|i| i.starts_with('$')).map(str::to_string))
+}
+
+/// A member's display name through a per-call cache.
+async fn cached_name(room: &Room, names: &mut std::collections::HashMap<String, String>, u: &str) -> String {
+    if let Some(n) = names.get(u) {
+        return n.clone();
+    }
+    let n = resolve_member_name(room, u).await;
+    names.insert(u.to_string(), n.clone());
+    n
+}
+
+/// threads: the Threads list's JSON (see RoomController::load_threads): the server's /threads roots (each with its
+/// bundled summary) + the roots the room's window holds replies for, summarised like the timeline's roots.
+async fn load_threads_json(room: &Room, pages: u32) -> String {
+    use matrix_sdk::room::ListThreadsOptions;
+    use tinhat_widgets::threads::{thread_list, ListThread};
+    let me = room.own_user_id().to_string();
+    let mut roots: Vec<serde_json::Value> = Vec::new();
+    let mut failed = false;
+    // `pages` pages of 50 (Load more threads); `more` = the server has older ones
+    let mut from: Option<String> = None;
+    let mut more = false;
+    for _ in 0..pages.max(1) {
+        let mut opts = ListThreadsOptions::default();
+        opts.limit = Some(UInt::from(50u32));
+        opts.from = from.clone();
+        match room.list_threads(opts).await {
+            Ok(page) => {
+                for ev in page.chunk.iter() {
+                    if let Ok(mut v) = ev.raw().deserialize_as::<serde_json::Value>() {
+                        crate::moved::normalize(&mut v);
+                        roots.push(v);
+                    }
+                }
+                from = page.prev_batch_token.clone();
+                more = from.is_some();
+                if !more {
+                    break;
+                }
+            }
+            Err(e) => {
+                eprintln!("[threads] /threads failed: {e}");
+                failed = true;
+                break;
+            }
+        }
+    }
+    let window: Vec<serde_json::Value> = timeline_window_for(room.room_id().as_str()).lock().await.events.clone();
+    let plan = crate::threads_rows::thread_plan(&window, None);
+    // roots the window has replies for but the server didn't list (yet): the window's copy, or a bare entry
+    for r in plan.seen.keys() {
+        if roots.iter().any(|v| crate::threads_rows::ev_id(v) == r) {
+            continue;
+        }
+        match window.iter().find(|v| crate::threads_rows::ev_id(v) == r) {
+            Some(v) => roots.push(v.clone()),
+            None => roots.push(serde_json::json!({ "event_id": r })),
+        }
+    }
+    let ids: Vec<String> = roots.iter().map(|v| crate::threads_rows::ev_id(v).to_string()).collect();
+    let receipts = crate::receipts::my_thread_receipts(room, &ids).await;
+    let mut names: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    let mut avatars: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    let mut items = Vec::new();
+    let mut list = Vec::new();
+    for v in &roots {
+        let Some(t) = crate::threads_rows::root_thread(v, &plan.seen, &me, &receipts, &plan.ts_of) else { continue };
+        let root = crate::threads_rows::ev_id(v).to_string();
+        let sender = v.get("sender").and_then(|s| s.as_str()).unwrap_or("").to_string();
+        let root_name = if sender.is_empty() { String::new() } else { cached_name(room, &mut names, &sender).await };
+        let last_name = cached_name(room, &mut names, &t.last_sender).await;
+        let avatar = if sender.is_empty() { String::new() } else { sender_avatar(room, &sender, &mut avatars).await };
+        let redacted = v.get("unsigned").and_then(|u| u.get("redacted_because")).is_some();
+        let body = v.get("content").and_then(|c| c.get("body")).and_then(|b| b.as_str()).unwrap_or("");
+        let ty = v.get("type").and_then(|t| t.as_str()).unwrap_or("");
+        let snippet = if redacted {
+            "Message deleted".to_string()
+        } else if ty == "m.room.encrypted" {
+            "Encrypted message".to_string()
+        } else if ty.is_empty() {
+            "Message not loaded".to_string()
+        } else {
+            body.split_whitespace().collect::<Vec<_>>().join(" ").chars().take(200).collect()
+        };
+        list.push(ListThread { root: root.clone(), root_sender: sender.clone(), last_ts: t.last_ts, mine: t.mine });
+        items.push(serde_json::json!({ "root": root, "rootSender": sender, "rootName": root_name, "rootAvatar": avatar,
+            "snippet": snippet, "count": t.count, "lastName": last_name, "lastTs": t.last_ts, "unread": t.unread, "mine": t.mine }));
+    }
+    serde_json::json!({ "items": items, "all": thread_list(&list, "all", &me), "mine": thread_list(&list, "mine", &me), "error": failed, "more": more }).to_string()
+}
+
+/// threads: the thread a loaded row is in ("" = main or not loaded).
+fn row_thread(messages_json: &str, id: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(messages_json)
+        .ok()
+        .and_then(|v| {
+            v.as_array()?
+                .iter()
+                .find(|m| m.get("id").and_then(|i| i.as_str()) == Some(id))
+                .and_then(|m| m.get("threadId").and_then(|s| s.as_str()).map(str::to_string))
+        })
+        .unwrap_or_default()
+}
+
+/// threads: one thread's /relations pages for its panel (fetched once, then page by page as the panel scrolls up) and
+/// its root, per room + thread. Newest page first; `next` = the server's token for older ones (None = the start).
+#[derive(Default)]
+struct ThreadWindow {
+    fetched: Vec<serde_json::Value>,
+    root: Option<serde_json::Value>,
+    next: Option<String>,
+    started: bool,
+    /// review #2: when the newest page was last fetched (a thread reopened later fetches its head again)
+    head_at: Option<std::time::Instant>,
+}
+
+fn thread_windows() -> &'static std::sync::Mutex<std::collections::HashMap<String, Arc<tokio::sync::Mutex<ThreadWindow>>>> {
+    static W: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, Arc<tokio::sync::Mutex<ThreadWindow>>>>> = std::sync::OnceLock::new();
+    W.get_or_init(Default::default)
+}
+
+/// threads: the thread's events (newest first, threads_rows::merge_thread) for `want` rows, and whether older ones may
+/// exist. Network: the first page on the first load, then one more page whenever `want` outgrows what is loaded.
+async fn thread_window_events(room: &Room, root: &str, want: usize, window: &[serde_json::Value], session_gen: u64) -> (Vec<serde_json::Value>, bool) {
+    use matrix_sdk::room::RelationsOptions;
+    // review #1 / round 2 #12: per session (a signed-out account's decrypted thread never reaches the next one) — the
+    // generation the load STARTED in, and nothing is kept once the session changed meanwhile
+    if crate::session::generation() != session_gen {
+        return (Vec::new(), false);
+    }
+    let key = format!("{session_gen}|{}|{root}", room.room_id());
+    let tw = thread_windows().lock().unwrap_or_else(|p| p.into_inner()).entry(key).or_default().clone();
+    let mut tw = tw.lock().await;
+    let Ok(root_id) = matrix_sdk::ruma::OwnedEventId::try_from(root) else { return (Vec::new(), false) };
+    if tw.root.is_none() && !window.iter().any(|v| crate::threads_rows::ev_id(v) == root) {
+        if let Ok(ev) = Box::pin(room.load_or_fetch_event(&root_id, None)).await {
+            if let Ok(mut v) = ev.raw().deserialize_as::<serde_json::Value>() {
+                crate::moved::normalize(&mut v);
+                tw.root = Some(v);
+            }
+        }
+    }
+    // the thread's own messages (is_rendered_row leaves thread replies out: it counts the main timeline's rows)
+    let rows = |fetched: &[serde_json::Value], rt: Option<&serde_json::Value>| {
+        crate::threads_rows::merge_thread(root, window, fetched, rt)
+            .iter()
+            .filter(|v| {
+                matches!(v.get("type").and_then(|t| t.as_str()), Some("m.room.message") | Some("m.room.encrypted"))
+                    && v.get("content").and_then(|c| c.get("m.relates_to")).and_then(|r| r.get("rel_type")).and_then(|r| r.as_str()) != Some("m.replace")
+            })
+            .count()
+    };
+    // review #2: the newest page again when it is older than 30 s (replies missed while the panel was closed, or that
+    // the room's window has dropped since), merged in by id
+    if tw.started && tw.head_at.is_none_or(|t| t.elapsed() > std::time::Duration::from_secs(30)) {
+        // round 2 #2: newest pages until one overlaps what is held (a gap longer than a page fills too), at most 6
+        let mut from: Option<String> = None;
+        for _ in 0..6 {
+            let mut opts = RelationsOptions::default();
+            opts.from = from.clone();
+            opts.limit = Some(UInt::from(50u32));
+            opts.recurse = true;
+            let Ok(page) = room.relations(root_id.clone(), opts).await else { break };
+            if crate::session::generation() != session_gen {
+                return (Vec::new(), false);
+            }
+            let mut overlap = false;
+            for ev in page.chunk.iter() {
+                if let Ok(mut v) = ev.raw().deserialize_as::<serde_json::Value>() {
+                    crate::moved::normalize(&mut v);
+                    let id = crate::threads_rows::ev_id(&v).to_string();
+                    match tw.fetched.iter().position(|f| crate::threads_rows::ev_id(f) == id) {
+                        Some(i) => {
+                            overlap = true;
+                            // round 2 #14: a copy that decrypts now replaces the one held without its key
+                            let was_utd = tw.fetched[i].get("type").and_then(|t| t.as_str()) == Some("m.room.encrypted");
+                            if was_utd && v.get("type").and_then(|t| t.as_str()) != Some("m.room.encrypted") {
+                                tw.fetched[i] = v;
+                            }
+                        }
+                        None => tw.fetched.push(v),
+                    }
+                }
+            }
+            tw.head_at = Some(std::time::Instant::now());
+            if overlap || page.next_batch_token.is_none() {
+                break;
+            }
+            from = page.next_batch_token.clone();
+        }
+    }
+    // at most a few pages per pass (a long thread fills in as the panel scrolls)
+    for _ in 0..4 {
+        let need = !tw.started || (tw.next.is_some() && rows(&tw.fetched, tw.root.as_ref()) < want);
+        if !need {
+            break;
+        }
+        let mut opts = RelationsOptions::default();
+        opts.from = if tw.started { tw.next.clone() } else { None };
+        opts.limit = Some(UInt::from(50u32));
+        opts.recurse = true;
+        match room.relations(root_id.clone(), opts).await {
+            Ok(page) => {
+                if crate::session::generation() != session_gen {
+                    return (Vec::new(), false);
+                }
+                for ev in page.chunk.iter() {
+                    if let Ok(mut v) = ev.raw().deserialize_as::<serde_json::Value>() {
+                        crate::moved::normalize(&mut v);
+                        if let matrix_sdk::deserialized_responses::TimelineEventKind::UnableToDecrypt { utd_info, .. } = &ev.kind {
+                            crate::utd::annotate(&mut v, &utd_info.reason);
+                        }
+                        tw.fetched.push(v);
+                    }
+                }
+                // dir=b: the server's next_batch continues further back (the spec's token for "more")
+                tw.next = page.next_batch_token.clone();
+                if !tw.started {
+                    tw.head_at = Some(std::time::Instant::now());
+                }
+                tw.started = true;
+            }
+            Err(e) => {
+                eprintln!("[threads] relations of {root} failed: {e}");
+                break;
+            }
+        }
+    }
+    // review #3: the window's redactions also reach the copies fetched here (the window stamps only its own)
+    for red in window.iter().filter(|v| v.get("type").and_then(|t| t.as_str()) == Some("m.room.redaction")) {
+        let target = red
+            .get("redacts")
+            .and_then(|r| r.as_str())
+            .or_else(|| red.get("content").and_then(|c| c.get("redacts")).and_then(|r| r.as_str()))
+            .unwrap_or("")
+            .to_string();
+        let twm = &mut *tw;
+        for v in twm.fetched.iter_mut().chain(twm.root.iter_mut()) {
+            if crate::threads_rows::ev_id(v) == target && v.get("unsigned").and_then(|u| u.get("redacted_because")).is_none() {
+                stamp_redacted(v, red);
+            }
+        }
+    }
+    let evs = crate::threads_rows::merge_thread(root, window, &tw.fetched, tw.root.as_ref());
+    (evs, tw.next.is_some() || !tw.started)
+}
+
 fn row_sender(messages_json: &str, id: &str) -> String {
     serde_json::from_str::<serde_json::Value>(messages_json)
         .ok()
@@ -5118,6 +6793,7 @@ pub(crate) fn forget_session() {
     newest_nonrow().lock().unwrap_or_else(|p| p.into_inner()).clear();
     pinned_rows().lock().unwrap_or_else(|p| p.into_inner()).clear();
     theme_shares().lock().unwrap_or_else(|p| p.into_inner()).clear();
+    thread_windows().lock().unwrap_or_else(|p| p.into_inner()).clear(); // threads: their fetched events
 }
 
 
@@ -5311,6 +6987,8 @@ pub(crate) async fn do_apply_room_photo(
 
     let p = crate::platform::path_from_file_url(path);
     let data = std::fs::read(&p).map_err(|e| format!("read {p}: {e}"))?;
+    // docs/PHOTO-METADATA.md: the room photo loses its location + identifying metadata too (can't be cleaned = not set)
+    let data = photo_bytes_for_upload("image/*", data).map_err(|_| PHOTO_LOCATION_FAIL.to_string())?;
     let ext = std::path::Path::new(&p)
         .extension()
         .and_then(|e| e.to_str())
@@ -5892,6 +7570,27 @@ pub(crate) async fn resolve_member_name(room: &Room, mxid: &str) -> String {
 }
 
 #[cfg(test)]
+mod attachment_retry_tests {
+    // fix/attach-retry-txn (12.1.15 merge): the attachment now goes out through attach-encrypt-recheck's send_raw, so the
+    // echo's transaction id has to ride on THAT request: a Retry after a lost response repeats the same transaction and
+    // the server answers with the event it already has, instead of posting the file a second time.
+    #[test]
+    fn a_retried_attachment_repeats_the_echos_transaction() {
+        let src = include_str!("room.rs");
+        // perform_echo's own body only (astra: the whole rest of the file also holds this test's own strings)
+        let f = src.find("async fn perform_echo(").expect("perform_echo");
+        let body = &src[f..f + src[f..].find("\n}\n").expect("the end of perform_echo")];
+        assert!(!body.contains("mod attachment_retry_tests"), "the search must stop at perform_echo's end");
+        assert!(body.contains("let txn: OwnedTransactionId = e.txn.as_str().into();"), "the txn is the echo's own");
+        let start = body.find("EchoKind::Attachment(path) => {").expect("the attachment arm");
+        let end = start + body[start..].find("EchoKind::Voice(v) => {").expect("the end of the arm");
+        let arm = &body[start..end];
+        assert!(arm.contains(".send_raw(\"m.room.message\", content)"), "the event goes out with send_raw");
+        assert!(arm.contains(".with_transaction_id(&txn)"), "a Retry has to be the same transaction");
+    }
+}
+
+#[cfg(test)]
 mod reply_mention_tests {
     use super::reply_mention_ids;
 
@@ -6325,4 +8024,720 @@ fn theme_share_of(event_id: &str, content: &serde_json::Value) -> serde_json::Va
     }
     c.insert(event_id.to_string(), v.clone());
     v
+}
+
+#[cfg(test)]
+mod attach_encrypt_tests {
+    use super::{attach_upload_checked, attach_upload_encrypt, attachment_content};
+    use matrix_sdk::ruma::events::room::MediaSource;
+    use matrix_sdk::ruma::OwnedMxcUri;
+    use matrix_sdk::EncryptionState::{self, Encrypted, NotEncrypted, Unknown};
+    use std::cell::RefCell;
+
+    fn dup(s: &EncryptionState) -> EncryptionState {
+        match s {
+            Encrypted => Encrypted,
+            NotEncrypted => NotEncrypted,
+            _ => Unknown,
+        }
+    }
+
+    fn block<F: std::future::Future>(f: F) -> F::Output {
+        tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(f)
+    }
+
+    /// A room whose state changes on a script: each `latest` / `current` read takes the next value of its list (the last
+    /// repeats), each upload records `encrypted` and applies `after_upload`.
+    struct Script {
+        state: RefCell<EncryptionState>,
+        after_upload: RefCell<Vec<EncryptionState>>,
+        uploads: RefCell<Vec<bool>>,
+    }
+    impl Script {
+        fn new(start: EncryptionState, after_upload: Vec<EncryptionState>) -> Self {
+            Self { state: RefCell::new(start), after_upload: RefCell::new(after_upload), uploads: RefCell::new(vec![]) }
+        }
+        fn run(&self) -> Result<bool, String> {
+            block(attach_upload_checked(
+                || async { Ok(dup(&self.state.borrow())) },
+                || dup(&self.state.borrow()),
+                |encrypted| async move {
+                    self.uploads.borrow_mut().push(encrypted);
+                    let mut next = self.after_upload.borrow_mut();
+                    if !next.is_empty() {
+                        *self.state.borrow_mut() = next.remove(0);
+                    }
+                    Ok(encrypted)
+                },
+            ))
+        }
+    }
+
+    #[test]
+    fn the_decision_table() {
+        assert_eq!(attach_upload_encrypt(&NotEncrypted, &NotEncrypted), Ok(false));
+        assert_eq!(attach_upload_encrypt(&Encrypted, &NotEncrypted), Ok(true));
+        assert_eq!(attach_upload_encrypt(&NotEncrypted, &Encrypted), Ok(true));
+        assert!(attach_upload_encrypt(&Unknown, &NotEncrypted).is_err());
+        assert!(attach_upload_encrypt(&NotEncrypted, &Unknown).is_err());
+    }
+
+    #[test]
+    fn a_plain_room_uploads_once_in_the_clear() {
+        let s = Script::new(NotEncrypted, vec![]);
+        assert_eq!(s.run(), Ok(false));
+        assert_eq!(*s.uploads.borrow(), vec![false]);
+    }
+
+    #[test]
+    fn an_encrypted_room_uploads_once_encrypted() {
+        let s = Script::new(Encrypted, vec![]);
+        assert_eq!(s.run(), Ok(true));
+        assert_eq!(*s.uploads.borrow(), vec![true]);
+    }
+
+    #[test]
+    fn encryption_turned_on_during_the_upload_uploads_again_encrypted() {
+        let s = Script::new(NotEncrypted, vec![Encrypted]);
+        assert_eq!(s.run(), Ok(true), "the media handed to the event must be the encrypted upload");
+        assert_eq!(*s.uploads.borrow(), vec![false, true]);
+    }
+
+    /// The synchronous read right before the upload counts, even when the first read said plain.
+    #[test]
+    fn the_reread_right_before_the_upload_counts() {
+        let uploads = RefCell::new(vec![]);
+        let r: Result<bool, String> = block(attach_upload_checked(
+            || async { Ok(NotEncrypted) },
+            || Encrypted,
+            |e| {
+                uploads.borrow_mut().push(e);
+                async move { Ok(e) }
+            },
+        ));
+        assert_eq!(r, Ok(true));
+        assert_eq!(*uploads.borrow(), vec![true]);
+    }
+
+    #[test]
+    fn unknown_at_the_reread_uploads_nothing() {
+        let uploads = RefCell::new(0);
+        let r: Result<bool, String> = block(attach_upload_checked(
+            || async { Ok(NotEncrypted) },
+            || Unknown,
+            |e| {
+                *uploads.borrow_mut() += 1;
+                async move { Ok(e) }
+            },
+        ));
+        assert!(r.is_err());
+        assert_eq!(*uploads.borrow(), 0);
+    }
+
+    #[test]
+    fn a_failed_state_read_uploads_nothing() {
+        let uploads = RefCell::new(0);
+        let r: Result<bool, String> = block(attach_upload_checked(
+            || async { Err("no answer".to_string()) },
+            || NotEncrypted,
+            |e| {
+                *uploads.borrow_mut() += 1;
+                async move { Ok(e) }
+            },
+        ));
+        assert!(r.is_err());
+        assert_eq!(*uploads.borrow(), 0);
+    }
+
+    #[test]
+    fn unknown_uploads_nothing() {
+        let s = Script::new(Unknown, vec![]);
+        assert!(s.run().is_err());
+        assert!(s.uploads.borrow().is_empty());
+    }
+
+    #[test]
+    fn unknown_after_a_plain_upload_sends_nothing() {
+        let s = Script::new(NotEncrypted, vec![Unknown]);
+        assert!(s.run().is_err());
+        assert_eq!(*s.uploads.borrow(), vec![false]);
+    }
+
+    #[test]
+    fn a_state_that_never_settles_gives_up() {
+        let s = Script::new(NotEncrypted, vec![Encrypted, NotEncrypted, Encrypted, NotEncrypted]);
+        // an encrypted upload ends it as soon as one happens; only flip-flopping reads past three tries can fail
+        assert_eq!(s.run(), Ok(true));
+        let always_flips = RefCell::new(0);
+        let r: Result<bool, String> = block(attach_upload_checked(
+            || async {
+                let mut n = always_flips.borrow_mut();
+                *n += 1;
+                Ok(if *n % 2 == 1 { NotEncrypted } else { Encrypted })
+            },
+            || NotEncrypted,
+            |e| async move { Ok(e) },
+        ));
+        assert!(r.is_err());
+    }
+
+    fn plain() -> MediaSource {
+        MediaSource::Plain(OwnedMxcUri::from("mxc://example.org/abc"))
+    }
+
+    #[test]
+    fn content_matches_what_the_sdk_built() {
+        let c = |m: &str, w, h, size| serde_json::to_value(attachment_content(&m.parse().unwrap(), "a.bin".into(), plain(), w, h, size)).unwrap();
+        assert_eq!(c("image/png", 4, 3, 99), serde_json::json!({ "msgtype": "m.image", "body": "a.bin", "url": "mxc://example.org/abc", "info": { "mimetype": "image/png", "w": 4, "h": 3, "size": 99 } }));
+        assert_eq!(c("image/png", 0, 0, 99), serde_json::json!({ "msgtype": "m.image", "body": "a.bin", "url": "mxc://example.org/abc", "info": { "mimetype": "image/png" } }));
+        assert_eq!(c("video/mp4", 0, 0, 99), serde_json::json!({ "msgtype": "m.video", "body": "a.bin", "url": "mxc://example.org/abc", "info": { "mimetype": "video/mp4" } }));
+        assert_eq!(c("audio/ogg", 0, 0, 99), serde_json::json!({ "msgtype": "m.audio", "body": "a.bin", "url": "mxc://example.org/abc", "info": { "mimetype": "audio/ogg" } }));
+        assert_eq!(c("application/pdf", 0, 0, 99), serde_json::json!({ "msgtype": "m.file", "body": "a.bin", "url": "mxc://example.org/abc", "info": { "mimetype": "application/pdf" } }));
+    }
+
+    #[test]
+    fn encrypted_media_goes_out_as_file_never_url() {
+        let file: matrix_sdk::ruma::events::room::EncryptedFile = serde_json::from_value(serde_json::json!({
+            "url": "mxc://example.org/enc", "v": "v2", "hashes": { "sha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "iv": "AAAAAAAAAAAAAAAAAAAAAA",
+            "key": { "kty": "oct", "key_ops": ["encrypt", "decrypt"], "alg": "A256CTR", "k": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "ext": true }
+        }))
+        .unwrap();
+        let v = serde_json::to_value(attachment_content(&"image/png".parse().unwrap(), "a.png".into(), MediaSource::Encrypted(Box::new(file)), 0, 0, 0)).unwrap();
+        assert!(v.get("url").is_none());
+        assert_eq!(v["file"]["url"], "mxc://example.org/enc");
+    }
+
+    /// The closures above are only as good as the send path using them.
+    #[test]
+    fn the_send_path_uses_the_checked_upload() {
+        let src = include_str!("room.rs");
+        let start = src.find("EchoKind::Attachment(path) => {").expect("the attachment arm");
+        let end = start + src[start..].find("fn attach_upload_encrypt").expect("the end of the arm");
+        let arm = &src[start..end];
+        assert!(arm.contains("attach_upload_checked("), "the arm must upload through the checked upload");
+        assert!(arm.contains("|| room.encryption_state(),"), "the re-read before the upload");
+        assert!(arm.contains(".send_raw(\"m.room.message\", content)"), "the event goes out with send_raw");
+        assert!(!arm.contains(".send_attachment("), "Room::send_attachment decides the encryption once, before the upload");
+    }
+}
+
+/// "Location is removed from photos you send" (docs/PHOTO-METADATA.md): the upload rule on real photo bytes (the shared
+/// vectors testvectors/exif-strip), and every image upload path going through it. Mirrors the web's
+/// src/core/exifstrip.test.ts.
+#[cfg(test)]
+mod photo_location_tests {
+    use super::*;
+
+    const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testvectors/exif-strip");
+
+    fn vectors() -> serde_json::Value {
+        serde_json::from_str(&std::fs::read_to_string(format!("{DIR}/vectors.json")).unwrap()).unwrap()
+    }
+    fn input(name: &str) -> Vec<u8> {
+        std::fs::read(format!("{DIR}/in/{name}")).unwrap()
+    }
+    fn leaks(b: &[u8]) -> Vec<String> {
+        let v = vectors();
+        let mut needles: Vec<Vec<u8>> = v["secrets"].as_array().unwrap().iter().map(|s| s.as_str().unwrap().chars().map(|c| c as u8).collect()).collect();
+        for g in v["gpsRationals"].as_array().unwrap() {
+            let h = g.as_str().unwrap();
+            needles.push((0..h.len()).step_by(2).map(|i| u8::from_str_radix(&h[i..i + 2], 16).unwrap()).collect());
+        }
+        needles.into_iter().filter(|n| b.windows(n.len()).any(|w| w == n.as_slice())).map(|n| String::from_utf8_lossy(&n).into_owned()).collect()
+    }
+    const PHOTOS: [(&str, &str, u16); 12] = [
+        ("heic-moov-meta-xml-orient3.heic", "image/heic", 3),
+        ("heic-samsung-sefd-uuid-orient3.heic", "image/heic", 3),
+        ("jpeg-jfif-thumbs-adobe-orient6.jpg", "image/jpeg", 6),
+        ("png-iccp-splt-iend-orient8.png", "image/png", 8),
+        ("webp-anim-frame-chunks.webp", "image/webp", 1),
+        ("avif-xml-and-uri-items.avif", "image/avif", 1),
+        ("jpeg-phone-orient6.jpg", "image/jpeg", 6),
+        ("png-exif-text-orient6.png", "image/png", 6),
+        ("webp-exif-xmp-orient6.webp", "image/webp", 6),
+        ("avif-exif-xmp-orient6.avif", "image/avif", 6),
+        ("heic-synthetic-orient3.heic", "image/heic", 3),
+        ("jpeg-mpf-second-picture.jpg", "image/jpeg", 8),
+    ];
+
+    #[test]
+    fn an_uploaded_photo_carries_no_gps_and_keeps_its_orientation() {
+        for (name, mime, orient) in PHOTOS {
+            let raw = input(name);
+            assert!(!leaks(&raw).is_empty(), "{name}: the input is identifying");
+            let up = photo_bytes_for_upload(mime, raw).unwrap();
+            assert!(leaks(&up).is_empty(), "{name}: the uploaded bytes still carry {:?}", leaks(&up));
+            assert_eq!(tinhat_widgets::exifstrip::strip_image_metadata(&up).unwrap().orientation, orient, "{name}: orientation kept");
+        }
+    }
+
+    /// A phone's HEIC/HEIF/AVIF photo goes as a picture (so it is cleaned), like on the web (format.ts EXT_MIME).
+    #[test]
+    fn heic_photos_are_pictures() {
+        for (ext, m) in [("heic", "image/heic"), ("heif", "image/heif"), ("hif", "image/heif"), ("avif", "image/avif"), ("jpg", "image/jpeg")] {
+            assert_eq!(mime_for_ext(ext), m, "{ext}");
+        }
+        let up = photo_bytes_for_upload(mime_for_ext("heic"), input("heic-synthetic-orient3.heic")).unwrap();
+        assert!(leaks(&up).is_empty());
+    }
+
+    #[test]
+    fn the_rule_sniffs_the_bytes() {
+        // a JPEG behind a .png name is still cleaned
+        let up = photo_bytes_for_upload("image/png", input("jpeg-phone-orient6.jpg")).unwrap();
+        assert!(leaks(&up).is_empty());
+    }
+
+    #[test]
+    fn not_a_picture_goes_up_as_it_is() {
+        let raw = input("text-unchanged.txt");
+        for mime in ["application/octet-stream", "application/pdf", "video/mp4", "image/jpeg", ""] {
+            assert_eq!(photo_bytes_for_upload(mime, raw.clone()).unwrap(), raw, "{mime}");
+        }
+        for (name, mime) in [("gif-unchanged.gif", "image/gif"), ("jpeg-clean.jpg", "image/jpeg"), ("png-clean.png", "image/png"), ("webp-simple.webp", "image/webp")] {
+            assert_eq!(photo_bytes_for_upload(mime, input(name)).unwrap(), input(name), "{name}");
+        }
+    }
+
+    /// 12.1.16 2-2: the bytes decide, never the declared type or the extension (testvectors/exif-strip/upload-rule.json,
+    /// the web replays the same table). Each case runs with the mime the attachment would get from its name
+    /// (mime_for_ext) and with its declared type.
+    #[test]
+    fn upload_rule_2_2_the_bytes_decide() {
+        let doc: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{DIR}/upload-rule.json")).unwrap()).unwrap();
+        let cases = doc["cases"].as_array().unwrap();
+        assert!(cases.len() >= 25);
+        for c in cases {
+            let file = c["in"].as_str().unwrap();
+            let name = c["name"].as_str().unwrap();
+            let typ = c["type"].as_str().unwrap();
+            let expect = c["expect"].as_str().unwrap();
+            let ext = std::path::Path::new(name).extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+            for mime in [mime_for_ext(&ext), if typ.is_empty() { "application/octet-stream" } else { typ }] {
+                let what = format!("{file} as {name} ({mime})");
+                let got = photo_bytes_for_upload(mime, input(file));
+                match expect {
+                    "refused" => assert_eq!(friendly_send_error(&got.expect_err(&what)), PHOTO_LOCATION_FAIL, "{what}"),
+                    "cleaned" => {
+                        let got = got.unwrap_or_else(|e| panic!("{what}: {e}"));
+                        assert!(got == std::fs::read(format!("{DIR}/out/{file}")).unwrap(), "{what}: not the cleaned bytes");
+                        assert!(leaks(&got).is_empty(), "{what}: still carries {:?}", leaks(&got));
+                    }
+                    _ => assert!(got.unwrap_or_else(|e| panic!("{what}: {e}")) == input(file), "{what}: changed"),
+                }
+            }
+        }
+    }
+
+    /// 12.1.16 R3-1: an upload that is NOT a picture (soundboard clip, voice note) refuses picture bytes in any format;
+    /// real audio goes up as it is (testvectors/exif-strip/non-picture-upload.json, the web replays it too).
+    #[test]
+    fn non_picture_uploads_refuse_picture_bytes_r3_1() {
+        let doc: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{DIR}/non-picture-upload.json")).unwrap()).unwrap();
+        let cases = doc["cases"].as_array().unwrap();
+        assert!(cases.len() >= 8);
+        for c in cases {
+            let file = c["in"].as_str().unwrap();
+            let got = refuse_picture_bytes(&input(file));
+            match c["expect"].as_str().unwrap() {
+                "refused" => {
+                    let e = got.expect_err(file);
+                    assert_eq!(friendly_send_error(&format!("voice: {e}")), PHOTO_LOCATION_FAIL, "{file}: the voice note's words");
+                }
+                _ => assert!(got.is_ok(), "{file}: real audio must go up"),
+            }
+        }
+        assert_eq!(crate::soundboard::upload_fail_words("picture", 0), PHOTO_LOCATION_FAIL, "the soundboard's words");
+    }
+
+    /// R3-1: every fn that sends a request body (reqwest `.body(` / `.multipart(`, a D-Bus body) is a known kind; a new
+    /// one has to be looked at: a body that could be a user's file must go through photo_bytes_for_upload (a picture) or
+    /// refuse_picture_bytes (not one), then be added here with what it sends.
+    #[test]
+    fn every_request_body_is_a_known_kind_r3_1() {
+        const KNOWN: [(&str, &str); 33] = [
+            ("bridge.rs:body_json", "reads a reply"), ("bridge.rs:do_complete_password_reset", "JSON"),
+            ("bridge.rs:do_request_password_reset", "JSON"), ("bridge.rs:gate_login", "JSON"), ("bridge.rs:raw_join", "JSON"),
+            ("call_ctl.rs:uplink_probe", "speed test: zeros"), ("flatpak.rs:apply", "D-Bus"), ("flatpak.rs:monitor_loop", "D-Bus"),
+            ("games.rs:catalog_post", "JSON"), ("gameservers_ctl.rs:call", "JSON"), ("guests_ctl.rs:call", "JSON"),
+            ("invites.rs:call", "JSON"), ("livekit.rs:post_sfu_get", "JSON"), ("logship.rs:ship_bug_report", "app log text"),
+            ("logship.rs:ship_previous_session_log", "app log text"), ("moderation.rs:post_json_auth", "JSON"),
+            ("notif_actions.rs:session_locked", "D-Bus"), ("notify.rs:body_for_server", "notification text"),
+            ("notify.rs:caps", "D-Bus"), ("notify.rs:here", "D-Bus"), ("notify.rs:notify_action_replacing", "notification text"),
+            ("notify.rs:notify_call", "notification text"), ("notify.rs:notify_message", "notification text"),
+            ("password.rs:change_password", "JSON"), ("presence.rs:api", "JSON"), ("presence.rs:probe_idle", "D-Bus"),
+            ("ringglue.rs:decline", "JSON"), ("safety.rs:delete_account_inner", "JSON"), ("safety.rs:send_report", "JSON"),
+            ("safety.rs:set_ignored", "JSON"), ("settings.rs:raw_login", "JSON"), ("settings.rs:set_profile_field", "JSON"),
+            ("soundboard.rs:upload_clip", "the clip: refuse_picture_bytes"),
+        ];
+        fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+            for e in std::fs::read_dir(dir).unwrap() {
+                let p = e.unwrap().path();
+                if p.is_dir() {
+                    walk(&p, out);
+                } else if p.extension().and_then(|x| x.to_str()) == Some("rs") {
+                    out.push(p);
+                }
+            }
+        }
+        // test modules out (the same layout rule as every_image_upload_is_covered)
+        fn app_code(s: &str) -> String {
+            let lines: Vec<&str> = s.split('\n').collect();
+            let (mut out, mut i) = (Vec::new(), 0);
+            while i < lines.len() {
+                let l = lines[i];
+                if l.trim() == "#[cfg(test)]" {
+                    let ind = &l[..l.len() - l.trim_start().len()];
+                    let mut j = i + 1;
+                    if j < lines.len() && lines[j].trim_end().ends_with(';') {
+                        i = j + 1;
+                        continue;
+                    }
+                    let close = format!("{ind}}}");
+                    while j < lines.len() && lines[j] != close {
+                        j += 1;
+                    }
+                    i = j + 1;
+                    continue;
+                }
+                out.push(l);
+                i += 1;
+            }
+            out.join("\n")
+        }
+        let mut files = Vec::new();
+        walk(std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/src")), &mut files);
+        let mut sites: Vec<String> = Vec::new();
+        for p in files {
+            let name = p.file_name().unwrap().to_str().unwrap().to_string();
+            let code = app_code(&std::fs::read_to_string(&p).unwrap());
+            for pat in [".body(", ".multipart("] {
+                for (at, _) in code.match_indices(pat) {
+                    let head = &code[..at];
+                    let start = head
+                        .match_indices(" fn ")
+                        .map(|(i, _)| i)
+                        .filter(|&i| {
+                            let line_start = head[..i].rfind('\n').map_or(0, |n| n + 1);
+                            let pre = head[line_start..i].trim();
+                            pre.is_empty() || pre.ends_with("pub") || pre.ends_with("async") || pre.ends_with("pub(crate)") || pre.ends_with(')')
+                        })
+                        .last()
+                        .unwrap_or(0);
+                    let fname: String = head[start + 4..].chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+                    sites.push(format!("{name}:{fname}"));
+                }
+            }
+        }
+        sites.sort();
+        sites.dedup();
+        let mut known: Vec<String> = KNOWN.iter().map(|(s, _)| s.to_string()).collect();
+        known.sort();
+        assert_eq!(sites, known, "a request body appeared or went: classify it (see the doc comment)");
+    }
+
+    /// R3-1: the soundboard clip and the voice note refuse picture bytes before anything is sent.
+    #[test]
+    fn the_soundboard_and_voice_note_refuse_pictures_first() {
+        let sb = include_str!("soundboard.rs");
+        let f = &sb[sb.find("async fn upload_clip(").unwrap()..];
+        let f = &f[..f.find("\n}\n").unwrap()];
+        let r = f.find("crate::room::refuse_picture_bytes(&bytes)").expect("upload_clip refuses pictures");
+        assert!(r < f.find("bytes.len() > 3 * 1024 * 1024").unwrap() && r < f.find(".post(&url)").unwrap());
+        let room = include_str!("room.rs");
+        let v = &room[room.find("EchoKind::Voice(v) => {").unwrap()..];
+        let r = v.find("refuse_picture_bytes(&data)").expect("the voice note refuses pictures");
+        assert!(r < v.find("upload_encrypted_file(").unwrap() && r < v.find(".upload(&mime, data, None)").unwrap());
+    }
+
+    #[test]
+    fn a_photo_that_cant_be_cleaned_is_refused_with_the_shared_words() {
+        let err = photo_bytes_for_upload("image/jpeg", input("jpeg-bad-length.jpg")).unwrap_err();
+        assert_eq!(friendly_send_error(&err), "Couldn't remove this photo's location, so it wasn't sent");
+        assert_eq!(PHOTO_LOCATION_FAIL, "Couldn't remove this photo's location, so it wasn't sent");
+    }
+
+    /// The chat attachment (attach, paste, drag-drop: all are send_attachment → EchoKind::Attachment) cleans the bytes
+    /// before the upload and states the cleaned size.
+    #[test]
+    fn the_attachment_send_cleans_before_the_upload() {
+        let src = include_str!("room.rs");
+        let start = src.find("EchoKind::Attachment(path) => {").expect("the attachment arm");
+        let end = start + src[start..].find("EchoKind::Voice(v) => {").expect("the end of the arm");
+        let arm = &src[start..end];
+        let clean = arm.find("let data = photo_bytes_for_upload(mime.as_ref(), data)?;").expect("the arm cleans the bytes");
+        let read = arm.find("tokio::fs::read(&pb)").unwrap();
+        let upload = arm.find("attach_upload_checked(").unwrap();
+        assert!(read < clean && clean < upload, "read → clean → upload");
+        assert!(arm.contains("attachment_content(&mime, filename, source, e.w, e.h, size)"), "the cleaned size");
+        // the event never states the original file's size (L7's upload-limit check before the read may use it)
+        assert!(!arm.contains("e.w, e.h, e.size)"), "never the original file's size in the event");
+    }
+
+    #[test]
+    fn the_room_and_profile_photos_are_cleaned_too() {
+        let room = include_str!("room.rs");
+        let f = &room[room.find("pub(crate) async fn do_apply_room_photo(").unwrap()..];
+        let f = &f[..f.find("\n}\n").unwrap()];
+        assert!(f.find("photo_bytes_for_upload(").unwrap() < f.find(".upload(&mime, data, None)").unwrap());
+        let settings = include_str!("settings.rs");
+        let g = &settings[settings.find("async fn upload_and_set_avatar(").unwrap()..];
+        let g = &g[..g.find("\n}\n").unwrap()];
+        assert!(g.find("photo_bytes_for_upload(").unwrap() < g.find(".upload_avatar(&mime, data)").unwrap());
+    }
+
+    /// Every media upload cleans pictures first: in the app's code (test items removed), each upload call's own fn calls
+    /// photo_bytes_for_upload before it. The only exception: call_ctl.rs's built-in 1x1 PNG (no user picture). Voice
+    /// notes share perform_echo, which cleans (audio goes up unchanged). The named sites must all be found, so a moved or
+    /// renamed upload is noticed: the chat attachment, the room photo, the profile photo, Memories "Add photos" and the
+    /// chat background's own picture (ambience; it is posted in the chat, PRODUCT-CALLS #40d).
+    #[test]
+    fn every_image_upload_is_covered() {
+        fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+            for e in std::fs::read_dir(dir).unwrap() {
+                let p = e.unwrap().path();
+                if p.is_dir() {
+                    walk(&p, out);
+                } else if p.extension().and_then(|x| x.to_str()) == Some("rs") {
+                    out.push(p);
+                }
+            }
+        }
+        // #[cfg(test)] items removed by layout: from the attribute to the first later line that is its indent + "}"
+        fn app_code(s: &str) -> String {
+            let lines: Vec<&str> = s.split('\n').collect();
+            let mut out = Vec::new();
+            let mut i = 0;
+            while i < lines.len() {
+                let l = lines[i];
+                if l.trim() == "#[cfg(test)]" {
+                    let ind = &l[..l.len() - l.trim_start().len()];
+                    let mut j = i + 1;
+                    if j < lines.len() && lines[j].trim_end().ends_with(';') {
+                        i = j + 1;
+                        continue;
+                    }
+                    let close = format!("{ind}}}");
+                    while j < lines.len() && lines[j] != close {
+                        j += 1;
+                    }
+                    i = j + 1;
+                    continue;
+                }
+                out.push(l);
+                i += 1;
+            }
+            out.join("\n")
+        }
+        let mut files = Vec::new();
+        walk(std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/src")), &mut files);
+        let mut sites: Vec<String> = Vec::new();
+        for p in files {
+            let name = p.file_name().unwrap().to_str().unwrap().to_string();
+            let code = app_code(&std::fs::read_to_string(&p).unwrap());
+            // R3-1: a multipart body is an upload too (the soundboard clip): it must refuse pictures
+            for pat in [".upload(", ".upload_avatar(", "upload_encrypted_file(", "multipart/form-data"] {
+                for (at, _) in code.match_indices(pat) {
+                    // the call's own fn: the last `fn name(` line before it
+                    let head = &code[..at];
+                    let start = head
+                        .match_indices(" fn ")
+                        .map(|(i, _)| i)
+                        .filter(|&i| {
+                            let line_start = head[..i].rfind('\n').map_or(0, |n| n + 1);
+                            let pre = head[line_start..i].trim();
+                            pre.is_empty() || pre.ends_with("pub") || pre.ends_with("async") || pre.ends_with("pub(crate)") || pre.ends_with(')')
+                        })
+                        .last()
+                        .unwrap_or(0);
+                    let fname: String = head[start + 4..].chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+                    sites.push(format!("{name}:{fname}"));
+                    if name == "call_ctl.rs" {
+                        assert!(code.contains("upload_avatar(&mime, PNG.to_vec())"), "call_ctl.rs: only the built-in PNG");
+                        continue;
+                    }
+                    assert!(
+                        head[start..].contains("photo_bytes_for_upload(") || head[start..].contains("refuse_picture_bytes("),
+                        "{name} {fname}: an upload without photo_bytes_for_upload (a picture) or refuse_picture_bytes (not one) before it"
+                    );
+                }
+            }
+        }
+        sites.sort();
+        sites.dedup();
+        for want in ["room.rs:perform_echo", "room.rs:do_apply_room_photo", "settings.rs:upload_and_set_avatar", "memories_photos.rs:send_photo", "room.rs:post_background_image", "soundboard.rs:upload_clip"] {
+            assert!(sites.iter().any(|s| s == want), "upload site {want} not found: {sites:?}");
+        }
+    }
+}
+
+#[cfg(test)]
+mod thread_redaction_tests {
+    use super::*;
+
+    /// threads: a deleted thread reply keeps its thread relation (it stays in its thread, never a stray main row); a
+    /// deleted main message keeps nothing.
+    #[test]
+    fn a_redacted_thread_reply_stays_in_its_thread() {
+        let red = serde_json::json!({ "type": "m.room.redaction", "event_id": "$red", "redacts": "$t1", "content": {} });
+        let mut reply = serde_json::json!({ "event_id": "$t1", "type": "m.room.message",
+            "content": { "body": "x", "msgtype": "m.text", "m.relates_to": { "rel_type": "m.thread", "event_id": "$root", "is_falling_back": true, "m.in_reply_to": { "event_id": "$root" } } } });
+        stamp_redacted(&mut reply, &red);
+        assert_eq!(reply["content"].get("body"), None);
+        assert_eq!(tinhat_widgets::threads::thread_of(&reply["content"]), "$root");
+        assert!(reply["unsigned"]["redacted_because"].is_object());
+        let plan = crate::threads_rows::thread_plan(&[reply.clone()], None);
+        assert!(!plan.in_view[0], "not a main-timeline row");
+        let mut main = serde_json::json!({ "event_id": "$m", "type": "m.room.message",
+            "content": { "body": "y", "m.relates_to": { "m.in_reply_to": { "event_id": "$x" } } } });
+        stamp_redacted(&mut main, &red);
+        assert_eq!(main["content"], serde_json::json!({}));
+    }
+}
+
+
+// ---- chat backgrounds (docs/AMBIENCE.md) ----------------------------------------------------------------------------
+
+extern "C" {
+    fn tinhat_ambience_reencode(src: *const std::os::raw::c_char, dst: *const std::os::raw::c_char, max_side: i32, max_bytes: i64, qualities: *const f64, nq: i32, shrink: f64, out_w: *mut i32, out_h: *mut i32) -> i64;
+}
+
+/// Re-encode a picked image for a chat background (ambience_image.cpp): `(bytes, w, h)`.
+fn ambience_reencode(src: &str, dst: &std::path::Path) -> Result<(u64, u32, u32), String> {
+    use tinhat_widgets::ambience as amb;
+    let s = std::ffi::CString::new(src).map_err(|e| e.to_string())?;
+    let d = std::ffi::CString::new(dst.to_string_lossy().as_bytes()).map_err(|e| e.to_string())?;
+    let q = amb::IMAGE_QUALITIES;
+    let (mut w, mut h) = (0i32, 0i32);
+    // SAFETY: valid NUL-terminated strings and a live array for the call's duration; out pointers to locals.
+    let n = unsafe { tinhat_ambience_reencode(s.as_ptr(), d.as_ptr(), amb::IMAGE_MAX_SIDE as i32, amb::IMAGE_MAX_BYTES as i64, q.as_ptr(), q.len() as i32, amb::IMAGE_SHRINK, &mut w, &mut h) };
+    if n < 0 {
+        return Err("not an image, or too large".into());
+    }
+    Ok((n as u64, w.max(0) as u32, h.max(0) as u32))
+}
+
+/// The background's own image as a local file URL + its colour cells (every pixel; ambience_image.cpp), when the shared
+/// rule (ambience::image_shown) says it may show here: the setter's own image message in this room, not redacted,
+/// decrypted on this device. ("", "") = show the preset.
+async fn background_image_file(room: &Room, bg_json: &str) -> (String, String) {
+    use tinhat_widgets::ambience as amb;
+    let none = (String::new(), String::new());
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(bg_json) else { return none };
+    let bg = amb::parse_background(v.get("content").unwrap_or(&serde_json::Value::Null), v.get("sender").and_then(|s| s.as_str()).unwrap_or(""));
+    let Some(eid_s) = bg.image.clone().filter(|_| bg.kind == amb::BackgroundKind::Image) else { return none };
+    let Ok(eid) = matrix_sdk::ruma::EventId::parse(&eid_s) else { return none };
+    let Ok(ev) = room.event(&eid, None).await else { return none };
+    let Ok(raw) = ev.raw().deserialize_as::<serde_json::Value>() else { return none };
+    let ty = raw.get("type").and_then(|t| t.as_str()).unwrap_or("").to_string();
+    let content = raw.get("content").cloned().unwrap_or_default();
+    let info = amb::ImageEvent {
+        r#type: ty.clone(),
+        sender: raw.get("sender").and_then(|s| s.as_str()).unwrap_or("").to_string(),
+        room: room.room_id().to_string(),
+        msgtype: content.get("msgtype").and_then(|m| m.as_str()).unwrap_or("").to_string(),
+        redacted: raw.get("unsigned").and_then(|u| u.get("redacted_because")).is_some(),
+        decrypted: ty == "m.room.message",
+    };
+    if !amb::image_shown(&bg, room.room_id().as_str(), Some(&info)) {
+        return none;
+    }
+    let mime = content.get("info").and_then(|i| i.get("mimetype")).and_then(|m| m.as_str()).map(str::to_string);
+    // fetch_media hands back a file URL (what QML loads), not a path
+    let Ok(url) = fetch_media(content, &eid_s, mime.as_deref(), MediaUse::InlineImage).await else { return none };
+    let u2 = url.clone();
+    let cells = tokio::task::spawn_blocking(move || media_cells(&u2)).await.ok().flatten();
+    // not decodable here, or bigger than 4096 px: the preset (never an image whose colours weren't measured)
+    let Some(cells) = cells else { return none };
+    (url, cells)
+}
+
+/// The colour cells of a picture fetch_media cached, from the file URL it returns. The cell reader opens a file PATH:
+/// handed the URL it measured nothing, and the desktop showed only the fallback scene behind every own picture
+/// (round 6, G-ambience A6).
+fn media_cells(url: &str) -> Option<String> {
+    ambience_cells(&media_path(url).to_string_lossy())
+}
+
+/// The exact inverse of platform::file_url on each OS. Linux: the raw `file://` + path, never percent-encoded (a URL
+/// parser would cut a cache directory at a `#` or decode a `%20` in it); Windows: url::Url::from_file_path's URL.
+fn media_path(url: &str) -> std::path::PathBuf {
+    #[cfg(windows)]
+    {
+        crate::memories_photos::local_path(url)
+    }
+    #[cfg(not(windows))]
+    {
+        std::path::PathBuf::from(crate::platform::path_from_file_url(url))
+    }
+}
+
+extern "C" {
+    fn tinhat_ambience_cells(path: *const std::os::raw::c_char, max_side: i32, out: *mut f64, cap: i32) -> i32;
+}
+
+/// The image's 8 × 8 colour cells over EVERY pixel of its first frame, as the JSON ambience::scrim_for_cells takes.
+fn ambience_cells(path: &str) -> Option<String> {
+    let p = std::ffi::CString::new(path).ok()?;
+    let mut out = vec![0f64; 64 * 6];
+    // SAFETY: a valid NUL-terminated path and a buffer of `cap` cells (6 doubles each) for the call's duration.
+    let n = unsafe { tinhat_ambience_cells(p.as_ptr(), 4096, out.as_mut_ptr(), 64) };
+    if n <= 0 {
+        return None;
+    }
+    let cells: Vec<serde_json::Value> = (0..n as usize).map(|i| { let c = &out[i * 6..i * 6 + 6]; serde_json::json!([[c[0], c[1], c[2]], [c[3], c[4], c[5]]]) }).collect();
+    Some(serde_json::Value::Array(cells).to_string())
+}
+
+#[cfg(test)]
+mod ambience_cells_tests {
+    use super::ambience_cells;
+
+    const PNG_1X1: [u8; 69] = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0xf8, 0xff, 0xff, 0x3f, 0x00, 0x05, 0xfe, 0x02, 0xfe, 0x0d, 0xef, 0x46, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
+
+    fn write(name: &str, bytes: &[u8]) -> String {
+        let p = std::env::temp_dir().join(format!("tinhat-test-{}-{name}", std::process::id()));
+        std::fs::write(&p, bytes).unwrap();
+        p.to_string_lossy().into_owned()
+    }
+
+    #[test]
+    fn background_cells_come_from_the_url_fetch_media_returns() {
+        // round 6 (G-ambience A6): fetch_media returns a file URL; the own picture's cells must be measured from it, or
+        // the desktop draws only the fallback scene behind every own picture (2e1858b61 did exactly that)
+        let ok = write("bg own picture.png", &PNG_1X1);
+        let url = crate::platform::file_url(std::path::Path::new(&ok));
+        assert!(url.starts_with("file:"), "{url}");
+        assert!(super::media_cells(&url).is_some(), "the cells of the picture behind {url}");
+        // the cell reader itself takes a path (why the URL has to be turned into one)
+        assert!(ambience_cells(&url).is_none());
+        // a media cache directory whose own name holds a "#" or a "%20" (the URL is never percent-encoded on Linux)
+        let dir = std::env::temp_dir().join(format!("tinhat-test-{} cache#1 %20x", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let odd = dir.join("bg.png");
+        std::fs::write(&odd, PNG_1X1).unwrap();
+        let odd_url = crate::platform::file_url(&odd);
+        assert!(super::media_cells(&odd_url).is_some(), "the cells of the picture behind {odd_url}");
+        let _ = std::fs::remove_file(ok);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ambience_image_size_is_checked_before_decoding() {
+        // 3-6 (desktop twin): a real 1 × 1 picture is measured …
+        let ok = write("ok.png", &PNG_1X1);
+        assert!(ambience_cells(&ok).is_some());
+        // … a 30000 × 30000 header is refused before any pixel is decoded …
+        let mut bomb = PNG_1X1.to_vec();
+        bomb[16..20].copy_from_slice(&30000u32.to_be_bytes());
+        bomb[20..24].copy_from_slice(&30000u32.to_be_bytes());
+        let bomb_p = write("bomb.png", &bomb);
+        assert!(ambience_cells(&bomb_p).is_none());
+        // … and so is anything whose header doesn't say its size
+        let junk = write("junk.bin", b"not an image at all, just some bytes");
+        assert!(ambience_cells(&junk).is_none());
+        for p in [ok, bomb_p, junk] {
+            let _ = std::fs::remove_file(p);
+        }
+    }
 }

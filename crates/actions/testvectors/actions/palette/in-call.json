@@ -5731,7 +5731,7 @@
           }
         ],
         "mode": "all",
-        "query": "café",
+        "query": "cafe",
         "stage": null,
         "total": 1
       },
@@ -6034,7 +6034,7 @@
             "kind": "room",
             "label": "Café Crème",
             "pick": false,
-            "score": 30,
+            "score": 100,
             "target": null
           }
         ],
@@ -6342,7 +6342,7 @@
             "kind": "room",
             "label": "Café Crème",
             "pick": false,
-            "score": 30,
+            "score": 100,
             "target": null
           }
         ],
@@ -8867,7 +8867,7 @@
           }
         ],
         "mode": "all",
-        "query": "céleste",
+        "query": "celeste",
         "stage": null,
         "total": 1
       },
@@ -21720,7 +21720,7 @@
             "active": null,
             "emoji": null,
             "enabled": true,
-            "hint": null,
+            "hint": "Ctrl+/",
             "icon": "input-keyboard-symbolic",
             "id": "app.shortcuts.open",
             "kind": "action",
@@ -21860,7 +21860,7 @@
             "active": null,
             "emoji": null,
             "enabled": true,
-            "hint": null,
+            "hint": "Ctrl+F",
             "icon": "search",
             "id": "nav.roomList.filter",
             "kind": "action",
@@ -24191,6 +24191,20 @@
             "pick": false,
             "score": 100,
             "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "za",
+            "kind": "find",
+            "label": "Find people named \"za\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
           }
         ],
         "mode": "person",
@@ -24499,6 +24513,20 @@
             "pick": false,
             "score": 100,
             "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "val",
+            "kind": "find",
+            "label": "Find people named \"val\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
           }
         ],
         "mode": "person",
@@ -24793,7 +24821,22 @@
     },
     {
       "expect": {
-        "items": [],
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "blake",
+            "kind": "find",
+            "label": "Find people named \"blake\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
         "mode": "person",
         "query": "blake",
         "stage": null,
@@ -28102,7 +28145,7 @@
             "active": null,
             "emoji": null,
             "enabled": true,
-            "hint": null,
+            "hint": "Ctrl+/",
             "icon": "input-keyboard-symbolic",
             "id": "app.shortcuts.open",
             "kind": "action",
@@ -28242,7 +28285,7 @@
             "active": null,
             "emoji": null,
             "enabled": true,
-            "hint": null,
+            "hint": "Ctrl+F",
             "icon": "search",
             "id": "nav.roomList.filter",
             "kind": "action",
@@ -29129,6 +29172,2274 @@
         }
       },
       "name": "desktop in-call: \"@#\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@celeste:example.com",
+            "kind": "person",
+            "label": "Céleste",
+            "pick": false,
+            "score": 100,
+            "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "cele",
+            "kind": "find",
+            "label": "Find people named \"cele\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "cele",
+        "stage": null,
+        "total": 1
+      },
+      "input": {
+        "app": "desktop",
+        "query": "@cele",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop in-call: \"@cele\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@celeste:example.com",
+            "kind": "person",
+            "label": "Céleste",
+            "pick": false,
+            "score": 100,
+            "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "Céleste",
+            "kind": "find",
+            "label": "Find people named \"Céleste\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "celeste",
+        "stage": null,
+        "total": 1
+      },
+      "input": {
+        "app": "desktop",
+        "query": "@Céleste",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop in-call: \"@Céleste\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@zane:example.com",
+            "kind": "person",
+            "label": "Zane",
+            "pick": false,
+            "score": 100,
+            "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "Zane",
+            "kind": "find",
+            "label": "Find people named \"Zane\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "zane",
+        "stage": null,
+        "total": 1
+      },
+      "input": {
+        "app": "desktop",
+        "query": "@  Zane  ",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop in-call: \"@  Zane  \""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "nobody here",
+            "kind": "find",
+            "label": "Find people named \"nobody here\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "nobody here",
+        "stage": null,
+        "total": 0
+      },
+      "input": {
+        "app": "desktop",
+        "query": "@nobody here",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop in-call: \"@nobody here\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@zane:example.com",
+            "kind": "person",
+            "label": "Zane",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@simon:example.com",
+            "kind": "person",
+            "label": "Simon",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@dylan:example.com",
+            "kind": "person",
+            "label": "Dylan",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@moonraker:example.com",
+            "kind": "person",
+            "label": "moonraker",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@celeste:example.com",
+            "kind": "person",
+            "label": "Céleste",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@vala:example.com",
+            "kind": "person",
+            "label": "Vala",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "",
+        "stage": null,
+        "total": 6
+      },
+      "input": {
+        "app": "desktop",
+        "query": "@ ",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop in-call: \"@ \""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "\"quoted\"",
+            "kind": "find",
+            "label": "Find people named \"\"quoted\"\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "quoted",
+        "stage": null,
+        "total": 0
+      },
+      "input": {
+        "app": "desktop",
+        "query": "@\"quoted\"",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop in-call: \"@\\\"quoted\\\"\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "{query}",
+            "kind": "find",
+            "label": "Find people named \"{query}\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "query",
+        "stage": null,
+        "total": 0
+      },
+      "input": {
+        "app": "desktop",
+        "query": "@{query}",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "desktop in-call: \"@{query}\""
     },
     {
       "expect": {
@@ -34833,7 +37144,7 @@
           }
         ],
         "mode": "all",
-        "query": "café",
+        "query": "cafe",
         "stage": null,
         "total": 1
       },
@@ -35136,7 +37447,7 @@
             "kind": "room",
             "label": "Café Crème",
             "pick": false,
-            "score": 30,
+            "score": 100,
             "target": null
           }
         ],
@@ -35444,7 +37755,7 @@
             "kind": "room",
             "label": "Café Crème",
             "pick": false,
-            "score": 30,
+            "score": 100,
             "target": null
           }
         ],
@@ -37969,7 +40280,7 @@
           }
         ],
         "mode": "all",
-        "query": "céleste",
+        "query": "celeste",
         "stage": null,
         "total": 1
       },
@@ -50822,7 +53133,7 @@
             "active": null,
             "emoji": null,
             "enabled": true,
-            "hint": null,
+            "hint": "Ctrl+/",
             "icon": "input-keyboard-symbolic",
             "id": "app.shortcuts.open",
             "kind": "action",
@@ -53251,6 +55562,20 @@
             "pick": false,
             "score": 100,
             "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "za",
+            "kind": "find",
+            "label": "Find people named \"za\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
           }
         ],
         "mode": "person",
@@ -53559,6 +55884,20 @@
             "pick": false,
             "score": 100,
             "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "val",
+            "kind": "find",
+            "label": "Find people named \"val\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
           }
         ],
         "mode": "person",
@@ -53853,7 +56192,22 @@
     },
     {
       "expect": {
-        "items": [],
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "blake",
+            "kind": "find",
+            "label": "Find people named \"blake\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
         "mode": "person",
         "query": "blake",
         "stage": null,
@@ -57120,7 +59474,7 @@
             "active": null,
             "emoji": null,
             "enabled": true,
-            "hint": null,
+            "hint": "Ctrl+/",
             "icon": "input-keyboard-symbolic",
             "id": "app.shortcuts.open",
             "kind": "action",
@@ -58147,6 +60501,2274 @@
         }
       },
       "name": "web in-call: \"@#\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@celeste:example.com",
+            "kind": "person",
+            "label": "Céleste",
+            "pick": false,
+            "score": 100,
+            "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "cele",
+            "kind": "find",
+            "label": "Find people named \"cele\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "cele",
+        "stage": null,
+        "total": 1
+      },
+      "input": {
+        "app": "web",
+        "query": "@cele",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web in-call: \"@cele\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@celeste:example.com",
+            "kind": "person",
+            "label": "Céleste",
+            "pick": false,
+            "score": 100,
+            "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "Céleste",
+            "kind": "find",
+            "label": "Find people named \"Céleste\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "celeste",
+        "stage": null,
+        "total": 1
+      },
+      "input": {
+        "app": "web",
+        "query": "@Céleste",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web in-call: \"@Céleste\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@zane:example.com",
+            "kind": "person",
+            "label": "Zane",
+            "pick": false,
+            "score": 100,
+            "target": null
+          },
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "Zane",
+            "kind": "find",
+            "label": "Find people named \"Zane\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "zane",
+        "stage": null,
+        "total": 1
+      },
+      "input": {
+        "app": "web",
+        "query": "@  Zane  ",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web in-call: \"@  Zane  \""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "nobody here",
+            "kind": "find",
+            "label": "Find people named \"nobody here\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "nobody here",
+        "stage": null,
+        "total": 0
+      },
+      "input": {
+        "app": "web",
+        "query": "@nobody here",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web in-call: \"@nobody here\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@zane:example.com",
+            "kind": "person",
+            "label": "Zane",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@simon:example.com",
+            "kind": "person",
+            "label": "Simon",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@dylan:example.com",
+            "kind": "person",
+            "label": "Dylan",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@moonraker:example.com",
+            "kind": "person",
+            "label": "moonraker",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@celeste:example.com",
+            "kind": "person",
+            "label": "Céleste",
+            "pick": false,
+            "score": 0,
+            "target": null
+          },
+          {
+            "a": null,
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "@vala:example.com",
+            "kind": "person",
+            "label": "Vala",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "",
+        "stage": null,
+        "total": 6
+      },
+      "input": {
+        "app": "web",
+        "query": "@ ",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web in-call: \"@ \""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "\"quoted\"",
+            "kind": "find",
+            "label": "Find people named \"\"quoted\"\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "quoted",
+        "stage": null,
+        "total": 0
+      },
+      "input": {
+        "app": "web",
+        "query": "@\"quoted\"",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web in-call: \"@\\\"quoted\\\"\""
+    },
+    {
+      "expect": {
+        "items": [
+          {
+            "a": "dm.new",
+            "active": null,
+            "emoji": null,
+            "enabled": true,
+            "hint": null,
+            "icon": null,
+            "id": "{query}",
+            "kind": "find",
+            "label": "Find people named \"{query}\"…",
+            "pick": false,
+            "score": 0,
+            "target": null
+          }
+        ],
+        "mode": "person",
+        "query": "query",
+        "stage": null,
+        "total": 0
+      },
+      "input": {
+        "app": "web",
+        "query": "@{query}",
+        "snapshot": {
+          "current": {
+            "activeSpace": "!space:example.com",
+            "room": "!val:example.com"
+          },
+          "lists": {
+            "cameras": [
+              "v4l:video0"
+            ],
+            "inputs": [
+              "alsa_input.usb-headset"
+            ],
+            "outputs": [
+              "alsa_output.speakers",
+              "nowhere"
+            ],
+            "person": [
+              "@blake:example.com",
+              "@zane:example.com",
+              "@simon:example.com",
+              "@dylan:example.com",
+              "@moonraker:example.com",
+              "@celeste:example.com",
+              "@vala:example.com"
+            ],
+            "room": [
+              "!gc:example.com",
+              "!val:example.com",
+              "!mods:example.com",
+              "!ftb:example.com",
+              "!gen:example.com",
+              "!zane:example.com",
+              "!simon:example.com",
+              "!cafe:example.com",
+              "!sofia:example.com",
+              "!night:example.com",
+              "!movie:example.com",
+              "!pal:example.com",
+              "!left:example.com",
+              "!inv:example.com"
+            ],
+            "theme": [
+              "oled",
+              "goose",
+              "lib:nord"
+            ]
+          },
+          "subjects": {
+            "audioSource": {
+              "app:spotify": {
+                "name": "Spotify",
+                "values": {}
+              }
+            },
+            "device": {
+              "alsa_input.usb-headset": {
+                "name": "Headset",
+                "values": {}
+              },
+              "alsa_output.speakers": {
+                "name": "Speakers",
+                "values": {}
+              },
+              "v4l:video0": {
+                "name": "Webcam",
+                "values": {}
+              }
+            },
+            "message": {
+              "$message1": {
+                "name": "a message",
+                "values": {
+                  "message.interactive": true,
+                  "message.mine": true,
+                  "message.text": true
+                }
+              }
+            },
+            "participant": {
+              "@zane:example.com:DEVICEZ": {
+                "name": "Zane (laptop)",
+                "values": {}
+              }
+            },
+            "person": {
+              "@blake:example.com": {
+                "name": "Blake",
+                "values": {
+                  "person.me": true
+                }
+              },
+              "@celeste:example.com": {
+                "name": "Céleste",
+                "values": {}
+              },
+              "@dylan:example.com": {
+                "name": "Dylan",
+                "values": {}
+              },
+              "@moonraker:example.com": {
+                "name": "moonraker",
+                "values": {}
+              },
+              "@simon:example.com": {
+                "name": "Simon",
+                "values": {}
+              },
+              "@vala:example.com": {
+                "name": "Vala",
+                "values": {}
+              },
+              "@zane:example.com": {
+                "name": "Zane",
+                "values": {}
+              }
+            },
+            "room": {
+              "!cafe:example.com": {
+                "name": "Café Crème",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!ftb:example.com": {
+                "name": "FTB Skies",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.joined": true
+                }
+              },
+              "!gc:example.com": {
+                "alias": "#gaming-central:example.com",
+                "name": "Gaming Central",
+                "values": {
+                  "room.callLive": true,
+                  "room.hasUnread": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!gen:example.com": {
+                "alias": "#general:example.com",
+                "name": "#general",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!inv:example.com": {
+                "name": "Invited room",
+                "values": {
+                  "room.invited": true
+                }
+              },
+              "!left:example.com": {
+                "name": "Left behind",
+                "values": {
+                  "room.joined": false
+                }
+              },
+              "!mods:example.com": {
+                "name": "valheim-mods",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!movie:example.com": {
+                "name": "Movie night",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!night:example.com": {
+                "name": "Game night 🎮",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!pal:example.com": {
+                "name": "Palworld",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!simon:example.com": {
+                "name": "Simon",
+                "values": {
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              },
+              "!sofia:example.com": {
+                "name": "ΣΟΦΙΑ",
+                "values": {
+                  "room.joined": true
+                }
+              },
+              "!val:example.com": {
+                "alias": "#valheim:example.com",
+                "name": "Valheim",
+                "values": {
+                  "room.current": true,
+                  "room.inCall": true,
+                  "room.inSpace": true,
+                  "room.joined": true
+                }
+              },
+              "!zane:example.com": {
+                "name": "Zane",
+                "values": {
+                  "room.hasUnread": true,
+                  "room.isDm": true,
+                  "room.joined": true
+                }
+              }
+            },
+            "sound": {
+              "mxc://example.com/airhorn": {
+                "name": "Air horn",
+                "values": {}
+              },
+              "mxc://example.com/bruh": {
+                "name": "Bruh",
+                "values": {}
+              }
+            },
+            "space": {
+              "!oldspace:example.com": {
+                "name": "Old space",
+                "values": {
+                  "space.joined": false
+                }
+              },
+              "!space:example.com": {
+                "name": "Example",
+                "values": {
+                  "space.canManage": true,
+                  "space.joined": true
+                }
+              }
+            },
+            "theme": {
+              "goose": {
+                "name": "Goose",
+                "values": {}
+              },
+              "lib:nord": {
+                "name": "Nord",
+                "values": {}
+              },
+              "oled": {
+                "name": "OLED",
+                "values": {}
+              }
+            },
+            "tile": {
+              "tile-zane-screen": {
+                "name": "Zane's screen",
+                "values": {
+                  "tile.share": true
+                }
+              }
+            }
+          },
+          "values": {
+            "call.cameraOn": true,
+            "call.in": true,
+            "call.micMuted": false,
+            "gif.available": true,
+            "platform.screenCapture": true,
+            "prefs.callLayout": "auto",
+            "prefs.echoCancel": true,
+            "prefs.nsMode": "standard",
+            "prefs.theme": "goose",
+            "presence.known": true,
+            "ui.callShown": true,
+            "ui.roomOpen": true,
+            "update.state": "none"
+          }
+        }
+      },
+      "name": "web in-call: \"@{query}\""
     },
     {
       "expect": {

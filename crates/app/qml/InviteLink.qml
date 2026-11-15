@@ -62,5 +62,51 @@ QtObject {
         var r = links.parseHash(hash)
         return r.name === "register" ? links.inviteFieldValue(r.token) : null
     }
+    /// A14.3: the server a pasted invite link names — its host ("maplehouse.tinhat.me", "chat.example.com:8443"),
+    /// lower-cased; null when `text` isn't a whole https?:// invite link (codeFromPaste gives its code).
+    function hostFromPaste(text) {
+        var t = String(text === undefined || text === null ? "" : text).trim()
+        if (links.codeFromPaste(t) === null) return null
+        var m = /^https?:\/\/([^\/?#@]+)(?=[\/?#]|$)/i.exec(t)
+        if (!m) return null
+        var h = m[1].toLowerCase()
+        return /^[a-z0-9[][a-z0-9.:\[\]-]*$/.test(h) ? h : null
+    }
+    /// What a paste into the Server or Invite code field means, in one piece (A14.3; the web's invite.ts
+    /// inviteFromPaste): {code, host} for a whole invite link, {code, host: null} for just its "#/register?…" part,
+    /// null otherwise — also for an https?:// link whose host can't be used (a user@ part, a non-ASCII name): its code
+    /// must never go to whatever server the field held before.
+    function inviteFromPaste(text) {
+        var code = links.codeFromPaste(text)
+        if (code === null) return null
+        if (!/^https?:\/\//i.test(String(text === undefined || text === null ? "" : text).trim())) return { code: code, host: null }
+        var host = links.hostFromPaste(text)
+        return host === null ? null : { code: code, host: host }
+    }
+    /// The one-tap invite link a code is handed out as (A14.0): `<web app>/#/register?token=CODE` — the web app opens
+    /// its create-account form with the code filled in; pasted into the desktop's sign-in screen it fills the code
+    /// (codeFromPaste above) and names the server. `webUrl` is the server's web app ("https://host/").
+    function registerLink(webUrl, code) {
+        var base = String(webUrl === undefined || webUrl === null ? "" : webUrl)
+        if (base.length > 0 && base.charAt(base.length - 1) !== "/") base += "/"
+        return base + "#/register?token=" + encodeURIComponent(String(code === undefined || code === null ? "" : code).trim())
+    }
+    /// The ready-to-paste invite message (A14.0; the web's spaces/invitesModel.ts inviteMessageText, the same text —
+    /// testvectors/invite-message/vectors.json). It leads with the one-tap link; the manual steps stay under it.
+    /// `until` = the expiry day already formatted ("December 1"), "" when the code never expires; `installUrl` = where
+    /// the app is downloaded ("" on a Tin Hat Server, whose message leads with its own web address).
+    function inviteMessageText(server, webUrl, code, until, installUrl) {
+        var c = String(code === undefined || code === null ? "" : code)
+        var blip = /^TH-/i.test(c) ? c.substring(3) : c
+        var u = until ? " It's good until " + until + "." : ""
+        var steps = installUrl
+            ? "1. Install Tin Hat: " + installUrl + "\n" + "2. Open it and pick \"Create an account\" under the sign-in button.\n"
+            : "1. Open " + webUrl + " in your browser (or install the Tin Hat app).\n" + "2. Pick \"Create an account\" under the sign-in button.\n"
+        return "You're invited to " + server + " on Tin Hat.\n"
+             + "Join here: " + links.registerLink(webUrl, c) + "\n"
+             + "Or set it up by hand:\n"
+             + steps + "3. Server: " + server + " — invite code: " + blip + "." + u
+             + (installUrl ? "\nOr open it in your browser: " + webUrl : "")
+    }
     // END pure
 }

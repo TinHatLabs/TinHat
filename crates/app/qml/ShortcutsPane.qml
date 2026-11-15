@@ -13,6 +13,10 @@ import dev.tinhat.app   // Th: the active theme (docs/MIGRATING-THEME.md)
 
 ColumnLayout {
     id: pane
+    // A22.5 (2026-11-13): a setting's "Change key…" fills the search once (SettingsWindow.shortcutsPreset)
+    property string preset: ""
+    signal presetTaken()
+    onPresetChanged: if (pane.preset.length > 0) { shortcutsSearch.text = pane.preset; pane.presetTaken() }
     property var app: null
     spacing: 24
     readonly property var host: pane.app && pane.app.actions ? pane.app.actions : null
@@ -63,6 +67,7 @@ ColumnLayout {
             Layout.topMargin: 4
             spacing: 8
             ThTextField {
+                id: shortcutsSearch
                 Layout.fillWidth: true
                 placeholderText: "Search actions…"
                 Accessible.name: "Search actions"

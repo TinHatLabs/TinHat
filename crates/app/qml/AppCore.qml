@@ -63,6 +63,7 @@ Item {
     readonly property PresenceController c_presenceCtl: presenceCtl   // 10.6: opt-in presence (docs/REACH.md §2)
     readonly property ThemeController c_themeCtl: themeCtl   // themes (C1): the engine → the Th singleton
     readonly property ThemeEditorController c_editorCtl: editorCtl   // 11.0 step 5: the theme editor, share cards, Pick
+    readonly property AmbienceController c_ambience: ambienceCtl   // chat backgrounds + particle effects (docs/AMBIENCE.md)
     readonly property LowGpuController c_lowgpu: lowgpuCtl   // 11.0 (GPU.md): the low-GPU contract's rules
     readonly property ActionsController c_actionsCtl: actionsCtl   // 11.0 step 3 (buttons): the actions engine (ACTIONS.md)
     readonly property GameServersController c_gameServers: gameServersCtl   // 11.1: the Game servers widget (GAMESERVERS.md)
@@ -324,6 +325,23 @@ Item {
     // 12.1.9 (assembly-044 area 3 P2): everything before the LAST ':' (identity.rs mxid_of, the web's calls/identity.ts
     // mxidOf), so @u:host:8448:DEV stays @u:host:8448 (the old first-two-parts split made it @u:host, and a menu for
     // @u:host could moderate the port user's device). A bare mxid (one ':' after the localpart) is kept as it is.
+    // P9 (12.1.16): double-click (double-tap) a call tile, and the tile menu's view rows (Pin / Full screen, so small tiles
+    // have them too). testvectors/tile-gestures, byte-identical to the web's src/features/callui/tileGestures.ts; run by
+    // scripts/tile-gestures-test.qml. t = { share, self, fake, pinned, fullscreen }.
+    function tileWords() {
+        return { pin: "Pin as the main view", unpin: "Unpin", fullscreen: "Full screen", leaveFullscreen: "Leave full screen",
+                 layoutPinHint: "Pin: right-click a tile, or its \u22ef menu" }
+    }
+    function tileDoubleAction(t) {
+        if (!t || t.self) return "none"
+        return (t.share && !t.fake) ? "fullscreen" : "reset"
+    }
+    function tileViewItems(t) {
+        if (!t || t.self) return []
+        var out = [t.pinned ? ["unpin", "Unpin"] : ["pin", "Pin as the main view"]]
+        if (t.share && !t.fake) out.push(t.fullscreen ? ["leaveFullscreen", "Leave full screen"] : ["fullscreen", "Full screen"])
+        return out
+    }
     function tileMxid(p) {
         var s = String(p || "")
         var i = s.lastIndexOf(":")
@@ -677,7 +695,13 @@ Item {
         if (!isNaN(pw) && !isNaN(ph) && pw >= w.minimumWidth && ph >= 120 && pw < 8000 && ph < 8000) { w.width = pw; w.height = ph }
         if (Qt.platform.pluginName.indexOf("wayland") !== 0) {
             var px = parseInt(settings.uiPref("pip-x")), py = parseInt(settings.uiPref("pip-y"))
-            if (!isNaN(px) && !isNaN(py) && px > -4000 && py > -4000) { w.x = px; w.y = py }
+            // A33.3 / A33.4: only on a connected screen, and each further pop-out 32 px down-right of the last
+            if (!isNaN(px) && !isNaN(py) && px > -4000 && py > -4000
+                    && screenFit.onScreen(px, py, w.width, w.height, Qt.application.screens)) {
+                var taken = Object.keys(_pips).filter(function (k) { return k !== tileId && _pips[k] }).map(function (k) { return { x: _pips[k].x, y: _pips[k].y } })
+                var spot = screenFit.nextSpot(px, py, w.width, w.height, taken, Qt.application.screens)
+                w.x = spot.x; w.y = spot.y
+            }
         }
         // By request: a popped-out stream should leave the grid — the same
         // pixels twice wastes space AND decode. VIEW-side hide only (the tile is
@@ -725,6 +749,35 @@ Item {
     // doesn't sit frozen on a black/last frame and its _pips slot doesn't block re-opening that
     // id later (bugs B + D). callTiles changes only when the real tile list changes.
     onCallTilesChanged: {
+        // D02.3: remember the pinned / full-screen tiles' participant + kind (kept after they leave), and carry a held pin
+        var meta = {}
+        for (var mi = 0; mi < callTiles.length; ++mi) {
+            var mt = callTiles[mi]
+            if (mt && mt.id && mt.participant) meta[mt.id] = { participant: String(mt.participant), kind: String(mt.kind || "video") }
+        }
+        var keep = [core.pinnedTile, core.shareFullscreen]
+        for (var ki = 0; ki < keep.length; ++ki) if (keep[ki].length > 0 && !meta[keep[ki]] && core._tileMeta[keep[ki]]) meta[keep[ki]] = core._tileMeta[keep[ki]]
+        core._tileMeta = meta
+        // (review r2) a hold for an older pin goes once the person pinned something else
+        if (core._pinHeld && core.pinnedTile.length > 0 && core.pinnedTile !== core._pinHeld.from) core._pinHeld = null
+        // (review: hold first, then carry — a replacement that arrives in the same update is found at once)
+        if (core.pinnedTile.length > 0 && core.shareFullscreen.length === 0 && !core._pinHeld
+                && !callTiles.some(function(t) { return t.id === core.pinnedTile })) {
+            core._pinHeld = core._heldOf(core.pinnedTile)
+            if (core._pinHeld) core._pinHeld.from = core.pinnedTile
+            // 5-8 (2026-11-14): the pin goes NOW (the hold remembers it), so a pin never dangles on someone who left: it
+            // used to stay set when no tile was popped out (the cleanup below sat after the PiP early return), and each
+            // later update re-armed a fresh 5 s hold from it — the person regained the pin whenever they came back
+            core._sysUnpin = true
+            core.pinnedTile = ""
+        }
+        if (core._pinHeld) {
+            // (review) a pin the person changed meanwhile wins: carry only while the pin is still the held one, or cleared
+            var mine = core.pinnedTile.length === 0 || core.pinnedTile === core._pinHeld.from
+            var to = mine ? core._carryTo(core._pinHeld) : ""
+            if (to.length > 0) { core.pinnedTile = to; core._pinHeld = null }
+            else if (!mine || Date.now() >= core._pinHeld.until) core._pinHeld = null
+        }
         core._syncTileModel()     // 0.8.28: the grid model follows the array in place
         core._applyHiddenMemory() // 0.8.7 hide/show memory (single-handler rule)
         core._syncWatched()       // new share tiles start unwatched — push the truth now
@@ -734,7 +787,7 @@ Item {
         // it counts as gone for the PiP (closed), like a tile that left
         var ids = callTiles.filter(function(t) { return t.cameraMuted !== true }).map(function(t) { return t.id })
         // A pinned tile that left the call must not keep an empty main area pinned (a muted camera stays pinned).
-        if (core.pinnedTile.length > 0 && !callTiles.some(function(t) { return t.id === core.pinnedTile })) core.pinnedTile = ""
+        if (core.pinnedTile.length > 0 && !callTiles.some(function(t) { return t.id === core.pinnedTile })) { core._sysUnpin = true; core.pinnedTile = "" }
         for (var i = 0; i < keys.length; ++i) {
             if (ids.indexOf(keys[i]) < 0 && _pips[keys[i]])
                 _pips[keys[i]].close()   // -> its onClosing cleans _pips + destroys
@@ -907,8 +960,9 @@ Item {
         uiSound.stop(); uiSound.source = core.soundUrl(kind === "notify" ? "notify" + core.sndVariant("notify") : kind); uiSound.play()
     }
     // Settings previews: the same player; clicking the playing one stops it (the ringtones are long).
-    function previewSound(file) {
-        if (core._previewFile === file && uiSound.playbackState === MediaPlayer.PlayingState) { uiSound.stop(); core._previewFile = ""; return }
+    // restart = play it again from the start even when it is the one playing (the Sound volume slider, D07.1)
+    function previewSound(file, restart) {
+        if (!restart && core._previewFile === file && uiSound.playbackState === MediaPlayer.PlayingState) { uiSound.stop(); core._previewFile = ""; return }
         core._previewFile = file
         uiSoundOut.volume = core.sndVolume()
         uiSound.stop(); uiSound.source = core.soundUrl(file); uiSound.play()
@@ -936,6 +990,89 @@ Item {
         function onParticipantJoined(identity) { nav.refreshParticipants() }
         function onParticipantLeft(identity) { nav.refreshParticipants() } // drop their bubble from the room-list call strip
         function onPersonChime(kind) { if (kind !== "join" || Date.now() >= core._chimeArmAt) core.playCallChime(kind) }
+    }
+
+    // ---- accessibility round 2 (M3): calls speak to screen readers (the web's callui/CallAnnouncer.tsx, same rules:
+    // callannounce.rs = callannounce.ts, shared vectors). The shell says the words: srAnnounce → Accessible.announce
+    // (urgent = assertive). The call's own state: joining, in, reconnecting (urgent), failed (urgent, the banner's
+    // words), left — read once the flags settle (Qt.callLater: callctl's tick sets them one by one). People joining /
+    // leaving the call I am in: polite, batched over rosterBatchMs; nothing in the first rosterArmMs after I got in
+    // (the people already there, as for the join chime), never the recorder, me, or a second device of someone still in.
+    // The incoming-call card says itself (IncomingCallToast present → announceIncoming).
+    signal srAnnounce(string text, bool urgent)
+    CallAnnounceController { id: announceCtl }
+    function _sayJson(j) {
+        if (!j || j.length === 0) return
+        var a = JSON.parse(j)
+        if (a && a.text) core.srAnnounce(String(a.text), a.urgent === true)
+    }
+    function incomingCardJson(dm, room, who, namesJson, other) { return announceCtl.card(dm === true, room, who, namesJson, other === true) }   // A15.2/A15.6
+    function announceIncoming(roomName, who) { core._sayJson(announceCtl.incoming(String(roomName || ""), String(who || ""), core.mInCall === true)) }
+    function _annFlagsJson() {
+        return JSON.stringify({ inCall: core.mInCall === true, connecting: core.mConnecting === true, reconnecting: core.mReconnecting === true,
+                                callFailed: core.mCallFailed === true, failReason: String(core.mCallFailReason || ""), removedBy: String(core.mRemovedBy || "") })
+    }
+    // the flags last said ("" = none yet: then the idle call, so the very first change — the first Join — is said too)
+    property string _annPrev: ""
+    readonly property string _annIdle: JSON.stringify({ inCall: false, connecting: false, reconnecting: false, callFailed: false, failReason: "", removedBy: "" })
+    property double _annInSince: 0
+    property var _annJoined: []      // people (mxids, one per person; named when the batch is read: their tile may still be on its way)
+    property var _annLeft: []        // [{ m: mxid, n: name }] (named now: the tile goes with them)
+    function _annCheck() {
+        var nj = core._annFlagsJson()
+        var pj = core._annPrev.length > 0 ? core._annPrev : core._annIdle
+        if (pj === nj) return
+        core._annPrev = nj
+        var was = announceCtl.phaseOf(pj), now = announceCtl.phaseOf(nj)
+        if (now === "in" && was !== "in" && was !== "reconnecting") core._annInSince = Date.now()
+        if (now !== "in" && now !== "reconnecting") { core._annInSince = 0; core._annJoined = []; core._annLeft = []; annBatch.stop() }
+        core._sayJson(announceCtl.phase(pj, nj, core.roomNameOf(core.mCallRoomId) || ""))
+    }
+    Connections {
+        target: core
+        function onMInCallChanged() { Qt.callLater(core._annCheck) }
+        function onMConnectingChanged() { Qt.callLater(core._annCheck) }
+        function onMReconnectingChanged() { Qt.callLater(core._annCheck) }
+        function onMCallFailedChanged() { Qt.callLater(core._annCheck) }
+        function onMCallFailReasonChanged() { Qt.callLater(core._annCheck) }
+        function onMRemovedByChanged() { Qt.callLater(core._annCheck) }
+    }
+    function _annRoster(kind, identity) {
+        if (core._annInSince <= 0 || Date.now() < core._annInSince + announceCtl.num("rosterArmMs")) return
+        if (core.isRecorder(identity)) return
+        var m = core.tileMxid(identity)
+        if (m === core.mUserId) return   // my own other device (Pad) is not "someone joined"
+        var tiles = core.mVideoTiles || []
+        for (var i = 0; i < tiles.length; i++) {   // another device of the same person is (still) in the call
+            var p = tiles[i].participant || ""
+            if (p.length > 0 && p !== identity && tiles[i].id !== "vid_selfview" && core.tileMxid(p) === m) return
+        }
+        // one entry per PERSON (two people with the same name are two; one person's two devices are one)
+        if (kind === "join") { var j = core._annJoined.slice(); if (j.indexOf(m) < 0) j.push(m); core._annJoined = j }
+        else {
+            var l = core._annLeft.slice(), had = false
+            for (var k = 0; k < l.length; k++) if (l[k].m === m) had = true
+            if (!had) l.push({ m: m, n: core.hearName(identity) })
+            core._annLeft = l
+        }
+        if (!annBatch.running) annBatch.start()
+    }
+    Timer {
+        id: annBatch
+        interval: announceCtl.num("rosterBatchMs")
+        onTriggered: {
+            var names = []
+            for (var i = 0; i < core._annJoined.length; i++) names.push(core.hearName(core._annJoined[i]))
+            var left = []
+            for (var k = 0; k < core._annLeft.length; k++) left.push(core._annLeft[k].n)
+            core._annJoined = []; core._annLeft = []
+            core._sayJson(announceCtl.roster(JSON.stringify(names), JSON.stringify(left)))
+        }
+    }
+    Connections {
+        target: callctl
+        function onParticipantJoined(identity) { core._annRoster("join", String(identity)) }
+        function onParticipantLeft(identity) { core._annRoster("leave", String(identity)) }
     }
 
     // After leaving a call, the room-list call-participant strip reads m.call.member STATE, which
@@ -994,6 +1131,7 @@ Item {
     PresenceController { id: presenceCtl }        // 10.6: opt-in Online / Away / In a call + the "at the computer" pings (docs/REACH.md)
     ThemeController { id: themeCtl }              // themes (C1): resolves a theme id through the engine for the Th singleton
     ThemeEditorController { id: editorCtl }       // 11.0 step 5: the theme editor, share cards (Try / Keep), the Pick tool
+    AmbienceController { id: ambienceCtl }       // chat backgrounds + particle effects (docs/AMBIENCE.md)
     LowGpuController { id: lowgpuCtl }            // 11.0 (GPU.md): window state, motion switch, the duration token, ring, busy mark …
     ActionsController { id: actionsCtl }          // 11.0 step 3 (buttons): rows, availability, the Ctrl+K palette (crates/actions)
     // 11.1 (docs/GAMESERVERS.md): the Game servers status — ONE poller for the widget, Up next and the calendar card; it
@@ -1036,6 +1174,7 @@ Item {
         running: core.mLoggedIn
         onTriggered: { padCtl.refreshTargets(); core._mirrorPad() }
     }
+    ScreenFit { id: screenFit }   // A33.3 / A33.4: pop-out windows stay on a connected screen
     // One-shot startup update check, a few seconds after we're logged in (non-blocking;
     // fails silently to "up to date / check failed" if no manifest is hosted yet).
     Timer {
@@ -1045,6 +1184,15 @@ Item {
         property bool done: false
         running: core.mLoggedIn && !done
         onTriggered: { done = true; updater.checkForUpdates() }
+    }
+    // A32.0: an app left open for days still hears about a new version: check again every 4 hours (the web polls
+    // version.json every 30 min). Never while an update is downloading or waiting for its restart.
+    Timer {
+        id: updateRecheckTimer
+        interval: 4 * 60 * 60 * 1000
+        repeat: true
+        running: core.mLoggedIn && updateCheckTimer.done
+        onTriggered: if (!core.mUpdateDownloading && !core.mUpdateReady) updater.checkForUpdates()
     }
     // Parsed once here rather than per bubble: every video bubble binds to this and
     // only the one whose id matches reacts.
@@ -1198,6 +1346,14 @@ Item {
     // master switch of every unfocused rule (it was Calls-only, on by default, in 10.8.0). Pref `call-unfocused-saver`
     // (the 10.8.0 key: a stored "1" / "0" is the user's own choice), default OFF (lowgpu unfocused_saver_on).
     property bool mCallUnfocusedSaver: false
+    // chat backgrounds + particle effects (Settings → Appearance → Performance; docs/AMBIENCE.md): read at sign-in
+    property bool mChatBackgrounds: true
+    property bool mChatEffects: true
+    property bool mChatEffectsPause: true   // 2026-11-14: on by default
+    // sun-gamebg: Settings → Appearance → Performance → "Game art backgrounds" (pref `chat-game-art`, default ON)
+    property bool mChatGameArt: true
+    readonly property string gameArtWords: gameArtWordsCtl.wordsJson()
+    GameArtController { id: gameArtWordsCtl }
     onMCallUnfocusedSaverChanged: { Qt.callLater(core.logWinState); core._applyVisibilityPause() }
     property bool mMusicPlaying: false  // #7 music 2nd-track live
     property bool mNcAvailable: true    // RNNoise element installed? false => the toggle can do nothing
@@ -1246,6 +1402,9 @@ Item {
     property bool mLocalAfk: false      // #7 we are BRB/AFK in the call
     property bool _afkApplied: false    // #4 last mLocalAfk we pushed into the incoming-cut
     property bool _afkMutedMic: false   // #7 AFK (not the user) muted the mic; restore on un-BRB
+    // 4-9 (review): a push-to-talk change is the person's mic choice — BRB's "unmute when back" claim goes (the web's
+    // hooks.onUserMicToggle), or coming back from BRB would reopen the mic after the change had muted it
+    Connections { target: callctl; ignoreUnknownSignals: true; function onPushToTalkChanged() { core._afkMutedMic = false } }
     property var mAwayUsers: []         // #7 userIds currently away in the call
     property string _awayRaw: "[]"
     property double _afkPollAt: 0
@@ -1291,6 +1450,25 @@ Item {
     property int _fsPrevVisibility: 0
     property bool _fsPrevMaximized: false
     property string _fsPrevPinned: ""
+    // D02.3 (2026-11-13): pin + full screen follow a blip. The pinned / full-screen tile's {participant, kind} is kept
+    // here while it exists; when it leaves, `_pinHeld` / `_fsHeld` = {participant, kind, until} for the grace, and a tile
+    // of the same participant + kind arriving in that time takes the pin / full screen (callctl.carryTile, tilecarry.rs)
+    property var _tileMeta: ({})
+    property var _pinHeld: null
+    // (review r2) the person unpinning during the grace cancels the carry; the app's own unpin of a tile that left doesn't
+    property bool _sysUnpin: false
+    onPinnedTileChanged: {
+        if (core.pinnedTile.length === 0 && !core._sysUnpin) core._pinHeld = null
+        core._sysUnpin = false
+    }
+    property var _fsHeld: null
+    function _heldOf(id) {
+        var m = core._tileMeta[String(id || "")]
+        return m ? { participant: m.participant, kind: m.kind, until: Date.now() + 5000 } : null
+    }
+    function _carryTo(h) {
+        return h ? String(callctl.carryTile(h.participant, h.kind, h.until, JSON.stringify(callTiles), Date.now())) : ""
+    }
     property real callSideFrac: 0.28       // side column's share of the grid width (seam drag)
     // 9.3.1: the seam between the call and the chat (Legacy). callPaneFrac = the call panel's
     // share of the page height once the divider has been dragged (-1 = never: the grid keeps its
@@ -2317,6 +2495,9 @@ Item {
                 if (mLocalAfk !== _afkApplied) {
                     _afkApplied = mLocalAfk
                     if (mLocalAfk) {
+                        // BRB privacy (2026-11-13): going away ends a push-to-talk hold first, so a hold carried
+                        // into BRB is not un-muted on the way back with the key long released (ptt_rules.rs).
+                        if (callctl.pttSpeaking) callctl.pttHold(false)
                         // Record whether WE (AFK) muted the mic, so coming back restores exactly
                         // that and never surprise-unmutes a mic the user muted themselves. Use the
                         // LIVE callctl.micMuted (not the 120ms-lagged mirror) + an EXPLICIT setter
@@ -2561,7 +2742,14 @@ Item {
     }
     // Screen-share lifecycle -> passive notifications.
     onMStreamStatusChanged: if (mStreamStatus.length > 0) core.notify(mStreamStatus, "short")
-    onMCallStatusChanged: if (mCallStatus.length > 0) core.notify(mCallStatus, "short")
+    // 12.1.15: a share that ended on its own (testvectors/share-stopped) is a notice with a way back, not a line that
+    // passes in three seconds
+    onMCallStatusChanged: {
+        if (mCallStatus.length === 0) return
+        if (mCallStatus.indexOf("Your share stopped") === 0)
+            core.notifyAction(mCallStatus, 12000, "Share again", function () { if (core.shell && core.shell.openStreamPopover) core.shell.openStreamPopover() })
+        else core.notify(mCallStatus, "short")
+    }
     // 10.1 (TH-SHELL-01): after sign-in, LoginController.status had no home on screen — a bad
     // invite link, a malformed user id in "New chat", an invite to nobody all failed in silence.
     // The sign-in card keeps owning it before login.

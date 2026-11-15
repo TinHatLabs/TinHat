@@ -638,9 +638,12 @@ impl qobject::SettingsController {
 
     /// 0.8.7 "never record me": the Memories recorder must not capture this user's
     /// audio/video. Persisted here, advertised via rtc.rs's membership marker.
+    /// Consent (U9, 2026-11-13): a flip mid-call re-publishes the membership AT ONCE (the web's DECISIONS D11), so the
+    /// recorder stops capturing me now, not at the next 30-min membership refresh.
     pub fn apply_record_optout(mut self: Pin<&mut Self>, on: bool) {
         overlay_pref_write("record-optout", if on { "1" } else { "0" });
         self.as_mut().set_record_optout(on);
+        crate::bridge::runtime().spawn(crate::call_ctl::republish_membership("Never record me changed"));
     }
 
     pub fn refresh_record_optout(mut self: Pin<&mut Self>) {
@@ -1177,6 +1180,8 @@ async fn upload_and_set_avatar(client: &matrix_sdk::Client, path_or_url: &str) -
     let data = std::fs::read(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
     let mime: mime::Mime = avatar_mime(&ext).parse().unwrap_or(mime::IMAGE_PNG);
+    // docs/PHOTO-METADATA.md: the profile photo loses its location + identifying metadata (can't be cleaned = not set)
+    let data = crate::room::photo_bytes_for_upload(mime.as_ref(), data).map_err(|_| crate::room::PHOTO_LOCATION_FAIL.to_string())?;
     let mxc = client
         .account()
         .upload_avatar(&mime, data)
@@ -1695,5 +1700,43 @@ impl qobject::SettingsController {
                 o.as_mut().set_delete_answers(n.wrapping_add(1));
             });
         });
+    }
+}
+
+#[cfg(test)]
+mod record_optout_tests {
+    /// U9: "Never record me" reaches the recorder mid-call. The marker is read only at publish (rtc.rs), so the flip
+    /// itself must re-publish; before the fix it waited for the next membership refresh.
+    #[test]
+    fn a_flip_republishes_the_membership_at_once() {
+        let src = include_str!("settings.rs");
+        let at = src.find("pub fn apply_record_optout(").expect("the setter");
+        let body = &src[at..at + src[at..].find("\n    }\n").expect("its end")];
+        assert!(body.contains("crate::call_ctl::republish_membership("), "the setter re-publishes: {body}");
+    }
+
+    /// D02.5: a slow join says "Still connecting…" (10 s) and its time-out names no "stale" call (= the web).
+    #[test]
+    fn the_join_words() {
+        let island = include_str!("../qml/CallIsland.qml");
+        assert!(island.contains("island._connStill ? \"Still connecting…\" : \"Connecting…\"") && island.contains("interval: 10000; running: island._connecting"));
+        let cc = include_str!("call_ctl.rs");
+        assert!(cc.contains("\"the call didn't connect within 15 seconds — try again\"") && !cc.contains("may be stale"));
+    }
+
+    /// A18.2: "Start recording" is a normal button, not the destructive red one (= the web).
+    #[test]
+    fn the_record_confirm_is_not_destructive() {
+        let main = include_str!("../qml/Main.qml");
+        let at = main.find("id: recordConfirm").unwrap();
+        let block = &main[at..at + 600];
+        assert!(block.contains("destructive: false") && !block.contains("destructive: true"));
+    }
+
+    /// A18.0: the record confirmation names the page "Never record me" is on (Privacy, not Calls).
+    #[test]
+    fn the_record_confirm_names_privacy() {
+        let main = include_str!("../qml/Main.qml");
+        assert!(main.contains("in Settings → Privacy is left out") && !main.contains("in Settings → Calls is left out"));
     }
 }

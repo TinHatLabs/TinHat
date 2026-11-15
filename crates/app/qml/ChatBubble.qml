@@ -30,6 +30,9 @@ Item {
     // ---- public API ----
     property bool mine: false
     property bool grouped: false
+    // P19: a grouped follow-up shows its clock on hover / focus only; Sending…, Not sent, the pin and (edited) always
+    // show (web lib/stamp.ts clockQuiet: the same rule). The line keeps its height, so nothing moves.
+    readonly property bool clockQuiet: grouped && !pending && !failed && !pinned && !edited
     property string body: ""
     property string sender: ""          // mxid
     property string senderName: ""      // resolved display (falls back to localpart)
@@ -56,6 +59,13 @@ Item {
     // the list has the focus (the web paints the same wash on its focused row)
     property bool kbCurrent: false
     property var preview: null          // link preview descriptor (LinkPreviewCard)
+    // threads (docs/THREADS.md): the summary under a thread root ({count, lastName, lastTs, repliers, unread}; null =
+    // none), its words (the shared core's, from the room controller) and whether a thread can start here
+    property var threadInfo: null
+    property string threadText: ""
+    property string threadLabel: ""
+    property bool canThread: false
+    signal threadRequested(var opener)
     signal replyRequested()
     signal editRequested()
     signal moreReactRequested()
@@ -138,10 +148,44 @@ Item {
     function _esc(s) {
         return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
     }
+    // BEGIN react-norm pure (tools/reactions-test.mjs)
+    /// QOL A07.2: a reaction key's grouping form (reactions.rs react_key_norm, the web's reactKeyNorm): the U+FE0E /
+    /// U+FE0F variation selectors dropped, so ❤ and ❤️ are one chip.
+    function reactNorm(k) { return String(k === undefined || k === null ? "" : k).replace(/[\uFE0E\uFE0F]/g, "") }
+    // END react-norm pure
+    /// QOL A07.2 (review): take back every reaction of mine a chip holds (❤ and ❤️ both sent are one chip)
+    function unreactChip(chip) {
+        // (the list only while it still holds the chip's own id: an optimistic re-add has its own)
+        var ids = (chip.reactionIds && chip.reactionIds.indexOf(chip.reactionId) >= 0) ? chip.reactionIds : [chip.reactionId]
+        for (var i = 0; i < ids.length; i++) if (String(ids[i]).length > 0) bubble.unreact(String(ids[i]))
+    }
+    /// QOL A31.1: what a reaction chip says (its tooltip, and with the key + count its screen-reader name)
+    function reactWho(r) {
+        var who = (r.who !== undefined && r.who !== null) ? r.who : []
+        var names = []
+        for (var i = 0; i < who.length && i < 8; i++) names.push(who[i])
+        if (who.length > 8) names.push("+" + (who.length - 8))
+        var k = r.key !== undefined ? r.key : ""
+        if (names.length === 0) return (r.mine ? "You" : "Someone") + " reacted with " + k
+        return names.join(", ") + " reacted with " + k
+    }
     function _codeFont(html) {
         if (Th.fontCode.length === 0 || (html.indexOf("<code") < 0 && html.indexOf("<pre") < 0)) return html
         return html.replace(/<(code|pre)(?=[\s>])/g, "<$1 style=\"font-family:'" + Th.fontCode + "'\"")
     }
+    // QOL A00.1: one player at a time (NowPlaying.qml): this bubble's players' ids
+    // (set once: a binding on newId would re-run on every new id)
+    property string _npAudio: ""
+    property string _npVideo: ""
+    Component.onCompleted: { bubble._npAudio = NowPlaying.newId("audio"); bubble._npVideo = NowPlaying.newId("video") }
+    Connections {
+        target: NowPlaying
+        function onPauseRequested(id) {
+            if (id === bubble._npAudio) audioPlayer.pause()
+            else if (id === bubble._npVideo) bubble.pauseVideo()
+        }
+    }
+    signal pauseVideo()
     Component {
         id: videoSurface
         VideoOutput {
@@ -152,6 +196,9 @@ Item {
                 videoOutput: vout
                 audioOutput: AudioOutput {}
                 Component.onCompleted: play()
+                Component.onDestruction: NowPlaying.stopped(bubble._npVideo)
+                onPlaybackStateChanged: playbackState === MediaPlayer.PlayingState
+                                        ? NowPlaying.playing(bubble._npVideo) : NowPlaying.stopped(bubble._npVideo)
                 onErrorOccurred: bubble.videoFailedId = bubble.eventId
                 // no picture: the video track's codec isn't decodable here (the sound alone would play)
                 onMediaStatusChanged: {
@@ -163,6 +210,10 @@ Item {
                 anchors.fill: parent
                 onClicked: vplayer.playbackState === MediaPlayer.PlayingState
                            ? vplayer.pause() : vplayer.play()
+            }
+            Connections {
+                target: bubble
+                function onPauseVideo() { /* onPauseRequested bubble._npVideo */ vplayer.pause() }
             }
         }
     }
@@ -181,6 +232,12 @@ Item {
         return Qt.rgba(a.r + (b.r - a.r) * k, a.g + (b.g - a.g) * k, a.b + (b.b - a.b) * k, 1)   // theme-lint: ok — a mix of two tokens (the gradient at a height), not a literal
     }
 
+    /// QOL A29.5: "Downloading 4.5 MB…" / "Opening 4.5 MB…" (just "Downloading…" when the size is unknown) — Tin Hat
+    /// Web's MediaBlocks busyWithSize, the same words.
+    function busyWithSize(verb, bytes) {
+        var sz = bubble.fmtSize(bytes)
+        return verb + (sz.length > 0 ? " " + sz : "") + "…"
+    }
     /// Human file size. Deliberately 1 decimal place: "4.7 MB" reads, "4718592" does not.
     function fmtSize(bytes) {
         if (!bytes || bytes <= 0) return ""
@@ -257,6 +314,20 @@ Item {
     readonly property real avatarSize: 34
     readonly property real gutter: avatarSize + Kirigami.Units.largeSpacing
     readonly property real bubbleRadius: bubble.theme.radiusLg
+    // chat backgrounds (docs/AMBIENCE.md): the panels the particles meet — the bubble, the name, the reactions — as
+    // rects in `target`'s coordinates (rl / rr = the bubble's top corner radii, where pools follow the curve)
+    // the name's colour when the name is drawn (on the background: the scrim keeps it readable), else ""
+    function ambNameColour() { return (ambName.parent && ambName.parent.visible && ambName.visible) ? String(ambName.color) : "" }
+    function ambRects(target, key, out) {
+        function add(it, k, x, y, w, h, rl, rr) {
+            if (!it || !it.visible || w < 2 || h < 2) return
+            var p = it.mapToItem(target, x, y)
+            out.push({ id: key + k, x: p.x, y: p.y, w: w, h: h, rl: rl, rr: rr })
+        }
+        add(bubbleRect, ":b", 0, 0, bubbleRect.width, bubbleRect.height, bubbleRect.corners.topLeftRadius, bubbleRect.corners.topRightRadius)
+        if (ambName.parent && ambName.parent.visible) add(ambName, ":n", 0, 0, ambName.width, ambName.height, 0, 0)
+        add(ambReactions, ":r", ambReactions.childrenRect.x, ambReactions.childrenRect.y, ambReactions.childrenRect.width, ambReactions.childrenRect.height, 0, 0)
+    }
     // 10.4: a space role's colour wins over the hashed hue.
     readonly property color senderHue: {
         if (bubble.roleColor.length > 0) { var rc = Qt.color(bubble.roleColor); if (rc.valid) return rc }   // theme-lint: ok content: the space role's colour
@@ -348,6 +419,7 @@ Item {
                 visible: !bubble.grouped && !bubble.mine && !bubble.isEmote
                 spacing: 6
                 Controls.Label {
+                    id: ambName
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.maximumWidth: bubble.maxBubble - (roleTag.visible ? roleTag.implicitWidth + 6 : 0)
                     text: bubble.displayName
@@ -436,7 +508,8 @@ Item {
                                 required property var modelData
                                 // 10.1 (TH-MSG-10): the quick buttons TOGGLE like the chips do (a second
                                 // click used to send a duplicate reaction the server rejects).
-                                readonly property var chip: { var r = bubble.reactions || []; for (var i = 0; i < r.length; i++) if (r[i].key === modelData) return r[i]; return null }
+                                // QOL A07.2: by the grouping form (❤ = ❤️), so the quick ❤️ finds a ❤ chip of mine
+                                readonly property var chip: { var r = bubble.reactions || []; for (var i = 0; i < r.length; i++) if (bubble.reactNorm(r[i].key) === bubble.reactNorm(modelData)) return r[i]; return null }
                                 readonly property bool mineAlready: chip !== null && chip.mine === true
                                 width: 26; height: 24; radius: 6
                                 color: mineAlready ? Th.bubbleHoverBarButtonBgChecked : (qrMa.containsMouse ? Th.bubbleHoverBarButtonBgHover : "transparent")
@@ -444,7 +517,7 @@ Item {
                                 MouseArea {
                                     id: qrMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        if (parent.mineAlready && parent.chip.reactionId !== undefined && String(parent.chip.reactionId).length > 0) bubble.unreact(parent.chip.reactionId)
+                                        if (parent.mineAlready && parent.chip.reactionId !== undefined && String(parent.chip.reactionId).length > 0) bubble.unreactChip(parent.chip)
                                         else if (!parent.mineAlready) bubble.react(parent.modelData)
                                     }
                                 }
@@ -457,6 +530,7 @@ Item {
                             model: [
                                 { icon: "face-smile-symbolic", tip: "More reactions", act: "react" },
                                 { icon: "mail-reply-sender-symbolic", tip: "Reply", act: "reply" },
+                                { icon: "dialog-messages-symbolic", tip: "Reply in thread", act: "thread", threadOnly: true },
                                 { icon: "document-edit-symbolic", tip: "Edit", act: "edit", mineOnly: true, textOnly: true },
                                 { icon: "overflow-menu-symbolic", tip: "More", act: "more" }
                             ]
@@ -465,6 +539,7 @@ Item {
                                 // 10.1 (TH-MSG-01): the pencil never appears on a picture/file — an edit
                                 // sends m.text and REPLACES the attachment with its filename, for everyone.
                                 visible: (!(modelData.mineOnly === true) || bubble.mine) && !(modelData.textOnly === true && (bubble.isMedia || bubble.hasDiceCard || bubble.hasPollCard))
+                                         && (!(modelData.threadOnly === true) || bubble.canThread)
                                 width: visible ? 26 : 0; height: 24; radius: 6
                                 color: abMa.containsMouse ? Th.bubbleHoverBarButtonBgHover : "transparent"
                                 Kirigami.Icon {
@@ -482,6 +557,7 @@ Item {
                                         var a = parent.modelData.act
                                         if (a === "react") bubble.moreReactRequested()
                                         else if (a === "reply") bubble.replyRequested()
+                                        else if (a === "thread") bubble.threadRequested(null)
                                         else if (a === "edit") bubble.editRequested()
                                         else bubble.menuRequested()
                                     }
@@ -596,15 +672,29 @@ Item {
                             color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
                             isMask: true
                         }
-                        Controls.Label {
-                            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                            Layout.maximumWidth: bubble.maxBubble - 70
-                            // selfhost/firstrun §3: why it can't be read, in the web's words (the row's body, utd.rs)
-                            text: bubble.body.length > 0 ? bubble.body : "Can't read this message yet — its key hasn't reached this device."
-                            color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
-                            font.italic: true
-                            opacity: 0.8
-                            wrapMode: Text.WordWrap
+                        ColumnLayout {
+                            spacing: 2
+                            Controls.Label {
+                                id: lockedText
+                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                Layout.maximumWidth: bubble.maxBubble - 70
+                                // selfhost/firstrun §3: why it can't be read, in the web's words (the row's body, utd.rs)
+                                text: bubble.body.length > 0 ? bubble.body : "Can't read this message yet — its key hasn't reached this device."
+                                color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
+                                font.italic: true
+                                opacity: 0.8
+                                wrapMode: Text.WordWrap
+                            }
+                            // A28.3: the words ask to verify, so the way to do it is right here (web lib/utd.ts
+                            // utdOffersVerify: the same test on the same words)
+                            ThButton {
+                                app: bubble.app
+                                flat: true
+                                text: "Verify this device…"
+                                visible: bubble.undecryptable && lockedText.text.indexOf("Verify this device") !== -1
+                                         && bubble.app && typeof bubble.app.openVerifySheet === "function"
+                                onClicked: bubble.app.openVerifySheet()
+                            }
                         }
                     }
 
@@ -643,6 +733,14 @@ Item {
                         color: bubble.mine ? Th.bubbleOwnFg : Th.bubbleOtherFg
                         readOnly: true
                         selectByMouse: true
+                        // a11y round 2 (M7): a message is read-only text a screen reader reads (and can select), not an
+                        // edit field (the TextEdit reported the role "text" with the state "editable": every message was
+                        // announced as an editable field). Its name is the plain text (rich text without the markup).
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: bodyText.getText(0, bodyText.length)
+                        Accessible.editable: false
+                        Accessible.readOnly: true
+                        Accessible.selectableText: true
                         selectionColor: Th.bubbleSelectionBg
                         selectedTextColor: Th.bubbleSelectionFg
                         // A matrix.to user link is a @mention "pill" → open the profile
@@ -669,7 +767,7 @@ Item {
                             acceptedButtons: Qt.RightButton
                             onTapped: bodyMenu.popup()
                         }
-                        Controls.Menu {
+                        KeyMenu {
                             id: bodyMenu
                             Controls.MenuItem {
                                 text: "Copy selection"
@@ -844,10 +942,20 @@ Item {
                         }
                         // Left-click → lightbox; right-click falls through to the bubble menu.
                         MouseArea {
+                            id: inlineImgOpen
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton
                             cursorShape: Qt.PointingHandCursor
                             onClicked: bubble.imageClicked(bubble.media, inlineImg.natW, inlineImg.natH, bubble.body)
+                            // QOL A08.7: opens from the keyboard too (Tab, Enter / Space)
+                            activeFocusOnTab: true
+                            Accessible.role: Accessible.Button
+                            Accessible.name: "Open image"
+                            Accessible.onPressAction: bubble.imageClicked(bubble.media, inlineImg.natW, inlineImg.natH, bubble.body)
+                            Keys.onReturnPressed: bubble.imageClicked(bubble.media, inlineImg.natW, inlineImg.natH, bubble.body)
+                            Keys.onEnterPressed: bubble.imageClicked(bubble.media, inlineImg.natW, inlineImg.natH, bubble.body)
+                            Keys.onSpacePressed: bubble.imageClicked(bubble.media, inlineImg.natW, inlineImg.natH, bubble.body)
+                            Rectangle { anchors.fill: parent; color: "transparent"; border.width: 2; border.color: Kirigami.Theme.focusColor; visible: inlineImgOpen.activeFocus }
                         }
                     }
                     // Image still decrypting / unavailable → a labeled placeholder. Security review 2026-10-26: also an image
@@ -889,7 +997,7 @@ Item {
                             text: (bubble.body.length > 0 ? bubble.body : "file") + (bubble.opening ? "  — opening…" : "")   // 10.1 (TH-MSG-13)
                             color: bubble.mine ? Th.bubbleOwnLinkFg : Th.bubbleOtherLinkFg
                             font.underline: true
-                            Controls.ToolTip.text: bubble.opening ? "Opening…" : "Download & open"
+                            Controls.ToolTip.text: bubble.opening ? bubble.busyWithSize("Opening", bubble.fileSize) : "Download & open"   // QOL A29.5
                             Controls.ToolTip.visible: chipTap.containsMouse
                             Controls.ToolTip.delay: 400
                             MouseArea {
@@ -938,10 +1046,19 @@ Item {
                             bottomColor: bubble.mine ? bubble.ownFillAt(t1) : Th.bubbleOtherBg
                         }
                         MouseArea {
+                            id: inlineGifOpen
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: bubble.imageClicked(bubble.media, bubble.imageW,
                                                            bubble.imageH, bubble.body)
+                            // QOL A08.7: opens from the keyboard too (Tab, Enter / Space)
+                            activeFocusOnTab: true
+                            Accessible.role: Accessible.Button
+                            Accessible.name: "Open image"
+                            Keys.onReturnPressed: bubble.imageClicked(bubble.media, bubble.imageW, bubble.imageH, bubble.body)
+                            Keys.onEnterPressed: bubble.imageClicked(bubble.media, bubble.imageW, bubble.imageH, bubble.body)
+                            Keys.onSpacePressed: bubble.imageClicked(bubble.media, bubble.imageW, bubble.imageH, bubble.body)
+                            Rectangle { anchors.fill: parent; color: "transparent"; border.width: 2; border.color: Kirigami.Theme.focusColor; visible: inlineGifOpen.activeFocus }
                         }
                     }
 
@@ -994,7 +1111,7 @@ Item {
                                     text: bubble.videoFailed
                                           ? bubble.videoCantPlay
                                           : bubble.videoLoading
-                                          ? "Downloading…"
+                                          ? bubble.busyWithSize("Downloading", bubble.fileSize)   // QOL A29.5
                                           : (bubble.fmtSize(bubble.fileSize)
                                              + (bubble.durationMs > 0
                                                 ? "  ·  " + bubble.fmtTime(bubble.durationMs) : ""))
@@ -1126,6 +1243,10 @@ Item {
                             onMediaStatusChanged: _probe("status")
                             onDurationChanged: _probe("duration")
                             onErrorOccurred: _probe("error")
+                            // QOL A00.1: one player at a time
+                            onPlaybackStateChanged: playbackState === MediaPlayer.PlayingState
+                                                    ? NowPlaying.playing(bubble._npAudio) : NowPlaying.stopped(bubble._npAudio)
+                            Component.onDestruction: NowPlaying.stopped(bubble._npAudio)
                         }
 
                         RowLayout {
@@ -1136,6 +1257,11 @@ Item {
                                            ? "media-playback-pause" : "media-playback-start"
                                 onClicked: audioPlayer.playbackState === MediaPlayer.PlayingState
                                            ? audioPlayer.pause() : audioPlayer.play()
+                                // QOL A00.5: a name and a tip (Tin Hat Web's "Play" / "Pause")
+                                Accessible.name: audioPlayer.playbackState === MediaPlayer.PlayingState ? "Pause" : "Play"
+                                Controls.ToolTip.text: Accessible.name
+                                Controls.ToolTip.visible: hovered
+                                Controls.ToolTip.delay: 500
                             }
                             ThSlider {
                                 id: audioSeek
@@ -1209,10 +1335,10 @@ Item {
                             : ((bubble.pinned ? "📌 " : "") + (bubble.edited ? "(edited) " : "") + (bubble.theme.fmtClock ? bubble.theme.fmtClock(bubble.ts) : Qt.formatTime(new Date(bubble.ts), Locale.ShortFormat))))   // 10.1 (TL-19 / TH-PREF-11): the app's clock setting, else the system's
                         horizontalAlignment: Text.AlignRight
                         font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.92)
-                        opacity: bubble.failed ? 1.0 : 0.7
+                        opacity: bubble.failed ? 1.0 : ((bubble.clockQuiet && !bubbleHover.hovered && !bubble.activeFocus && !bubble.kbCurrent) ? 0.0 : 0.7)
                         color: bubble.failed ? Th.bubbleFgError : (bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg)
                         HoverHandler { id: stampHover }
-                        Controls.ToolTip.text: Qt.formatDateTime(new Date(bubble.ts), Locale.LongFormat)
+                        Controls.ToolTip.text: bubble.theme.fmtFull ? bubble.theme.fmtFull(bubble.ts) : Qt.formatDateTime(new Date(bubble.ts), Locale.LongFormat)   // A05.5: the app's clock setting
                         Controls.ToolTip.visible: stampHover.hovered && !bubble.pending && !bubble.failed
                         Controls.ToolTip.delay: 600
                     }
@@ -1230,12 +1356,17 @@ Item {
                     color: Th.bubbleFgError
                     font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
                 }
+                // L1 A31.0 / D05.6: a screen reader names them as buttons and can press them (the web's <button>s); the
+                // keyboard reaches them through the message's menu (Retry / Delete, A38.0) — the list is one Tab stop
                 Controls.Label {
                     text: "Retry"
                     color: Th.bubbleRetryFg
                     font.bold: true
                     font.underline: retryHover.hovered
                     font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    Accessible.role: Accessible.Button
+                    Accessible.name: "Retry sending this message"
+                    Accessible.onPressAction: bubble.retryRequested(bubble.txn)
                     HoverHandler { id: retryHover; cursorShape: Qt.PointingHandCursor }
                     TapHandler { onTapped: bubble.retryRequested(bubble.txn) }
                 }
@@ -1244,6 +1375,9 @@ Item {
                     color: Th.bubbleDiscardFg
                     font.underline: discardHover.hovered
                     font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    Accessible.role: Accessible.Button
+                    Accessible.name: "Delete this unsent message"
+                    Accessible.onPressAction: bubble.discardRequested(bubble.txn)
                     HoverHandler { id: discardHover; cursorShape: Qt.PointingHandCursor }
                     TapHandler { onTapped: bubble.discardRequested(bubble.txn) }
                 }
@@ -1252,6 +1386,7 @@ Item {
             // Reactions row slot — renders chips when `reactions` is populated.
             // Each reaction is { key, count, mine, reactionId, who }.
             Flow {
+                id: ambReactions
                 Layout.fillWidth: true
                 Layout.maximumWidth: bubble.maxBubble   // 10.1 (TH-VIS-15): wraps within the bubble's width
                 Layout.alignment: bubble.mine ? Qt.AlignRight : Qt.AlignLeft
@@ -1276,29 +1411,42 @@ Item {
                         Behavior on color { ColorAnimation { duration: bubble.theme.dur; easing.type: Easing.OutCubic } }
                         Behavior on scale { NumberAnimation { duration: bubble.theme.dur; easing.type: Easing.OutBack } }
                         // Click toggles our reaction (add the same key, or redact ours).
+                        function toggle() {
+                            if (modelData.mine && modelData.reactionId !== undefined && modelData.reactionId.length > 0)
+                                bubble.unreactChip(modelData)
+                            else
+                                bubble.react(modelData.key)
+                        }
                         MouseArea {
                             id: chipMa
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (modelData.mine && modelData.reactionId !== undefined && modelData.reactionId.length > 0)
-                                    bubble.unreact(modelData.reactionId)
-                                else
-                                    bubble.react(modelData.key)
-                            }
+                            onClicked: parent.toggle()
                         }
-                        // 9.3: who reacted, on hover.
-                        Controls.ToolTip.text: {
-                            var who = (modelData.who !== undefined && modelData.who !== null) ? modelData.who : []
-                            var names = []
-                            for (var i = 0; i < who.length && i < 8; i++) names.push(who[i])
-                            if (who.length > 8) names.push("+" + (who.length - 8))
-                            var k = modelData.key !== undefined ? modelData.key : ""
-                            if (names.length === 0) return (modelData.mine ? "You" : "Someone") + " reacted with " + k
-                            return names.join(", ") + " reacted with " + k
+                        // QOL A31.1: a chip is a toggle button for the keyboard and screen readers too (Tab, Space/Enter)
+                        activeFocusOnTab: true
+                        Accessible.role: Accessible.Button
+                        Accessible.checkable: true
+                        Accessible.checked: modelData.mine === true
+                        Accessible.name: (modelData.key !== undefined ? modelData.key : "") + " " + (modelData.count || 1) + ": " + bubble.reactWho(modelData)
+                        Accessible.onPressAction: toggle()
+                        Accessible.onToggleAction: toggle()
+                        Keys.onSpacePressed: toggle()
+                        Keys.onReturnPressed: toggle()
+                        Keys.onEnterPressed: toggle()
+                        Rectangle {   // the focus ring
+                            anchors.fill: parent
+                            anchors.margins: -2
+                            radius: height / 2
+                            color: "transparent"
+                            border.width: 2
+                            border.color: Kirigami.Theme.focusColor
+                            visible: parent.activeFocus
                         }
-                        Controls.ToolTip.visible: chipMa.containsMouse
+                        // 9.3: who reacted, on hover (and on keyboard focus).
+                        Controls.ToolTip.text: bubble.reactWho(modelData)
+                        Controls.ToolTip.visible: chipMa.containsMouse || activeFocus
                         Controls.ToolTip.delay: 450
                         RowLayout {
                             id: reactRow
@@ -1321,6 +1469,71 @@ Item {
                 }
                 // 10.1 (TH-VIS-15): the inline "+" is gone — "More reactions" lives in the hover bar,
                 // and the half-faded smiley floating beside the chips read as a stray glyph.
+            }
+
+            // threads (docs/THREADS.md): "12 replies · Ana · 5 min ago" under a thread root, with the newest repliers'
+            // faces and an unread dot; opens the thread (click, Enter, Space). Tin Hat Web's ThreadSummary, same sizes.
+            Rectangle {
+                id: threadSum
+                readonly property int unread: (bubble.threadInfo && bubble.threadInfo.unread !== undefined) ? bubble.threadInfo.unread : 0
+                Layout.alignment: bubble.mine ? Qt.AlignRight : Qt.AlignLeft
+                Layout.topMargin: 3
+                Layout.maximumWidth: bubble.maxBubble
+                visible: bubble.threadInfo !== null && bubble.threadInfo !== undefined
+                implicitHeight: 26
+                implicitWidth: tsRow.implicitWidth + 12
+                radius: 13
+                color: tsMa.containsMouse ? Th.bubbleReactionBgHover : Th.bubbleReactionBg
+                border.width: activeFocus ? 2 : 1
+                border.color: (unread > 0 || activeFocus) ? Th.bubbleReactionOwnBorder : Th.bubbleReactionBorder
+                activeFocusOnTab: visible
+                Accessible.role: Accessible.Button
+                Accessible.name: bubble.threadLabel + (unread > 0 ? ". Unread replies" : "")
+                Accessible.onPressAction: bubble.threadRequested(threadSum)
+                Keys.onPressed: (ev) => {
+                    if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter || ev.key === Qt.Key_Space) { bubble.threadRequested(threadSum); ev.accepted = true }
+                }
+                RowLayout {
+                    id: tsRow
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: 4
+                    width: Math.min(implicitWidth, threadSum.width - 12)
+                    spacing: 6
+                    Row {
+                        spacing: -6 // overlap the faces
+                        Repeater {
+                            model: (bubble.threadInfo && bubble.threadInfo.repliers) ? bubble.threadInfo.repliers : []
+                            delegate: Avatar {
+                                required property var modelData
+                                app: bubble.app
+                                size: 18
+                                name: modelData.name !== undefined ? modelData.name : ""
+                                seed: modelData.id !== undefined ? modelData.id : ""
+                                imageSource: modelData.avatar !== undefined ? String(modelData.avatar) : ""
+                            }
+                        }
+                    }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        textFormat: Text.PlainText   // never markup (a display name)
+                        text: bubble.threadText
+                        elide: Text.ElideRight
+                        color: Th.bubbleReactionCountFg
+                        font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    }
+                    Rectangle {
+                        visible: threadSum.unread > 0
+                        implicitWidth: 8; implicitHeight: 8; radius: 4
+                        color: Th.bubbleReactionOwnBorder
+                    }
+                }
+                MouseArea {
+                    id: tsMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: bubble.threadRequested(threadSum)
+                }
             }
 
             // Read receipts — small overlapping avatars of members who've read up to

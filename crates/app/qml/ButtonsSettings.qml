@@ -35,6 +35,7 @@ ColumnLayout {
 
     SettingsSection {
         title: "Buttons"
+        anchorIds: ["appearance.buttons"]
         hint: "Choose the buttons of the room header, the message box, your account card and the call controls — hide the ones you never use, reorder them, add others. You can also right-click any of these rows to edit it there."
         Repeater {
             model: bs.rows

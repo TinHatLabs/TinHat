@@ -1,0 +1,325 @@
+{
+  "about": "guests = -1: not known on this device (the room isn't joined here). L4 first-run shared rules (Tin Hat desktop crates/app/src/first_run.rs + guests.rs, Tin Hat Web src/features/nav/firstrun.ts + guests/model.ts). Byte-identical in both repos.",
+  "dmWaitingExplain": "They'll see your messages once they join.",
+  "dmWaiting": [
+    {
+      "dm": true,
+      "peer": "@sam:example.com",
+      "membership": "invite",
+      "name": "Sam",
+      "want": "Waiting for Sam to join"
+    },
+    {
+      "dm": true,
+      "peer": "@sam:example.com",
+      "membership": "invite",
+      "name": "",
+      "want": "Waiting for @sam:example.com to join"
+    },
+    {
+      "dm": true,
+      "peer": "@sam:example.com",
+      "membership": "invite",
+      "name": "  ",
+      "want": "Waiting for @sam:example.com to join"
+    },
+    {
+      "dm": true,
+      "peer": "@sam:example.com",
+      "membership": "join",
+      "name": "Sam",
+      "want": ""
+    },
+    {
+      "dm": true,
+      "peer": "@sam:example.com",
+      "membership": "leave",
+      "name": "Sam",
+      "want": ""
+    },
+    {
+      "dm": true,
+      "peer": "",
+      "membership": "invite",
+      "name": "Sam",
+      "want": ""
+    },
+    {
+      "dm": false,
+      "peer": "@sam:example.com",
+      "membership": "invite",
+      "name": "Sam",
+      "want": ""
+    },
+    {
+      "dm": true,
+      "peer": "@sam:example.com",
+      "membership": "",
+      "name": "",
+      "want": ""
+    },
+    {
+      "dm": true,
+      "peer": "@a:b.c",
+      "membership": "invite",
+      "name": " Ana Lee ",
+      "want": "Waiting for Ana Lee to join"
+    }
+  ],
+  "dmInviteTip": [
+    {
+      "name": "Sam",
+      "mxid": "@sam:example.com",
+      "want": "Sam (@sam:example.com) wants to chat — click to look"
+    },
+    {
+      "name": "@sam:example.com",
+      "mxid": "@sam:example.com",
+      "want": "@sam:example.com wants to chat — click to look"
+    },
+    {
+      "name": "",
+      "mxid": "@sam:example.com",
+      "want": "@sam:example.com wants to chat — click to look"
+    },
+    {
+      "name": "Sam",
+      "mxid": "",
+      "want": "Sam wants to chat — click to look"
+    },
+    {
+      "name": "",
+      "mxid": "",
+      "want": "Someone wants to chat — click to look"
+    },
+    {
+      "name": " Robin ",
+      "mxid": "@robin:other.example",
+      "want": "Robin (@robin:other.example) wants to chat — click to look"
+    }
+  ],
+  "noRooms": [
+    {
+      "rooms": 0,
+      "invites": 0,
+      "want": {
+        "title": "No rooms yet",
+        "explanation": "Start a chat with a friend, or make a room for your group.",
+        "buttons": [
+          "newDm",
+          "newRoom"
+        ]
+      }
+    },
+    {
+      "rooms": 0,
+      "invites": 1,
+      "want": {
+        "title": "You've been invited",
+        "explanation": "Your invites are in your room list. Accept one to start chatting.",
+        "buttons": []
+      }
+    },
+    {
+      "rooms": 0,
+      "invites": 3,
+      "want": {
+        "title": "You've been invited",
+        "explanation": "Your invites are in your room list. Accept one to start chatting.",
+        "buttons": []
+      }
+    },
+    {
+      "rooms": 1,
+      "invites": 0,
+      "want": null
+    },
+    {
+      "rooms": 5,
+      "invites": 2,
+      "want": null
+    }
+  ],
+  "guestConfirm": [
+    {
+      "what": "off",
+      "guests": 0,
+      "waiting": 0,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "Nobody is in or waiting right now. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": 1,
+      "waiting": 0,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "1 guest in the room will be removed. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": 2,
+      "waiting": 0,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "2 guests in the room will be removed. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": 0,
+      "waiting": 1,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "1 person waiting will be turned away. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": 0,
+      "waiting": 3,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "3 people waiting will be turned away. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": 1,
+      "waiting": 1,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "1 guest in the room will be removed and 1 person waiting will be turned away. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": 4,
+      "waiting": 2,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "4 guests in the room will be removed and 2 people waiting will be turned away. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": -1,
+      "waiting": 0,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "Any guests in the room will be removed. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "off",
+      "guests": -1,
+      "waiting": 2,
+      "want": {
+        "title": "Turn off the guest room?",
+        "body": "Any guests in the room will be removed and 2 people waiting will be turned away. The guest link stops working.",
+        "confirm": "Turn off"
+      }
+    },
+    {
+      "what": "link",
+      "guests": 0,
+      "waiting": 0,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": 1,
+      "waiting": 0,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working. Guests already in the room stay. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": 2,
+      "waiting": 0,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working. Guests already in the room stay. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": 0,
+      "waiting": 1,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working and 1 person waiting with it will be turned away. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": 0,
+      "waiting": 3,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working and 3 people waiting with it will be turned away. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": 1,
+      "waiting": 1,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working and 1 person waiting with it will be turned away. Guests already in the room stay. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": 4,
+      "waiting": 2,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working and 2 people waiting with it will be turned away. Guests already in the room stay. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": -1,
+      "waiting": 0,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working. Guests already in the room stay. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    },
+    {
+      "what": "link",
+      "guests": -1,
+      "waiting": 2,
+      "want": {
+        "title": "Make a new guest link?",
+        "body": "The old link stops working and 2 people waiting with it will be turned away. Guests already in the room stay. The new link is copied for you.",
+        "confirm": "New link"
+      }
+    }
+  ]
+}

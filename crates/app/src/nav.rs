@@ -103,16 +103,26 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "markRoomRead"]
         fn mark_room_read(self: Pin<&mut NavController>, room_id: &QString);
-        /// QML: markSpaceRead(key) — 10.1 (TH-NAV-03): the same for every unread room the rail
-        /// key owns (a real space's children; "home" = orphans + DMs; "favourites").
+        /// QML: markSpaceRead(key, label) — 10.1 (TH-NAV-03): the same for every unread room the rail
+        /// key owns ([`mark_read_owns`]: a space's rooms; "home" = rooms in no space + DMs; "favourites";
+        /// "people" = DMs; "orphans" = rooms in no space). A11.2: the outcome comes back as [`marked_read`]'s note.
         #[qinvokable]
         #[cxx_name = "markSpaceRead"]
-        fn mark_space_read(self: Pin<&mut NavController>, key: &QString);
+        fn mark_space_read(self: Pin<&mut NavController>, key: &QString, label: &QString);
+        /// A11.2: what Mark all as read did ([`mark_read_note`]: "Marked 3 rooms in Home as read").
+        #[qsignal]
+        #[cxx_name = "markedRead"]
+        fn marked_read(self: Pin<&mut NavController>, text: QString);
         /// QML: spaceOf(roomId) — 10.1 (TH-NAV-02): the rail key that owns a room ("home" for
         /// orphans and DMs), so opening a room from Ctrl+K / a toast can switch the rail to it.
         #[qinvokable]
         #[cxx_name = "spaceOf"]
         fn space_of(self: Pin<&mut NavController>, room_id: &QString) -> QString;
+        /// QML: noRoomsPlan(rooms, invites) — A01.0 / P4 (Sunday QoL): the start page with no rooms at all
+        /// (first_run::no_rooms_plan as JSON; "null" = there are rooms).
+        #[qinvokable]
+        #[cxx_name = "noRoomsPlan"]
+        fn no_rooms_plan(self: &NavController, rooms: i32, invites: i32) -> QString;
     }
 
     impl cxx_qt::Threading for NavController {}
@@ -144,6 +154,10 @@ impl Default for NavControllerRust {
 }
 
 impl qobject::NavController {
+    pub fn no_rooms_plan(&self, rooms: i32, invites: i32) -> QString {
+        QString::from(&crate::first_run::no_rooms_plan(rooms as i64, invites as i64).to_string())
+    }
+
     pub fn space_of(self: Pin<&mut Self>, room_id: &QString) -> QString {
         let id = room_id.to_string();
         let key = self
@@ -168,15 +182,19 @@ impl qobject::NavController {
         });
     }
 
-    /// 10.1 (TH-NAV-03): mark every unread room a rail key owns read.
-    pub fn mark_space_read(self: Pin<&mut Self>, key: &QString) {
+    /// 10.1 (TH-NAV-03): mark every unread room a rail key owns read. A11.2 / A11.3: the web's key rules
+    /// ([`mark_read_owns`], shared vectors), the rooms marked in parallel, and a note with the count when done.
+    pub fn mark_space_read(self: Pin<&mut Self>, key: &QString, label: &QString) {
         let key = key.to_string();
+        let label = label.to_string();
         if key.is_empty() {
             return;
         }
         let owner: std::collections::HashMap<String, String> =
             self.rust().room_space.lock().map(|m| m.clone()).unwrap_or_default();
+        let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
+            let gen = crate::session::generation();
             let Some(client) = crate::session::client() else { return };
             let mut ids = Vec::new();
             for room in client.joined_rooms() {
@@ -184,16 +202,24 @@ impl qobject::NavController {
                     continue;
                 }
                 let rid = room.room_id().to_string();
-                let owned = match key.as_str() {
-                    "favourites" => room.is_favourite(),
-                    "home" => owner.get(&rid).map(|k| k == "home").unwrap_or(true),
-                    k => owner.get(&rid).map(|o| o == k).unwrap_or(false),
+                let own = owner.get(&rid).filter(|k| k.as_str() != "home");
+                let r = MarkReadRoom {
+                    space: room.is_space(),
+                    dm: room.is_direct().await.unwrap_or(false),
+                    fav: room.is_favourite(),
+                    parented: own.is_some(),
+                    in_key: rid == key || own.is_some_and(|k| k.as_str() == key),
                 };
-                if owned {
+                if mark_read_owns(&key, &r) {
                     ids.push(rid);
                 }
             }
-            mark_rooms_read(&client, ids).await;
+            let (marked, failed) = mark_rooms_read(&client, ids).await;
+            if crate::session::generation() != gen {
+                return;
+            }
+            let text = mark_read_note(&label, marked, failed);
+            let _ = qt.queue(move |o| o.marked_read(QString::from(&text)));
         });
     }
 
@@ -461,20 +487,130 @@ async fn nav_status_values(room: &Room) -> Vec<Value> {
 /// 10.1 (TH-NAV-03): read receipt + fully-read marker on each room's newest event, through
 /// `receipts::send_read_markers` (public `m.read` only in a room of my own server, else `m.read.private`).
 /// The server recomputes the unread counts and the next sync redraws the badges.
-pub(crate) async fn mark_rooms_read(client: &Client, ids: Vec<String>) {
+/// A11.2: up to 8 rooms at a time (it used to go one room after another: slow in a big space). Returns (marked, failed).
+pub(crate) async fn mark_rooms_read(client: &Client, ids: Vec<String>) -> (usize, usize) {
+    use futures_util::StreamExt;
+    let results: Vec<bool> = futures_util::stream::iter(ids)
+        .map(|id| async move { mark_one_read(client, &id).await })
+        .buffer_unordered(8)
+        .collect()
+        .await;
+    let marked = results.iter().filter(|ok| **ok).count();
+    (marked, results.len() - marked)
+}
+
+async fn mark_one_read(client: &Client, id: &str) -> bool {
     use matrix_sdk::room::MessagesOptions;
-    for id in ids {
-        let Ok(rid) = matrix_sdk::ruma::RoomId::parse(&id) else { continue };
-        let Some(room) = client.get_room(&rid) else { continue };
-        let mut opts = MessagesOptions::backward();
-        opts.limit = matrix_sdk::ruma::UInt::new(1).unwrap_or_default();
-        let Ok(resp) = room.messages(opts).await else { continue };
-        let Some(ev) = resp.chunk.first() else { continue };
-        let Ok(v) = ev.raw().deserialize_as::<Value>() else { continue };
-        let Some(eid) = v.get("event_id").and_then(|e| e.as_str()) else { continue };
-        if let Err(e) = crate::receipts::send_read_markers(&room, eid).await {
-            eprintln!("[nav] mark read failed for {id}: {e}");
+    let Ok(rid) = matrix_sdk::ruma::RoomId::parse(id) else { return false };
+    let Some(room) = client.get_room(&rid) else { return false };
+    let cutoff = crate::mentions_ctl::now_ms(); // the mentions that had arrived when the newest event was looked up
+    let mut opts = MessagesOptions::backward();
+    opts.limit = matrix_sdk::ruma::UInt::new(1).unwrap_or_default();
+    let Ok(resp) = room.messages(opts).await else { return false };
+    let Some(ev) = resp.chunk.first() else { return false };
+    let Ok(v) = ev.raw().deserialize_as::<Value>() else { return false };
+    let Some(eid) = v.get("event_id").and_then(|e| e.as_str()) else { return false };
+    if let Err(e) = crate::receipts::send_read_markers(&room, eid).await {
+        eprintln!("[nav] mark read failed for {id}: {e}");
+        return false;
+    }
+    // D03.4: a room marked read takes its mentions with it — the Mentions widget no longer says "new" for them
+    crate::mentions_ctl::room_seen_up_to(id, cutoff);
+    true
+}
+
+/// A11.3: what a rail key's Mark all as read covers (the web's markSpaceRead rules; shared vectors
+/// testvectors/mark-read.json). `parented` = the room is in a space; `in_key` = it is the space `key` or in it.
+#[derive(Clone, Copy, Debug, Default)]
+pub(crate) struct MarkReadRoom {
+    pub space: bool,
+    pub dm: bool,
+    pub fav: bool,
+    pub parented: bool,
+    pub in_key: bool,
+}
+
+pub(crate) fn mark_read_owns(key: &str, r: &MarkReadRoom) -> bool {
+    if r.space {
+        // A5.3: a space's own count goes with Home, and with itself / the space above it
+        return key == "home" || (!matches!(key, "favourites" | "people" | "orphans") && r.in_key);
+    }
+    match key {
+        "home" => !r.parented || r.dm,
+        "favourites" => r.fav,
+        "people" => r.dm,
+        "orphans" => !r.parented && !r.dm,
+        _ => r.in_key,
+    }
+}
+
+/// A11.2 / D03.8: the note after Mark all as read (the same words on the web).
+pub(crate) fn mark_read_note(label: &str, marked: usize, failed: usize) -> String {
+    let rooms = |n: usize| if n == 1 { "1 room".to_string() } else { format!("{n} rooms") };
+    match (marked, failed) {
+        (0, 0) => format!("Nothing to mark as read in {label}"),
+        (0, _) => format!("Couldn't mark {label} as read — try again"),
+        (m, 0) => format!("Marked {} in {label} as read", rooms(m)),
+        (m, f) => format!("Marked {} in {label} as read; {} couldn't be marked — try again", rooms(m), rooms(f)),
+    }
+}
+
+/// D03.3: the shared room-order vectors (the web's model.ts sortRooms replays a byte copy).
+#[cfg(test)]
+mod room_sort_tests {
+    use super::sort_rooms;
+
+    const VECTORS: &str = include_str!("testvectors/room-sort.json");
+
+    #[test]
+    fn room_sort_vectors() {
+        let v: serde_json::Value = serde_json::from_str(VECTORS).unwrap();
+        for c in v["cases"].as_array().unwrap() {
+            let mut rows: Vec<(Option<u64>, serde_json::Value)> =
+                c["rows"].as_array().unwrap().iter().map(|r| (r["recency"].as_u64(), r.clone())).collect();
+            sort_rooms(&mut rows);
+            let got: Vec<&str> = rows.iter().map(|(_, r)| r["id"].as_str().unwrap()).collect();
+            let want: Vec<&str> = c["out"].as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect();
+            assert_eq!(got, want, "{}", c["name"]);
         }
+    }
+
+    #[test]
+    fn room_sort_vectors_match_the_web_copy() {
+        let Ok(dir) = std::env::var("TINHAT_WEB_DIR") else { return };
+        let path = std::path::Path::new(&dir).join("src/features/nav/testvectors/room-sort.json");
+        let theirs = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        assert!(VECTORS == theirs, "testvectors/room-sort.json differs from {}", path.display());
+    }
+}
+
+#[cfg(test)]
+mod mark_read_tests {
+    use super::{mark_read_note, mark_read_owns, MarkReadRoom};
+
+    const VECTORS: &str = include_str!("testvectors/mark-read.json");
+
+    #[test]
+    fn mark_read_vectors() {
+        let v: serde_json::Value = serde_json::from_str(VECTORS).unwrap();
+        let b = |r: &serde_json::Value, k: &str| r[k].as_bool().unwrap_or(false);
+        for c in v["owns"].as_array().unwrap() {
+            let r = &c["room"];
+            let room = MarkReadRoom { space: b(r, "space"), dm: b(r, "dm"), fav: b(r, "fav"), parented: b(r, "parented"), in_key: b(r, "inKey") };
+            assert_eq!(mark_read_owns(c["key"].as_str().unwrap(), &room), c["out"].as_bool().unwrap(), "{}", c["name"]);
+        }
+        for c in v["note"].as_array().unwrap() {
+            let got = mark_read_note(c["label"].as_str().unwrap(), c["marked"].as_u64().unwrap() as usize, c["failed"].as_u64().unwrap() as usize);
+            assert_eq!(got, c["out"].as_str().unwrap(), "{}", c["name"]);
+        }
+    }
+
+    #[test]
+    fn mark_read_vectors_match_the_web_copy() {
+        let Ok(dir) = std::env::var("TINHAT_WEB_DIR") else { return };
+        let path = std::path::Path::new(&dir).join("src/features/nav/testvectors/mark-read.json");
+        let theirs = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        assert!(VECTORS == theirs, "testvectors/mark-read.json differs from {}", path.display());
     }
 }
 
@@ -574,6 +710,8 @@ pub fn dm_strip_json(strip: &DmStrip) -> String {
                 "id": e.id, "name": e.name, "avatar": e.avatar, "peer": e.peer,
                 "unread": e.unread, "highlight": e.highlight,
                 "invite": e.membership == "invite", "recency": e.recency,
+                // D09.4 (Sunday QoL): the invite's tooltip names the inviter's full address (first_run::dm_invite_tip)
+                "inviteTip": if e.membership == "invite" { crate::first_run::dm_invite_tip(&e.name, &e.peer) } else { String::new() },
             })
         })
         .collect();
@@ -665,6 +803,19 @@ pub(crate) async fn dm_peer(room: &Room, membership: &str) -> (String, Option<ma
     }
     .or_else(|| heroes.iter().find(|h| h.user_id == peer).and_then(|h| h.avatar_url.clone()));
     (peer.to_string(), avatar)
+}
+
+/// D09.3 (Sunday QoL): a joined DM's "Waiting for Sam to join" line (first_run::dm_waiting_line) while its other person
+/// is still only invited — their own membership and name from the local member store ("" otherwise).
+pub(crate) async fn dm_waiting_for(room: &Room, is_dm: bool, membership: &str, peer: &str) -> String {
+    if !is_dm || membership != "join" || peer.is_empty() {
+        return String::new();
+    }
+    let Ok(uid) = matrix_sdk::ruma::UserId::parse(peer) else { return String::new() };
+    match room.get_member_no_sync(&uid).await {
+        Ok(Some(m)) => crate::first_run::dm_waiting_line(true, peer, m.membership().as_str(), m.display_name().unwrap_or("")),
+        _ => String::new(),
+    }
 }
 
 /// Newest timeline activity per joined room seen by the live sync (ms since the epoch). The
@@ -1183,22 +1334,23 @@ async fn invited_space_member_count(client: &Client, space: &Room) -> u64 {
     n
 }
 
-/// Sort: pending invites, then DMs with something new, then favourites (10.1, TH-NAV-07: the
-/// tier bridge::rooms_json always had and this list silently lacked — "Favourite" did nothing
-/// visible), then active call, then anything else unread, then SDK recency, then name.
+/// Sort: pending invites, then what is personal and new — DMs with something new and (D03.3) rooms
+/// with an unread mention — then favourites (10.1, TH-NAV-07: the tier bridge::rooms_json always had
+/// and this list silently lacked — "Favourite" did nothing visible), then active call, then anything
+/// else unread, then SDK recency, then name. Shared vectors testvectors/room-sort.json (the web's sortRooms).
 fn sort_rooms(rooms: &mut [(Option<u64>, Value)]) {
     let name_of = |v: &Value| v["name"].as_str().unwrap_or("").to_lowercase();
     let is_invite = |v: &Value| v["membership"].as_str() == Some("invite");
     let fav_of = |v: &Value| v["favourite"].as_bool().unwrap_or(false);
     let unread_of =
         |v: &Value| !v["muted"].as_bool().unwrap_or(false) && v["unread"].as_u64().unwrap_or(0) > 0;
-    let unread_dm_of = |v: &Value| unread_of(v) && v["dm"].as_bool().unwrap_or(false);
+    let personal_of = |v: &Value| unread_of(v) && (v["dm"].as_bool().unwrap_or(false) || v["highlight"].as_bool().unwrap_or(false));
     rooms.sort_by(|a, b| {
         let a_call = a.1["call"].as_bool().unwrap_or(false);
         let b_call = b.1["call"].as_bool().unwrap_or(false);
         is_invite(&b.1)
             .cmp(&is_invite(&a.1)) // pending invites to the very top
-            .then_with(|| unread_dm_of(&b.1).cmp(&unread_dm_of(&a.1))) // then new DMs
+            .then_with(|| personal_of(&b.1).cmp(&personal_of(&a.1))) // then new DMs + unread mentions (D03.3)
             .then_with(|| fav_of(&b.1).cmp(&fav_of(&a.1))) // then favourites
             .then_with(|| b_call.cmp(&a_call))
             .then_with(|| unread_of(&b.1).cmp(&unread_of(&a.1))) // then anything unread

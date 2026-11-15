@@ -166,9 +166,32 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "pttPressStarts"]
         fn ptt_press_starts(self: &CallController, key: &QString, text_focus: bool) -> bool;
+        /// 4-1 / 4-2: QML: callctl.pttPressStartsExact(key, otherMods, textFocus, popup) — ptt_rules::press_starts_in (no
+        /// other modifier, no popup owning the focus)
+        #[qinvokable]
+        #[cxx_name = "pttPressStartsExact"]
+        fn ptt_press_starts_exact(self: &CallController, key: &QString, other_mods: bool, text_focus: bool, popup: bool) -> bool;
         #[qinvokable]
         #[cxx_name = "pttChordEnds"]
         fn ptt_chord_ends(self: &CallController, held: &QString) -> bool;
+        /// A22.1: QML: callctl.pttHint(key) — the "you're muted" bubble under push to talk (ptt_rules::muted_hint)
+        #[qinvokable]
+        #[cxx_name = "pttHint"]
+        fn ptt_hint(self: &CallController, key: &QString) -> QString;
+        /// LAB gates only (paddrive force-drop; refused in a release): a recoverable terminal drop of the call now
+        #[qinvokable]
+        #[cxx_name = "labForceDrop"]
+        fn lab_force_drop(self: &CallController) -> bool;
+        /// D02.3: QML: callctl.carryTile(participant, kind, until, tilesJson, now) — the tile a held pin / full screen moves
+        /// to after a blip ("" = none yet; tilecarry.rs, shared vectors)
+        /// A13.0: QML: callctl.micMeterHint() — the line under a meter that shows no level (why the last start failed;
+        /// meter_hint.rs, shared vectors)
+        #[qinvokable]
+        #[cxx_name = "micMeterHint"]
+        fn mic_meter_hint(self: &CallController) -> QString;
+        #[qinvokable]
+        #[cxx_name = "carryTile"]
+        fn carry_tile(self: &CallController, participant: &QString, kind: &QString, until: f64, tiles: &QString, now: f64) -> QString;
         /// Explicitly set mic muted (NOT a toggle) + apply to the live call — idempotent, and
         /// always drives the gst pipeline to the right state (a force-unmute guarantees Playing,
         /// so AFK/BRB return reliably resumes capture). QML: forceMicMuted(bool).
@@ -715,6 +738,8 @@ fn person_chimes() -> &'static std::sync::Mutex<(crate::persontiles::PersonChime
 }
 /// The call generation the chime state belongs to (bumped at each call's start and end).
 static CHIME_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// P15: the push-to-talk press/release generation; a release tail mutes only if nothing was pressed or released since.
+static PTT_TAIL_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 fn chime_now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
 }
@@ -2086,10 +2111,22 @@ pub async fn in_active_call() -> bool {
 /// Re-publish the live mic (if in a call) so a changed AGC/NS setting takes effect now,
 /// PRESERVING the current mute state. No-op when not in a call — the new persisted value is
 /// read on the next mic publish.
+/// 4-9 (review): the mic writes' generation (apply_mic) and the newest write's value — a write that is no longer the
+/// newest skips, and a rebuild started before a newer write publishes that write's value, not its own stale one.
+static MIC_APPLY_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+static MIC_APPLIED_MUTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
 fn republish_live_mic(was_muted: bool) {
+    let gen0 = MIC_APPLY_GEN.load(std::sync::atomic::Ordering::SeqCst);
     crate::bridge::runtime().spawn(async move {
         let cell = current_call();
         let mut guard = cell.lock().await;
+        let was_muted = crate::mic_mode::rebuild_muted(
+            was_muted,
+            gen0,
+            MIC_APPLY_GEN.load(std::sync::atomic::Ordering::SeqCst),
+            MIC_APPLIED_MUTED.load(std::sync::atomic::Ordering::SeqCst),
+        );
         if let Some(call) = guard.as_mut() {
             if let Err(e) = call.republish_mic(was_muted).await {
                 eprintln!("[call] mic re-publish (AGC/NS change) failed: {e}");
@@ -2221,10 +2258,10 @@ fn active_focus_url() -> &'static std::sync::Mutex<Option<String>> {
     F.get_or_init(|| std::sync::Mutex::new(None))
 }
 
-/// Pad (pad_ctl.rs, docs/PAD.md): re-publish our call membership NOW — Settings → Calls → Pad changed its `pad1`
-/// cap, which would otherwise wait for the 30-min refresh. The same path as that refresh (join_rtc_session keeps the
-/// original created_ts, so no peer rotates its key). Nothing outside a call.
-pub(crate) async fn republish_membership() {
+/// Re-publish our call membership NOW: Pad (pad_ctl.rs, docs/PAD.md) when Settings → Calls → Pad changes its `pad1` cap,
+/// and "Never record me" (settings.rs, U9) — both would otherwise wait for the 30-min refresh. The same path as that
+/// refresh (join_rtc_session keeps the original created_ts, so no peer rotates its key). Nothing outside a call.
+pub(crate) async fn republish_membership(why: &'static str) {
     let my_gen = join_gen().load(std::sync::atomic::Ordering::SeqCst);
     let Some(rid) = active_call_room().lock().unwrap().clone() else { return };
     if current_call().lock().await.is_none() {
@@ -2239,7 +2276,7 @@ pub(crate) async fn republish_membership() {
     }
     // the same path as every membership publish (lock, stale check under it, taken back if superseded meanwhile)
     match publish_membership_locked(&room, &svc, my_gen).await {
-        Some(Ok(())) => eprintln!("[call] membership re-published (Pad setting changed)"),
+        Some(Ok(())) => eprintln!("[call] membership re-published ({why})"),
         Some(Err(e)) => eprintln!("[call] membership re-publish failed: {e}"),
         None => {}
     }
@@ -2294,12 +2331,12 @@ fn call_started() -> &'static std::sync::Mutex<Option<std::time::Instant>> {
 }
 
 /// Consecutive auto-rejoin attempts; reset whenever a call proves healthy. Capped at
-/// [`MAX_AUTO_REJOINS`], after which the manual Rejoin banner takes over.
+/// `rejoin_rule::MAX_AUTO_REJOINS`, after which the manual Rejoin banner takes over.
 fn auto_rejoins() -> &'static std::sync::atomic::AtomicU32 {
     static N: OnceLock<std::sync::atomic::AtomicU32> = OnceLock::new();
     N.get_or_init(|| std::sync::atomic::AtomicU32::new(0))
 }
-const MAX_AUTO_REJOINS: u32 = 2;
+// the cap: crate::rejoin_rule::MAX_AUTO_REJOINS (P14)
 
 /// Pre-drop mic mute, set by the auto-rejoin path and consumed by the next join — a
 /// muted user must never be silently rejoined with a HOT mic.
@@ -2307,6 +2344,42 @@ const MAX_AUTO_REJOINS: u32 = 2;
 /// belongs to), never by the caller: presses start episodes, Leave / sign-out end them, a recovery holds its episode's
 /// ticket. The streamer's capture bar follows the episode when its join starts (cleared only by a normal join / Talk).
 use crate::watch_session::{ledger as watch_ledger, Decision as WatchDecision, Phase as WatchPhase};
+
+/// A share that ended on its own is never a frozen picture: it stops, and the call status says so in these words
+/// (testvectors/share-stopped, the same in Tin Hat Web). AppCore.qml shows a status that starts with the prefix as a
+/// notice with a "Share again" button.
+/// The share's capture died on its own: the window or screen being shared is gone.
+const SHARE_SOURCE_GONE_STATUS: &str = "Your share stopped: the shared window or screen is gone";
+/// Linux: the shared window changed size and the capture could not be started again.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+const SHARE_RESIZE_FAILED_STATUS: &str = "Your share stopped: it could not restart after the window changed size";
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+const SHARE_RESIZE_GAVE_UP_STATUS: &str = "Your share stopped: the shared window kept changing size";
+/// 5-1 (fix1216): what a Leave does at once, on the Qt thread, before its teardown waits for the call's lock (a share
+/// restart or a resume may hold it): the mic goes silent, the call's capture leases end (no capture or publish of the
+/// call being left can start or commit), and every share resume is cancelled (its carried source closed).
+fn leave_now() {
+    tinhat_streamer::mic_tx_leave(); // closed until the next join starts (a PTT press meanwhile can't reopen it)
+    tinhat_streamer::capture_lease::end_session_now("leave");
+    tinhat_streamer::cancel_resume(crate::bridge::runtime().handle());
+}
+
+/// 12.1.16 (D02.2): the share came back on its own after an automatic rejoin (same source, no picker)…
+const SHARE_BACK_STATUS: &str = "Sharing screen again";
+/// …or it could not (the source is gone, the publish failed): the notice with "Share again", as Tin Hat Web always shows.
+const SHARE_NOT_BACK_STATUS: &str = "Your share stopped: the call reconnected";
+/// 12.1.16 (D02.7): the others in the call are told when someone's share ends — after VIEWER_SHARE_GRACE, and only if
+/// that person is still in the call (a leave has its own cue); never the recorder. The web's shareStopped.ts
+/// viewerShareEnded (testvectors/share-stopped viewerEnded / viewerGraceMs).
+const SHARE_VIEWER_ENDED: &str = "{name} stopped sharing their screen";
+const VIEWER_SHARE_GRACE: std::time::Duration = std::time::Duration::from_millis(800);
+fn viewer_share_ended_status(name: &str, still_in_call: bool, recorder: bool, sharing_again: bool) -> Option<String> {
+    // sharing_again: a new share of theirs is up already (a quality change re-publishes it) — nothing ended
+    if !still_in_call || recorder || sharing_again {
+        return None;
+    }
+    Some(SHARE_VIEWER_ENDED.replace("{name}", name))
+}
 
 /// 12.1.8 (Astra r2): every teardown is done and no episode is current: nothing of a watch call runs any more — the
 /// ledger's bar opens and the streamer's follows it (the one other place the bar opens besides a normal join / Talk).
@@ -2622,11 +2695,13 @@ impl qobject::CallController {
         // This attempt's generation. Any later join_call/leave_call bump supersedes us:
         // every cleanup/registration below must check join_gen_stale(my_gen) first.
         let my_gen = join_gen().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+        tinhat_streamer::mic_tx_new_call(); // 5-1: a new call: the mic gate follows this call's intent again
         // 10.1 (TH-CALL-02): a plain join starts unmuted, so clear whatever the LAST call left in
         // mic_muted now — from here until the join completes, mic_muted is the user's intent for
         // THIS call (they may press mute while "Connecting…"; the Ok branch honours it).
         if rejoin_mic_muted().lock().unwrap().is_none() {
             self.as_mut().set_mic_muted(false);
+            tinhat_streamer::set_mic_tx_muted(false); // 5-1: the mic gate mirrors the intent (Qt thread only)
         }
         self.as_mut().set_fail_reason(QString::default());
         // RBAC: a new call starts with no moderation state (removedBy is "cleared on the next join").
@@ -2638,6 +2713,7 @@ impl qobject::CallController {
         let ptt_muted = Self::ptt_target_muted(*self.push_to_talk(), *self.ptt_speaking(), false);
         if ptt_muted {
             self.as_mut().set_mic_muted(true);
+            tinhat_streamer::set_mic_tx_muted(true); // 5-1: the mic gate mirrors the intent (Qt thread only)
         }
         // Pad QOL: a watch join (the ledger's episode is a watching one): capture barred + deafened BEFORE connect, so
         // nothing is captured and every remote track subscribed during connect starts cut
@@ -2654,6 +2730,7 @@ impl qobject::CallController {
         self.as_mut().set_no_capture(watch);
         if watch {
             self.as_mut().set_mic_muted(true);
+            tinhat_streamer::set_mic_tx_muted(true); // 5-1: the mic gate mirrors the intent (Qt thread only)
             tinhat_streamer::set_deafened(true);
             self.as_mut().set_deafened(true);
             eprintln!("[call] joining {room_id} to WATCH (no mic, deafened)");
@@ -2679,31 +2756,82 @@ impl qobject::CallController {
                     // Auto-end screen shares whose capture dies on its own — on Windows
                     // that's "the shared window was closed" (WGC posts a bus error).
                     // Without this the share zombie-froze on the last frame while the
-                    // UI still said "Sharing" (live friends feedback). Windows-only so
-                    // the Linux build's behavior stays byte-identical.
-                    if cfg!(windows) {
+                    // UI still said "Sharing" (live friends feedback). Linux too since 12.1.15:
+                    // a closed window ("stream error: target not found") left the same zombie.
+                    // (A shared window that only changed SIZE is restarted instead: the next hook.)
+                    {
                         let qt_hook = qt.clone();
-                        let hook = std::sync::Arc::new(move || {
+                        let hook = std::sync::Arc::new(move |sid: String| {
                             let qt_hook = qt_hook.clone();
                             crate::bridge::runtime().spawn(async move {
                                 let cell = current_call();
                                 let mut guard = cell.lock().await;
-                                if let Some(call) = guard.as_mut() {
-                                    call.stop_screenshare().await;
+                                // (only the share that died: by now another one may be live. The UI update is
+                                // queued with the call still locked, so a share started after it updates after it.)
+                                let Some(call) = guard.as_mut() else { return };
+                                if call.stop_screenshare_if(&sid).await {
+                                    let _ = qt_hook.queue(|mut o| {
+                                        o.as_mut().set_sharing(false);
+                                        o.as_mut().set_status(QString::from(SHARE_SOURCE_GONE_STATUS));
+                                    });
                                 }
                                 drop(guard);
-                                let _ = qt_hook.queue(|mut o| {
-                                    o.as_mut().set_sharing(false);
-                                    o.as_mut().set_status(QString::from(
-                                        "Screen share ended — the shared window closed",
-                                    ));
-                                });
                             });
                         });
                         let cell = current_call();
                         let mut guard = cell.lock().await;
                         if let Some(call) = guard.as_mut() {
                             call.set_share_dead_hook(hook);
+                        }
+                    }
+                    // Linux: a shared window that changed size. GStreamer's PipeWire source cannot follow the
+                    // compositor's new format (KWin 6.8: "stream error: unhandled format", capture dead), so the
+                    // capture restarts on the same portal session: no new dialog, the size learned again. Paced
+                    // (streamer ShareResizeBackoff, per share): a window being dragged changes size many times a
+                    // second. `sid` = the share the change was seen on; `wait` = None: too many in a row, give up.
+                    #[cfg(target_os = "linux")]
+                    {
+                        let qt_hook = qt.clone();
+                        let hook = std::sync::Arc::new(move |sid: String, wait: Option<std::time::Duration>| {
+                            let qt_hook = qt_hook.clone();
+                            crate::bridge::runtime().spawn(async move {
+                                if let Some(wait) = wait {
+                                    tokio::time::sleep(wait).await;
+                                }
+                                let cell = current_call();
+                                let mut guard = cell.lock().await;
+                                let Some(call) = guard.as_mut() else { return };
+                                // Some(text) = that share is over, say why (nothing when it was no longer the live one)
+                                let ended: Option<&'static str> = match wait {
+                                    Some(_) => match call.restart_screenshare_resized(&sid).await {
+                                        Ok(_) => None,
+                                        Err(e) => {
+                                            eprintln!("[call] share restart after a size change failed: {e}");
+                                            Some(SHARE_RESIZE_FAILED_STATUS)
+                                        }
+                                    },
+                                    None => {
+                                        let was_live = call.stop_screenshare_if(&sid).await;
+                                        if was_live {
+                                            eprintln!("[call] the shared source keeps changing size: the share is ended");
+                                        }
+                                        was_live.then_some(SHARE_RESIZE_GAVE_UP_STATUS)
+                                    }
+                                };
+                                // (queued with the call still locked: a share started after this updates the UI after it)
+                                if let Some(text) = ended {
+                                    let _ = qt_hook.queue(move |mut o| {
+                                        o.as_mut().set_sharing(false);
+                                        o.as_mut().set_status(QString::from(text));
+                                    });
+                                }
+                                drop(guard);
+                            });
+                        });
+                        let cell = current_call();
+                        let mut guard = cell.lock().await;
+                        if let Some(call) = guard.as_mut() {
+                            call.set_share_resized_hook(hook);
                         }
                     }
                     // Camera capture died on its own (virtual-cam input hogging — see
@@ -2906,6 +3034,7 @@ impl qobject::CallController {
                         .map(|(by, name)| moderator_label(&by, &name));
                     let empty = std::collections::HashSet::new();
                     publish_desired(build_tiles(&[], &empty, &empty));
+                    let note_room = room_id.clone(); // D09.5 (the closure below would otherwise take room_id)
                     let _ = qt.queue(move |mut o| {
                         o.as_mut().set_connecting(false);
                         o.as_mut().set_in_call(true);
@@ -2920,6 +3049,7 @@ impl qobject::CallController {
                             || *o.mic_muted()
                             || qobject::CallController::ptt_target_muted(*o.push_to_talk(), *o.ptt_speaking(), false);
                         o.as_mut().set_mic_muted(want_muted);
+                        tinhat_streamer::set_mic_tx_muted(want_muted); // 5-1: the mic gate mirrors the intent (Qt thread only)
                         // PAD-PHONE Step B: the handoff starts with the roster (a muted join while my phone transmits)
                         let barrier = JOIN_BARRIER_MUTED.swap(false, std::sync::atomic::Ordering::SeqCst);
                         let acts = {
@@ -2947,6 +3077,29 @@ impl qobject::CallController {
                         // edge (mute mic / unpublish camera / cut audio = "can't recover").
                         crate::afk_ctl::clear_intent();
                         o.as_mut().set_status(QString::from("In call"));
+                        // D09.5 (2026-11-13): I started it in a room with members on other servers: they will meet "Join a
+                        // call hosted elsewhere?" — tell me (callannounce::start_note)
+                        {
+                            let rid = note_room;
+                            let qt5 = o.qt_thread();
+                            crate::bridge::runtime().spawn(async move {
+                                let Some(client) = crate::session::client() else { return };
+                                let Some(room) = matrix_sdk::ruma::RoomId::parse(rid.as_str()).ok().and_then(|r| client.get_room(&r)) else { return };
+                                let me = client.user_id().map(|u| u.to_string()).unwrap_or_default();
+                                let members: Vec<String> = room.members_no_sync(matrix_sdk::RoomMemberships::JOIN).await.map(|ms| ms.iter().map(|m| m.user_id().to_string()).collect()).unwrap_or_default();
+                                let others_live = crate::ringglue::others_live_rings(&room, &me).await;
+                                let alone = others_live == 0;
+                                let note = crate::callannounce::start_note(&me, &members, alone);
+                                if note.is_empty() {
+                                    return;
+                                }
+                                let _ = qt5.queue(move |mut o| {
+                                    if *o.in_call() && o.room_id().to_string() == rid {
+                                        o.as_mut().set_status(QString::from(note));
+                                    }
+                                });
+                            });
+                        }
                         // Show the local self-view tile from the moment we join (avatar
                         // placeholder until the camera turns on), so the user always has a
                         // square representing their presence — not only once they enable video.
@@ -2962,6 +3115,64 @@ impl qobject::CallController {
                         o.as_mut().refresh_mic_apm(); // mirror persisted AGC + NS toggles
                         o.as_mut().refresh_audio_sources(); // mirror persisted share-audio sink (Audio/Sink, no flood)
                     });
+                    // D02.2 (12.1.16): the rejoin after a drop brings the share back on the same source (share_carry: only a
+                    // share carried for THIS room, fresh; a join of another room closes it). No picker, no gesture.
+                    {
+                        let qt_s = qt.clone();
+                        let rid = room_id.clone();
+                        crate::bridge::runtime().spawn(async move {
+                            // 5-6 (fix1216): a share live at the drop always ends in the share back or "Share again"
+                            let (cast, epoch) = match tinhat_streamer::take_carried_share(&rid).await {
+                                tinhat_streamer::Resume::Back(cast, epoch) => (cast, epoch),
+                                tinhat_streamer::Resume::Lost => {
+                                    eprintln!("[call] the share live at the drop has no source left: Share again");
+                                    let _ = qt_s.queue(move |mut o| {
+                                        if !join_gen_stale(my_gen) {
+                                            o.as_mut().set_status(QString::from(SHARE_NOT_BACK_STATUS));
+                                        }
+                                    });
+                                    return;
+                                }
+                                tinhat_streamer::Resume::Nothing => return,
+                            };
+                            let cell = current_call();
+                            let mut guard = cell.lock().await;
+                            // 5-1 (fix1216): checked AFTER the call is ours — a Leave while this waited for it (or another
+                            // join) cancels the resume; a Leave during the publish ends its capture lease (leave_now)
+                            let res = match guard.as_mut() {
+                                Some(call) if !join_gen_stale(my_gen) && tinhat_streamer::resume_still_wanted(epoch) => {
+                                    call.publish_screenshare(cast).await.map_err(|e| format!("{e:#}"))
+                                }
+                                _ => {
+                                    cast.close().await;
+                                    eprintln!("[call] share resume cancelled (left the call, or another join)");
+                                    return;
+                                }
+                            };
+                            // (queued with the call still locked, as share_screen does: a share that dies at once reports its
+                            // "stopped" after this. Review: a Leave or another join since owns the UI — say nothing then.)
+                            match res {
+                                Ok(()) => {
+                                    eprintln!("[call] screen-share back after the rejoin (same source)");
+                                    let _ = qt_s.queue(move |mut o| {
+                                        if join_gen_stale(my_gen) || !tinhat_streamer::resume_still_wanted(epoch) {
+                                            return;
+                                        }
+                                        o.as_mut().set_sharing(true);
+                                        o.as_mut().set_status(QString::from(SHARE_BACK_STATUS));
+                                    });
+                                }
+                                Err(e) => {
+                                    eprintln!("[call] screen-share could not come back after the rejoin: {e}");
+                                    let _ = qt_s.queue(move |mut o| {
+                                        if !join_gen_stale(my_gen) {
+                                            o.as_mut().set_status(QString::from(SHARE_NOT_BACK_STATUS));
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
                     // Install peers' E2EE media keys so their audio/video decrypt
                     // (else black tiles + silence). Runs until the call ends.
                     crate::bridge::runtime().spawn(install_peer_keys_loop(room_id.clone()));
@@ -3029,6 +3240,38 @@ impl qobject::CallController {
                                 }
                             }
                             CallEvent::VideoRemoved { id } => {
+                                // D02.7 (12.1.16): someone's share ended — say so, unless they left (their own cue)
+                                if let Some((_, who, true)) = tiles.iter().find(|(t, _, _)| t == &id).cloned() {
+                                    let qt_v = qt2.clone();
+                                    let rid = room_id.clone();
+                                    crate::bridge::runtime().spawn(async move {
+                                        tokio::time::sleep(VIEWER_SHARE_GRACE).await;
+                                        if active_call_room().lock().unwrap().as_deref() != Some(rid.as_str()) {
+                                            return;
+                                        }
+                                        let name = Some(name_for(&who)).filter(|n| !n.is_empty()).unwrap_or_else(|| {
+                                            let m = mxid_of(&who);
+                                            m.trim_start_matches('@').split(':').next().unwrap_or("").to_string()
+                                        });
+                                        // (checked on the Qt thread, where the status is set: a Leave, a rejoin or their new share
+                                        // in between wins — review r2)
+                                        let _ = qt_v.queue(move |mut o| {
+                                            if join_gen_stale(my_gen) {
+                                                return;
+                                            }
+                                            let present = tinhat_streamer::participant_present(&who);
+                                            let again = desired_video_tiles().lock().unwrap().raw.as_ref().is_some_and(|raw| {
+                                                raw.iter().any(|t| {
+                                                    t.get("participant").and_then(serde_json::Value::as_str) == Some(who.as_str())
+                                                        && t.get("screenshare").and_then(serde_json::Value::as_bool) == Some(true)
+                                                })
+                                            });
+                                            if let Some(text) = viewer_share_ended_status(&name, present, is_vod_bot(&who), again) {
+                                                o.as_mut().set_status(QString::from(&text));
+                                            }
+                                        });
+                                    });
+                                }
                                 tiles.retain(|(t, _, _)| t != &id);
                                 let built = build_tiles(&tiles, &participants, &muted);
                                 let json = built.json.clone();
@@ -3141,15 +3384,15 @@ impl qobject::CallController {
                                 let json = built.json.clone();
                                 publish_desired(built);
                                 let id_sig = identity.clone();
-                                // Step B: a leave chimes only for the person's LAST connection; a Pad one waits 5 s for
-                                // their next connection (a mode switch), then the tick below decides
+                                // Step B: a leave chimes only for the person's LAST connection, which waits 5 s for their
+                                // next one (a Pad mode switch; since D02.3 any blip), then the tick below decides
                                 let kind = {
                                     let mut pc = person_chimes().lock().unwrap();
                                     pc.1 = std::iter::once(my_call_identity()).chain(participants.iter().cloned()).collect();
                                     let present = pc.1.clone();
                                     pc.0.leave(&identity, &chime_attrs, &present, chime_now_ms())
                                 };
-                                if kind.is_empty() && crate::persontiles::is_pad_identity(&identity) {
+                                if kind.is_empty() && !person_chimes().lock().unwrap().0.pending.is_empty() {
                                     let qt4 = qt2.clone();
                                     crate::bridge::runtime().spawn(async move {
                                         tokio::time::sleep(std::time::Duration::from_millis(crate::persontiles::PAD_LEAVE_GRACE_MS + 50)).await;
@@ -3294,10 +3537,10 @@ impl qobject::CallController {
                                 //     duplicate identity / deleted room (server said leave).
                                 //   * call_started()==None — leave_call ran; the user hung up
                                 //     while this event was in flight. Never resurrect that.
-                                //   * first attempt requires 45s of healthy call (a call that
-                                //     dies young is a JOIN problem, not a link blip); follow-up
-                                //     attempts are capped at MAX_AUTO_REJOINS before parking on
-                                //     the manual Rejoin banner.
+                                //   * P14 (2026-11-13, rejoin_rule.rs): a young call heals too once its
+                                //     join had completed (call_started is Some only after Connected); a
+                                //     join that never completed is a JOIN problem. Attempts are capped
+                                //     at MAX_AUTO_REJOINS before parking on the manual Rejoin banner.
                                 let auto_rejoin = if disconnected && recoverable {
                                     match *call_started().lock().unwrap() {
                                         None => false, // user already hung up — stay hung up
@@ -3306,8 +3549,8 @@ impl qobject::CallController {
                                             if healthy {
                                                 auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
                                             }
-                                            let n = auto_rejoins().fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-                                            n <= MAX_AUTO_REJOINS && (healthy || n > 1)
+                                            let before = auto_rejoins().fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                                            crate::rejoin_rule::auto_rejoin(true, false, healthy, true, before)
                                         }
                                     }
                                 } else {
@@ -3331,6 +3574,11 @@ impl qobject::CallController {
                                         if auto_rejoin {
                                             *rejoin_mic_muted().lock().unwrap() = Some(*o.mic_muted());
                                         }
+                                        // D02.2 (12.1.16): a share live at the drop comes back with the rejoin, on the same
+                                        // source (tinhat_streamer::share_carry; armed before the teardown below starts)
+                                        // (5-6: a share restart that lost the call left its source in the carry: still sharing)
+                                        let carry_share = auto_rejoin && (*o.sharing() || tinhat_streamer::share_orphan_waiting());
+                                        let carry_epoch = tinhat_streamer::resume_epoch(); // 5-1: a Leave from here on voids it
                                         // Terminal drop: replicate leave_call's GUI-side teardown
                                         // ORDER (predetach every sink while the QML items still
                                         // exist, THEN NULL the pipelines, THEN drop the tiles from
@@ -3385,6 +3633,9 @@ impl qobject::CallController {
                                         // scheduler first polls this teardown.
                                         teardowns_in_flight().fetch_add(1, std::sync::atomic::Ordering::SeqCst);
                                         crate::bridge::runtime().spawn(async move {
+                                            if carry_share {
+                                                tinhat_streamer::arm_share_carry(&rid, carry_epoch).await;
+                                            }
                                             teardown_call_session(rid.clone(), Some(qt3.clone())).await;
                                             if !auto_rejoin {
                                                 return;
@@ -3423,6 +3674,7 @@ impl qobject::CallController {
                                                     // can't leak into an unrelated later join.
                                                     o.as_mut().set_reconnecting(false);
                                                     *rejoin_mic_muted().lock().unwrap() = None;
+                                                    crate::bridge::runtime().spawn(tinhat_streamer::drop_carried_share()); // D02.2
                                                 }
                                             });
                                         });
@@ -3531,6 +3783,14 @@ impl qobject::CallController {
     }
 
     pub fn leave_call(mut self: Pin<&mut Self>) {
+        // 4-9 (2026-11-14): leaving ends a push-to-talk hold (mic_mode.rs): a hold kept across the leave opened the next
+        // call's mic at its join
+        PTT_TAIL_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let (speaking, muted) = crate::mic_mode::leave_hold(*self.push_to_talk(), *self.mic_muted());
+        self.as_mut().set_ptt_speaking(speaking);
+        if muted && !*self.mic_muted() {
+            self.as_mut().force_mic_muted(true); // (the hold's open mic closes at once, not at the teardown)
+        }
         // 12.1.7: an explicit leave ends the episode — a recovery or a queued join of it never runs
         watch_ledger().press_leave();
         if *self.hanging_up() {
@@ -3540,6 +3800,7 @@ impl qobject::CallController {
             *call_started().lock().unwrap() = None;
             *rejoin_mic_muted().lock().unwrap() = None;
             auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
+            leave_now(); // 5-1: no capture of this call starts from here, the mic is silent, no share resume runs
             if *self.reconnecting() {
                 self.as_mut().set_reconnecting(false);
                 self.as_mut().set_status(QString::from("Left call"));
@@ -3569,6 +3830,7 @@ impl qobject::CallController {
         *call_started().lock().unwrap() = None;
         auto_rejoins().store(0, std::sync::atomic::Ordering::SeqCst);
         *rejoin_mic_muted().lock().unwrap() = None;
+        leave_now(); // 5-1: no capture of this call starts from here, the mic is silent, no share resume runs
         // Pad QOL: the call ends, and so does watching's UI. 12.1.7: the capture bar stays as it is — only the next
         // normal join's start (or Talk here) clears it, so a publish still in flight from a watch call stays refused
         WATCHING.store(false, std::sync::atomic::Ordering::SeqCst);
@@ -4856,6 +5118,7 @@ impl qobject::CallController {
         }
         self.as_mut().set_status(QString::from("Preparing screen share…"));
         let qt = self.qt_thread();
+        let qt_live = qt.clone();
         crate::bridge::runtime().spawn(async move {
             let result = async {
                 let screencast = tinhat_streamer::pick_screencast()
@@ -4866,15 +5129,19 @@ impl qobject::CallController {
                 let call = guard.as_mut().ok_or_else(|| "not in a call".to_string())?;
                 call.publish_screenshare(screencast)
                     .await
-                    .map_err(|e| tinhat_streamer::call_health::share_error_text(&e))
+                    .map_err(|e| tinhat_streamer::call_health::share_error_text(&e))?;
+                // 12.1.15: "sharing" is queued with the call still locked. A share that stops on its own is reported
+                // by a task that needs this lock, so its "stopped" always reaches the UI after this, never before.
+                let _ = qt_live.queue(|mut o| {
+                    o.as_mut().set_sharing(true);
+                    o.as_mut().set_status(QString::from("Sharing screen"));
+                });
+                Ok::<(), String>(())
             }
             .await;
             settle_after_not_connected(&result).await;
             let _ = qt.queue(move |mut o| match result {
-                Ok(()) => {
-                    o.as_mut().set_sharing(true);
-                    o.as_mut().set_status(QString::from("Sharing screen"));
-                }
+                Ok(()) => {} // (shown already, with the call locked)
                 Err(e) => {
                     eprintln!("[call] share failed: {e}");
                     // 12.1.13 (Astra r3): a late not-connected line never covers a join that runs since
@@ -4932,6 +5199,7 @@ impl qobject::CallController {
             let handle: u64 = handle.to_string().parse().unwrap_or(0);
             self.as_mut().set_status(QString::from("Preparing screen share…"));
             let qt = self.qt_thread();
+            let qt_live = qt.clone();
             crate::bridge::runtime().spawn(async move {
                 let result = async {
                     let screencast = tinhat_streamer::ScreenCast::from_parts(&kind, handle)
@@ -4941,15 +5209,19 @@ impl qobject::CallController {
                     let call = guard.as_mut().ok_or_else(|| "not in a call".to_string())?;
                     call.publish_screenshare(screencast)
                         .await
-                        .map_err(|e| tinhat_streamer::call_health::share_error_text(&e))
+                        .map_err(|e| tinhat_streamer::call_health::share_error_text(&e))?;
+                    // 12.1.15: "sharing" is queued with the call still locked. A share that stops on its own is reported
+                    // by a task that needs this lock, so its "stopped" always reaches the UI after this, never before.
+                    let _ = qt_live.queue(|mut o| {
+                        o.as_mut().set_sharing(true);
+                        o.as_mut().set_status(QString::from("Sharing screen"));
+                    });
+                    Ok::<(), String>(())
                 }
                 .await;
                 settle_after_not_connected(&result).await;
                 let _ = qt.queue(move |mut o| match result {
-                    Ok(()) => {
-                        o.as_mut().set_sharing(true);
-                        o.as_mut().set_status(QString::from("Sharing screen"));
-                    }
+                    Ok(()) => {} // (shown already, with the call locked)
                     Err(e) => {
                         eprintln!("[call] share failed: {e}");
                         if e != tinhat_streamer::call_health::NOT_CONNECTED_ERR || share_line_may_replace(&o.status().to_string()) {
@@ -5102,12 +5374,9 @@ impl qobject::CallController {
     /// The rule that matters: with push-to-talk ON the mic is muted unless the key is
     /// held, and toggling mute by hand does NOT override that — otherwise you press the
     /// mute button once, forget, and broadcast your room for the rest of the evening.
+    /// BRB (2026-11-13): while I am away a held key never un-mutes (crate::ptt_rules::target_muted, shared vectors).
     pub(crate) fn ptt_target_muted(ptt_on: bool, holding: bool, manual_muted: bool) -> bool {
-        if ptt_on {
-            !holding
-        } else {
-            manual_muted
-        }
+        crate::ptt_rules::target_muted(ptt_on, holding, manual_muted, crate::afk_ctl::afk_intent())
     }
 
     /// Turn push-to-talk on or off (persisted). Switching it ON mutes immediately, so
@@ -5134,9 +5403,11 @@ impl qobject::CallController {
     pub fn enable_push_to_talk(mut self: Pin<&mut Self>, on: bool) {
         self.as_mut().set_push_to_talk(on);
         set_ptt_pref(on);
-        let manual = *self.mic_muted();
-        let target = Self::ptt_target_muted(on, false, manual);
-        self.as_mut().set_ptt_speaking(false);
+        // 4-9 (2026-11-14): either way a hold ends and the mic is muted (mic_mode.rs). Turning it OFF mid-hold used to keep
+        // the hold's open mic (the target came from the live mic_muted), and the release then returned early: a hot mic.
+        PTT_TAIL_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst); // a pending release tail does nothing now
+        let (speaking, target) = crate::mic_mode::ptt_toggled(on);
+        self.as_mut().set_ptt_speaking(speaking);
         self.force_mic_muted(target);
     }
 
@@ -5145,16 +5416,80 @@ impl qobject::CallController {
     pub fn ptt_press_starts(&self, key: &QString, text_focus: bool) -> bool {
         crate::ptt_rules::press_starts_hold(&key.to_string(), text_focus)
     }
+    pub fn ptt_press_starts_exact(&self, key: &QString, other_mods: bool, text_focus: bool, popup: bool) -> bool {
+        crate::ptt_rules::press_starts_in(&key.to_string(), popup, other_mods, text_focus)
+    }
     pub fn ptt_chord_ends(&self, held: &QString) -> bool {
         crate::ptt_rules::chord_ends_hold(&held.to_string(), false, false)
     }
+    pub fn mic_meter_hint(&self) -> QString {
+        let why = if watch_ledger().watching() || tinhat_streamer::capture_barred() { "watching" } else { tinhat_streamer::mic_monitor_why() };
+        QString::from(crate::meter_hint::meter_hint(why))
+    }
+    pub fn ptt_hint(&self, key: &QString) -> QString {
+        QString::from(crate::ptt_rules::muted_hint(&key.to_string()).as_str())
+    }
+    pub fn lab_force_drop(&self) -> bool {
+        #[cfg(tinhat_env_selftests)]
+        {
+            if std::env::var_os("TINHAT_LABDRIVE_DROP").is_none() {
+                return false;
+            }
+            crate::bridge::runtime().spawn(async {
+                let cell = current_call();
+                let guard = cell.lock().await;
+                match guard.as_ref() {
+                    Some(c) if c.lab_force_terminal_drop() => {}
+                    _ => eprintln!("[call] lab: no call to drop (or it already ended)"),
+                }
+            });
+            true
+        }
+        #[cfg(not(tinhat_env_selftests))]
+        {
+            false
+        }
+    }
+    pub fn carry_tile(&self, participant: &QString, kind: &QString, until: f64, tiles: &QString, now: f64) -> QString {
+        let arr: Vec<serde_json::Value> = serde_json::from_str(&tiles.to_string()).unwrap_or_default();
+        let ms = |x: f64| if x.is_finite() && x > 0.0 { x as u64 } else { 0 };
+        QString::from(crate::tilecarry::carry_target(&participant.to_string(), &kind.to_string(), ms(until), &arr, ms(now)).unwrap_or_default().as_str())
+    }
     pub fn ptt_hold(mut self: Pin<&mut Self>, down: bool) {
-        if !*self.push_to_talk() || *self.ptt_speaking() == down {
+        // BRB privacy (2026-11-13): a press while I am away opens nothing (ptt_rules::hold_speaks)
+        let away = crate::afk_ctl::afk_intent();
+        let speaking = crate::ptt_rules::hold_speaks(down, away);
+        if down && !speaking {
+            eprintln!("[ptt] press ignored: away (BRB)");
+        }
+        if !*self.push_to_talk() {
             return;
         }
-        self.as_mut().set_ptt_speaking(down);
-        let target = Self::ptt_target_muted(true, down, true);
-        self.force_mic_muted(target);
+        // P15: every press/release cancels a release tail still pending (a press in the tail continues the hold)
+        let gen = PTT_TAIL_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+        if *self.ptt_speaking() == speaking {
+            return;
+        }
+        let tail = crate::ptt_rules::release_tail_ms(away);
+        if speaking || tail == 0 {
+            self.as_mut().set_ptt_speaking(speaking);
+            let target = Self::ptt_target_muted(true, speaking, true);
+            self.force_mic_muted(target);
+            return;
+        }
+        // P15: the mic stays open `tail` ms more so the last word isn't cut; pttSpeaking stays true until then
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(tail)).await;
+            let _ = qt.queue(move |mut o| {
+                if PTT_TAIL_GEN.load(std::sync::atomic::Ordering::SeqCst) != gen || !*o.ptt_speaking() {
+                    return;
+                }
+                o.as_mut().set_ptt_speaking(false);
+                let target = qobject::CallController::ptt_target_muted(true, false, true);
+                o.force_mic_muted(target);
+            });
+        });
     }
 
     pub fn join_call_pressed(mut self: Pin<&mut Self>, room_id: &QString) {
@@ -5345,12 +5680,23 @@ impl qobject::CallController {
     /// Set the mic and apply it to the live call (the old force_mic_muted body; a moderator's mute keeps the SFU side).
     fn apply_mic(mut self: Pin<&mut Self>, muted: bool) {
         self.as_mut().set_mic_muted(muted);
+        // 5-1 (fix1216): the encoder goes silent / live NOW; the publication mute below waits for the call's lock (a share
+        // restart may hold it for seconds). Before the server-mute return (review r2): under a moderator's mute the SFU
+        // side holds it, and the server unmute's re-publish must find the gate open.
+        tinhat_streamer::set_mic_tx_muted(muted);
+        // 4-9 (review): the newest write wins. Each write is its own task, and two tasks can take the call lock out of
+        // order: a hold's unmute landing after the mode change's mute reopened the mic while the UI said muted.
         if !muted && *self.server_muted() {
-            return;
+            return; // no write (and no new generation: a pending mute still applies)
         }
+        let gen = MIC_APPLY_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+        MIC_APPLIED_MUTED.store(muted, std::sync::atomic::Ordering::SeqCst);
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let guard = cell.lock().await;
+            if !crate::mic_mode::write_is_current(gen, MIC_APPLY_GEN.load(std::sync::atomic::Ordering::SeqCst)) {
+                return; // a newer write has run, or will (it carries the person's latest choice)
+            }
             if let Some(call) = guard.as_ref() {
                 call.set_mic_muted(muted);
             }
@@ -5807,16 +6153,26 @@ pub async fn leave_for_sign_out() {
 
 /// 10.1 (TH-CALL-03): the three common join failures in plain words; anything else keeps the
 /// raw text (it is still shown, just under a sentence a person can act on).
-fn join_fail_reason(raw: &str) -> String {
+/// The words after "Couldn't join the call — " (web callrules.ts joinFailWords; shared vectors
+/// testvectors/join-fail.json). A36.1: the call service's (lk-jwt-service) own errors get plain words, never its raw text.
+pub(crate) fn join_fail_reason(raw: &str) -> String {
     let l = raw.to_ascii_lowercase();
     if l.contains("timed out") || l.contains("timeout") || l.contains("deadline") {
         "the call server didn't answer. Check your connection and try again.".to_string()
     } else if l.contains("already") && (l.contains("call") || l.contains("participant") || l.contains("identity")) {
         "you're already in this call on another device.".to_string()
+    } else if l.contains("lk-jwt-service http ") {
+        if l.contains("lk-jwt-service http 401") || l.contains("lk-jwt-service http 403") {
+            "the call server didn't accept your sign-in. Try again in a moment.".to_string()
+        } else {
+            "the call server had a problem. Try again in a moment.".to_string()
+        }
     } else if l.contains("dns") || l.contains("resolve") || l.contains("connection refused") || l.contains("unreachable") || l.contains("network") || l.contains("connect") {
         "couldn't reach the call server. Check your connection and try again.".to_string()
     } else if l.contains("not signed in") {
         "you're not signed in.".to_string()
+    } else if l.contains("lk-jwt-service") {
+        "the call server had a problem. Try again in a moment.".to_string()
     } else {
         raw.to_string()
     }
@@ -6259,7 +6615,7 @@ async fn do_join(
             tinhat_streamer::abandon_partial_connect();
             withdraw_own_membership(&room, my_gen).await;
             *active_call_room().lock().unwrap() = None;
-            return Err("connect timed out — the call may be stale, try again".to_string());
+            return Err("the call didn't connect within 15 seconds — try again".to_string());
         }
     };
     // RBAC (§5.4 "own state"): if the call room's `dev.tinhat.call.moderation` says a
@@ -7067,6 +7423,156 @@ mod watch_publish_tests {
             assert!(b.contains("if capture_barred() {"), "{sig}: no capture-bar backstop");
         }
     }
+    /// A share that ended on its own: the words (shared with Tin Hat Web, testvectors/share-stopped) and the notice
+    /// with its "Share again" button in AppCore.qml.
+    #[test]
+    fn a_share_that_stopped_on_its_own_says_so_with_a_share_again_button() {
+        use crate::call_ctl::{SHARE_RESIZE_FAILED_STATUS, SHARE_RESIZE_GAVE_UP_STATUS, SHARE_SOURCE_GONE_STATUS};
+        let v: serde_json::Value = serde_json::from_str(include_str!("../../../testvectors/share-stopped/vectors.json")).unwrap();
+        let w = |k: &str| v[k].as_str().unwrap().to_string();
+        assert_eq!(SHARE_SOURCE_GONE_STATUS, w("gone"));
+        assert_eq!(SHARE_RESIZE_FAILED_STATUS, v["desktopOnly"]["resizeFailed"].as_str().unwrap());
+        assert_eq!(SHARE_RESIZE_GAVE_UP_STATUS, v["desktopOnly"]["resizeGaveUp"].as_str().unwrap());
+        for s in [SHARE_SOURCE_GONE_STATUS, SHARE_RESIZE_FAILED_STATUS, SHARE_RESIZE_GAVE_UP_STATUS] {
+            assert!(s.starts_with(&w("prefix")), "{s}");
+        }
+        let core = include_str!("../qml/AppCore.qml");
+        let handler = &core[core.find("onMCallStatusChanged:").expect("the call status handler")..];
+        let handler = &handler[..handler.find("onMStatusChanged:").expect("the next handler")];
+        assert!(handler.contains(&format!("indexOf(\"{}\") === 0", w("prefix"))), "the notice is chosen by the prefix");
+        assert!(handler.contains(&format!("core.notifyAction(mCallStatus, {}, \"{}\"", v["noticeMs"], w("action"))), "the button and how long it stays");
+        assert!(handler.contains("openStreamPopover()"), "the button opens the share picker");
+        let main = include_str!("../qml/Main.qml");
+        assert!(main.contains("function openStreamPopover() { streamPopover.open() }"));
+        // every platform ends a share whose capture died (Linux left it "live" on repeated frames until 12.1.15)
+        let ctl = include_str!("call_ctl.rs");
+        let hook = &ctl[ctl.find("call.set_share_dead_hook(hook);").expect("the hook")..];
+        let before = &ctl[..ctl.len() - hook.len()];
+        let block = &before[before.rfind("// Auto-end screen shares whose capture dies on its own").expect("the block")..];
+        assert!(!block.contains("cfg!(windows)"), "the capture-died hook is installed on every platform");
+        assert!(block.contains("if call.stop_screenshare_if(&sid).await {") && block.contains("SHARE_SOURCE_GONE_STATUS"), "only the share that died is stopped");
+    }
+
+    /// D02.2 (12.1.16): a share live when a call drops comes back with the automatic rejoin, on the same source
+    /// (tinhat_streamer::share_carry, unit-tested there); the words are the shared vectors' (Tin Hat Web says
+    /// `rejoined` with its Share again button, a browser needs the click).
+    #[test]
+    fn a_share_comes_back_with_the_auto_rejoin() {
+        use crate::call_ctl::{SHARE_BACK_STATUS, SHARE_NOT_BACK_STATUS};
+        let v: serde_json::Value = serde_json::from_str(include_str!("../../../testvectors/share-stopped/vectors.json")).unwrap();
+        assert_eq!(SHARE_NOT_BACK_STATUS, v["rejoined"].as_str().unwrap());
+        assert!(SHARE_NOT_BACK_STATUS.starts_with(v["prefix"].as_str().unwrap()), "the failure gets the Share again notice");
+        assert_eq!(SHARE_BACK_STATUS, v["desktopOnly"]["back"].as_str().unwrap());
+        // the code only: these assertions' own strings must not satisfy them
+        let all = include_str!("call_ctl.rs");
+        let ctl = &all[..all.find("\n#[cfg(test)]").expect("the tests")];
+        // armed at the drop, only for an auto-rejoin of a call that was sharing, BEFORE its teardown runs
+        assert!(ctl.contains("let carry_share = auto_rejoin && (*o.sharing() || tinhat_streamer::share_orphan_waiting());"));
+        let td = &ctl[ctl.find("if carry_share {\n").expect("the arm")..];
+        assert!(td.find("tinhat_streamer::arm_share_carry(&rid, carry_epoch).await;").unwrap() < td.find("teardown_call_session(rid.clone(), Some(qt3.clone())).await;").unwrap());
+        // the rejoined call of that room publishes it again
+        let bj = &ctl[ctl.find("fn begin_join(").unwrap()..];
+        let bj = &bj[..bj.find("\n    fn ").unwrap_or(bj.len())];
+        assert!(bj.contains("tinhat_streamer::take_carried_share(&rid).await") && bj.contains("call.publish_screenshare(cast).await"));
+        assert!(bj.contains("set_status(QString::from(SHARE_BACK_STATUS))") && bj.contains("set_status(QString::from(SHARE_NOT_BACK_STATUS))"));
+        // no rejoin = nothing kept: Leave (both paths: leave_now) and a recovery that doesn't run
+        assert!(ctl.matches("tinhat_streamer::drop_carried_share()").count() >= 1);
+        assert!(ctl.matches("leave_now(); // 5-1").count() >= 2);
+        // the streamer's close hands the cast to the carry instead of closing it
+        let st = include_str!("../../streamer/src/call.rs");
+        assert!(st.contains("if let Some(screencast) = crate::share_carry::share_closing(Some(screencast)) {"));
+    }
+
+    /// 5-1 (fix1216): mute and Leave never wait behind a share restart / resume holding the call's lock, and no capture
+    /// starts in a call that was left. (The rules themselves: share_carry's epoch tests, capture_lease's end_session_now
+    /// test, call.rs's mic_tx_frame test.)
+    #[test]
+    fn mute_and_leave_never_wait_for_the_call_and_a_left_call_starts_no_capture() {
+        let all = include_str!("call_ctl.rs");
+        let ctl = &all[..all.find("\n#[cfg(test)]").expect("the tests")];
+        let body = |sig: &str| -> &str {
+            let at = ctl.find(sig).unwrap_or_else(|| panic!("{sig}"));
+            let b = &ctl[at..];
+            &b[..b.find("\n    }\n").or_else(|| b.find("\n}\n")).unwrap()]
+        };
+        // the mute: the encoder's gate is set before the lock is taken
+        let am = body("fn apply_mic(");
+        let gate = am.find("tinhat_streamer::set_mic_tx_muted(muted);").expect("apply_mic sets the mic gate");
+        assert!(gate < am.find("cell.lock().await").expect("then the publication mute"), "the gate comes first");
+        assert!(gate < am.find("if !muted && *self.server_muted() {").unwrap(), "before the server-mute return (review r2)");
+        // a join starts with the gate following its intent again (a Leave latched it closed)
+        let bj0 = body("fn begin_join(");
+        assert!(bj0.find("tinhat_streamer::mic_tx_new_call();").unwrap() < bj0.find("tinhat_streamer::set_mic_tx_muted(").unwrap());
+        // a Leave: the mic gate, the call's leases and the share resume, all at once and without the call
+        let ln = {
+            let at = ctl.find("fn leave_now(").expect("leave_now");
+            &ctl[at..at + ctl[at..].find("\n}\n").unwrap()]
+        };
+        for s in ["tinhat_streamer::mic_tx_leave();", "tinhat_streamer::capture_lease::end_session_now(\"leave\");", "tinhat_streamer::cancel_resume("] {
+            assert!(ln.contains(s), "leave_now: {s}");
+        }
+        assert!(!ln.contains(".await"), "leave_now waits for nothing");
+        let lc = body("pub fn leave_call(");
+        assert!(lc.contains("leave_now(); // 5-1"), "Leave during a drop's teardown");
+        let hu = body("fn hang_up(");
+        assert!(hu.contains("leave_now(); // 5-1"), "Leave of a live call");
+        // the gate mirrors every Qt-side write of the mic's intent (review r1: only the Qt thread writes it)
+        let writes: Vec<usize> = ctl.match_indices(".as_mut().set_mic_muted(").map(|(i, _)| i).collect();
+        assert!(writes.len() >= 5);
+        for i in writes {
+            let next = &ctl[i..(i + 700).min(ctl.len())];
+            assert!(next.contains("tinhat_streamer::set_mic_tx_muted("), "a micMuted write without the gate: {}", &ctl[i..i + 60]);
+        }
+        // the resume checks the Leave AFTER it got the call (a Leave while it waited for the lock cancels it)
+        let bj = &ctl[ctl.find("fn begin_join(").unwrap()..];
+        let lock_at = bj.find("let mut guard = cell.lock().await;\n                            // 5-1").expect("the resume's lock");
+        let check = bj[lock_at..].find("tinhat_streamer::resume_still_wanted(epoch)").expect("checked after the lock");
+        let publish = bj[lock_at..].find("call.publish_screenshare(cast).await").unwrap();
+        assert!(check < publish);
+        // the arm belongs to the epoch read at the drop
+        assert!(ctl.contains("let carry_epoch = tinhat_streamer::resume_epoch();"));
+    }
+
+    /// 5-6 (fix1216): a restart whose re-publish lost the call keeps its source for the rejoin, and a share live at the drop
+    /// always ends in the share back or "Share again".
+    #[test]
+    fn a_restart_that_lost_the_call_still_brings_the_share_back_or_says_share_again() {
+        let st = include_str!("../../streamer/src/call.rs");
+        let at = st.find("pub async fn restart_screenshare(&mut self)").unwrap();
+        let rs = &st[at..at + st[at..].find("\n    }\n").unwrap()];
+        let lost = rs
+            .find("if e.to_string() == crate::call_health::NOT_CONNECTED_ERR && lease.valid() {")
+            .expect("the lost-call branch, only while the call is still ours");
+        assert!(rs.contains("let carry_epoch = crate::share_carry::resume_epoch();"));
+        assert!(rs[lost..].find("crate::share_carry::keep_after_lost(screencast, carry_epoch).await;").unwrap() < rs[lost..].find("screencast.close()").unwrap(), "kept, not closed");
+        let all = include_str!("call_ctl.rs");
+        let ctl = &all[..all.find("\n#[cfg(test)]").unwrap()];
+        let bj = &ctl[ctl.find("fn begin_join(").unwrap()..];
+        let lost_arm = bj.find("tinhat_streamer::Resume::Lost => {").expect("the Lost case");
+        assert!(bj[lost_arm..lost_arm + 600].contains("set_status(QString::from(SHARE_NOT_BACK_STATUS))"), "Lost says Share again");
+    }
+
+    /// D02.7 (12.1.16): the others are told when someone's share ends (the web's viewerShareEnded, the same vectors).
+    #[test]
+    fn viewers_are_told_when_a_share_ends() {
+        use crate::call_ctl::{viewer_share_ended_status, SHARE_VIEWER_ENDED, VIEWER_SHARE_GRACE};
+        let v: serde_json::Value = serde_json::from_str(include_str!("../../../testvectors/share-stopped/vectors.json")).unwrap();
+        assert_eq!(SHARE_VIEWER_ENDED, v["viewerEnded"].as_str().unwrap());
+        assert_eq!(VIEWER_SHARE_GRACE.as_millis() as u64, v["viewerGraceMs"].as_u64().unwrap());
+        assert_eq!(viewer_share_ended_status("Ana", true, false, false).as_deref(), Some("Ana stopped sharing their screen"));
+        assert_eq!(viewer_share_ended_status("Ana", false, false, false), None, "a leave has its own cue");
+        assert_eq!(viewer_share_ended_status("rec", true, true, false), None);
+        assert_eq!(viewer_share_ended_status("Ana", true, false, true), None, "a re-published share (quality change) didn't end");
+        assert!(!viewer_share_ended_status("Ana", true, false, false).unwrap().starts_with(v["prefix"].as_str().unwrap()), "no Share again for viewers");
+        let ctl = include_str!("call_ctl.rs");
+        let at = ctl.find("CallEvent::VideoRemoved { id } => {").unwrap();
+        let body = &ctl[at..at + 2800];
+        assert!(body.contains("if let Some((_, who, true)) = tiles.iter().find(|(t, _, _)| t == &id).cloned() {"), "only a share tile");
+        assert!(body.contains("tokio::time::sleep(VIEWER_SHARE_GRACE).await;") && body.contains("tinhat_streamer::participant_present(&who)"));
+        assert!(body.contains("let _ = qt_v.queue(move |mut o| {\n                                            if join_gen_stale(my_gen) {"), "checked where the status is set");
+        assert!(body.contains("viewer_share_ended_status(&name, present, is_vod_bot(&who), again)"));
+    }
+
     #[test]
     fn a_join_press_is_always_a_normal_join() {
         // every user-facing Join goes through join_call_pressed (clears a stale watch intent); internal rejoins don't

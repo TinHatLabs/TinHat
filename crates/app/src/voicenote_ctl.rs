@@ -109,6 +109,9 @@ pub struct Draft {
     /// the send's transaction id: minted at the first Send, kept for every retry ("" = never sent)
     pub txn: String,
     pub error: String,
+    /// QOL A00.2: why the recording stopped by itself ("Stopped at the 15-minute limit" / "Stopped for the call"),
+    /// shown under the review row like Tin Hat Web's `note` ("" = stopped by the user)
+    pub note: String,
     /// Send pressed while recording: send as soon as the note is finalized
     pub send_after_stop: bool,
     /// a send request waits for the view (takeSendRequest)
@@ -258,6 +261,7 @@ impl Machine {
                 size: 0,
                 txn: String::new(),
                 error: String::new(),
+                note: String::new(),
                 send_after_stop: false,
                 req_pending: false,
                 token: SendToken::default(),
@@ -320,6 +324,7 @@ impl Machine {
         } else {
             String::new()
         };
+        d.note = stop_note(f.capped, f.reason == tinhat_streamer::voicenote::Reason::Call).to_string();
         if std::mem::take(&mut d.send_after_stop) {
             return Finalized::Send;
         }
@@ -599,20 +604,27 @@ pub fn send_allowed(txn: &str) -> bool {
     lock().allows_send(&acct, txn)
 }
 
+/// QOL A00.2: the words for a recording that stopped by itself (Tin Hat Web's TEXT.cap / TEXT.call); "" = by the user.
+pub fn stop_note(capped: bool, by_call: bool) -> &'static str {
+    if by_call {
+        "Stopped for the call"
+    } else if capped {
+        "Stopped at the 15-minute limit"
+    } else {
+        ""
+    }
+}
+
 fn apply_finished(id: u64, f: &tinhat_streamer::voicenote::Finished) {
     let by_call = f.reason == tinhat_streamer::voicenote::Reason::Call;
     let room = lock().drafts.values().find(|d| d.id == id).map(|d| d.room.clone()).unwrap_or_default();
     let out = lock().finalized(id, f);
     match out {
         Finalized::Review => {
-            let what = if by_call {
-                "Recording stopped for the call"
-            } else if f.capped {
-                "Recording stopped at 15 minutes"
-            } else {
-                "Recording stopped"
-            };
-            emit(&room, "announce", &format!("{what}, {}", spoken(f.duration_ms)));
+            // the web's announce: "<note>. Recording stopped, <seconds>"
+            let note = stop_note(f.capped, by_call);
+            let lead = if note.is_empty() { String::new() } else { format!("{note}. ") };
+            emit(&room, "announce", &format!("{lead}Recording stopped, {}", spoken(f.duration_ms)));
             if f.error.is_some() || f.reason == tinhat_streamer::voicenote::Reason::Error {
                 emit(&room, "error", "The microphone stopped");
             }
@@ -743,11 +755,12 @@ impl qobject::VoiceNoteController {
         let mut v = json!({
             "state": "idle", "inCall": in_call(), "busyElsewhere": busy_elsewhere, "events": evs,
             "elapsedMs": 0, "clock": "0:00", "warn": false, "level": 0.0, "levels": [],
-            "waveform": [], "durationMs": 0, "durationClock": "0:00", "fileUrl": "", "error": "", "txn": "",
+            "waveform": [], "durationMs": 0, "durationClock": "0:00", "fileUrl": "", "error": "", "note": "", "txn": "",
         });
         if let Some(d) = d {
             v["state"] = json!(d.state.as_str());
             v["error"] = json!(d.error);
+            v["note"] = json!(d.note);
             v["txn"] = json!(d.txn);
             if matches!(d.state, VnState::Recording | VnState::Finalizing | VnState::Requesting) {
                 let st = tinhat_streamer::voicenote::status().filter(|s| s.id == d.id);
@@ -1296,5 +1309,19 @@ mod tests {
         let bars = level_bars(&[32768; 30], 48);
         assert_eq!(bars.len(), 48);
         assert!(bars[47] > 0.99 && bars[0] == 0.0);
+    }
+}
+
+#[cfg(test)]
+mod stop_note_tests {
+    /// QOL A00.2: a recording that stopped by itself says why under the review row (Tin Hat Web's TEXT.cap / TEXT.call).
+    #[test]
+    fn stop_note_words() {
+        assert_eq!(super::stop_note(true, false), "Stopped at the 15-minute limit");
+        assert_eq!(super::stop_note(false, true), "Stopped for the call");
+        assert_eq!(super::stop_note(true, true), "Stopped for the call");
+        assert_eq!(super::stop_note(false, false), "");
+        let qml = include_str!("../qml/VoiceRecorderRow.qml");
+        assert!(qml.contains("String(row.vs.error || row.vs.note || \"\")"), "the row shows the note");
     }
 }

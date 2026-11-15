@@ -1,0 +1,243 @@
+{
+  "about": "Soundboard keys (QOL A16.0 / product call P12 (a), and A16.1). key = '1'..'9' / 'Enter' / another key, mods = Ctrl/Alt/Meta held, inSearch = the search box has focus, query = its text, counts = how many favourites / room sounds / recent / web results are shown (in that order on screen). expect: 'fav:N' (play the shown favourite N, 0-based), 'room:0' / 'recent:0' / 'web:0' (play that section's first), 'none' (the key is taken, nothing plays), 'type' (the key is not the soundboard's: it types / goes to the focused control). Replayed by the desktop (tools/soundboard-keys-test.mjs on SoundboardPopover.qml) and Tin Hat Web (src/features/media/soundboard/keys.test.ts).",
+  "cases": [
+    {
+      "name": "empty search: 1 plays the first favourite",
+      "key": "1",
+      "mods": false,
+      "inSearch": true,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "fav:0"
+    },
+    {
+      "name": "empty search: 3 plays the third favourite",
+      "key": "3",
+      "mods": false,
+      "inSearch": true,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "fav:2"
+    },
+    {
+      "name": "empty search: 9 with three favourites types the digit",
+      "key": "9",
+      "mods": false,
+      "inSearch": true,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    },
+    {
+      "name": "empty search, no favourites: 1 types",
+      "key": "1",
+      "mods": false,
+      "inSearch": true,
+      "query": "",
+      "counts": {
+        "fav": 0,
+        "room": 2,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    },
+    {
+      "name": "search has text: digits type",
+      "key": "2",
+      "mods": false,
+      "inSearch": true,
+      "query": "air",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    },
+    {
+      "name": "search has a space: digits type",
+      "key": "2",
+      "mods": false,
+      "inSearch": true,
+      "query": " ",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    },
+    {
+      "name": "focus outside the search: 2 plays the second favourite",
+      "key": "2",
+      "mods": false,
+      "inSearch": false,
+      "query": "air",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "fav:1"
+    },
+    {
+      "name": "focus outside the search: 5 with three favourites does nothing",
+      "key": "5",
+      "mods": false,
+      "inSearch": false,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "none"
+    },
+    {
+      "name": "Ctrl+1 is never a hotkey",
+      "key": "1",
+      "mods": true,
+      "inSearch": true,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    },
+    {
+      "name": "0 is not a hotkey",
+      "key": "0",
+      "mods": false,
+      "inSearch": true,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    },
+    {
+      "name": "Enter plays the first favourite match",
+      "key": "Enter",
+      "mods": false,
+      "inSearch": true,
+      "query": "a",
+      "counts": {
+        "fav": 2,
+        "room": 1,
+        "recent": 1,
+        "web": 4
+      },
+      "expect": "fav:0"
+    },
+    {
+      "name": "Enter with no favourite match plays the first room sound",
+      "key": "Enter",
+      "mods": false,
+      "inSearch": true,
+      "query": "boo",
+      "counts": {
+        "fav": 0,
+        "room": 2,
+        "recent": 1,
+        "web": 4
+      },
+      "expect": "room:0"
+    },
+    {
+      "name": "Enter with only recent and web matches plays the recent one",
+      "key": "Enter",
+      "mods": false,
+      "inSearch": true,
+      "query": "boo",
+      "counts": {
+        "fav": 0,
+        "room": 0,
+        "recent": 1,
+        "web": 4
+      },
+      "expect": "recent:0"
+    },
+    {
+      "name": "Enter with only web results plays the first web result",
+      "key": "Enter",
+      "mods": false,
+      "inSearch": true,
+      "query": "vine boom",
+      "counts": {
+        "fav": 0,
+        "room": 0,
+        "recent": 0,
+        "web": 5
+      },
+      "expect": "web:0"
+    },
+    {
+      "name": "Enter with nothing shown does nothing",
+      "key": "Enter",
+      "mods": false,
+      "inSearch": true,
+      "query": "zzz",
+      "counts": {
+        "fav": 0,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "none"
+    },
+    {
+      "name": "Enter outside the search is left to the focused button",
+      "key": "Enter",
+      "mods": false,
+      "inSearch": false,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    },
+    {
+      "name": "letters type",
+      "key": "a",
+      "mods": false,
+      "inSearch": true,
+      "query": "",
+      "counts": {
+        "fav": 3,
+        "room": 0,
+        "recent": 0,
+        "web": 0
+      },
+      "expect": "type"
+    }
+  ]
+}

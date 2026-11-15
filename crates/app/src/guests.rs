@@ -89,6 +89,60 @@ pub fn notice_text(name: &str) -> String {
     format!("{name} is waiting to come in as a guest")
 }
 
+/// A27.4 (Sunday QoL): the "is waiting" notice's button — "letIn" for whoever may let guests in (the knock is what they
+/// act on), else "open" (the Guests room). The web's model.ts noticeAction.
+pub fn notice_action(can_admit: bool) -> &'static str {
+    if can_admit {
+        "letIn"
+    } else {
+        "open"
+    }
+}
+
+// ---- the confirm before Turn off / New link (Sunday QoL P10, TRIAGE A14.4/A27.0; the web's model.ts guestConfirm,
+// shared vectors testvectors/first-run.json `guestConfirm`, replayed in first_run.rs's tests) -------------------------
+
+fn count(n: usize, one: &str, many: &str) -> String {
+    format!("{n} {}", if n == 1 { one } else { many })
+}
+
+/// What Turn off (`what` = "off") / New link (else) will do, named before it happens: `guests` = guest accounts in the
+/// Guests room now (-1 = not known on this device: the room isn't joined here — never a confident "nobody"),
+/// `waiting` = people at the door → `{title, body, confirm}`.
+pub fn guest_confirm(what: &str, guests: i64, waiting: usize) -> serde_json::Value {
+    if what == "off" {
+        let mut parts: Vec<String> = Vec::new();
+        if guests < 0 {
+            parts.push("any guests in the room will be removed".to_string());
+        } else if guests > 0 {
+            parts.push(format!("{} in the room will be removed", count(guests as usize, "guest", "guests")));
+        }
+        if waiting > 0 {
+            parts.push(format!("{} waiting will be turned away", count(waiting, "person", "people")));
+        }
+        let said = parts.join(" and ");
+        let mut body = if said.is_empty() {
+            "Nobody is in or waiting right now. ".to_string()
+        } else {
+            let mut c = said.chars();
+            let first = c.next().map(|f| f.to_uppercase().collect::<String>()).unwrap_or_default();
+            format!("{first}{}. ", c.as_str())
+        };
+        body.push_str("The guest link stops working.");
+        return serde_json::json!({ "title": "Turn off the guest room?", "body": body, "confirm": "Turn off" });
+    }
+    let mut body = "The old link stops working".to_string();
+    if waiting > 0 {
+        body.push_str(&format!(" and {} waiting with it will be turned away", count(waiting, "person", "people")));
+    }
+    body.push('.');
+    if guests != 0 {
+        body.push_str(" Guests already in the room stay.");
+    }
+    body.push_str(" The new link is copied for you.");
+    serde_json::json!({ "title": "Make a new guest link?", "body": body, "confirm": "New link" })
+}
+
 // ---- JS's value rules -------------------------------------------------------------------------------------------
 
 /// JS `\s` and `String.prototype.trim`: WhiteSpace (TAB, VT, FF, SP, NBSP, ZWNBSP, the Zs spaces) + LineTerminator
@@ -614,6 +668,13 @@ mod tests {
     }
     fn ids(v: &[&str]) -> Vec<String> {
         v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn notice_action_lets_in_whoever_may() {
+        // A27.4: the web's model.test.ts noticeAction
+        assert_eq!(notice_action(true), "letIn");
+        assert_eq!(notice_action(false), "open");
     }
 
     #[test]

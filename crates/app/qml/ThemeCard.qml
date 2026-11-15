@@ -262,7 +262,7 @@ Item {
                 isMask: true
             }
         }
-        Controls.Menu {
+        KeyMenu {
             id: menu
             // Kirigami's menu layer (z 400): the cards live in the Settings sheet, a Kirigami OverlaySheet at z 200 — a
             // plain Menu (z 0) opened BEHIND it and the ⋯ seemed to do nothing (10.8: My themes' ⋯ never showed a menu)

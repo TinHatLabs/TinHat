@@ -27,6 +27,7 @@ pub mod qobject {
         #[qproperty(QString, results_json)] // QML: resultsJson — [{id,title,url,width,height,preview}]
         #[qproperty(bool, loading)] //          QML: loading
         #[qproperty(QString, error)] //         QML: error — "" or a user-facing message
+        #[qproperty(QString, send_failed_json)] // QML: sendFailedJson — L1 A20.1: the last GIFs that didn't go, newest last (at most 8) [{seq, room, cls (room.rs fail_class)}]; the view says so once per seq
         type GifController = super::GifControllerRust;
 
         /// QML: search(query) — empty/whitespace = trending (immediate); non-empty is
@@ -44,11 +45,14 @@ pub mod qobject {
     impl cxx_qt::Threading for GifController {}
 }
 
+static GIF_FAIL_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 #[derive(Default)]
 pub struct GifControllerRust {
     results_json: QString,
     loading: bool,
     error: QString,
+    send_failed_json: QString,
     // The most-recent in-flight search task, so a new keystroke aborts the previous one.
     inflight: Mutex<Option<JoinHandle<()>>>,
 }
@@ -96,9 +100,17 @@ impl qobject::GifController {
     pub fn pick(self: Pin<&mut Self>, room_id: &QString, url: &QString) {
         let room_id = room_id.to_string();
         let url = url.to_string();
+        let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
             if let Err(e) = crate::room::do_send_plain(&room_id, &url).await {
                 eprintln!("[gif] send failed: {e}");
+                // L1 A20.1: a GIF that didn't go used to vanish without a word (the sender thought it went out)
+                let seq = GIF_FAIL_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+                let j = serde_json::json!({ "seq": seq, "room": room_id, "cls": crate::room::fail_class(&e) }).to_string();
+                let _ = qt.queue(move |o| {
+                    let list = crate::room::push_failure(&o.send_failed_json().to_string(), &j);
+                    o.set_send_failed_json(QString::from(&list));
+                });
             }
         });
     }

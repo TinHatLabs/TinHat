@@ -1,0 +1,251 @@
+{
+ "about": "The mic-mode invariant (4-9, launch-gate 2026-11-14): after ANY mic-mode change the mic ends MUTED unless the person explicitly unmuted it. Each scenario starts out of push to talk with the mic muted, in a call; after each step `live` = the mic transmits. Events: pttOn / pttOff (the setting, also its call-bar button), holdDown / holdUp (the key; the release tail is its own test), muteToggle (the mic button), deviceSwitch, leave, join (a next call), afkOn / afkOff (BRB). baseFails = the 12.1.15 rules get this scenario wrong (the control). Byte-identical: desktop crates/app/src/testvectors/mic-mode.json (owner; mic_mode.rs), web src/features/calls/testvectors/mic-mode.json (micMode.ts).",
+ "scenarios": [
+  {
+   "baseFails": true,
+   "name": "4-9: push to talk turned OFF mid-hold: muted, and stays muted after the release",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "pttOff",
+     "live": false
+    },
+    {
+     "event": "holdUp",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": false,
+   "name": "push to talk turned ON mid-talk (mic unmuted by hand): muted",
+   "steps": [
+    {
+     "event": "muteToggle",
+     "live": true
+    },
+    {
+     "event": "pttOn",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": false,
+   "name": "a mute toggle during a hold is the person's: muted; the release keeps it muted",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "muteToggle",
+     "live": false
+    },
+    {
+     "event": "holdUp",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": false,
+   "name": "two mute toggles during a hold: open while held, muted at the release",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "muteToggle",
+     "live": false
+    },
+    {
+     "event": "muteToggle",
+     "live": true
+    },
+    {
+     "event": "holdUp",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": false,
+   "name": "a device switch during a hold: still held, muted at the release",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "deviceSwitch",
+     "live": true
+    },
+    {
+     "event": "holdUp",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": true,
+   "name": "4-9: leaving during a hold ends it: the next call starts muted",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "leave",
+     "live": false
+    },
+    {
+     "event": "join",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": false,
+   "name": "U1: BRB during a hold mutes; a press while away opens nothing; back from BRB still muted",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "afkOn",
+     "live": false
+    },
+    {
+     "event": "holdUp",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": false
+    },
+    {
+     "event": "afkOff",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": true,
+   "name": "4-9: push to talk off then on mid-hold: muted all along",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "pttOff",
+     "live": false
+    },
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdUp",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": false,
+   "name": "control: unmuted by hand, then push to talk on and off: muted",
+   "steps": [
+    {
+     "event": "muteToggle",
+     "live": true
+    },
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "pttOff",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": false,
+   "name": "control: a plain hold and release",
+   "steps": [
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "holdDown",
+     "live": true
+    },
+    {
+     "event": "holdUp",
+     "live": false
+    }
+   ]
+  },
+  {
+   "baseFails": true,
+   "name": "4-9 (review): unmuted by hand, BRB, push to talk on and off, back from BRB: muted (the mode change drops BRB's restore)",
+   "steps": [
+    {
+     "event": "muteToggle",
+     "live": true
+    },
+    {
+     "event": "afkOn",
+     "live": false
+    },
+    {
+     "event": "pttOn",
+     "live": false
+    },
+    {
+     "event": "pttOff",
+     "live": false
+    },
+    {
+     "event": "afkOff",
+     "live": false
+    }
+   ]
+  }
+ ]
+}

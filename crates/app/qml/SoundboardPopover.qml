@@ -190,10 +190,49 @@ Controls.Popup {
         for (var i = 0; i < sheet.roomSounds.length; i++) if (sheet.roomSounds[i].sourceUrl === url) return sheet.roomSounds[i]
         return null
     }
-    // Hotkeys 1-9 play the first nine favourites while the popover is open.
-    function playHotkey(n) {
-        var list = sheet.favShown
-        if (n >= 1 && n <= list.length) { var d = list[n - 1]; sheet.toggleSound(d.sourceUrl || d.url || "", d.name || "", d.emoji || "") }
+    // QOL A16.0 (product call P12 (a)) + A16.1: one key rule for the board and the search box. Digits 1-9 play the shown
+    // favourites whenever the box doesn't have focus OR is empty (it is focused on open, so the hotkeys used to be
+    // swallowed); a digit with no favourite behind it types into an empty box. Enter in the box plays the first match in
+    // screen order: favourites, room sounds, recent, then the web (it used to look at favourites only).
+    // SHARED LOGIC: sbKeyAction is Tin Hat Web's soundboard/keys.ts, rule for rule; tools/soundboard-keys-test.mjs runs
+    // it on the shared vectors (crates/app/src/testvectors/soundboard-keys.json).
+    // BEGIN soundboard-keys pure (tools/soundboard-keys-test.mjs)
+    /// "fav:N" / "room:0" / "recent:0" / "web:0" = play that one; "none" = the key is taken, nothing plays; "type" = not
+    /// the soundboard's key (it types / goes to the focused control). c = {fav, room, recent, web} shown counts.
+    function sbKeyAction(key, mods, inSearch, query, c) {
+        if (key.length === 1 && key >= "1" && key <= "9") {
+            if (mods) return "type"
+            if (inSearch && query.length > 0) return "type"
+            var n = Number(key)
+            if (n <= c.fav) return "fav:" + (n - 1)
+            return inSearch ? "type" : "none"
+        }
+        if (key === "Enter" && inSearch && !mods) {
+            var order = ["fav", "room", "recent", "web"]
+            for (var i = 0; i < order.length; i++) if (c[order[i]] > 0) return order[i] + ":0"
+            return "none"
+        }
+        return "type"
+    }
+    // END soundboard-keys pure
+    /// a Qt key event → sbKeyAction's key ("1".."9", "Enter", else "other") and mods
+    function _sbKey(ev) {
+        if (ev.key >= Qt.Key_1 && ev.key <= Qt.Key_9) return String(ev.key - Qt.Key_0)
+        if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) return "Enter"
+        return "other"
+    }
+    function _sbMods(ev) { return (ev.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier)) !== 0 }
+    /// run a key through sbKeyAction; true = taken (accept the event)
+    function runKey(ev, inSearch) {
+        var a = sheet.sbKeyAction(sheet._sbKey(ev), sheet._sbMods(ev), inSearch, searchField.text,
+                                  { fav: sheet.favShown.length, room: sheet.roomShown.length, recent: sheet.recentShown.length, web: sheet.searchResults.length })
+        if (a === "type") return false
+        var parts = a.split(":")
+        var from = parts[0] === "fav" ? sheet.favShown : parts[0] === "room" ? sheet.roomShown
+                 : parts[0] === "recent" ? sheet.recentShown : parts[0] === "web" ? sheet.searchResults : []
+        var d = from[Number(parts[1])]
+        if (d) sheet.toggleSound(d.sourceUrl || d.url || "", d.name || "", d.emoji || "")
+        return true
     }
 
     // ---- upload ----
@@ -327,7 +366,7 @@ Controls.Popup {
             Controls.ToolTip.visible: hovered
             onClicked: card.remove()
         }
-        Controls.Menu {
+        KeyMenu {
             id: cardMenu
             margins: 6
             Controls.MenuItem {
@@ -398,8 +437,8 @@ Controls.Popup {
         spacing: 0
         focus: true
         Keys.onPressed: (ev) => {
-            if (ev.key >= Qt.Key_1 && ev.key <= Qt.Key_9 && !searchField.activeFocus) { sheet.playHotkey(ev.key - Qt.Key_0); ev.accepted = true }
-            else if (ev.key === Qt.Key_Escape) { sheet.close(); ev.accepted = true }
+            if (ev.key === Qt.Key_Escape) { sheet.close(); ev.accepted = true }
+            else if (!searchField.activeFocus && sheet.runKey(ev, false)) ev.accepted = true   // the box runs its own
         }
         // ---- header ----
         RowLayout {
@@ -419,8 +458,8 @@ Controls.Popup {
                 placeholderText: "Search your sounds and the web…"
                 onTextChanged: { sheet.query = text; sheet.searchSounds(text.trim().length >= 2 ? text.trim() : "") }
                 Keys.onPressed: (ev) => {
-                    // Digits type into the search box; Enter plays the first match.
-                    if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) { sheet.playHotkey(1); ev.accepted = true }
+                    // QOL A16.0 / A16.1: digits are hotkeys while the box is empty; Enter plays the first match
+                    if (sheet.runKey(ev, true)) ev.accepted = true
                 }
             }
             Controls.ToolButton {

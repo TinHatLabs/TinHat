@@ -238,7 +238,7 @@ Window {
                     Controls.ToolTip.visible: qualityHover.hovered && !qualityMenu.visible
                     Controls.ToolTip.delay: 400
                     HoverHandler { id: qualityHover }
-                    Controls.Menu {
+                    KeyMenu {
                         id: qualityMenu
                         margins: 6
                         // Popups don't inherit the wrapper's theme: set both schemes explicitly.

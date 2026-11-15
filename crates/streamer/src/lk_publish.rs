@@ -1772,10 +1772,171 @@ pub(crate) fn watch_pipeline_bus_notify(
     pipeline: &gst::Pipeline,
     on_dead: Option<Box<dyn FnOnce() + Send>>,
 ) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
+    watch_bus(pipeline, std::sync::Arc::new(PipelineEnd::new(on_dead, None)))
+}
+
+/// How a watched pipeline ended ON ITS OWN. Decided once, under one lock, by whichever thread sees it first (the
+/// bus thread, or a share's source pad): a pipeline gets `on_resized` or `on_dead`, never both, never twice.
+pub(crate) struct PipelineEnd {
+    inner: std::sync::Mutex<PipelineEndInner>,
+}
+struct PipelineEndInner {
+    over: bool,
+    on_dead: Option<Box<dyn FnOnce() + Send>>,
+    on_resized: Option<Box<dyn FnOnce() + Send>>,
+}
+impl PipelineEnd {
+    pub(crate) fn new(on_dead: Option<Box<dyn FnOnce() + Send>>, on_resized: Option<Box<dyn FnOnce() + Send>>) -> Self {
+        Self { inner: std::sync::Mutex::new(PipelineEndInner { over: false, on_dead, on_resized }) }
+    }
+    /// Claim the pipeline's one ending and get the callback to run for it (after this returns: the lock is not
+    /// held while it runs). `resized` = the source changed its format; without a resize callback that is a death
+    /// like any other. None = it had already ended, or nobody listens.
+    pub(crate) fn claim(&self, resized: bool) -> Option<Box<dyn FnOnce() + Send>> {
+        let mut g = self.inner.lock().ok()?;
+        if g.over {
+            return None;
+        }
+        g.over = true;
+        let cb = if resized { g.on_resized.take().or_else(|| g.on_dead.take()) } else { g.on_dead.take() };
+        g.on_resized = None;
+        g.on_dead = None;
+        cb
+    }
+}
+
+/// [`watch_pipeline_bus_notify`] for a SCREEN SHARE, plus `on_resized`: fired once, INSTEAD of `on_dead`, when the
+/// source changed its format mid-stream (a shared window changed size). pipewiresrc cannot follow that, so the
+/// owner restarts the capture on the same portal session. Two forms, both seen on KWin 6.8.2: a bus error
+/// (gstpipewire 1.4, capture.rs `source_format_changed`), or caps of another size at the source pad and then a
+/// stalled stream with no error at all (gstpipewire 1.6). The size is watched from before the capture played
+/// ([`install_source_size_watch`], call.rs), so a change that came before this call is reported by it too.
+pub(crate) fn watch_share_bus(
+    pipeline: &gst::Pipeline,
+    on_dead: Option<Box<dyn FnOnce() + Send>>,
+    on_resized: Option<Box<dyn FnOnce() + Send>>,
+) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
+    let watch_size = on_resized.is_some();
+    let end = std::sync::Arc::new(PipelineEnd::new(on_dead, on_resized));
+    let stop = watch_bus(pipeline, end.clone());
+    if watch_size {
+        watch_source_size(pipeline, stop.clone(), end);
+    }
+    stop
+}
+
+/// The size of a capture's source, watched from BEFORE the capture plays (call.rs installs it on every share
+/// pipeline it is about to start): the first caps give the size, caps of another size later are a change. The
+/// share's watcher ([`watch_share_bus`]) attaches to it once the share is published, and is told at once when the
+/// change came before that. (A probe added to a running pad does not replay the caps that went by, and the pad's
+/// current caps read next to it can already be the changed ones: either way a resize in that gap, which
+/// gstpipewire 1.6 follows with a stalled stream and no error, would go unseen.)
+pub(crate) struct SourceSizeWatch {
+    state: std::sync::Mutex<SourceSizeState>,
+}
+type SizeChangeFn = Box<dyn FnOnce((i32, i32), (i32, i32)) + Send>;
+#[derive(Default)]
+struct SourceSizeState {
+    first: Option<(i32, i32)>,
+    changed: Option<((i32, i32), (i32, i32))>,
+    on_change: Option<SizeChangeFn>,
+}
+impl SourceSizeWatch {
+    fn saw(&self, now: (i32, i32)) {
+        let fire = {
+            let Ok(mut st) = self.state.lock() else { return };
+            match (st.first, st.changed) {
+                (None, _) => {
+                    st.first = Some(now);
+                    None
+                }
+                (Some(was), None) if was != now => {
+                    st.changed = Some((was, now));
+                    st.on_change.take().map(|cb| (cb, was))
+                }
+                _ => None,
+            }
+        };
+        if let Some((cb, was)) = fire {
+            cb(was, now); // (outside the lock)
+        }
+    }
+    /// Run `cb(was, now)` when the size changes; at once when it already has.
+    fn on_change(&self, cb: SizeChangeFn) {
+        let already = {
+            let Ok(mut st) = self.state.lock() else { return };
+            match st.changed {
+                Some(c) => Some((cb, c)),
+                None => {
+                    st.on_change = Some(cb);
+                    None
+                }
+            }
+        };
+        if let Some((cb, (was, now))) = already {
+            cb(was, now);
+        }
+    }
+}
+
+/// The watches of the pipelines that have one, by pipeline (weak: an entry goes with its pipeline).
+fn source_size_watches() -> &'static std::sync::Mutex<Vec<(gst::glib::WeakRef<gst::Pipeline>, std::sync::Arc<SourceSizeWatch>)>> {
+    static W: std::sync::OnceLock<std::sync::Mutex<Vec<(gst::glib::WeakRef<gst::Pipeline>, std::sync::Arc<SourceSizeWatch>)>>> = std::sync::OnceLock::new();
+    W.get_or_init(Default::default)
+}
+
+/// Start watching the size of `pipeline`'s source. Call it BEFORE the pipeline plays; once per pipeline (a second
+/// call returns the first watch).
+pub(crate) fn install_source_size_watch(pipeline: &gst::Pipeline) -> Option<std::sync::Arc<SourceSizeWatch>> {
+    let mut all = source_size_watches().lock().ok()?;
+    all.retain(|(p, _)| p.upgrade().is_some());
+    if let Some((_, w)) = all.iter().find(|(p, _)| p.upgrade().as_ref() == Some(pipeline)) {
+        return Some(w.clone());
+    }
+    let pad = pipeline.iterate_sources().into_iter().flatten().next().and_then(|e| e.static_pad("src"))?;
+    fn size_of(caps: &gst::CapsRef) -> Option<(i32, i32)> {
+        let s = caps.structure(0)?;
+        Some((s.get::<i32>("width").ok()?, s.get::<i32>("height").ok()?))
+    }
+    let watch = std::sync::Arc::new(SourceSizeWatch { state: Default::default() });
+    // (a pipeline that already plays, e.g. a watcher installed without this call before: the size it has now)
+    if let Some(now) = pad.current_caps().as_deref().and_then(size_of) {
+        watch.saw(now);
+    }
+    let w = watch.clone();
+    pad.add_probe(gst::PadProbeType::EVENT_DOWNSTREAM, move |_, info| {
+        if let Some(gst::PadProbeData::Event(ev)) = &info.data {
+            if let gst::EventView::Caps(c) = ev.view() {
+                if let Some(now) = size_of(c.caps()) {
+                    w.saw(now);
+                }
+            }
+        }
+        gst::PadProbeReturn::Ok
+    });
+    all.push((pipeline.downgrade(), watch.clone()));
+    Some(watch)
+}
+
+/// The source-pad half of [`watch_share_bus`]: a source that changed size (now, or since the capture started)
+/// claims the pipeline's end.
+fn watch_source_size(pipeline: &gst::Pipeline, stop: std::sync::Arc<std::sync::atomic::AtomicBool>, end: std::sync::Arc<PipelineEnd>) {
+    let Some(watch) = install_source_size_watch(pipeline) else { return };
+    watch.on_change(Box::new(move |was, now| {
+        if stop.load(std::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
+        if let Some(cb) = end.claim(true) {
+            eprintln!("[lk] the share's source changed size mid-stream: {}x{} -> {}x{}", was.0, was.1, now.0, now.1);
+            cb();
+        }
+    }));
+}
+
+fn watch_bus(pipeline: &gst::Pipeline, end: std::sync::Arc<PipelineEnd>) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
     let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let Some(bus) = pipeline.bus() else { return stop };
     let stop_w = stop.clone();
-    let mut on_dead = on_dead;
     std::thread::spawn(move || {
         use gst::MessageView;
         loop {
@@ -1787,11 +1948,19 @@ pub(crate) fn watch_pipeline_bus_notify(
             };
             match msg.view() {
                 MessageView::Error(e) => {
+                    let why = format!("error: {} ({:?})", e.error(), e.debug());
                     eprintln!("[lk] capture gst ERROR: {} ({:?})", e.error(), e.debug());
                     #[cfg(not(windows))]
-                    crate::capture::note_buffer_refusal(&format!("error: {} ({:?})", e.error(), e.debug()));
+                    crate::capture::note_buffer_refusal(&why);
+                    #[cfg(not(windows))]
+                    let resized = crate::capture::source_format_changed(&why);
+                    #[cfg(windows)]
+                    let resized = {
+                        let _ = &why;
+                        false
+                    };
                     if !stop_w.load(std::sync::atomic::Ordering::Relaxed) {
-                        if let Some(cb) = on_dead.take() {
+                        if let Some(cb) = end.claim(resized) {
                             cb();
                         }
                     }
@@ -1800,7 +1969,7 @@ pub(crate) fn watch_pipeline_bus_notify(
                 MessageView::Eos(_) => {
                     eprintln!("[lk] capture gst EOS");
                     if !stop_w.load(std::sync::atomic::Ordering::Relaxed) {
-                        if let Some(cb) = on_dead.take() {
+                        if let Some(cb) = end.claim(false) {
                             cb();
                         }
                     }
@@ -3366,6 +3535,360 @@ mod share_capture_tests {
         assert_eq!(renegotiated, 0, "{renegotiated} of {} starts renegotiated the source mid-stream (pipewiresrc reconnects and then returns buffers a frame late)", rates.len());
         assert!(low.is_empty(), "{} of {} starts ran below {min_fps} fps: [{}]", low.len(), rates.len(), low.join(", "));
     }
+
+    /// The wordings pipewiresrc posts when a shared window changes size (captured on KWin 6.8.2 with gstpipewire
+    /// 1.4.9, the first one also in a field log), against the ones it posts for other deaths.
+    #[cfg(not(windows))]
+    #[test]
+    fn a_source_format_change_is_told_from_other_capture_errors() {
+        use crate::capture::source_format_changed;
+        for resized in [
+            "error: stream error: unhandled format (Some(\"../src/gst/gstpipewiresrc.c(748): on_state_changed (): /GstPipeline:pipeline8/GstPipeWireSrc:pipewiresrc6\"))",
+            "error: stream error: Format negotiation failed (Some(\"../src/gst/gstpipewiresrc.c(748): on_state_changed (): /GstPipeline:pipeline0/GstPipeWireSrc:src\"))",
+        ] {
+            assert!(source_format_changed(resized), "a size change: {resized}");
+        }
+        for other in [
+            // the shared window was closed
+            "error: stream error: target not found (Some(\"../src/gst/gstpipewiresrc.c(748): on_state_changed (): /GstPipeline:pipeline0/GstPipeWireSrc:src\"))",
+            "error: stream error: error alloc buffers: Invalid argument (None)",
+            "error: Internal data stream error. (Some(\"streaming stopped, reason not-negotiated (-4)\"))",
+            "error: Failed to allocate required memory. (Some(\"unhandled format in the pool\"))",
+            "no frame in 4 s",
+        ] {
+            assert!(!source_format_changed(other), "not a size change: {other}");
+        }
+    }
+
+    /// Restarts after a size change wait longer while the changes keep coming, start over only after a restarted
+    /// capture stayed up for QUIET (the time a restart takes is not quiet), and stop for good after MAX_IN_A_ROW.
+    #[test]
+    fn resize_restarts_back_off_and_give_up() {
+        use crate::call::ShareResizeBackoff as B;
+        use std::time::{Duration, Instant};
+        let (ms, secs) = (Duration::from_millis, Duration::from_secs);
+        let t0 = Instant::now();
+        // a window being dragged: every restart comes up and dies on the next change a second later
+        let (mut b, mut t, mut waits) = (B::new(), t0, Vec::new());
+        for _ in 0..6 {
+            waits.push(b.next(t).expect("a wait").as_millis() as u64);
+            t += secs(1);
+            b.restarted(b.seen(), t);
+            t += secs(1);
+        }
+        assert_eq!(waits, [400, 800, 1600, 2000, 2000, 2000]);
+        // the last restart stayed up: the next change starts over
+        t += B::QUIET;
+        assert_eq!(b.next(t), Some(ms(400)), "a capture that stayed up ends the run");
+        // a restart that takes a minute (or never comes up) is not a quiet spell
+        t += secs(60);
+        assert_eq!(b.next(t), Some(ms(800)), "slow recovery keeps the run");
+        b.restarted(b.seen(), t);
+        t += B::QUIET - ms(1);
+        assert_eq!(b.next(t), Some(ms(1600)), "up for less than QUIET keeps the run");
+        // a restart that finishes AFTER a newer change was seen: the capture it brought up is the one that change
+        // was seen on, so it is not up, however long the next recovery takes
+        let began = b.seen();
+        assert_eq!(b.next(t), Some(ms(2000)), "the newer change, seen while that restart still ran");
+        b.restarted(began, t);
+        t += secs(60);
+        assert_eq!(b.next(t), Some(ms(2000)), "the run goes on");
+        // any restart that brings a capture up counts (a quality change too)
+        b.restarted(b.seen(), t);
+        t += B::QUIET + ms(1);
+        assert_eq!(b.next(t), Some(ms(400)));
+
+        let (mut b, mut t, mut n) = (B::new(), t0, 0u32);
+        while b.next(t).is_some() {
+            n += 1;
+            t += secs(20);
+            b.restarted(b.seen(), t);
+            t += secs(2);
+            assert!(n <= 1000, "never gives up");
+        }
+        assert_eq!(n, B::MAX_IN_A_ROW, "slow restarts count like fast ones");
+        t += secs(30);
+        assert_eq!(b.next(t), None, "still none while the changes keep coming");
+    }
+
+    /// A pipeline ends once: whichever of the two watchers sees it first decides, and the other gets nothing.
+    #[test]
+    fn a_pipeline_gets_one_ending() {
+        use std::sync::atomic::{AtomicU32, Ordering::SeqCst};
+        let (dead, resized) = (std::sync::Arc::new(AtomicU32::new(0)), std::sync::Arc::new(AtomicU32::new(0)));
+        let end = |with_resized: bool| {
+            let (d, r) = (dead.clone(), resized.clone());
+            dead.store(0, SeqCst);
+            resized.store(0, SeqCst);
+            let on_resized: Option<Box<dyn FnOnce() + Send>> = with_resized.then(|| {
+                Box::new(move || {
+                    r.fetch_add(1, SeqCst);
+                }) as Box<dyn FnOnce() + Send>
+            });
+            PipelineEnd::new(
+                Some(Box::new(move || {
+                    d.fetch_add(1, SeqCst);
+                })),
+                on_resized,
+            )
+        };
+        let run = |e: &PipelineEnd, claims: &[bool]| -> (u32, u32, Vec<bool>) {
+            let got: Vec<bool> = claims
+                .iter()
+                .map(|&resized| match e.claim(resized) {
+                    Some(cb) => {
+                        cb();
+                        true
+                    }
+                    None => false,
+                })
+                .collect();
+            (dead.load(SeqCst), resized.load(SeqCst), got)
+        };
+        // the source pad saw the new size first, then the bus brings an error and an EOS: a resize, nothing else
+        assert_eq!(run(&end(true), &[true, false, false]), (0, 1, vec![true, false, false]));
+        // the bus saw a death first (a closed window): the late caps do not turn it into a restart
+        assert_eq!(run(&end(true), &[false, true]), (1, 0, vec![true, false]));
+        // both see the same size change (1.4 can post the error and the caps): one restart
+        assert_eq!(run(&end(true), &[true, true]), (0, 1, vec![true, false]));
+        // nobody restarts shares (Windows, the camera): a format error is a death like any other
+        assert_eq!(run(&end(false), &[true, false]), (1, 0, vec![true, false]));
+    }
+
+    /// watch_share_bus, the bus form (gstpipewire 1.4): a format error fires the resize hook and NOT the dead hook;
+    /// every other death fires the dead hook only.
+    #[cfg(not(windows))]
+    #[test]
+    fn a_format_error_restarts_a_share_and_any_other_death_ends_it() {
+        use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
+        let _ = gst::init();
+        let run = |text: &str| -> (bool, bool) {
+            let pipeline = gst::Pipeline::new();
+            let (dead, resized) = (std::sync::Arc::new(AtomicBool::new(false)), std::sync::Arc::new(AtomicBool::new(false)));
+            let (d, r) = (dead.clone(), resized.clone());
+            let stop = watch_share_bus(&pipeline, Some(Box::new(move || d.store(true, SeqCst))), Some(Box::new(move || r.store(true, SeqCst))));
+            let msg = gst::message::Error::builder(gst::ResourceError::Failed, text).src(&pipeline).build();
+            pipeline.bus().expect("a bus").post(msg).expect("posted");
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+            while !dead.load(SeqCst) && !resized.load(SeqCst) && std::time::Instant::now() < deadline {
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50)); // the other hook would have fired by now
+            stop.store(true, SeqCst);
+            (dead.load(SeqCst), resized.load(SeqCst))
+        };
+        assert_eq!(run("stream error: unhandled format"), (false, true));
+        assert_eq!(run("stream error: Format negotiation failed"), (false, true));
+        assert_eq!(run("stream error: target not found"), (true, false), "a closed window ends the share");
+        assert_eq!(run("Internal data stream error."), (true, false));
+        // a watcher without a resize callback (Windows; the camera's watcher): a format error is a death
+        let pipeline = gst::Pipeline::new();
+        let dead = std::sync::Arc::new(AtomicBool::new(false));
+        let d = dead.clone();
+        let stop = watch_share_bus(&pipeline, Some(Box::new(move || d.store(true, SeqCst))), None);
+        let msg = gst::message::Error::builder(gst::ResourceError::Failed, "stream error: unhandled format").src(&pipeline).build();
+        pipeline.bus().expect("a bus").post(msg).expect("posted");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        while !dead.load(SeqCst) && std::time::Instant::now() < deadline {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        stop.store(true, SeqCst);
+        assert!(dead.load(SeqCst));
+    }
+
+    /// watch_share_bus, the source-pad form (gstpipewire 1.6: no error, caps of the new size, then a stalled stream):
+    /// caps of another SIZE fire the resize hook, once; the same size again (another rate) does not. The watcher is
+    /// installed once the capture RUNS, as call.rs does: the size to compare with is the one the source has by then
+    /// (a probe does not replay the caps event that went by before it was added).
+    #[test]
+    fn a_new_size_at_the_source_restarts_a_share_once() {
+        use std::sync::atomic::{AtomicU32, Ordering::SeqCst};
+        let _ = gst::init();
+        let line = "videotestsrc is-live=true ! capsfilter name=c caps=video/x-raw,width=320,height=240,framerate=30/1 ! fakesink sync=false";
+        let pipeline = gst::parse::launch(line).unwrap().downcast::<gst::Pipeline>().unwrap();
+        let fired = std::sync::Arc::new(AtomicU32::new(0));
+        let f = fired.clone();
+        pipeline.set_state(gst::State::Playing).unwrap();
+        let (res, _, _) = pipeline.state(gst::ClockTime::from_seconds(5));
+        assert!(res.is_ok(), "the test pipeline did not start");
+        std::thread::sleep(std::time::Duration::from_millis(300)); // frames flow: the first caps are long gone
+        let stop = watch_share_bus(
+            &pipeline,
+            None,
+            Some(Box::new(move || {
+                f.fetch_add(1, SeqCst);
+            })),
+        );
+        let c = pipeline.by_name("c").unwrap();
+        let set = |caps: &str| c.set_property("caps", caps.parse::<gst::Caps>().unwrap());
+        let settle = |want: u32| {
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+            while fired.load(SeqCst) < want && std::time::Instant::now() < deadline {
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            fired.load(SeqCst)
+        };
+        // (every count is read first and checked after the pipeline is down: a failed check must not unwind past a
+        // playing pipeline)
+        let quiet = settle(0);
+        set("video/x-raw,width=320,height=240,framerate=15/1");
+        let same_size = settle(0);
+        set("video/x-raw,width=640,height=480,framerate=15/1");
+        let new_size = settle(1);
+        set("video/x-raw,width=800,height=600,framerate=15/1");
+        let again = settle(1);
+        stop.store(true, SeqCst);
+        let _ = pipeline.set_state(gst::State::Null);
+        assert_eq!(quiet, 0, "nothing changed yet");
+        assert_eq!(same_size, 0, "the same size at another rate is not a size change");
+        assert_eq!(new_size, 1, "another size fires the hook");
+        assert_eq!(again, 1, "once: the owner restarts the capture, this pipeline is done");
+
+        // call.rs's order: the size is watched from BEFORE the capture plays, the share's watcher comes once the
+        // share is published. A change in between (which gstpipewire 1.6 follows with a stalled stream and no
+        // error) is reported the moment the watcher attaches.
+        let pipeline = gst::parse::launch(line).unwrap().downcast::<gst::Pipeline>().unwrap();
+        install_source_size_watch(&pipeline).expect("the size watch");
+        pipeline.set_state(gst::State::Playing).unwrap();
+        let (res, _, _) = pipeline.state(gst::ClockTime::from_seconds(5));
+        assert!(res.is_ok(), "the test pipeline did not start");
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        pipeline.by_name("c").unwrap().set_property("caps", "video/x-raw,width=640,height=480,framerate=30/1".parse::<gst::Caps>().unwrap());
+        std::thread::sleep(std::time::Duration::from_millis(700)); // the new caps went by: nobody was listening yet
+        let early = std::sync::Arc::new(AtomicU32::new(0));
+        let e = early.clone();
+        let stop = watch_share_bus(
+            &pipeline,
+            None,
+            Some(Box::new(move || {
+                e.fetch_add(1, SeqCst);
+            })),
+        );
+        let reported = early.load(SeqCst);
+        stop.store(true, SeqCst);
+        let _ = pipeline.set_state(gst::State::Null);
+        assert_eq!(reported, 1, "a size change from before the watcher is reported when it attaches");
+    }
+
+    /// REAL-COMPOSITOR gate, opt-in: TINHAT_RESIZE_NODE=<the node of a WINDOW screencast> and TINHAT_RESIZE_CMD=<a
+    /// shell command that changes that window's size> (the lab: KWin 6.8.2 and a KWin script). What a share does
+    /// when its window changes size:
+    ///   1. the app's pre-sized capture runs at the cap;
+    ///   2. the command runs, and the share's watcher (`watch_share_bus`) must report the change within 8 s;
+    ///   3. the restart (the size learned again, a new pre-sized capture) must run at the cap at the NEW size.
+    /// TINHAT_RESIZE_PLANT=1 is 12.1.13: nothing is restarted and the old capture is measured after the change;
+    /// the gate must FAIL with it.
+    #[cfg(not(windows))]
+    #[test]
+    fn share_window_resize_gate() {
+        use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::SeqCst};
+        let (Some(node), Ok(cmd)) = (
+            std::env::var("TINHAT_RESIZE_NODE").ok().and_then(|v| v.trim().parse::<u32>().ok()),
+            std::env::var("TINHAT_RESIZE_CMD"),
+        ) else {
+            eprintln!("skipping: TINHAT_RESIZE_NODE / TINHAT_RESIZE_CMD not set");
+            return;
+        };
+        let plant = std::env::var("TINHAT_RESIZE_PLANT").is_ok();
+        let floor: f64 = std::env::var("TINHAT_RESIZE_MIN_FPS").ok().and_then(|v| v.parse().ok()).unwrap_or(50.0);
+        let _ = gst::init();
+        let secs = std::time::Duration::from_secs;
+        let learn = || -> (u32, u32) {
+            let head = crate::capture::source_head_with_cap(&buffer_gate_head(node, false), 60, true);
+            let pipeline = gst::parse::launch(&size_probe_desc(&head)).unwrap().downcast::<gst::Pipeline>().unwrap();
+            let memo: std::sync::Arc<std::sync::Mutex<Option<(u32, u32)>>> = Default::default();
+            install_size_probe(&pipeline, memo.clone()).expect("the probe's sink");
+            let flowing = crate::call::first_frame_flag(&pipeline.by_name("sink").expect("the probe's sink"));
+            let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None).expect("a screen lease");
+            assert!(crate::call::leased_play(&lease, &pipeline, 6000, "resize gate"), "the size-learning run did not start");
+            let deadline = std::time::Instant::now() + secs(4);
+            while !flowing.load(SeqCst) {
+                assert!(std::time::Instant::now() < deadline, "the size-learning run got no frame in 4 s");
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+            let _ = crate::call::set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 4000, "resize gate");
+            let size = *memo.lock().unwrap();
+            size.expect("the size-learning run recorded no size")
+        };
+        // the app's pre-sized capture of a `size` source + the share's watcher: (pipeline, lease, frames, resized, stop)
+        type Run = (gst::Pipeline, crate::capture_lease::Lease, std::sync::Arc<AtomicU64>, std::sync::Arc<AtomicBool>, std::sync::Arc<AtomicBool>);
+        let start = |size: (u32, u32)| -> Run {
+            let (w, h) = fit_even(size.0, size.1, 1920, 1080);
+            let head = crate::capture::source_head_with_cap(&buffer_gate_head(node, false), 60, true);
+            let desc = cpu_presized_desc(&head, "", w, h, 60, cpu_capture_threads());
+            let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+            let frames = std::sync::Arc::new(AtomicU64::new(0));
+            let f = frames.clone();
+            let sink = pipeline.by_name("sink").expect("the capture's sink");
+            sink.static_pad("sink").unwrap().add_probe(gst::PadProbeType::BUFFER, move |_, _| {
+                f.fetch_add(1, SeqCst);
+                gst::PadProbeReturn::Ok
+            });
+            let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None).expect("a screen lease");
+            install_source_size_watch(&pipeline).expect("the size watch"); // before it plays, as call.rs does it
+            assert!(crate::call::leased_play(&lease, &pipeline, 8000, "resize gate"), "the capture did not start");
+            let deadline = std::time::Instant::now() + secs(6);
+            while frames.load(SeqCst) == 0 {
+                assert!(std::time::Instant::now() < deadline, "the capture got no frame in 6 s");
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+            // the share's watcher, installed once the capture runs (as call.rs does it)
+            let resized = std::sync::Arc::new(AtomicBool::new(false));
+            let r = resized.clone();
+            let stop = watch_share_bus(&pipeline, None, Some(Box::new(move || r.store(true, SeqCst))));
+            (pipeline, lease, frames, resized, stop)
+        };
+        let fps_over = |frames: &AtomicU64, d: std::time::Duration| -> f64 {
+            let n0 = frames.load(SeqCst);
+            std::thread::sleep(d);
+            (frames.load(SeqCst) - n0) as f64 / d.as_secs_f64()
+        };
+        let finish = |run: Run| {
+            run.4.store(true, SeqCst);
+            let _ = crate::call::set_state_bounded(run.0.upcast_ref(), gst::State::Null, 4000, "resize gate");
+            drop(run.1);
+        };
+
+        let size0 = learn();
+        let run = start(size0);
+        std::thread::sleep(secs(1));
+        let before = fps_over(&run.2, secs(2));
+        eprintln!("[resize-gate] sharing a {}x{} window: {before:.1} fps before the change", size0.0, size0.1);
+        assert!(before >= floor, "the share must run at the cap before the window changes size: {before:.1} fps");
+
+        let status = std::process::Command::new("sh").arg("-c").arg(&cmd).status().expect("the resize command");
+        assert!(status.success(), "the resize command failed: {status:?}");
+        let t = std::time::Instant::now();
+        while !run.3.load(SeqCst) && t.elapsed() < secs(8) {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        let seen = run.3.load(SeqCst);
+        eprintln!("[resize-gate] the window changed size: the watcher {} after {:.1} s", if seen { "reported it" } else { "reported NOTHING" }, t.elapsed().as_secs_f64());
+        if plant {
+            std::thread::sleep(secs(4).saturating_sub(t.elapsed()));
+            let after = fps_over(&run.2, secs(3));
+            eprintln!("[resize-gate] PLANTED 12.1.13 (no restart): {after:.1} fps from the old capture after the change");
+            finish(run);
+            assert!(after >= floor, "PLANTED 12.1.13: the share is dead after the window changed size: {after:.1} fps");
+            return;
+        }
+        assert!(seen, "the share's watcher must report the size change within 8 s");
+        finish(run);
+        std::thread::sleep(std::time::Duration::from_millis(crate::call::ShareResizeBackoff::WAITS_MS[0]));
+
+        let size1 = learn();
+        assert_ne!(size1, size0, "the restart must learn the window's NEW size");
+        let run = start(size1);
+        std::thread::sleep(secs(1));
+        let after = fps_over(&run.2, secs(3));
+        let again = run.3.load(SeqCst);
+        eprintln!("[resize-gate] restarted at {}x{}: {after:.1} fps; another size change reported: {again}", size1.0, size1.1);
+        finish(run);
+        assert!(after >= floor, "the restarted share must run at the cap: {after:.1} fps");
+        assert!(!again, "a window that stays put must not restart the share again");
+    }
+
 
     /// 12.1.12 start-time probe, opt-in, against a REAL compositor stream (TINHAT_BUFLOCK_NODE): how long a CPU
     /// share takes from building its capture to the first frame at the encoder's door, TINHAT_START_ROUNDS (default

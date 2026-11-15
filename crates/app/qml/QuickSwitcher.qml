@@ -25,6 +25,7 @@ Controls.Popup {
     property var rooms: []          // [{id, name, avatar, unread, highlight, dm, peer, alias, space, membership, inviteRank, …}] (root.mRooms)
     signal chosen(string roomId)
     signal inviteChosen(string roomId)   // Ctrl+K on a pending invite: Main.qml shows it where it waits (ACTIONS.md §14.3)
+    signal findPeople(string text)       // P6 (2026-11-14): "Find people named …" → New DM with the text in its field
 
     FallbackTheme { id: fallbackTheme }
     readonly property var _a: app || fallbackTheme   // sizes (radius…); colours come from Th
@@ -54,7 +55,8 @@ Controls.Popup {
     property bool stageFromOutside: false   // opened at a stage by a button: Backspace does not go back
     readonly property var _texts: app && app.actionsTable ? app.actionsTable.palette.texts
                                   : ({ placeholder: "Search rooms, people and actions…", pickPlaceholder: "{label} — pick one…",
-                                       empty: "Nothing matches \"{query}\"", emptyRooms: "No rooms", inviteMarker: "Invited" })
+                                       empty: "Nothing matches \"{query}\"", emptyRooms: "No rooms", inviteMarker: "Invited",
+                                       emptyStage: "Nothing to pick here", tip: "Type @ for people, # for rooms, > for actions" })
 
     /** Type into the field (tests, the review captures). */
     function setQuery(t) { qsField.text = t }
@@ -151,36 +153,48 @@ Controls.Popup {
     }
     readonly property string _stageLabel: stage.length > 0 ? _label(stage) : ""
 
+    // What Enter (or a click) on a row does — the web's paletteChoice.ts, the same rule; tools/palette-choice-test.mjs
+    // runs this code (between the markers) on the shared vectors (crates/app/testvectors/palette-choice/vectors.json = a
+    // byte copy of the web's).
+    // BEGIN choice
+    function choice(it, picking) {
+        if (!it || it.enabled !== true) return { do: "nothing" }
+        if (it.kind === "room") return picking ? { do: "pickRoom", id: it.id } : { do: "openRoom", id: it.id }
+        if (it.kind === "invite") return { do: "showInvite", id: it.id }
+        if (it.kind === "person") return { do: "message", person: it.id }
+        if (it.kind === "find") return { do: "newDm", text: it.id }
+        if (it.kind === "action" && it.pick === true) return { do: "stage", action: it.id }
+        if (it.a) return { do: "run", action: it.a, target: it.kind === "choice" ? it.target : null }
+        return { do: "nothing" }
+    }
+    // END choice
     function choose(it) {
-        if (!it || it.enabled !== true) return
-        if (it.kind === "room") {
-            var p = qs.pick
+        var p = qs.pick
+        var c = qs.choice(it, !!p)
+        if (c.do === "openRoom" || c.do === "pickRoom") {
             qs.close()
-            if (p) p.onPick(it.id)
-            else qs.chosen(it.id)
-            return
-        }
-        if (it.kind === "invite") {
+            if (c.do === "pickRoom" && p) p.onPick(c.id)
+            else qs.chosen(c.id)
+        } else if (c.do === "showInvite") {
             // where it waits with Accept / Decline (Main.qml showInvite, ACTIONS.md §14.3) — never accepted here
             qs.close()
-            qs.inviteChosen(it.id)
-            return
-        }
-        if (it.kind === "person") {
+            qs.inviteChosen(c.id)
+        } else if (c.do === "message") {
             qs.close()
-            if (app && app.actions) app.actions.run("person.message", { source: "palette", target: { person: it.id } })
-            return
-        }
-        if (it.kind === "action" && it.pick === true) {
+            if (app && app.actions) app.actions.run("person.message", { source: "palette", target: { person: c.person } })
+        } else if (c.do === "newDm") {
+            // P6: "Find people named …" — the people picker searches everyone, not only your DM partners
+            qs.close()
+            qs.findPeople(c.text)
+        } else if (c.do === "stage") {
             // stage 2: pick the target here
-            qs.stage = it.id
+            qs.stage = c.action
             qs.stageFromOutside = false
             qs.query = ""; qsField.text = ""
-            return
+        } else if (c.do === "run") {
+            qs.close()
+            if (app && app.actions) app.actions.run(c.action, { source: "palette", target: c.target })
         }
-        var a = it.a, t = it.kind === "choice" ? it.target : null
-        qs.close()
-        if (a && app && app.actions) app.actions.run(a, { source: "palette", target: t })
     }
     function accept() {
         if (results.length > 0) choose(results[Math.max(0, Math.min(list.currentIndex, results.length - 1))])
@@ -288,8 +302,9 @@ Controls.Popup {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.centerIn: parent
                 visible: qs.results.length === 0
+                // A10.7: stage 2 with nothing to pick says so (never 'Nothing matches ""')
                 text: qs.query.trim().length > 0 ? String(qs._texts.empty).replace("{query}", qs.query.trim())
-                      : (qs.stage.length > 0 ? String(qs._texts.empty).replace("{query}", "") : qs._texts.emptyRooms)
+                      : (qs.stage.length > 0 ? String(qs._texts.emptyStage || "Nothing to pick here") : qs._texts.emptyRooms)
                 color: Th.switcherEmptyFg
             }
             delegate: Item {
@@ -322,7 +337,7 @@ Controls.Popup {
                             imageSource: row.roomEntry && row.roomEntry.avatar !== undefined ? row.roomEntry.avatar : ""
                         }
                         Item {
-                            visible: row.modelData.kind === "action" || row.modelData.kind === "choice"
+                            visible: row.modelData.kind === "action" || row.modelData.kind === "choice" || row.modelData.kind === "find"
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
                             Controls.Label {
@@ -333,12 +348,13 @@ Controls.Popup {
                                 font.pixelSize: 18
                             }
                             ThIcon {
-                                visible: !!row.modelData.icon && !row.modelData.emoji
+                                // the find row (P6) wears the search glyph (the web's Lead)
+                                visible: (!!row.modelData.icon || row.modelData.kind === "find") && !row.modelData.emoji
                                 anchors.centerIn: parent
                                 width: Kirigami.Units.iconSizes.smallMedium
                                 height: Kirigami.Units.iconSizes.smallMedium
                                 app: qs.app
-                                name: row.modelData.icon ? row.modelData.icon : ""
+                                name: row.modelData.kind === "find" ? "edit-find" : (row.modelData.icon ? row.modelData.icon : "")
                                 color: row.off ? Th.actionPaletteItemFgDisabled : Th.actionPaletteIcon
                                 isMask: true
                             }
@@ -416,6 +432,17 @@ Controls.Popup {
                 }
             }
             Controls.ScrollBar.vertical: FoxScrollBar { app: qs.app }   // 10.1 (TH-DS-05): the house scrollbar everywhere
+        }
+        // A10.7: the hint under an empty field — the prefixes (palette.texts.tip; the web's .tip)
+        Controls.Label {
+            textFormat: Text.PlainText
+            visible: qs.pick === null && qs.stage.length === 0 && qs.query.trim().length === 0
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: String(qs._texts.tip || "")
+            color: Th.switcherEmptyFg
+            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            elide: Text.ElideRight
         }
     }
 }

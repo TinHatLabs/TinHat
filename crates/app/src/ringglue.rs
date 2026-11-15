@@ -112,6 +112,85 @@ pub fn joined_count(stored_joined: Option<usize>, summary_joined: u64) -> u64 {
     }
 }
 
+/// P8 (2026-11-13): the ring a Decline names (the web's `declineRing`, the vectors' `pick`): in a two-person room the
+/// newest of the others' live ring ids (`ring_sets().1`, event order) that is a valid ring id; else None — a group call
+/// has no single caller to tell, so its card offers Dismiss only.
+pub fn decline_ring(live: &[String], dm: bool) -> Option<String> {
+    if !dm {
+        return None;
+    }
+    live.iter().rev().find(|r| ring_id_ok(r)).cloned()
+}
+
+/// The room's call.member state now + the room membership of everyone it names and of `extra` (a decliner), and how
+/// many are joined (`members_no_sync`, see [`joined_count`]).
+async fn ring_view(room: &matrix_sdk::Room, extra: &str) -> (Vec<Value>, HashMap<String, Option<String>>, Option<usize>) {
+    let members: Vec<Value> = {
+        use matrix_sdk::ruma::events::call::member::CallMemberEventContent;
+        match room.get_state_events_static::<CallMemberEventContent>().await {
+            Ok(raws) => raws.iter().filter_map(|x| serde_json::to_value(x).ok()).collect(),
+            Err(_) => Vec::new(),
+        }
+    };
+    let mut joined: HashMap<String, Option<String>> = HashMap::new();
+    for who in members.iter().filter_map(|v| v.get("sender").and_then(Value::as_str)).chain(std::iter::once(extra)) {
+        if who.is_empty() || joined.contains_key(who) {
+            continue;
+        }
+        let ms = match matrix_sdk::ruma::UserId::parse(who) {
+            Ok(u) => room.get_member_no_sync(&u).await.ok().flatten().map(|m| m.membership().to_string()),
+            Err(_) => None,
+        };
+        joined.insert(who.to_string(), ms);
+    }
+    let stored_joined = room.members_no_sync(matrix_sdk::RoomMemberships::JOIN).await.ok().map(|ms| ms.len());
+    (members, joined, stored_joined)
+}
+
+/// D09.5: how many other people's call memberships are live in the room now (the shared live-session rule).
+pub async fn others_live_rings(room: &matrix_sdk::Room, me: &str) -> usize {
+    let now_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0);
+    let (members, joined, _) = ring_view(room, "").await;
+    let membership_of = |u: &str| joined.get(u).cloned().flatten();
+    ring_sets(&members, membership_of, me, now_ms).1.len()
+}
+
+/// P8 (2026-11-13; RINGING.md §5): the incoming card's Decline (QML has already taken the card and the ring down). The
+/// DM gets `dev.tinhat.call.decline {ring}` (encrypted in an encrypted DM: the caller sees "<name> declined", my other
+/// devices drop their card) and the server is told (`POST /push/ring/decline`: my phones stop ringing). No ring to name
+/// (not a two-person room, the call is over): nothing is sent, the card was just dismissed. = the web's declineIncoming.
+pub async fn decline(room_id: String) {
+    let Some(client) = crate::session::client() else { return };
+    let Some(room) = matrix_sdk::ruma::RoomId::parse(room_id.as_str()).ok().and_then(|r| client.get_room(&r)) else { return };
+    let me = client.user_id().map(|u| u.to_string()).unwrap_or_default();
+    let now_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0);
+    let (members, joined, stored_joined) = ring_view(&room, "").await;
+    let membership_of = |u: &str| joined.get(u).cloned().flatten();
+    let (_, live) = ring_sets(&members, membership_of, &me, now_ms);
+    let dm = joined_count(stored_joined, room.joined_members_count()) == 2;
+    crate::callwatch::forget_card(&room_id);
+    let Some(ring) = decline_ring(&live, dm) else {
+        eprintln!("[ringglue] decline in {room_id}: no ring to name (not a two-person room, or the call is over) — dismissed only");
+        return;
+    };
+    eprintln!("[ringglue] declined the ring in {room_id} (ring {ring})");
+    if let Err(e) = room.send_raw(CALL_DECLINE_TYPE, serde_json::json!({ "ring": ring })).await {
+        eprintln!("[ringglue] decline: the room event failed: {e}");
+    }
+    let (Ok(url), Some(token)) = (crate::proxy::url("/push/ring/decline"), client.access_token()) else { return };
+    let body = serde_json::json!({ "room": room_id, "ring": ring }).to_string();
+    let req = crate::proxy::http(Some(std::time::Duration::from_secs(8)))
+        .post(&url)
+        .header("Authorization", format!("Bearer {token}"))
+        .header("Content-Type", "application/json")
+        .body(body);
+    match req.send().await {
+        Ok(r) if r.status().is_success() => {}
+        Ok(r) => eprintln!("[ringglue] decline: the server answered {} (older server or push off)", r.status().as_u16()),
+        Err(_) => eprintln!("[ringglue] decline: the server couldn't be reached"),
+    }
+}
+
 /// The words the caller sees (the web's `declinedText`: the same).
 pub fn declined_text(name: &str) -> String {
     let n = name.trim();
@@ -230,27 +309,9 @@ pub async fn on_sync(client: &matrix_sdk::Client, response: &matrix_sdk::sync::S
     for (room_id, ev) in todo {
         let Some(room) = matrix_sdk::ruma::RoomId::parse(room_id.as_str()).ok().and_then(|r| client.get_room(&r)) else { continue };
         // the room's call.member state now, and the room membership of everyone it names + the decliner
-        let members: Vec<Value> = {
-            use matrix_sdk::ruma::events::call::member::CallMemberEventContent;
-            match room.get_state_events_static::<CallMemberEventContent>().await {
-                Ok(raws) => raws.iter().filter_map(|x| serde_json::to_value(x).ok()).collect(),
-                Err(_) => Vec::new(),
-            }
-        };
         let decliner = ev.get("sender").and_then(Value::as_str).unwrap_or("").to_string();
-        let mut joined: HashMap<String, Option<String>> = HashMap::new();
-        for who in members.iter().filter_map(|v| v.get("sender").and_then(Value::as_str)).chain(std::iter::once(decliner.as_str())) {
-            if joined.contains_key(who) {
-                continue;
-            }
-            let ms = match matrix_sdk::ruma::UserId::parse(who) {
-                Ok(u) => room.get_member_no_sync(&u).await.ok().flatten().map(|m| m.membership().to_string()),
-                Err(_) => None,
-            };
-            joined.insert(who.to_string(), ms);
-        }
+        let (members, joined, stored_joined) = ring_view(&room, &decliner).await;
         let membership_of = |u: &str| joined.get(u).cloned().flatten();
-        let stored_joined = room.members_no_sync(matrix_sdk::RoomMemberships::JOIN).await.ok().map(|ms| ms.len());
         let (own, live) = ring_sets(&members, membership_of, &me, now_ms.max(0) as u64);
         let ctx = DeclineCtx {
             me: &me,
@@ -341,6 +402,13 @@ mod tests {
             };
             assert_eq!(decline_outcome(&c["event"], &ctx), want, "case: {name}");
         }
+        // P8: the ring a Decline names
+        let pick = v["pick"].as_array().expect("pick");
+        assert_eq!(pick.len(), 6);
+        for p in pick {
+            let got = decline_ring(&strings(&p["live"]), p["dm"].as_bool().unwrap());
+            assert_eq!(got.as_deref(), p["want"].as_str(), "pick: {}", p["name"]);
+        }
         let rings = v["rings"].as_array().expect("rings");
         assert_eq!(rings.len(), 16);
         for r in rings {
@@ -408,4 +476,23 @@ mod tests {
             assert!(!ring_id_ok(bad), "{bad:?}");
         }
     }
+
+    /// P8: the card's Decline is wired: the button shows for a DM, takes the card down and asks ringglue.rs to tell the
+    /// caller (the bridge spawns `decline`), which sends the shared event type with the shared pick (= the web's
+    /// Incoming.tsx + callwatch.ts declineIncoming).
+    #[test]
+    fn the_card_declines() {
+        let card = include_str!("../qml/IncomingCallToast.qml");
+        assert!(card.contains("tip: \"Decline\"") && card.contains("onClicked: toast.decline(modelData.roomId)"), "the button");
+        assert!(card.contains("app.login.declineIncoming(roomId)") && card.contains("app.twoPersonCall(roomId)"), "two-person rooms only, asks the bridge");
+        // (lab A) the room list's twoPerson is the decline's own rule (joined_count == 2), not m.direct
+        assert!(include_str!("bridge.rs").contains("\"twoPerson\": two_person") && include_str!("bridge.rs").contains("crate::ringglue::joined_count("));
+        let bridge = include_str!("bridge.rs");
+        assert!(bridge.contains("runtime().spawn(crate::ringglue::decline(room_id.to_string()))"), "the bridge spawns it");
+        let me = include_str!("ringglue.rs");
+        let body = &me[me.find("pub async fn decline(").unwrap()..];
+        assert!(body.contains("decline_ring(&live, dm)") && body.contains("send_raw(CALL_DECLINE_TYPE, serde_json::json!({ \"ring\": ring }))"), "the event");
+        assert!(body.contains("\"/push/ring/decline\""), "the server is told");
+    }
+
 }

@@ -573,3 +573,15 @@ mod tests {
         assert_eq!(who_of("@a/b:x"), "ab");
     }
 }
+
+#[cfg(test)]
+mod recv_stats_scrub_tests {
+    /// The shipped log's scrubbers must leave the `[recv-stats]` line whole (mirrors the web's recvStats.test.ts).
+    #[test]
+    fn the_scrubber_leaves_the_recv_stats_line_whole() {
+        let p = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testvectors/recv-stats/format.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap();
+        let line = v["scrubSafe"].as_str().unwrap();
+        assert_eq!(super::scrub(line).trim_end(), line);
+    }
+}

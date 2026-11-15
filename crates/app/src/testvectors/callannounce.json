@@ -1,0 +1,772 @@
+{
+  "_about": "Shared vectors: what a screen reader hears about calls. Web src/features/calls/callannounce.vectors.json = desktop crates/app/src/testvectors/callannounce.json, byte-identical. card (A15.2/A15.6, 2026-11-13): the incoming call card's two lines: a DM = '<who or the room> is calling' / 'Incoming call'; a group = 'Incoming call · <room>' / '<names> is|are in the call' (nameList of the people in the call now, me left out), else '<who> started a call' / 'Someone started a call'; ' — you're in another call' appended to the second line. startNote (D09.5, 2026-11-13): the status line after I start a call (alone = nobody else in it yet) when a joined member's server (the mxid after its first ':') differs from mine: they will meet the 'Join a call hosted elsewhere?' sheet.",
+  "constants": {
+    "rosterArmMs": 2500,
+    "rosterBatchMs": 1200
+  },
+  "phase": [
+    {
+      "name": "idle → connecting",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": true,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "Joining the call in Game night…",
+        "urgent": false
+      }
+    },
+    {
+      "name": "connecting → in",
+      "prev": {
+        "inCall": false,
+        "connecting": true,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "You're in the call in Game night",
+        "urgent": false
+      }
+    },
+    {
+      "name": "idle → in (a fast join)",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "You're in the call in Game night",
+        "urgent": false
+      }
+    },
+    {
+      "name": "no room name",
+      "prev": {
+        "inCall": false,
+        "connecting": true,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "  ",
+      "out": {
+        "text": "You're in the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "in → reconnecting (urgent)",
+      "prev": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": true,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "Reconnecting to the call…",
+        "urgent": true
+      }
+    },
+    {
+      "name": "reconnecting → in",
+      "prev": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": true,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "Reconnected to the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "reconnecting without inCall still reads reconnecting",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": true,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": true,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "x",
+      "out": null
+    },
+    {
+      "name": "in → dropped",
+      "prev": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "Call ended — connection lost",
+        "urgent": true
+      }
+    },
+    {
+      "name": "connecting → join failed, reason capitalised",
+      "prev": {
+        "inCall": false,
+        "connecting": true,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "the call server didn't answer",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "Couldn't join the call: The call server didn't answer",
+        "urgent": true
+      }
+    },
+    {
+      "name": "removed by a moderator wins over a reason",
+      "prev": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "kicked",
+        "removedBy": " Ana "
+      },
+      "room": "x",
+      "out": {
+        "text": "Ana disconnected you from the call",
+        "urgent": true
+      }
+    },
+    {
+      "name": "failed → failed, same words: nothing",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "x",
+      "out": null
+    },
+    {
+      "name": "failed → failed, new words: said again",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "the call server didn't answer",
+        "removedBy": ""
+      },
+      "room": "x",
+      "out": {
+        "text": "Couldn't join the call: The call server didn't answer",
+        "urgent": true
+      }
+    },
+    {
+      "name": "failed → idle (banner dismissed): nothing",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "",
+        "removedBy": "Ana"
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "x",
+      "out": null
+    },
+    {
+      "name": "failed → connecting (Rejoin)",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": true,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": true,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "Joining the call in Game night…",
+        "urgent": false
+      }
+    },
+    {
+      "name": "in → idle",
+      "prev": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "You left the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "reconnecting → idle",
+      "prev": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": true,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "You left the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "connecting → idle (cancelled)",
+      "prev": {
+        "inCall": false,
+        "connecting": true,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "Game night",
+      "out": {
+        "text": "Stopped joining the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "same phase, other flags: nothing",
+      "prev": {
+        "inCall": true,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": true,
+        "connecting": true,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "x",
+      "out": null
+    },
+    {
+      "name": "idle → idle",
+      "prev": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "next": {
+        "inCall": false,
+        "connecting": false,
+        "reconnecting": false,
+        "callFailed": false,
+        "failReason": "",
+        "removedBy": ""
+      },
+      "room": "x",
+      "out": null
+    }
+  ],
+  "incoming": [
+    {
+      "name": "who + room",
+      "room": "Game night",
+      "who": "Ana",
+      "inOtherCall": false,
+      "out": {
+        "text": "Incoming call in Game night: Ana started a call",
+        "urgent": true
+      }
+    },
+    {
+      "name": "already in another call",
+      "room": "Game night",
+      "who": "Ana",
+      "inOtherCall": true,
+      "out": {
+        "text": "Incoming call in Game night: Ana started a call. You're in another call",
+        "urgent": true
+      }
+    },
+    {
+      "name": "no caller name",
+      "room": "Game night",
+      "who": " ",
+      "inOtherCall": false,
+      "out": {
+        "text": "Incoming call in Game night: Someone started a call",
+        "urgent": true
+      }
+    },
+    {
+      "name": "no room name",
+      "room": "",
+      "who": "Ana",
+      "inOtherCall": false,
+      "out": {
+        "text": "Incoming call: Ana started a call",
+        "urgent": true
+      }
+    }
+  ],
+  "names": [
+    {
+      "in": [],
+      "out": ""
+    },
+    {
+      "in": [
+        "Ana"
+      ],
+      "out": "Ana"
+    },
+    {
+      "in": [
+        "Ana",
+        "Ben"
+      ],
+      "out": "Ana and Ben"
+    },
+    {
+      "in": [
+        "Ana",
+        "Ben",
+        "Cy"
+      ],
+      "out": "Ana, Ben and Cy"
+    },
+    {
+      "in": [
+        "Ana",
+        "Ben",
+        "Cy",
+        "Dee"
+      ],
+      "out": "Ana, Ben and 2 others"
+    },
+    {
+      "in": [
+        " Ana ",
+        "",
+        "Ben"
+      ],
+      "out": "Ana and Ben"
+    }
+  ],
+  "roster": [
+    {
+      "name": "nothing",
+      "joined": [],
+      "left": [],
+      "out": null
+    },
+    {
+      "name": "one join",
+      "joined": [
+        "Ana"
+      ],
+      "left": [],
+      "out": {
+        "text": "Ana joined the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "two joins",
+      "joined": [
+        "Ana",
+        "Ben"
+      ],
+      "left": [],
+      "out": {
+        "text": "Ana and Ben joined the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "a leave",
+      "joined": [],
+      "left": [
+        "Cy"
+      ],
+      "out": {
+        "text": "Cy left the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "both",
+      "joined": [
+        "Ana"
+      ],
+      "left": [
+        "Cy",
+        "Dee"
+      ],
+      "out": {
+        "text": "Ana joined the call. Cy and Dee left the call",
+        "urgent": false
+      }
+    },
+    {
+      "name": "five joins",
+      "joined": [
+        "Ana",
+        "Ben",
+        "Cy",
+        "Dee",
+        "Eve"
+      ],
+      "left": [],
+      "out": {
+        "text": "Ana, Ben and 3 others joined the call",
+        "urgent": false
+      }
+    }
+  ],
+  "card": [
+    {
+      "name": "a DM: the caller is calling",
+      "dm": true,
+      "room": "Ana",
+      "who": "Ana",
+      "inCall": [
+        "Ana"
+      ],
+      "inOtherCall": false,
+      "out": {
+        "title": "Ana is calling",
+        "sub": "Incoming call"
+      }
+    },
+    {
+      "name": "a DM while I'm in another call",
+      "dm": true,
+      "room": "Ana",
+      "who": "Ana",
+      "inCall": [
+        "Ana"
+      ],
+      "inOtherCall": true,
+      "out": {
+        "title": "Ana is calling",
+        "sub": "Incoming call — you're in another call"
+      }
+    },
+    {
+      "name": "a DM with no caller name yet: the room's name",
+      "dm": true,
+      "room": "Ana",
+      "who": "",
+      "inCall": [],
+      "inOtherCall": false,
+      "out": {
+        "title": "Ana is calling",
+        "sub": "Incoming call"
+      }
+    },
+    {
+      "name": "a group: who is in the call now",
+      "dm": false,
+      "room": "Game night",
+      "who": "Ana",
+      "inCall": [
+        "Ana",
+        "Ben"
+      ],
+      "inOtherCall": false,
+      "out": {
+        "title": "Incoming call · Game night",
+        "sub": "Ana and Ben are in the call"
+      }
+    },
+    {
+      "name": "a group, one person in",
+      "dm": false,
+      "room": "Game night",
+      "who": "Ana",
+      "inCall": [
+        "Ana"
+      ],
+      "inOtherCall": false,
+      "out": {
+        "title": "Incoming call · Game night",
+        "sub": "Ana is in the call"
+      }
+    },
+    {
+      "name": "a group, many in",
+      "dm": false,
+      "room": "Game night",
+      "who": "Ana",
+      "inCall": [
+        "Ana",
+        "Ben",
+        "Cy",
+        "Dee"
+      ],
+      "inOtherCall": true,
+      "out": {
+        "title": "Incoming call · Game night",
+        "sub": "Ana, Ben and 2 others are in the call — you're in another call"
+      }
+    },
+    {
+      "name": "a group, nobody seen yet: the starter",
+      "dm": false,
+      "room": "Game night",
+      "who": "Ana",
+      "inCall": [],
+      "inOtherCall": false,
+      "out": {
+        "title": "Incoming call · Game night",
+        "sub": "Ana started a call"
+      }
+    },
+    {
+      "name": "a group, nobody known",
+      "dm": false,
+      "room": "Game night",
+      "who": "",
+      "inCall": [],
+      "inOtherCall": false,
+      "out": {
+        "title": "Incoming call · Game night",
+        "sub": "Someone started a call"
+      }
+    }
+  ],
+  "startNote": [
+    {
+      "name": "I start a call in a room with a friend on another server",
+      "me": "@me:a.test",
+      "members": [
+        "@me:a.test",
+        "@sam:b.test"
+      ],
+      "alone": true,
+      "out": "People here from other servers will be asked to trust your server's call host before they can join."
+    },
+    {
+      "name": "everyone is on my server: nothing",
+      "me": "@me:a.test",
+      "members": [
+        "@me:a.test",
+        "@ana:a.test"
+      ],
+      "alone": true,
+      "out": ""
+    },
+    {
+      "name": "I join someone else's call: nothing (it is their host)",
+      "me": "@me:a.test",
+      "members": [
+        "@me:a.test",
+        "@sam:b.test"
+      ],
+      "alone": false,
+      "out": ""
+    },
+    {
+      "name": "a server name with a port is another server",
+      "me": "@me:a.test",
+      "members": [
+        "@me:a.test",
+        "@x:a.test:8448"
+      ],
+      "alone": true,
+      "out": "People here from other servers will be asked to trust your server's call host before they can join."
+    },
+    {
+      "name": "malformed ids are ignored",
+      "me": "@me:a.test",
+      "members": [
+        "@me:a.test",
+        "nobody",
+        ""
+      ],
+      "alone": true,
+      "out": ""
+    }
+  ]
+}

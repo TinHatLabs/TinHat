@@ -12,6 +12,12 @@ import dev.tinhat.app
 ColumnLayout {
     id: island
     required property var app   // Main.qml root
+    // D02.5 (2026-11-13): "Connecting…" turns into "Still connecting…" after 10 s (the house busy rule, ThBusyIndicator;
+    // the web's useStillLabel), so a slow join reads as alive
+    property bool _connStill: false
+    readonly property bool _connecting: !!island.app && island.app.mConnecting === true
+    on_ConnectingChanged: island._connStill = false
+    Timer { interval: 10000; running: island._connecting && !island._connStill; onTriggered: island._connStill = true }
     // islands C3: the in-call panel (tiles, call bar, banners) + the call/chat seam, from the room page's header column
     // (the flush layout): the column's 4 px spacing inside, shown while the call is
     spacing: Kirigami.Units.smallSpacing
@@ -92,7 +98,7 @@ ColumnLayout {
                     // calls included, focused or not (the 10.6 GPU baseline).
                 }
                 Controls.Label {
-                    text: island.app.mConnecting ? "Connecting…" : island.app.mInCall ? "In call"
+                    text: island.app.mConnecting ? (island._connStill ? "Still connecting…" : "Connecting…") : island.app.mInCall ? "In call"
                         : island.app.mReconnecting ? "Reconnecting…" : "Disconnected"
                     color: Th.callStatusBarFg
                     font.bold: true
@@ -395,7 +401,7 @@ ColumnLayout {
                     }
                     Controls.ToolTip.visible: showAllHover.hovered && !hiddenMenu.visible
                     Controls.ToolTip.text: "See who's hidden — show them one by one, or all at once"
-                    Controls.Menu {
+                    KeyMenu {
                         id: hiddenMenu
                         modal: true
                         MenuSectionLabel { app: island.app; text: "Hidden streams" }
@@ -504,7 +510,7 @@ ColumnLayout {
                     tip: "How the call grid is arranged"
                     Controls.ToolTip.visible: hovered && !layoutMenu.visible
                     onClicked: layoutMenu.popup(layoutBtn, 0, layoutBtn.height + 2)
-                    Controls.Menu {
+                    KeyMenu {
                         id: layoutMenu
                         modal: true
                         MenuSectionLabel { app: island.app; text: "Layout" }
@@ -513,7 +519,7 @@ ColumnLayout {
                         Controls.MenuItem { text: "Speaker — one big, the rest below"; checkable: true; checked: island.app.callLayout === "speaker"; onTriggered: island.app.setCallLayout("speaker") }
                         Controls.MenuItem { text: "Side strip — streams big, everyone beside"; checkable: true; checked: island.app.callLayout === "sidebar"; onTriggered: island.app.setCallLayout("sidebar") }
                         Controls.MenuSeparator {}
-                        Controls.MenuItem { text: island.app.pinnedTile.length > 0 ? "Unpin the main tile" : "Pin: hover a tile and press the pin"; enabled: island.app.pinnedTile.length > 0; onTriggered: island.app.pinnedTile = "" }
+                        Controls.MenuItem { text: LinkGate.plain(island.app.pinnedTile.length > 0 ? "Unpin the main tile" : island.app.tileWords().layoutPinHint); enabled: island.app.pinnedTile.length > 0; onTriggered: island.app.pinnedTile = "" }
                         Controls.MenuItem { text: "Animate layout changes"; checkable: true; checked: island.app.callAnimate; onTriggered: island.app.callAnimate = !island.app.callAnimate }
                     }
                 }
@@ -1760,7 +1766,14 @@ ColumnLayout {
                                 if (tile.overflowY > 0) tile.thPanY = Math.max(-1, Math.min(1, startY - translation.y / tile.overflowY))
                             }
                         }
-                        TapHandler { onDoubleTapped: tile.resetView() }
+                        // P9 (12.1.16): double-click a share = full screen (and back); any other tile resets its view
+                        TapHandler {
+                            onDoubleTapped: {
+                                var a = island.app.tileDoubleAction({ share: tile.modelData.screenshare === true, self: tile.isSelf, fake: island.app.fakeCall === true })
+                                if (a === "fullscreen") island.app.tileViewRun(island.app.shareFullscreen === tile.modelData.id ? "leaveFullscreen" : "fullscreen", tile.modelData.id)
+                                else if (a === "reset") tile.resetView()
+                            }
+                        }
                         // 0.8.31: right-click (or long-press) → this person's volumes.
                         TapHandler {
                             acceptedButtons: Qt.RightButton
@@ -2257,8 +2270,19 @@ ColumnLayout {
                             spacing: 6
                             Controls.Label { text: tile.width > 430 ? "● recording-only · tuned in" : "● tuned in"; color: Th.tileTunedInFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }   // 10.1 (TH-CALL-11)
                             Controls.Label {
+                                id: tunedLeave
+                                // D05.7: a keyboard and screen-reader button too (Tab, Return / Enter / Space), like the web's
+                                function leave() { island.app.callctl.setTileTunedIn(tile.modelData.id, false) }
                                 text: "Leave"; color: Th.tileTunedInLeaveFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.underline: true
-                                TapHandler { onTapped: island.app.callctl.setTileTunedIn(tile.modelData.id, false) }
+                                font.bold: activeFocus
+                                activeFocusOnTab: true
+                                Keys.onReturnPressed: tunedLeave.leave()
+                                Keys.onEnterPressed: tunedLeave.leave()
+                                Keys.onSpacePressed: tunedLeave.leave()
+                                Accessible.role: Accessible.Button
+                                Accessible.name: "Leave the tuned-in stream"
+                                Accessible.onPressAction: tunedLeave.leave()
+                                TapHandler { onTapped: tunedLeave.leave() }
                             }
                         }
                     }
@@ -2445,7 +2469,7 @@ ColumnLayout {
                     acceptedButtons: Qt.RightButton
                     onTapped: callBarMenu.popup()
                 }
-                Controls.Menu {
+                KeyMenu {
                     id: callBarMenu
                     Controls.MenuItem { text: "Edit buttons…"; icon.name: "document-edit-symbolic"; onTriggered: brow.edit("Call controls") }
                 }
@@ -2463,6 +2487,9 @@ ColumnLayout {
                         visible: brow.shows("call.mic.toggle")
                         live: !brow.dimmed("call.mic.toggle")
                         hasMenu: true
+                        menuName: "Microphone settings"
+                        checkable: true
+                        checked: app.mMicMuted || app.mServerMuted   // D05.5: pressed = muted
                         menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "mic"
                         onMenuClicked: island.callOptionsRef.toggleFor(micBtn, "mic")
                         iconName: (app.mMicMuted || app.mServerMuted) ? "microphone-sensitivity-muted-symbolic" : "audio-input-microphone-symbolic"
@@ -2481,7 +2508,7 @@ ColumnLayout {
                         variant: app.callctl.pttSpeaking ? "ptt" : "gameChat"
                         badge: app.mGameChat ? "🎮" : ""
                         tip: app.mServerMuted ? app.serverMutedText() + " — ask them to unmute you"
-                           : (app.callctl.pttSpeaking ? "Transmitting (push-to-talk)\n" : "") + (app.mMicMuted ? "Unmute" : "Mute") + " — Ctrl+Shift+M"
+                           : (app.callctl.pttSpeaking ? "Transmitting (push-to-talk)\n" : "") + (app.mMicMuted ? "Unmute" : "Mute") + " — " + app.helpKey("call.mic.toggle", "Ctrl+Shift+M")   // A12.2: rebinding follows
                              + (app.mGameChat && !app.mMicMuted ? "\nGame chat: people in the game's voice chat don't hear this mic here; everyone else does" : "")
                              + (app.heardSummary().length > 0 ? "\n" + app.heardSummary() : "")
                         // 10.5: red ring + pulse while you talk into a muted mic; amber ring while the call isn't getting it.
@@ -2520,7 +2547,7 @@ ColumnLayout {
                                 Controls.Label {
                                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.topMargin: 9; Layout.bottomMargin: 9
-                                    text: island.app.callctl.pushToTalk ? "You're muted — hold " + (island.app.actions && island.app.actions.pttKeys.length > 0 ? island.app.actions.pttKeys[0] : "Ctrl") + " to talk" : "You're muted"
+                                    text: island.app.callctl.pushToTalk ? island.app.callctl.pttHint(island.app.actions && island.app.actions.pttKeys.length > 0 ? island.app.actions.pttKeys[0] : "Ctrl") : "You're muted"   // A22.1: ptt_rules::muted_hint
                                     color: Th.callbarMutedBubbleFg
                                     font.bold: true
                                 }
@@ -2578,12 +2605,15 @@ ColumnLayout {
                         live: !brow.dimmed("call.deafen.toggle")
                         id: deafenBtn
                         hasMenu: true
+                        menuName: "Speaker settings"
+                        checkable: true
+                        checked: app.mDeafened   // D05.5
                         menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "speaker"
                         onMenuClicked: island.callOptionsRef.toggleFor(deafenBtn, "speaker")
                         iconName: app.mDeafened ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
                         active: app.mDeafened
                         danger: app.mDeafened // deafened = you hear nothing; warn like mute
-                        tip: (app.mDeafened ? "Undeafen (restore audio)" : "Deafen (mute all output)") + " — Ctrl+Shift+D"
+                        tip: (app.mDeafened ? "Undeafen (restore audio)" : "Deafen (mute all output)") + " — " + app.helpKey("call.deafen.toggle", "Ctrl+Shift+D")
                         onClicked: app.callctl.applyDeafen(!app.mDeafened)
                     }
                     CallButton { // camera toggle
@@ -2593,6 +2623,9 @@ ColumnLayout {
                         live: !brow.dimmed("call.camera.toggle")
                         id: camBtn
                         hasMenu: true
+                        menuName: "Camera settings"
+                        checkable: true
+                        checked: app.mCameraOn   // D05.5
                         menuOpen: island.callOptionsRef.opened && island.callOptionsRef.section === "camera"
                         onMenuClicked: island.callOptionsRef.toggleFor(camBtn, "camera")
                         // "camera-disabled-symbolic" is an Adwaita name absent from Breeze
@@ -2613,6 +2646,9 @@ ColumnLayout {
                         iconName: "video-display-brightness-symbolic"
                         active: app.mCallSharing
                         hasMenu: true
+                        menuName: "Screen share settings"
+                        checkable: true
+                        checked: app.mCallSharing   // D05.5
                         menuOpen: island.streamPopoverRef.opened
                         onMenuClicked: island.streamPopoverRef.visible ? island.streamPopoverRef.close() : island.streamPopoverRef.open()
                         tip: app.mCallSharing
@@ -2630,6 +2666,9 @@ ColumnLayout {
                         visible: brow.shows("call.audioShare.toggle")
                         live: !brow.dimmed("call.audioShare.toggle")
                         hasMenu: true // 0.8.33: the source picker lives in the stream popover
+                        menuName: "Shared audio settings"
+                        checkable: true
+                        checked: app.mMusicPlaying   // D05.5
                         menuOpen: island.streamPopoverRef.opened
                         onMenuClicked: island.streamPopoverRef.visible ? island.streamPopoverRef.close() : island.streamPopoverRef.open()
                         iconName: "audio-speakers-symbolic"
@@ -2803,6 +2842,17 @@ ColumnLayout {
                                                 visible: modelData.w > 0
                                                 text: modelData.w + "×" + modelData.h + " @ " + modelData.fps + " fps"
                                                 color: Th.healthCardValueFg
+                                            }
+                                            Controls.Label {
+                                                objectName: "shareRateHint"
+                                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                                // 12.1.15: the usual reason a shared game's rate drops (the web's popovers.tsx; vectors rateHint)
+                                                visible: modelData.kind === "screen" && modelData.w > 0
+                                                text: "Games often lower their frame rate when they're not the focused window."
+                                                color: Th.healthCardDetailFg
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                wrapMode: Text.WordWrap
+                                                Layout.fillWidth: true
                                             }
                                             Controls.Label {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -3200,7 +3250,7 @@ ColumnLayout {
                         tip: "More call buttons"
                         active: moreMenu.opened
                         onClicked: moreMenu.opened ? moreMenu.close() : moreMenu.popup(moreBtn, 0, -moreMenu.implicitHeight - 4)
-                        Controls.Menu {
+                        KeyMenu {   // a11y round 2 m11 (assembly 12.1.15: the two-pane More menu came after the branch)
                             id: moreMenu
                             Instantiator {
                                 model: brow.foldedItems

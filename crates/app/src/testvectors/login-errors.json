@@ -1,0 +1,165 @@
+{
+ "_about": "D08.6/D08.5: the sign-in card's one-liner for a raw failure (errcode + message + status on the web, the error chain on the desktop). Byte-identical in the desktop (crates/app/src/testvectors/login-errors.json, login_errors.rs) and Tin Hat Web (src/core/matrix/testvectors/login-errors.json, errors.ts). Rules in order; the raw text goes to the log, never to the card.",
+ "cases": [
+  {
+   "name": "desktop wrong password",
+   "raw": "the server returned an error: [403 / M_FORBIDDEN] Invalid username or password",
+   "want": "Wrong username or password."
+  },
+  {
+   "name": "web wrong password",
+   "raw": "M_FORBIDDEN Invalid username or password 403",
+   "want": "Wrong username or password."
+  },
+  {
+   "name": "web rate limit",
+   "raw": "M_LIMIT_EXCEEDED Too Many Requests 429",
+   "want": "Too many attempts — wait a minute and try again."
+  },
+  {
+   "name": "desktop rate limit",
+   "raw": "the server returned an error: [429 / M_LIMIT_EXCEEDED] Too Many Requests",
+   "want": "Too many attempts — wait a minute and try again."
+  },
+  {
+   "name": "deactivated",
+   "raw": "M_USER_DEACTIVATED This account has been deactivated 403",
+   "want": "That account has been deactivated."
+  },
+  {
+   "name": "locked",
+   "raw": "M_USER_LOCKED This account has been locked 401",
+   "want": "That account is locked — ask whoever runs the server."
+  },
+  {
+   "name": "suspended",
+   "raw": "M_USER_SUSPENDED This account has been suspended 403",
+   "want": "That account is suspended — ask whoever runs the server."
+  },
+  {
+   "name": "unknown issuer before the connect words",
+   "raw": "error sending request for url (https://chat.example.org/_matrix/client/v3/login): client error (Connect): invalid peer certificate: UnknownIssuer",
+   "want": "The server's certificate isn't trusted on this machine."
+  },
+  {
+   "name": "expired certificate names the clock",
+   "raw": "error sending request for url (https://chat.example.org/): client error (Connect): invalid peer certificate: Expired",
+   "want": "The server's certificate looks out of date — check that this device's date and time are right."
+  },
+  {
+   "name": "not-yet-valid certificate names the clock",
+   "raw": "client error (Connect): invalid peer certificate: NotValidYet",
+   "want": "The server's certificate looks out of date — check that this device's date and time are right."
+  },
+  {
+   "name": "dns",
+   "raw": "error sending request for url (https://nosuch.example/): client error (Connect): dns error: failed to lookup address information: Name or service not known",
+   "want": "Can't find that server — check the address."
+  },
+  {
+   "name": "web dns",
+   "raw": "net::ERR_NAME_NOT_RESOLVED",
+   "want": "Can't find that server — check the address."
+  },
+  {
+   "name": "web offline",
+   "raw": " Failed to fetch ",
+   "want": "Can't reach the server — check your connection and the address."
+  },
+  {
+   "name": "connection refused",
+   "raw": "error sending request for url (https://chat.example.org/): client error (Connect): tcp connect error: Connection refused (os error 111)",
+   "want": "Can't reach the server — check your connection and the address."
+  },
+  {
+   "name": "timed out",
+   "raw": "operation timed out",
+   "want": "Can't reach the server — check your connection and the address."
+  },
+  {
+   "name": "proxy 502 page",
+   "raw": "M_UNKNOWN <html><head><title>502 Bad Gateway</title></head></html> 502",
+   "want": "The server is having trouble right now — try again in a few minutes."
+  },
+  {
+   "name": "gateway timeout is the server, not the connection",
+   "raw": "the server returned an error: [504] Gateway Timeout",
+   "want": "The server is having trouble right now — try again in a few minutes."
+  },
+  {
+   "name": "desktop 503 with no words",
+   "raw": "the server returned an error: [503 / M_UNKNOWN] ",
+   "want": "The server is having trouble right now — try again in a few minutes."
+  },
+  {
+   "name": "web 500",
+   "raw": "M_UNKNOWN Internal server error 500",
+   "want": "The server is having trouble right now — try again in a few minutes."
+  },
+  {
+   "name": "port numbers are not status codes",
+   "raw": "the server returned an error: [404 / M_UNRECOGNIZED] Unrecognized request at https://chat.example.org:5003/",
+   "want": "That doesn't look like a Matrix server."
+  },
+  {
+   "name": "a port is not a rate limit",
+   "raw": "M_UNRECOGNIZED Unrecognized request at https://chat.example.org:4290/ 404",
+   "want": "That doesn't look like a Matrix server."
+  },
+  {
+   "name": "a TLS negotiation failure is not an untrusted certificate",
+   "raw": "error sending request for url (https://chat.example.org/): client error (Connect): received fatal alert: HandshakeFailure",
+   "want": "Can't reach the server — check your connection and the address."
+  },
+  {
+   "name": "a port in an address is not a status",
+   "raw": "error sending request for url (https://chat.example.org:503/_matrix/client/v3/login): operation timed out",
+   "want": "Can't reach the server — check your connection and the address."
+  },
+  {
+   "name": "a 503 port with no other words is still no status",
+   "raw": "error sending request for url (https://chat.example.org:503/)",
+   "want": "Sign-in didn't work — try again in a moment."
+  },
+  {
+   "name": "a socket address's port is not a status",
+   "raw": "tcp connect error: 127.0.0.1:429: Connection refused (os error 111)",
+   "want": "Can't reach the server — check your connection and the address."
+  },
+  {
+   "name": "a client certificate request is not an untrusted server",
+   "raw": "error sending request for url (https://chat.example.org/): client error (Connect): received fatal alert: CertificateRequired",
+   "want": "Can't reach the server — check your connection and the address."
+  },
+  {
+   "name": "well-known",
+   "raw": "the .well-known file is invalid",
+   "want": "That doesn't look like a Matrix server."
+  },
+  {
+   "name": "a proxy's bare 403 page is not a wrong password",
+   "raw": " <html><title>403 Forbidden</title></html> 403",
+   "want": "The server refused to sign you in — check the address, or ask whoever runs it."
+  },
+  {
+   "name": "unknown server text never shows raw",
+   "raw": "M_UNKNOWN Something odd happened in module x::y 400",
+   "want": "Sign-in didn't work — try again in a moment."
+  },
+  {
+   "name": "empty",
+   "raw": "",
+   "want": "Sign-in didn't work — try again in a moment."
+  }
+ ],
+ "unreachable": [
+  {
+   "server": "chat.example.org",
+   "want": "Couldn't reach chat.example.org — check your connection and the address."
+  },
+  {
+   "server": "",
+   "want": "Couldn't reach the server — check your connection and the address."
+  }
+ ]
+}

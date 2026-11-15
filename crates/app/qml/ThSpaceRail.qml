@@ -75,7 +75,7 @@ Item {
     }
     function _dmTip(e, pres) {
         var name = String((e && e.name) || "")
-        if (e && e.invite === true) return name + " wants to chat — click to look"
+        if (e && e.invite === true) return String(e.inviteTip || (name + " wants to chat — click to look"))   // D09.4: names the full address (nav.rs)
         var n = Number((e && e.unread) || 0)
         return name + " — " + (n === 1 ? "1 new message" : n + " new messages") + (pres ? " · " + String(pres.label || "") : "")
     }
@@ -128,7 +128,7 @@ Item {
 
     // 10.6 (REACH §1.3): a DM bubble's menu — Open / Mark as read, or Accept / Decline for an
     // invite. Hoisted at the rail so a strip update cannot close it under the pointer.
-    Controls.Menu {
+    KeyMenu {
         id: dmMenu
         modal: true
         margins: 6
@@ -168,7 +168,7 @@ Item {
 
     // RBAC §7.3: an invited space's only two answers. Hoisted at the rail (the bubble delegates
     // are rebuilt on every nav refresh); pops at the pointer.
-    Controls.Menu {
+    KeyMenu {
         id: inviteMenu
         modal: true
         margins: 6
@@ -198,6 +198,17 @@ Item {
                 readonly property bool inRow: !!ListView.view && ListView.view.orientation === ListView.Horizontal
                 width: (ListView.view && !wrapper.inRow) ? ListView.view.width : 68
                 height: 52
+                function activate() { if (rail.navController) rail.navController.selectSpace(wrapper.modelData.key) }
+                // `at` = the keyboard's slot (the menu opens at it), null = at the pointer
+                function openMenu(at) {
+                    if (wrapper.modelData.membership === "invite") {
+                        inviteMenu.key = String(wrapper.modelData.key)
+                        inviteMenu.label = String(wrapper.modelData.label || "")
+                        if (at) inviteMenu.popup(at, at.width / 2, at.height / 2); else inviteMenu.popup()
+                    } else {
+                        rail.spaceMenuRequested(wrapper.modelData.key, wrapper.modelData.label)
+                    }
+                }
 
                 MouseArea {
                     id: dragArea
@@ -224,17 +235,8 @@ Item {
                         }
                     }
                     onClicked: (mouse) => {
-                        if (mouse.button === Qt.RightButton) {
-                            if (wrapper.modelData.membership === "invite") {
-                                inviteMenu.key = String(wrapper.modelData.key)
-                                inviteMenu.label = String(wrapper.modelData.label || "")
-                                inviteMenu.popup()
-                            } else {
-                                rail.spaceMenuRequested(wrapper.modelData.key, wrapper.modelData.label)
-                            }
-                        } else if (rail.navController) {
-                            rail.navController.selectSpace(wrapper.modelData.key)
-                        }
+                        if (mouse.button === Qt.RightButton) wrapper.openMenu(null)
+                        else wrapper.activate()
                     }
 
                     SpaceBubble {
@@ -273,6 +275,15 @@ Item {
                     Controls.ToolTip.delay: 400
                 }
 
+                RailFocus {   // a11y round 2 (M2): a Tab stop; Return selects, the Menu key / Shift+F10 = the right-click menu
+                    id: spaceFocus
+                    name: wrapper.modelData.membership === "invite" ? "Invited: " + wrapper.modelData.label : wrapper.modelData.label
+                    current: wrapper.modelData.key === rail.activeKey
+                    hasMenu: true
+                    ringRadius: bubble.selected ? rail._a.radiusLg + 2 : 24
+                    onActivated: wrapper.activate()
+                    onMenuRequested: wrapper.openMenu(spaceFocus)
+                }
                 // Reorder live as the grabbed bubble passes over a neighbour.
                 DropArea {
                     anchors.fill: parent

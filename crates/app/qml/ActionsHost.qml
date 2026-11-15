@@ -123,6 +123,7 @@ Item {
             "prefs.callUnfocusedSaver": app.mCallUnfocusedSaver === true,
             "prefs.callBarPinned": app.callBarPinned === true,
             "prefs.desktopNotifications": !!(app.settings && app.settings.desktopNotifications),
+            "prefs.diagnostics": true,   // P18: no switch any more: a report can always be made (the web feeds the same)
             "prefs.recordOptOut": !!(app.settings && app.settings.recordOptout),
             "prefs.reduceMotion": app.mReducedMotion === true,
             "prefs.gifAutoplay": Motion.gifAutoplay === true,
@@ -326,7 +327,8 @@ Item {
     /** The actions with a Shortcut item of their own in Main.qml (their keys come from keysFor). */
     readonly property var ownShortcutActions: ["app.settings.open", "call.fill.toggle", "nav.quickSwitcher.open", "call.mic.toggle",
         "call.deafen.toggle", "soundboard.open", "calendar.open", "space.settings.open", "nav.room.previous", "nav.room.next",
-        "nav.unread.previous", "nav.unread.next", "layout.edit", "app.zoom.in", "app.zoom.out", "app.zoom.reset"]
+        "nav.unread.previous", "nav.unread.next", "layout.edit", "app.zoom.in", "app.zoom.out", "app.zoom.reset",
+        "app.shortcuts.open", "nav.roomList.filter"]
     /** A person's keys for every other action (they get a Shortcut below). */
     readonly property var userShortcuts: {
         var out = [], bs = host.effectiveKeys.bindings || []
@@ -505,7 +507,7 @@ Item {
         case "layout.edit": app.openEditLayout(false); return true
         // a drawer's button (feat/editmode-buttons-drawers, EDITMODE-UI §7.3): its island in a drawer under it, or closed
         case "layout.drawer.toggle": if (ctx.subject) app.toggleDrawer(ctx.subject, ctx.anchor); else app.closeDrawer(); return true   // 11.0 edit mode: open — or, editing, Done (EDITMODE-UI §1)
-        case "app.bugReport": if (!ui.bugReportDialog.keepNote) ui.bugReportDialog.clearForm(); ui.bugReportDialog.open(); return true
+        case "app.bugReport": ui.bugReportDialog.open(); return true
         case "app.iconGallery": ui.iconGallery.openOrRaise(); return true
         case "app.install": ui.installDialog.open(); return true
         case "app.logship.toggle": { var on = app.mLogship !== 1; app.settings.applyLogship(on); app.mLogship = on ? 1 : 0; return true }
@@ -633,7 +635,7 @@ Item {
         case "nav.room.next": app.stepRoom(1, false); return true
         case "nav.room.previous": app.stepRoom(-1, false); return true
         case "nav.room.open": if (ctx.subject) app.openRoomId(ctx.subject); return true
-        case "nav.roomList.filter": if (ui.roomsIsl && ui.roomsIsl.filterField) ui.roomsIsl.filterField.forceActiveFocus(); return true
+        case "nav.roomList.filter": if (ui.roomsIsl && ui.roomsIsl.filterField && ui.roomsIsl.filterField.visible) { ui.roomsIsl.filterField.forceActiveFocus(); ui.roomsIsl.filterField.selectAll() } return true
         case "nav.space.select": { var key = host._param(ctx, "rail") || ctx.subject || ""; if (key.length > 0) app.nav.selectSpace(key); return true }
         case "nav.unread.next": app.stepRoom(1, true); return true
         case "nav.unread.previous": app.stepRoom(-1, true); return true
@@ -724,7 +726,7 @@ Item {
             return true
         }
         case "space.markAllRead":
-            if (ctx.subject) { app.nav.markSpaceRead(ctx.subject); app.showPassiveNotification(LinkGate.plain("Marking everything in " + host._nameOf("space", ctx.subject) + " as read…"), "short") }
+            if (ctx.subject) { app.nav.markSpaceRead(ctx.subject, host._nameOf("space", ctx.subject)); app.showPassiveNotification(LinkGate.plain("Marking everything in " + host._nameOf("space", ctx.subject) + " as read…"), "short") }
             return true
         case "space.settings.open": if (ctx.subject) app.openSpaceSettings(ctx.subject, host._param(ctx, "tab") || "overview"); return true
         // ---- fun ----
@@ -733,8 +735,11 @@ Item {
             if (r.length === 0) return true
             ui.memoriesWindow.roomId = r
             ui.memoriesWindow.roomName = host._nameOf("room", r)
-            if (r === host.currentRoomId) { app.room.fetchMemories(); app.room.fetchClips() }
-            else { app.room.fetchMemoriesFor(r); app.room.fetchClipsFor(r) }
+            // recordings only where the server records (Memories opens on every server; without a recorder: photos only)
+            if (ui.memoriesWindow.recordsHere) {
+                if (r === host.currentRoomId) { app.room.fetchMemories(); app.room.fetchClips() }
+                else { app.room.fetchMemoriesFor(r); app.room.fetchClipsFor(r) }
+            }
             ui.memoriesWindow.openOrRaise()
             return true
         }

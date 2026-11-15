@@ -1,0 +1,17 @@
+{
+  "about": "Now playing (QOL A00.1): one voice note / audio clip / video plays at a time, and starting a recording pauses whatever plays. Replayed by the desktop (tools/now-playing-test.mjs on crates/app/qml/NowPlaying.qml) and Tin Hat Web (src/features/chat/lib/nowPlaying.test.ts). A case runs its ops from {cur: null}; out = the ids asked to pause, in order; cur = who plays at the end.",
+  "cases": [
+    { "name": "one player plays, nothing paused", "ops": [{ "play": "a" }], "out": [], "cur": "a" },
+    { "name": "a second player pauses the first", "ops": [{ "play": "a" }, { "play": "b" }], "out": ["a"], "cur": "b" },
+    { "name": "a third player pauses only the one playing", "ops": [{ "play": "a" }, { "play": "b" }, { "play": "c" }], "out": ["a", "b"], "cur": "c" },
+    { "name": "the same player again (resume, seek) pauses nothing", "ops": [{ "play": "a" }, { "play": "a" }], "out": [], "cur": "a" },
+    { "name": "a player that ended lets the next start freely", "ops": [{ "play": "a" }, { "end": "a" }, { "play": "b" }], "out": [], "cur": "b" },
+    { "name": "an old player's late end doesn't clear the one playing", "ops": [{ "play": "a" }, { "play": "b" }, { "end": "a" }, { "play": "c" }], "out": ["a", "b"], "cur": "c" },
+    { "name": "recording pauses the player", "ops": [{ "play": "a" }, { "record": true }], "out": ["a"], "cur": null },
+    { "name": "recording with nothing playing pauses nothing", "ops": [{ "record": true }], "out": [], "cur": null },
+    { "name": "recording after the player ended pauses nothing", "ops": [{ "play": "a" }, { "end": "a" }, { "record": true }], "out": [], "cur": null },
+    { "name": "playing after a recording started pauses nothing", "ops": [{ "play": "a" }, { "record": true }, { "play": "b" }], "out": ["a"], "cur": "b" },
+    { "name": "end of a player that never played is ignored", "ops": [{ "end": "z" }, { "play": "a" }], "out": [], "cur": "a" },
+    { "name": "an unknown op changes nothing", "ops": [{ "play": "a" }, { "seek": "a" }, { "play": "b" }], "out": ["a"], "cur": "b" }
+  ]
+}

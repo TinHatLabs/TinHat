@@ -6,7 +6,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 
-Controls.Menu {
+KeyMenu {
     id: menu
     modal: false
     // the rail's selection when the menu opens: a space id ("!…") or Home / People, and its label

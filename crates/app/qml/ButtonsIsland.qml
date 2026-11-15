@@ -67,7 +67,7 @@ Item {
         acceptedButtons: Qt.RightButton
         onTapped: islandMenu.popup()
     }
-    Controls.Menu {
+    KeyMenu {
         id: islandMenu
         Controls.MenuItem { text: "Edit buttons…"; icon.name: "document-edit-symbolic"; onTriggered: bi.edit() }
         Controls.MenuItem { text: "Remove this island…"; icon.name: "edit-delete-symbolic"; onTriggered: removeAsk.open() }

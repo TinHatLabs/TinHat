@@ -997,6 +997,20 @@ pub async fn on_sync(client: &Client, account_data: &[Raw<AnyGlobalAccountDataEv
 /// server ends only after them (finish_sign_out waits for the returned task, bounded, before its server
 /// logout). The engine is reset first (nothing new is dispatched for the old session), then the goodbye
 /// waits for whatever was already on the wire. Then everything is forgotten. None: nothing to say.
+/// sun-gamebg ("Match the game"): the custom status text of everyone the presence service lists — i.e. only people who
+/// SHARE their status (the service lists nobody else); mxid → text. Empty until the first read.
+pub(crate) fn shared_status_texts() -> BTreeMap<String, String> {
+    let e = lock();
+    e.map
+        .iter()
+        .filter_map(|(u, s)| s.status.as_ref().and_then(|v| v.get("text")).and_then(Value::as_str).map(|t| (u.clone(), t.to_string())))
+        .collect()
+}
+/// sun-gamebg: has the presence map been read at least once this session?
+pub(crate) fn presence_loaded() -> bool {
+    lock().read_last_ok.is_some()
+}
+
 pub fn on_sign_out(old: Option<Client>) -> Option<tokio::task::JoinHandle<()>> {
     let token = old.as_ref().and_then(|c| c.access_token());
     let (instance, was_active, pinging, off_pending, (write_off, note_rev)) = {

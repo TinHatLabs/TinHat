@@ -1,5 +1,5 @@
 {
-  "about": "Pad on the phone, Step A (share claude/tinhat-pad/PAD-PHONE/DESIGN.md): one tile per PERSON. Byte-identical in web src/features/calls/persontiles.vectors.json and desktop crates/app/src/testvectors/persontiles.json. personOf(identity, attrs): the server-minted tinhat.person P (a valid mxid) and identity === P + ':' + DEVICE ([A-Za-z0-9_+/-]{1,64}: the server's identity.mjs DEVICE_RE, 0.3.12) with an optional exact '~watch-<16 lowercase hex>'; anything else is nobody's (its own tile). chipOf: personOf ok + tinhat.pad=phone + tinhat.mode=watch + the ~watch- suffix. The mxid localpart: 1-255 UTF-16 code units, none of them ':' or one of JavaScript's \\s characters ([\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]: the server's MXID_RE). Fold output fields: members (sorted; [] for one device), pad, muted (all members), othersLive (self tile: one of my other devices' mic is live), alts / altOf (a person's other cameras: one shown, the others kept and hidden), serverMuted (every member) / partlyMuted (some). Step B (12.1.10 / server 0.3.14): the phone's Mic / Camera modes \u2014 chipOf also gives 'mic' (tinhat.mode=mic + the '~pad-mic-<16 lowercase hex>' suffix) and 'camera' (tinhat.mode=camera + '~pad-cam-<16 lowercase hex>'); a person's pad = their chips once each in the order watch, mic, camera joined by '+'; a Camera-mode device has no mic (as a watcher); a Pad camera is shown unless the viewer picked another (the lowest such tile id). play: playMicOf(identity, attrs, own) = false only for my OWN other devices (server-vouched). chimes: PersonChimes steps (join / leave / tick with the identities present, me included, and the clock): a join chimes only for a person with no other connection, a leave only for their last one, a Pad connection's last leave waits 5000 ms and their return in that time cancels both. keyAlias: keyAliasBase(identity, attrs) = the '<mxid>:<device>' whose media keys a server-vouched Pad Mic / Camera connection decrypts under (its suffix dropped), else '' (normal, Watch, unvouched, mismatched).",
+  "about": "Pad on the phone, Step A (share claude/tinhat-pad/PAD-PHONE/DESIGN.md): one tile per PERSON. Byte-identical in web src/features/calls/persontiles.vectors.json and desktop crates/app/src/testvectors/persontiles.json. personOf(identity, attrs): the server-minted tinhat.person P (a valid mxid) and identity === P + ':' + DEVICE ([A-Za-z0-9_+/-]{1,64}: the server's identity.mjs DEVICE_RE, 0.3.12) with an optional exact '~watch-<16 lowercase hex>'; anything else is nobody's (its own tile). chipOf: personOf ok + tinhat.pad=phone + tinhat.mode=watch + the ~watch- suffix. The mxid localpart: 1-255 UTF-16 code units, none of them ':' or one of JavaScript's \\s characters ([\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]: the server's MXID_RE). Fold output fields: members (sorted; [] for one device), pad, muted (all members), othersLive (self tile: one of my other devices' mic is live), alts / altOf (a person's other cameras: one shown, the others kept and hidden), serverMuted (every member) / partlyMuted (some). Step B (12.1.10 / server 0.3.14): the phone's Mic / Camera modes \u2014 chipOf also gives 'mic' (tinhat.mode=mic + the '~pad-mic-<16 lowercase hex>' suffix) and 'camera' (tinhat.mode=camera + '~pad-cam-<16 lowercase hex>'); a person's pad = their chips once each in the order watch, mic, camera joined by '+'; a Camera-mode device has no mic (as a watcher); a Pad camera is shown unless the viewer picked another (the lowest such tile id). play: playMicOf(identity, attrs, own) = false only for my OWN other devices (server-vouched). chimes: PersonChimes steps (join / leave / tick with the identities present, me included, and the clock): a join chimes only for a person with no other connection, a leave only for their last one, a Pad connection's last leave waits 5000 ms and their return in that time cancels both. keyAlias: keyAliasBase(identity, attrs) = the '<mxid>:<device>' whose media keys a server-vouched Pad Mic / Camera connection decrypts under (its suffix dropped), else '' (normal, Watch, unvouched, mismatched). D02.3 (2026-11-13): the leave grace (PAD_LEAVE_GRACE_MS) applies to every person's last connection, not only a Pad one: a blip (leave + the same person back within it) plays no chime; a real leave chimes when it ends.",
   "person": [
     {
       "identity": "@alice:example.org:DEV1",
@@ -2147,7 +2147,7 @@
       ]
     },
     {
-      "name": "a person's last NORMAL device leaves: a leave chime at once",
+      "name": "D02.3: a person's last NORMAL device leaves: the leave chime after the grace (nobody of theirs came back)",
       "attrs": {
         "@alice:example.org:DEV1": {
           "tinhat.person": "@alice:example.org"
@@ -2191,7 +2191,25 @@
             "@me:example.org:ME1"
           ],
           "now": 0,
-          "expect": "leave"
+          "expect": ""
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 4999,
+          "expect": 0
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 5000,
+          "expect": 1
         }
       ]
     },
@@ -2345,7 +2363,16 @@
             "@me:example.org:ME1"
           ],
           "now": 3,
-          "expect": "leave"
+          "expect": ""
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 5003,
+          "expect": 1
         }
       ]
     },
@@ -2471,6 +2498,74 @@
           "present": [
             "@me:example.org:ME1",
             "@alice:example.org:PHONE~pad-mic-0123456789abcdef"
+          ],
+          "now": 20000,
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "D02.3: a normal device blips (leave, the same device back in 3 s): no chimes at all",
+      "attrs": {
+        "@alice:example.org:DEV1": {
+          "tinhat.person": "@alice:example.org"
+        },
+        "@alice:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~pad-cam-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "camera",
+          "tinhat.gen": "3"
+        },
+        "@alice:example.org:PHONE~watch-0123456789abcdef": {
+          "tinhat.person": "@alice:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "watch",
+          "tinhat.gen": "3"
+        },
+        "@bob:example.org:B1": {
+          "tinhat.person": "@bob:example.org"
+        },
+        "@me:example.org:PHONE~pad-mic-0123456789abcdef": {
+          "tinhat.person": "@me:example.org",
+          "tinhat.pad": "phone",
+          "tinhat.mode": "mic",
+          "tinhat.gen": "3"
+        },
+        "@me:example.org:ME1": {
+          "tinhat.person": "@me:example.org"
+        }
+      },
+      "steps": [
+        {
+          "op": "leave",
+          "id": "@bob:example.org:B1",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 0,
+          "expect": ""
+        },
+        {
+          "op": "join",
+          "id": "@bob:example.org:B1",
+          "present": [
+            "@me:example.org:ME1"
+          ],
+          "now": 3000,
+          "expect": ""
+        },
+        {
+          "op": "tick",
+          "id": "",
+          "present": [
+            "@me:example.org:ME1",
+            "@bob:example.org:B1"
           ],
           "now": 20000,
           "expect": 0

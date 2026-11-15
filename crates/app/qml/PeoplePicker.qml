@@ -17,7 +17,8 @@ ColumnLayout {
     property string roomId: ""         // whose members are dimmed ("" = none)
     property bool keepPicking: true    // invites: clear the field after a pick and go on; New DM: false
     property string placeholder: "Name, username or @name:their.server"
-    signal picked(string mxid)
+    signal picked(string mxid)        // New DM (keepPicking false): the parent acts on it
+    signal invited(string mxid)       // an invite from this picker went through (2026-11-13: the picker sends it itself)
 
     // the row Enter would pick now (a pickable person), "" = none: the dialog's own button acts on it
     readonly property string selectedMxid: (sel >= 0 && sel < rows.length && rows[sel].pickable) ? String(rows[sel].mxid) : ""
@@ -31,7 +32,7 @@ ColumnLayout {
         var p = peopleCtl.pick
         if (p < 0 || p >= rows.length) return -1
         var r = rows[p]
-        return (r.lookup === true && r.look !== "looking" && r.look !== "" && r.pickable !== true) ? peopleCtl.fallback : p
+        return (r.lookup === true && r.look !== "looking" && r.look !== "inviting" && r.look !== "" && r.pickable !== true) ? peopleCtl.fallback : p
     }
     readonly property int sel: {
         if (chosenMxid.length > 0 && chosenText === field.text)
@@ -60,17 +61,38 @@ ColumnLayout {
         field.forceActiveFocus()
     }
     function pickSelected() { pickRow(picker.sel) }
+    // invites (keepPicking): the picker sends the invite itself (2026-11-13, A02.0). The person shows "Inviting…" until the
+    // answer; only a success dims them and clears the field for the next; a failure keeps them pickable (pick again = try
+    // again) with the reason under their name. The text each invite was sent from, so the field clears only if unchanged.
+    property var _sentFrom: ({})
     function pickRow(i) {
         if (i < 0 || i >= rows.length || !rows[i].pickable) return
         var id = String(rows[i].mxid)
         if (picker.keepPicking) {
-            peopleCtl.picked(id)
-            picker.chosenMxid = ""
-            field.text = ""
-            field.forceActiveFocus()
+            picker._sentFrom[id] = field.text
+            peopleCtl.invite(picker.roomId, id, String(rows[i].name || ""))
+            return
         }
         picker.picked(id)
     }
+    Connections {
+        target: peopleCtl
+        function onInvited(mxid, ok, text) {
+            if (picker.app.showPassiveNotification) picker.app.showPassiveNotification(LinkGate.plain(text), ok ? 2500 : 5000)
+            if (mxid.length === 0) return   // an answer from an earlier opening: said, but not this opening's field
+            var from = picker._sentFrom[mxid]
+            delete picker._sentFrom[mxid]
+            if (!ok) return
+            if (from !== undefined && field.text === from) {
+                picker.chosenMxid = ""
+                field.text = ""
+            }
+            field.forceActiveFocus()
+            picker.invited(mxid)
+        }
+    }
+    // a look-up worth another try (their server or yours was briefly unreachable / busy) goes again by itself (A02.3)
+    Timer { interval: 5200; repeat: true; running: picker.visible && peopleCtl.retryPending; onTriggered: peopleCtl.search() }
     function move(step) {
         if (rows.length === 0) return
         var i = picker.sel
@@ -131,7 +153,7 @@ ColumnLayout {
                 width: parent.width
                 height: Math.max(Kirigami.Units.gridUnit * 2.4, rowText.implicitHeight + 8)
                 Accessible.role: Accessible.ListItem
-                Accessible.name: hit.modelData.line + ", " + hit.modelData.mxid + (hit.tag ? ", " + hit.tag : "") + (hit.modelData.note ? ". " + hit.modelData.note : "")
+                Accessible.name: hit.modelData.line + ", " + hit.modelData.mxid + (hit.tag ? ", " + hit.tag : "") + (hit.modelData.note ? ". " + hit.modelData.note : "") + (hit.modelData.look === "failed" && hit.ok ? " Try again." : "")
                 Accessible.selected: hit.index === picker.sel
                 Accessible.onPressAction: picker.pickRow(hit.index)
                 Rectangle {
@@ -174,21 +196,29 @@ ColumnLayout {
                     }
                     Controls.Label { visible: hit.tag.length > 0; textFormat: Text.PlainText; text: hit.tag; color: Th.inviteHintFg; font.pointSize: picker.smallSize; font.italic: true }
                     ThButton { visible: hit.modelData.anyway === true; app: picker.app; flat: true; text: picker.verb + " anyway"; onClicked: picker.pickRow(hit.index) }
-                    ThIcon { visible: hit.ok && hit.modelData.anyway !== true; app: picker.app; name: picker.verb === "Message" ? "document-edit-symbolic" : "list-add-user"; width: 16; height: 16; color: Th.inviteResultIcon; hovered: hitMa.containsMouse }
+                    ThButton { visible: hit.ok && hit.modelData.look === "failed" && hit.modelData.anyway !== true; app: picker.app; flat: true; text: "Try again"; onClicked: picker.pickRow(hit.index) }
+                    ThIcon { visible: hit.ok && hit.modelData.anyway !== true && hit.modelData.look !== "failed"; app: picker.app; name: picker.verb === "Message" ? "document-edit-symbolic" : "list-add-user"; width: 16; height: 16; color: Th.inviteResultIcon; hovered: hitMa.containsMouse }
                 }
             }
         }
-        Controls.Label {
+        ColumnLayout {
             anchors.centerIn: parent
             width: parent.width - Kirigami.Units.largeSpacing * 2
             visible: picker.rows.length === 0
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-            text: peopleCtl.kind === "empty" || peopleCtl.kind === ""
-                  ? "Type a name, a username, or someone's full address."
-                  : "No one by that name. Someone on another server: type their full address, like @name:their.server."
-            color: Th.inviteHintFg
-            font.pointSize: picker.smallSize
+            spacing: 2
+            Controls.Label {
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                textFormat: Text.PlainText
+                // people.rs empty_note: what to type, "Searching…" while the search runs, or that it failed (A02.2)
+                text: peopleCtl.emptyNote.length > 0 ? peopleCtl.emptyNote : "Type a name, a username, or someone's full address."
+                color: Th.inviteHintFg
+                font.pointSize: picker.smallSize
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
+            }
+            ThButton { visible: peopleCtl.searchFailed; Layout.alignment: Qt.AlignHCenter; app: picker.app; flat: true; text: "Try again"; onClicked: peopleCtl.retry() }
         }
     }
 

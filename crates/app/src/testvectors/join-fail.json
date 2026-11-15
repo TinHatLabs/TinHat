@@ -1,0 +1,20 @@
+{
+  "about": "A36.1: the words after \"Couldn't join the call — \". Desktop call_ctl.rs join_fail_reason, web callrules.ts joinFailWords. Byte-identical in both repos.",
+  "cases": [
+    { "raw": "operation timed out", "want": "the call server didn't answer. Check your connection and try again." },
+    { "raw": "participant already in the call", "want": "you're already in this call on another device." },
+    { "raw": "error sending request: dns error: failed to lookup address", "want": "couldn't reach the call server. Check your connection and try again." },
+    { "raw": "not signed in", "want": "you're not signed in." },
+    { "raw": "lk-jwt-service HTTP 401: {\"error\":\"M_UNKNOWN_TOKEN\"}", "want": "the call server didn't accept your sign-in. Try again in a moment." },
+    { "raw": "lk-jwt-service HTTP 403: forbidden", "want": "the call server didn't accept your sign-in. Try again in a moment." },
+    { "raw": "lk-jwt-service HTTP 502: <html>bad gateway: upstream connect error</html>", "want": "the call server had a problem. Try again in a moment." },
+    { "raw": "lk-jwt-service HTTP 504: gateway timeout", "want": "the call server didn't answer. Check your connection and try again." },
+    { "raw": "lk-jwt-service answered with something that isn't JSON", "want": "the call server had a problem. Try again in a moment." },
+    { "raw": "lk-jwt-service answered without url/jwt", "want": "the call server had a problem. Try again in a moment." },
+    { "raw": "lk-jwt-service response parse failed: expected value (body: <html>)", "want": "the call server had a problem. Try again in a moment." },
+    { "raw": "lk-jwt-service answered with a redirect (HTTP 302) — not followed", "want": "the call server had a problem. Try again in a moment." },
+    { "raw": "lk-jwt-service request failed: error sending request for url: connection refused", "want": "couldn't reach the call server. Check your connection and try again." },
+    { "raw": "The call service tried to redirect the sign-in proof, so Tin Hat didn't follow it", "want": "The call service tried to redirect the sign-in proof, so Tin Hat didn't follow it" },
+    { "raw": "This room has no call yet", "want": "This room has no call yet" }
+  ]
+}

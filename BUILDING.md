@@ -16,6 +16,18 @@ export LK_CUSTOM_WEBRTC=/path/to/libwebrtc/linux-x64-release   # the patched arc
 cargo build --release -p tinhat-app        # -> target/release/tinhat
 ```
 
+**The Linux release download (.bin) links mpvqt statically** (12.1.16: Arch's mpvqt 1.2.1 renamed its shared library
+from `libMpvQt.so.3` to `.so.4`, and a binary that needs the old name doesn't start after a system update).
+`scripts/mpvqt-static.sh --fetch` downloads, once, KDE's release tarballs of mpvqt 1.2.0 and extra-cmake-modules
+6.30.0 (pinned by sha256) into `~/.cache/tinhat-mpvqt-static/inputs` (or `TINHAT_MPVQT_INPUTS`); keep them with the
+release's other build inputs. Then `scripts/mpvqt-static.sh` builds mpvqt into a private folder without the network
+(nothing is installed system-wide; a tarball that doesn't match its sha256 stops it) and prints a
+`TINHAT_MPVQT_STATIC=…` line to export before `cargo build`. A build with
+`TINHAT_RELEASE_BUILD=1` outside the Flatpak stops without it. libmpv stays a shared library (`libmpv.so.2`). After the
+build, `scripts/linux-start-gate.sh <binary>` in a freshly updated Arch system with the runtime packages above must
+print PASS: no `libMpvQt` in the binary's NEEDED list, nothing "not found" in `ldd`, and a real start to the sign-in
+screen under Xvfb.
+
 The binary must carry the five ship stamps (`tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`, `tinhat-vp9-kf-iv-v1`, `tinhat-iv-v2`, `tinhat-iv-rx-v1`) — `grep` them;
 a build without them linked the upstream (or an older) libwebrtc: encrypted AV1 will not decode, and encrypted VP9
 shares can wait or never start at the SFU.
@@ -42,7 +54,10 @@ variable for this: it replaces the repository's own rustflags.
 **Windows release gate (every release):** the candidate must update itself: `windows\update-swap-gate.ps1` (a lab build
 of the candidate → the same build as the next version, on a local feed signed by `scripts/update-swap-feed.sh`) must
 print PASS, and `TINHAT_SAFE_UNZIP_BUNDLE=<the final win64 zip> cargo test --release -p tinhat-app
-safe_unzip::tests::real_bundle -- --ignored` must pass (it fails once the bundle uses half of an unzip limit).
+safe_unzip::tests::real_bundle -- --ignored` must pass (it fails once the bundle uses half of an unzip limit). From 12.1.14
+also `windows\update-refusal-gate.ps1` for each planted refusal (`scripts/update-refusal-feed.sh`: `-Plant badexe`,
+`baddll`, `badcore`, and `badexe`/`badcore` again with `-SkipProbe`) must print PASS: a Windows update that Windows
+won't start leaves the old version starting (UPDATE_PATH.md §3.6).
 
 ## Logs
 

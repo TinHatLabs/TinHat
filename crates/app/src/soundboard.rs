@@ -442,9 +442,10 @@ impl qobject::SoundboardController {
                 o.as_mut().set_uploading(false);
                 match result {
                     Ok(n) => eprintln!("[soundboard] uploaded + added to favourites: {n}"),
-                    Err(e) => {
-                        eprintln!("[soundboard] upload failed: {e}");
-                        o.as_mut().set_error(QString::from(&format!("Upload failed: {e}")));
+                    Err((kind, status, raw)) => {
+                        // A20.2: the raw cause goes to the log only; the panel shows plain words (web uploadWords.ts)
+                        eprintln!("[soundboard] upload failed ({kind} {status}): {raw}");
+                        o.as_mut().set_error(QString::from(&upload_fail_words(kind, status)));
                     }
                 }
                 if let Some(j) = personal_json {
@@ -754,10 +755,34 @@ pub fn normalize_search_results(v: &Value) -> String {
 /// Upload an own clip to the server's soundboard service (`POST /soundboard/upload`, bearer =
 /// our Matrix access token, multipart hand-built: the tree's reqwest has no `multipart`
 /// feature) and add it to the personal list. Returns the stored name.
-async fn upload_clip(path: &std::path::Path, name: &str) -> Result<String, String> {
-    let bytes = tokio::fs::read(path).await.map_err(|e| format!("read: {e}"))?;
+/// A20.2: a failed upload = (kind, HTTP status or 0, the raw cause for the log); upload_fail_words turns it into words.
+type UploadErr = (&'static str, u16, String);
+
+/// A soundboard upload's failure in plain words (web media/soundboard/uploadWords.ts; shared vectors
+/// testvectors/soundboard-upload.json).
+pub(crate) fn upload_fail_words(kind: &str, status: u16) -> String {
+    const TOO_BIG: &str = "That clip is bigger than 3 MB. Try a shorter one.";
+    const SERVER: &str = "The server couldn't take that clip. Try again in a moment.";
+    match kind {
+        "too-big" => TOO_BIG,
+        "unreadable" => "That file couldn't be read.",
+        "network" => "Couldn't reach the server. Check your connection and try again.",
+        "signed-out" => "You're not signed in.",
+        "server" if status == 413 => TOO_BIG,
+        "server" if status == 401 || status == 403 => "The server didn't accept your sign-in. Try again in a moment.",
+        "not-listed" => "Uploaded, but it couldn't be added to your sounds. Try again.",
+        "picture" => crate::room::PHOTO_LOCATION_FAIL,
+        _ => SERVER,
+    }
+    .to_string()
+}
+
+async fn upload_clip(path: &std::path::Path, name: &str) -> Result<String, UploadErr> {
+    let bytes = tokio::fs::read(path).await.map_err(|e| ("unreadable", 0, e.to_string()))?;
+    // R3-1: a clip is never a picture: bytes that sniff as one (a GPS JPEG renamed clip.mp3) are not sent
+    crate::room::refuse_picture_bytes(&bytes).map_err(|e| ("picture", 0, e))?;
     if bytes.len() > 3 * 1024 * 1024 {
-        return Err("bigger than 3 MB".into());
+        return Err(("too-big", 0, format!("{} bytes", bytes.len())));
     }
     let fname = path.file_name().map(|f| f.to_string_lossy().to_string()).unwrap_or_else(|| "clip".into());
     let ext = path.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
@@ -770,7 +795,7 @@ async fn upload_clip(path: &std::path::Path, name: &str) -> Result<String, Strin
     } else {
         name.to_string()
     };
-    let token = crate::session::client().and_then(|c| c.access_token()).ok_or("not logged in")?;
+    let token = crate::session::client().and_then(|c| c.access_token()).ok_or(("signed-out", 0, "not logged in".to_string()))?;
     let boundary = format!("----Tin HatUpload{}", std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0));
     let mut body: Vec<u8> = Vec::with_capacity(bytes.len() + 512);
@@ -787,19 +812,19 @@ async fn upload_clip(path: &std::path::Path, name: &str) -> Result<String, Strin
         .body(body)
         .send()
         .await
-        .map_err(|e| format!("network: {e}"))?;
+        .map_err(|e| ("network", 0, e.to_string()))?;
     let status = resp.status();
     let text = resp.text().await.unwrap_or_default();
     if !status.is_success() {
         let msg = serde_json::from_str::<Value>(&text).ok()
             .and_then(|v| v.get("error").and_then(|e| e.as_str()).map(|s| s.to_string()))
             .unwrap_or_else(|| format!("HTTP {status}"));
-        return Err(msg);
+        return Err(("server", status.as_u16(), msg));
     }
-    let v: Value = serde_json::from_str(&text).map_err(|e| format!("bad reply: {e}"))?;
-    let clip_url = v.get("url").and_then(|u| u.as_str()).ok_or("no url in reply")?.to_string();
+    let v: Value = serde_json::from_str(&text).map_err(|e| ("bad-reply", status.as_u16(), e.to_string()))?;
+    let clip_url = v.get("url").and_then(|u| u.as_str()).ok_or(("bad-reply", status.as_u16(), "no url in reply".to_string()))?.to_string();
     let stored = v.get("name").and_then(|n| n.as_str()).unwrap_or(&name).to_string();
-    do_add_personal_sound(&stored, &clip_url, "", 0).await.map_err(|e| format!("saved on the server but not in your list: {e}"))?;
+    do_add_personal_sound(&stored, &clip_url, "", 0).await.map_err(|e| ("not-listed", 0, e.to_string()))?;
     Ok(stored)
 }
 

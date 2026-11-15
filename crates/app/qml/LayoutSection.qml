@@ -41,8 +41,13 @@ SettingsRowGroup {
     }
     SettingsRow {
         app: sec.app
+        anchorId: "appearance.layout"
         label: "Edit layout"
-        description: "Move, resize and add islands. Ctrl+E in the main window, or right-clicking a gap between islands, opens it."
+        // A17.2: the key layout.edit has now (rebindable; web editmode/hints.ts: the same words)
+        readonly property var editKeys: (sec.app && sec.app.actions) ? sec.app.actions.keysFor("layout.edit") : []
+        description: editKeys.length > 0
+            ? "Move, resize and add islands. " + editKeys[0] + " or right-clicking a gap between islands opens it."
+            : "Move, resize and add islands. Right-clicking a gap between islands opens it."
         trailing: [
             ThButton {
                 app: sec.app

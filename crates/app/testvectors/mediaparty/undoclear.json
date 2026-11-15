@@ -1,0 +1,242 @@
+{
+  "about": "Media Party: Undo after Clear (QOL A16.2, product call P11 (a)). input.queue = the queue NOW (others may have added since the Clear), input.cleared = the queue as it was when I pressed Clear; expect = the urls after Undo: the cleared items in their order, then anything added since that isn't one of them. Replayed by the desktop (watchparty.rs queue_undo_clear) and Tin Hat Web (queue.ts undoClear).",
+  "cases": [
+    {
+      "name": "the queue is still empty: the cleared list comes back",
+      "input": {
+        "queue": [],
+        "cleared": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          }
+        ]
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003"
+      ]
+    },
+    {
+      "name": "someone added one since: the cleared list, then theirs",
+      "input": {
+        "queue": [
+          {
+            "addedBy": "@b:example.com",
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          }
+        ],
+        "cleared": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          }
+        ]
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003",
+        "https://www.youtube.com/watch?v=v0000000004"
+      ]
+    },
+    {
+      "name": "someone re-added a cleared item: no duplicate",
+      "input": {
+        "queue": [
+          {
+            "addedBy": "@b:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ],
+        "cleared": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T3",
+            "url": "https://www.youtube.com/watch?v=v0000000003"
+          }
+        ]
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000003"
+      ]
+    },
+    {
+      "name": "two added since, in their order, after the cleared list",
+      "input": {
+        "queue": [
+          {
+            "addedBy": "@b:example.com",
+            "title": "T5",
+            "url": "https://www.youtube.com/watch?v=v0000000005"
+          },
+          {
+            "addedBy": "@b:example.com",
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          }
+        ],
+        "cleared": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          }
+        ]
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000005",
+        "https://www.youtube.com/watch?v=v0000000004"
+      ]
+    },
+    {
+      "name": "nothing was cleared: unchanged",
+      "input": {
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T4",
+            "url": "https://www.youtube.com/watch?v=v0000000004"
+          }
+        ],
+        "cleared": []
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000004"
+      ]
+    },
+    {
+      "name": "already undone: unchanged",
+      "input": {
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ],
+        "cleared": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ]
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002"
+      ]
+    },
+    {
+      "name": "a cleared list with a repeated link keeps both",
+      "input": {
+        "queue": [],
+        "cleared": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ]
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002"
+      ]
+    },
+    {
+      "name": "mixed: re-added and new",
+      "input": {
+        "queue": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T9",
+            "url": "https://www.youtube.com/watch?v=v0000000009"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          }
+        ],
+        "cleared": [
+          {
+            "addedBy": "@a:example.com",
+            "title": "T1",
+            "url": "https://www.youtube.com/watch?v=v0000000001"
+          },
+          {
+            "addedBy": "@a:example.com",
+            "title": "T2",
+            "url": "https://www.youtube.com/watch?v=v0000000002"
+          }
+        ]
+      },
+      "expect": [
+        "https://www.youtube.com/watch?v=v0000000001",
+        "https://www.youtube.com/watch?v=v0000000002",
+        "https://www.youtube.com/watch?v=v0000000009"
+      ]
+    }
+  ]
+}

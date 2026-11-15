@@ -408,6 +408,10 @@ Item {
                 videoOutput: vout
                 audioOutput: AudioOutput {}
                 Component.onCompleted: play()
+                // QOL A00.1: one player at a time (NowPlaying.qml)
+                onPlaybackStateChanged: playbackState === MediaPlayer.PlayingState
+                                        ? NowPlaying.playing(card._npEmbed) : NowPlaying.stopped(card._npEmbed)
+                Component.onDestruction: NowPlaying.stopped(card._npEmbed)
             }
             // Tap toggles play/pause.
             MouseArea {
@@ -415,8 +419,14 @@ Item {
                 onClicked: player.playbackState === MediaPlayer.PlayingState
                     ? player.pause() : player.play()
             }
+            Connections {
+                target: NowPlaying
+                function onPauseRequested(id) { if (id === card._npEmbed) player.pause() }
+            }
         }
     }
+    property string _npEmbed: ""
+    Component.onCompleted: card._npEmbed = NowPlaying.newId("embed")
 
     Component {
         id: webComponent

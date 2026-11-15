@@ -200,9 +200,6 @@ pub struct Ranked {
 
 pub fn rank_people(input: &str, own: &str, me: &str, known: &[KnownPerson], directory: &[DirectoryHit], members: &[String]) -> Ranked {
     let query = people_query(input, own);
-    if query.kind == QueryKind::Empty {
-        return Ranked { query, rows: Vec::new(), pick: -1, fallback: -1 };
-    }
     let members: std::collections::HashSet<&str> = members.iter().map(String::as_str).collect();
     let mut listed: std::collections::HashSet<String> = std::collections::HashSet::from([me.to_string()]);
     let row = |section: Section, mxid: &str, name: &str, avatar: &str, dm: bool, lookup: bool| {
@@ -223,6 +220,19 @@ pub fn rank_people(input: &str, own: &str, me: &str, known: &[KnownPerson], dire
             dm,
         }
     };
+    if query.kind == QueryKind::Empty {
+        // nothing typed yet (2026-11-13, P7): the people you know, ready to pick: DM partners first, then the most shared
+        // rooms; members and you left out. Enter picks no one until a row is chosen (arrows or the mouse).
+        let mut ready: Vec<&KnownPerson> = known.iter().filter(|p| p.mxid != me && !members.contains(p.mxid.as_str())).collect();
+        ready.sort_by(|a, b| {
+            b.dm.cmp(&a.dm)
+                .then(b.shared.cmp(&a.shared))
+                .then_with(|| atrim(&a.name).to_lowercase().cmp(&atrim(&b.name).to_lowercase()))
+                .then_with(|| a.mxid.cmp(&b.mxid))
+        });
+        let rows = ready.into_iter().take(KNOWN_MAX).map(|p| row(Section::Known, &p.mxid, &p.name, &p.avatar, p.dm, false)).collect();
+        return Ranked { query, rows, pick: -1, fallback: -1 };
+    }
     let mut scored: Vec<(&KnownPerson, u8)> = known
         .iter()
         .filter(|p| p.mxid != me)
@@ -341,6 +351,186 @@ pub fn lookup_outcome(status: u16, errcode: &str, message: &str, target: &str, o
     o(LookupKind::Unreachable, false, text)
 }
 
+/// Why an invite failed, from the server's answer (2026-11-13, A02.0/D09.1/D09.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InviteFailKind {
+    RateLimited,
+    Member,
+    Banned,
+    NoPerm,
+    Disabled,
+    NoFederation,
+    Refused,
+    Forbidden,
+    NotFound,
+    Unreachable,
+    Other,
+}
+
+impl InviteFailKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            InviteFailKind::RateLimited => "ratelimited",
+            InviteFailKind::Member => "member",
+            InviteFailKind::Banned => "banned",
+            InviteFailKind::NoPerm => "noperm",
+            InviteFailKind::Disabled => "disabled",
+            InviteFailKind::NoFederation => "nofederation",
+            InviteFailKind::Refused => "refused",
+            InviteFailKind::Forbidden => "forbidden",
+            InviteFailKind::NotFound => "notfound",
+            InviteFailKind::Unreachable => "unreachable",
+            InviteFailKind::Other => "other",
+        }
+    }
+}
+
+/// An invite's failed answer → plain words. `status` 0 = no answer at all (network); `message_verb` true = the invite
+/// inside a new DM ("Couldn't start that chat." first). The server's own text is only matched, never shown; a cause is
+/// named only when the answer establishes it (errcode or the server's known wording), otherwise the words stay
+/// neutral. The web's people.ts inviteFailure is the same rule (shared vectors).
+pub fn invite_failure(status: u16, errcode: &str, message: &str, target: &str, own_server: &str, message_verb: bool) -> (InviteFailKind, String) {
+    use InviteFailKind as K;
+    let server = person_label(target, "", own_server).server;
+    let local = local_of(target);
+    let msg = message.to_lowercase();
+    let code = errcode.to_uppercase();
+    let lead = if message_verb { "Couldn't start that chat. " } else { "" };
+    let out = |k: InviteFailKind, text: String| (k, format!("{lead}{text}"));
+    if status == 429 || code == "M_LIMIT_EXCEEDED" {
+        return out(K::RateLimited, "Too many invites at once. Try again in a moment.".into());
+    }
+    if status == 0 {
+        return out(K::Unreachable, "Couldn't reach your server. Check your connection and try again.".into());
+    }
+    if code == "M_ALREADY_JOINED" || code == "ORG.MATRIX.MSC3848.ALREADY_JOINED" || msg.contains("is already in the room") {
+        return out(K::Member, format!("{local} is already a member."));
+    }
+    if code == "M_BANNED" || msg.contains("is banned from the room") {
+        return out(K::Banned, format!("{local} is banned here. Unban them first."));
+    }
+    if code == "M_INSUFFICIENT_POWER" || code == "ORG.MATRIX.MSC3848.INSUFFICIENT_POWER" || msg.contains("permission to invite") {
+        return out(K::NoPerm, "You don't have permission to invite people here. Ask an admin.".into());
+    }
+    if msg.contains("invites have been disabled") {
+        return out(K::Disabled, "Your server doesn't allow invites. The owner of your server can change that.".into());
+    }
+    if !server.is_empty() && msg.contains("federation denied") {
+        return out(
+            K::NoFederation,
+            format!("Your server doesn't connect to {server}, so people there can't be reached from here. The owner of your server can change that."),
+        );
+    }
+    if !server.is_empty() && msg.contains("not permitted to send invites") {
+        return out(K::Refused, format!("{server} didn't accept the invite."));
+    }
+    if (status == 404 || code == "M_NOT_FOUND") && (msg.contains("unknown user") || msg.contains("user not found") || msg.contains("profile was not found")) {
+        let text = if server.is_empty() {
+            format!("There's no one called {local} on your server. Check the spelling.")
+        } else {
+            format!("{server} has no one called {local}. Check the spelling.")
+        };
+        return out(K::NotFound, text);
+    }
+    if status == 403 {
+        let text = if message_verb { "Couldn't start that chat. The invite was refused.".to_string() } else { format!("Couldn't invite {local}. The invite was refused.") };
+        return (K::Forbidden, text);
+    }
+    let text = if message_verb { "Couldn't start that chat. Try again in a moment.".to_string() } else { format!("Couldn't invite {local}. Try again in a moment.") };
+    (K::Other, text)
+}
+
+/// A matrix-sdk error → (status, errcode, message) for [`invite_failure`]: status 0 = no HTTP answer (the request never
+/// got one: connection, DNS, timeout), 1 = no Matrix answer to read but not a network failure (an unreadable answer, a
+/// local error).
+pub fn error_parts(e: &matrix_sdk::Error) -> (u16, String, String) {
+    use matrix_sdk::ruma::api::error::ErrorBody;
+    if let Some(api) = e.as_client_api_error() {
+        let status = api.status_code.as_u16();
+        return match &api.body {
+            ErrorBody::Standard(b) => {
+                let errcode = if matches!(b.kind, matrix_sdk::ruma::api::error::ErrorKind::Forbidden) { "M_FORBIDDEN".to_string() } else { b.kind.errcode().to_string() };
+                (status, errcode, b.message.clone())
+            }
+            ErrorBody::Json(v) => {
+                let s = |k: &str| v.get(k).and_then(|x| x.as_str()).unwrap_or("").to_string();
+                (status, s("errcode"), s("error"))
+            }
+            _ => (status, String::new(), String::new()),
+        };
+    }
+    fn transport(h: &matrix_sdk::HttpError) -> bool {
+        match h {
+            matrix_sdk::HttpError::Reqwest(_) => true,
+            matrix_sdk::HttpError::Cached(inner) => transport(inner),
+            _ => false,
+        }
+    }
+    let network = matches!(e, matrix_sdk::Error::Http(h) if transport(h));
+    (if network { 0 } else { 1 }, String::new(), String::new())
+}
+
+/// An invite sent from the picker, until the answer: in flight, or failed with the reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Sent {
+    Inviting,
+    Failed(String),
+}
+
+/// What happened to an invite: it was sent, or the server answered (ok + the words).
+pub enum InviteEvent<'a> {
+    Start,
+    Answer { ok: bool, text: &'a str },
+}
+
+/// The picker's invite bookkeeping (2026-11-13, A02.0): Start marks them in flight (not pickable, not yet a member); a
+/// yes makes them a member; a no keeps them pickable with the reason (pick again = try again). A second Start while one
+/// is in flight, or for a member, changes nothing. The web's people.ts inviteStep is the same rule (shared vectors).
+pub fn invite_step(members: &[String], sent: &std::collections::HashMap<String, Sent>, mxid: &str, ev: InviteEvent) -> (Vec<String>, std::collections::HashMap<String, Sent>) {
+    let mut m = members.to_vec();
+    let mut out = sent.clone();
+    let inviting = matches!(out.get(mxid), Some(Sent::Inviting));
+    match ev {
+        InviteEvent::Start => {
+            if !m.iter().any(|x| x == mxid) && !inviting {
+                out.insert(mxid.to_string(), Sent::Inviting);
+            }
+        }
+        InviteEvent::Answer { .. } if !inviting => {}
+        InviteEvent::Answer { ok: true, .. } => {
+            out.remove(mxid);
+            if !m.iter().any(|x| x == mxid) {
+                m.push(mxid.to_string());
+            }
+        }
+        InviteEvent::Answer { ok: false, text } => {
+            out.insert(mxid.to_string(), Sent::Failed(text.to_string()));
+        }
+    }
+    (m, out)
+}
+
+/// The directory search's state, for [`empty_note`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SearchState {
+    Idle,
+    Searching,
+    Failed,
+}
+
+/// The line an empty list shows (2026-11-13, A02.2): what to type; while the directory search runs, "Searching…" (never
+/// "No one by that name" before the answer); when it failed, say so (the picker offers Try again).
+pub fn empty_note(kind: QueryKind, search: SearchState) -> &'static str {
+    if kind == QueryKind::Empty {
+        return "Type a name, a username, or someone's full address.";
+    }
+    match search {
+        SearchState::Searching => "Searching…",
+        SearchState::Failed => "Couldn't search your server right now.",
+        SearchState::Idle => "No one by that name. Someone on another server: type their full address, like @name:their.server.",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -431,6 +621,73 @@ mod tests {
         for c in cases {
             let o = lookup_outcome(c["status"].as_u64().unwrap() as u16, s(&c["errcode"]), s(&c["message"]), s(&c["target"]), s(&c["own"]));
             assert_eq!(json!({"kind": o.kind.as_str(), "pickable": o.pickable, "text": o.text}), c["want"], "{c}");
+        }
+    }
+
+    #[test]
+    fn invite_failure_vectors() {
+        let v = vectors();
+        let cases = v["invite"].as_array().unwrap();
+        assert!(cases.len() >= 15);
+        for c in cases {
+            let (k, text) = invite_failure(
+                c["status"].as_u64().unwrap() as u16,
+                s(&c["errcode"]),
+                s(&c["message"]),
+                s(&c["target"]),
+                s(&c["own"]),
+                s(&c["verb"]) == "Message",
+            );
+            assert_eq!(json!({"kind": k.as_str(), "text": text}), c["want"], "{c}");
+        }
+    }
+
+    #[test]
+    fn invite_step_vectors() {
+        let to_map = |v: &Value| -> std::collections::HashMap<String, Sent> {
+            v.as_object()
+                .unwrap()
+                .iter()
+                .map(|(k, x)| (k.clone(), if s(&x["state"]) == "inviting" { Sent::Inviting } else { Sent::Failed(s(&x["text"]).to_string()) }))
+                .collect()
+        };
+        let to_json = |m: &std::collections::HashMap<String, Sent>| -> Value {
+            Value::Object(
+                m.iter()
+                    .map(|(k, x)| (k.clone(), match x { Sent::Inviting => json!({"state": "inviting"}), Sent::Failed(t) => json!({"state": "failed", "text": t}) }))
+                    .collect(),
+            )
+        };
+        let v = vectors();
+        let cases = v["sent"].as_array().unwrap();
+        assert!(cases.len() >= 8);
+        for c in cases {
+            let members: Vec<String> = c["members"].as_array().unwrap().iter().map(|m| s(m).to_string()).collect();
+            let ev = if s(&c["event"]["kind"]) == "start" {
+                InviteEvent::Start
+            } else {
+                InviteEvent::Answer { ok: c["event"]["ok"].as_bool().unwrap(), text: s(&c["event"]["text"]) }
+            };
+            let (m, out) = invite_step(&members, &to_map(&c["sent"]), s(&c["mxid"]), ev);
+            assert_eq!(json!({"members": m, "sent": to_json(&out)}), c["want"], "{}", c["what"]);
+        }
+    }
+
+    #[test]
+    fn empty_note_vectors() {
+        for c in vectors()["empty"].as_array().unwrap() {
+            let kind = match s(&c["kind"]) {
+                "empty" => QueryKind::Empty,
+                "name" => QueryKind::Name,
+                "username" => QueryKind::Username,
+                _ => QueryKind::Address,
+            };
+            let search = match s(&c["search"]) {
+                "searching" => SearchState::Searching,
+                "failed" => SearchState::Failed,
+                _ => SearchState::Idle,
+            };
+            assert_eq!(empty_note(kind, search), s(&c["want"]), "{c}");
         }
     }
 

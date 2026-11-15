@@ -24,6 +24,8 @@ pub struct ScreenCast {
     // The REAL source size as the capture pipeline saw it on its first frame, when the portal (and the stream
     // probe) gave none. A re-publish of the same cast (a quality change) then knows the size up front.
     learned: std::sync::Arc<std::sync::Mutex<Option<(u32, u32)>>>,
+    // The source changed size mid-share ([`Self::forget_size`]): what the portal said at the start no longer holds.
+    stale: std::sync::Arc<std::sync::atomic::AtomicBool>,
     // `Session<T>` owns a `Proxy<'static>`, so it's fully storable and keeps the
     // portal session (and thus the cast) open until explicitly closed.
     session: Session<Screencast>,
@@ -62,7 +64,27 @@ impl ScreenCast {
     }
     /// Captured source size in pixels: the portal's, else the one the capture learned from its first frame.
     pub fn size(&self) -> Option<(u32, u32)> {
-        self.size.or_else(|| *self.learned.lock().unwrap())
+        let learned = *self.learned.lock().unwrap();
+        if self.stale.load(std::sync::atomic::Ordering::SeqCst) {
+            return learned;
+        }
+        self.size.or(learned)
+    }
+    /// The source changed size mid-share (a shared window was resized): the portal's size and the learned one are
+    /// both stale, so the next start of the capture learns the size again.
+    pub(crate) fn forget_size(&self) {
+        (self.size_forgetter())()
+    }
+    /// [`Self::forget_size`] for whoever SEES the change (the share's watcher, on a GStreamer thread): from then
+    /// on every restart of this cast, a quality change too, learns the size again.
+    pub(crate) fn size_forgetter(&self) -> impl Fn() + Send + 'static {
+        let (stale, learned) = (self.stale.clone(), self.learned.clone());
+        move || {
+            stale.store(true, std::sync::atomic::Ordering::SeqCst);
+            if let Ok(mut l) = learned.lock() {
+                *l = None;
+            }
+        }
     }
     /// Where the capture builders record the real source size (see [`Self::size`]).
     pub(crate) fn size_memo(&self) -> std::sync::Arc<std::sync::Mutex<Option<(u32, u32)>>> {
@@ -146,6 +168,16 @@ pub(crate) fn note_buffer_refusal(why: &str) -> bool {
     true
 }
 
+/// Is this capture error the SOURCE changing its format mid-stream (a shared window changed size)? GStreamer's
+/// pipewiresrc cannot follow that. gstpipewire 1.4 (the Flatpak's) posts "stream error: unhandled format" or
+/// "stream error: Format negotiation failed" and the capture is dead; 1.6 posts nothing, sends caps of the new size
+/// and stalls (lk_publish `watch_share_bus` catches that form at the source pad). Both wordings were captured on
+/// KWin 6.8.2 while a shared window was resized; a closed window says "target not found" instead.
+pub(crate) fn source_format_changed(why: &str) -> bool {
+    let w = why.to_ascii_lowercase();
+    w.contains("stream error") && (w.contains("unhandled format") || w.contains("format negotiation failed"))
+}
+
 /// Is this capture error PipeWire refusing the stream buffers that were asked for?
 pub(crate) fn buffer_request_refused(why: &str) -> bool {
     let w = why.to_ascii_lowercase();
@@ -211,6 +243,7 @@ pub async fn pick_screencast() -> Result<ScreenCast> {
         node_id,
         size,
         learned: Default::default(),
+        stale: Default::default(),
         session,
     })
 }

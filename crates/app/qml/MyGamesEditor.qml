@@ -38,6 +38,17 @@ Rectangle {
     }
     function art(id) { return catalogBase + "/art/" + encodeURIComponent(id) + "/portrait" }
     function setList(key, list) { var p = Object.assign({}, prefs); p[key] = list; prefs = p; dirty = true }
+    // QOL A19.3: the Steam import line says when only the first 60 are shown. SHARED LOGIC: Tin Hat Web's
+    // calendar/model/reelQol.ts importCountText; tools/reel-qol-test.mjs runs it on crates/app/src/testvectors/reel-qol.json.
+    readonly property int importShown: 60
+    // BEGIN import-count pure (tools/reel-qol-test.mjs)
+    function importCountText(total, pending) {
+        var t = total + " game" + (total === 1 ? "" : "s") + " found"
+        if (pending) t += " (" + pending + " still being checked)"
+        if (total > 60) t += ", showing the first 60"
+        return t + " — tick the ones you’d play:"
+    }
+    // END import-count pure
     function addTo(key, g) {
         nameCache = Object.assign({}, nameCache, (function () { var o = {}; o[g.id] = { name: g.name }; return o })())
         var others = ["wouldPlay", "definitelyNot"].filter(function (k) { return k !== key })
@@ -59,6 +70,8 @@ Rectangle {
     }
     function save() { ctl.savePrefs(JSON.stringify({ wouldPlay: prefs.wouldPlay, favorites: prefs.favorites, definitelyNot: prefs.definitelyNot, flexible: prefs.flexible, names: nameCache })); dirty = false }
     // searchJson is already the ARRAY (TH-REEL-01); an object with `items` is tolerated too.
+    // QOL A19.5 (review): the results answer this text (GamesController.searchFor), not an older search or an added game
+    function resultsCurrent(q) { return !searchDebounce.running && String(ed.ctl.searchFor || "") === q }
     readonly property var results: { try { var r = JSON.parse(ctl.searchJson || "[]"); return Array.isArray(r) ? r : (r.items || []) } catch (e) { return [] } }
 
     ColumnLayout {
@@ -84,7 +97,12 @@ Rectangle {
                 Text { textFormat: Text.PlainText; visible: !searchField.text.length && !searchField.activeFocus; text: searchField.placeholderText; color: Th.reelFieldPlaceholder; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
                 onTextEdited: searchDebounce.restart()
                 // "Press Enter to add it by name" (the copy below) — now true (TH-REEL-01 / TH-GAP-19).
-                onAccepted: if (text.trim().length >= 2 && ed.results.length === 0) ed.ctl.addCustomGame(text.trim())
+                // QOL A19.5: with results, Enter adds the first one (it used to do nothing) — only results of THIS text:
+                // while the next search is pending the list still shows the last one's (review), and Enter waits
+                onAccepted: if (text.trim().length >= 2) {
+                    if (ed.results.length === 0) ed.ctl.addCustomGame(text.trim())
+                    else if (ed.resultsCurrent(text.trim())) ed.addTo("wouldPlay", ed.results[0])
+                }
                 Timer { id: searchDebounce; interval: 220; onTriggered: if (ed.catalogOn && searchField.text.trim().length >= 2) ed.ctl.searchCatalog(searchField.text.trim()) }
             }
         }
@@ -196,7 +214,7 @@ Rectangle {
             visible: imp.error !== undefined || (imp.items !== undefined)
             Text {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                text: impRow.imp.error ? impRow.imp.error : ((impRow.imp.items || []).length + " games found" + (impRow.imp.pending ? " (" + impRow.imp.pending + " still being checked)" : "") + " — tick the ones you’d play:")
+                text: impRow.imp.error ? impRow.imp.error : ed.importCountText((impRow.imp.items || []).length, Number(impRow.imp.pending) || 0)
                 color: impRow.imp.error ? Th.reelErrorFg : Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
             // 10.1 (TH-REEL-15): nothing is pre-ticked (the import is a suggestion, not a decision),
@@ -206,14 +224,14 @@ Rectangle {
                 text: "Tick all"
                 implicitHeight: 24
                 radius: app.radiusSm
-                onClicked: { var items = (impRow.imp.items || []).slice(0, 60); for (var i = 0; i < items.length; i++) ed.addTo("wouldPlay", items[i]) }
+                onClicked: { var items = (impRow.imp.items || []).slice(0, ed.importShown); for (var i = 0; i < items.length; i++) ed.addTo("wouldPlay", items[i]) }
             }
         }
         Flow {
             Layout.fillWidth: true
             spacing: 6
             Repeater {
-                model: { try { return (JSON.parse(ed.ctl.importJson || "{}").items || []).slice(0, 60) } catch (e) { return [] } }
+                model: { try { return (JSON.parse(ed.ctl.importJson || "{}").items || []).slice(0, ed.importShown) } catch (e) { return [] } }
                 delegate: ReelButton {
                     required property var modelData
                     text: modelData.name

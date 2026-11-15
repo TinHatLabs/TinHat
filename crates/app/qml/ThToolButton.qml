@@ -25,7 +25,11 @@ Controls.ToolButton {
 
     display: Controls.AbstractButton.IconOnly
     Accessible.role: Accessible.Button
-    Accessible.name: tip.length > 0 ? tip : label
+    // A31.6: a screen reader hears the button's name; the shortcut in the tip's trailing "(…)" is its description
+    // (scripts/a11y-tip-test.qml evaluates this rule)
+    function tipParts(t) { var m = /^(.*?)\s*\(([^()]*(?:Ctrl|Alt|Shift|Meta|Esc|Enter|Space|F\d+)[^()]*|[A-Z0-9])\)\s*$/.exec(t); return m ? [m[1], m[2]] : [t, ""] }
+    Accessible.name: tip.length > 0 ? tipParts(tip)[0] : label
+    Accessible.description: tip.length > 0 ? tipParts(tip)[1] : ""
     Controls.ToolTip.text: tip
     Controls.ToolTip.visible: hovered && tip.length > 0
     Controls.ToolTip.delay: 400

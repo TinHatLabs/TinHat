@@ -343,6 +343,9 @@ pub fn set_done() {
     }
     eprintln!("[boot] +{} ms main window shown — startup window closing", elapsed_ms());
     mark_boot_ok();
+    // 12.1.14: this version came up here, so the updater's backup\ of the previous one can go (update_switch.rs)
+    #[cfg(windows)]
+    crate::platform::after_main_window();
     push();
 }
 

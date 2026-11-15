@@ -14,7 +14,7 @@ vectors (§12).
 
 | File | What |
 | --- | --- |
-| `actions.json` | The table (§2): every action + the registries it refers to. Generated from the authored spec `tools/actions/gen/*.py` by `build_actions.py` (canonical JSON: keys in code-point order, 2-space indent, final newline). |
+| `actions.json` | The table (§2): every action + the registries it refers to. Authored directly in this file, in canonical JSON (keys in code-point order, 2-space indent, final newline); both apps' tests check that form against the reference (`src/theme/canon.ts`, `tinhat_theme::canon`). |
 | `default-rows.json` | The default button rows of the layout presets (§9.8), same shape as the layout's `opts.<island>.rows`. |
 | `ACTIONS.md` | This text. |
 | `tools/actions/validate.mjs` | The independent validator (§12.3): shapes, id grammar, every name declared and scope-correct, icons in both packs, default rows placeable. |
@@ -466,8 +466,11 @@ that does nothing), so "Leave call" outside a call still finds itself.
 
 `fold(s)` = the Unicode default lower-casing of `s` (`String.prototype.toLowerCase` / `str::to_lowercase`), then
 every run of separator code points (`palette.separators`, inclusive ranges: whitespace, ASCII punctuation, `·`,
-general punctuation U+2010–U+2029, …) becomes one space, trimmed. Queries and texts are folded the same way. No
-diacritic folding in v1 ("cafe" finds "Café" only as a subsequence). Lower-casing follows each runtime's Unicode tables
+general punctuation U+2010–U+2029, …) becomes one space, trimmed. Queries and texts are folded the same way.
+**Accents (2026-11-14):** after lower-casing, a code point in `palette.fold.drop` (the combining marks U+0300–U+036F)
+is left out, and a letter in `palette.fold.letters` is written as its base letters ("é" → "e", "ł" → "l", "ß" → "ss",
+"ά" → "α") — a small table both apps read, so no runtime's own Unicode decomposition is involved; "cafe" finds
+"Café" and "Café" finds "cafe". Lower-casing follows each runtime's Unicode tables
 (both apps are on Unicode 17 today); a letter encoded after that may fold differently until both update.
 
 ### 10.4 Tiers
@@ -496,9 +499,13 @@ are in (`current.room`), or an unavailable action or choice. Empty query (all or
 rooms — last ones after the rest, else in entry order. Otherwise the entries with a score > 0, sorted by (last,
 score descending, kind in `palette.kindOrder` = invite, room, action, person, choice, entry order) — an invite and a
 room of the same name and score: the invite first, as on the empty list; at most `maxResults` (100) are returned,
-`total` counts them all. Output: `{mode: all|room|person|action|stage, query (the folded query), stage (the picked
+`total` counts them all. **Person mode with a non-empty folded query** (P6, 2026-11-14) adds one last row after the
+ranked ones, `{kind: "find", id: <the text after the prefix, U+0020 spaces trimmed>, label: palette.texts.findPeople
+with {query} = that text, a: "dm.new", score 0, …nulls}`: Enter opens New DM with that text in its field (the people
+picker searches the whole directory, not only your DM partners). It is not counted in `total` and never cut by
+`maxResults`. Output: `{mode: all|room|person|action|stage, query (the folded query), stage (the picked
 action or null), total, items: [{kind, id, label, icon, hint, enabled, pick, active, emoji, a, target, score}]}`
-(`kind` = invite | room | action | person | choice; `a` = the action a row runs, `target` = a choice's target,
+(`kind` = invite | room | action | person | choice | find; `a` = the action a row runs, `target` = a choice's target,
 `active` = an action's or a choice's toggle state — stage 2 marks the theme / layout in use — null for invites, rooms
 and people; an invite's `icon`, `hint`, `a` and `target` are null).
 
@@ -517,12 +524,28 @@ and people; an invite's `icon`, `hint`, `a` and `target` are null).
 ### 10.7 Texts
 
 `palette.texts`: the field's placeholder, stage 2's (`{label}` = the action's label), the empty-result line
-(`{query}` = the query as typed), the empty room list, an invite row's marker (`inviteMarker`: "Invited", the room
-list's word) and the section names per kind.
+(`{query}` = the query as typed), stage 2 with nothing to pick (`emptyStage`, never 'Nothing matches ""'), the empty
+room list, an invite row's marker (`inviteMarker`: "Invited", the room list's word), the find row (`findPeople`), the
+hint under an empty field naming the prefixes (`tip`) and the section names per kind.
+
+### 10.8 The room list's filter
+
+The "Filter rooms…" field above the room list uses the same folding (§10.3), never its own lower-casing:
+`roomFilter {query, rooms: [{name, aliases, membership, unread, mention}]}` (rows in list order) → `{text, unread,
+mention, active, shown: [bool per row], first}`. The query is split on U+0020; the words `is:unread`, `is:mention`
+and `is:mentions` (ASCII, any case) are flags (a row must have something unread / a mention of you), the other words
+are joined by one space and folded into `text`. A row shows when the filter is not `active` (no text, no flag), or its
+flags hold and either `text` is empty or it matches the folded name by §10.4's name tiers **without** the subsequence
+(prefix, word start, every word, substring), or the folded part before the first ":" of an alias (the room's address,
+a DM's other person's id: "alex" finds a DM with @alex:example.org; the server name never matches). `first` = the
+first shown row that is not an invite (an invite waits for Accept / Decline), -1 when the filter is not active or
+nothing qualifies: the row both apps draw highlighted and the one **Enter** acts on (as a click: open, or the join
+dialog for a listed room you are not in). Typing never opens a room (P1, 2026-11-14): Enter or a click does.
 
 ## 11. The API (both apps, JSON in / JSON out)
 
-`evaluate`, `row`, `menu`, `place`, `target`, `palette`, `choices`, `fold`, `score`, `drawer`, `summary`, and the key
+`evaluate`, `row`, `menu`, `place`, `target`, `palette`, `choices`, `fold`, `score`, `roomFilter` (§10.8), `drawer`,
+`summary`, and the key
 bindings' `sequence {text}`, `checkBinding {app, action, key}`, `effective {app, doc?}`, `matchKey {app, doc?, key,
 scope?, typing?}`, `setBinding {app, doc?, action, keys}`, `shortcuts {app, doc?}` (§8) — one JSON value in, one out,
 never throwing; a malformed input answers `{"error": "<code>"}` (`bad-input`, `bad-app`,
@@ -553,7 +576,7 @@ tools/actions/gen-vectors.mjs`, writing the contract and the web copy); the desk
 Web: `src/actions/actions.test.ts` (in `tools/modular/unit.sh`): every vector byte for byte (canonical JSON), the
 copies equal the contract, the worked examples (§13), the table's invariants, robustness. Desktop:
 `cargo test -p tinhat-actions` (`tests/vectors.rs` — every vector, the copies; `tests/unit.rs` — the same worked
-examples and invariants).
+examples and invariants). Both also check that the table is in canonical form (§1).
 
 ### 12.3 The validator
 

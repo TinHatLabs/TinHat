@@ -144,7 +144,8 @@ QtObject {
     function redo() { if (em.open && !em.readOnly && em.dragRef.length === 0 && em.layoutCtl.editRedo()) em._log("redo") }
     function preset(name) { if (em.open && !em.readOnly) em._report(em.layoutCtl.editPreset(name), "preset " + name) }
     function reset() { em.preset("reset") }
-    function hide(ref) { em.apply({ op: "hide", ref: ref }) }
+    // A17.0: hiding / removing an island says so (it went silently); Undo brings it back (web editmode/hints.ts: the same words)
+    function hide(ref) { if (em.apply({ op: "hide", ref: ref }).ok) em.toast(em.islandName(ref) + " hidden — Undo brings it back.", 3000) }
     function restore(ref) { em.apply({ op: "restore", ref: ref }) }
     function floatIsland(ref, rect) {
         if (!em.open || em.readOnly || !em.host) return
@@ -182,7 +183,10 @@ QtObject {
     function drawerTargets() {
         try { return JSON.parse(String(em.layoutCtl.drawerTargets(em.formJson))) } catch (e) { return [] }
     }
-    function removeButtonIsland(ref) { if (em.open && !em.readOnly) em._report(em.layoutCtl.editRemoveButtonIsland(ref), "remove " + ref) }
+    function removeButtonIsland(ref) {
+        if (em.open && !em.readOnly && em._report(em.layoutCtl.editRemoveButtonIsland(ref), "remove " + ref).ok)
+            em.toast("Button island removed — Undo brings it back.", 3000)
+    }
     /** Add widget (§7): the widget gallery; a hidden widgets island comes back first (one undo step). */
     function addWidget() {
         if (em.hidden.indexOf("widgets") >= 0) em.restore("widgets")

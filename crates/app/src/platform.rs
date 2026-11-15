@@ -1110,7 +1110,9 @@ pub(crate) fn early_startup() {
     }
     redirect_stderr_to_log();
     install_crash_breadcrumb();
-    cleanup_after_update();
+    // 12.1.14: switch to a downloaded + checked update now (supervised; this start quits once it runs, or stays on
+    // this version if Windows refuses it), else sweep the updater's leftovers as before
+    startup_update_step();
     init_bundle_env();
     // Toast attribution (§8.2) — background thread: two reg.exe writes, and no
     // toast can fire before the sync loop is up anyway.
@@ -1595,98 +1597,162 @@ fn init_bundle_env() {
     }
 }
 
+/// 12.1.14: the updater's folders under the install root (update_switch.rs).
+#[cfg(windows)]
+pub(crate) fn update_layout() -> crate::update_switch::Layout {
+    crate::update_switch::Layout::new(install_root())
+}
+
 /// Next-launch sweep (UPDATE_PATH.md §3.4): the previous bundle (`backup\`) and any
 /// aborted download (`staging\`) can only be deleted once the old process is gone —
 /// which is now. Best-effort: a still-locked file (AV scan…) just stays for the launch
 /// after; never fatal, never user-visible beyond one log line.
 #[cfg(windows)]
 pub(crate) fn cleanup_after_update() {
-    let root = install_root();
-    for sub in ["backup", "staging"] {
-        let dir = root.join(sub);
-        if dir.exists() {
-            match std::fs::remove_dir_all(&dir) {
-                Ok(()) => eprintln!("[platform] swept updater dir {}", dir.display()),
-                Err(e) => eprintln!("[platform] sweep of {} deferred ({e}); retrying next launch", dir.display()),
+    crate::update_switch::sweep(&update_layout());
+}
+
+/// 12.1.14 (UPDATE_PATH.md §3.6), every start of the installed app: a newer bundle that was downloaded AND passed its
+/// check waits in staging → switch to it now, supervised: this start hands over and quits once the new version runs;
+/// if Windows refuses it, the folders go back, this version keeps starting, and the UI shows why (the note file).
+/// Nothing waiting → the old sweep (backup\ is safe to delete: this start just proved current\ works).
+#[cfg(windows)]
+fn startup_update_step() {
+    use crate::update_switch as us;
+    let l = update_layout();
+    if !is_bundle_install() {
+        cleanup_after_update();
+        return;
+    }
+    let running = env!("CARGO_PKG_VERSION");
+    let v = match us::startup_plan(&l, running, crate::update::is_upgrade) {
+        us::StartupPlan::Sweep => {
+            // backup\ waits for this start's main window (after_main_window)
+            us::sweep_staging(&l);
+            return;
+        }
+        us::StartupPlan::Switch(v) => v,
+    };
+    eprintln!("[update] {v} is downloaded and checked: switching to it now (supervised; {running} stays if it won't start)");
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    match us::win::hand_over(&l, running, &args, &[]) {
+        Ok(mut h) => {
+            if h.still_running() {
+                eprintln!("[update] {v} runs — this start ({running}) steps aside");
+                crate::boot::exit_early(0);
             }
+            let back = h.give_back();
+            eprintln!("[update] {v} answered and then exited before the hand-over; folders back: {back:?}");
+            let ns = us::NotStarted {
+                refusal: us::Refusal::Failed("it exited right after it started".to_string()),
+                kept: running.to_string(),
+                rollback: back,
+            };
+            write_update_note(&l, &not_started_message(&ns));
+        }
+        Err(ns) => {
+            crate::relaunch::log_failed(&format!("the update to {v}: {}", ns.refusal.why()));
+            eprintln!("[update] kept {}; folders back: {:?}", ns.kept, ns.rollback);
+            write_update_note(&l, &not_started_message(&ns));
         }
     }
 }
 
-/// The Windows install step (UPDATE_PATH.md §3.2): verified zip bytes → staged unzip →
-/// VERSION sanity → backup/promote folder swap with retries + rollback. Returns the
-/// path of the promoted exe. The caller (update.rs) has ALREADY verified the sha256.
+/// 12.1.14: set when an attempt couldn't put the folders back: then backup\ may be the only good copy, and this
+/// session must not delete it (second review).
 #[cfg(windows)]
-pub(crate) fn install_update_zip(zip_bytes: &[u8], expected_version: &str) -> Result<PathBuf, String> {
-    let root = install_root();
-    let current = root.join("current");
-    let staging = root.join("staging");
-    let backup = root.join("backup");
+static KEEP_BACKUP: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-    if !current.join("tinhat.exe").is_file() {
+/// 12.1.14: the main window is on screen, so this version works here: delete the previous one (backup\), off the
+/// GUI thread. Only for the installed app (a portable run never owns those folders), and never after a failed
+/// roll back in this session.
+#[cfg(windows)]
+pub(crate) fn after_main_window() {
+    if !is_bundle_install() {
+        return;
+    }
+    if KEEP_BACKUP.load(std::sync::atomic::Ordering::SeqCst) {
+        eprintln!("[update] keeping backup\\ (an update attempt couldn't put the folders back)");
+        return;
+    }
+    let _ = std::thread::Builder::new()
+        .name("sweep-backup".into())
+        .spawn(|| crate::update_switch::sweep_backup(&update_layout()));
+}
+
+/// What the person reads after a supervised start that didn't work.
+#[cfg(windows)]
+pub(crate) fn not_started_message(ns: &crate::update_switch::NotStarted) -> String {
+    match &ns.rollback {
+        Ok(()) => ns.refusal.message(&ns.kept),
+        Err(_) => {
+            KEEP_BACKUP.store(true, std::sync::atomic::Ordering::SeqCst);
+            format!(
+            "{} Tin Hat couldn't move the previous version back by itself: if it doesn't open next time, reinstall it from tinhat.dev.",
+            ns.refusal.message(&ns.kept)
+        )
+        }
+    }
+}
+
+#[cfg(windows)]
+fn write_update_note(l: &crate::update_switch::Layout, msg: &str) {
+    if let Err(e) = std::fs::write(l.note(), msg) {
+        eprintln!("[update] couldn't keep the message for the window ({e})");
+    }
+}
+
+/// 12.1.14: the message a startup switch left for the window (read once).
+#[cfg(windows)]
+pub(crate) fn take_update_note() -> Option<String> {
+    let p = update_layout().note();
+    let s = std::fs::read_to_string(&p).ok()?;
+    let _ = std::fs::remove_file(&p);
+    let s = s.trim().to_string();
+    (!s.is_empty()).then_some(s)
+}
+
+/// The Windows download step (UPDATE_PATH.md §3.2, 12.1.14 §3.6): verified zip bytes → staging\unpack → the bundle
+/// moves to staging\bundle (VERSION checked) → the bundle's own check (`--update-probe`) → staging\READY. current\ is
+/// NEVER touched here: the switch happens only at a restart, supervised (update_switch.rs). The caller (update.rs)
+/// has ALREADY verified the sha256. Outer Err = the staging failed; inner Err = the new version doesn't start here.
+#[cfg(windows)]
+pub(crate) fn stage_update_zip(
+    zip_bytes: &[u8],
+    expected_version: &str,
+) -> Result<Result<(), crate::update_switch::Refusal>, String> {
+    use crate::update_switch as us;
+    let l = update_layout();
+    if !l.current().join(us::EXE).is_file() {
         return Err(format!(
             "no portable install at {} — self-update needs the bundle layout (first install = unzip there)",
-            current.display()
+            l.current().display()
         ));
     }
-
-    // 1-2. Clean staging, unzip the new bundle into staging\current\.
-    if staging.exists() {
-        std::fs::remove_dir_all(&staging).map_err(|e| format!("clear staging: {e}"))?;
-    }
-    let stage_bundle = staging.join("current");
-    std::fs::create_dir_all(&stage_bundle).map_err(|e| format!("mkdir staging: {e}"))?;
+    let unpack = us::prepare_staging(&l)?;
     // safe_unzip: plain files and folders strictly inside staging only, headers checked, one entry per path (the bytes
-    // are already the signed feed's, but the unzip doesn't rely on that). A refusal leaves `current` untouched.
-    crate::safe_unzip::extract_zip(std::io::Cursor::new(zip_bytes), &stage_bundle).map_err(|e| format!("unzip: {e}"))?;
-
-    // Tolerate a zip whose top level is a single wrapper dir (PACKAGING §7 zips the
-    // folder; UPDATE_PATH §1 zips the contents — accept both shapes).
-    let mut bundle = stage_bundle.clone();
-    if !bundle.join("tinhat.exe").is_file() {
-        let entries: Vec<_> = std::fs::read_dir(&bundle)
-            .map_err(|e| format!("read staging: {e}"))?
-            .filter_map(|e| e.ok())
-            .collect();
-        if entries.len() == 1 && entries[0].path().is_dir()
-            && entries[0].path().join("tinhat.exe").is_file()
-        {
-            bundle = entries[0].path();
-        } else {
-            return Err("zip has no tinhat.exe at top level or in a single wrapper dir".into());
+    // are already the signed feed's, but the unzip doesn't rely on that).
+    let staged = crate::safe_unzip::extract_zip(std::io::Cursor::new(zip_bytes), &unpack)
+        .map_err(|e| format!("unzip: {e}"))
+        .and_then(|_| us::adopt_unpacked(&l, expected_version));
+    if let Err(e) = staged {
+        us::discard_staging(&l);
+        return Err(e);
+    }
+    let ver = us::bundle_version(&l.staged());
+    match us::win::probe(&l, &ver) {
+        Ok(_) => match us::mark_ready(&l, &ver) {
+            Ok(()) => Ok(Ok(())),
+            Err(e) => {
+                us::discard_staging(&l);
+                Err(e)
+            }
+        },
+        Err(r) => {
+            us::discard_staging(&l);
+            Ok(Err(r))
         }
     }
-
-    // Sanity: the bundle must declare the version the manifest promised (UPDATE_PATH §3.2/4).
-    let ver_file = bundle.join("VERSION");
-    let staged_ver = std::fs::read_to_string(&ver_file).unwrap_or_default().trim().to_string();
-    if !expected_version.is_empty() && staged_ver != expected_version {
-        return Err(format!(
-            "staged VERSION {staged_ver:?} != manifest version {expected_version:?} (bad bundle?)"
-        ));
-    }
-
-    // 3. Sweep any stale backup (best-effort — a locked leftover must not block updating).
-    if backup.exists() {
-        if let Err(e) = std::fs::remove_dir_all(&backup) {
-            eprintln!("[platform] stale backup sweep failed ({e}); proceeding");
-        }
-    }
-
-    // 4-5. The swap: current -> backup, staged bundle -> current. Same-volume renames
-    // are legal on a live bundle (the running exe keeps its handles). Retry each rename
-    // ~5x/200ms for transient AV locks (UPDATE_PATH §3.5); roll back if promote fails.
-    rename_retry(&current, &backup).map_err(|e| format!("move live bundle aside: {e}"))?;
-    if let Err(e) = rename_retry(&bundle, &current) {
-        let msg = match rename_retry(&backup, &current) {
-            Ok(()) => format!("promote new bundle: {e} (rolled back to previous version)"),
-            Err(rb) => format!("promote new bundle: {e}; ROLLBACK ALSO FAILED: {rb} — reinstall from zip"),
-        };
-        return Err(msg);
-    }
-    let _ = std::fs::remove_dir_all(&staging); // leftover wrapper dirs; best-effort
-
-    Ok(current.join("tinhat.exe"))
 }
 
 // ---------------------------------------------------------------------------------
@@ -1748,7 +1814,7 @@ pub(crate) fn mark_install_prompt_seen() {
 /// it as an app: staging copy → swap into `<root>\current` (a previous install moves
 /// to backup\, exactly like an update), strip Mark-of-the-Web, Start-menu + desktop
 /// shortcuts, an Apps & features entry. Returns the installed exe. Runs OFF the GUI
-/// thread (hundreds of MB to copy). Same-volume rename rules as install_update_zip.
+/// thread (hundreds of MB to copy). Same-volume rename rules as the update switch (update_switch.rs).
 #[cfg(windows)]
 pub(crate) fn install_from_portable() -> Result<PathBuf, String> {
     let exe = std::env::current_exe().map_err(|e| format!("current_exe: {e}"))?;

@@ -204,6 +204,12 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "clearQueue"]
         fn clear_queue(self: Pin<&mut WatchPartyController>);
+        /// QOL A16.2 (P11): Undo after Clear — `cleared_json` = the queue as it was when Clear was pressed; it comes back
+        /// first, then anything others added since (vectors undoclear.json `queue_undo_clear`). One write.
+        /// `room_id` = the party the Clear was in: a restore for another room (I moved on meanwhile) is dropped.
+        #[qinvokable]
+        #[cxx_name = "restoreQueue"]
+        fn restore_queue(self: Pin<&mut WatchPartyController>, room_id: &QString, cleared_json: &QString);
         /// 11.3 QOL (QOL.md §5): "Play next" — move `from` right after the playing item (`now_url`; absent → the top).
         /// One write (vectors queueops.json `moveToNext`).
         #[qinvokable]
@@ -561,6 +567,23 @@ impl qobject::WatchPartyController {
                 return false;
             }
             q.clear();
+            true
+        });
+    }
+
+    pub fn restore_queue(self: Pin<&mut Self>, room_id: &QString, cleared_json: &QString) {
+        if room_id.to_string() != self.room_id().to_string() {
+            return; // the Clear was in another party: never restore its queue here
+        }
+        let v: Value = serde_json::from_str(&cleared_json.to_string()).unwrap_or(Value::Null);
+        let cleared: Vec<Value> = v.as_array().cloned().unwrap_or_default();
+        if cleared.is_empty() {
+            return;
+        }
+        // always written: the base may still be the store's pre-Clear copy (our Clear's echo comes with the next /sync,
+        // and base_party prefers the longer queue), which would read as "nothing to restore" and leave the queue empty
+        self.edit_queue(move |q, _| {
+            queue_undo_clear(q, &cleared);
             true
         });
     }
@@ -1605,6 +1628,20 @@ pub fn queue_clear_played(q: &mut Vec<Value>, now: &str) -> bool {
     true
 }
 
+/// QOL A16.2 (P11) Undo after Clear: the cleared items in their order, then whatever others added since that isn't one
+/// of them (a re-added link is not doubled). Shared vectors testvectors/mediaparty/undoclear.json (the web's undoClear).
+pub fn queue_undo_clear(q: &mut Vec<Value>, cleared: &[Value]) -> bool {
+    let before: Vec<String> = q.iter().map(|it| item_url(it).to_string()).collect();
+    let back: std::collections::HashSet<&str> = cleared.iter().map(item_url).collect();
+    let mut out: Vec<Value> = cleared.to_vec();
+    out.extend(q.iter().filter(|it| !back.contains(item_url(it))).cloned());
+    let changed = out.iter().map(item_url).ne(before.iter().map(String::as_str));
+    if changed {
+        *q = out;
+    }
+    changed
+}
+
 /// mulberry32 — bit-for-bit the JS / Python reference (u32 wrapping arithmetic = Math.imul + `>>> 0`).
 pub fn mulberry32(seed: u32) -> impl FnMut() -> f64 {
     let mut st = seed;
@@ -2014,6 +2051,7 @@ async fn browse_fetch(kind: &str, params: &Value) -> Value {
 /// not-yet-synced local store and drop the new item (the watch-party "queue does nothing" bug;
 /// see activity.rs for the same trap). A missing room is an Err (not a silent Ok) so it surfaces.
 pub async fn do_enqueue(room_id: &str, url: &str, title: &str) -> Result<Value, String> {
+    let _one_at_a_time = queue_writes().lock().await;
     let room = room_by_id(room_id).await.ok_or_else(|| "room not available".to_string())?;
     crate::appstate::ensure_writable(&room, &[WP_EVENT]).await;
     let mut party = base_party(&room, room_id).await;
@@ -2029,6 +2067,14 @@ pub async fn do_enqueue(room_id: &str, url: &str, title: &str) -> Result<Value, 
         .map_err(|e| e.to_string())?;
     remember_party_write(room_id, &party);
     Ok(party)
+}
+
+/// QOL A16.2 review: the queue's read-modify-writes (do_enqueue, do_edit_queue) run one at a time, in the order they
+/// were made — Undo right after Clear must start from Clear's write, not race it. Never held across another lock of
+/// it (neither function calls the other).
+fn queue_writes() -> &'static tokio::sync::Mutex<()> {
+    static WRITES: std::sync::OnceLock<tokio::sync::Mutex<()>> = std::sync::OnceLock::new();
+    WRITES.get_or_init(|| tokio::sync::Mutex::new(()))
 }
 
 /// The party we last WROTE per room (and when): the local store echoes our own state write only after the next
@@ -2072,6 +2118,7 @@ pub async fn do_edit_queue(
     room_id: &str,
     edit: impl FnOnce(&mut Vec<Value>, &str) -> bool,
 ) -> Result<Option<Value>, String> {
+    let _one_at_a_time = queue_writes().lock().await;
     let room = room_by_id(room_id).await.ok_or_else(|| "room not available".to_string())?;
     crate::appstate::ensure_writable(&room, &[WP_EVENT]).await;
     let mut party = base_party(&room, room_id).await;
@@ -3033,6 +3080,36 @@ mod mediaparty_tests {
         }
         for (_, _, _, action, _) in MP_SHORTCUTS.iter().filter(|s| !s.3.is_empty()) {
             assert!(qml.contains(&format!("case \"{action}\"")), "runAction has no case for {action}");
+        }
+    }
+
+    /// QOL A16.2 review: Clear and Undo go through do_edit_queue, which takes the queue-write lock before it reads.
+    #[test]
+    fn queue_writes_are_serialised() {
+        let src = include_str!("watchparty.rs");
+        for f in ["pub async fn do_edit_queue(", "pub async fn do_enqueue("] {
+            let body = src.split(f).nth(1).unwrap();
+            let lock = body.find("queue_writes().lock().await").expect("takes the queue-write lock");
+            let read = body.find("base_party(&room").unwrap();
+            assert!(lock < read, "{f}: the lock comes before the read");
+        }
+    }
+
+    /// QOL A16.2 (P11): Undo after Clear — every case of the shared undoclear.json (the web's undoClear replays it).
+    #[test]
+    fn undoclear_vectors() {
+        let v = vectors("undoclear.json");
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 8);
+        let urls = |q: &[Value]| Value::Array(q.iter().map(|it| it["url"].clone()).collect());
+        for c in cases {
+            let name = c["name"].as_str().unwrap();
+            let q0: Vec<Value> = c["input"]["queue"].as_array().cloned().unwrap_or_default();
+            let cleared: Vec<Value> = c["input"]["cleared"].as_array().cloned().unwrap_or_default();
+            let mut q = q0.clone();
+            let changed = queue_undo_clear(&mut q, &cleared);
+            assert_eq!(urls(&q), c["expect"], "{name}");
+            assert_eq!(changed, urls(&q) != urls(&q0), "{name}: changed flag");
         }
     }
 

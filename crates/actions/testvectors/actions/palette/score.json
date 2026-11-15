@@ -695,7 +695,7 @@
     },
     {
       "expect": {
-        "tier": 30
+        "tier": 100
       },
       "input": {
         "as": "name",
@@ -706,7 +706,7 @@
     },
     {
       "expect": {
-        "tier": 0
+        "tier": 70
       },
       "input": {
         "as": "keyword",
@@ -717,7 +717,7 @@
     },
     {
       "expect": {
-        "tier": 0
+        "tier": 40
       },
       "input": {
         "as": "alias",
@@ -1187,6 +1187,171 @@
         "text": "aa"
       },
       "name": "alias: \"aa\" ~ \"a a\""
+    },
+    {
+      "expect": {
+        "tier": 100
+      },
+      "input": {
+        "as": "name",
+        "query": "cele",
+        "text": "Céleste"
+      },
+      "name": "name: \"Céleste\" ~ \"cele\""
+    },
+    {
+      "expect": {
+        "tier": 70
+      },
+      "input": {
+        "as": "keyword",
+        "query": "cele",
+        "text": "Céleste"
+      },
+      "name": "keyword: \"Céleste\" ~ \"cele\""
+    },
+    {
+      "expect": {
+        "tier": 40
+      },
+      "input": {
+        "as": "alias",
+        "query": "cele",
+        "text": "Céleste"
+      },
+      "name": "alias: \"Céleste\" ~ \"cele\""
+    },
+    {
+      "expect": {
+        "tier": 100
+      },
+      "input": {
+        "as": "name",
+        "query": "lodz",
+        "text": "Łódź"
+      },
+      "name": "name: \"Łódź\" ~ \"lodz\""
+    },
+    {
+      "expect": {
+        "tier": 70
+      },
+      "input": {
+        "as": "keyword",
+        "query": "lodz",
+        "text": "Łódź"
+      },
+      "name": "keyword: \"Łódź\" ~ \"lodz\""
+    },
+    {
+      "expect": {
+        "tier": 40
+      },
+      "input": {
+        "as": "alias",
+        "query": "lodz",
+        "text": "Łódź"
+      },
+      "name": "alias: \"Łódź\" ~ \"lodz\""
+    },
+    {
+      "expect": {
+        "tier": 100
+      },
+      "input": {
+        "as": "name",
+        "query": "strasse",
+        "text": "Straße"
+      },
+      "name": "name: \"Straße\" ~ \"strasse\""
+    },
+    {
+      "expect": {
+        "tier": 70
+      },
+      "input": {
+        "as": "keyword",
+        "query": "strasse",
+        "text": "Straße"
+      },
+      "name": "keyword: \"Straße\" ~ \"strasse\""
+    },
+    {
+      "expect": {
+        "tier": 40
+      },
+      "input": {
+        "as": "alias",
+        "query": "strasse",
+        "text": "Straße"
+      },
+      "name": "alias: \"Straße\" ~ \"strasse\""
+    },
+    {
+      "expect": {
+        "tier": 100
+      },
+      "input": {
+        "as": "name",
+        "query": "nguyen",
+        "text": "Nguyễn"
+      },
+      "name": "name: \"Nguyễn\" ~ \"nguyen\""
+    },
+    {
+      "expect": {
+        "tier": 70
+      },
+      "input": {
+        "as": "keyword",
+        "query": "nguyen",
+        "text": "Nguyễn"
+      },
+      "name": "keyword: \"Nguyễn\" ~ \"nguyen\""
+    },
+    {
+      "expect": {
+        "tier": 40
+      },
+      "input": {
+        "as": "alias",
+        "query": "nguyen",
+        "text": "Nguyễn"
+      },
+      "name": "alias: \"Nguyễn\" ~ \"nguyen\""
+    },
+    {
+      "expect": {
+        "tier": 100
+      },
+      "input": {
+        "as": "name",
+        "query": "CAFÉ",
+        "text": "cafe"
+      },
+      "name": "name: \"cafe\" ~ \"CAFÉ\""
+    },
+    {
+      "expect": {
+        "tier": 70
+      },
+      "input": {
+        "as": "keyword",
+        "query": "CAFÉ",
+        "text": "cafe"
+      },
+      "name": "keyword: \"cafe\" ~ \"CAFÉ\""
+    },
+    {
+      "expect": {
+        "tier": 40
+      },
+      "input": {
+        "as": "alias",
+        "query": "CAFÉ",
+        "text": "cafe"
+      },
+      "name": "alias: \"cafe\" ~ \"CAFÉ\""
     },
     {
       "expect": {

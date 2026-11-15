@@ -20,6 +20,7 @@
 // (it "did nothing" on click). Every working dialog in this app uses the Column shape.
 import QtQuick
 import QtQuick.Controls as Controls
+import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app   // Th: the dialog.* tokens
 
@@ -64,6 +65,9 @@ Controls.Dialog {
     signal setUpRecoveryRequested(string password) // no device can vouch — create recovery instead
     signal startOverRequested(string password)     // no key, no device: a new identity + Security Key
     signal sasResetRequested()              // back to the first screen (sends the cancel if a request is live)
+    signal saveKeyRequested(string fileUrl) // L1 A28.1: "Save as file…" (Main.qml: login.saveRecoveryKey); keySavedToFile() after
+    // L1 A28.1: a saved file counts as "saved somewhere safe" (Tin Hat Web's keySaved: copied or downloaded)
+    function keySavedToFile() { savedCheck.checked = true }
 
     // The ways out on the screens after "Use another device" (waiting on it, cancelled / timed out / nothing could
     // vouch) — before, those offered only Cancel / Try again (a friend's phone, 2026-10-26; the web's wayOut). Each one
@@ -79,7 +83,7 @@ Controls.Dialog {
 
     // named clearForm, NOT reset: "reset" collides with QQC2 Dialog's built-in
     // reset() signal (qt.qml.invalidOverride at every load)
-    function clearForm() { secKeyField.text = ""; pwField.text = ""; soPwField.text = ""; dlg.keyPathOpen = false; dlg.startOverOpen = false }
+    function clearForm() { secKeyField.text = ""; showKeyBox.checked = false; pwField.text = ""; soPwField.text = ""; dlg.keyPathOpen = false; dlg.startOverOpen = false }
 
     // Hold (same rule as Tin Hat Web's S9 hold, SHEET_HOLD_MS; adversarial review 2026-09-25): the dialog is
     // centred, so the NEXT state's buttons appear where the pointer just was — in the real app a double click on
@@ -120,7 +124,32 @@ Controls.Dialog {
     // 10.1 (TH-SET-24 / TH-FIRST-06): the one-time recovery key can't be closed away until
     // the user says they have it somewhere (Escape still works; this is a nudge, not a lock).
     standardButtons: (dlg.sasState === "recovery-done" && !savedCheck.checked) ? Controls.Dialog.NoButton : Controls.Dialog.Close
-    onRejected: if (dlg.sasState !== "" && dlg.sasState !== "done") dlg.sasCancelled()
+    // L1 A28.0: the key is shown once, so until "I've saved this key" is ticked neither Escape nor a click outside closes
+    // this screen: Escape asks first (keyAsk, the web's KEY_SKIP_* words). Closing it is not a cancel: it used to go
+    // through sasCancelled and log "You cancelled" over a key that was made; it goes back to the first screen instead.
+    readonly property bool keyUnsaved: dlg.sasState === "recovery-done" && !savedCheck.checked
+    closePolicy: dlg.keyUnsaved ? Controls.Popup.NoAutoClose : (Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside)
+    onRejected: {
+        if (dlg.sasState === "recovery-done") dlg.sasResetRequested()
+        else if (dlg.sasState !== "" && dlg.sasState !== "done") dlg.sasCancelled()
+    }
+    // the window-keys rule (scripts/qml-window-keys-check.py): only while the window that shows the sheet has the focus
+    readonly property bool keysHere: dlg.visible && dlg.contentItem.Window.activeFocusItem !== null
+    Shortcut {
+        sequences: [StandardKey.Cancel]
+        enabled: dlg.keysHere && dlg.keyUnsaved && !keyAsk.visible
+        onActivated: keyAsk.open()
+    }
+    ConfirmDialog {
+        id: keyAsk
+        app: dlg.app
+        dialogTitle: "Close without saving your key?"
+        message: "You won't see it again. Without it, you can't read your messages if you sign in on a new device."
+        confirmText: "Close anyway"
+        cancelText: "Go back"
+        destructive: true
+        onConfirmed: dlg.reject()
+    }
     // D3 (QA 12.1.11): verifying ANOTHER device is over at "done" (this side gets no keys; the requester's sheet closes
     // when its keys arrive, Main.qml onMVerifiedChanged). The finished sheet used to stay open and modal, and the next
     // click (Join in the call banner) only closed it. It closes now, as Close at "done" did (no cancel, no reset: the
@@ -203,9 +232,15 @@ Controls.Dialog {
                 id: secKeyField
                 width: parent.width
                 placeholderText: "Security Key (e.g. EsTx …)"
-                echoMode: TextInput.Password
+                echoMode: showKeyBox.checked ? TextInput.Normal : TextInput.Password
                 enabled: !dlg.busy
                 onAccepted: if (text.length > 0) dlg.verifyRequested(text)
+            }
+            // A28.2: check a typed key letter by letter (the web: the same box and words)
+            Controls.CheckBox {
+                id: showKeyBox
+                text: "Show the key"
+                enabled: !dlg.busy
             }
             Controls.Button {
                 width: parent.width
@@ -523,9 +558,23 @@ Controls.Dialog {
                     onClicked: {
                         if (dlg.app && dlg.app.copyToClipboard) dlg.app.copyToClipboard(dlg.recoveryKey)
                         else { keyArea.selectAll(); keyArea.copy(); keyArea.deselect() }
-                        if (dlg.app && dlg.app.showPassiveNotification) dlg.app.showPassiveNotification("Recovery key copied — paste it somewhere safe", "short")
+                        if (dlg.app && dlg.app.showPassiveNotification) dlg.app.showPassiveNotification("Security Key copied — paste it somewhere safe", "short")
                     }
                 }
+                // L1 A28.1: the key as a file (Tin Hat Web's Download: tinhat-security-key.txt, the same text)
+                ThButton {
+                    app: dlg.app
+                    text: "Save as file…"
+                    icon.name: "document-save-symbolic"
+                    onClicked: { keyFileDialog.selectedFile = keyFileDialog.currentFolder + "/tinhat-security-key.txt"; keyFileDialog.open() }
+                }
+            }
+            FileDialog {
+                id: keyFileDialog
+                title: "Save your Security Key"
+                fileMode: FileDialog.SaveFile
+                nameFilters: ["Text files (*.txt)"]
+                onAccepted: dlg.saveKeyRequested(decodeURIComponent(String(selectedFile)))
             }
             Controls.CheckBox {
                 id: savedCheck

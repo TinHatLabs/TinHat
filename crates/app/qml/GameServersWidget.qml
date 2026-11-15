@@ -243,7 +243,7 @@ Item {
         focusPolicy: Qt.TabFocus
         contentItem: WidgetText { id: slTxt; role: "meta"; semibold: true; text: "Start a game…"; color: Th.accentBright; font.underline: sl.hovered || sl.visualFocus }
         onClicked: picker.popup(sl, 0, sl.height)
-        Controls.Menu {
+        KeyMenu {
             id: picker
             modal: false
             Repeater {

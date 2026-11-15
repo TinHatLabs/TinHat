@@ -1,0 +1,242 @@
+{
+  "about": "Reactions (QOL A07.0 / A07.1 / A07.2): one key rule and one grouping rule. norm: a key's grouping form (U+FE0E / U+FE0F variation selectors dropped, so ❤ and ❤️ are one chip and the quick ❤️ finds yours). groups: a message's reactions in timeline order (oldest first) → its chips in order of first appearance (stable across reloads), key = the first one sent, count = distinct senders (never display names), mine = I am one of them. Replayed by the desktop (reactions.rs unit tests + tools/reactions-test.mjs on ChatBubble.qml) and Tin Hat Web (src/features/chat/lib/reactions.test.ts).",
+  "norm": [
+    {
+      "in": "❤",
+      "out": "❤"
+    },
+    {
+      "in": "❤️",
+      "out": "❤"
+    },
+    {
+      "in": "👍",
+      "out": "👍"
+    },
+    {
+      "in": "👍🏽",
+      "out": "👍🏽"
+    },
+    {
+      "in": "1️⃣",
+      "out": "1⃣"
+    },
+    {
+      "in": "☺️",
+      "out": "☺"
+    },
+    {
+      "in": "✔︎",
+      "out": "✔"
+    },
+    {
+      "in": "😂",
+      "out": "😂"
+    },
+    {
+      "in": "+1",
+      "out": "+1"
+    },
+    {
+      "in": "🏳️‍🌈",
+      "out": "🏳‍🌈"
+    },
+    {
+      "in": "",
+      "out": ""
+    }
+  ],
+  "groups": [
+    {
+      "name": "first seen first, kept on reload",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "😂",
+          "sender": "@b:x"
+        },
+        {
+          "key": "👍",
+          "sender": "@c:x"
+        },
+        {
+          "key": "❤️",
+          "sender": "@d:x"
+        },
+        {
+          "key": "👍",
+          "sender": "@b:x"
+        }
+      ],
+      "expect": [
+        {
+          "key": "😂",
+          "count": 1,
+          "mine": false
+        },
+        {
+          "key": "👍",
+          "count": 2,
+          "mine": false
+        },
+        {
+          "key": "❤️",
+          "count": 1,
+          "mine": false
+        }
+      ]
+    },
+    {
+      "name": "❤ and ❤️ are one chip, shown as the first one sent",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "❤",
+          "sender": "@b:x"
+        },
+        {
+          "key": "❤️",
+          "sender": "@c:x"
+        },
+        {
+          "key": "❤️",
+          "sender": "@me:x"
+        }
+      ],
+      "expect": [
+        {
+          "key": "❤",
+          "count": 3,
+          "mine": true
+        }
+      ]
+    },
+    {
+      "name": "❤️ first, then ❤ from me: one chip, mine",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "❤️",
+          "sender": "@b:x"
+        },
+        {
+          "key": "❤",
+          "sender": "@me:x"
+        }
+      ],
+      "expect": [
+        {
+          "key": "❤️",
+          "count": 2,
+          "mine": true
+        }
+      ]
+    },
+    {
+      "name": "two people with the same display name count twice",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "👍",
+          "sender": "@ann:x"
+        },
+        {
+          "key": "👍",
+          "sender": "@ann:y"
+        }
+      ],
+      "expect": [
+        {
+          "key": "👍",
+          "count": 2,
+          "mine": false
+        }
+      ]
+    },
+    {
+      "name": "one person reacting twice (a duplicate the server let through) counts once",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "👍",
+          "sender": "@b:x"
+        },
+        {
+          "key": "👍",
+          "sender": "@b:x"
+        }
+      ],
+      "expect": [
+        {
+          "key": "👍",
+          "count": 1,
+          "mine": false
+        }
+      ]
+    },
+    {
+      "name": "my duplicate across variants counts once and is mine",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "❤",
+          "sender": "@me:x"
+        },
+        {
+          "key": "❤️",
+          "sender": "@me:x"
+        }
+      ],
+      "expect": [
+        {
+          "key": "❤",
+          "count": 1,
+          "mine": true
+        }
+      ]
+    },
+    {
+      "name": "someone else's reaction is not mine",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "🎉",
+          "sender": "@b:x"
+        }
+      ],
+      "expect": [
+        {
+          "key": "🎉",
+          "count": 1,
+          "mine": false
+        }
+      ]
+    },
+    {
+      "name": "skin tones stay separate",
+      "me": "@me:x",
+      "reactions": [
+        {
+          "key": "👍",
+          "sender": "@b:x"
+        },
+        {
+          "key": "👍🏽",
+          "sender": "@c:x"
+        }
+      ],
+      "expect": [
+        {
+          "key": "👍",
+          "count": 1,
+          "mine": false
+        },
+        {
+          "key": "👍🏽",
+          "count": 1,
+          "mine": false
+        }
+      ]
+    }
+  ]
+}

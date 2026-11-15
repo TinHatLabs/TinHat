@@ -86,6 +86,11 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: island.railRef.addRequested()
             }
+            RailFocus {   // a11y round 2 (M2)
+                name: "Join with a link, or make a space"
+                discSize: 46
+                onActivated: island.railRef.addRequested()
+            }
             Controls.ToolTip.text: "Join with a link, or make a space"
             Controls.ToolTip.visible: addMa.containsMouse
             Controls.ToolTip.delay: 400
@@ -152,6 +157,11 @@ Item {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: island.railRef.addRequested()
+            }
+            RailFocus {   // a11y round 2 (M2)
+                name: "Join with a link, or make a space"
+                discSize: 46
+                onActivated: island.railRef.addRequested()
             }
             Controls.ToolTip.text: "Join with a link, or make a space"
             Controls.ToolTip.visible: hAddMa.containsMouse

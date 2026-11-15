@@ -316,7 +316,7 @@ impl qobject::PadController {
         }
         if was != on {
             // the `pad1` cap follows at once (not at the 30-min refresh)
-            crate::bridge::runtime().spawn(crate::call_ctl::republish_membership());
+            crate::bridge::runtime().spawn(crate::call_ctl::republish_membership("Pad setting changed"));
         }
         bump(self.as_mut());
     }

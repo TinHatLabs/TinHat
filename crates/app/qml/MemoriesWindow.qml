@@ -33,6 +33,7 @@ import QtQuick
 import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Controls as Controls
+import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app   // Th: the memories.* tokens
 import dev.tinhat.mpv
@@ -48,7 +49,7 @@ Window {
     property string memoriesError: ""
     // 10.1 (TH-MEM-02): the list is being fetched — "No memories here yet" waits for the answer.
     property bool loading: false
-    onRefreshRequested: { mem.loading = true; loadingCap.restart() }
+    onRefreshRequested: { if (mem.recordsHere) { mem.loading = true; loadingCap.restart() } mem.fetchPhotos() }
     onMemoriesChanged: { mem.loading = false; mem._openPending() }
     // widgets W2 (the Memories widget, Main.openMemory): open THIS session once the room's list holds it — through
     // tryOpen, so a live or processing one shows its notice like a click on its card; forgotten after 20 s
@@ -70,6 +71,177 @@ Window {
     onMemoriesErrorChanged: if (memoriesError.length > 0) mem.loading = false
     Timer { id: loadingCap; interval: 8000; onTriggered: mem.loading = false }   // never spins forever
     property var clips: []
+
+    // ---- Memories photos (memories_photos.rs; docs/MEMORIES-PHOTOS.md; the web's PhotoParts.tsx) ----
+    // A photo is a normal image message of the room; my own list (dev.tinhat.memories, state_key = me) names it. One
+    // timeline with the recordings (memphotos::timeline), All / Recordings / Photos.
+    property string filter: "all"
+    // a server without a call recorder (memories:false): photos only (memphotos::window_mode, the web's windowMode)
+    readonly property bool recordsHere: !mem.app || mem.app.serverMemories !== false
+    readonly property var mode: {
+        try { return JSON.parse(String(mem.vodctl ? mem.vodctl.memoriesWindowMode(mem.recordsHere) : "")) } catch (e) { return ({ recordings: mem.recordsHere, filters: [], subtitle_empty: "", empty_title: "", empty_text: "", photos_empty_title: "", photos_empty_text: "", tip: "" }) }
+    }
+    readonly property bool recIncluded: mem.mode.recordings === true && mem.filter !== "photos"
+    property string selPhoto: ""
+    property var pendingPhotoUrls: []
+    property string pendingPhotoRoom: ""
+    readonly property var photosData: {
+        var raw = mem.vodctl ? String(mem.vodctl.memoryPhotosJson || "") : ""
+        if (raw.length === 0) return ({ photos: [] })
+        try { var d = JSON.parse(raw); return (d && d.room === mem.roomId) ? d : ({ photos: [] }) } catch (e) { return ({ photos: [] }) }
+    }
+    readonly property var photos: mem.photosData.photos || []
+    readonly property var items: {
+        if (!mem.vodctl) return []
+        try { return JSON.parse(mem.vodctl.memoriesTimeline(JSON.stringify(mem.memories || []), JSON.stringify(mem.photos), mem.filter)) } catch (e) { return [] }
+    }
+    readonly property var viewing: mem.selPhoto.length > 0 ? mem.photoById(mem.selPhoto) : null
+    function photoById(id) { for (var i = 0; i < mem.photos.length; i++) if (mem.photos[i].event_id === id) return mem.photos[i]; return null }
+    function recById(id) { var l = mem.memories || []; for (var i = 0; i < l.length; i++) if (String(l[i].id) === String(id)) return l[i]; return null }
+    function fetchPhotos() {
+        if (!mem.vodctl || mem.roomId.length === 0) return
+        // 2-3 (review): the change count as of this read: a change before the window's first poll is not swallowed
+        mem._photosRevSeen = mem.vodctl.memoryPhotosRev(mem.roomId)
+        mem.photosLoading = true; photosLoadingCap.restart(); mem.vodctl.fetchMemoryPhotos(mem.roomId)
+    }
+    function stepPhoto(dir) {
+        if (!mem.vodctl || !mem.viewing) return ""
+        return String(mem.vodctl.memoriesStep(JSON.stringify(mem.items), mem.selPhoto, dir))
+    }
+    readonly property string prevPhoto: mem.viewing ? mem.stepPhoto(-1) : ""
+    readonly property string nextPhoto: mem.viewing ? mem.stepPhoto(1) : ""
+    // "Today", "Yesterday", else "Saturday, November 14" (+ ", 2025" in another year) — the web's dayLabel
+    function dayLabel(ms) {
+        var d = new Date(Number(ms)), t = new Date()
+        var md = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+        var mt = new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime()
+        var days = Math.round((mt - md) / 86400000)
+        if (days === 0) return "Today"
+        if (days === 1) return "Yesterday"
+        var base = d.toLocaleString(Qt.locale(), "dddd, MMMM d")
+        return d.getFullYear() === t.getFullYear() ? base : base + ", " + d.getFullYear()
+    }
+    // "Add photos": images only (never SVG); an unencrypted room says first that the server can see them
+    function addPhotoUrls(urls) {
+        var imgs = []
+        for (var i = 0; i < urls.length; i++) {
+            var u = String(urls[i]), l = u.toLowerCase()
+            if (/\.(png|jpe?g|gif|webp|bmp)$/.test(l)) imgs.push(u)
+        }
+        if (imgs.length === 0 || !mem.vodctl || mem.photosData.canAdd !== true) return
+        if (mem.photosData.encrypted === false) { mem.pendingPhotoUrls = imgs; mem.pendingPhotoRoom = mem.roomId; unencryptedDlg.open(); return }
+        mem.vodctl.addMemoryPhotos(mem.roomId, JSON.stringify(imgs))
+    }
+    // photos load once per open / room / refresh; photosLoading until that room's answer arrives
+    property bool photosLoading: false
+    // 2-3: another device's add / remove, a moderator's take-down or a deleted photo message (the sync loop counts them per
+    // room, memories_photos::on_sync): re-read while the window is open — a removed photo leaves the list and its viewer
+    property int _photosRevSeen: -1
+    Timer {
+        interval: 1500; repeat: true
+        running: mem.visible && mem.roomId.length > 0 && mem.vodctl !== null
+        onTriggered: {
+            var r = mem.vodctl.memoryPhotosRev(mem.roomId)
+            if (mem._photosRevSeen >= 0 && r !== mem._photosRevSeen) mem.fetchPhotos()
+            mem._photosRevSeen = r
+        }
+    }
+    Timer { id: photosLoadingCap; interval: 20000; onTriggered: mem.photosLoading = false }
+    onPhotosDataChanged: {
+        mem.photosLoading = false
+        if (mem.photosGate.length > 0) {
+            var d = mem.photosData, l = []
+            for (var i = 0; i < (d.photos || []).length; i++) { var p = d.photos[i]; l.push(p.event_id + "/" + p.owner + "/c" + p.comments + (p.media ? "/img" : "/noimg")) }
+            console.log("[memphotos] room=" + d.room + " photos=" + l.length + " [" + l.join(" ") + "] unavailable=" + d.unavailable
+                        + " canAdd=" + d.canAdd + " iModerate=" + d.iModerate + " encrypted=" + d.encrypted)
+            if (!mem._gateAdded && mem.visible && d.room === mem.roomId && d.canAdd === true) {
+                mem._gateAdded = true
+                var urls = mem.photosGate.split(",").filter(function(u) { return u.length > 0 })
+                console.log("[memphotos] gate: adding " + urls.length + " file(s)")
+                mem.addPhotoUrls(urls)
+            }
+        }
+    }
+    // Gate hook (TINHAT_GUI_MEMPHOTOS="<file url>[,<file url>]", unset in every real launch): once this room's photos
+    // are loaded and adding is allowed, add those files once ("Add photos"); every answer is logged as a [memphotos]
+    // line and the photos are re-read every 10 s (what other devices did shows up).
+    readonly property string photosGate: mem.vodctl ? String(mem.vodctl.memoryPhotosGate() || "") : ""
+    property bool _gateAdded: false
+    Timer { interval: 10000; repeat: true; running: mem.photosGate.length > 0 && mem.visible && mem.roomId.length > 0; onTriggered: mem.fetchPhotos() }
+    Connections {
+        target: mem.vodctl
+        function onMemoryPhotosNoticeChanged() {
+            var t = String(mem.vodctl.memoryPhotosNotice || ""), i = t.indexOf("|")
+            if (mem.visible && t.length > 0) mem.showToast(i >= 0 ? t.slice(i + 1) : t)
+        }
+    }
+    Shortcut { sequence: "Left"; enabled: mem.keysHere && mem.sel === null && mem.viewing !== null && mem.prevPhoto.length > 0; onActivated: mem.selPhoto = mem.prevPhoto }
+    Shortcut { sequence: "Right"; enabled: mem.keysHere && mem.sel === null && mem.viewing !== null && mem.nextPhoto.length > 0; onActivated: mem.selPhoto = mem.nextPhoto }
+    Shortcut { sequence: "Esc"; enabled: mem.keysHere && mem.sel === null && mem.viewing !== null && !mem.theater; onActivated: mem.selPhoto = "" }
+    onSelChanged: if (mem.sel !== null) mem.selPhoto = ""
+    Shortcut { sequence: StandardKey.Paste; enabled: mem.keysHere && mem.sel === null && mem.vodctl !== null; onActivated: mem.addPhotoUrls(JSON.parse(String(mem.vodctl.clipboardAttachments() || "[]"))) }
+    FileDialog {
+        id: addPhotosDialog
+        title: "Add photos"
+        fileMode: FileDialog.OpenFiles
+        nameFilters: ["Images (*.png *.jpg *.jpeg *.gif *.webp *.bmp)"]
+        onAccepted: { var l = []; for (var i = 0; i < selectedFiles.length; i++) l.push(String(selectedFiles[i])); mem.addPhotoUrls(l) }
+    }
+    ConfirmDialog {
+        id: unencryptedDlg
+        app: mem.app
+        dialogTitle: "Add photos"
+        message: "This room isn't encrypted: the server can see these photos."
+        confirmText: "Add photos"
+        onConfirmed: {
+            if (mem.vodctl && mem.pendingPhotoRoom === mem.roomId && mem.pendingPhotoUrls.length > 0) mem.vodctl.addMemoryPhotos(mem.pendingPhotoRoom, JSON.stringify(mem.pendingPhotoUrls))
+            mem.pendingPhotoUrls = []
+        }
+        onCancelled: mem.pendingPhotoUrls = []
+    }
+    Controls.Dialog {
+        id: removePhotoDlg
+        property string eventId: ""
+        property bool mine: false
+        title: "Remove from Memories?"
+        modal: true
+        parent: Controls.Overlay.overlay
+        anchors.centerIn: parent
+        implicitWidth: Math.min(380, (parent ? parent.width : 380) - Kirigami.Units.gridUnit * 2)
+        standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
+        onOpened: { alsoDeleteBox.checked = false; var ok = removePhotoDlg.standardButton(Controls.Dialog.Ok); if (ok) ok.text = "Remove" }
+        onAccepted: {
+            if (!mem.vodctl) return
+            if (removePhotoDlg.mine) mem.vodctl.removeFromMemories(mem.roomId, removePhotoDlg.eventId, alsoDeleteBox.checked)
+            else mem.vodctl.takeDownMemory(mem.roomId, removePhotoDlg.eventId)
+            mem.selPhoto = ""
+        }
+        ColumnLayout {
+            width: parent ? parent.width : implicitWidth
+            spacing: Kirigami.Units.largeSpacing
+            Controls.Label { textFormat: Text.PlainText; text: "The photo stays in the chat."; wrapMode: Text.Wrap; Layout.fillWidth: true }
+            // only my own message: the chat lets people delete only their own
+            Controls.CheckBox { id: alsoDeleteBox; visible: removePhotoDlg.mine; text: "Also delete it from the chat" }
+        }
+    }
+    // the list's / photo viewer's toast (the player's own lives in its stage)
+    Rectangle {
+        z: 100
+        visible: mem.sel === null && mem.toast.length > 0
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Kirigami.Units.gridUnit * 2
+        radius: mem.theme.radius
+        color: Th.memoriesToastBg
+        implicitWidth: Math.min(listToastLbl.implicitWidth + Kirigami.Units.largeSpacing * 2, mem.width - Kirigami.Units.gridUnit * 2)
+        implicitHeight: listToastLbl.implicitHeight + Kirigami.Units.largeSpacing
+        Controls.Label { id: listToastLbl; anchors.centerIn: parent; width: parent.width - Kirigami.Units.largeSpacing * 2; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; textFormat: Text.PlainText; text: mem.toast; color: Th.memoriesToastFg }
+    }
+    DropArea {
+        anchors.fill: parent
+        enabled: mem.sel === null
+        onDropped: function(drop) { if (drop.hasUrls) { var l = []; for (var i = 0; i < drop.urls.length; i++) l.push(String(drop.urls[i])); mem.addPhotoUrls(l) } }
+    }
     property bool inCall: false
     property var watchPlayback: ({})
     property bool watchInParty: false
@@ -157,7 +329,7 @@ Window {
         mem.store.applyUiBlob("memories-resume", JSON.stringify(out))
     } }
     onResumeAtChanged: memSaveTimer.restart()
-    onVisibleChanged: if (visible) _restoreTransport()
+    onVisibleChanged: if (visible) { _restoreTransport(); mem.fetchPhotos() }
     property string toast: ""
     readonly property bool theater: mem.visibility === Window.FullScreen
     // 10.1 (TH-MEM-10): in fullscreen the header, margins and side rail go; the transport shows
@@ -849,6 +1021,10 @@ Window {
     }
     // Final commit when the drag ends — the throttles above may have swallowed the
     // last position, and the release is the position the user actually meant.
+    // A18.3 (2026-11-13; the web's clipjump.ts): a clip is pressed just AFTER the moment, so a jump starts clipLeadInS
+    // earlier (never before the start); the chip and the mark keep the press time
+    readonly property int clipLeadInS: 5
+    function clipSeekOf(off) { return Math.max(0, off - mem.clipLeadInS) }
     function commitSeek(g) {
         console.log("[memories] seek -> " + Number(g).toFixed(2) + " (from " + mem.globalPos.toFixed(2) + (mem.focusWaiting ? ", waiting" : "") + ")")
         mem.fineTrace = 60   // 15 s of 250 ms samples after every landing
@@ -889,7 +1065,7 @@ Window {
     // to do with the call and keeps going (web docs/native-bugs/media.md: "a call ending leaves ANY joined watch party").
     onInCallChanged: if (!mem.inCall && mem.watchInParty && String((mem.watchPlayback && mem.watchPlayback.url) || "").indexOf("tinhat-memory://") === 0) mem.syncStop()
     // The app switched rooms under us: the list is another room's now.
-    onRoomIdChanged: if (mem.sel !== null) mem.backToList()
+    onRoomIdChanged: { if (mem.sel !== null) mem.backToList(); mem.selPhoto = ""; mem.pendingPhotoUrls = []; mem.fetchPhotos() }
 
     width: Kirigami.Units.gridUnit * 48
     height: Kirigami.Units.gridUnit * 40
@@ -1822,8 +1998,9 @@ Window {
                                      + (names.length > 0 ? " · " + names.join(", ") : "")
                             }
                             var n = mem.memories ? mem.memories.length : 0
+                            var np = mem.photos.length
                             return (mem.roomName.length > 0 ? mem.roomName + " · " : "")
-                                 + (n === 0 ? "recordings of this room's calls" : n + (n === 1 ? " memory" : " memories"))
+                                 + (n + np === 0 ? mem.mode.subtitle_empty : (mem.vodctl ? String(mem.vodctl.memoriesCountText(n, np)) : ""))
                         }
                     }
                 }
@@ -1839,6 +2016,42 @@ Window {
                     text: "▶ " + (mem.focusedTrack ? mem.shortName(mem.focusedTrack.identity) : "") + " joins at " + mem.fmtTime(mem.focusedOffset)
                     fg: Th.memoriesWaitPillFg
                     bg: Th.memoriesWaitPillBg
+                }
+                // Memories photos: the filter (All / Recordings / Photos) and "Add photos"
+                Rectangle {
+                    visible: mem.sel === null && mem.viewing === null && (mem.mode.filters || []).length > 0
+                    radius: mem.theme.radius
+                    color: Th.memoriesCardBg
+                    border.width: 1
+                    border.color: Th.memoriesCardBorder
+                    implicitWidth: filterRow.implicitWidth + 4
+                    implicitHeight: filterRow.implicitHeight + 4
+                    RowLayout {
+                        id: filterRow
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Repeater {
+                            model: [{ k: "all", t: "All" }, { k: "recordings", t: "Recordings" }, { k: "photos", t: "Photos" }]
+                            delegate: Controls.ToolButton {
+                                required property var modelData
+                                text: LinkGate.plain(modelData.t)
+                                checkable: true
+                                checked: mem.filter === modelData.k
+                                font.bold: checked
+                                Accessible.name: modelData.t
+                                onClicked: mem.filter = modelData.k
+                            }
+                        }
+                    }
+                }
+                GlowButton {
+                    visible: mem.sel === null && mem.viewing === null && mem.photosData.canAdd === true
+                    app: mem.app
+                    text: "Add photos"
+                    icon.name: "list-add-symbolic"
+                    Controls.ToolTip.text: "Add photos or screenshots to this room's Memories. They're also posted in the chat."
+                    Controls.ToolTip.visible: hovered
+                    onClicked: addPhotosDialog.open()
                 }
                 HeaderIconButton {
                     visible: mem.sel === null
@@ -1891,7 +2104,7 @@ Window {
             // ============================ LIST VIEW ============================
             Controls.ScrollView {
                 id: libraryScroll
-                visible: mem.sel === null
+                visible: mem.sel === null && mem.viewing === null
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 contentWidth: availableWidth
@@ -1903,7 +2116,7 @@ Window {
                     anchors.horizontalCenter: parent.horizontalCenter
             // couldn't load (never had a list) → say so, offer retry
             Item {
-                visible: mem.sel === null && mem.memories.length === 0 && mem.memoriesError.length > 0
+                visible: mem.sel === null && mem.viewing === null && mem.items.length === 0 && mem.recIncluded && mem.memories.length === 0 && mem.memoriesError.length > 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: Kirigami.Units.gridUnit * 16
                 EmptyState {
@@ -1925,7 +2138,8 @@ Window {
             }
             // 10.1 (TH-MEM-02): fetching
             Item {
-                visible: mem.sel === null && mem.memories.length === 0 && mem.memoriesError.length === 0 && mem.loading
+                visible: mem.sel === null && mem.viewing === null && mem.items.length === 0 && !(mem.recIncluded && mem.memoriesError.length > 0 && mem.memories.length === 0)
+                         && ((mem.recIncluded && mem.loading) || (mem.filter !== "recordings" && mem.photosLoading))
                 Layout.fillWidth: true
                 Layout.preferredHeight: Kirigami.Units.gridUnit * 16
                 EmptyState {
@@ -1937,23 +2151,128 @@ Window {
             }
             // nothing recorded yet
             Item {
-                visible: mem.sel === null && mem.memories.length === 0 && mem.memoriesError.length === 0 && !mem.loading
+                visible: mem.sel === null && mem.viewing === null && mem.items.length === 0
+                         && !(mem.recIncluded && (mem.loading || (mem.memoriesError.length > 0 && mem.memories.length === 0)))
+                         && !(mem.filter !== "recordings" && mem.photosLoading)
                 Layout.fillWidth: true
                 Layout.preferredHeight: Kirigami.Units.gridUnit * 16
                 EmptyState {
                     anchors.fill: parent
                     app: mem.app
-                    iconName: "camera-video-symbolic"
-                    title: "No memories here yet"
-                    explanation: "Press ⏺ Rec in a call and every stream and voice is saved for reliving later — with 🔖 Clip to bookmark the good bits."
+                    iconName: mem.filter === "photos" || !mem.mode.recordings ? "image-x-generic" : "camera-video-symbolic"
+                    title: mem.filter === "photos" ? mem.mode.photos_empty_title : mem.mode.empty_title
+                    explanation: mem.filter === "photos" ? mem.mode.photos_empty_text : mem.mode.empty_text
                 }
             }
+            // the timeline (memphotos::timeline): a day heading when the day changes, then the recording or photo card
             Repeater {
-                model: mem.sel === null ? mem.memories : []
-                delegate: Rectangle {
-                    id: card
+                model: mem.sel === null && mem.viewing === null ? mem.items : []
+                delegate: ColumnLayout {
+                    id: itemRow
                     required property var modelData
                     required property int index
+                    readonly property string day: mem.dayLabel(modelData.at)
+                    readonly property var rec: modelData.kind === "recording" ? mem.recById(modelData.id) : null
+                    readonly property var photo: modelData.kind === "photo" ? mem.photoById(modelData.id) : null
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+                    Controls.Label {
+                        textFormat: Text.PlainText
+                        visible: itemRow.index === 0 || mem.dayLabel(mem.items[itemRow.index - 1].at) !== itemRow.day
+                        text: itemRow.day
+                        font.bold: true
+                        color: Th.memoriesMetaFg
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                    }
+                    Loader {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: item ? item.implicitHeight : 0
+                        active: itemRow.rec !== null
+                        sourceComponent: recCard
+                        onLoaded: { item.modelData = Qt.binding(function() { return itemRow.rec }); item.index = itemRow.index }
+                    }
+                    Loader {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: item ? item.implicitHeight : 0
+                        active: itemRow.photo !== null
+                        sourceComponent: photoCard
+                        onLoaded: item.photo = Qt.binding(function() { return itemRow.photo })
+                    }
+                }
+            }
+            Controls.Label {
+                textFormat: Text.PlainText
+                visible: mem.sel === null && mem.filter !== "recordings" && Number(mem.photosData.unavailable || 0) > 0
+                Layout.alignment: Qt.AlignHCenter
+                color: Th.memoriesMetaFg
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                text: { var n = Number(mem.photosData.unavailable || 0); return n + (n === 1 ? " photo" : " photos") + " can't be shown on this device yet." }
+            }
+            Component {
+                id: photoCard
+                Rectangle {
+                    id: pcard
+                    property var photo: null
+                    implicitHeight: 99 + Kirigami.Units.largeSpacing * 2
+                    radius: mem.theme.radius
+                    color: pHover.hovered ? Th.memoriesCardBgHover : Th.memoriesCardBg
+                    border.width: 1
+                    border.color: pHover.hovered ? Th.memoriesCardBorderHover : Th.memoriesCardBorder
+                    activeFocusOnTab: true
+                    Accessible.role: Accessible.Button
+                    Accessible.name: pcard.photo ? "Photo shared by " + pcard.photo.name + ", " + mem.fmtDate(pcard.photo.ts) : ""
+                    Keys.onReturnPressed: if (pcard.photo) mem.selPhoto = pcard.photo.event_id
+                    Keys.onSpacePressed: if (pcard.photo) mem.selPhoto = pcard.photo.event_id
+                    HoverHandler { id: pHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler { onTapped: if (pcard.photo) mem.selPhoto = pcard.photo.event_id }
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: Kirigami.Units.largeSpacing
+                        spacing: Kirigami.Units.largeSpacing
+                        Rectangle {
+                            Layout.preferredWidth: 176
+                            Layout.preferredHeight: 99
+                            Layout.alignment: Qt.AlignTop
+                            radius: mem.theme.radiusSm
+                            clip: true
+                            color: Th.memoriesCardPosterBg
+                            border.width: 1
+                            border.color: Th.memoriesCardPosterBorder
+                            Controls.Label { anchors.centerIn: parent; visible: pimg.status !== Image.Ready; text: "🖼"; color: Th.memoriesMetaFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.8 }
+                            Image {
+                                id: pimg
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                autoTransform: true
+                                asynchronous: true
+                                sourceSize.width: 352
+                                source: pcard.photo && pcard.photo.media ? pcard.photo.media : ""
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Kirigami.Units.smallSpacing
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Controls.Label { textFormat: Text.PlainText; text: pcard.photo ? mem.fmtDate(pcard.photo.ts) : ""; font.bold: true; color: Th.memoriesFg }
+                                Pill { text: "📷 photo" }
+                            }
+                            Controls.Label { textFormat: Text.PlainText; text: pcard.photo ? "shared by " + pcard.photo.name : ""; color: Th.memoriesMetaFg; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Pill {
+                                // 2-8: a photo inside a thread shows no count (memphotos::comments_face)
+                                visible: pcard.photo !== null && !!pcard.photo.commentsFace && Number(pcard.photo.commentsFace.count) > 0
+                                text: pcard.photo && pcard.photo.commentsFace ? "💬 " + pcard.photo.commentsFace.button : ""
+                            }
+                        }
+                    }
+                }
+            }
+            Component {
+                id: recCard
+                Rectangle {
+                    id: card
+                    property var modelData: ({})
+                    property int index: 0
                     readonly property bool live: !modelData.end_ms
                     readonly property bool processing: !!modelData.end_ms && modelData.ready === false && !modelData.empty
                     // 10.1 (TH-MEM-04): minutes since the session closed (cards rebuild on every refresh).
@@ -2140,6 +2459,111 @@ Window {
                 }
             }
 
+            // ====================== PHOTO VIEWER (Memories photos) ======================
+            ColumnLayout {
+                visible: mem.sel === null && mem.viewing !== null
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: Kirigami.Units.smallSpacing
+                RowLayout {
+                    Layout.fillWidth: true
+                    HeaderIconButton { app: mem.app; iconName: "go-previous-symbolic"; tip: "Back to Memories"; Accessible.name: "Back to Memories"; onClicked: mem.selPhoto = "" }
+                    ColumnLayout {
+                        spacing: 0
+                        Layout.fillWidth: true
+                        Controls.Label { textFormat: Text.PlainText; text: mem.viewing ? mem.fmtDateLong(mem.viewing.ts) : ""; font.bold: true; color: Th.memoriesFg; elide: Text.ElideRight; Layout.fillWidth: true }
+                        Controls.Label { textFormat: Text.PlainText; text: mem.viewing ? "shared by " + mem.viewing.name : ""; color: Th.memoriesMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                    }
+                    HeaderIconButton { app: mem.app; iconName: "go-up-symbolic"; tip: "Previous photo"; Accessible.name: "Previous photo"; enabled: mem.prevPhoto.length > 0; onClicked: mem.selPhoto = mem.prevPhoto }
+                    HeaderIconButton { app: mem.app; iconName: "go-down-symbolic"; tip: "Next photo"; Accessible.name: "Next photo"; enabled: mem.nextPhoto.length > 0; onClicked: mem.selPhoto = mem.nextPhoto }
+                }
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: 200
+                    radius: mem.theme.radius
+                    color: Th.memoriesStageBg
+                    clip: true
+                    Image {
+                        id: fullImg
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectFit
+                        autoTransform: true
+                        asynchronous: true
+                        source: mem.viewing && mem.viewing.media ? mem.viewing.media : ""
+                        Accessible.name: mem.viewing ? "Photo shared by " + mem.viewing.name : ""
+                    }
+                    Controls.BusyIndicator { anchors.centerIn: parent; running: fullImg.status === Image.Loading || (mem.viewing !== null && !mem.viewing.media && mem.viewing.mediaFailed !== true) }
+                    Controls.Label {
+                        anchors.centerIn: parent
+                        visible: mem.viewing !== null && (mem.viewing.mediaFailed === true || fullImg.status === Image.Error)
+                        textFormat: Text.PlainText
+                        text: "Couldn't load this photo. Refresh to try again."
+                        color: Th.memoriesMetaFg
+                    }
+                    Controls.RoundButton {
+                        visible: mem.prevPhoto.length > 0
+                        anchors.left: parent.left; anchors.leftMargin: Kirigami.Units.largeSpacing; anchors.verticalCenter: parent.verticalCenter
+                        icon.name: "go-previous-symbolic"
+                        Accessible.name: "Previous photo"
+                        onClicked: mem.selPhoto = mem.prevPhoto
+                    }
+                    Controls.RoundButton {
+                        visible: mem.nextPhoto.length > 0
+                        anchors.right: parent.right; anchors.rightMargin: Kirigami.Units.largeSpacing; anchors.verticalCenter: parent.verticalCenter
+                        icon.name: "go-next-symbolic"
+                        Accessible.name: "Next photo"
+                        onClicked: mem.selPhoto = mem.nextPhoto
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.bottomMargin: Kirigami.Units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
+                    // comments = a thread on the photo's message (the thread panel; until it lands: the message in the chat)
+                    GlowButton {
+                        app: mem.app
+                        text: LinkGate.plain(mem.viewing && mem.viewing.commentsFace ? "💬 " + mem.viewing.commentsFace.button : "")
+                        onClicked: {
+                            if (!mem.viewing || !mem.app) return
+                            // 2-8: a photo posted inside a thread: its comments are that thread (load() gives the root)
+                            if (typeof mem.app.openThread === "function") mem.app.openThread(mem.roomId, mem.viewing.threadRoot || mem.viewing.event_id)
+                            else if (typeof mem.app.jumpToEvent === "function") mem.app.jumpToEvent(mem.roomId, mem.viewing.event_id)
+                        }
+                    }
+                    GlowButton {
+                        app: mem.app
+                        text: "Show in chat"
+                        icon.name: "mail-reply-sender-symbolic"
+                        onClicked: if (mem.viewing && mem.app && mem.app.jumpToEvent) mem.app.jumpToEvent(mem.roomId, mem.viewing.event_id)
+                    }
+                    GlowButton {
+                        app: mem.app
+                        text: "Save"
+                        icon.name: "document-save-symbolic"
+                        onClicked: if (mem.viewing) savePhotoDialog.open()
+                    }
+                    Item { Layout.fillWidth: true }
+                    GlowButton {
+                        visible: mem.viewing !== null && (mem.viewing.owner === mem.photosData.me || mem.photosData.iModerate === true)
+                        app: mem.app
+                        text: "Remove from Memories"
+                        icon.name: "delete-symbolic"
+                        onClicked: {
+                            removePhotoDlg.eventId = mem.viewing.event_id
+                            removePhotoDlg.mine = mem.viewing.owner === mem.photosData.me
+                            removePhotoDlg.open()
+                        }
+                    }
+                }
+            }
+            FileDialog {
+                id: savePhotoDialog
+                title: "Save photo"
+                fileMode: FileDialog.SaveFile
+                onAccepted: if (mem.viewing && mem.vodctl) mem.vodctl.saveMemoryPhoto(String(mem.viewing.media), String(selectedFile))
+            }
+
             // T3: decoder-missing banner — the machine has no usable gst H.264
             // decoder, so side tiles show snapshots instead of live motion. Tell the
             // user the exact one-time fix.
@@ -2157,8 +2581,9 @@ Window {
                     anchors.margins: Kirigami.Units.largeSpacing * 0.75
                     wrapMode: Text.Wrap
                     color: Th.memoriesFg
-                    text: "⚠️ Live side tiles need a video decoder this machine is missing, so they're showing snapshots. "
-                        + "On Arch: sudo pacman -S gst-libav — then restart Tin Hat. The main view still plays normally."
+                    // QOL A18.5: no Arch-only command for every user
+                    text: "⚠️ Live side tiles need a video decoder this computer is missing, so they're showing snapshots. "
+                        + "The main view still plays normally."
                 }
             }
 
@@ -2501,7 +2926,7 @@ Window {
                                 Controls.ToolTip.text: "🔖 " + mem.shortName(modelData.by) + " · " + mem.fmtTime(modelData.off)
                                 Controls.ToolTip.visible: tickHover.hovered
                                 HoverHandler { id: tickHover; cursorShape: Qt.PointingHandCursor }
-                                TapHandler { onTapped: mem.commitSeek(parent.modelData.off) }
+                                TapHandler { onTapped: mem.commitSeek(mem.clipSeekOf(parent.modelData.off)) }
                             }
                         }
                     }
@@ -2709,7 +3134,7 @@ Window {
                                 color: Th.memoriesClipFg
                             }
                             HoverHandler { id: clipHover; cursorShape: Qt.PointingHandCursor }
-                            TapHandler { onTapped: mem.commitSeek(parent.modelData.off) }
+                            TapHandler { onTapped: mem.commitSeek(mem.clipSeekOf(parent.modelData.off)) }
                         }
                     }
                 }

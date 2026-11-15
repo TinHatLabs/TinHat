@@ -1,0 +1,29 @@
+{
+ "about": "Why the Settings mic meter shows no level (A13.0/A13.2, 2026-11-13). meterHint(reason) = the line under the meter. Reasons: nosignal (the capture failed or is silent: unplugged / in use), blocked (the browser refused the permission; web), unavailable (the meter's noise-filter element is missing; desktop), watching (Pad Watch: no microphone is opened); anything else reads as nosignal. Byte-identical: desktop crates/app/src/testvectors/meterhint.json (owner; meter_hint.rs), web src/features/settings/meterhint.json (meterHint.ts).",
+ "cases": [
+  {
+   "hint": "No signal from this microphone — it may be unplugged or in use by another app. Pick another one above.",
+   "reason": "nosignal"
+  },
+  {
+   "hint": "Tin Hat isn't allowed to use the microphone. Allow it in the browser's site settings for this page, then reload.",
+   "reason": "blocked"
+  },
+  {
+   "hint": "The level meter can't run on this computer (a noise-filter part is missing). Your microphone can still work in calls.",
+   "reason": "unavailable"
+  },
+  {
+   "hint": "This device is watching a call, so it doesn't open its microphone. Choose Talk here to use it.",
+   "reason": "watching"
+  },
+  {
+   "hint": "No signal from this microphone — it may be unplugged or in use by another app. Pick another one above.",
+   "reason": ""
+  },
+  {
+   "hint": "No signal from this microphone — it may be unplugged or in use by another app. Pick another one above.",
+   "reason": "something-new"
+  }
+ ]
+}

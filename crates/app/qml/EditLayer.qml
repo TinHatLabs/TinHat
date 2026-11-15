@@ -595,7 +595,7 @@ Item {
         var r = el.menuRows[i]
         if (r && el.em.app && el.em.app.actions) el.em.app.actions.openRowEditor({ island: r.island, row: r.row, form: "desktop", title: r.title })
     }
-    Controls.Menu {
+    KeyMenu {
         id: islandMenu
         objectName: "editIslandMenu"
         modal: false
@@ -603,6 +603,15 @@ Item {
         readonly property bool hideable: el.em.hideable(ref)
         readonly property bool floating: ref.length > 0 && el.em.floating(ref)
         readonly property bool floatable: el.em.floatable(ref) && !floating
+        // A17.6: the Widgets island's own way to add one (the toolbar's Add widget; the web: the same item)
+        Controls.MenuItem {
+            text: "Add widget…"
+            icon.name: "list-add-symbolic"
+            visible: el.em.kindOf(islandMenu.ref) === "widgets"
+            height: visible ? implicitHeight : 0
+            onTriggered: el.em.addWidget()
+        }
+        Controls.MenuSeparator { visible: el.em.kindOf(islandMenu.ref) === "widgets"; height: visible ? implicitHeight : 0 }
         Controls.MenuItem {
             text: LinkGate.plain(el.menuRows.length > 1 ? "Buttons: " + (el.menuRows[0] ? el.menuRows[0].title : "") + "…" : "Edit buttons…")
             icon.name: "document-edit-symbolic"
@@ -667,7 +676,7 @@ Item {
     // ---- right-click on a gap in edit mode: Reset these sizes · Done editing (§6) ----
     property var menuGap: null
     function openGapMenu(g, item, mx, my) { el.menuGap = g; gapMenu.popup(item, mx, my) }
-    Controls.Menu {
+    KeyMenu {
         id: gapMenu
         modal: false
         Controls.MenuItem {

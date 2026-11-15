@@ -24,7 +24,10 @@ ColumnLayout {
     // is written once, here — never read back through a child's `visible`, which turns false with the parent's.
     spacing: Kirigami.Units.smallSpacing
     readonly property bool barShown: !(island.app.callMaximized && island.app.callShown)
-    readonly property bool joinShown: island.app.mCallActive && !island.app.mInCall && !island.app.mConnecting && !island.app.fakeCall
+    // A15.1 (2026-11-13): also while I'm in ANOTHER room's call — the banner then offers Switch (it was hidden: a room with a
+    // live call had no way in short of hanging up first, unless it rang)
+    readonly property bool inOtherCall: island.app.mInCall && !!island.app.room && island.app.mCallRoomId !== island.app.room.roomId
+    readonly property bool joinShown: island.app.mCallActive && (!island.app.mInCall || island.inOtherCall) && !island.app.mConnecting && !island.app.fakeCall
     // Pad (docs/PAD.md): another of my devices is in this room's call → "Pad" next to Join (greyed with its line when
     // it can't work); null = none of mine there
     readonly property var padT: island.app.padTargetIn(island.app.room ? island.app.room.roomId : "")
@@ -39,8 +42,8 @@ ColumnLayout {
     function guestsButton(id) {
         switch (id) {
         case "copy": island.app.guestsCtl.copyLink(); break
-        case "newLink": island.app.guestsCtl.newLink(); break
-        case "turnOff": island.app.guestsCtl.turnOff(); break
+        case "newLink": island.app.askGuestConfirm("link"); break   // P10: ask first (Main.qml guestConfirm)
+        case "turnOff": island.app.askGuestConfirm("off"); break
         case "turnOn": island.app.guestsCtl.turnOn(); break
         }
     }
@@ -91,6 +94,10 @@ ColumnLayout {
         // were removed as dead code (RoomHeaderBar no longer has those buttons).
         onCallToggled: app.callctl.joinCallPressed(app.room.roomId)
         infoOpen: island.rightPanelRef.opened
+        // threads (docs/THREADS.md): the Threads tab on its list (closes the panel when it shows threads already)
+        threadsOpen: island.rightPanelRef.threadsShown === true
+        threadsUnread: !!app.conversationView && app.conversationView.mThreadsUnread === true
+        onThreadsRequested: island.rightPanelRef.threadsShown ? island.rightPanelRef.close() : island.rightPanelRef.openThread("", null)
         onInfoRequested: island.rightPanelRef.opened ? island.rightPanelRef.close() : island.rightPanelRef.open()
         // Settings ▾ — refresh the device lists, then open the consolidated menu.
         onSettingsRequested: { app.refreshDeviceMenus(); island.devicesMenuRef.popup() }
@@ -250,10 +257,13 @@ ColumnLayout {
             }
             GlowButton {
                 app: island.app
-                text: app.mConnecting ? "Joining…" : "Join"
+                text: island.inOtherCall ? "Switch" : (app.mConnecting ? "Joining…" : "Join")
                 busy: app.mConnecting   // 10.1 (TH-MOTION-05): the header's call button already did this
                 enabled: !app.mConnecting
-                onClicked: app.callctl.joinCallPressed(app.room.roomId)
+                Controls.ToolTip.text: island.inOtherCall ? "Leave your call and join this one" : ""
+                Controls.ToolTip.visible: island.inOtherCall && hovered
+                Controls.ToolTip.delay: 300
+                onClicked: island.inOtherCall ? app.callctl.switchCall(app.room.roomId) : app.callctl.joinCallPressed(app.room.roomId)
             }
         }
     }

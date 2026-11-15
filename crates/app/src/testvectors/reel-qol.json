@@ -1,0 +1,154 @@
+{
+  "about": "Game Reel (QOL A19.1, A19.3). why: what a greyed Spin / Re-spin / Veto says on hover ('' = nothing; busy / spinning states say nothing either), from the snapshot's hasResult, notice, respinsLeft, myVetoesLeft, canSpin, canVeto. importCount: the Steam import line for `total` games found (the list shows the first 60), with `pending` still being checked. Replayed by the desktop (tools/reel-qol-test.mjs on GameReelPanel.qml / MyGamesEditor.qml) and Tin Hat Web (src/features/calendar/model/reelQol.test.ts).",
+  "why": [
+    {
+      "name": "spin: can spin",
+      "button": "spin",
+      "snap": {
+        "hasResult": false,
+        "notice": "",
+        "respinsLeft": 2,
+        "myVetoesLeft": 1,
+        "canSpin": true,
+        "canVeto": true
+      },
+      "expect": ""
+    },
+    {
+      "name": "spin: the notice says why",
+      "button": "spin",
+      "snap": {
+        "hasResult": false,
+        "notice": "Nobody's here yet.",
+        "respinsLeft": 2,
+        "myVetoesLeft": 1,
+        "canSpin": false,
+        "canVeto": true
+      },
+      "expect": "Nobody's here yet."
+    },
+    {
+      "name": "re-spin: some left",
+      "button": "spin",
+      "snap": {
+        "hasResult": true,
+        "notice": "",
+        "respinsLeft": 2,
+        "myVetoesLeft": 1,
+        "canSpin": true,
+        "canVeto": true
+      },
+      "expect": ""
+    },
+    {
+      "name": "re-spin: none left",
+      "button": "spin",
+      "snap": {
+        "hasResult": true,
+        "notice": "",
+        "respinsLeft": 0,
+        "myVetoesLeft": 1,
+        "canSpin": true,
+        "canVeto": false
+      },
+      "expect": "No re-spins left tonight"
+    },
+    {
+      "name": "veto: can veto",
+      "button": "veto",
+      "snap": {
+        "hasResult": true,
+        "notice": "",
+        "respinsLeft": 2,
+        "myVetoesLeft": 1,
+        "canSpin": true,
+        "canVeto": true
+      },
+      "expect": ""
+    },
+    {
+      "name": "veto: mine used",
+      "button": "veto",
+      "snap": {
+        "hasResult": true,
+        "notice": "",
+        "respinsLeft": 2,
+        "myVetoesLeft": 0,
+        "canSpin": true,
+        "canVeto": false
+      },
+      "expect": "You've used your veto for tonight"
+    },
+    {
+      "name": "veto: no re-spins left",
+      "button": "veto",
+      "snap": {
+        "hasResult": true,
+        "notice": "",
+        "respinsLeft": 0,
+        "myVetoesLeft": 1,
+        "canSpin": true,
+        "canVeto": false
+      },
+      "expect": "No re-spins left tonight — a veto needs one"
+    },
+    {
+      "name": "veto: both used: my veto first",
+      "button": "veto",
+      "snap": {
+        "hasResult": true,
+        "notice": "",
+        "respinsLeft": 0,
+        "myVetoesLeft": 0,
+        "canSpin": true,
+        "canVeto": false
+      },
+      "expect": "You've used your veto for tonight"
+    },
+    {
+      "name": "veto: blocked for another reason: nothing to say",
+      "button": "veto",
+      "snap": {
+        "hasResult": true,
+        "notice": "",
+        "respinsLeft": 2,
+        "myVetoesLeft": 1,
+        "canSpin": true,
+        "canVeto": false
+      },
+      "expect": ""
+    }
+  ],
+  "importCount": [
+    {
+      "total": 140,
+      "pending": 0,
+      "expect": "140 games found, showing the first 60 — tick the ones you’d play:"
+    },
+    {
+      "total": 60,
+      "pending": 0,
+      "expect": "60 games found — tick the ones you’d play:"
+    },
+    {
+      "total": 61,
+      "pending": 3,
+      "expect": "61 games found (3 still being checked), showing the first 60 — tick the ones you’d play:"
+    },
+    {
+      "total": 1,
+      "pending": 0,
+      "expect": "1 game found — tick the ones you’d play:"
+    },
+    {
+      "total": 12,
+      "pending": 4,
+      "expect": "12 games found (4 still being checked) — tick the ones you’d play:"
+    },
+    {
+      "total": 0,
+      "pending": 0,
+      "expect": "0 games found — tick the ones you’d play:"
+    }
+  ]
+}

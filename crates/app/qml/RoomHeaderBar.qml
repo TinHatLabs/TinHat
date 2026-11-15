@@ -51,6 +51,11 @@ Item {
     signal callToggled()
     signal memoriesRequested() // open Memories (this room's recorded calls) — 2026-09-02: its own button
     signal infoRequested()    // open the right-hand room-info / members panel
+    // threads (docs/THREADS.md): the Threads button (after the row, as the web's unmapped header buttons): the right
+    // panel's Threads tab on its list; a dot while a loaded thread has replies I haven't read
+    signal threadsRequested()
+    property bool threadsOpen: false
+    property bool threadsUnread: false
     property bool infoOpen: false   // 10.1 (TH-RP-13): the panel is showing → the button reads pressed
     property real bgRadius: 0      // 11.0 (islands C6/C7): the header island's radius — the gradient rounds itself
     property int leftInset: 0       // 10.1 (TH-SHELL-21): corner mode parks its handle over the avatar's spot
@@ -253,7 +258,8 @@ Item {
                 enabled: !hrow.dimmed("memories.open")
                 app: headerBar.app
                 iconName: "camera-video-symbolic"
-                tip: "Memories — relive this room's recorded calls"
+                // Memories opens on every server; without a recorder it is the room's photos (memphotos::window_mode)
+                tip: headerBar.app && headerBar.app.serverMemories === false ? "Memories — this room's photos" : "Memories — relive this room's recorded calls"
                 onClicked: headerBar.memoriesRequested()
             }
             // Start / join a call — only when NOT already in one. In a call, all controls
@@ -302,6 +308,22 @@ Item {
                 tip: String((g.words || {}).copy || "Copy guest link")
                 onClicked: headerBar.app.guestsCtl.copyLink()
             }
+            HeaderIconButton {
+                id: threadsBtn
+                Layout.row: 0; Layout.column: hrow.lastColumn + 2
+                visible: headerBar.roomId.length > 0
+                app: headerBar.app
+                iconName: "dialog-messages-symbolic"
+                accent: headerBar.threadsOpen
+                tip: headerBar.threadsOpen ? "Close threads" : (headerBar.threadsUnread ? "Threads (unread replies)" : "Threads")
+                onClicked: headerBar.threadsRequested()
+                Rectangle {
+                    visible: headerBar.threadsUnread
+                    x: parent.width - width - 6; y: 6
+                    width: 8; height: 8; radius: 4
+                    color: Th.bubbleReactionOwnBorder
+                }
+            }
             // the row's other buttons (added from the editor, or all of them in another look / size) and its dividers
             Repeater {
                 model: hrow.generics
@@ -336,7 +358,7 @@ Item {
             acceptedButtons: Qt.RightButton
             onTapped: (point) => headerMenu.popup()
         }
-        Controls.Menu {
+        KeyMenu {
             id: headerMenu
             Controls.MenuItem {
                 text: "Edit buttons…"

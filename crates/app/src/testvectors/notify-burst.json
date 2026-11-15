@@ -1,0 +1,72 @@
+{
+  "_doc": "Notification bursts (A03.0, P3 a): at most one alert per room per gap_ms, but a rise held back by that gap (or by the global cap) is never lost: the engine re-scans at `wake` and the held messages get one trailing alert. Each case starts with a baseline step (seeds silently). A step lists every joined room (count = the room's trigger level: notifying messages in All rooms, mentions in Mentions rooms); `fire` = [room, rise] in room order; `wake` = the ms the engine must re-scan at (null = nothing held). Owned by the desktop (crates/app/src/testvectors/notify-burst.json); the web's src/features/settings/testvectors/notify-burst.json is a byte copy.",
+  "gap_ms": 5000,
+  "cap": 8,
+  "cap_window_ms": 10000,
+  "cases": [
+    {
+      "name": "follow_up_inside_the_gap_gets_a_trailing_alert",
+      "steps": [
+        { "t": 0, "rooms": [{ "id": "!a", "count": 0 }], "fire": [], "wake": null },
+        { "t": 1000, "rooms": [{ "id": "!a", "count": 1 }], "fire": [["!a", 1]], "wake": null },
+        { "t": 3000, "rooms": [{ "id": "!a", "count": 2 }], "fire": [], "wake": 6000 },
+        { "t": 6000, "rooms": [{ "id": "!a", "count": 2 }], "fire": [["!a", 1]], "wake": null },
+        { "t": 9000, "rooms": [{ "id": "!a", "count": 2 }], "fire": [], "wake": null }
+      ]
+    },
+    {
+      "name": "a_burst_inside_the_gap_collapses_into_one_trailing_alert",
+      "steps": [
+        { "t": 0, "rooms": [{ "id": "!a", "count": 0 }], "fire": [], "wake": null },
+        { "t": 1000, "rooms": [{ "id": "!a", "count": 1 }], "fire": [["!a", 1]], "wake": null },
+        { "t": 2000, "rooms": [{ "id": "!a", "count": 2 }], "fire": [], "wake": 6000 },
+        { "t": 4000, "rooms": [{ "id": "!a", "count": 4 }], "fire": [], "wake": 6000 },
+        { "t": 6000, "rooms": [{ "id": "!a", "count": 4 }], "fire": [["!a", 3]], "wake": null }
+      ]
+    },
+    {
+      "name": "a_new_message_after_the_gap_fires_at_once",
+      "steps": [
+        { "t": 0, "rooms": [{ "id": "!a", "count": 0 }], "fire": [], "wake": null },
+        { "t": 1000, "rooms": [{ "id": "!a", "count": 1 }], "fire": [["!a", 1]], "wake": null },
+        { "t": 3000, "rooms": [{ "id": "!a", "count": 2 }], "fire": [], "wake": 6000 },
+        { "t": 7000, "rooms": [{ "id": "!a", "count": 3 }], "fire": [["!a", 2]], "wake": null }
+      ]
+    },
+    {
+      "name": "opening_the_room_drops_the_held_alert",
+      "steps": [
+        { "t": 0, "rooms": [{ "id": "!a", "count": 0 }], "fire": [], "wake": null },
+        { "t": 1000, "rooms": [{ "id": "!a", "count": 1 }], "fire": [["!a", 1]], "wake": null },
+        { "t": 2000, "rooms": [{ "id": "!a", "count": 2 }], "fire": [], "wake": 6000 },
+        { "t": 3000, "rooms": [{ "id": "!a", "count": 2, "attended": true }], "fire": [], "wake": null },
+        { "t": 6000, "rooms": [{ "id": "!a", "count": 2 }], "fire": [], "wake": null }
+      ]
+    },
+    {
+      "name": "muted_rooms_never_alert_or_wake",
+      "steps": [
+        { "t": 0, "rooms": [{ "id": "!m", "count": 0, "mode": "mute" }], "fire": [], "wake": null },
+        { "t": 1000, "rooms": [{ "id": "!m", "count": 3, "mode": "mute" }], "fire": [], "wake": null },
+        { "t": 7000, "rooms": [{ "id": "!m", "count": 3, "mode": "mute" }], "fire": [], "wake": null }
+      ]
+    },
+    {
+      "name": "two_rooms_keep_their_own_gap",
+      "steps": [
+        { "t": 0, "rooms": [{ "id": "!a", "count": 0 }, { "id": "!b", "count": 0 }], "fire": [], "wake": null },
+        { "t": 1000, "rooms": [{ "id": "!a", "count": 1 }, { "id": "!b", "count": 0 }], "fire": [["!a", 1]], "wake": null },
+        { "t": 2000, "rooms": [{ "id": "!a", "count": 2 }, { "id": "!b", "count": 1 }], "fire": [["!b", 1]], "wake": 6000 },
+        { "t": 6000, "rooms": [{ "id": "!a", "count": 2 }, { "id": "!b", "count": 1 }], "fire": [["!a", 1]], "wake": null }
+      ]
+    },
+    {
+      "name": "the_global_cap_holds_the_ninth_room_until_its_window_ends",
+      "steps": [
+        { "t": 0, "rooms": [{ "id": "!r1", "count": 0 }, { "id": "!r2", "count": 0 }, { "id": "!r3", "count": 0 }, { "id": "!r4", "count": 0 }, { "id": "!r5", "count": 0 }, { "id": "!r6", "count": 0 }, { "id": "!r7", "count": 0 }, { "id": "!r8", "count": 0 }, { "id": "!r9", "count": 0 }], "fire": [], "wake": null },
+        { "t": 1000, "rooms": [{ "id": "!r1", "count": 1 }, { "id": "!r2", "count": 1 }, { "id": "!r3", "count": 1 }, { "id": "!r4", "count": 1 }, { "id": "!r5", "count": 1 }, { "id": "!r6", "count": 1 }, { "id": "!r7", "count": 1 }, { "id": "!r8", "count": 1 }, { "id": "!r9", "count": 1 }], "fire": [["!r1", 1], ["!r2", 1], ["!r3", 1], ["!r4", 1], ["!r5", 1], ["!r6", 1], ["!r7", 1], ["!r8", 1]], "wake": 11000 },
+        { "t": 11000, "rooms": [{ "id": "!r1", "count": 1 }, { "id": "!r2", "count": 1 }, { "id": "!r3", "count": 1 }, { "id": "!r4", "count": 1 }, { "id": "!r5", "count": 1 }, { "id": "!r6", "count": 1 }, { "id": "!r7", "count": 1 }, { "id": "!r8", "count": 1 }, { "id": "!r9", "count": 1 }], "fire": [["!r9", 1]], "wake": null }
+      ]
+    }
+  ]
+}

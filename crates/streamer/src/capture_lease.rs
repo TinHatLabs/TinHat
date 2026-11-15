@@ -235,6 +235,24 @@ impl Leases {
     pub fn pending(&self) -> usize {
         self.live.len() + self.stopping
     }
+    /// 5-1: the current session ends now: it admits nothing more, and every lease of it not committed yet is voided (its
+    /// gates close, its stops returned). Leases of no session (Settings' meter, a voice note) are left alone.
+    pub fn end_session_now(&mut self) -> (usize, Vec<Stop>) {
+        let Some(s) = self.session.take() else { return (0, vec![]) };
+        let mut n = 0;
+        let mut stops = vec![];
+        for e in self.live.values_mut() {
+            if e.committed || e.session != Some(s) {
+                continue;
+            }
+            n += 1;
+            for g in e.gates.drain(..) {
+                g.store(false, std::sync::atomic::Ordering::SeqCst);
+            }
+            stops.append(&mut e.stops);
+        }
+        (n, stops)
+    }
 }
 
 fn run_stops(stops: Vec<Stop>) {
@@ -506,10 +524,62 @@ pub fn session() -> Option<u64> {
     lock().session()
 }
 
+/// 5-1 (fix1216): a Leave ends the current session's leases NOW (the Qt thread, no call lock): from here no capture or
+/// publish of the call being left can start or commit (a share resume, a restart, a camera start), their source gates
+/// close and their stops run, while the session's own teardown is still waiting for the call. Returns how many.
+pub fn end_session_now(why: &str) -> usize {
+    let (n, stops) = {
+        let mut l = lock();
+        let out = l.end_session_now();
+        l.stopping += usize::from(!out.1.is_empty());
+        out
+    };
+    if n > 0 {
+        eprintln!("[lease] {why}: {n} capture operation(s) of the call ended");
+    }
+    if !stops.is_empty() {
+        #[cfg(not(test))]
+        std::thread::spawn(move || {
+            run_stops(stops);
+            lock().stopping -= 1;
+        });
+        #[cfg(test)]
+        {
+            run_stops(stops);
+            lock().stopping -= 1;
+        }
+    }
+    n
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::sync::Arc;
+
+    /// 5-1 (fix1216): a Leave ends the call's leases at once — nothing of that call starts or commits afterwards, its
+    /// gates close and its stops run; leases of no session (the Settings meter) are left alone.
+    #[test]
+    fn a_leave_ends_the_calls_leases_now() {
+        let mut l = Leases::default();
+        l.set_session(Some(9));
+        let call = l.take(Kind::Screen, Some(9)).expect("a lease of the call");
+        let meter = l.take(Kind::Screen, None).expect("a lease of no session");
+        let stopped = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let s2 = stopped.clone();
+        assert!(l.hold(call, Box::new(move || s2.store(true, std::sync::atomic::Ordering::SeqCst))).is_ok());
+        let (n, stops) = l.end_session_now();
+        assert_eq!(n, 1, "only the call's lease");
+        for s in stops {
+            s();
+        }
+        assert!(stopped.load(std::sync::atomic::Ordering::SeqCst), "its stop ran");
+        assert!(!l.valid(call), "nothing of the left call is admitted any more");
+        assert!(l.commit(call).is_err(), "and nothing of it commits");
+        assert!(l.valid(meter), "a lease of no session goes on");
+        assert_eq!(l.take(Kind::Screen, Some(9)), None, "the left session admits no new lease");
+        assert_eq!(l.end_session_now().0, 0, "a second Leave has nothing to end");
+    }
     const CASES: &str = include_str!("captureleases.cases.json");
     /// the web's capturelease.test.ts LEASE_CASES_SHA256 (same bytes on both sides)
     const CASES_SHA256: &str = "79b13cb096f57bffc92275b126c1434f736cc922b3679d13eba47ca74baad058";

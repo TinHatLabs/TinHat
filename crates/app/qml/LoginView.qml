@@ -20,6 +20,14 @@ Item {
     id: loginView
     required property var app   // ApplicationWindow (theme tokens); set by parent
     FallbackTheme { id: fallbackTheme }
+    // A01.1: Escape leaves the create / reset face (or withdraws the replace question), like "Back to sign in"
+    Keys.onEscapePressed: (event) => {
+        if (loginView.busy) { event.accepted = false; return }
+        if (loginView.confirmReplace) loginView.replaceBack()
+        else if (loginView.showCreate) loginView.leaveCreate()
+        else if (loginView.showReset) loginView.leaveReset()
+        else event.accepted = false
+    }
     readonly property var theme: app || fallbackTheme
 
     // Colours: the login.* tokens of the active theme (Th); sizes (radius…) come from `theme`.
@@ -81,7 +89,9 @@ Item {
     // clears the password — it used to sit in the field, one eye-toggle from plaintext.
     function focusFirst() {
         if (loginView.showReset) return
-        if (usernameField.text.length > 0) passwordField.focusField(); else usernameField.focusField()
+        // A01.3: on a first run the Server field is empty and comes first — the caret starts there
+        if (homeserverField.text.trim().length === 0) homeserverField.focusField()
+        else if (usernameField.text.length > 0) passwordField.focusField(); else usernameField.focusField()
     }
     function clearCredentials() { passwordField.text = ""; passwordField.showPassword = false; Qt.callLater(loginView.focusFirst) }
     Component.onCompleted: Qt.callLater(loginView.focusFirst)
@@ -264,11 +274,14 @@ Item {
                         // to the Invite code field (the create form opens) and the server stays what it was
                         var pasted = text.length - homeserverField.prevLen >= 6
                         homeserverField.prevLen = text.length
-                        var code = pasted ? InviteLink.codeFromPaste(text) : null
-                        if (code !== null) {
+                        var link = pasted ? InviteLink.inviteFromPaste(text) : null
+                        if (link !== null) {
                             loginView.showCreate = true
-                            inviteCodeField.text = code
-                            homeserverField.text = Qt.binding(function () { return loginView.homeserver })
+                            inviteCodeField.text = link.code
+                            // A14.3: the link names its server — that is where the account is made (the field shows it)
+                            var host = link.host
+                            if (host !== null) { loginView.homeserverEdited(host); homeserverField.text = Qt.binding(function () { return loginView.homeserver }); homeserverField.prevLen = host.length }
+                            else homeserverField.text = Qt.binding(function () { return loginView.homeserver })
                             inviteCodeField.focusField()
                             return
                         }
@@ -276,6 +289,17 @@ Item {
                         if (loginView.showReset) resetCheckT.restart()   // the reset face follows the server typed
                     }
                     onAccepted: usernameField.focusField()
+                }
+                // A01.3: a first run's empty Server field says what goes there (the web's line, the same words)
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    Layout.fillWidth: true
+                    visible: homeserverField.text.trim().length === 0
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "Your server is where your account lives. Its address is in your invite, like yourname.tinhat.me."
+                    color: Th.loginSubtitleFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
                 // a bare name is a tinhat.me name: say which server it opens (the phone apps' "Opens <host>")
                 Controls.Label {
@@ -306,9 +330,17 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     textFormat: Text.PlainText
                     text: "Use " + loginView.movedTo
-                    color: movedLinkArea.containsMouse ? Th.loginLinkFgHover : Th.loginLinkFg
+                    color: (movedLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
-                    font.underline: movedLinkArea.containsMouse
+                    font.underline: movedLinkArea.containsMouse || activeFocus
+                    // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
+                    activeFocusOnTab: movedLinkArea.enabled
+                    Keys.onReturnPressed: if (movedLinkArea.enabled) movedLinkArea.clicked(null)
+                    Keys.onEnterPressed: if (movedLinkArea.enabled) movedLinkArea.clicked(null)
+                    Keys.onSpacePressed: if (movedLinkArea.enabled) movedLinkArea.clicked(null)
+                    Accessible.role: Accessible.Button
+                    Accessible.name: text
+                    Accessible.onPressAction: if (movedLinkArea.enabled) movedLinkArea.clicked(null)
                     MouseArea {
                         id: movedLinkArea
                         anchors.fill: parent
@@ -365,9 +397,17 @@ Item {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: "Forgot your password?"
-                    color: resetLinkArea.containsMouse ? Th.loginLinkFgHover : Th.loginLinkFg
+                    color: (resetLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
-                    font.underline: resetLinkArea.containsMouse
+                    font.underline: resetLinkArea.containsMouse || activeFocus
+                    // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
+                    activeFocusOnTab: resetLinkArea.enabled
+                    Keys.onReturnPressed: if (resetLinkArea.enabled) resetLinkArea.clicked(null)
+                    Keys.onEnterPressed: if (resetLinkArea.enabled) resetLinkArea.clicked(null)
+                    Keys.onSpacePressed: if (resetLinkArea.enabled) resetLinkArea.clicked(null)
+                    Accessible.role: Accessible.Button
+                    Accessible.name: text
+                    Accessible.onPressAction: if (resetLinkArea.enabled) resetLinkArea.clicked(null)
                     MouseArea {
                         id: resetLinkArea
                         anchors.fill: parent
@@ -395,9 +435,17 @@ Item {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: "New here? Create an account"
-                    color: createLinkArea.containsMouse ? Th.loginLinkFgHover : Th.loginLinkFg
+                    color: (createLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
-                    font.underline: createLinkArea.containsMouse
+                    font.underline: createLinkArea.containsMouse || activeFocus
+                    // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
+                    activeFocusOnTab: createLinkArea.enabled
+                    Keys.onReturnPressed: if (createLinkArea.enabled) createLinkArea.clicked(null)
+                    Keys.onEnterPressed: if (createLinkArea.enabled) createLinkArea.clicked(null)
+                    Keys.onSpacePressed: if (createLinkArea.enabled) createLinkArea.clicked(null)
+                    Accessible.role: Accessible.Button
+                    Accessible.name: text
+                    Accessible.onPressAction: if (createLinkArea.enabled) createLinkArea.clicked(null)
                     MouseArea {
                         id: createLinkArea
                         anchors.fill: parent
@@ -428,8 +476,14 @@ Item {
                         onTextEdited: (t) => {
                             var pasted = t.length - inviteCodeField.prevLen >= 6
                             inviteCodeField.prevLen = t.length
-                            var code = pasted ? InviteLink.codeFromPaste(t) : null
-                            if (code !== null) { inviteCodeField.text = code; return }
+                            var link = pasted ? InviteLink.inviteFromPaste(t) : null
+                            if (link !== null) {
+                                inviteCodeField.text = link.code
+                                // A14.3: the link's server is where this code works
+                                var host = link.host
+                                if (host !== null) { loginView.homeserverEdited(host); homeserverField.text = Qt.binding(function () { return loginView.homeserver }); homeserverField.prevLen = host.length }
+                                return
+                            }
                             if (/^\s*th-/i.test(t)) inviteCodeField.text = t.replace(/^\s*th-/i, "")
                         }
                         onAccepted: newUserField.focusField()
@@ -474,14 +528,16 @@ Item {
                         enabled: !loginView.busy
                         onAccepted: loginView.tryCreate()
                     }
+                    // D01.7 (signupHint below): which field is wrong, while it is typed
                     Controls.Label {
+                        readonly property var hint: loginView.signupHint(newUserField.text, newPwField.text, newPw2Field.text)
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
-                        color: (newPw2Field.text.length > 0 && newPw2Field.text !== newPwField.text) ? Th.loginErrorFg : Th.loginHintFg
+                        color: hint.error ? Th.loginErrorFg : Th.loginHintFg
                         font.pointSize: Kirigami.Theme.smallFont.pointSize
-                        text: (newPw2Field.text.length > 0 && newPw2Field.text !== newPwField.text) ? "The passwords don't match."
-                            : "Usernames are lowercase letters, numbers, dots, dashes and underscores. Passwords are at least 8 characters."
+                        text: hint.text
                     }
                     GlowButton {
                         id: createBtn
@@ -506,9 +562,17 @@ Item {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         text: "Back to sign in"
-                        color: createBackArea.containsMouse ? Th.loginLinkFgHover : Th.loginLinkFg
+                        color: (createBackArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
                         font.pointSize: Kirigami.Theme.smallFont.pointSize
-                        font.underline: createBackArea.containsMouse
+                        font.underline: createBackArea.containsMouse || activeFocus
+                        // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
+                        activeFocusOnTab: createBackArea.enabled
+                        Keys.onReturnPressed: if (createBackArea.enabled) createBackArea.clicked(null)
+                        Keys.onEnterPressed: if (createBackArea.enabled) createBackArea.clicked(null)
+                        Keys.onSpacePressed: if (createBackArea.enabled) createBackArea.clicked(null)
+                        Accessible.role: Accessible.Button
+                        Accessible.name: text
+                        Accessible.onPressAction: if (createBackArea.enabled) createBackArea.clicked(null)
                         MouseArea {
                             id: createBackArea
                             anchors.fill: parent
@@ -654,9 +718,17 @@ Item {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         text: "Back to sign in"
-                        color: backLinkArea.containsMouse ? Th.loginLinkFgHover : Th.loginLinkFg
+                        color: (backLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
                         font.pointSize: Kirigami.Theme.smallFont.pointSize
-                        font.underline: backLinkArea.containsMouse
+                        font.underline: backLinkArea.containsMouse || activeFocus
+                        // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
+                        activeFocusOnTab: backLinkArea.enabled
+                        Keys.onReturnPressed: if (backLinkArea.enabled) backLinkArea.clicked(null)
+                        Keys.onEnterPressed: if (backLinkArea.enabled) backLinkArea.clicked(null)
+                        Keys.onSpacePressed: if (backLinkArea.enabled) backLinkArea.clicked(null)
+                        Accessible.role: Accessible.Button
+                        Accessible.name: text
+                        Accessible.onPressAction: if (backLinkArea.enabled) backLinkArea.clicked(null)
                         MouseArea {
                             id: backLinkArea
                             anchors.fill: parent
@@ -804,12 +876,29 @@ Item {
     onShowCreateChanged: loginView.replaceBack()
     function replaceBack() { loginView.confirmReplace = false; loginView._pendingKind = "" }
 
+    // BEGIN pure (tools/login-view-test.mjs)
+    /// D01.7: the line under the create form's passwords names the wrong field while it is typed (Tin Hat Web's
+    /// src/app/createForm.ts signupHint; testvectors/signup-hint/vectors.json is byte-identical on both sides). The
+    /// username rule is the one create_account checks (bridge.rs); a short password is a hint, a mismatch an error.
+    function signupHint(username, password, password2) {
+        var u = String(username || "").trim().toLowerCase()
+        if (u.length > 0 && (u.length > 64 || !/^[a-z0-9._=\-/+]+$/.test(u)))
+            return { text: "That username won't work: use lowercase letters, numbers, dots, dashes and underscores — no spaces.", error: true }
+        var n = Array.from(String(password || "")).length
+        if (n > 0 && n < 8) return { text: "The password needs at least 8 characters.", error: false }
+        if (String(password2 || "").length > 0 && password2 !== password) return { text: "The passwords don't match.", error: true }
+        return { text: "Usernames are lowercase letters, numbers, dots, dashes and underscores. Passwords are at least 8 characters.", error: false }
+    }
+    // END pure
     // 10.4: the create face — everything filled in, passwords agree, not mid-request.
-    readonly property bool createReady: !loginView.busy && loginView.homeserver.trim().length > 0
+    // A01.2: an empty Server field does NOT grey the button out with no reason: the click answers with
+    // SERVER_FIELD_HINT (bridge.rs create_account) and the caret goes to the field.
+    readonly property bool createReady: !loginView.busy
         && inviteCodeField.text.trim().length > 0 && newUserField.text.trim().length > 0
-        && newPwField.text.length >= 8 && newPwField.text === newPw2Field.text
+        && Array.from(newPwField.text).length >= 8 && newPwField.text === newPw2Field.text   // characters, as the hint counts (D01.7)
     function tryCreate(confirmed) {
         if (loginView.createReady) {
+            if (homeserverField.text.trim().length === 0) homeserverField.focusField()   // A01.2 (the hint says why)
             if (confirmed !== true && loginView.hasSavedSession()) { loginView._pendingKind = "create"; loginView.confirmReplace = true; return }
             loginView.createAccount(inviteCodeField.text.trim(), newUserField.text.trim(), newPwField.text, displayNameField.text.trim())
         }

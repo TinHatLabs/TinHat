@@ -1,0 +1,87 @@
+{
+ "about": "Auto-rejoin after a terminal drop (P14, 2026-11-13). Byte-identical in desktop crates/app/src/testvectors/rejoin.json (the owner; rejoin_rule.rs) and web src/features/calls/testvectors/rejoin.json (rejoinRule.ts). healthy = the call ran 45 s or more (it resets attempts to 0 first); completed = the join had completed (the call server said Connected); attempts = auto-rejoins already made in this run of drops; the cap is maxAttempts. auto = recoverable and not hung up and attempts (after the reset) < maxAttempts and (healthy or completed). 5-7 (launch-gate 2026-11-14): ONE automatic rejoin (maxAttempts 1): a second drop shows Connection lost with Try again, no loop.",
+ "cases": [
+  {
+   "attempts": 0,
+   "auto": true,
+   "completed": true,
+   "healthy": true,
+   "hungUp": false,
+   "name": "a healthy call (45 s+) drops: rejoin",
+   "recoverable": true
+  },
+  {
+   "attempts": 0,
+   "auto": true,
+   "completed": true,
+   "healthy": false,
+   "hungUp": false,
+   "name": "P14: a young call whose join had completed drops: one rejoin",
+   "recoverable": true
+  },
+  {
+   "attempts": 0,
+   "auto": false,
+   "completed": false,
+   "healthy": false,
+   "hungUp": false,
+   "name": "a join that never completed: no rejoin (a JOIN problem)",
+   "recoverable": true
+  },
+  {
+   "attempts": 1,
+   "auto": false,
+   "completed": true,
+   "healthy": false,
+   "hungUp": false,
+   "name": "5-7: a second young drop after the one auto-rejoin: no rejoin (Connection lost + Try again)",
+   "recoverable": true
+  },
+  {
+   "attempts": 1,
+   "auto": false,
+   "completed": false,
+   "healthy": false,
+   "hungUp": false,
+   "name": "5-7: a drop after a rejoin that never connected: no second try",
+   "recoverable": true
+  },
+  {
+   "attempts": 2,
+   "auto": false,
+   "completed": true,
+   "healthy": false,
+   "hungUp": false,
+   "name": "the 1-try cap: a later young drop parks on Rejoin",
+   "recoverable": true
+  },
+  {
+   "attempts": 2,
+   "auto": true,
+   "completed": true,
+   "healthy": true,
+   "hungUp": false,
+   "name": "a healthy call resets the count: rejoin again",
+   "recoverable": true
+  },
+  {
+   "attempts": 0,
+   "auto": false,
+   "completed": true,
+   "healthy": true,
+   "hungUp": false,
+   "name": "the server said leave (kick, duplicate identity, deleted room): never",
+   "recoverable": false
+  },
+  {
+   "attempts": 0,
+   "auto": false,
+   "completed": true,
+   "healthy": true,
+   "hungUp": true,
+   "name": "the user hung up while the drop was in flight: never",
+   "recoverable": true
+  }
+ ],
+ "maxAttempts": 1
+}

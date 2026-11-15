@@ -39,6 +39,13 @@ Item {
     Accessible.role: Accessible.Button
     Accessible.name: cb.tip
     Accessible.onPressAction: cb.clicked()
+    // D05.5 (2026-11-13): a toggle says whether it is on (muted / deafened / camera on / sharing) to a screen reader,
+    // not only through its colour (the web's aria-pressed); `menuName` names the ▴ (e.g. "Microphone settings")
+    property bool checkable: false
+    property bool checked: false
+    property string menuName: "Settings"
+    Accessible.checkable: cb.checkable
+    Accessible.checked: cb.checked
     // `slashed`: draw a diagonal strike over the glyph — the unambiguous "this is
     // OFF" cue for toggles whose icon can't change per-state (camera has no
     // breeze camera-disabled glyph; friends read the old accent/no-accent fill
@@ -180,12 +187,19 @@ Item {
     Rectangle {
         id: chev
         visible: cb.hasMenu
+        // D05.5: the ▴ is reachable from the keyboard too (Tab, then Space / Enter), with its own name
+        activeFocusOnTab: cb.hasMenu
+        Keys.onSpacePressed: cb.menuClicked()
+        Keys.onReturnPressed: cb.menuClicked()
+        Accessible.role: Accessible.Button
+        Accessible.name: cb.menuName
+        Accessible.onPressAction: cb.menuClicked()
         width: 20; height: 20; radius: 10
         anchors.right: parent.right; anchors.top: parent.top
         anchors.rightMargin: -5; anchors.topMargin: -5
         color: (chevMa.containsMouse || cb.menuOpen) ? Th.callbarChevronBgHover : Th.callbarChevronBg
         border.width: 1
-        border.color: (chevMa.containsMouse || cb.menuOpen) ? Th.callbarChevronBorderHover : Th.callbarChevronBorder
+        border.color: (chevMa.containsMouse || cb.menuOpen || chev.activeFocus) ? Th.callbarChevronBorderHover : Th.callbarChevronBorder
         scale: chevMa.containsMouse ? 1.15 : 1.0
         Behavior on scale { NumberAnimation { duration: Motion.dur; easing.type: Easing.OutBack } }
         Behavior on color { ColorAnimation { duration: Motion.dur } }
@@ -211,8 +225,8 @@ Item {
             cursorShape: Qt.PointingHandCursor
             onClicked: cb.menuClicked()
         }
-        Controls.ToolTip.text: "Settings"
-        Controls.ToolTip.visible: chevMa.containsMouse
+        Controls.ToolTip.text: cb.menuName
+        Controls.ToolTip.visible: chevMa.containsMouse || chev.activeFocus
         Controls.ToolTip.delay: 400
     }
     Controls.ToolTip.text: cb.tip

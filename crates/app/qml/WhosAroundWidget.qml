@@ -499,7 +499,7 @@ Item {
     }
 
     // ── right-click: Message · Call · View profile ──
-    Controls.Menu {
+    KeyMenu {
         id: personMenu
         modal: false
         property var who: null

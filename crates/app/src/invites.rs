@@ -116,7 +116,9 @@ async fn call(method: &str, path: &str, body: Option<Value>) -> Result<(u16, Val
         if e.is_timeout() {
             "The server didn't answer in time".to_string()
         } else {
-            format!("Couldn't reach the server: {e}")
+            // A14.6: one sentence in Settings → Invites, the reqwest chain in the log
+            eprintln!("[invites] {e}");
+            crate::login_errors::unreachable_text("")
         }
     })?;
     let status = resp.status().as_u16();

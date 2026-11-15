@@ -1,0 +1,4600 @@
+{
+  "cases": [
+    {
+      "expect": {
+        "active": false,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "text": "",
+        "unread": false
+      },
+      "input": {
+        "query": "",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"\""
+    },
+    {
+      "expect": {
+        "active": false,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "text": "",
+        "unread": false
+      },
+      "input": {
+        "query": " ",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\" \""
+    },
+    {
+      "expect": {
+        "active": false,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "text": "",
+        "unread": false
+      },
+      "input": {
+        "query": "   ",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"   \""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gam",
+        "unread": false
+      },
+      "input": {
+        "query": "gam",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"gam\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gam",
+        "unread": false
+      },
+      "input": {
+        "query": "GAM",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"GAM\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gam",
+        "unread": false
+      },
+      "input": {
+        "query": "gam ",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"gam \""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gam",
+        "unread": false
+      },
+      "input": {
+        "query": " gam",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\" gam\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "central",
+        "unread": false
+      },
+      "input": {
+        "query": "central",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"central\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gaming central",
+        "unread": false
+      },
+      "input": {
+        "query": "gaming central",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"gaming central\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "cen gam",
+        "unread": false
+      },
+      "input": {
+        "query": "cen gam",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"cen gam\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gc",
+        "unread": false
+      },
+      "input": {
+        "query": "gc",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"gc\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 1,
+        "mention": false,
+        "shown": [
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "valheim mods",
+        "unread": false
+      },
+      "input": {
+        "query": "valheim mods",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"valheim mods\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 1,
+        "mention": false,
+        "shown": [
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "valheim mods",
+        "unread": false
+      },
+      "input": {
+        "query": "valheim-mods",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"valheim-mods\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 1,
+        "mention": false,
+        "shown": [
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "mods",
+        "unread": false
+      },
+      "input": {
+        "query": "mods",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"mods\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 2,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "alex",
+        "unread": false
+      },
+      "input": {
+        "query": "alex",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"alex\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 2,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "alex w",
+        "unread": false
+      },
+      "input": {
+        "query": "alex.w",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"alex.w\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 2,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "alex w",
+        "unread": false
+      },
+      "input": {
+        "query": "alex w",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"alex w\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "example",
+        "unread": false
+      },
+      "input": {
+        "query": "example",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"example\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "chat",
+        "unread": false
+      },
+      "input": {
+        "query": "chat",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"chat\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 5,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "text": "zoe",
+        "unread": false
+      },
+      "input": {
+        "query": "zoe",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"zoe\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 5,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "text": "zoe",
+        "unread": false
+      },
+      "input": {
+        "query": "zoë",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"zoë\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 5,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "text": "zoe",
+        "unread": false
+      },
+      "input": {
+        "query": "ZOE",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"ZOE\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 4,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
+        "text": "cafe",
+        "unread": false
+      },
+      "input": {
+        "query": "cafe",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"cafe\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 4,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
+        "text": "cafe",
+        "unread": false
+      },
+      "input": {
+        "query": "café",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"café\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 4,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
+        "text": "cafe creme",
+        "unread": false
+      },
+      "input": {
+        "query": "cafe creme",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"cafe creme\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 4,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
+        "text": "creme",
+        "unread": false
+      },
+      "input": {
+        "query": "creme",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"creme\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "movie",
+        "unread": false
+      },
+      "input": {
+        "query": "movie",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"movie\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 7,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          true
+        ],
+        "text": "night",
+        "unread": false
+      },
+      "input": {
+        "query": "night",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"night\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 7,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ],
+        "text": "owls",
+        "unread": false
+      },
+      "input": {
+        "query": "owls",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"owls\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "xyz",
+        "unread": false
+      },
+      "input": {
+        "query": "xyz",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"xyz\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gaming",
+        "unread": false
+      },
+      "input": {
+        "query": "#gaming",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"#gaming\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 2,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "alex",
+        "unread": false
+      },
+      "input": {
+        "query": "@alex",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"@alex\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "",
+        "unread": true
+      },
+      "input": {
+        "query": "is:unread",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:unread\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "",
+        "unread": true
+      },
+      "input": {
+        "query": "IS:UNREAD",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"IS:UNREAD\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 2,
+        "mention": true,
+        "shown": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "text": "",
+        "unread": false
+      },
+      "input": {
+        "query": "is:mention",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:mention\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 2,
+        "mention": true,
+        "shown": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "text": "",
+        "unread": false
+      },
+      "input": {
+        "query": "is:mentions",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:mentions\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 2,
+        "mention": true,
+        "shown": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "",
+        "unread": true
+      },
+      "input": {
+        "query": "is:unread is:mention",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:unread is:mention\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gam",
+        "unread": true
+      },
+      "input": {
+        "query": "is:unread gam",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:unread gam\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "gam",
+        "unread": true
+      },
+      "input": {
+        "query": "gam is:unread",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"gam is:unread\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "movie",
+        "unread": true
+      },
+      "input": {
+        "query": "is:unread movie",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:unread movie\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": true,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "general",
+        "unread": false
+      },
+      "input": {
+        "query": "is:mention general",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:mention general\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "is",
+        "unread": false
+      },
+      "input": {
+        "query": "is:",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "is read",
+        "unread": false
+      },
+      "input": {
+        "query": "is:read",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:read\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "is unreadx",
+        "unread": false
+      },
+      "input": {
+        "query": "is:unreadx",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:unreadx\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "",
+        "unread": true
+      },
+      "input": {
+        "query": "is:unread  ",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"is:unread  \""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "",
+        "unread": true
+      },
+      "input": {
+        "query": "  is:unread",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"  is:unread\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
+        "text": "night",
+        "unread": true
+      },
+      "input": {
+        "query": "night is:unread",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"night is:unread\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 7,
+        "mention": false,
+        "shown": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          true
+        ],
+        "text": "nig",
+        "unread": false
+      },
+      "input": {
+        "query": "nig",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"nig\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false,
+          true,
+          true
+        ],
+        "text": "g",
+        "unread": false
+      },
+      "input": {
+        "query": "g",
+        "rooms": [
+          {
+            "aliases": [
+              "#gaming:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "Gaming Central",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#valheim-mods:example.com"
+            ],
+            "membership": "join",
+            "mention": false,
+            "name": "valheim-mods",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@alex.w:example.com"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Alex",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [
+              "#cafe:other.org"
+            ],
+            "membership": "none",
+            "mention": false,
+            "name": "Café Crème",
+            "unread": false
+          },
+          {
+            "aliases": [
+              "@zoe:chat.example"
+            ],
+            "membership": "join",
+            "mention": true,
+            "name": "Zoë",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "join",
+            "mention": false,
+            "name": "General",
+            "unread": false
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "\"g\""
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [],
+        "text": "gam",
+        "unread": false
+      },
+      "input": {
+        "query": "gam",
+        "rooms": []
+      },
+      "name": "no rooms"
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 1,
+        "mention": false,
+        "shown": [
+          true,
+          true
+        ],
+        "text": "night",
+        "unread": false
+      },
+      "input": {
+        "query": "night",
+        "rooms": [
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          },
+          {
+            "aliases": [],
+            "membership": "none",
+            "mention": false,
+            "name": "Night owls",
+            "unread": false
+          }
+        ]
+      },
+      "name": "an invite matches first: the next row is first"
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": -1,
+        "mention": false,
+        "shown": [
+          true
+        ],
+        "text": "movie",
+        "unread": false
+      },
+      "input": {
+        "query": "movie",
+        "rooms": [
+          {
+            "aliases": [],
+            "membership": "invite",
+            "mention": false,
+            "name": "Movie night",
+            "unread": true
+          }
+        ]
+      },
+      "name": "only an invite matches"
+    },
+    {
+      "expect": {
+        "active": true,
+        "first": 0,
+        "mention": false,
+        "shown": [
+          true,
+          false,
+          true
+        ],
+        "text": "a",
+        "unread": false
+      },
+      "input": {
+        "query": "a",
+        "rooms": [
+          {
+            "name": "Alpha"
+          },
+          {
+            "name": 3
+          },
+          {
+            "aliases": [
+              "#a:x",
+              4
+            ]
+          }
+        ]
+      },
+      "name": "defaults: no aliases, membership, flags"
+    },
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": {
+        "query": "a",
+        "rooms": {}
+      },
+      "name": "not a list"
+    },
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": {
+        "query": "a",
+        "rooms": [
+          "Alpha"
+        ]
+      },
+      "name": "a row that is not an object"
+    },
+    {
+      "expect": {
+        "error": "bad-input"
+      },
+      "input": {
+        "rooms": []
+      },
+      "name": "no query"
+    }
+  ],
+  "kind": "roomFilter"
+}

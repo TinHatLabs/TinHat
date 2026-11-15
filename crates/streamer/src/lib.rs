@@ -51,6 +51,8 @@ pub mod hear; // 10.5: "can they hear me?" — mic check, muted talk, receipts, 
 pub mod sameroom; // 11.3: "same room" — link up, room-mic election, in-room playback mute
 pub mod callstats; // widgets (modular UI step 2): receive stats per remote track, ConnectionQuality, `tinhat.rxq`
 pub mod call_health; // 12.1.13 reconnect-wedge: a call that isn't really connected ends visibly (shared rule with web)
+pub mod share_carry; // 12.1.16 (D02.2): a screen share survives an auto-rejoin (same source, no picker)
+pub use share_carry::{arm_share_carry, cancel_resume, drop_carried_share, has_orphan as share_orphan_waiting, resume_epoch, resume_still_wanted, take_carried_share, Resume};
 pub use call::CallSession;
 // Per-track playback gain (Phase 3): the app's AudioPrefsController drives these to
 // adjust a single remote participant's level/mute. NO-OP at unity (volume=1.0).
@@ -111,6 +113,7 @@ pub use hear::{fix_system_level as hear_fix_system_level, request_heal as hear_r
 // 11.3 same room: the app's invokables + the UI snapshot + the remembered pairs store.
 pub use sameroom::{answer_ask as same_room_answer, cancel_ask as same_room_cancel, auto_link as same_room_auto, forget_pair as same_room_forget_pair, link_with as same_room_link, pairs_json as same_room_pairs_json, set_auto as same_room_set_auto, set_hear_through as same_room_hear_through, set_store_path as same_room_set_store_path, state_json as same_room_json, unlink as same_room_unlink};
 pub use call::{mic_capture_down, mic_wanted};
+pub use call::{mic_tx_leave, mic_tx_muted, mic_tx_new_call, set_mic_tx_muted}; // 5-1 (fix1216): the lock-free mic gate
 // Pad QOL (2026-10-31): watching — no microphone captured until this device's own "Talk here"
 pub use call::{capture_barred, leased_start, retire_mic_monitor_if_barred, retire_output_taps_if_barred, set_capture_barred};
 // 0.8.33: the speaker outputs summed into the echo reference (empty = Tin Hat's own output).
@@ -123,14 +126,14 @@ pub use call::abandon_partial_connect;
 // voice overlay — robust where a raw RMS floor is not (AGC boosts ambient noise).
 pub use call::{audio_levels_json, mic_level, speakers_json};
 // Pad on the phone, Step A: the server-minted participant attributes (person tiles, the Pad chip)
-pub use call::{participant_attributes, participant_attrs_rev};
+pub use call::{participant_attributes, participant_attrs_rev, participant_present};
 // Outgoing "stream health": publisher-side stats (encoder, res/fps, send bitrate, quality
 // limitation, receiver-report loss/RTT) per outgoing stream, refreshed every 3s while
 // screen/camera/mic tracks are live. Feeds the in-call transparency popup.
 pub use call::publish_stats_json;
 // Noise-cancel before/after meter: a standalone mic monitor (no call needed) feeding the
 // pre- (raw) and post-denoise RMS cells. mic_level_pre is the raw mic; mic_level is post.
-pub use call::{mic_level_pre, start_mic_monitor, stop_mic_monitor};
+pub use call::{mic_level_pre, mic_monitor_why, start_mic_monitor, stop_mic_monitor};
 // Speaker (output sink) level meter: a standalone monitor tapping the selected sink's
 // `.monitor` into output_level. Analogous to the mic monitor; no playback pipeline change.
 pub use call::{output_level, start_output_monitor, stop_output_monitor};

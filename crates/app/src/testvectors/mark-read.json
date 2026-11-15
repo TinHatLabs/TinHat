@@ -1,0 +1,29 @@
+{
+  "_doc": "Mark all as read (A11.2 / A11.3 / D03.8). owns: which unread rooms a rail key's Mark all as read covers (key = home | favourites | people | orphans | a space id; room: space = it is a space, dm, fav = favourite, parented = it is in a space, inKey = it is the space `key` or in it). note: the words shown when it is done. Owned by the desktop (crates/app/src/testvectors/mark-read.json, nav.rs mark_read_owns / mark_read_note); the web's src/features/nav/testvectors/mark-read.json is a byte copy (markread.ts).",
+  "owns": [
+    { "name": "home_takes_rooms_in_no_space", "key": "home", "room": { "parented": false }, "out": true },
+    { "name": "home_takes_dms_even_in_a_space", "key": "home", "room": { "dm": true, "parented": true }, "out": true },
+    { "name": "home_leaves_a_space_room", "key": "home", "room": { "parented": true }, "out": false },
+    { "name": "home_clears_a_space_count", "key": "home", "room": { "space": true, "parented": true }, "out": true },
+    { "name": "favourites_takes_favourites_only", "key": "favourites", "room": { "fav": true, "parented": true }, "out": true },
+    { "name": "favourites_leaves_the_rest", "key": "favourites", "room": { "dm": true }, "out": false },
+    { "name": "people_takes_dms", "key": "people", "room": { "dm": true }, "out": true },
+    { "name": "people_leaves_rooms", "key": "people", "room": { "parented": false }, "out": false },
+    { "name": "orphans_takes_rooms_in_no_space", "key": "orphans", "room": { "parented": false }, "out": true },
+    { "name": "orphans_leaves_dms", "key": "orphans", "room": { "dm": true, "parented": false }, "out": false },
+    { "name": "orphans_leaves_space_rooms", "key": "orphans", "room": { "parented": true }, "out": false },
+    { "name": "meta_keys_never_take_spaces_but_home", "key": "people", "room": { "space": true, "inKey": true }, "out": false },
+    { "name": "a_space_takes_its_rooms", "key": "!space:example.org", "room": { "parented": true, "inKey": true }, "out": true },
+    { "name": "a_space_takes_its_dms_too", "key": "!space:example.org", "room": { "dm": true, "parented": true, "inKey": true }, "out": true },
+    { "name": "a_space_leaves_other_rooms", "key": "!space:example.org", "room": { "parented": true, "inKey": false }, "out": false },
+    { "name": "a_space_clears_its_own_count", "key": "!space:example.org", "room": { "space": true, "inKey": true }, "out": true },
+    { "name": "a_space_leaves_other_spaces", "key": "!space:example.org", "room": { "space": true, "inKey": false }, "out": false }
+  ],
+  "note": [
+    { "name": "nothing_unread", "label": "Home", "marked": 0, "failed": 0, "out": "Nothing to mark as read in Home" },
+    { "name": "one_room", "label": "Games", "marked": 1, "failed": 0, "out": "Marked 1 room in Games as read" },
+    { "name": "several_rooms", "label": "Home", "marked": 12, "failed": 0, "out": "Marked 12 rooms in Home as read" },
+    { "name": "some_failed", "label": "Home", "marked": 3, "failed": 1, "out": "Marked 3 rooms in Home as read; 1 room couldn't be marked — try again" },
+    { "name": "all_failed", "label": "People", "marked": 0, "failed": 2, "out": "Couldn't mark People as read — try again" }
+  ]
+}

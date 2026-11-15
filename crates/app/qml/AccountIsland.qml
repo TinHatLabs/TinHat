@@ -41,7 +41,7 @@ Rectangle {
         firstColumn: 1
         bespoke: ["app.bugReport", "app.sidebar.toggle", "app.menu.open"]
     }
-    Controls.Menu {
+    KeyMenu {
         id: accountMenu
         Controls.MenuItem {
             text: "Edit buttons…"

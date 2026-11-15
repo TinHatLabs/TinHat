@@ -244,6 +244,7 @@ Item {
             title: "Layout"
             SettingsRow {
                 app: pane.app
+                anchorId: "appearance.style"
                 label: "Style"
                 description: "Islands gives every part of the window its own rounded card; Flat puts them edge to edge, the way Tin Hat looked before."
                 trailing: ThComboBox {
@@ -297,6 +298,7 @@ Item {
             // 11.0 (GPU.md §2.6, both apps): the pref `gif-autoplay`, default on (ThGif)
             SettingsRow {
                 app: pane.app
+                anchorId: "appearance.gif-autoplay"
                 label: "Play GIFs automatically"
                 description: "GIFs play up to three times, then rest on their first frame. Point at one to play it again; with Reduce motion on, a click plays it once."
                 toggle: gifSw
@@ -314,6 +316,7 @@ Item {
             title: "Performance"
             SettingsRow {
                 app: pane.app
+                anchorId: "appearance.gpu-saver"
                 label: "Save GPU while Tin Hat isn't focused"
                 description: "For lower-end PCs: while Tin Hat isn't the active window it pauses animations, previews and GIFs and shows cameras small."
                 toggle: saverSw
@@ -322,6 +325,70 @@ Item {
                     Accessible.name: "Save GPU while Tin Hat isn't focused"
                     checked: pane.app.mCallUnfocusedSaver
                     onToggled: { pane.app.mCallUnfocusedSaver = checked; pane.app.settings.applyUiPref("call-unfocused-saver", checked ? "1" : "0") }
+                }
+            }
+            // chat backgrounds + particle effects (docs/AMBIENCE.md; the web's AppearancePane has the same rows + words)
+            SettingsRow {
+                app: pane.app
+                anchorId: "appearance.chat-backgrounds"
+                label: pane.app.ambience.word("backgrounds")
+                description: pane.app.ambience.word("backgroundsHelp")
+                toggle: bgSw
+                trailing: ThSwitch {
+                    id: bgSw
+                    Accessible.name: pane.app.ambience.word("backgrounds")
+                    checked: pane.app.mChatBackgrounds
+                    onToggled: { pane.app.mChatBackgrounds = checked; pane.app.settings.applyUiPref(pane.app.ambience.prefKey("backgrounds"), checked ? "1" : "0") }
+                }
+            }
+            // sun-gamebg: "Game art backgrounds" (the web's AppearancePane has the same row; words testvectors/gamebg/words.json).
+            // Under "Show chat backgrounds" (greyed while that is off), as on the web.
+            SettingsRow {
+                id: gameArtRow
+                app: pane.app
+                anchorId: "appearance.chat-game-art"
+                readonly property var w: JSON.parse(pane.app.gameArtWords)
+                label: w.gameArt
+                description: w.gameArtHelp
+                toggle: gameArtSw
+                enabled: pane.app.mChatBackgrounds
+                trailing: ThSwitch {
+                    id: gameArtSw
+                    Accessible.name: gameArtRow.w.gameArt
+                    enabled: pane.app.mChatBackgrounds
+                    checked: pane.app.mChatBackgrounds && pane.app.mChatGameArt
+                    onToggled: { pane.app.mChatGameArt = checked; pane.app.settings.applyUiPref("chat-game-art", checked ? "1" : "0") }
+                }
+            }
+            SettingsRow {
+                app: pane.app
+                anchorId: "appearance.chat-effects"
+                label: pane.app.ambience.word("effects")
+                description: pane.app.ambience.word("effectsHelp")
+                toggle: fxSw
+                enabled: pane.app.mChatBackgrounds
+                trailing: ThSwitch {
+                    id: fxSw
+                    Accessible.name: pane.app.ambience.word("effects")
+                    enabled: pane.app.mChatBackgrounds
+                    checked: pane.app.mChatBackgrounds && pane.app.mChatEffects
+                    onToggled: { pane.app.mChatEffects = checked; pane.app.settings.applyUiPref(pane.app.ambience.prefKey("effects"), checked ? "1" : "0") }
+                }
+            }
+            SettingsRow {
+                app: pane.app
+                anchorId: "appearance.chat-effects-pause"
+                readonly property bool rowOn: pane.app.ambience.pauseRowEnabled(pane.app.mChatEffectsPause, pane.app.mCallUnfocusedSaver)
+                label: pane.app.ambience.word("pause")
+                description: rowOn ? pane.app.ambience.word("pauseHelp") : pane.app.ambience.word("pauseSaver")
+                toggle: pauseSw
+                enabled: rowOn && pane.app.mChatBackgrounds && pane.app.mChatEffects
+                trailing: ThSwitch {
+                    id: pauseSw
+                    Accessible.name: pane.app.ambience.word("pause")
+                    enabled: parent.enabled
+                    checked: pane.app.ambience.pauseRowChecked(pane.app.mChatEffectsPause, pane.app.mCallUnfocusedSaver)
+                    onToggled: { pane.app.mChatEffectsPause = checked; pane.app.settings.applyUiPref(pane.app.ambience.prefKey("pause"), checked ? "1" : "0") }
                 }
             }
         }
@@ -396,7 +463,9 @@ Item {
     }
     function doRename() {
         var n = renameField.text.trim()
-        if (n.length < 1 || n.length > 80 || n === renameDialog.oldName) return
+        // A25.6: an empty name used to close the dialog silently (web AppearancePane.tsx: the same words)
+        if (n.length < 1) { pane.app.settingsToast("A theme needs a name — it keeps “" + renameDialog.oldName + "”.", "long"); return }
+        if (n.length > 80 || n === renameDialog.oldName) return
         var err = pane.ctl.renameMine(renameDialog.themeId, n)
         if (err.length > 0) pane.app.settingsToast(err, "long")
     }

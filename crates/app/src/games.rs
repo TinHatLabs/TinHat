@@ -78,6 +78,7 @@ pub mod qobject {
         #[qproperty(QString, my_prefs_json)] //   QML: myPrefsJson — my §7.1 prefs ({} = none)
         #[qproperty(QString, settings_json)] //   QML: settingsJson — the flat §6 object (+rev), defaults filled in
         #[qproperty(QString, search_json)] //     QML: searchJson — catalog autocomplete results; also [entry] after addCustomGame
+        #[qproperty(QString, search_for)] //      QML: searchFor — QOL A19.5: the text searchJson answers ("" = not a search's)
         #[qproperty(QString, import_json)] //     QML: importJson — Steam library import result ({error} on failure)
         #[qproperty(QString, simulation_json)] // QML: simulationJson — a snapshot under unsaved settings (admin simulator)
         #[qproperty(QString, catalog_base)] //    QML: catalogBase — `<api>/games` of the user's server (art = <base>/art/<id>/portrait)
@@ -168,6 +169,7 @@ pub struct GamesControllerRust {
     my_prefs_json: QString,
     settings_json: QString,
     search_json: QString,
+    search_for: QString,
     import_json: QString,
     simulation_json: QString,
     catalog_base: QString,
@@ -199,6 +201,7 @@ impl Default for GamesControllerRust {
             my_prefs_json: QString::from("{}"),
             settings_json: QString::from(&Settings::default().to_json().to_string()),
             search_json: QString::from("[]"),
+            search_for: QString::default(),
             import_json: QString::from("{}"),
             simulation_json: QString::from("{}"),
             catalog_base: QString::from(&default_catalog_base()),
@@ -472,6 +475,7 @@ impl qobject::GamesController {
         // selfhost: a server without the catalogue (games: false) answers no search; games are added by name
         let q = if crate::server_offer::feature_on_global(crate::server_offer::ServerFeature::Games) { q } else { String::new() };
         if q.is_empty() {
+            self.as_mut().set_search_for(QString::default());
             self.as_mut().set_search_json(QString::from("[]"));
             if let Ok(mut g) = self.rust().inflight_search.lock() {
                 if let Some(prev) = g.take() {
@@ -490,10 +494,12 @@ impl qobject::GamesController {
                     // The service answers { "items": [...] } (TH-REEL-01); "results" kept as a fallback.
                     let list = v.get("items").or_else(|| v.get("results")).cloned().unwrap_or(v);
                     let list = if list.is_array() { list } else { json!([]) };
+                    o.as_mut().set_search_for(QString::from(&q));
                     o.as_mut().set_search_json(QString::from(&list.to_string()));
                 }
                 Err(e) => {
                     eprintln!("[games] search failed: {e}");
+                    o.as_mut().set_search_for(QString::default());
                     o.as_mut().set_search_json(QString::from("[]"));
                     o.as_mut().set_last_error(QString::from("Couldn't reach the game catalog"));
                 }
@@ -524,6 +530,7 @@ impl qobject::GamesController {
                     if let Some(id) = entry.get("id").and_then(Value::as_str) {
                         remember_catalog_entry(id, &entry);
                     }
+                    o.as_mut().set_search_for(QString::default()); // the added game, not a search's answer
                     o.as_mut().set_search_json(QString::from(&json!([entry]).to_string()));
                 }
                 Err(e) => {
@@ -2253,7 +2260,7 @@ fn remember_catalog_entry(id: &str, v: &Value) {
 }
 
 /// 10.5.2: the API's client carries `TinHat/<version> (<os>)` ([`crate::proxy::http`]).
-fn http() -> matrix_sdk::reqwest::Client {
+pub(crate) fn http() -> matrix_sdk::reqwest::Client {
     crate::proxy::http(Some(std::time::Duration::from_secs(20)))
 }
 
@@ -2288,7 +2295,7 @@ pub(crate) async fn catalog_get_auth(base: &str, path: &str, bearer: Option<&str
     serde_json::from_str(&text).map_err(|e| format!("bad JSON from {url}: {e}"))
 }
 
-async fn catalog_post(base: &str, path: &str, body: Value, bearer: Option<&str>) -> Result<Value, String> {
+pub(crate) async fn catalog_post(base: &str, path: &str, body: Value, bearer: Option<&str>) -> Result<Value, String> {
     let url = catalog_url(base, path)?;
     let mut req = http().post(&url).header("Content-Type", "application/json").body(body.to_string());
     if let Some(t) = bearer {

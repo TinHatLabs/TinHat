@@ -144,18 +144,29 @@ ColumnLayout {
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 pressAndHoldInterval: 500
-                function openMenu() {
+                // `at` = the keyboard's slot (the menu opens at it), absent = at the pointer
+                function openMenu(at) {
                     island.dmMenuRef.rid = dmSlot.rid
                     island.dmMenuRef.label = dmSlot.e ? String(dmSlot.e.name || "") : ""
                     island.dmMenuRef.invite = dmSlot.invite
-                    island.dmMenuRef.popup()
+                    if (at) island.dmMenuRef.popup(at, at.width / 2, at.height / 2); else island.dmMenuRef.popup()
                 }
-                onClicked: (mouse) => {
-                    if (mouse.button === Qt.RightButton) { openMenu(); return }
+                function activate() {
                     if (dmSlot.invite) { if (island.railRef.navController) island.railRef.navController.selectSpace("people") }
                     else island.railRef.dmOpenRequested(dmSlot.rid)
                 }
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.RightButton) { openMenu(); return }
+                    activate()
+                }
                 onPressAndHold: openMenu()
+            }
+            RailFocus {   // a11y round 2 (M2): a Tab stop; Return opens the DM, the Menu key / Shift+F10 = its menu
+                id: dmFocus
+                name: (dmSlot.invite ? "Invite: " : "") + (dmSlot.e ? String(dmSlot.e.name || "") : "")
+                hasMenu: true
+                onActivated: dmMa.activate()
+                onMenuRequested: dmMa.openMenu(dmFocus)
             }
             Controls.ToolTip.text: island.railRef._tipSafe(island.railRef._dmTip(dmSlot.e, dmSlot.pres))
             Controls.ToolTip.visible: dmMa.containsMouse
@@ -205,6 +216,11 @@ ColumnLayout {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: if (island.railRef.navController) island.railRef.navController.selectSpace("people")
+        }
+        RailFocus {   // a11y round 2 (M2)
+            name: island.railRef._dmOverflow + " more direct messages — open People"
+            enabled: dmMore.shown
+            onActivated: if (island.railRef.navController) island.railRef.navController.selectSpace("people")
         }
         Controls.ToolTip.text: island.railRef._dmOverflow + " more — open People"
         Controls.ToolTip.visible: moreMa.containsMouse

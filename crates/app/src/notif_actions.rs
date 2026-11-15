@@ -41,6 +41,18 @@ pub(crate) fn reply_content(text: &str) -> Option<Value> {
     Some(json!({ "msgtype": "m.text", "body": body, "m.mentions": {} }))
 }
 
+/// threads (docs/THREADS.md): a quick reply to a message in a thread stays in it — [`reply_content`] plus the thread
+/// relation with the spec's fallback (is_falling_back true, m.in_reply_to = the notified event, else the root). `root`
+/// = the notified event's thread root ("" = not in a thread). The web's threadReplyContent; vectors' threadReply group.
+pub(crate) fn thread_reply_content(text: &str, root: &str, event: &str) -> Option<Value> {
+    let mut c = reply_content(text)?;
+    if event_ok(root) && root != event {
+        c["m.relates_to"] = json!({ "rel_type": "m.thread", "event_id": root, "is_falling_back": true,
+            "m.in_reply_to": { "event_id": if event_ok(event) { event } else { root } } });
+    }
+    Some(c)
+}
+
 /// An event id a notification may act on: '$' + 1..254 more UTF-8 bytes, no control or white-space characters.
 pub(crate) fn event_ok(e: &str) -> bool {
     e.starts_with('$')
@@ -319,8 +331,30 @@ pub(crate) async fn run(gen: u64, room_id: String, event: String, key: String, t
         eprintln!("[notify] action of an ended session ignored");
         return;
     }
+    // threads (docs/THREADS.md): the thread the notified event is in ("" = the main timeline; Err = it couldn't be
+    // looked up: a reply then fails closed rather than land outside its thread)
+    // 1-5: the click (Open) too — from THIS toast's own event, never the room's newest one (a newer thread's message
+    // within the follow-up window would otherwise send a click on thread A's toast to thread B)
+    let looks = matches!(out, Outcome::Open | Outcome::Compose | Outcome::Send { .. });
+    let looked = if looks { notified_thread(gen, &room_id, &event).await } else { Ok(String::new()) };
+    // the lookup awaited: an action of a session that ended meanwhile does nothing (round 2 review)
+    if looks && crate::session::generation() != gen {
+        eprintln!("[notify] action of an ended session ignored");
+        return;
+    }
+    let out = match (&out, &looked) {
+        (Outcome::Send { .. }, Err(())) => {
+            eprintln!("[notify] reply not sent: the notified message's thread couldn't be looked up");
+            Outcome::Failed { note: failed_body(&text) }
+        }
+        _ => out,
+    };
+    let open = click_open_action(&room_id, &looked);
+    let root = looked.unwrap_or_default();
     match out {
-        Outcome::Open => crate::notify::toast_action(format!("open:{room_id}")),
+        Outcome::Open => crate::notify::toast_action(open),
+        // threads: Reply on a thread message opens that thread with its composer focused (Main.qml thread:)
+        Outcome::Compose if !root.is_empty() => crate::notify::toast_action(format!("thread:{room_id}\t{root}")),
         Outcome::Compose => crate::notify::toast_action(format!("compose:{room_id}")),
         Outcome::None => {}
         Outcome::Read { .. } => {
@@ -340,9 +374,15 @@ pub(crate) async fn run(gen: u64, room_id: String, event: String, key: String, t
                 return;
             };
             let body = content.get("body").and_then(|b| b.as_str()).unwrap_or_default().to_string();
-            match room.send(reply_event_content(&body)).await {
-                Ok(r) => {
-                    eprintln!("[notify] reply sent: {}", r.response.event_id);
+            // threads: a reply to a thread message keeps the thread (thread_reply_content, the vectors' threadReply);
+            // anything else goes exactly as before
+            let sent = match thread_reply_content(&text, &root, &event).filter(|c| c.get("m.relates_to").is_some()) {
+                Some(c) => room.send_raw("m.room.message", c).await.map(|r| r.response.event_id),
+                None => room.send(reply_event_content(&body)).await.map(|r| r.response.event_id),
+            };
+            match sent {
+                Ok(id) => {
+                    eprintln!("[notify] reply sent: {id}{}", if root.is_empty() { "" } else { " (in its thread)" });
                     if then_read.is_some() && crate::session::generation() == gen {
                         if let Err(e) = crate::receipts::send_read_markers(&room, &event).await {
                             eprintln!("[notify] reply sent, mark as read failed: {e}");
@@ -354,6 +394,42 @@ pub(crate) async fn run(gen: u64, room_id: String, event: String, key: String, t
                     failed(gen, &room_id, &failed_body(&text)).await;
                 }
             }
+        }
+    }
+}
+
+/// 1-5: where a click on a message toast goes: the thread of the toast's own event ("thread:<room>\t<root>"), else the
+/// room ("open:<room>"). A toast with no usable event, or one whose event couldn't be looked up, opens the room — never
+/// the thread of another (newer) notification.
+pub(crate) fn click_open_action(room_id: &str, looked: &Result<String, ()>) -> String {
+    match looked {
+        Ok(root) if !root.is_empty() => format!("thread:{room_id}\t{root}"),
+        _ => format!("open:{room_id}"),
+    }
+}
+
+/// threads: the thread root of the notified event (Ok("") = the main timeline, or no event to look at), from the store
+/// or the server. Err = it couldn't be looked up (the caller fails closed for a send).
+async fn notified_thread(gen: u64, room_id: &str, event: &str) -> Result<String, ()> {
+    if !event_ok(event) {
+        return Ok(String::new());
+    }
+    let Some((_, room)) = room_for(gen, room_id) else { return Err(()) };
+    let Ok(eid) = matrix_sdk::ruma::OwnedEventId::try_from(event) else { return Ok(String::new()) };
+    let fut: std::pin::Pin<Box<dyn std::future::Future<Output = _> + Send + '_>> = Box::pin(room.load_or_fetch_event(&eid, None));
+    // review: bounded — a click (or a reply) never waits long on the network
+    let Ok(got) = tokio::time::timeout(std::time::Duration::from_secs(5), fut).await else {
+        eprintln!("[notify] the notified event's lookup timed out");
+        return Err(());
+    };
+    match got {
+        Ok(ev) => {
+            let json = ev.raw().deserialize_as::<Value>().unwrap_or_default();
+            Ok(tinhat_widgets::threads::thread_of(json.get("content").unwrap_or(&Value::Null)))
+        }
+        Err(e) => {
+            eprintln!("[notify] the notified event couldn't be looked up: {e}");
+            Err(())
         }
     }
 }
@@ -386,6 +462,28 @@ mod tests {
         assert_eq!(w["placeholder"], WORD_PLACEHOLDER);
         assert_eq!(w["failedTitle"], WORD_FAILED_TITLE);
         assert_eq!(w["failedTextMax"], FAILED_TEXT_MAX as u64);
+    }
+
+    /// 1-5: a click on a toast goes to the thread of THAT toast's event — even after a newer message of another thread
+    /// became the room's newest notification (L2's follow-up window).
+    #[test]
+    fn a_toast_click_opens_its_own_thread() {
+        // the toast's own event decides; the room's newest notification (another thread's, say) never does
+        crate::notify::note_thread_set_for_tests("!r:x", "$threadB"); // the room's newest notification: thread B
+        assert_eq!(click_open_action("!r:x", &Ok("$threadA".into())), "thread:!r:x\t$threadA");
+        assert_eq!(click_open_action("!r:x", &Ok(String::new())), "open:!r:x", "a main-timeline message (or no event): the room");
+        assert_eq!(click_open_action("!r:x", &Err(())), "open:!r:x", "a failed lookup: the room, not another thread");
+    }
+
+    #[test]
+    fn thread_reply_vectors() {
+        let v = vectors();
+        let cases = v["threadReply"].as_array().unwrap();
+        assert_eq!(cases.len(), 8);
+        for c in cases {
+            let got = thread_reply_content(c["text"].as_str().unwrap(), c["root"].as_str().unwrap(), c["event"].as_str().unwrap()).unwrap_or(Value::Null);
+            assert_eq!(got, c["want"], "{}", c["note"]);
+        }
     }
 
     #[test]

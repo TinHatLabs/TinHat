@@ -994,7 +994,12 @@ async fn do_invite(space_id: &str, mxid: &str) -> Result<String, String> {
             _ => {}
         }
     }
-    c.space.invite_user_by_id(&uid).await.map_err(|e| format!("Couldn't invite {}: {e}", uid.localpart()))?;
+    c.space.invite_user_by_id(&uid).await.map_err(|e| {
+        // plain words from the server's answer (2026-11-13, A02.0)
+        let (status, errcode, message) = crate::people::error_parts(&e);
+        let own = c.space.client().user_id().map(|u| u.server_name().to_string()).unwrap_or_default();
+        crate::people::invite_failure(status, &errcode, &message, uid.as_str(), &own, false).1
+    })?;
     settle_membership(&c.space, &uid, &[MembershipState::Invite, MembershipState::Join]).await;
     Ok(format!("Invited {}", c.display(uid.as_str()).await))
 }

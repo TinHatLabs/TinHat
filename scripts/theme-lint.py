@@ -47,7 +47,7 @@ MIGRATED = [
     "CalendarCard.qml", "ChatBubble.qml", "ConversationView.qml", "VoiceRecorderRow.qml", "EmojiPicker.qml", "FloatingChats.qml", "Lightbox.qml",
     "LinkPreviewCard.qml", "ThEmbedCard.qml", "RoomHeaderBar.qml",
     # desktop C2 — settings
-    "BugReportDialog.qml", "RightPanel.qml", "RoleBadge.qml", "SpaceSettingsWindow.qml", "VerifyDeviceDialog.qml",
+    "BugReportDialog.qml", "RightPanel.qml", "ThreadsPane.qml", "RoleBadge.qml", "SpaceSettingsWindow.qml", "VerifyDeviceDialog.qml",
     # desktop C2 — media
     "CalendarWindow.qml", "GameNightAdmin.qml", "GameReelPanel.qml", "GameReelWindow.qml", "IconGalleryWindow.qml",
     "MemoriesWindow.qml", "MyGamesEditor.qml", "ReelButton.qml", "ReelCover.qml", "TierList.qml", "WatchPartyWindow.qml",

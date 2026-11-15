@@ -1,0 +1,212 @@
+{
+ "_doc": "The message notification's preview text (Messages-style, sun-winnotify 2026-11-14): the body trimmed, every run of JavaScript \\s whitespace folded to one space, cut to `max` code points + an ellipsis when longer, then 'Name: ' in a group room (sender set) and nothing in a DM (sender null). `want` null = no preview (the generic wording). Byte copy in both repos: desktop crates/app/src/testvectors/toast-preview.json, web src/features/settings/testvectors/toast-preview.json. `notes` (fix1216 1-10): the whole toast line: the cut text with the thread wording, the sender's display name in a group room, or the id's localpart when the member isn't cached or has an empty name; nothing in a DM.",
+ "max": 160,
+ "cases": [
+  {
+   "name": "group: the sender's name first",
+   "body": "hi",
+   "sender": "Ana",
+   "want": "Ana: hi"
+  },
+  {
+   "name": "dm: the text alone",
+   "body": "hi",
+   "sender": null,
+   "want": "hi"
+  },
+  {
+   "name": "a line break folds to a space",
+   "body": "one\ntwo",
+   "sender": "Ana",
+   "want": "Ana: one two"
+  },
+  {
+   "name": "runs of spaces, tabs and CRLF fold; ends trimmed",
+   "body": "  a \t\r\n  b  ",
+   "sender": null,
+   "want": "a b"
+  },
+  {
+   "name": "JavaScript \\s spaces fold (NBSP, em space, ideographic space, BOM)",
+   "body": "a\u00a0\u2003\u3000b\ufeffc",
+   "sender": null,
+   "want": "a b c"
+  },
+  {
+   "name": "line/paragraph separators fold",
+   "body": "a\u2028b\u2029c",
+   "sender": null,
+   "want": "a b c"
+  },
+  {
+   "name": "not JavaScript whitespace stays (NEL, zero-width space)",
+   "body": "a\u0085b\u200bc",
+   "sender": null,
+   "want": "a\u0085b\u200bc"
+  },
+  {
+   "name": "NEL at the edges stays (JavaScript trim keeps it)",
+   "body": "\u0085hi\u0085",
+   "sender": null,
+   "want": "\u0085hi\u0085"
+  },
+  {
+   "name": "a NEL alone is a preview",
+   "body": " \u0085 ",
+   "sender": "Ana",
+   "want": "Ana: \u0085"
+  },
+  {
+   "name": "exactly 160 code points stay",
+   "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "sender": null,
+   "want": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+   "name": "161 code points: the first 160 + an ellipsis",
+   "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "sender": null,
+   "want": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u2026"
+  },
+  {
+   "name": "an astral character counts once",
+   "body": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00",
+   "sender": null,
+   "want": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\u2026"
+  },
+  {
+   "name": "the cut comes after the fold",
+   "body": "a                                                                                                                                                                                                                                                                                                            b",
+   "sender": null,
+   "want": "a b"
+  },
+  {
+   "name": "the name is not counted in the cut",
+   "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "sender": "Ana",
+   "want": "Ana: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u2026"
+  },
+  {
+   "name": "only whitespace: no preview",
+   "body": " \n\t\u00a0 ",
+   "sender": "Ana",
+   "want": null
+  },
+  {
+   "name": "hostile text stays literal",
+   "body": "<b>x</b> & <a href=\"https://example.invalid/\">y</a>",
+   "sender": "Sam",
+   "want": "Sam: <b>x</b> & <a href=\"https://example.invalid/\">y</a>"
+  }
+ ],
+ "notes": [
+  {
+   "name": "group, cached member: the display name",
+   "display": "Ana",
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": false,
+   "body": "hi",
+   "want": "Ana: hi"
+  },
+  {
+   "name": "group, member not cached: the localpart (1-10)",
+   "display": null,
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": false,
+   "body": "hi",
+   "want": "ana: hi"
+  },
+  {
+   "name": "group thread, member not cached: the localpart, not 'In thread' (1-10)",
+   "display": null,
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": true,
+   "body": "hi",
+   "want": "ana (in thread): hi"
+  },
+  {
+   "name": "group thread, empty display name: the localpart",
+   "display": "",
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": true,
+   "body": "hi",
+   "want": "ana (in thread): hi"
+  },
+  {
+   "name": "group thread, cached member",
+   "display": "Ana",
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": true,
+   "body": "hi",
+   "want": "Ana (in thread): hi"
+  },
+  {
+   "name": "localpart of an id with a port",
+   "display": null,
+   "sender": "@bo:example.org:8448",
+   "dm": false,
+   "thread": false,
+   "body": "hi",
+   "want": "bo: hi"
+  },
+  {
+   "name": "dm: no name",
+   "display": "Ana",
+   "sender": "@ana:example.org",
+   "dm": true,
+   "thread": false,
+   "body": "hi",
+   "want": "hi"
+  },
+  {
+   "name": "dm thread",
+   "display": null,
+   "sender": "@ana:example.org",
+   "dm": true,
+   "thread": true,
+   "body": "hi",
+   "want": "In thread: hi"
+  },
+  {
+   "name": "whitespace-only body: no preview",
+   "display": "Ana",
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": true,
+   "body": " \n ",
+   "want": null
+  },
+  {
+   "name": "the cut before the thread wording",
+   "display": null,
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": true,
+   "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "want": "ana (in thread): xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u2026"
+  },
+  {
+   "name": "group, no sender at all: the nameless form",
+   "display": null,
+   "sender": "",
+   "dm": false,
+   "thread": false,
+   "body": "hi",
+   "want": "hi"
+  },
+  {
+   "name": "group thread, no sender at all: the nameless thread form",
+   "display": "",
+   "sender": "",
+   "dm": false,
+   "thread": true,
+   "body": "hi",
+   "want": "In thread: hi"
+  }
+ ]
+}

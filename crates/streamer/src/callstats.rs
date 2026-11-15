@@ -30,6 +30,7 @@ use livekit::track::{RemoteTrack, TrackSource};
 use livekit::webrtc::stats::RtcStats;
 use serde_json::{json, Value};
 use tinhat_widgets::quality::{self, cq_band, rx_numbers, worst_band, Band, Kind, RxSample, TrackNumbers};
+use tinhat_widgets::recvstats::{self, RecvCounters};
 use tinhat_widgets::rxq::{self, RxqGate};
 
 pub use tinhat_widgets::rxq::RXQ_TOPIC;
@@ -79,6 +80,8 @@ struct Tr {
     /// the raw sample at our last tinhat.rxq report: each report's numbers are measured from THIS baseline, every
     /// RXQ_SEND_MS, independent of the display samples and the focus (WIDGETS.md §10.2 v1.3; the web's rxqPrev)
     rep: Option<RxSample>,
+    /// this video track's counters at its last `[recv-stats]` line, and when (monotonic ms)
+    logged: Option<(RecvCounters, f64)>,
 }
 
 #[derive(Default)]
@@ -110,6 +113,8 @@ struct St {
     seq: u64,
     /// Period of the last sample, ms.
     period: u64,
+    /// When the last round of `[recv-stats]` lines went out (monotonic ms).
+    recv_log_at: Option<f64>,
     snapshot: String,
 }
 
@@ -224,7 +229,7 @@ pub(crate) fn track_added(identity: &str, sid: &str, source: TrackSource, track:
     }
     s.present.insert(identity.to_string());
     peer(&mut s, identity);
-    s.tracks.insert(sid.to_string(), Tr { who: identity.to_string(), k, track, prev: None, cur: None, rep: None });
+    s.tracks.insert(sid.to_string(), Tr { who: identity.to_string(), k, track, prev: None, cur: None, rep: None, logged: None });
 }
 
 pub(crate) fn track_removed(sid: &str) {
@@ -322,6 +327,33 @@ pub(crate) fn read_sample(k: Kind, stats: &[RtcStats]) -> Option<RxSample> {
     Some(sample)
 }
 
+/// One video receiver's counters from its `inbound-rtp`.
+fn read_counters(stats: &[RtcStats]) -> Option<RecvCounters> {
+    stats.iter().find_map(|s| match s {
+        RtcStats::InboundRtp(i) => Some(RecvCounters {
+            pli: Some(i.inbound.pli_count.into()),
+            nack: Some(i.inbound.nack_count.into()),
+            fir: Some(i.inbound.fir_count.into()),
+            decoded: Some(i.inbound.frames_decoded.into()),
+            dropped: Some(i.inbound.frames_dropped.into()),
+            kf: Some(i.inbound.key_frames_decoded.into()),
+            w: Some(i.inbound.frame_width.into()),
+            h: Some(i.inbound.frame_height.into()),
+            decoder: Some(i.inbound.decoder_implementation.clone()),
+        }),
+        _ => None,
+    })
+}
+
+/// The log's name for a video source; None = audio, which gets no `[recv-stats]` line.
+fn recv_src(k: Kind) -> Option<&'static str> {
+    match k {
+        Kind::V => Some("v"),
+        Kind::S => Some("s"),
+        Kind::A => None,
+    }
+}
+
 /// Start the sampler for this call (called once per session by call.rs, never for the recorder).
 pub(crate) fn spawn(lp: livekit::participant::LocalParticipant) {
     let my = SESSION.load(Ordering::SeqCst);
@@ -402,9 +434,21 @@ async fn sample_once(my: u64, period: u64) {
     if SESSION.load(Ordering::SeqCst) != my || !s.on {
         return;
     }
+    let recv_log = recvstats::log_due(s.recv_log_at, now);
+    if recv_log {
+        s.recv_log_at = Some(now);
+    }
+    let mut recv_lines = Vec::new();
     for (sid, r) in reads {
         let Ok(Ok(stats)) = r else { continue };
         let Some(t) = s.tracks.get_mut(&sid) else { continue };
+        if let Some(src) = recv_src(t.k).filter(|_| recv_log) {
+            if let Some(c) = read_counters(&stats) {
+                let dt = t.logged.as_ref().map(|(_, at)| ((now - at) / 1000.0).round() as u64);
+                recv_lines.push(recvstats::format_line(&t.who, src, &sid, &c, t.logged.as_ref().map(|(p, _)| p), dt));
+                t.logged = Some((c, now));
+            }
+        }
         let Some(cur) = read_sample(t.k, &stats) else { continue };
         if let Some(n) = rx_numbers(t.prev.as_ref(), &cur) {
             t.cur = Some(n);
@@ -428,6 +472,10 @@ async fn sample_once(my: u64, period: u64) {
     s.seq += 1;
     s.period = period;
     s.snapshot = build_snapshot(&s, now);
+    drop(s);
+    for line in recv_lines {
+        eprintln!("{line}");
+    }
 }
 
 /// What we receive from each person (their tracks' latest numbers, a/v/s order).
@@ -569,6 +617,40 @@ fn build_snapshot(s: &St, now: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn read_counters_maps_every_field() {
+        let mut i = livekit::webrtc::stats::InboundRtpStats::default();
+        i.inbound.pli_count = 1;
+        i.inbound.nack_count = 2;
+        i.inbound.fir_count = 3;
+        i.inbound.frames_decoded = 4;
+        i.inbound.frames_dropped = 5;
+        i.inbound.key_frames_decoded = 6;
+        i.inbound.frame_width = 7;
+        i.inbound.frame_height = 8;
+        i.inbound.decoder_implementation = "d".to_string();
+        let want = RecvCounters {
+            pli: Some(1),
+            nack: Some(2),
+            fir: Some(3),
+            decoded: Some(4),
+            dropped: Some(5),
+            kf: Some(6),
+            w: Some(7),
+            h: Some(8),
+            decoder: Some("d".to_string()),
+        };
+        assert_eq!(read_counters(&[RtcStats::InboundRtp(i)]), Some(want));
+        assert_eq!(read_counters(&[]), None);
+    }
+
+    #[test]
+    fn only_video_gets_a_recv_stats_line() {
+        assert_eq!(recv_src(Kind::V), Some("v"));
+        assert_eq!(recv_src(Kind::S), Some("s"));
+        assert_eq!(recv_src(Kind::A), None);
+    }
 
     #[test]
     fn reports_only_from_the_call_and_at_most_one_per_two_seconds() {

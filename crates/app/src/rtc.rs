@@ -757,8 +757,8 @@ pub async fn join_rtc_session(room: &Room, service_url: &str) -> matrix_sdk::Res
             "version": env!("CARGO_PKG_VERSION"),
             // 0.8.7 "never record me": the Memories recorder skips every track of a
             // member whose LIVE membership carries this flag, and drops them from
-            // the mixed audio. Advertised on every (re)publish, so a mid-call flip
-            // lands at the next membership refresh.
+            // the mixed audio. Advertised on every (re)publish; a mid-call flip
+            // re-publishes at once (settings.rs apply_record_optout, U9).
             "record_optout": crate::settings::record_optout(),
             // Pad (docs/PAD.md): "pad1" = my other verified devices may drive this call from their Pad (Settings →
             // Calls → Pad, default on). Nothing else reads `caps` today; older clients ignore it.

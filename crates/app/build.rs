@@ -104,6 +104,51 @@ fn env_selftests_cfg() {
     }
 }
 
+/// The Linux .bin (12.1.16): mpvqt (the watch-party item, MpvAbstractItem) is linked STATICALLY from the prefix
+/// `TINHAT_MPVQT_STATIC` names (built by scripts/mpvqt-static.sh), because Arch's mpvqt 1.2.1 renamed the shared
+/// library (libMpvQt.so.3 -> .so.4) and a .bin that needs the old name doesn't start on an updated system. A RELEASE
+/// outside the Flatpak (`TINHAT_RELEASE_BUILD=1`) stops here without it, so a .bin can't quietly link the system's
+/// libMpvQt.so again. The Flatpak builds its own libMpvQt.so into /app and ships it, so it ALWAYS keeps the shared
+/// library (a stray TINHAT_MPVQT_STATIC there is ignored with a warning).
+/// Returns the prefix to link from, or None = the shared library (lab builds, the Flatpak).
+#[cfg(target_os = "linux")]
+fn mpvqt_static_prefix() -> Option<std::path::PathBuf> {
+    println!("cargo:rerun-if-env-changed=TINHAT_MPVQT_STATIC");
+    println!("cargo:rerun-if-env-changed=TINHAT_RELEASE_BUILD");
+    println!("cargo:rerun-if-env-changed=FLATPAK_ID");
+    let release = std::env::var("TINHAT_RELEASE_BUILD").map(|v| v.trim() == "1").unwrap_or(false);
+    // flatpak-builder builds inside a Flatpak sandbox (it has /.flatpak-info) with FLATPAK_ID set
+    let flatpak = std::env::var("FLATPAK_ID").map(|v| !v.trim().is_empty()).unwrap_or(false)
+        || std::path::Path::new("/.flatpak-info").exists();
+    let prefix = std::env::var_os("TINHAT_MPVQT_STATIC").filter(|v| !v.is_empty()).map(std::path::PathBuf::from);
+    if flatpak {
+        if let Some(p) = &prefix {
+            println!("cargo:warning=TINHAT_MPVQT_STATIC={} ignored in a Flatpak build: the Flatpak ships its own libMpvQt.so", p.display());
+        }
+        return None;
+    }
+    match prefix {
+        Some(p) => {
+            let lib = p.join("lib").join("libMpvQt.a");
+            let header = p.join("include").join("MpvQt").join("MpvAbstractItem");
+            if !lib.is_file() || !header.is_file() {
+                panic!(
+                    "TINHAT_MPVQT_STATIC={} has no lib/libMpvQt.a + include/MpvQt (run scripts/mpvqt-static.sh)",
+                    p.display()
+                );
+            }
+            println!("cargo:rerun-if-changed={}", lib.display());
+            Some(p)
+        }
+        None if release && !flatpak => panic!(
+            "TINHAT_RELEASE_BUILD=1 for the Linux .bin without TINHAT_MPVQT_STATIC: the binary would need the system's \
+             libMpvQt.so, whose name changes between mpvqt versions (12.1.13 doesn't start on an updated Arch). \
+             Run scripts/mpvqt-static.sh and export the TINHAT_MPVQT_STATIC line it prints"
+        ),
+        None => None,
+    }
+}
+
 fn main() {
     check_update_trust_config();
     check_call_host_lab();
@@ -128,6 +173,7 @@ fn main() {
     // 0.8.35: every QML edit must reach the binary — without this the script only re-ran on a
     // version bump or a C++ bridge change, and QML edited after the bump was silently stale.
     println!("cargo:rerun-if-changed=qml");
+    println!("cargo:rerun-if-changed=src/ambience_bridge.h");
 
     // MSVC assumes the *system ANSI codepage* for narrow string literals, but
     // qmlcachegen emits our QML strings as narrow UTF-8 inside QStringLiteral (which
@@ -143,6 +189,7 @@ fn main() {
                 "qml/Main.qml",
                 "qml/AppCore.qml",
                 "qml/GameReelPanel.qml",
+                "qml/GameArtLayer.qml", // sun-gamebg: "Match the game" art in the chat background
                 "qml/GameReelWindow.qml",
                 "qml/ReelCover.qml",
                 "qml/ReelButton.qml",
@@ -224,6 +271,7 @@ fn main() {
                 "qml/ButtonsSettings.qml",
                 "qml/ShortcutsPane.qml",
                 "qml/RightPanel.qml",
+                "qml/ThreadsPane.qml", // threads (docs/THREADS.md): the right panel's Threads tab
                 "qml/ThEmbedCard.qml",
                 "qml/LinkPreviewCard.qml",
                 "qml/ThDock.qml",
@@ -238,6 +286,9 @@ fn main() {
                 "qml/FloatingChats.qml",
                 "qml/PipWindow.qml",
                 "qml/StreamPopover.qml",
+                "qml/ScreenFit.qml", // A33.3 / A33.4: remembered window spots stay on a connected screen
+                "qml/ShareQuick.qml", // 12.1.15: the share picker's "Custom…" panel (the rules; shared vectors with the web)
+                "qml/VolumePreview.qml", // 12.1.16 (D07.1): the Sound volume slider's preview (shared vectors with the web)
                 "qml/Lightbox.qml",
                 "qml/OverlayWindow.qml",
                 "qml/CamGlTest.qml",
@@ -258,6 +309,7 @@ fn main() {
                 "qml/ThCheckBox.qml",
                 "qml/ThSwitch.qml", // fix/basic-switch-on: every switch — the checked track reads toggle.track.checked (Basic drew palette.dark)
                 "qml/ThSlider.qml", // fix/sliders-volume: every slider — fill / groove / handle read slider.* (Basic drew the fill in palette.dark)
+                "qml/KeyMenu.qml", // a11y round 2 (m11): a Menu that takes the keyboard when the keyboard opened it (focus back to the button)
                 "qml/ThMenu.qml", // fix/sliders-volume: a Menu as wide as its widest row (Basic's is a fixed 200 px) — the menus with slider rows
                 "qml/ThRadioButton.qml",
                 "qml/ThButton.qml",
@@ -271,6 +323,11 @@ fn main() {
                 "qml/SettingsCard.qml",   //   a card of rows
                 "qml/SettingsRow.qml",    //   a row: label, description, control; the search anchor + flash
                 "qml/SettingsRowGroup.qml", // rows from another component in the same card
+                "qml/AmbienceLayer.qml",  //  chat backgrounds + particle effects (docs/AMBIENCE.md)
+                "qml/ParticlesMenu.qml", // round 4: the ☰ Particles submenu
+                "qml/BackgroundSheet.qml", // room menu → Chat background…
+                "qml/AmbienceGallery.qml", // TINHAT_AMBIENCE_GALLERY: captures + performance runs
+                "qml/GameArtGallery.qml", // TINHAT_GAMEBG_GALLERY: "Match the game" review captures (sun-gamebg)
                 "qml/LevelMeter.qml",     //   the house level meter (was Main.qml's inline component)
                 "qml/RoleBadge.qml", // RBAC: the one role chip (members list, RightPanel)
                 "qml/SpaceInviteCard.qml", // RBAC: invited-space card in the room panel (§7.3)
@@ -315,6 +372,7 @@ fn main() {
                 "qml/WidgetAnswerMark.qml", // widgets W2: ✓ ? ✕ (moved out of UpNextWidget)
                 // islands (modular UI, ISLANDS-ARCH): the islands, extracted from Main.qml (C3), then placed by the dock host
                 "qml/HeaderIsland.qml",
+                "qml/RailFocus.qml", // a11y round 2 (M2): a rail slot as a keyboard + screen-reader button
                 "qml/SpaceBubble.qml", // islands C3: the rail's bubble (was ThSpaceRail's inline component)
                 "qml/NavIsland.qml",
                 "qml/DmsIsland.qml",
@@ -345,6 +403,8 @@ fn main() {
             .qml_file(QmlFile::from("qml/InviteLink.qml").singleton(true))
             // security review 2026-10-26: the one door every link / attachment the app hands to the OS goes through
             .qml_file(QmlFile::from("qml/LinkGate.qml").singleton(true))
+            // QOL A00.1: one player at a time (voice notes, audio, video; a recording pauses them)
+            .qml_file(QmlFile::from("qml/NowPlaying.qml").singleton(true))
             // 11.0 step 5: the theme editor's pure helpers (targets + colour maths; the web's targets.ts + colour.ts)
             .qml_file(QmlFile::from("qml/ThemeEditorLib.qml").singleton(true)),
         )
@@ -357,6 +417,7 @@ fn main() {
         .file("src/diagnostics.rs") // DiagnosticsController (opt-in redacted bug report)
         .file("src/update.rs") // UpdateController (in-app / startup update check + self-replace)
         .file("src/activity.rs") // GameActivityController ("what we're playing" per room)
+        .file("src/gamebg_ctl.rs") // GameArtController ("Match the game" chat backgrounds, sun-gamebg)
         .file("src/audio_prefs.rs") // AudioPrefsController (per-(category,user) call volume/mute, #5)
         .file("src/status_ctl.rs") // UserStatusController (per-person "looking to play" status)
         .file("src/gif.rs") // GifController (in-chat Giphy picker via the server's Tin Hat API)
@@ -389,6 +450,9 @@ fn main() {
         .file("src/memories_ctl.rs") // MemoriesController (widgets W2: the Memories widget's data, WIDGETS.md §21)
         .file("src/gamenight_ctl.rs") // GameNightController (widgets W2: Game night's rules + my Reel credit, WIDGETS.md §23)
         .file("src/lowgpu_ctl.rs") // LowGpuController (step 3: the low-GPU contract's rules for QML, GPU.md)
+        .file("src/ambience_ctl.rs") // AmbienceController (chat backgrounds + particle effects' rules, docs/AMBIENCE.md)
+        .file("src/ambience_item.rs") // AmbienceItem (the particle layer: one scene-graph node, ambience_bridge.h)
+        .file("src/callannounce_ctl.rs") // CallAnnounceController (a11y round 2: what a screen reader hears about calls)
         .file("src/layout_ctl.rs") // LayoutController (islands C1: the layout engine, JSON in / JSON out; no UI yet)
         .file("src/actions_ctl.rs") // ActionsController (11.0 step 3: the actions engine — rows, the palette, JSON in / out)
         .file("src/pad_ctl.rs") // PadController (Pad: the phone as a remote for my call — docs/PAD.md)
@@ -396,6 +460,8 @@ fn main() {
             if cc.get_compiler().is_like_msvc() {
                 cc.flag("/utf-8");
             }
+            // ambience_item.rs includes its scene-graph half, src/ambience_bridge.h
+            cc.include(concat!(env!("CARGO_MANIFEST_DIR"), "/src"));
         })
         .build();
     }
@@ -413,6 +479,7 @@ fn main() {
         .file("src/theme_bridge.cpp") // 11.0 step 5: the theme editor review harness's window grab
         .file("src/ui_scale_bridge.cpp") // 2026-10-31 App size: Qt's scale factor at run time (docs/UI-ZOOM.md)
         .file("src/ptt_bridge.cpp") // push to talk's hold key, whatever has the keyboard
+        .file("src/ambience_image.cpp") // a chat background's own image: re-encoded as JPEG (docs/AMBIENCE.md)
         .std("c++17")
         .flag_if_supported("-fPIC"); // no-op on MSVC
     // Same MSVC narrow-literal hazard as the QML units above: keep the shim's
@@ -423,6 +490,15 @@ fn main() {
 
     #[cfg(target_os = "linux")]
     {
+        // Static mpvqt (the Linux .bin, 12.1.16): the prefix's headers go on the path BEFORE every other include dir,
+        // so <MpvQt/...> and <mpvqt_version.h> always match the linked libMpvQt.a (the system's /usr/include/MpvQt may
+        // be another mpvqt version); MPVQT_STATIC_DEFINE = the static form of its export header.
+        let mpvqt_static = mpvqt_static_prefix();
+        if let Some(p) = &mpvqt_static {
+            build.include(p.join("include"));
+            build.include(p.join("include").join("MpvQt"));
+            build.define("MPVQT_STATIC_DEFINE", None);
+        }
         // Qt6WebEngineQuick: include paths for the init shim + (via pkg-config metadata) the
         // link directives for libQt6WebEngineQuick / libQt6WebEngineCore. `mpv` (the watch-party
         // player surface's libmpv) emits its own -lmpv link directive here too.
@@ -476,15 +552,27 @@ fn main() {
         // MpvQt dir directly on the path. MpvAbstractItem is a QQuickFramebufferObject — Qt6Quick
         // (probed above) covers it.
         // /app/... = the Flatpak prefix (10.0): mpvqt + libmpv are built into the app there.
-        for inc in ["/usr/include", "/usr/include/MpvQt", "/app/include", "/app/include/MpvQt"] {
-            build.include(inc);
+        // Static mpvqt: its headers are already first on the path (top of this block); no system MpvQt dir then.
+        if mpvqt_static.is_none() {
+            for inc in ["/usr/include", "/usr/include/MpvQt", "/app/include", "/app/include/MpvQt"] {
+                build.include(inc);
+            }
         }
         build.compile("tinhatvideobridge");
         println!("cargo:rustc-link-lib=KF6ColorScheme");
         println!("cargo:rustc-link-lib=KF6ConfigCore");
         println!("cargo:rustc-link-lib=KF6ConfigGui");
         // mpvqt: link libMpvQt.so (no pkg-config). pkg-config "mpv" above already emitted -lmpv.
-        println!("cargo:rustc-link-lib=MpvQt");
+        // Static (the Linux .bin): libMpvQt.a from the prefix, plus what its objects need beyond the app's own
+        // libraries (QOpenGLFramebufferObject = Qt6OpenGL); libmpv.so.2 stays a shared dependency (-lmpv above).
+        if let Some(p) = &mpvqt_static {
+            println!("cargo:rustc-link-search=native={}", p.join("lib").display());
+            println!("cargo:rustc-link-lib=static:+verbatim=libMpvQt.a");
+            println!("cargo:rustc-link-lib=dylib=Qt6OpenGL");
+            println!("cargo:warning=mpvqt linked statically from {}", p.display());
+        } else {
+            println!("cargo:rustc-link-lib=MpvQt");
+        }
         println!("cargo:rustc-link-search=native=/usr/lib");
     }
 

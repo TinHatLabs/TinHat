@@ -1,7 +1,8 @@
 // StreamPopover.qml — the stream popover (0.8.22).
 //
 // ONE surface for "share my screen": what to share (source), how it looks (three
-// quality presets + custom), what people hear (an APP's audio — per-application capture —
+// quality presets + "Custom…": resolution, frame rate and bandwidth right here since 12.1.15,
+// the rest behind "More settings…"), what people hear (an APP's audio — per-application capture —
 // or everything, or nothing), and whether the stream is "for the recording only" (peers
 // hide + mute it until they tune in; the Memories recorder still captures it). While
 // live it shows a small real-time preview of exactly what is being sent, so you can tell
@@ -29,6 +30,11 @@ Controls.Popup {
     x: parent ? Math.round((parent.width - width) / 2) : 0
     // Above the call bar (which sits ~110 px up from the bottom of the window).
     y: parent ? Math.max(16, parent.height - height - 120) : 0
+    // A06.1 (12.1.16): never taller than the room above the call bar (in a very short window: the window less 16 px
+    // top and bottom); the middle scrolls (shareScroll)
+    readonly property real maxHeight: !parent ? implicitHeight
+        : (parent.height - 136 >= 280 ? parent.height - 136 : Math.max(120, parent.height - 32))
+    height: Math.min(implicitHeight, maxHeight)
     padding: 18
 
     readonly property bool live: app.mCallSharing
@@ -70,6 +76,15 @@ Controls.Popup {
                 return i
         return -1
     }
+    // 12.1.15: "Custom…" opens a small panel right here instead of the whole Settings window (ShareQuick.qml holds
+    // the rules; Tin Hat Web has the same panel)
+    property bool customOpen: false
+    readonly property var quality4: [app._sqW(), app._sqH(), app._sqFps(), app._sqKbps()]
+    readonly property ShareQuick quick: ShareQuick { resList: app.shareResList; bwList: app.shareBwList }
+    function applyQuick(what, i) {
+        var o = quick.pick(quality4, what, i)
+        ctl.applyShareQuality(o[0], o[1], o[2], o[3])
+    }
     readonly property string qualitySummary: {
         var q = String(app.mShareQuality || "").split(" ")
         if (q.length < 4) return ""
@@ -96,6 +111,7 @@ Controls.Popup {
                 if (sources[i].kind === "monitor") { chosenKind = "monitor"; chosenHandle = String(sources[i].handle); break }
     }
     onOpened: {
+        customOpen = false
         syncFromApp()
         ctl.refreshAudioSources()
         if (live && !previewPaused) ctl.pipStart("vid_selfshare")
@@ -127,6 +143,14 @@ Controls.Popup {
         if (!inCall) return
         if (id.length === 0) { if (app.mMusicPlaying) ctl.stopMusic() }
         else if (app.mMusicPlaying) ctl.startMusicSource(id)
+    }
+    // A06.1: bring an item inside the scrolling middle into view (keyboard focus walking past the fold)
+    function ensureVisible(item) {
+        if (!scroll || !item) return
+        var p = item.mapToItem(scroll.contentItem, 0, 0)
+        if (p.y < scroll.contentY) scroll.contentY = Math.max(0, p.y - 6)
+        else if (p.y + item.height > scroll.contentY + scroll.height)
+            scroll.contentY = Math.min(Math.max(0, scroll.contentHeight - scroll.height), p.y + item.height - scroll.height + 6)
     }
     function startShare() {
         if (!inCall) return
@@ -173,6 +197,27 @@ Controls.Popup {
         border.color: checked ? Th.callbarPillBorderSelected : Th.callbarPillBorder
         HoverHandler { id: pillHover }
         TapHandler { enabled: pill.enabledPill; onTapped: pill.clicked() }
+        // A06.5 (12.1.16): the pills work from the keyboard too — in the Tab order, Space / Enter pick, a focus ring,
+        // a button with a checked state for screen readers; a pill that gets focus scrolls into view (A06.1)
+        activeFocusOnTab: enabledPill
+        Accessible.role: Accessible.Button
+        Accessible.name: sub.length > 0 ? text + ", " + sub : text
+        Accessible.checkable: true
+        Accessible.checked: checked
+        Accessible.onPressAction: if (pill.enabledPill) pill.clicked()
+        Keys.onSpacePressed: (event) => { if (pill.enabledPill) pill.clicked(); event.accepted = true }
+        Keys.onReturnPressed: (event) => { if (pill.enabledPill) pill.clicked(); event.accepted = true }
+        Keys.onEnterPressed: (event) => { if (pill.enabledPill) pill.clicked(); event.accepted = true }
+        onActiveFocusChanged: if (activeFocus) pop.ensureVisible(pill)
+        Rectangle {
+            visible: pill.activeFocus
+            anchors.fill: parent
+            anchors.margins: -3
+            radius: pill.radius + 3
+            color: "transparent"
+            border.width: 2
+            border.color: Th.borderFocus
+        }
         Column {
             id: pillCol
             anchors.centerIn: parent
@@ -231,222 +276,299 @@ Controls.Popup {
             wrapMode: Text.WordWrap
         }
 
-        // ---- live preview ----
-        Rectangle {
-            visible: pop.live
+        // A06.1 (12.1.16): everything between the header and the action row scrolls, so the popover fits any window
+        // (the Custom… panel, a long app list and "More…" made it taller than a laptop screen) and Stop sharing /
+        // Start sharing / Done are always on screen.
+        Flickable {
+            id: scroll
+            objectName: "shareScroll"
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(220, Math.round(width * 9 / 16))
-            radius: 10
-            color: Th.callbarPreviewBg
+            Layout.fillHeight: true
+            Layout.preferredHeight: body.implicitHeight
+            Layout.minimumHeight: Math.min(body.implicitHeight, 60)
+            contentWidth: width
+            contentHeight: body.implicitHeight
             clip: true
-            // 0.8.30: rounded corners over the preview surface (see CornerMask.qml).
-            CornerMask { radius: 10; color: Th.callbarPopoverBg; z: 15 }
-            PipVideoItem {
-                anchors.fill: parent
-                tileId: "vid_selfshare"
-                Component.onCompleted: attachViewer()
-                Component.onDestruction: detachViewer()
-            }
+            interactive: contentHeight > height + 1
+            boundsBehavior: Flickable.StopAtBounds
+            Controls.ScrollBar.vertical: FoxScrollBar { app: pop.app }
+            ColumnLayout {
+                id: body
+                width: scroll.width
+                spacing: 10
+
+            // ---- live preview ----
             Rectangle {
-                anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                height: 24
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Th.callbarPreviewCaptionBg }
-                }
-                Controls.Label {
-                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                    anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
-                    text: "What you're sending · " + pop.qualitySummary + " · " + pop.audioSummary
-                    color: Th.callbarPreviewCaptionFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
-                    elide: Text.ElideRight
-                    width: parent.width - 12
-                }
-            }
-        }
-
-        // ---- source ----
-        SectionTitle { text: "What to share" }
-        // Linux: the desktop portal owns the picker (screens, windows, permissions).
-        Controls.Button {
-            visible: pop.sources.length === 0
-            Layout.fillWidth: true
-            enabled: pop.inCall
-            icon.name: "monitor-symbolic"
-            text: pop.live ? "Change what you're sharing…" : "Choose a screen or window…"
-            onClicked: { ctl.shareScreen(); if (!pop.live) pop.close() }
-        }
-        // Windows: our own list (monitors first, then windows).
-        Rectangle {
-            visible: pop.sources.length > 0
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(170, srcList.contentHeight + 4)
-            radius: 8
-            color: Th.callbarSourceListBg
-            border.width: 1; border.color: Th.callbarSourceListBorder
-            ListView {
-                id: srcList
-                anchors.fill: parent
-                anchors.margins: 2
+                visible: pop.live
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(220, Math.round(width * 9 / 16))
+                radius: 10
+                color: Th.callbarPreviewBg
                 clip: true
-                model: pop.sources
-                spacing: 1
-                interactive: contentHeight > height
-                Controls.ScrollBar.vertical: FoxScrollBar { app: pop.app }   // 10.1 (TH-DS-05): the house scrollbar everywhere
-                delegate: Rectangle {
-                    required property var modelData
-                    readonly property bool chosen: pop.chosenHandle === String(modelData.handle)
-                    width: ListView.view.width
-                    height: 30
-                    radius: 6
-                    color: chosen ? Th.callbarSourceListItemBgSelected
-                         : (srcHover.hovered ? Th.callbarSourceListItemBgHover : "transparent")
-                    HoverHandler { id: srcHover }
-                    TapHandler {
-                        onTapped: {
-                            pop.chosenKind = modelData.kind; pop.chosenHandle = String(modelData.handle)
-                            if (pop.live) ctl.shareScreenSource(modelData.kind, String(modelData.handle))
-                        }
+                // 0.8.30: rounded corners over the preview surface (see CornerMask.qml).
+                CornerMask { radius: 10; color: Th.callbarPopoverBg; z: 15 }
+                PipVideoItem {
+                    anchors.fill: parent
+                    tileId: "vid_selfshare"
+                    Component.onCompleted: attachViewer()
+                    Component.onDestruction: detachViewer()
+                }
+                Rectangle {
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    height: 24
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 1.0; color: Th.callbarPreviewCaptionBg }
                     }
-                    RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
-                        spacing: 8
-                        Kirigami.Icon {
-                            source: modelData.kind === "monitor" ? "monitor-symbolic" : "window-symbolic"
-                            color: Th.callbarSourceListItemIcon; implicitWidth: 16; implicitHeight: 16
-                        }
-                        Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.label; color: Th.callbarSourceListItemFg; elide: Text.ElideRight }
-                        Kirigami.Icon { visible: chosen; source: "checkmark-symbolic"; color: Th.callbarSourceListItemIconSelected; implicitWidth: 16; implicitHeight: 16 }
+                    Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                        anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
+                        text: "What you're sending · " + pop.qualitySummary + " · " + pop.audioSummary
+                        color: Th.callbarPreviewCaptionFg
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        elide: Text.ElideRight
+                        width: parent.width - 12
                     }
                 }
             }
-        }
-        // 10.1 (TH-CALL-01): say what the button will share, by name.
-        Controls.Label {
-            textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-            visible: pop.sources.length > 0
-            Layout.fillWidth: true
-            text: pop.chosenHandle.length > 0 ? "Sharing: " + pop.sourceLabel(pop.chosenHandle) : "Pick a screen or window above."
-            color: pop.chosenHandle.length > 0 ? Th.callbarPopoverFg : Th.callbarPopoverHintFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
-            elide: Text.ElideRight
-        }
 
-        // ---- quality ----
-        RowLayout {
-            Layout.fillWidth: true
-            SectionTitle { text: "Quality"; Layout.fillWidth: true }
+            // ---- source ----
+            SectionTitle { text: "What to share" }
+            // Linux: the desktop portal owns the picker (screens, windows, permissions).
+            Controls.Button {
+                visible: pop.sources.length === 0
+                Layout.fillWidth: true
+                enabled: pop.inCall
+                icon.name: "monitor-symbolic"
+                text: pop.live ? "Change what you're sharing…" : "Choose a screen or window…"
+                // A06.0 (12.1.16): the audio picked first starts with the share, as "Start sharing" does (the system picker
+                // is where the screen is chosen; the audio pick is ours)
+                onClicked: {
+                    var wasLive = pop.live
+                    ctl.shareScreen()
+                    if (pop.audioPending) ctl.startMusicSource(pop.audioChoice)
+                    if (!wasLive) pop.close()
+                }
+            }
+            // Windows: our own list (monitors first, then windows).
+            Rectangle {
+                visible: pop.sources.length > 0
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(170, srcList.contentHeight + 4)
+                radius: 8
+                color: Th.callbarSourceListBg
+                border.width: 1; border.color: Th.callbarSourceListBorder
+                ListView {
+                    id: srcList
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    clip: true
+                    model: pop.sources
+                    spacing: 1
+                    interactive: contentHeight > height
+                    Controls.ScrollBar.vertical: FoxScrollBar { app: pop.app }   // 10.1 (TH-DS-05): the house scrollbar everywhere
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property bool chosen: pop.chosenHandle === String(modelData.handle)
+                        width: ListView.view.width
+                        height: 30
+                        radius: 6
+                        color: chosen ? Th.callbarSourceListItemBgSelected
+                             : (srcHover.hovered ? Th.callbarSourceListItemBgHover : "transparent")
+                        HoverHandler { id: srcHover }
+                        TapHandler {
+                            onTapped: {
+                                pop.chosenKind = modelData.kind; pop.chosenHandle = String(modelData.handle)
+                                if (pop.live) ctl.shareScreenSource(modelData.kind, String(modelData.handle))
+                            }
+                        }
+                        RowLayout {
+                            anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
+                            spacing: 8
+                            Kirigami.Icon {
+                                source: modelData.kind === "monitor" ? "monitor-symbolic" : "window-symbolic"
+                                color: Th.callbarSourceListItemIcon; implicitWidth: 16; implicitHeight: 16
+                            }
+                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.label; color: Th.callbarSourceListItemFg; elide: Text.ElideRight }
+                            Kirigami.Icon { visible: chosen; source: "checkmark-symbolic"; color: Th.callbarSourceListItemIconSelected; implicitWidth: 16; implicitHeight: 16 }
+                        }
+                    }
+                }
+            }
+            // 10.1 (TH-CALL-01): say what the button will share, by name.
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                text: pop.presetIndex < 0 ? "Custom: " + pop.qualitySummary : pop.qualitySummary
-                color: Th.callbarPopoverHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
-            }
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-            Repeater {
-                model: pop.presets
-                delegate: Pill {
-                    required property var modelData
-                    required property int index
-                    Layout.fillWidth: true
-                    text: modelData.label
-                    sub: modelData.sub
-                    checked: pop.presetIndex === index
-                    onClicked: ctl.applyShareQuality(modelData.w, modelData.h, modelData.fps, modelData.kbps)
-                }
-            }
-            Pill {
-                text: "Custom…"
-                sub: "res · fps · encoder"
-                checked: pop.presetIndex < 0
-                onClicked: { pop.close(); app.openCallSettings() }
-            }
-        }
-
-        // ---- audio ----
-        SectionTitle { text: "Audio" }
-        Flow {
-            Layout.fillWidth: true
-            spacing: 6
-            Pill {
-                text: "No audio"
-                checked: pop.audioChoice.length === 0
-                onClicked: pop.chooseAudio("")
-            }
-            Repeater {
-                model: app.mAudioApps
-                delegate: Pill {
-                    required property var modelData
-                    text: modelData.label
-                    sub: modelData.detail || ""
-                    checked: pop.audioChoice === modelData.id
-                    onClicked: pop.chooseAudio(modelData.id)
-                }
-            }
-            Pill {
-                text: "Everything"
-                sub: "all sound on my output"
-                checked: pop.audioChoice.length > 0 && /\.monitor$/.test(pop.audioChoice)
-                enabledPill: pop.everythingId.length > 0
-                onClicked: pop.chooseAudio(pop.everythingId)
-            }
-            Pill {
-                text: pop.moreSources ? "Fewer…" : "More…"
-                sub: "inputs & devices"
-                onClicked: pop.moreSources = !pop.moreSources
-            }
-        }
-        Controls.Label {
-            visible: app.mAudioApps.length === 0
-            Layout.fillWidth: true
-            text: "No app is playing sound right now — start the game or player and this list fills in."
-            color: Th.callbarPopoverHintFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
-            wrapMode: Text.WordWrap
-        }
-        Flow {
-            visible: pop.moreSources
-            Layout.fillWidth: true
-            spacing: 6
-            Repeater {
-                model: app.mAudioSources
-                delegate: Pill {
-                    required property var modelData
-                    text: modelData.label
-                    checked: pop.audioChoice === modelData.node
-                    onClicked: pop.chooseAudio(modelData.node)
-                }
-            }
-        }
-
-        // ---- recording only ----
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.topMargin: 4
-            spacing: 10
-            // selfhost: a server without Memories has no "recording only" (hidden; a kept-on choice is undone)
-            visible: app.serverMemories
-            Component.onCompleted: if (!app.serverMemories && app.mShareRecOnly) ctl.applyShareRecordingOnly(false)
-            ThSwitch {
-                id: recSwitch
-                checked: app.mShareRecOnly
-                onToggled: ctl.applyShareRecordingOnly(checked)
-            }
-            ColumnLayout {
+                visible: pop.sources.length > 0
                 Layout.fillWidth: true
-                spacing: 0
-                Controls.Label { text: "For the recording only"; color: Th.callbarPopoverFg; font.bold: true }
+                text: pop.chosenHandle.length > 0 ? "Sharing: " + pop.sourceLabel(pop.chosenHandle) : "Pick a screen or window above."
+                color: pop.chosenHandle.length > 0 ? Th.callbarPopoverFg : Th.callbarPopoverHintFg
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                elide: Text.ElideRight
+            }
+
+            // ---- quality ----
+            RowLayout {
+                Layout.fillWidth: true
+                SectionTitle { text: "Quality"; Layout.fillWidth: true }
                 Controls.Label {
-                    Layout.fillWidth: true
-                    text: "Streams straight into Memories. Everyone else sees it hidden and muted unless they tune in."
+                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                    text: pop.presetIndex < 0 ? "Custom: " + pop.qualitySummary : pop.qualitySummary
                     color: Th.callbarPopoverHintFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
-                    wrapMode: Text.WordWrap
                 }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                Repeater {
+                    model: pop.presets
+                    delegate: Pill {
+                        required property var modelData
+                        required property int index
+                        Layout.fillWidth: true
+                        text: modelData.label
+                        sub: modelData.sub
+                        checked: pop.presetIndex === index
+                        onClicked: ctl.applyShareQuality(modelData.w, modelData.h, modelData.fps, modelData.kbps)
+                    }
+                }
+                Pill {
+                    objectName: "shareCustomPill"
+                    text: "Custom…"
+                    sub: "res · fps · bandwidth"
+                    checked: pop.presetIndex < 0 || pop.customOpen
+                    onClicked: pop.customOpen = !pop.customOpen
+                }
+            }
+            // ---- custom quality, right here: the three things people change; everything else is one click further
+            GridLayout {
+                objectName: "shareCustomQuick"
+                visible: pop.customOpen
+                Layout.fillWidth: true
+                columns: 2
+                columnSpacing: 12
+                rowSpacing: 6
+                Controls.Label { textFormat: Text.PlainText; text: "Resolution"; color: Th.callbarPopoverFg }
+                ThComboBox {
+                    objectName: "shareQuickResolution"
+                    Layout.fillWidth: true
+                    textRole: "label"
+                    Accessible.name: "Resolution"
+                    model: pop.quick.resList
+                    currentIndex: pop.quick.resIndex(pop.quality4)
+                    onActivated: (i) => pop.applyQuick("res", i)
+                }
+                Controls.Label { textFormat: Text.PlainText; text: "Frame rate"; color: Th.callbarPopoverFg }
+                ThComboBox {
+                    objectName: "shareQuickFrameRate"
+                    Layout.fillWidth: true
+                    Accessible.name: "Frame rate"
+                    model: pop.quick.rateLabels
+                    currentIndex: pop.quick.fpsIndex(pop.quality4)
+                    onActivated: (i) => pop.applyQuick("fps", i)
+                }
+                Controls.Label { textFormat: Text.PlainText; text: "Bandwidth"; color: Th.callbarPopoverFg }
+                ThComboBox {
+                    objectName: "shareQuickBandwidth"
+                    Layout.fillWidth: true
+                    textRole: "label"
+                    Accessible.name: "Bandwidth"
+                    model: pop.quick.bwList
+                    currentIndex: pop.quick.bwIndex(pop.quality4)
+                    onActivated: (i) => pop.applyQuick("bw", i)
+                }
+                Item { implicitWidth: 1; implicitHeight: 1 }
+                ThButton {
+                    objectName: "shareQuickMore"
+                    Layout.alignment: Qt.AlignRight
+                    flat: true
+                    text: "More settings…"
+                    onClicked: { pop.close(); app.openCallSettings() }
+                }
+            }
+
+            // ---- audio ----
+            SectionTitle { text: "Audio" }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 6
+                Pill {
+                    text: "No audio"
+                    checked: pop.audioChoice.length === 0
+                    onClicked: pop.chooseAudio("")
+                }
+                Repeater {
+                    model: app.mAudioApps
+                    delegate: Pill {
+                        required property var modelData
+                        text: modelData.label
+                        sub: modelData.detail || ""
+                        checked: pop.audioChoice === modelData.id
+                        onClicked: pop.chooseAudio(modelData.id)
+                    }
+                }
+                Pill {
+                    text: "Everything"
+                    sub: "all sound on my output"
+                    checked: pop.audioChoice.length > 0 && /\.monitor$/.test(pop.audioChoice)
+                    enabledPill: pop.everythingId.length > 0
+                    onClicked: pop.chooseAudio(pop.everythingId)
+                }
+                Pill {
+                    text: pop.moreSources ? "Fewer…" : "More…"
+                    sub: "inputs & devices"
+                    onClicked: pop.moreSources = !pop.moreSources
+                }
+            }
+            Controls.Label {
+                visible: app.mAudioApps.length === 0
+                Layout.fillWidth: true
+                text: "No app is playing sound right now — start the game or player and this list fills in."
+                color: Th.callbarPopoverHintFg
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                wrapMode: Text.WordWrap
+            }
+            Flow {
+                visible: pop.moreSources
+                Layout.fillWidth: true
+                spacing: 6
+                Repeater {
+                    model: app.mAudioSources
+                    delegate: Pill {
+                        required property var modelData
+                        text: modelData.label
+                        checked: pop.audioChoice === modelData.node
+                        onClicked: pop.chooseAudio(modelData.node)
+                    }
+                }
+            }
+
+            // ---- recording only ----
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                spacing: 10
+                // selfhost: a server without Memories has no "recording only" (hidden; a kept-on choice is undone)
+                visible: app.serverMemories
+                Component.onCompleted: if (!app.serverMemories && app.mShareRecOnly) ctl.applyShareRecordingOnly(false)
+                ThSwitch {
+                    id: recSwitch
+                    checked: app.mShareRecOnly
+                    onToggled: ctl.applyShareRecordingOnly(checked)
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
+                    Controls.Label { text: "For the recording only"; color: Th.callbarPopoverFg; font.bold: true }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        text: "Streams straight into Memories. Everyone else sees it hidden and muted unless they tune in."
+                        color: Th.callbarPopoverHintFg
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
             }
         }
 

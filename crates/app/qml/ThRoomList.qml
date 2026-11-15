@@ -78,14 +78,40 @@ Item {
     function _tipSafe(s) {
         return LinkGate.tipText(s)
     }
-    function openFirstMatch() {           // 10.1 (TH-NAV-12)
-        var q = panel.query.toLowerCase()
-        for (var i = 0; i < roomModel.count; i++) {
-            var r = roomModel.get(i).room
-            if (!r || r.membership === "invite") continue
-            if (q.length === 0 || String(r.name || "").toLowerCase().indexOf(q) !== -1) { panel.roomActivated(r.id); return }
-        }
+    // ---- the filter (ACTIONS.md §10.8, 2026-11-14): the ONE shared matcher (crates/actions roomFilter — the palette's
+    // folding: accents, separators; the name or the part before ":" of the room address / the DM's other person;
+    // is:unread, is:mention), byte-compatible with the web's (the palette/roomfilter.json vectors). P1: typing never
+    // opens a room — the first match is drawn highlighted (filterFirstId) and Enter acts on it (RoomsIsland
+    // acceptFilter), as a click on that row does. tools/room-filter-test.mjs runs _filterRow (between the markers).
+    // BEGIN filter-row
+    function _filterRow(r) {
+        var aliases = []
+        if (r && r.alias) aliases.push(String(r.alias))
+        if (r && r.peer) aliases.push(String(r.peer))
+        return { name: String((r && r.name) || ""), aliases: aliases, membership: String((r && r.membership) || "join"),
+                 unread: !!r && (r.unread || 0) > 0, mention: !!r && r.highlight === true }
     }
+    // END filter-row
+    readonly property var _filterOut: {
+        void _modelRev
+        var q = String(panel.query || "")
+        var off = { active: false, shown: ({}), firstId: "" }
+        // only the empty text skips the engine: what counts as blank is the shared matcher's call (a JS-trimmable space
+        // that is no separator, U+1680, must filter as on the web)
+        if (q.length === 0 || !panel.app || !panel.app.actionsCtl) return off
+        var rows = [], ids = []
+        for (var i = 0; i < roomModel.count; i++) { var r = roomModel.get(i).room; ids.push(String(roomModel.get(i).rid)); rows.push(panel._filterRow(r)) }
+        var o = null
+        try { o = JSON.parse(String(panel.app.actionsCtl.call("roomFilter", JSON.stringify({ query: q, rooms: rows })))) } catch (e) { o = null }
+        if (!o || !o.shown) return off
+        var shown = {}
+        for (var j = 0; j < ids.length; j++) if (o.shown[j] === true) shown[ids[j]] = true
+        return { active: o.active === true, shown: shown, firstId: o.first >= 0 ? ids[o.first] : "" }
+    }
+    /** Does the filter show this room (a row's `room`)? */
+    function roomShown(r) { return !!r && (!panel._filterOut.active || panel._filterOut.shown[String(r.id)] === true) }
+    /** The room the filter's Enter acts on (drawn highlighted), "" = none. */
+    readonly property string filterFirstId: _filterOut.firstId
 
     // Stable-identity room model, diffed from app.mNavRooms (keyed by room id) instead of
     // binding the ListView to a computed JS array — reassigning a JS array tears down and
@@ -99,12 +125,9 @@ Item {
     // per-delegate visibility toggle, so typing never rebuilds delegates.
     readonly property int _matchCount: {
         void _modelRev
-        var q = query.trim().toLowerCase()
+        void _filterOut
         var n = 0
-        for (var i = 0; i < roomModel.count; i++) {
-            var r = roomModel.get(i).room
-            if (q.length === 0 || String(r.name).toLowerCase().indexOf(q) >= 0) n++
-        }
+        for (var i = 0; i < roomModel.count; i++) if (panel.roomShown(roomModel.get(i).room)) n++
         return n
     }
 

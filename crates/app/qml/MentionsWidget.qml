@@ -226,7 +226,7 @@ Item {
     }
 
     // ── ⋯ / right-click: Jump to message · Mark as seen · Mark all as seen ──
-    Controls.Menu {
+    KeyMenu {
         id: rowMenu
         modal: false
         property var m: null

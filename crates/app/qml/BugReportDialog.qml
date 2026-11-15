@@ -19,9 +19,17 @@ Controls.Dialog {
     // named clearForm, NOT reset: "reset" collides with QQC2 Dialog's built-in
     // reset() signal (qt.qml.invalidOverride at every load)
     function clearForm() { noteArea.text = "" }
-    // 10.1 (TH-PKG-06): a failed send keeps the note — the next open shows it again instead of an
-    // empty box, so a flaky network can't eat what you just typed.
-    property bool keepNote: false   // set by Main.qml from settings.bugReportStatus
+    // L1 A34.0 (review): a send that finishes after the dialog was reopened and another note typed clears only ITS note;
+    // with two sends in flight, only the last one's answer may clear (pending counts them)
+    property string sentText: ""
+    property int pending: 0
+    function sendDone(sent) {
+        dlg.pending = Math.max(0, dlg.pending - 1)
+        if (sent && dlg.pending === 0 && noteArea.text === dlg.sentText) noteArea.text = ""
+        if (dlg.pending === 0) dlg.sentText = ""
+    }
+    // 10.1 (TH-PKG-06) + L1 A34.0: the note stays until a report is SENT (Main.qml clears it on "Report sent"): a failed
+    // send, Cancel, Escape or a click outside all keep it, and the next open shows it again (Tin Hat Web: the same).
 
     title: "Report a problem"
     modal: true
@@ -50,7 +58,7 @@ Controls.Dialog {
     readonly property real boxWidth: Math.min(520, (parent ? parent.width : 520) - Kirigami.Units.gridUnit * 2)
     implicitWidth: dlg.boxWidth
     standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
-    onAccepted: if (noteArea.text.trim().length > 0) dlg.submitted(noteArea.text)
+    onAccepted: if (noteArea.text.trim().length > 0) { dlg.sentText = noteArea.text; dlg.pending += 1; dlg.submitted(noteArea.text) }
 
     // Relabel Ok -> "Send report" + gate it on a non-empty note (imperative, the
     // ConfirmDialog pattern — a declarative override can't fall back to style default).

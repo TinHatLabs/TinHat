@@ -67,9 +67,20 @@ Controls.Dialog {
             ok.background = dangerFill.createObject(ok, { implicitHeight: h })
         }
     }
-    Component.onCompleted: _applyConfirmStyle()
+    Component.onCompleted: { _applyConfirmStyle(); dlg.openedChanged.connect(function () { if (dlg.opened) dlg._kbOpened() }) }   // (a11y round 2: _kbOpened below)
     onAboutToShow: { _applyConfirmStyle(); if (dlg.askReason) reasonField.text = "" }
     onOpened: if (dlg.askReason) reasonField.forceActiveFocus()
+    // a11y round 2 (M8): a modal confirm takes the keyboard when it opens (the first-run crash-log consent sat on top
+    // while the list and the composer behind it kept the keys): the focus goes to the safe answer — Cancel when the
+    // confirm is destructive, else the confirm — so Space answers it (Qt Quick's button key), Tab walks its buttons,
+    // Escape cancels.
+    // No ring until Tab (the focus reason is not a keyboard one: the same rule as the web's dialogs).
+    focus: true
+    function _kbOpened() {
+        if (dlg.askReason) return
+        var b = dlg.standardButton(dlg.destructive ? Controls.Dialog.Cancel : Controls.Dialog.Ok)
+        if (b) b.forceActiveFocus(Qt.PopupFocusReason); else dlg.contentItem.forceActiveFocus(Qt.PopupFocusReason)
+    }
     onConfirmTextChanged: _applyConfirmStyle()
 
     Component {

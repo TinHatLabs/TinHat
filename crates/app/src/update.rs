@@ -152,6 +152,16 @@ fn install_prompt_due() -> bool {
     false
 }
 
+/// 12.1.14: what a startup switch that didn't work left for the window ("" = nothing).
+#[cfg(windows)]
+fn startup_note() -> String {
+    crate::platform::take_update_note().unwrap_or_default()
+}
+#[cfg(not(windows))]
+fn startup_note() -> String {
+    String::new()
+}
+
 /// Spawn `exe` as the successor of this process and exit (Windows relaunch pattern —
 /// see restart()): the child inherits our stderr handle so the log reads as one file.
 #[cfg(windows)]
@@ -185,7 +195,8 @@ pub(crate) fn channel() -> &'static str {
 /// The one line the banner shows when the app can't update itself, per channel.
 pub(crate) fn manual_update_hint(portable: bool) -> String {
     match channel() {
-        "flatpak" => "update it with Discover, or: flatpak update dev.tinhat.TinHat".to_string(),
+        // QOL D08.8: plain words, no shell command recited at every user
+        "flatpak" => "update it in Discover or GNOME Software".to_string(),
         "pacman-final" => "this pacman build no longer updates — Tin Hat moved to Flatpak (install it from tinhat.dev)".to_string(),
         _ => {
             if cfg!(windows) {
@@ -263,7 +274,7 @@ impl Default for UpdateControllerRust {
             manual_update_hint: QString::from(&manual_update_hint(portable_run())),
             channel: QString::from(channel()),
             restarting: false,
-            restart_failed: QString::default(),
+            restart_failed: QString::from(&startup_note()),
             call_up: false,
             restart_waits_for_call: false,
             expected_sha: String::new(),
@@ -336,9 +347,14 @@ impl qobject::UpdateController {
                                         o.as_mut().set_update_available(false);
                                         o.as_mut().set_status(QString::from("Update installed — restart to apply."));
                                     }
-                                    Err(e) => o
-                                        .as_mut()
-                                        .set_status(QString::from(&format!("Update failed: {e} — or {}", manual_update_hint(false)))),
+                                    Err(e) => {
+                                        eprintln!("[update] Flatpak apply failed: {e}");
+                                        o.as_mut().set_status(QString::from(&format!(
+                                            "Update failed: {} — or {}",
+                                            fail_reason(&e.to_string()),
+                                            manual_update_hint(false)
+                                        )))
+                                    }
                                 }
                             }
                         });
@@ -348,9 +364,14 @@ impl qobject::UpdateController {
                             self.as_mut().set_downloading(true);
                             self.as_mut().set_status(QString::from(&line));
                         }
-                        Err(e) => self
-                            .as_mut()
-                            .set_status(QString::from(&format!("Update failed: {e} — or {}", manual_update_hint(false)))),
+                        Err(e) => {
+                            eprintln!("[update] Flatpak apply request failed: {e}");
+                            self.as_mut().set_status(QString::from(&format!(
+                                "Update failed: {} — or {}",
+                                fail_reason(&e.to_string()),
+                                manual_update_hint(false)
+                            )))
+                        }
                     }
                     return;
                 }
@@ -385,12 +406,20 @@ impl qobject::UpdateController {
                         // A successful update used to be LOG-INVISIBLE (only failures
                         // printed) — build-vintage archaeology on shipped logs needed
                         // format forensics to even notice one happened.
+                        // 12.1.14 (Windows): downloaded + checked; the restart switches to it, supervised
                         eprintln!("[update] applied — restart to activate the new build");
                         o.as_mut().set_ready_to_restart(true);
                         o.as_mut().set_update_available(false);
-                        o.as_mut().set_status(QString::from("Update installed — restart to apply."));
+                        o.as_mut().set_status(QString::from(ready_status(cfg!(windows))));
                     }
-                    Err(e) => {
+                    Err(ApplyError::Refused(r)) => {
+                        // 12.1.14: Windows wouldn't start the new version; nothing was switched
+                        let msg = r.message(env!("CARGO_PKG_VERSION"));
+                        eprintln!("[update] apply refused: {} — nothing switched, staying on {}", r.why(), env!("CARGO_PKG_VERSION"));
+                        o.as_mut().set_status(QString::from(&msg));
+                        o.as_mut().set_restart_failed(QString::from(&msg));
+                    }
+                    Err(ApplyError::Other(e)) => {
                         eprintln!("[update] apply failed: {e}");
                         // os error 32 = the bundle folder is rename-locked. Our own CWD
                         // self-lock is fixed in early_startup; what remains is genuinely
@@ -404,7 +433,7 @@ impl qobject::UpdateController {
                         } else {
                             format!(" — or {}", manual_update_hint(portable_run()))
                         };
-                        o.as_mut().set_status(QString::from(&format!("Update failed: {e}{hint}")));
+                        o.as_mut().set_status(QString::from(&format!("Update failed: {}{hint}", fail_reason(&e))));
                     }
                 }
             });
@@ -445,7 +474,7 @@ impl qobject::UpdateController {
                         }
                         Err(e) => {
                             eprintln!("[update] install-to-apps failed: {e}");
-                            o.as_mut().set_status(QString::from(&format!("Install failed: {e}")));
+                            o.as_mut().set_status(QString::from(&format!("Install failed: {}.", fail_reason(&e.to_string()))));
                         }
                     }
                 });
@@ -483,6 +512,19 @@ impl qobject::UpdateController {
         crate::relaunch::log_failed(why);
         self.as_mut().set_restarting(false);
         self.as_mut().set_restart_failed(QString::from(crate::relaunch::FAILED_MESSAGE));
+    }
+
+    /// 12.1.14: a supervised restart into a switched-in update didn't work: the folders are back (or say they aren't),
+    /// this instance stays up, and the banner says why in plain words.
+    #[cfg(windows)]
+    fn update_not_started(mut self: Pin<&mut Self>, ns: crate::update_switch::NotStarted) {
+        crate::relaunch::log_failed(ns.refusal.why());
+        eprintln!("[update] kept {}; folders back: {:?}", ns.kept, ns.rollback);
+        let msg = crate::platform::not_started_message(&ns);
+        self.as_mut().set_restarting(false);
+        self.as_mut().set_ready_to_restart(false);
+        self.as_mut().set_status(QString::from(&msg));
+        self.as_mut().set_restart_failed(QString::from(&msg));
     }
 
     pub fn restart(mut self: Pin<&mut Self>) {
@@ -536,69 +578,144 @@ impl qobject::UpdateController {
             }
             return;
         }
-        // Prefer the freshly-installed path captured by the apply step — after the swap,
-        // current_exe() follows the renamed inode to `<exe>.bak` (the OLD build).
-        let exe = installed_exe_path()
-            .lock()
-            .unwrap()
-            .clone()
-            .or_else(|| std::env::current_exe().ok());
-        let Some(exe) = exe else {
-            self.restart_did_not_happen("no path to this program");
-            return;
-        };
-        // U3 guard (c): never exec a swapped-in path that isn't a regular executable file
-        // (an archive/garbage something managed to write there, a directory, a dangling
-        // path). Refuse loudly instead of a confusing exec failure — or worse.
-        let exe_ok = match std::fs::metadata(&exe) {
-            Ok(m) => {
-                #[cfg(unix)]
-                let exec_bit = {
-                    use std::os::unix::fs::PermissionsExt;
-                    m.permissions().mode() & 0o111 != 0
-                };
-                #[cfg(not(unix))]
-                let exec_bit = true;
-                m.is_file() && exec_bit
-            }
-            Err(_) => false,
-        };
-        if !exe_ok {
-            eprintln!(
-                "[update] refusing restart: {} is not a regular executable file",
-                exe.display()
-            );
-            self.as_mut().set_status(QString::from(
-                "Restart refused: the installed update is not a valid executable — reinstall from a fresh download.",
-            ));
-            self.restart_did_not_happen(&format!("{} is not a regular executable file", exe.display()));
-            return;
-        }
-        let args: Vec<String> = std::env::args().skip(1).collect();
-        #[cfg(unix)]
-        {
-            use std::os::unix::process::CommandExt;
-            // exec replaces this process image with the updated binary (no orphan).
-            // 12.1.8: exec returns only when it failed — this instance stays up and says so
-            let err = std::process::Command::new(&exe).args(&args).exec();
-            self.restart_did_not_happen(&crate::relaunch::exec_returned(&err));
-        }
-        #[cfg(not(unix))]
-        {
-            // Marker env for the child: it inherits our stderr HANDLE (so it appends to
-            // this very log — rotation is skipped by design), and the marker (a) prints
-            // a visible session separator, (b) stops logship re-shipping the previous
-            // session's log the parent already shipped (the duplicate-upload pairs seen
-            // on every update day).
-            eprintln!("[update] restarting into the updated build");
-            let r = std::process::Command::new(&exe)
-                .args(&args)
-                .env("TINHAT_RELAUNCH", "update")
-                .spawn();
-            // 12.1.8: quit only if the new process exists; a failed spawn keeps this one up with a message
+        // 12.1.14 (update_switch.rs): Windows restarts supervised. A downloaded + checked update is switched in only
+        // now; the new instance must say it runs (relaunch ack) — refused, gone or silent = the folders go back and this
+        // instance stays up with the reason. Off the Qt thread: the wait can take up to START_TIMEOUT.
+        // A portable run (a zip in Downloads) restarts itself, as before: the updater's folders aren't its own (Astra review).
+        #[cfg(windows)]
+        if !crate::platform::is_bundle_install() {
+            let Ok(exe) = std::env::current_exe() else {
+                self.restart_did_not_happen("no path to this program");
+                return;
+            };
+            let args: Vec<String> = std::env::args().skip(1).collect();
+            eprintln!("[update] restarting (portable run)");
+            let r = std::process::Command::new(&exe).args(&args).env("TINHAT_RELAUNCH", "update").spawn();
             match crate::relaunch::spawn_verdict(&r) {
                 Ok(()) => std::process::exit(0),
                 Err(e) => self.restart_did_not_happen(&e),
+            }
+            return;
+        }
+        #[cfg(windows)]
+        {
+            self.as_mut().set_restarting(true);
+            let qt = self.qt_thread();
+            let args: Vec<String> = std::env::args().skip(1).collect();
+            let spawned = std::thread::Builder::new().name("relaunch".into()).spawn(move || {
+                let l = crate::platform::update_layout();
+                let running = env!("CARGO_PKG_VERSION");
+                match crate::update_switch::ready_version(&l) {
+                    Some(v) => eprintln!("[update] restarting into {v}: switching to it, supervised"),
+                    None => eprintln!("[update] restarting (supervised)"),
+                }
+                let r = crate::update_switch::win::hand_over(&l, running, &args, &[]);
+                let _ = qt.queue(move |mut o| match r {
+                    Ok(mut h) => match crate::relaunch::at_hand_over(*o.call_up()) {
+                        crate::relaunch::HandOver::Commit => {
+                            if h.still_running() {
+                                eprintln!("[update] {} runs — quitting this instance", h.inner.version);
+                                std::process::exit(0);
+                            }
+                            // gone between its ack and now: stop + move back OFF the GUI thread (it can take seconds), then say so
+                            let switched = h.inner.switched;
+                            let qt = o.qt_thread();
+                            std::thread::spawn(move || {
+                                let back = h.give_back();
+                                eprintln!("[update] the new instance answered and exited before the hand-over; folders back: {back:?}");
+                                let _ = qt.queue(move |mut o| {
+                                    o.as_mut().set_ready_to_restart(false);
+                                    if switched {
+                                        let ns = crate::update_switch::NotStarted {
+                                            refusal: crate::update_switch::Refusal::Failed("it exited right after it started".into()),
+                                            kept: running.to_string(),
+                                            rollback: back,
+                                        };
+                                        o.as_mut().update_not_started(ns);
+                                    } else {
+                                        o.as_mut().restart_did_not_happen("the new instance started and exited");
+                                    }
+                                });
+                            });
+                        }
+                        crate::relaunch::HandOver::WaitForCall => {
+                            eprintln!("[relaunch] called off at the hand-over: a call started — still running, restart after the call");
+                            // the new instance stands down and a switched update goes back to staging (still ready). Stay
+                            // "restarting" until the folders are back, so no second restart can start in between (Astra review).
+                            let qt = o.qt_thread();
+                            std::thread::spawn(move || {
+                                let r = h.call_off();
+                                let _ = qt.queue(move |mut o| {
+                                    o.as_mut().set_restarting(false);
+                                    match r {
+                                        Ok(()) => o.as_mut().set_restart_waits_for_call(true),
+                                        Err(e) => {
+                                            eprintln!("[update] putting the update back to staging failed: {e}");
+                                            o.as_mut().set_ready_to_restart(false);
+                                            o.as_mut().set_restart_failed(QString::from(
+                                                "Tin Hat couldn't undo the restart cleanly. If it doesn't open next time, reinstall it from tinhat.dev.",
+                                            ));
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    },
+                    Err(ns) => o.update_not_started(ns),
+                });
+            });
+            if let Err(e) = spawned {
+                self.restart_did_not_happen(&format!("cannot start the relaunch thread: {e}"));
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            // Prefer the freshly-installed path captured by the apply step — after the swap,
+            // current_exe() follows the renamed inode to `<exe>.bak` (the OLD build).
+            let exe = installed_exe_path()
+                .lock()
+                .unwrap()
+                .clone()
+                .or_else(|| std::env::current_exe().ok());
+            let Some(exe) = exe else {
+                self.restart_did_not_happen("no path to this program");
+                return;
+            };
+            // U3 guard (c): never exec a swapped-in path that isn't a regular executable file
+            // (an archive/garbage something managed to write there, a directory, a dangling
+            // path). Refuse loudly instead of a confusing exec failure — or worse.
+            let exe_ok = match std::fs::metadata(&exe) {
+                Ok(m) => {
+                    #[cfg(unix)]
+                    let exec_bit = {
+                        use std::os::unix::fs::PermissionsExt;
+                        m.permissions().mode() & 0o111 != 0
+                    };
+                    #[cfg(not(unix))]
+                    let exec_bit = true;
+                    m.is_file() && exec_bit
+                }
+                Err(_) => false,
+            };
+            if !exe_ok {
+                eprintln!(
+                    "[update] refusing restart: {} is not a regular executable file",
+                    exe.display()
+                );
+                self.as_mut().set_status(QString::from(
+                    "Restart refused: the installed update is not a valid executable — reinstall from a fresh download.",
+                ));
+                self.restart_did_not_happen(&format!("{} is not a regular executable file", exe.display()));
+                return;
+            }
+            let args: Vec<String> = std::env::args().skip(1).collect();
+            #[cfg(unix)]
+            {
+                use std::os::unix::process::CommandExt;
+                // exec replaces this process image with the updated binary (no orphan).
+                // 12.1.8: exec returns only when it failed — this instance stays up and says so
+                let err = std::process::Command::new(&exe).args(&args).exec();
+                self.restart_did_not_happen(&crate::relaunch::exec_returned(&err));
             }
         }
     }
@@ -827,6 +944,7 @@ fn parse_ver(s: &str) -> (u64, u64, u64, u64) {
 /// The path the update was installed to, captured BEFORE the backup rename. `restart()`
 /// must exec THIS: after the swap, `current_exe()` (`/proc/self/exe`) follows the renamed
 /// inode to `<exe>.bak`, so re-exec'ing it silently relaunches the OLD build.
+#[cfg_attr(windows, allow(dead_code))]
 fn installed_exe_path() -> &'static std::sync::Mutex<Option<std::path::PathBuf>> {
     static P: std::sync::OnceLock<std::sync::Mutex<Option<std::path::PathBuf>>> =
         std::sync::OnceLock::new();
@@ -838,7 +956,7 @@ fn installed_exe_path() -> &'static std::sync::Mutex<Option<std::path::PathBuf>>
 /// stop against a manifest whose chosen url points at an archive (e.g. the pacman
 /// .pkg.tar.zst that latest.json's legacy `url` used to carry) being raw-written over
 /// current_exe() on a user-writable install = bricked binary. Windows' normal channel
-/// never takes the raw-write path (its payload is a bundle ZIP that install_update_zip
+/// never takes the raw-write path (its payload is a bundle ZIP that stage_update_zip
 /// parses — a magic check of its own); the MZ arm covers any future bare-exe path there.
 #[cfg_attr(windows, allow(dead_code))]
 fn is_platform_executable(bytes: &[u8]) -> bool {
@@ -852,11 +970,43 @@ fn is_platform_executable(bytes: &[u8]) -> bool {
     }
 }
 
+/// 12.1.14: why an apply didn't happen. `Refused` = the downloaded version wouldn't start on this PC (Windows' check,
+/// update_switch.rs): nothing was switched, the person keeps the running version. `Other` = anything else.
+#[derive(Debug)]
+pub(crate) enum ApplyError {
+    #[cfg_attr(not(windows), allow(dead_code))]
+    Refused(crate::update_switch::Refusal),
+    Other(String),
+}
+impl From<String> for ApplyError {
+    fn from(s: String) -> Self {
+        ApplyError::Other(s)
+    }
+}
+impl From<&str> for ApplyError {
+    fn from(s: &str) -> Self {
+        ApplyError::Other(s.to_string())
+    }
+}
+impl std::fmt::Display for ApplyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.text())
+    }
+}
+impl ApplyError {
+    fn text(&self) -> String {
+        match self {
+            ApplyError::Refused(r) => r.why().to_string(),
+            ApplyError::Other(s) => s.clone(),
+        }
+    }
+}
+
 async fn do_download_and_apply(
     url: &str,
     expected_sha: &str,
     expected_version: &str,
-) -> Result<(), String> {
+) -> Result<(), ApplyError> {
     use sha2::{Digest, Sha256};
     if url.is_empty() {
         return Err("no download url".into());
@@ -871,7 +1021,7 @@ async fn do_download_and_apply(
     // the same version, never a download outside that version's release.
     let current = env!("CARGO_PKG_VERSION");
     if !is_upgrade(expected_version, current) {
-        return Err(format!("the update ({expected_version}) isn't newer than this build ({current}) — refusing it"));
+        return Err(format!("the update ({expected_version}) isn't newer than this build ({current}) — refusing it").into());
     }
     let (feed, overridden) = feed();
     crate::update_trust::download_allowed(url, &feed, expected_version, overridden).map_err(|r| r.message())?;
@@ -885,7 +1035,7 @@ async fn do_download_and_apply(
         h.update(&bytes);
         let got: String = h.finalize().iter().map(|b| format!("{b:02x}")).collect();
         if !got.eq_ignore_ascii_case(expected_sha.trim()) {
-            return Err(format!("checksum mismatch (expected {expected_sha}, got {got})"));
+            return Err(format!("checksum mismatch (expected {expected_sha}, got {got})").into());
         }
     }
 
@@ -903,9 +1053,11 @@ async fn do_download_and_apply(
                     .into(),
             );
         }
-        let promoted = crate::platform::install_update_zip(&bytes, expected_version)?;
-        *installed_exe_path().lock().unwrap() = Some(promoted);
-        Ok(())
+        // 12.1.14: stage + check only; current\ is switched at the restart, supervised (update_switch.rs)
+        match crate::platform::stage_update_zip(&bytes, expected_version)? {
+            Ok(()) => Ok(()),
+            Err(r) => Err(ApplyError::Refused(r)),
+        }
     }
     #[cfg(not(windows))]
     {
@@ -923,7 +1075,7 @@ async fn do_download_and_apply(
         // would install to the .bak path and the real launch path would keep the stale build.
         let exe = match installed_exe_path().lock().unwrap().clone() {
             Some(p) => p,
-            None => std::env::current_exe().map_err(|e| e.to_string())?,
+            None => std::env::current_exe().map_err(|e| ApplyError::Other(e.to_string()))?,
         };
         let new_path = exe.with_extension("new");
         std::fs::write(&new_path, &bytes).map_err(|e| format!("write {}: {e}", new_path.display()))?;
@@ -939,7 +1091,7 @@ async fn do_download_and_apply(
         std::fs::rename(&exe, &bak).map_err(|e| format!("backup current exe: {e}"))?;
         if let Err(e) = std::fs::rename(&new_path, &exe) {
             let _ = std::fs::rename(&bak, &exe); // best-effort restore
-            return Err(format!("install: {e}"));
+            return Err(format!("install: {e}").into());
         }
         *installed_exe_path().lock().unwrap() = Some(exe);
         Ok(())
@@ -950,8 +1102,10 @@ async fn do_download_and_apply(
 /// a LOCAL test manifest via `TINHAT_UPDATE_URL`, never the real channel. Two phases:
 ///
 ///   `TINHAT_UPDATE_TEST=apply`   fetch manifest → require newer → download → sha256 →
-///                              folder swap → assert promoted VERSION → spawn the NEW
-///                              exe in `verify` phase → exit (frees the old bundle).
+///                              stage + check (12.1.14; current\ untouched, else FAIL) →
+///                              supervised switch: the NEW exe runs the `verify` phase and
+///                              answers → exit (frees the old bundle). A refusal = exit 3,
+///                              "VERDICT: KEPT" (update-refusal-gate.ps1 wants exactly that).
 ///   `TINHAT_UPDATE_TEST=verify`  runs IN the promoted exe after the swap: sweep the
 ///                              leftover `backup\`/`staging\` (retrying while the old
 ///                              process dies), assert both gone + VERSION matches
@@ -981,33 +1135,57 @@ pub fn headless_update_test(mode: &str) -> ! {
                     eprintln!("[updtest] VERDICT: FAIL — manifest does not advertise a newer version");
                     return 1;
                 }
-                if let Err(e) = do_download_and_apply(&url, &sha, &ver).await {
-                    eprintln!("[updtest] VERDICT: FAIL — apply: {e}");
-                    return 1;
-                }
-                let promoted = std::fs::read_to_string(&version_file).unwrap_or_default();
-                if promoted.trim() != ver {
-                    eprintln!(
-                        "[updtest] VERDICT: FAIL — promoted VERSION {:?} != manifest {ver:?}",
-                        promoted.trim()
-                    );
-                    return 1;
-                }
-                eprintln!("[updtest] swap OK — promoted VERSION={ver}; spawning verify phase in the NEW exe");
-                let new_exe = root.join("current").join("tinhat.exe");
-                match std::process::Command::new(&new_exe)
-                    .env("TINHAT_UPDATE_TEST", "verify")
-                    .env("TINHAT_UPDATE_EXPECT_VER", &ver)
-                    // The dying parent may still hold the single-instance lock for a
-                    // beat — the verify child must not lose that race (test-only bypass,
-                    // TEST_PLAN.md §0 rule 3; no call is involved).
-                    .env("TINHAT_NO_SINGLE_INSTANCE", "1")
-                    .spawn()
-                {
-                    Ok(_) => 0,
+                let current_ver = || std::fs::read_to_string(&version_file).unwrap_or_default().trim().to_string();
+                match do_download_and_apply(&url, &sha, &ver).await {
+                    Ok(()) => {}
+                    // 12.1.14: the downloaded version didn't pass its check: nothing switched (the gate checks current\)
+                    Err(ApplyError::Refused(r)) => {
+                        eprintln!(
+                            "[updtest] VERDICT: KEPT — refused before the switch: {}; current\\ VERSION={}; message: {}",
+                            r.why(),
+                            current_ver(),
+                            r.message(current)
+                        );
+                        return 3;
+                    }
                     Err(e) => {
-                        eprintln!("[updtest] VERDICT: FAIL — spawn of promoted exe: {e}");
+                        eprintln!("[updtest] VERDICT: FAIL — apply: {}", e.text());
+                        return 1;
+                    }
+                }
+                // 12.1.14: the download only stages; current\ must still be this version
+                if current_ver() != current {
+                    eprintln!("[updtest] VERDICT: FAIL — current\\ changed at download time (VERSION {:?})", current_ver());
+                    return 1;
+                }
+                eprintln!("[updtest] staged + checked {ver}; current\\ still {current}; switching, supervised (verify phase in the NEW exe)");
+                let l = crate::platform::update_layout();
+                let env: [(&str, &str); 2] = [
+                    ("TINHAT_UPDATE_TEST", "verify"),
+                    ("TINHAT_UPDATE_EXPECT_VER", &ver),
+                    // 12.1.14: no single-instance bypass any more: the child answers before it waits for our lock, and
+                    // takes it once we quit — the real hand-over (second review: the bypass let it sweep backup\ early)
+                ];
+                match crate::update_switch::win::hand_over(&l, current, &[], &env) {
+                    Ok(mut h) => {
+                        if h.still_running() {
+                            eprintln!("[updtest] switch OK — {ver} answered from current\\; quitting so it can sweep backup\\");
+                            // the verify child owns it now: no roll back on the way out
+                            std::process::exit(0);
+                        }
+                        let back = h.give_back();
+                        eprintln!("[updtest] VERDICT: FAIL — the new exe answered and exited; folders back: {back:?}; current\\ VERSION={}", current_ver());
                         1
+                    }
+                    Err(ns) => {
+                        eprintln!(
+                            "[updtest] VERDICT: KEPT — refused at the switch: {}; rolled back: {:?}; current\\ VERSION={}; message: {}",
+                            ns.refusal.why(),
+                            ns.rollback,
+                            current_ver(),
+                            crate::platform::not_started_message(&ns)
+                        );
+                        3
                     }
                 }
             });
@@ -1132,12 +1310,12 @@ mod tests {
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
         let bin = |v: &str| format!("https://github.com/TinHatLabs/TinHat/releases/download/v{v}/tinhat-{v}-x86_64.bin");
         // older than this build: refused without a network request (the url would not even resolve in the test)
-        let e = rt.block_on(do_download_and_apply(&bin("1.0.0"), &"a".repeat(64), "1.0.0")).unwrap_err();
+        let e = rt.block_on(do_download_and_apply(&bin("1.0.0"), &"a".repeat(64), "1.0.0")).unwrap_err().text();
         assert!(e.contains("isn't newer"), "{e}");
-        let e = rt.block_on(do_download_and_apply(&bin("999.0.0"), "", "999.0.0")).unwrap_err();
+        let e = rt.block_on(do_download_and_apply(&bin("999.0.0"), "", "999.0.0")).unwrap_err().text();
         assert!(e.contains("no sha256"), "{e}");
         if std::env::var_os("TINHAT_UPDATE_URL").is_none() {
-            let e = rt.block_on(do_download_and_apply("https://x.test/tinhat-999.0.0-x86_64.bin", &"a".repeat(64), "999.0.0")).unwrap_err();
+            let e = rt.block_on(do_download_and_apply("https://x.test/tinhat-999.0.0-x86_64.bin", &"a".repeat(64), "999.0.0")).unwrap_err().text();
             assert!(e.contains("refusing"), "{e}");
         }
     }
@@ -1184,5 +1362,119 @@ mod tests {
         assert!(parse_ver("11.4.0") > parse_ver("11.3.9"));
         assert!(parse_ver("v11.4.0") == parse_ver("11.4.0"));
         assert!(parse_ver("11.4.0-rc1") == parse_ver("11.4.0"));
+    }
+}
+
+/// The status line once an update is ready (12.1.15). On Windows the updater has also run the new version's check
+/// (12.1.14's probe) before it says so; nothing is switched until the restart.
+pub(crate) fn ready_status(windows: bool) -> &'static str {
+    if windows {
+        "Update downloaded and checked — restart to apply."
+    } else {
+        "Update installed — restart to apply."
+    }
+}
+
+#[cfg(test)]
+mod ready_words_tests {
+    // launch-gate 2026-11-13 11:10: "Update installed" → "Update downloaded and checked — restart to apply" (Windows)
+    #[test]
+    fn windows_says_downloaded_and_checked() {
+        assert_eq!(super::ready_status(true), "Update downloaded and checked — restart to apply.");
+        assert_eq!(super::ready_status(false), "Update installed — restart to apply.", "Linux and the Flatpak keep their words");
+    }
+
+    #[test]
+    fn the_banner_and_the_status_line_say_it() {
+        let main = include_str!("../qml/Main.qml");
+        assert!(
+            main.contains(r#"? ((Qt.platform.os === "windows" ? "Update downloaded and checked (v" : "Update installed (v") + root.mLatestVersion + ") — restart to apply.")"#),
+            "Main.qml's update banner"
+        );
+        let src = include_str!("update.rs");
+        let apply = src.find("let result = do_download_and_apply(").expect("the download path");
+        let arm = &src[apply..apply + src[apply..].find("Err(ApplyError::Refused(r))").expect("its Ok arm")];
+        assert!(arm.contains("set_status(QString::from(ready_status(cfg!(windows))))"), "the download path's status line");
+    }
+}
+
+#[cfg(test)]
+mod hint_words_tests {
+    /// QOL D08.8 / A16.3 / A18.5: no update hint, playback error or decoder banner recites a shell command
+    /// (flatpak / pacman) at every user.
+    #[test]
+    fn no_shell_commands_in_user_words() {
+        assert!(!include_str!("update.rs").contains(concat!("or: flatpak ", "update dev.tinhat")));
+        for (name, src) in [
+            ("WatchPartyWindow.qml", include_str!("../qml/WatchPartyWindow.qml")),
+            ("MemoriesWindow.qml", include_str!("../qml/MemoriesWindow.qml")),
+        ] {
+            assert!(!src.contains(concat!("pacman", " -S")), "{name} tells every user to run pacman");
+        }
+    }
+}
+
+/// A20.3 / A32.3: the reason after "Update failed: " / "Install failed: " in plain words. The raw error (an OS error, the
+/// HTTP library's text, a checksum) goes to the log only. A clause the updater already words for people ("the update
+/// information isn't signed…", update_trust.rs) is kept as it is.
+pub(crate) fn fail_reason(e: &str) -> String {
+    let l = e.to_ascii_lowercase();
+    let r = if l.contains("os error 32") || l.contains("being used by another process") {
+        "the app folder is in use"
+    } else if l.contains("checksum mismatch") || l.contains("no sha256") {
+        "the download didn't match its checksum, so it wasn't installed"
+    } else if l.contains("os error 28") || l.contains("no space left") || l.contains("not enough space") {
+        "there isn't enough free disk space"
+    } else if l.contains("os error 5)") || l.contains("os error 13") || l.contains("permission denied") || l.contains("access is denied") {
+        "Tin Hat wasn't allowed to replace its files"
+    } else if l.contains("bigger than") {
+        "the download was bigger than expected, so it was refused"
+    } else if l.starts_with("http ")
+        || l.contains("error sending request")
+        || l.contains("timed out")
+        || l.contains("dns")
+        || l.contains("connection")
+        || l.contains("network")
+    {
+        "the download didn't finish — check your connection"
+    } else if l.starts_with("the ") {
+        return e.to_string();
+    } else {
+        "something went wrong (the details are in the app log)"
+    };
+    r.to_string()
+}
+
+#[cfg(test)]
+mod fail_reason_tests {
+    use super::fail_reason;
+
+    #[test]
+    fn raw_errors_become_plain_words() {
+        for (raw, want) in [
+            ("install: The process cannot access the file because it is being used by another process. (os error 32)", "the app folder is in use"),
+            ("checksum mismatch (expected abc, got def)", "the download didn't match its checksum, so it wasn't installed"),
+            ("write C:\\x\\tinhat.new: There is not enough space on the disk. (os error 112)", "there isn't enough free disk space"),
+            ("write /opt/x: No space left on device (os error 28)", "there isn't enough free disk space"),
+            ("backup current exe: Access is denied. (os error 5)", "Tin Hat wasn't allowed to replace its files"),
+            ("write /usr/bin/x: Permission denied (os error 13)", "Tin Hat wasn't allowed to replace its files"),
+            ("HTTP 404 Not Found", "the download didn't finish — check your connection"),
+            ("error sending request for url (https://x/y): connection closed before message completed", "the download didn't finish — check your connection"),
+            ("the download is bigger than 500000000 bytes", "the download was bigger than expected, so it was refused"),
+            ("the update information isn't signed by Tin Hat, so it was ignored (if this keeps happening, download Tin Hat again from tinhat.dev)",
+             "the update information isn't signed by Tin Hat, so it was ignored (if this keeps happening, download Tin Hat again from tinhat.dev)"),
+            ("zip: invalid Zip archive: Could not find central directory end", "something went wrong (the details are in the app log)"),
+        ] {
+            assert_eq!(fail_reason(raw), want, "{raw}");
+        }
+    }
+
+    #[test]
+    fn every_failure_line_goes_through_it() {
+        let src = include_str!("update.rs");
+        let body = &src[..src.find("fn fail_reason(").expect("fail_reason")];
+        assert!(!body.contains("\"Update failed: {e}"), "no raw error after Update failed");
+        assert!(!body.contains("\"Install failed: {e}"), "no raw error after Install failed");
+        assert_eq!(body.matches("fail_reason(").count(), 4, "the Flatpak result, the Flatpak request, the download, the install");
     }
 }

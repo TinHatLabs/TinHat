@@ -317,7 +317,7 @@ Item {
 
     // ── ⋯ menu (WIDGETS-UI.md §2, the web's Frame menu): Size · — · Collapse | Expand · Settings… · Move up · Move down
     //    · — · Add widget… · Remove (an unknown widget: Move up · Move down · — · Remove) ──
-    Controls.Menu {
+    KeyMenu {
         id: menu
         modal: false
         readonly property bool manySizes: frame.known && frame.sizes.length > 1

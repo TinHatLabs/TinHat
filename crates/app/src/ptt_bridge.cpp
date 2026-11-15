@@ -19,7 +19,7 @@
 
 namespace {
 
-const char *const kMethod = "tinhatPttKeyEvent(QVariant,QVariant)";
+const char *const kMethod = "tinhatPttKeyEvent(QVariant,QVariant,QVariant)";
 
 QWindow *findMainWindow() {
     static QPointer<QWindow> cached;
@@ -31,6 +31,24 @@ QWindow *findMainWindow() {
         }
     }
     return nullptr;
+}
+
+// 4-1 (2026-11-14): a modifier held besides the key itself (Shift+F10 = the menu key, Shift+Ctrl = a chord): such a press
+// never starts a hold (ptt_rules::press_starts). The key's own modifier bit and the keypad / group bits don't count.
+bool otherModifiers(const QKeyEvent *key) {
+    // (12.1.16 review round: AltGr = GroupSwitchModifier is a modifier of its own on some layouts, not Ctrl / Alt)
+    Qt::KeyboardModifiers m = key->modifiers() & (Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::GroupSwitchModifier);
+    switch (key->key()) {
+    case Qt::Key_Control: m &= ~Qt::ControlModifier; break;
+    case Qt::Key_Shift: m &= ~Qt::ShiftModifier; break;
+    case Qt::Key_Alt: m &= ~Qt::AltModifier; break;
+    case Qt::Key_AltGr: m &= ~(Qt::AltModifier | Qt::GroupSwitchModifier); break;
+    case Qt::Key_Meta:
+    case Qt::Key_Super_L:
+    case Qt::Key_Super_R: m &= ~Qt::MetaModifier; break;
+    default: break;
+    }
+    return m != Qt::NoModifier;
 }
 
 class PttKeyFilter : public QObject {
@@ -64,7 +82,7 @@ protected:
         const bool down = t == QEvent::KeyPress;
         if (down && (from != main || QGuiApplication::modalWindow())) return false;
         QMetaObject::invokeMethod(main, "tinhatPttKeyEvent", Qt::DirectConnection, Q_ARG(QVariant, QVariant(key->key())),
-                                  Q_ARG(QVariant, QVariant(down)));
+                                  Q_ARG(QVariant, QVariant(down)), Q_ARG(QVariant, QVariant(otherModifiers(key))));
         return false;
     }
 };

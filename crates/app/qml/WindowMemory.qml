@@ -19,6 +19,8 @@ Item {
     // (the Media Party mini player), so that geometry never becomes the remembered one.
     property bool hold: false
     readonly property bool canPlace: Qt.platform.pluginName.indexOf("wayland") !== 0
+    // A33.3: a remembered spot on a screen that isn't connected any more is not restored (the system places it)
+    ScreenFit { id: fit }
     // The host applies this itself when it shows the window (showing a hidden window as
     // Maximized here would make it visible before the boot reveal).
     readonly property bool wantMaximized: store ? store.uiPref(key + "-max") === "1" : false
@@ -31,7 +33,8 @@ Item {
         }
         if (canPlace) {
             var x = parseInt(store.uiPref(key + "-x")), y = parseInt(store.uiPref(key + "-y"))
-            if (!isNaN(x) && !isNaN(y) && x > -4000 && y > -4000 && x < 16000 && y < 16000) { target.x = x; target.y = y }
+            if (!isNaN(x) && !isNaN(y) && x > -4000 && y > -4000 && x < 16000 && y < 16000
+                    && fit.onScreen(x, y, target.width, target.height, Qt.application.screens)) { target.x = x; target.y = y }
         }
         remembered = true
     }

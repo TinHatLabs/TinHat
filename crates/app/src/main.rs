@@ -5,16 +5,26 @@
 // window next to the app. Diagnostics still reach a dev terminal (parent-console
 // attach) or the log file: platform::redirect_stderr_to_log decides at startup.
 #![cfg_attr(windows, windows_subsystem = "windows")]
+#[cfg(test)]
+mod wording; // the words the app shows, pinned (mirrored by the web's src/app/wording.test.ts)
 pub mod ptt_rules; // push to talk key rules (shared vectors with the web)
+#[cfg(test)]
+mod ptt_popup_hold; // 12.1.16 review round on 4-1/4-2: AltGr + a popup ends a key hold (tests only)
 pub mod activity; // "What we're playing" per-room activity (dev.tinhat.activity)
+pub mod gamebg_ctl; // sun-gamebg: GameArtController — "Match the game" chat backgrounds (testvectors/gamebg)
 pub mod app_badge; // REACH A5.10: the taskbar / dock unread count (Unity LauncherEntry on Linux, overlay icon on Windows)
 pub mod afk_ctl; // AfkController — #7 BRB/AFK presence in a call (Matrix reactions/state)
 pub mod assets; // bundled app assets (icon layers + chimes) -> runtime dir
 pub mod notif_actions; // Reply / Mark as read on message notifications (docs/NOTIF-ACTIONS.md)
 pub mod receipts; // every read receipt / read marker the app sends: public m.read only in a room of my own server
 pub mod callwatch; // 10.0: incoming-call edges per sync -> LoginController signals
+pub mod meter_hint; // A13.0/A13.2: why the Settings mic meter shows no level (shared vectors)
+pub mod mic_mode; // 4-9: the mic-mode invariant (shared vectors testvectors/mic-mode.json)
+pub mod tilecarry; // D02.3: pin + full screen follow a blip (shared vectors testvectors/tilecarry.json)
+pub mod rejoin_rule; // P14: auto-rejoin after a terminal drop (shared vectors testvectors/rejoin.json)
 pub mod ringglue; // DM ringing glue: dev.tinhat.call.decline → "<name> declined" / the card goes (RINGING.md §5)
 pub mod quietrules; // 10.3: account push rules that keep call joins / room housekeeping out of the unread counts
+pub mod memories_photos; // Memories photos: the dev.tinhat.memories lists, fetch + decrypt on this device (docs/MEMORIES-PHOTOS.md)
 pub mod gameservers_ctl; // 11.1: GameServersController — the Game servers widget's data (docs/GAMESERVERS.md)
 pub mod justme_ctl; // widgets W2: JustMeController — "Is it just me?" (WIDGETS.md §20)
 pub mod memories_ctl; // widgets W2: MemoriesController — the Memories widget's data (WIDGETS.md §21)
@@ -43,10 +53,14 @@ pub mod voicenote_ctl; // voice notes (docs/VOICE-NOTES.md): VoiceNoteController
 pub mod note_ctl; // widgets W1: NoteController — the space's Sticky note (dev.tinhat.note, edit_space_note)
 pub mod dice_ctl; // widgets W3: DiceController — rolling (OS CSPRNG), the private rolls, the Dice widget's history
 pub mod polls_ctl; // widgets W3: PollsController + the poll card's JSON (the shared polls logic for QML)
+pub mod ambience_ctl; // AmbienceController — chat backgrounds + particle effects' rules for QML (docs/AMBIENCE.md)
+pub mod ambience_item; // AmbienceItem — the particle layer behind the message list (one scene-graph node)
 pub mod lowgpu_ctl; // step 3 (GPU.md): LowGpuController — the low-GPU contract's rules for QML (tinhat_widgets::lowgpu)
 pub mod layout_ctl; // islands (C1): LayoutController — the layout engine (crates/layout) as JSON in / JSON out; 11.0 edit mode: the session + the synced layouts' QML face
 pub mod layout_store; // 11.0 edit mode: your layouts across your devices (dev.tinhat.layouts, EDITMODE-UI §16)
 pub mod actions_ctl; // 11.0 step 3 (buttons): ActionsController — the actions engine (crates/actions) as JSON in / JSON out
+pub mod login_errors; // D08.6/D08.5/A14.6: plain-words sign-in + network errors (shared vectors with the web)
+pub mod first_run; // Sunday QoL L4: the DM "Waiting for … to join" line + the no-rooms plan (shared vectors with the web)
 pub mod dm_target; // 2026-09-29: the New DM field — a plain username → @name:<our server> (shared vectors with the web)
 pub mod people; // 2026-11-12 feat/people-search: the add-people picker's rules (shared vectors with the web's people.ts)
 pub mod people_ctl; // PeopleController — the add-people picker's data (room Invite, New DM, space Invite)
@@ -58,6 +72,8 @@ pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
 pub mod left_words; // 12.1.1: the "already left" words of a kick / Disconnect / Mute (= the web's spaces/leftWords.ts)
 pub mod identity; // identity fix 12.1.8: LiveKit identity → user by the call memberships (= the web's features/calls/identity.ts)
+pub mod callannounce; // a11y round 2 (M3): what a screen reader hears about calls (= web callannounce.ts)
+pub mod callannounce_ctl; // CallAnnounceController: those rules for QML
 pub mod mic_handoff; // PAD-PHONE Step B: "my phone has the mic" on this computer (pure; call_ctl carries it out)
 pub mod persontiles; // Pad on the phone, Step A: one tile per person from the server attribute (= web persontiles.ts)
 pub mod companions; // screen share P3: fold a phone's share-only companion into its person (= the web's features/calls/companions.ts)
@@ -69,6 +85,7 @@ pub mod pad_engine; // Pad: the receiver + controller state machines over the ru
 pub mod pad_net; // Pad: Olm to-device transport + the trust glue (one node per session)
 pub mod pad_ctl; // Pad: PadController — the QML bridge (exec → PadHost.qml, the chip, discovery, the Pad window)
 pub mod pad_lab; // Pad: TINHAT_PAD_TEST — the headless two-device lab gate (a local / *.test server only)
+pub mod reactions; // QOL A07: reaction chips — one key rule (❤ = ❤️) + stable grouping by sender (= the web's chat/lib/reactions.ts)
 pub mod embeds; // inline click-to-play media-embed URL parser (ported from the earlier web client)
 pub mod richtext; // security review 2026-10-26 (H2): another member's HTML → what the bubble shows (shared vectors with the web)
 pub mod viewer; // security review 2026-10-26: which attachments are shown inline / opened, and as what (shared vectors with the web)
@@ -102,6 +119,7 @@ pub mod password; // selfhost: a forgotten password (the server's owner resets i
 #[cfg(windows)]
 pub mod qvideo; // FFI to the QVideoSink prototype shim + TINHAT_QVS_TEST (Windows video tail)
 pub mod room; // RoomController — timeline + send (M3 chat)
+pub mod threads_rows; // threads (docs/THREADS.md): the rows side of m.thread (the web's threads/rows.ts)
 pub mod rtc; // MatrixRTC: detect active call + resolve the real LiveKit focus
 pub mod session; // process-global logged-in Client, shared between controllers
 pub mod settings; // SettingsController — account profile / devices / security state
@@ -113,8 +131,10 @@ pub mod status_ctl; // per-person "looking to play" status (dev.tinhat.userstatu
 pub mod stream; // StreamController — NVENC screen-share publish into a call
 pub mod relaunch; // 12.1.8: a relaunch quits only once the new instance runs (pure rules + the child's ack)
 pub mod update; // UpdateController — in-app / startup update check + self-replace
+pub mod update_switch; // 12.1.14: Windows updates switch in only a bundle that starts (probe + supervised start + roll back)
 pub mod update_trust; // H3: what the updater believes — the signed feed (minisign, release key compiled in), pinned downloads (pure)
 pub mod video; // FFI to the C++ qml6glsink bridge (native remote-video tiles)
+pub mod recorder_keys; // the Memories recorder keeps call keys only: its crypto store drops chat (megolm) keys
 pub mod vodsvc; // Memories — the headless call-recorder service (0.8.7; the recorder service host only)
 pub mod medialinks; // Media Party link parsing (pure; twin of the web links.ts)
 pub mod watchparty; // WatchPartyController — queue/playback-clock/viewer-presence + sync + search
@@ -589,6 +609,10 @@ fn install_clean_exit_signals() {
 /// releases the handle when the process dies (even on crash) — no stale-lock risk.
 /// Same purpose as on Linux: a 2nd instance would mint the identical `user:device`
 /// LiveKit identity and wedge the first one's call rejoin.
+/// 12.1.14: how long a Windows relaunch waits for its predecessor's lock (see update_switch.rs).
+#[cfg(windows)]
+const WIN_RELAUNCH_LOCK_WAIT: std::time::Duration = std::time::Duration::from_secs(15);
+
 #[cfg(windows)]
 fn acquire_single_instance_lock() -> Option<std::fs::File> {
     use std::os::windows::fs::OpenOptionsExt;
@@ -609,17 +633,34 @@ fn acquire_single_instance_lock() -> Option<std::fs::File> {
     // genuine duplicates still fail every attempt; only scanner blips get rescued.
     // (flock on Linux has no such false positive — Windows-only concern.)
     let mut attempt = 0;
+    // 12.1.14: a supervised restart's new instance (TINHAT_RELAUNCH) says it runs, then waits here while the previous
+    // instance, which holds this lock, sees that and quits: up to WIN_RELAUNCH_LOCK_WAIT, not 1 s. If the previous
+    // instance calls the restart off instead (it deleted our hand-over file), we leave quietly.
+    let relaunch = std::env::var_os("TINHAT_RELAUNCH").is_some();
+    let tries = if relaunch { (WIN_RELAUNCH_LOCK_WAIT.as_millis() / 250) as u32 } else { 4 };
     loop {
         match std::fs::OpenOptions::new().create(true).write(true).share_mode(0).open(&path) {
             Ok(file) => {
                 eprintln!("[main] single-instance lock acquired");
+                relaunch::settled();
                 return Some(file);
             }
-            Err(e) if e.raw_os_error() == Some(ERROR_SHARING_VIOLATION) && attempt < 4 => {
+            Err(e) if e.raw_os_error() == Some(ERROR_SHARING_VIOLATION) && attempt < tries => {
+                if relaunch::called_off() {
+                    eprintln!("[relaunch] the previous instance called the restart off — exiting quietly");
+                    std::process::exit(0);
+                }
+                if relaunch && attempt == 0 {
+                    eprintln!("[main] relaunch: waiting for the previous instance to exit");
+                }
                 attempt += 1;
                 std::thread::sleep(std::time::Duration::from_millis(250));
             }
             Err(e) if e.raw_os_error() == Some(ERROR_SHARING_VIOLATION) => {
+                // 12.1.14: a relaunch that gave up withdraws its hand-over, so the previous instance stays up
+                if relaunch {
+                    relaunch::withdraw();
+                }
                 eprintln!("[main] another Tin Hat instance is already running — exiting this one.");
                 eprintln!("[main] (set TINHAT_NO_SINGLE_INSTANCE=1 to force a second instance.)");
                 println!("Tin Hat is already running.");
@@ -634,8 +675,32 @@ fn acquire_single_instance_lock() -> Option<std::fs::File> {
 }
 
 
+/// The ambience / game-art review galleries (AmbienceGallery.qml: captures + the performance runs, the web's
+/// #/__gallery/ambience; GameArtGallery.qml: "Match the game" captures, the web's #/__gallery/gamebg). Lab hooks:
+/// compiled only outside a release (cfg tinhat_env_selftests), refused by scripts/release-binary-check.sh.
+#[cfg(tinhat_env_selftests)]
+fn lab_gallery_qml() -> Option<&'static str> {
+    if std::env::var_os("TINHAT_AMBIENCE_GALLERY").is_some() {
+        Some("qrc:/qt/qml/dev/tinhat/app/qml/AmbienceGallery.qml")
+    } else if std::env::var_os("TINHAT_GAMEBG_GALLERY").is_some() {
+        Some("qrc:/qt/qml/dev/tinhat/app/qml/GameArtGallery.qml")
+    } else {
+        None
+    }
+}
+#[cfg(not(tinhat_env_selftests))]
+fn lab_gallery_qml() -> Option<&'static str> {
+    None
+}
+
 fn main() {
     boot::mark_start(); // anchors the [boot] +N ms timings
+    // 12.1.14 (win-updater-safety): `tinhat.exe --update-probe` = the updater's check of a downloaded bundle, run from
+    // staging before anything is switched (update_switch.rs). First of all: it reads no settings and writes nothing.
+    #[cfg(windows)]
+    if std::env::args().nth(1).as_deref() == Some(update_switch::PROBE_ARG) {
+        update_switch::win::run_probe();
+    }
     // selfhost: the server gates go over the actions table before anything reads it (server_offer.rs)
     server_offer::ensure_actions_overlay();
     // The per-user directories are fixed FIRST, before anything below reads or writes a
@@ -1926,6 +1991,9 @@ fn main() {
         } else if std::env::var_os("TINHAT_BUTTONS_TEST").is_some() {
             // 11.0 buttons: the offscreen review captures (ButtonsTest.qml: rows, button islands, the Ctrl+K palette)
             "qrc:/qt/qml/dev/tinhat/app/qml/ButtonsTest.qml".to_string()
+        } else if let Some(g) = lab_gallery_qml() {
+            // chat backgrounds / "Match the game" review captures + performance runs without a sign-in (lab builds only)
+            g.to_string()
         } else if std::env::var_os("TINHAT_THEME_GALLERY").is_some() {
             // 11.0 step 5: the theme editor's / share cards' review captures (ThemeEditorGallery.qml, no sign-in; the
             // web's #/__gallery/theme-editor + theme-share, the same states)
@@ -2000,6 +2068,18 @@ mod tour_copy_tests {
     /// The QML string literals joined (the card bodies are split over lines with `+`).
     fn joined() -> String {
         TOUR.replace("\"\n                + \"", "")
+    }
+
+    pub const SAY_HI: &str = "Got here from an invite? The room or DM you were invited to is in your room list — open it and say hi. To start your own, use the + above your rooms for a new DM or a new room.";
+
+    /// A01.6 / D01.8 / A34.4 (Sunday QoL): a card for the friend who came from an invite; no card sends people to a ☰
+    /// entry that left the menu in 11.2 (= the web's tour.test.ts).
+    #[test]
+    fn say_hi_card_and_no_stale_menu_path() {
+        let t = joined();
+        assert!(t.contains(&format!("title: \"Say hi\",\n            body: \"{SAY_HI}\"")), "the Say hi card");
+        assert!(!t.contains("☰ → \\\"Tuck nav into corner"), "the corner toggle is not in ☰");
+        assert!(t.contains("the \\\"Tuck nav into corner\\\" button next to your name"), "the real control");
     }
 
     #[test]

@@ -28,7 +28,7 @@ Item {
     opacity: mark.running ? 1 : 0
     Behavior on opacity { NumberAnimation { duration: Motion.durLong } }
     Accessible.role: Accessible.ProgressBar
-    Accessible.name: "Loading"
+    Accessible.name: mark.label.length > 0 ? mark.shownLabel : "Loading"   // QOL A29.0: what loads, when known
 
     // lowgpu.ts stillLabel (same code): a label already starting with the word "Still" stays
     function stillLabel(l) {

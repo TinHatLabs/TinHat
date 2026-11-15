@@ -12,7 +12,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 
-Controls.Menu {
+KeyMenu {   // a11y round 2 (m11): takes the keyboard when the keyboard opened it
     readonly property real rowsWidth: (contentItem && contentItem.contentItem)
         ? contentItem.contentItem.visibleChildren.reduce((w, c) => Math.max(w, c.implicitWidth), 0) : 0
     width: Math.max(implicitWidth, rowsWidth + leftPadding + rightPadding)

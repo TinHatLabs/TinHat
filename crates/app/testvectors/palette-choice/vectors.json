@@ -1,0 +1,177 @@
+{
+  "format": "tinhat-palette-choice-vectors",
+  "cases": [
+    {
+      "name": "a room opens",
+      "picking": false,
+      "it": {
+        "kind": "room",
+        "id": "!a:x",
+        "enabled": true,
+        "pick": false,
+        "a": null,
+        "target": null
+      },
+      "want": {
+        "do": "openRoom",
+        "id": "!a:x"
+      }
+    },
+    {
+      "name": "pick mode hands the room to the picker",
+      "picking": true,
+      "it": {
+        "kind": "room",
+        "id": "!a:x",
+        "enabled": true,
+        "pick": false,
+        "a": null,
+        "target": null
+      },
+      "want": {
+        "do": "pickRoom",
+        "id": "!a:x"
+      }
+    },
+    {
+      "name": "an invite shows where it waits",
+      "picking": false,
+      "it": {
+        "kind": "invite",
+        "id": "!i:x",
+        "enabled": true,
+        "pick": false,
+        "a": null,
+        "target": null
+      },
+      "want": {
+        "do": "showInvite",
+        "id": "!i:x"
+      }
+    },
+    {
+      "name": "a person gets a DM",
+      "picking": false,
+      "it": {
+        "kind": "person",
+        "id": "@z:x",
+        "enabled": true,
+        "pick": false,
+        "a": null,
+        "target": null
+      },
+      "want": {
+        "do": "message",
+        "person": "@z:x"
+      }
+    },
+    {
+      "name": "find people: New DM with the query (P6)",
+      "picking": false,
+      "it": {
+        "kind": "find",
+        "id": "Zoë W",
+        "enabled": true,
+        "pick": false,
+        "a": "dm.new",
+        "target": null
+      },
+      "want": {
+        "do": "newDm",
+        "text": "Zoë W"
+      }
+    },
+    {
+      "name": "an action that picks goes to stage 2",
+      "picking": false,
+      "it": {
+        "kind": "action",
+        "id": "app.theme.set",
+        "enabled": true,
+        "pick": true,
+        "a": "app.theme.set",
+        "target": null
+      },
+      "want": {
+        "do": "stage",
+        "action": "app.theme.set"
+      }
+    },
+    {
+      "name": "an action runs",
+      "picking": false,
+      "it": {
+        "kind": "action",
+        "id": "call.mic.toggle",
+        "enabled": true,
+        "pick": false,
+        "a": "call.mic.toggle",
+        "target": null
+      },
+      "want": {
+        "do": "run",
+        "action": "call.mic.toggle",
+        "target": null
+      }
+    },
+    {
+      "name": "a choice runs with its target",
+      "picking": false,
+      "it": {
+        "kind": "choice",
+        "id": "oled",
+        "enabled": true,
+        "pick": false,
+        "a": "app.theme.set",
+        "target": {
+          "theme": "oled"
+        }
+      },
+      "want": {
+        "do": "run",
+        "action": "app.theme.set",
+        "target": {
+          "theme": "oled"
+        }
+      }
+    },
+    {
+      "name": "a disabled row does nothing",
+      "picking": false,
+      "it": {
+        "kind": "action",
+        "id": "call.leave",
+        "enabled": false,
+        "pick": false,
+        "a": "call.leave",
+        "target": null
+      },
+      "want": {
+        "do": "nothing"
+      }
+    },
+    {
+      "name": "no row does nothing",
+      "picking": false,
+      "it": null,
+      "want": {
+        "do": "nothing"
+      }
+    },
+    {
+      "name": "an unknown kind without an action does nothing",
+      "picking": false,
+      "it": {
+        "kind": "later",
+        "id": "x",
+        "enabled": true,
+        "pick": false,
+        "a": null,
+        "target": null
+      },
+      "want": {
+        "do": "nothing"
+      }
+    }
+  ]
+}

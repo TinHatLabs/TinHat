@@ -38,6 +38,17 @@ Item {
         if (!toast.ringing(roomId)) return l.num("ringRest")
         return l.ringHigh(toast.arrived[roomId], toast.now) ? l.num("ringHigh") : l.num("ringLow")
     }
+    // A15.3 (2026-11-13): every card is past its ring (RING_LIMIT 25 s): the card settles (Main.qml: top right, narrower;
+    // the second line goes). The web's Incoming.tsx: the same rule.
+    readonly property bool settled: {
+        var n = toast.now
+        if (toast.calls.length === 0) return false
+        for (var i = 0; i < toast.calls.length; i++) {
+            var since = toast.arrived[toast.calls[i].roomId]
+            if (since === undefined || n - since < 25000) return false
+        }
+        return true
+    }
     readonly property bool anyRing: {
         var n = toast.now, w = Motion.realWinState, r = Motion.reducedMotion   // dependencies
         for (var i = 0; i < toast.calls.length; i++) if (toast.ringing(toast.calls[i].roomId)) return true
@@ -64,6 +75,9 @@ Item {
         calls = next
         // 10.1 (TH-POP-10): already on a call → one notify blip, not a 25 s ringtone into headphones.
         if (app) { if (app.mInCall) app.playUiSound("notify"); else app.startRing(); app.notifyIncomingCall(roomId, roomName, who) }
+        // a11y round 2 (M3): a screen reader hears the card at once (urgent), not only the ringtone; the focus stays
+        // where it is (typing is never interrupted)
+        if (app && typeof app.announceIncoming === "function") app.announceIncoming(roomName, who)
         ringLimit.restart()
     }
     function dismiss(roomId) {
@@ -78,13 +92,37 @@ Item {
         var a = Object.assign({}, toast.arrived); delete a[roomId]; toast.arrived = a
     }
     function ended(roomId) { dismiss(roomId) }
+    // P8 (2026-11-13): a DM ring can be declined (the web's Incoming.tsx: the same button, the same word). The card and
+    // the ring go here; ringglue.rs tells the caller ("<name> declined"), my other devices and the server.
+    function decline(roomId) {
+        dismiss(roomId)
+        if (app && app.login) app.login.declineIncoming(roomId)
+    }
+    // (lab A 2026-11-14: m.direct can be missing on the invitee's side; the Decline's own rule is two joined people)
+    function declinable(roomId) { return !!app && typeof app.twoPersonCall === "function" && app.twoPersonCall(roomId) }
+    // A15.2/A15.6: the card's two lines (callannounce.rs incoming_card = the web's incomingCard, shared vectors); the
+    // people in the call from the room list's row (the join banner's source), me left out
+    function cardLines(c) {
+        var names = []
+        var rooms = (app && app.mNavRooms) ? app.mNavRooms : []
+        for (var i = 0; i < rooms.length; i++) {
+            if (!rooms[i] || rooms[i].id !== c.roomId) continue
+            var ps = rooms[i].participants || []
+            for (var j = 0; j < ps.length; j++) if (ps[j].mxid !== app.mUserId) names.push(String(ps[j].name || ps[j].mxid || ""))
+            break
+        }
+        var fallback = { title: "Incoming call · " + c.roomName, sub: c.who && c.who.length > 0 ? c.who + " started a call" : "Someone started a call" }
+        if (!app || typeof app.incomingCardJson !== "function") return fallback
+        try { return JSON.parse(app.incomingCardJson(toast.declinable(c.roomId), String(c.roomName || ""), String(c.who || ""), JSON.stringify(names), toast.inOtherCall)) }
+        catch (e) { return fallback }
+    }
     function join(roomId) {
         if (app) app.stopRing()
         calls = calls.filter(function (c) { return c.roomId !== roomId })
         toast._forget(roomId)
         toast.joinRequested(roomId)
     }
-    Timer { id: ringLimit; interval: 25000; onTriggered: if (app) app.stopRing() }
+    Timer { id: ringLimit; interval: 25000; onTriggered: { if (app) app.stopRing(); toast.now = Date.now() } }   // (+ A15.3: settle)
 
     ColumnLayout {
         id: column
@@ -94,6 +132,8 @@ Item {
             model: toast.calls
             delegate: Rectangle {
                 required property var modelData
+                Accessible.role: Accessible.Grouping
+                Accessible.name: "Incoming call · " + modelData.roomName
                 Layout.fillWidth: true
                 implicitHeight: row.implicitHeight + Kirigami.Units.largeSpacing * 2
                 radius: 14
@@ -122,10 +162,12 @@ Item {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 2
+                        // A15.2/A15.6 (2026-11-13): a DM names the caller; a group says who is in the call now
+                        readonly property var lines: toast.cardLines(modelData)
                         Controls.Label {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
-                            text: "Incoming call · " + modelData.roomName
+                            text: parent.lines.title
                             color: Th.callIncomingFg
                             font.bold: true
                             elide: Text.ElideRight
@@ -133,8 +175,8 @@ Item {
                         Controls.Label {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             Layout.fillWidth: true
-                            text: (modelData.who && modelData.who.length > 0 ? modelData.who + " started a call" : "Someone started a call")
-                                  + (toast.inOtherCall ? " — you're in another call" : "")
+                            text: parent.lines.sub
+                            visible: !toast.settled   // A15.3: one line once settled
                             color: Th.callIncomingSubFg
                             font.pointSize: Kirigami.Theme.smallFont.pointSize
                             elide: Text.ElideRight
@@ -145,6 +187,13 @@ Item {
                         text: toast.inOtherCall ? "Switch" : "Join"
                         icon.name: "call-start-symbolic"
                         onClicked: toast.join(modelData.roomId)
+                    }
+                    ThToolButton {
+                        app: toast.app
+                        visible: toast.declinable(modelData.roomId)
+                        iconName: "call-stop-symbolic"
+                        tip: "Decline"
+                        onClicked: toast.decline(modelData.roomId)
                     }
                     ThToolButton {
                         app: toast.app

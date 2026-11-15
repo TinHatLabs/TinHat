@@ -1,0 +1,12 @@
+{
+  "about": "Attachments and voice notes vs the server's upload limit (QOL A08.2; voice notes §6). size = the file's bytes, limit = the server's m.upload.size (null = unknown: never refused). over = refused before anything is read or uploaded, with \"That file is too large for the server\" (a voice note: \"This voice message is too large for the server\"). Replayed by the desktop (room.rs voice_over_limit) and Tin Hat Web (src/features/chat/lib/uploadLimit.ts overUploadLimit).",
+  "cases": [
+    { "name": "under the limit", "size": 1000, "limit": 104857600, "over": false },
+    { "name": "exactly the limit", "size": 104857600, "limit": 104857600, "over": false },
+    { "name": "one byte over", "size": 104857601, "limit": 104857600, "over": true },
+    { "name": "a 4 GB file against 100 MB", "size": 4294967296, "limit": 104857600, "over": true },
+    { "name": "unknown limit: never refused", "size": 4294967296, "limit": null, "over": false },
+    { "name": "a zero limit is no limit", "size": 5, "limit": 0, "over": false },
+    { "name": "an empty file", "size": 0, "limit": 10, "over": false }
+  ]
+}

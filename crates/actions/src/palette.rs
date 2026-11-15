@@ -24,22 +24,41 @@ pub fn is_sep(cp: u32) -> bool {
     table().palette.separators.iter().any(|&(lo, hi)| x >= lo && x <= hi)
 }
 
-/// Lower-case, every separator run → one space, trimmed (ACTIONS.md §10.3).
+/// A code point accent folding drops (the table's `fold.drop`: the combining marks).
+fn is_dropped(cp: u32) -> bool {
+    table().palette.fold_drop.iter().any(|&(lo, hi)| cp >= lo && cp <= hi)
+}
+
+/// Lower-case, accents off (the table's `fold`: combining marks dropped, "é" → "e", "ß" → "ss"), every separator run →
+/// one space, trimmed (ACTIONS.md §10.3).
 pub fn fold(text: &str) -> String {
+    let letters = &table().palette.fold_letters;
     let mut out = String::new();
     let mut pending_space = false;
     for ch in text.to_lowercase().chars() {
-        if is_sep(ch as u32) {
+        let cp = ch as u32;
+        if is_sep(cp) {
             pending_space = !out.is_empty();
+            continue;
+        }
+        if is_dropped(cp) {
             continue;
         }
         if pending_space {
             out.push(' ');
         }
         pending_space = false;
-        out.push(ch);
+        match letters.get(&ch) {
+            Some(b) => out.push_str(b),
+            None => out.push(ch),
+        }
     }
     out
+}
+
+/// The text with leading and trailing U+0020 spaces removed (only those: the reference's `trimSpaces`).
+pub fn trim_spaces(text: &str) -> &str {
+    text.trim_matches(' ')
 }
 
 fn subsequence(q: &str, t: &str) -> bool {
@@ -121,8 +140,9 @@ pub fn alias_tier(t: &str, q: &str) -> f64 {
 
 // ---- entries --------------------------------------------------------------------------------------------------------
 
-/// `EntryKind = "invite" | "room" | "person" | "action" | "choice"` — `invite` = a pending invite to a room or a DM
-/// (2026-09-28: Ctrl+K lists them again, ACTIONS.md §10.1).
+/// `EntryKind = "invite" | "room" | "person" | "action" | "choice" | "find"` — `invite` = a pending invite to a room or a
+/// DM (2026-09-28: Ctrl+K lists them again, ACTIONS.md §10.1); `find` = person mode's last row, "Find people named …"
+/// (2026-11-14, ACTIONS.md §10.5): never ranked, `id` = the query as typed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EntryKind {
     Invite,
@@ -130,6 +150,7 @@ pub enum EntryKind {
     Person,
     Action,
     Choice,
+    Find,
 }
 
 impl EntryKind {
@@ -140,6 +161,7 @@ impl EntryKind {
             EntryKind::Person => "person",
             EntryKind::Action => "action",
             EntryKind::Choice => "choice",
+            EntryKind::Find => "find",
         }
     }
 }
@@ -621,6 +643,28 @@ pub fn palette(app: App, snap: &Snapshot, query: &str, stage: Option<&str>) -> P
         }
     }
     let q = fold(rest);
+    // person mode with something typed: a last row that searches everyone ("Find people named …" → New DM, the query in
+    // its field), after the DM partners that match (P6, 2026-11-14) — not counted in `total`, never cut by maxResults
+    let find = if mode == "person" && !q.is_empty() {
+        let typed = trim_spaces(rest);
+        let tpl = table().palette.texts.get("findPeople").and_then(Value::as_str).unwrap_or("{query}");
+        Some(PaletteItem {
+            kind: EntryKind::Find,
+            id: typed.to_string(),
+            label: tpl.split("{query}").collect::<Vec<_>>().join(typed),
+            icon: None,
+            hint: None,
+            enabled: true,
+            pick: false,
+            active: None,
+            emoji: None,
+            a: Some("dm.new".to_string()),
+            target: None,
+            score: 0.0,
+        })
+    } else {
+        None
+    };
     let entries: Vec<Entry> = if mode == "room" || (mode == "all" && q.is_empty()) {
         let mut rooms = room_like_entries(snap, EntryKind::Invite);
         rooms.extend(room_like_entries(snap, EntryKind::Room));
@@ -637,8 +681,82 @@ pub fn palette(app: App, snap: &Snapshot, query: &str, stage: Option<&str>) -> P
         all.extend(person_entries(snap));
         all
     };
-    let (total, items) = rank(&entries, &q);
+    let (total, mut items) = rank(&entries, &q);
+    items.extend(find);
     PaletteOut { mode, query: q, stage: None, total, items }
+}
+
+// ---- the room list's filter (ACTIONS.md §10.8) ------------------------------------------------------------------------
+
+/// A parsed room filter: the folded text and the `is:` words.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RoomFilter {
+    /// the folded text (the query without its `is:` words)
+    pub text: String,
+    /// `is:unread`: rooms with something unread
+    pub unread: bool,
+    /// `is:mention` / `is:mentions`: rooms that mention you
+    pub mention: bool,
+    /// anything to filter by (text or an `is:` word)
+    pub active: bool,
+}
+
+/// Parse the room list's "Filter rooms…" field: words split on U+0020; `is:unread`, `is:mention` and `is:mentions`
+/// (ASCII, any case) are flags; the other words, joined by one space, are folded (§10.3) into the text.
+pub fn room_filter(query: &str) -> RoomFilter {
+    let (mut unread, mut mention) = (false, false);
+    let mut words: Vec<&str> = Vec::new();
+    for w in query.split(' ') {
+        let lw = w.to_lowercase();
+        if lw == "is:unread" {
+            unread = true;
+        } else if lw == "is:mention" || lw == "is:mentions" {
+            mention = true;
+        } else if !w.is_empty() {
+            words.push(w);
+        }
+    }
+    let text = fold(&words.join(" "));
+    let active = !text.is_empty() || unread || mention;
+    RoomFilter { text, unread, mention, active }
+}
+
+/// One row of the room list as the filter sees it.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct RoomFilterRow {
+    pub name: String,
+    /// the room's address (`#name:server`) and a DM's other person (`@name:server`): matched by the part before the
+    /// first ":" (folded)
+    pub aliases: Vec<String>,
+    /// "join" | "invite" | "none"
+    pub membership: String,
+    pub unread: bool,
+    pub mention: bool,
+}
+
+/// Does the filter show this row? Its flags must hold, and its text (when any) must match the name — §10.4's name tiers
+/// without the subsequence — or an alias's part before ":".
+pub fn room_filter_shows(f: &RoomFilter, r: &RoomFilterRow) -> bool {
+    if (f.unread && !r.unread) || (f.mention && !r.mention) {
+        return false;
+    }
+    if f.text.is_empty() {
+        return true;
+    }
+    if name_tier(&fold(&r.name), &f.text, false) > 0.0 {
+        return true;
+    }
+    r.aliases.iter().any(|al| name_tier(&fold(al.split(':').next().unwrap_or("")), &f.text, false) > 0.0)
+}
+
+/// The room list's filter over its rows (in list order): which rows show, and the FIRST — the row Enter acts on and the
+/// one drawn highlighted: the first shown row that is not an invite; -1 (None) when the filter is empty or nothing
+/// qualifies.
+pub fn room_filter_run(query: &str, rows: &[RoomFilterRow]) -> (RoomFilter, Vec<bool>, Option<usize>) {
+    let f = room_filter(query);
+    let shown: Vec<bool> = rows.iter().map(|r| !f.active || room_filter_shows(&f, r)).collect();
+    let first = if f.active { rows.iter().enumerate().position(|(i, r)| shown[i] && r.membership != "invite") } else { None };
+    (f, shown, first)
 }
 
 /// A plain JSON copy of an entry list without the ranking inputs (for the vectors of the entry builders).

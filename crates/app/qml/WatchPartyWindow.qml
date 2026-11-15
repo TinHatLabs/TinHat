@@ -46,6 +46,7 @@ Window {
     onSearchOnChanged: if (!searchOn && browseTab !== "history") browseTab = "history"
     // 10.1 (TH-CAL-22 / TH-MEM-08 / TH-WP-15): remembered size (+ position off Wayland) across runs. 11.3 QOL: held
     // while mini / fullscreen so neither geometry ever becomes the remembered one.
+    ScreenFit { id: screenFit }
     WindowMemory { id: winMemo; target: sheet; key: "watchparty"; store: (sheet.app && sheet.app.prefStore) ? sheet.app.prefStore : null; hold: sheet.mini || sheet._miniLeaving }
     property string roomId: ""
     property bool inParty: false
@@ -109,6 +110,7 @@ Window {
     signal removeAt(int index)           // 11.4
     signal moveItem(int from, int to)    // 11.4
     signal clearQueue()                  // 11.4 (host-gated here)
+    signal restoreQueue(string roomId, string clearedJson)   // QOL A16.2 (P11): Undo after Clear (watchparty.rs restoreQueue)
     signal moveToNext(int from)          // 11.3 QOL: "Play next" (queue op moveToNext — anyone in the party)
     signal clearPlayed()                 // 11.3 QOL (host-gated here)
     signal shuffleUpcoming()             // 11.3 QOL (host-gated here)
@@ -371,7 +373,8 @@ Window {
     Timer { id: miniPosSave; interval: 700; onTriggered: if (sheet.mini && winMemo.canPlace) { sheet.savePref("watchparty-mini-x", Math.round(sheet.x)); sheet.savePref("watchparty-mini-y", Math.round(sheet.y)) } }
     function miniPos() {
         var x = parseInt(sheet.store ? sheet.store.uiPref("watchparty-mini-x") : ""), y = parseInt(sheet.store ? sheet.store.uiPref("watchparty-mini-y") : "")
-        if (!isNaN(x) && !isNaN(y) && x > -4000 && y > -4000 && x < 16000 && y < 16000) return { x: x, y: y }
+        if (!isNaN(x) && !isNaN(y) && x > -4000 && y > -4000 && x < 16000 && y < 16000
+                && screenFit.onScreen(x, y, 480, 270, Qt.application.screens)) return { x: x, y: y }   // A33.3
         // first time: the bottom-right of the screen's available area, 24 px in
         var right = Math.min(Screen.virtualX + Screen.width, Screen.desktopAvailableWidth)
         var bottom = Math.min(Screen.virtualY + Screen.height, Screen.desktopAvailableHeight)
@@ -487,7 +490,10 @@ Window {
         if (watching && rid.length > 0) sheet.leftByClosing(rid)
     }
     onVisibleChanged: { if (visible && mpv) mpv.loadCurrent(); if (visible && !searchOn && browseTab !== "history") browseTab = "history" }
-    onInPartyChanged: if (inParty) sheet._osdArmAt = Date.now() + 2500
+    onInPartyChanged: {
+        if (inParty) sheet._osdArmAt = Date.now() + 2500
+        else sheet._dropUndo()   // QOL A16.2: leaving the party drops its Undo
+    }
 
     // ---- the window's own actions (window:watchParty context, ACTIONS.md §14.1) ------------------------------------
     // 11.3 QOL: my last play / pause counts until the shared clock answers (≤ 5 s) — on a slow server two quick
@@ -608,6 +614,60 @@ Window {
 
     // ---- 11.3 QOL (§2) the OSD: one pill at the top-centre of the video, 1.2 s then a 200 ms fade (none with reduced
     // motion); the newest replaces the current one. Mine (keys / clicks / wheel) and what OTHERS do (below).
+    // QOL A16.2 (P11 (a)): Clear empties the queue for everyone at once; a 5 s "Queue cleared · Undo" bar puts it back
+    // (the cleared items first, then anything others added meanwhile: queue_undo_clear, vectors undoclear.json).
+    // Tin Hat Web: QueueList's Clear → the same toast.
+    property string _undoJson: ""
+    property string _undoRoom: ""   // the party the Clear was in: Undo never writes into another one
+    readonly property string _partyRoom: sheet.app && sheet.app.watchCtl ? String(sheet.app.watchCtl.roomId) : ""
+    function clearWithUndo() {
+        if (!sheet.canControl || sheet.queue.length === 0) return
+        sheet._undoJson = JSON.stringify(sheet.queue)
+        sheet._undoRoom = sheet._partyRoom
+        sheet.clearQueue()
+        undoBar.visible = true
+        undoT.restart()
+    }
+    function undoClear() {
+        undoT.stop()
+        undoBar.visible = false
+        if (sheet._undoJson.length > 0 && sheet.inParty && sheet._partyRoom === sheet._undoRoom)
+            sheet.restoreQueue(sheet._undoRoom, sheet._undoJson)
+        sheet._undoJson = ""
+    }
+    function _dropUndo() { undoT.stop(); undoBar.visible = false; sheet._undoJson = "" }
+    on_PartyRoomChanged: sheet._dropUndo()
+    Timer { id: undoT; interval: 5000; onTriggered: sheet._dropUndo() }
+    Rectangle {
+        id: undoBar
+        objectName: "mpUndoBar"
+        visible: false
+        z: 100
+        parent: sheet.contentItem
+        anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+        anchors.bottom: parent ? parent.bottom : undefined
+        anchors.bottomMargin: 18
+        implicitWidth: undoRow.implicitWidth + 24
+        implicitHeight: undoRow.implicitHeight + 12
+        radius: 8
+        color: Th.watchpartyClickToPlayBg
+        Accessible.role: Accessible.AlertMessage
+        Accessible.name: "Queue cleared"
+        RowLayout {
+            id: undoRow
+            anchors.centerIn: parent
+            spacing: 10
+            Controls.Label { textFormat: Text.PlainText; text: "Queue cleared"; color: Th.watchpartyClickToPlayFg; font.bold: true }
+            ThButton {
+                app: sheet.app
+                flat: true
+                text: "Undo"
+                enabled: sheet.canControl
+                onClicked: sheet.undoClear()
+            }
+        }
+    }
+
     function showOsd(text, icon) {
         osd.text = String(text)
         osd.icon = icon ? String(icon) : ""
@@ -735,7 +795,7 @@ Window {
     // the row menu (right-click a queue row): Play now · Play next · Move to top · Move up · Move down · Open link ·
     // Copy link · Remove
     function openRowMenu(i) { rowMenu.idx = i; rowMenu.popup() }
-    Controls.Menu {
+    KeyMenu {
         id: rowMenu
         property int idx: -1
         readonly property var item: (idx >= 0 && idx < sheet.queue.length) ? sheet.queue[idx] : null
@@ -1108,9 +1168,8 @@ Window {
                                                     && !sheet.mSawPlayback && !sheet.mEofSeen
                                                     && Date.now() - sheet.mLoadStartedAt > 20000
                                                     && mpv.getProperty("idle-active") === true) {
-                                                sheet.playbackError =
-                                                    "Playback failed — mpv couldn't load this link. YouTube needs yt-dlp " +
-                                                    "(pacman -S yt-dlp); a private, removed or region-locked video fails the same way. Press Retry."
+                                                // QOL A16.3: Tin Hat Web's words (no package-manager command for every user)
+                                                sheet.playbackError = "Playback failed — couldn't load this video. Press Retry."
                                             }
                                         }
                                     }
@@ -1491,7 +1550,7 @@ Window {
                                 text: "Clear"
                                 Controls.ToolTip.text: !sheet.canControl && sheet.inParty ? "Only the host (" + sheet.hostName + ") can clear the queue" : "Clear the queue (for everyone)"
                                 Controls.ToolTip.visible: hovered
-                                onClicked: sheet.clearQueue()
+                                onClicked: sheet.clearWithUndo()
                             }
                         }
                         ListView {
@@ -1778,9 +1837,20 @@ Window {
                                         model: sheet.searchOn ? [ { id: "search", label: "Search" }, { id: "music", label: "Music" }, { id: "trending", label: "Trending" }, { id: "playlists", label: "Playlists" }, { id: "history", label: "History" } ]
                                                               : [ { id: "history", label: "History" } ]
                                         delegate: Item {
+                                            id: tabItem
                                             required property var modelData
                                             readonly property bool on: sheet.browseTab === modelData.id
                                             width: tabLbl.implicitWidth + 20; height: tabLbl.implicitHeight + 11
+                                            // A31.3: a tab by keyboard (Tab, then Enter / Space) and for screen readers (the web: role=tab)
+                                            activeFocusOnTab: true
+                                            Accessible.role: Accessible.PageTab
+                                            Accessible.name: modelData.label
+                                            Accessible.selected: on
+                                            Accessible.onPressAction: sheet.setTab(modelData.id)
+                                            Keys.onReturnPressed: sheet.setTab(modelData.id)
+                                            Keys.onEnterPressed: sheet.setTab(modelData.id)
+                                            Keys.onSpacePressed: sheet.setTab(modelData.id)
+                                            Rectangle { anchors.fill: parent; radius: 3; color: "transparent"; border.width: 2; border.color: Th.watchpartyQueueRowBorderHover; visible: tabItem.activeFocus }
                                             Controls.Label { id: tabLbl; anchors.centerIn: parent; anchors.verticalCenterOffset: -1; textFormat: Text.PlainText; text: parent.modelData.label; font.bold: true; color: (parent.on || tabMa.containsMouse) ? Th.watchpartyFg : Th.watchpartyMetaFg }
                                             Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 2; visible: parent.on; color: Th.watchpartyQueueRowBorderHover }
                                             MouseArea { id: tabMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: sheet.setTab(parent.modelData.id) }
@@ -1798,15 +1868,27 @@ Window {
                                            ? [ { id: 0, label: "All" }, { id: 10, label: "Music" }, { id: 20, label: "Gaming" }, { id: 1, label: "Film" }, { id: 24, label: "Entertainment" }, { id: 17, label: "Sports" }, { id: 28, label: "Science" } ]
                                            : [ { id: "video", label: "Videos" }, { id: "music", label: "Music" }, { id: "playlist", label: "Playlists" }, { id: "channel", label: "Channels" } ]
                                     delegate: Rectangle {
+                                        id: chipItem
                                         required property var modelData
                                         readonly property bool on: sheet.browseTab === "trending" ? sheet.trendingCat === modelData.id : sheet.searchType === modelData.id
+                                        // A31.3: by keyboard and for screen readers (a toggle button)
+                                        function pick() { if (sheet.browseTab === "trending") { sheet.trendingCat = modelData.id; sheet.runBrowse() } else { sheet.searchType = modelData.id; if (searchField.text.trim().length > 0) sheet.runBrowse() } }
+                                        activeFocusOnTab: true
+                                        Accessible.role: Accessible.Button
+                                        Accessible.name: modelData.label
+                                        Accessible.checkable: true
+                                        Accessible.checked: on
+                                        Accessible.onPressAction: pick()
+                                        Keys.onReturnPressed: pick()
+                                        Keys.onEnterPressed: pick()
+                                        Keys.onSpacePressed: pick()
                                         implicitWidth: chipLbl.implicitWidth + 20; implicitHeight: chipLbl.implicitHeight + 4; radius: 10
                                         color: (on || chipMa.containsMouse) ? Th.watchpartyQueueRowBgHover : Th.watchpartyQueueRowBg
-                                        border.width: 1; border.color: on ? Th.watchpartyQueueRowBorderHover : Th.watchpartyQueueRowBorder
+                                        border.width: activeFocus ? 2 : 1; border.color: (on || activeFocus) ? Th.watchpartyQueueRowBorderHover : Th.watchpartyQueueRowBorder
                                         Controls.Label { id: chipLbl; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.modelData.label; font.pointSize: Kirigami.Theme.smallFont.pointSize; color: parent.on ? Th.watchpartyFg : Th.watchpartyMetaFg }
                                         MouseArea {
                                             id: chipMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                            onClicked: { if (sheet.browseTab === "trending") { sheet.trendingCat = parent.modelData.id; sheet.runBrowse() } else { sheet.searchType = parent.modelData.id; if (searchField.text.trim().length > 0) sheet.runBrowse() } }
+                                            onClicked: chipItem.pick()
                                         }
                                     }
                                 }
@@ -1828,12 +1910,21 @@ Window {
                                     Repeater {
                                         model: sheet.suggestions
                                         delegate: Rectangle {
+                                            id: sugItem
                                             required property var modelData
                                             Layout.fillWidth: true
                                             implicitHeight: sugLbl.implicitHeight + 8
-                                            color: sugMa.containsMouse ? Th.watchpartyResultRowBgHover : "transparent"
+                                            color: (sugMa.containsMouse || activeFocus) ? Th.watchpartyResultRowBgHover : "transparent"
+                                            // A31.3: a suggestion by keyboard (Tab, then Enter) and for screen readers (the web: role=option)
+                                            function pick() { searchField.text = String(modelData); sheet.suggest(""); searchField.forceActiveFocus() }
+                                            activeFocusOnTab: true
+                                            Accessible.role: Accessible.ListItem
+                                            Accessible.name: String(modelData)
+                                            Accessible.onPressAction: pick()
+                                            Keys.onReturnPressed: pick()
+                                            Keys.onEnterPressed: pick()
                                             Controls.Label { id: sugLbl; anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: String(parent.modelData); color: Th.watchpartyResultRowFg }
-                                            MouseArea { id: sugMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { searchField.text = String(parent.modelData); sheet.suggest(""); searchField.forceActiveFocus() } }
+                                            MouseArea { id: sugMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: sugItem.pick() }
                                         }
                                     }
                                 }

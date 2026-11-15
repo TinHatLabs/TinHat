@@ -933,7 +933,7 @@
    }
   },
   {
-   "what": "empty: nothing",
+   "what": "empty (P7): the people you know, ready to pick: DM partners first, then most shared rooms; members and me left out; no Enter pick",
    "own": "home.example",
    "me": "@me:home.example",
    "input": "",
@@ -1005,7 +1005,294 @@
    ],
    "members": [],
    "want": {
-    "rows": [],
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@alex:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@al:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@alexandra:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@sam:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@tom:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": -1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "empty (P7): someone already in the room is left out (not dimmed: the list is for picking)",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "  ",
+   "known": [
+    {
+     "mxid": "@sam:home.example",
+     "name": "Sam Rivera",
+     "avatar": "",
+     "dm": false,
+     "shared": 3
+    },
+    {
+     "mxid": "@alex:elsewhere.example",
+     "name": "Alex",
+     "avatar": "",
+     "dm": true,
+     "shared": 2
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": "",
+     "dm": false,
+     "shared": 5
+    },
+    {
+     "mxid": "@al:home.example",
+     "name": "Al",
+     "avatar": "",
+     "dm": true,
+     "shared": 1
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": "",
+     "dm": false,
+     "shared": 9
+    },
+    {
+     "mxid": "@tom:home.example",
+     "name": "Tom",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [
+    {
+     "mxid": "@alex:home.example",
+     "name": "Alex (here)",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexandra:home.example",
+     "name": "Alexandra",
+     "avatar": ""
+    },
+    {
+     "mxid": "@me:home.example",
+     "name": "Me myself",
+     "avatar": ""
+    },
+    {
+     "mxid": "@alexis:far.example",
+     "name": "Alexis",
+     "avatar": ""
+    }
+   ],
+   "members": [
+    "@alexandra:home.example"
+   ],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@alex:elsewhere.example",
+      "server": "elsewhere.example",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@al:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@sam:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@tom:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     }
+    ],
+    "pick": -1,
+    "fallback": -1
+   }
+  },
+  {
+   "what": "empty (P7): at most 8; ties by name",
+   "own": "home.example",
+   "me": "@me:home.example",
+   "input": "",
+   "known": [
+    {
+     "mxid": "@kai:home.example",
+     "name": "Kai",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@bea:home.example",
+     "name": "Bea",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@ash:home.example",
+     "name": "Ash",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@jo:home.example",
+     "name": "Jo",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@cy:home.example",
+     "name": "Cy",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@fen:home.example",
+     "name": "Fen",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@gus:home.example",
+     "name": "Gus",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@ida:home.example",
+     "name": "Ida",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@hal:home.example",
+     "name": "Hal",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    },
+    {
+     "mxid": "@dee:home.example",
+     "name": "Dee",
+     "avatar": "",
+     "dm": false,
+     "shared": 1
+    }
+   ],
+   "directory": [],
+   "members": [],
+   "want": {
+    "rows": [
+     {
+      "section": "known",
+      "mxid": "@ash:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@bea:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@cy:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@dee:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@fen:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@gus:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@hal:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     },
+     {
+      "section": "known",
+      "mxid": "@ida:home.example",
+      "server": "",
+      "member": false,
+      "lookup": false
+     }
+    ],
     "pick": -1,
     "fallback": -1
    }
@@ -1712,6 +1999,495 @@
    "section": "other",
    "own": "home.example",
    "want": "On another server"
+  }
+ ],
+ "invite": [
+  {
+   "status": 429,
+   "errcode": "M_LIMIT_EXCEEDED",
+   "message": "Too Many Requests",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "ratelimited",
+    "text": "Too many invites at once. Try again in a moment."
+   }
+  },
+  {
+   "status": 0,
+   "errcode": "",
+   "message": "",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "unreachable",
+    "text": "Couldn't reach your server. Check your connection and try again."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "@kim:home.example is already in the room.",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "member",
+    "text": "kim is already a member."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "ORG.MATRIX.MSC3848.ALREADY_JOINED",
+   "message": "Forbidden",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "member",
+    "text": "kim is already a member."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "@kim:far.example is banned from the room",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "banned",
+    "text": "kim is banned here. Unban them first."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "You don't have permission to invite users",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "noperm",
+    "text": "You don't have permission to invite people here. Ask an admin."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_INSUFFICIENT_POWER",
+   "message": "",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "noperm",
+    "text": "You don't have permission to invite people here. Ask an admin."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "ORG.MATRIX.MSC3848.INSUFFICIENT_POWER",
+   "message": "Forbidden",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "noperm",
+    "text": "You don't have permission to invite people here. Ask an admin."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "Invites have been disabled on this server",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "disabled",
+    "text": "Your server doesn't allow invites. The owner of your server can change that."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "Federation denied with far.example.",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "nofederation",
+    "text": "Your server doesn't connect to far.example, so people there can't be reached from here. The owner of your server can change that."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "This user is not permitted to send invites to this server/user",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "refused",
+    "text": "far.example didn't accept the invite."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "This user is not permitted to send invites to this server/user",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Message",
+   "want": {
+    "kind": "refused",
+    "text": "Couldn't start that chat. far.example didn't accept the invite."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "Forbidden",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Message",
+   "want": {
+    "kind": "forbidden",
+    "text": "Couldn't start that chat. The invite was refused."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "This room has been blocked on this server",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "forbidden",
+    "text": "Couldn't invite kim. The invite was refused."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "Forbidden",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "forbidden",
+    "text": "Couldn't invite kim. The invite was refused."
+   }
+  },
+  {
+   "status": 404,
+   "errcode": "M_NOT_FOUND",
+   "message": "Unknown user",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "notfound",
+    "text": "far.example has no one called kim. Check the spelling."
+   }
+  },
+  {
+   "status": 404,
+   "errcode": "M_NOT_FOUND",
+   "message": "Profile was not found",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Message",
+   "want": {
+    "kind": "notfound",
+    "text": "Couldn't start that chat. There's no one called kim on your server. Check the spelling."
+   }
+  },
+  {
+   "status": 404,
+   "errcode": "M_NOT_FOUND",
+   "message": "Unknown room",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "other",
+    "text": "Couldn't invite kim. Try again in a moment."
+   }
+  },
+  {
+   "status": 502,
+   "errcode": "M_UNKNOWN",
+   "message": "Bad Gateway",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "other",
+    "text": "Couldn't invite kim. Try again in a moment."
+   }
+  },
+  {
+   "status": 500,
+   "errcode": "M_UNKNOWN",
+   "message": "Internal server error",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "other",
+    "text": "Couldn't invite kim. Try again in a moment."
+   }
+  },
+  {
+   "status": 500,
+   "errcode": "M_UNKNOWN",
+   "message": "Internal server error",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Message",
+   "want": {
+    "kind": "other",
+    "text": "Couldn't start that chat. Try again in a moment."
+   }
+  },
+  {
+   "status": 1,
+   "errcode": "",
+   "message": "",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "other",
+    "text": "Couldn't invite kim. Try again in a moment."
+   }
+  },
+  {
+   "status": 400,
+   "errcode": "M_BAD_JSON",
+   "message": "",
+   "target": "@kim:home.example",
+   "own": "home.example",
+   "verb": "Invite",
+   "want": {
+    "kind": "other",
+    "text": "Couldn't invite kim. Try again in a moment."
+   }
+  },
+  {
+   "status": 403,
+   "errcode": "M_FORBIDDEN",
+   "message": "You don't have permission to invite users",
+   "target": "@kim:far.example",
+   "own": "home.example",
+   "verb": "Message",
+   "want": {
+    "kind": "noperm",
+    "text": "Couldn't start that chat. You don't have permission to invite people here. Ask an admin."
+   }
+  }
+ ],
+ "empty": [
+  {
+   "kind": "empty",
+   "search": "idle",
+   "want": "Type a name, a username, or someone's full address."
+  },
+  {
+   "kind": "empty",
+   "search": "failed",
+   "want": "Type a name, a username, or someone's full address."
+  },
+  {
+   "kind": "name",
+   "search": "searching",
+   "want": "Searching…"
+  },
+  {
+   "kind": "username",
+   "search": "failed",
+   "want": "Couldn't search your server right now."
+  },
+  {
+   "kind": "address",
+   "search": "idle",
+   "want": "No one by that name. Someone on another server: type their full address, like @name:their.server."
+  }
+ ],
+ "sent": [
+  {
+   "what": "start: in flight, not yet a member",
+   "members": [],
+   "sent": {},
+   "mxid": "@kim:far.example",
+   "event": {
+    "kind": "start"
+   },
+   "want": {
+    "members": [],
+    "sent": {
+     "@kim:far.example": {
+      "state": "inviting"
+     }
+    }
+   }
+  },
+  {
+   "what": "a yes makes them a member and clears the in-flight mark",
+   "members": [
+    "@ann:home.example"
+   ],
+   "sent": {
+    "@kim:far.example": {
+     "state": "inviting"
+    }
+   },
+   "mxid": "@kim:far.example",
+   "event": {
+    "kind": "answer",
+    "ok": true,
+    "text": "Invited Kim"
+   },
+   "want": {
+    "members": [
+     "@ann:home.example",
+     "@kim:far.example"
+    ],
+    "sent": {}
+   }
+  },
+  {
+   "what": "a no keeps them out of the members, with the reason",
+   "members": [],
+   "sent": {
+    "@kim:far.example": {
+     "state": "inviting"
+    }
+   },
+   "mxid": "@kim:far.example",
+   "event": {
+    "kind": "answer",
+    "ok": false,
+    "text": "far.example didn't accept the invite."
+   },
+   "want": {
+    "members": [],
+    "sent": {
+     "@kim:far.example": {
+      "state": "failed",
+      "text": "far.example didn't accept the invite."
+     }
+    }
+   }
+  },
+  {
+   "what": "pick again after a no = try again (in flight again)",
+   "members": [],
+   "sent": {
+    "@kim:far.example": {
+     "state": "failed",
+     "text": "x"
+    }
+   },
+   "mxid": "@kim:far.example",
+   "event": {
+    "kind": "start"
+   },
+   "want": {
+    "members": [],
+    "sent": {
+     "@kim:far.example": {
+      "state": "inviting"
+     }
+    }
+   }
+  },
+  {
+   "what": "a second start while one is in flight changes nothing",
+   "members": [],
+   "sent": {
+    "@kim:far.example": {
+     "state": "inviting"
+    }
+   },
+   "mxid": "@kim:far.example",
+   "event": {
+    "kind": "start"
+   },
+   "want": {
+    "members": [],
+    "sent": {
+     "@kim:far.example": {
+      "state": "inviting"
+     }
+    }
+   }
+  },
+  {
+   "what": "a member is never started",
+   "members": [
+    "@ann:home.example"
+   ],
+   "sent": {},
+   "mxid": "@ann:home.example",
+   "event": {
+    "kind": "start"
+   },
+   "want": {
+    "members": [
+     "@ann:home.example"
+    ],
+    "sent": {}
+   }
+  },
+  {
+   "what": "an answer nobody waits for (picker opened again) changes nothing",
+   "members": [],
+   "sent": {},
+   "mxid": "@kim:far.example",
+   "event": {
+    "kind": "answer",
+    "ok": true,
+    "text": "Invited Kim"
+   },
+   "want": {
+    "members": [],
+    "sent": {}
+   }
+  },
+  {
+   "what": "others in flight are kept",
+   "members": [],
+   "sent": {
+    "@ann:home.example": {
+     "state": "inviting"
+    },
+    "@kim:far.example": {
+     "state": "inviting"
+    }
+   },
+   "mxid": "@kim:far.example",
+   "event": {
+    "kind": "answer",
+    "ok": false,
+    "text": "Too many invites at once. Try again in a moment."
+   },
+   "want": {
+    "members": [],
+    "sent": {
+     "@ann:home.example": {
+      "state": "inviting"
+     },
+     "@kim:far.example": {
+      "state": "failed",
+      "text": "Too many invites at once. Try again in a moment."
+     }
+    }
+   }
   }
  ]
 }

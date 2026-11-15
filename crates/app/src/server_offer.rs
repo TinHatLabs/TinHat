@@ -315,8 +315,16 @@ pub const ACTION_GATES: &[(&str, ServerFeature)] = &[
     ("app.logship.toggle", ServerFeature::Reports),
 ];
 
+/// Actions of a gated family that every server keeps: Memories opens everywhere (its photos need nothing from the
+/// server; without a recorder the window shows photos only, memphotos::window_mode). The web's ACTION_GATE_EXCEPTIONS
+/// is the same list.
+pub const ACTION_GATE_EXCEPTIONS: &[&str] = &["memories.open"];
+
 /// The feature an action needs, or None.
 pub fn gate_of_action(id: &str) -> Option<ServerFeature> {
+    if ACTION_GATE_EXCEPTIONS.contains(&id) {
+        return None;
+    }
     for (k, f) in ACTION_GATES {
         let hit = if k.ends_with('.') { id.starts_with(k) } else { id == *k };
         if hit {
@@ -1211,7 +1219,7 @@ mod tests {
     #[test]
     fn action_gates_which_actions_each_feature_carries() {
         let cases: &[(&str, Option<ServerFeature>)] = &[
-            ("memories.open", Some(Memories)),
+            ("memories.open", None), // Memories opens on every server (photos; without a recorder: photos only)
             ("memories.sync.toggle", Some(Memories)),
             ("memories.playPause", Some(Memories)),
             ("room.recording.toggle", Some(Memories)),
@@ -1268,6 +1276,10 @@ mod tests {
                 assert!(ids.contains(k), "no action {k}");
             }
         }
+        for k in ACTION_GATE_EXCEPTIONS {
+            assert!(ids.contains(k), "no action {k}");
+        }
+        assert_eq!(ACTION_GATE_EXCEPTIONS, ["memories.open"]);
         // a prefix gate never swallows an action of another family
         for id in &ids {
             if id.starts_with("push.") {
@@ -1344,7 +1356,7 @@ mod tests {
     fn apply_action_gates_requires_anded_predicates_declared_idempotent() {
         let mut t = json!({
             "actions": [
-                { "id": "memories.open", "when": "room.joined" },
+                { "id": "memories.playPause", "when": "room.joined" },
                 { "id": "call.clip", "requires": "x.y" },
                 { "id": "call.join" },
                 { "id": "sound.play", "requires": { "not": "a" } },
@@ -1379,8 +1391,10 @@ mod tests {
         let n = apply_action_gates(&mut real);
         assert!(n >= 27, "gated {n} actions");
         let loaded = tinhat_actions::table::load(&real).expect("the gated table loads");
-        let a = loaded.actions.iter().find(|a| a.id == "memories.open").unwrap();
+        let a = loaded.actions.iter().find(|a| a.id == "room.recording.toggle").unwrap();
         assert!(a.requires.as_ref().is_some_and(|r| r.to_string().contains("server.memories")));
+        let m = loaded.actions.iter().find(|a| a.id == "memories.open").unwrap();
+        assert!(!m.requires.as_ref().is_some_and(|r| r.to_string().contains("server.memories")), "Memories opens on every server");
         assert!(loaded.predicates.contains_key("server.gifs"));
         assert!(loaded.predicates.contains_key(RETIRED_PREDICATE));
     }
@@ -1453,8 +1467,9 @@ mod tests {
         let nothing: Map<String, Value> = SERVER_FEATURES.iter().map(|f| (f.name().to_string(), json!(*f == Calls))).collect();
         let off = snap(predicate_values(&parse_offer(&offer_with(Value::Object(nothing), json!({}))), false));
         let on = snap(predicate_values(&no_offer(), false));
+        // Memories photos: Memories opens on every server (without a recorder: photos only)
+        assert_eq!(present("memories.open", &off)["visible"], true, "memories.open on a server without a recorder");
         for a in [
-            "memories.open",
             "room.recording.toggle",
             "soundboard.open",
             "app.recordOptOut.toggle",
@@ -1491,7 +1506,8 @@ mod tests {
         }
         // Ctrl+K: "Memories", "Soundboard", "status", "Report a problem" are not offered while the server says no
         let palette = |s: &str, q: &str| -> String { crate::actions_ctl::palette(&QString::from(s), &QString::from(q), &QString::from("")).to_string() };
-        for (q, a) in [("memories", "memories.open"), ("soundboard", "soundboard.open"), ("status", "status.open"), ("report", "app.bugReport")] {
+        assert!(palette(&off, "memories").contains("\"memories.open\""), "Memories is in the palette on every server");
+        for (q, a) in [("soundboard", "soundboard.open"), ("status", "status.open"), ("report", "app.bugReport")] {
             assert!(!palette(&off, q).contains(&format!("\"{a}\"")), "{a} not in the palette");
             assert!(palette(&on, q).contains(&format!("\"{a}\"")), "{a} in the palette when offered");
         }

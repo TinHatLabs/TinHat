@@ -400,7 +400,7 @@ Window {
     }
 
     // ---- per-member menu (hoisted; acts on win.actor) ----
-    Controls.Menu {
+    KeyMenu {
         id: memberMenu
         modal: true
         margins: 6
@@ -473,7 +473,7 @@ Window {
         }
     }
     // Which roles this member holds — checkable, declarative (CheckMenuItem), rank-gated.
-    Controls.Menu {
+    KeyMenu {
         id: rolesMenu
         modal: true
         margins: 6
@@ -543,7 +543,8 @@ Window {
                 roomId: win.spaceId
                 Layout.fillWidth: true
                 Layout.topMargin: Kirigami.Units.smallSpacing
-                onPicked: (mxid) => win.invite(mxid)
+                // the picker sends the invite itself and shows how it went (2026-11-13, A02.0); the member list reloads
+                onInvited: (mxid) => win.refreshRequested()
             }
             RowLayout {
                 Layout.fillWidth: true
@@ -1444,7 +1445,7 @@ Window {
                                                             Controls.ToolTip.delay: 300
                                                             Controls.ToolTip.text: permRow.honour
                                                                 ? "Honour system: Tin Hat hides or blocks this, but a modified client could ignore it."
-                                                                : "Server-enforced: the homeserver or the Tin Hat server refuses it — a modified client can't get around it."
+                                                                : "Server-enforced: your server refuses it — a modified client can't get around it."
                                                             Controls.Label {
                                                                 id: chipText
                                                                 anchors.centerIn: parent

@@ -393,6 +393,10 @@ fn set_participant_attrs(identity: &str, attrs: HashMap<String, String>) {
         m.0 += 1;
     }
 }
+/// D02.7 (12.1.16): is this identity in the call right now (connected, attributes known)?
+pub fn participant_present(identity: &str) -> bool {
+    participant_attrs().lock().unwrap().1.contains_key(identity)
+}
 fn drop_participant_attrs(identity: &str) {
     drop_key_alias(identity);
     mic_gone(identity);
@@ -4113,7 +4117,15 @@ pub struct CallSession {
     // the shared window was closed / capture source vanished. The app installs it
     // (Windows-only today) to auto-stop the share instead of freezing the last frame
     // forever. None = old log-only behavior (Linux unchanged).
-    share_dead_hook: Option<Arc<dyn Fn() + Send + Sync>>,
+    // 12.1.15: the hook gets the dead share's track sid, and the app stops THAT share only (`stop_screenshare_if`):
+    // by the time its task runs, another share may be the live one.
+    share_dead_hook: Option<Arc<dyn Fn(String) + Send + Sync>>,
+    // Fired (lk_publish `watch_share_bus`) when the share's SOURCE changed size mid-share: a shared window was
+    // resized, and pipewiresrc cannot follow that. Arguments: that share's track sid, and how long to wait before
+    // `restart_screenshare_resized` (None = give up: `stop_screenshare_if`).
+    share_resized_hook: Option<Arc<dyn Fn(String, Option<std::time::Duration>) + Send + Sync>>,
+    // The pacing of those restarts, per share (a fresh share starts a fresh count).
+    share_resize_pace: Arc<std::sync::Mutex<ShareResizeBackoff>>,
     // Fired when the CAMERA capture dies on its own (virtual cams — NVIDIA
     // Broadcast — error out with -5 when their backing physical camera is held
     // elsewhere, e.g. by our OWN just-released direct publish; reproduced on a
@@ -6696,6 +6708,59 @@ fn start_aux_capture(
     Ok((pipeline, task, stop))
 }
 
+/// Pacing for the capture restarts after a shared window changed size (`restart_screenshare_resized`). A window
+/// being dragged changes size many times a second and every restart dies on the next change, so restarts wait a
+/// little longer each time while the changes keep coming, and stop for good after `MAX_IN_A_ROW`.
+#[derive(Debug, Default)]
+pub struct ShareResizeBackoff {
+    in_a_row: u32,
+    // when the last restart finished; None while one is owed (the time a restart takes is not "quiet")
+    up_since: Option<std::time::Instant>,
+    // how many changes were seen so far (a restart that finishes after a NEWER change is not "up")
+    seen: u64,
+}
+
+impl ShareResizeBackoff {
+    /// A restarted capture that stayed up this long ends the run: the next change starts a new one.
+    pub const QUIET: std::time::Duration = std::time::Duration::from_secs(5);
+    /// Waits before the 1st, 2nd, 3rd and every later restart of one run.
+    pub const WAITS_MS: [u64; 4] = [400, 800, 1600, 2000];
+    /// Restarts in one run before giving up (about a minute and a half of non-stop resizing).
+    pub const MAX_IN_A_ROW: u32 = 30;
+
+    pub const fn new() -> Self {
+        Self { in_a_row: 0, up_since: None, seen: 0 }
+    }
+
+    /// How many size changes were seen so far. Read it before a restart, hand it to [`Self::restarted`] after.
+    pub fn seen(&self) -> u64 {
+        self.seen
+    }
+
+    /// The wait before the restart for a size change seen at `now`; None = give up, the share ends.
+    pub fn next(&mut self, now: std::time::Instant) -> Option<std::time::Duration> {
+        self.seen += 1;
+        if self.up_since.take().is_some_and(|up| now.saturating_duration_since(up) > Self::QUIET) {
+            self.in_a_row = 0;
+        }
+        if self.in_a_row >= Self::MAX_IN_A_ROW {
+            return None;
+        }
+        let wait = Self::WAITS_MS[(self.in_a_row as usize).min(Self::WAITS_MS.len() - 1)];
+        self.in_a_row += 1;
+        Some(std::time::Duration::from_millis(wait))
+    }
+
+    /// A restart of the capture (for a size change, a quality change, any) finished at `now` and its capture runs.
+    /// `seen_before` = [`Self::seen`] when that restart began: if another change was seen since, the capture that
+    /// just came up is the one that change was seen on, and it is not up.
+    pub fn restarted(&mut self, seen_before: u64, now: std::time::Instant) {
+        if self.seen == seen_before {
+            self.up_since = Some(now);
+        }
+    }
+}
+
 impl CallSession {
     /// Connect to the SFU with per-participant E2EE (our key at `key_index` under our
     /// identity), and start the event loop that plays remote participants' audio and
@@ -7500,6 +7565,8 @@ impl CallSession {
                 camera: None,
                 _playback: playback,
                 share_dead_hook: None,
+                share_resized_hook: None,
+                share_resize_pace: Default::default(),
                 camera_dead_hook: None,
                 camera_quiet_hook: None,
                 hear_task,
@@ -7548,8 +7615,57 @@ impl CallSession {
 
     /// Install the capture-died hook for screen shares (see `share_dead_hook`).
     /// Call once after connect, before any share starts.
-    pub fn set_share_dead_hook(&mut self, hook: Arc<dyn Fn() + Send + Sync>) {
+    pub fn set_share_dead_hook(&mut self, hook: Arc<dyn Fn(String) + Send + Sync>) {
         self.share_dead_hook = Some(hook);
+    }
+
+    /// The watcher's one-shot for a share whose capture died on its own: tell the app which share it was.
+    fn share_dead_notifier(&self, sid: &livekit::id::TrackSid) -> Option<Box<dyn FnOnce() + Send>> {
+        let hook = self.share_dead_hook.clone()?;
+        let sid = sid.as_str().to_string();
+        Some(Box::new(move || hook(sid)))
+    }
+
+    /// Install the source-changed-size hook for screen shares (see `share_resized_hook`).
+    pub fn set_share_resized_hook(&mut self, hook: Arc<dyn Fn(String, Option<std::time::Duration>) + Send + Sync>) {
+        self.share_resized_hook = Some(hook);
+    }
+
+    /// The watcher's one-shot for a share's source changing size. At once, on the watcher's thread: the cast's
+    /// remembered size is forgotten (`forget`: every restart of this cast from now on learns it again, a quality
+    /// change that gets in first included) and the wait is drawn from the share's pacing; then the app is told.
+    fn share_resized_notifier(&self, sid: &livekit::id::TrackSid, forget: impl Fn() + Send + 'static) -> Option<Box<dyn FnOnce() + Send>> {
+        let hook = self.share_resized_hook.clone()?;
+        let pace = self.share_resize_pace.clone();
+        let sid = sid.as_str().to_string();
+        Some(Box::new(move || {
+            forget();
+            let wait = pace.lock().ok().and_then(|mut p| p.next(std::time::Instant::now()));
+            hook(sid, wait)
+        }))
+    }
+
+    /// Both one-shots of a share's capture, for lk_publish `watch_share_bus`.
+    #[allow(clippy::type_complexity)]
+    fn share_end_notifiers(&self, sid: &livekit::id::TrackSid, screencast: &ScreenCast) -> (Option<Box<dyn FnOnce() + Send>>, Option<Box<dyn FnOnce() + Send>>) {
+        #[cfg(target_os = "linux")]
+        let resized = self.share_resized_notifier(sid, screencast.size_forgetter());
+        #[cfg(not(target_os = "linux"))]
+        let resized = {
+            let _ = screencast;
+            None
+        };
+        (self.share_dead_notifier(sid), resized)
+    }
+
+    /// Stop the live share if it is the one with this track sid (a hook's task may run after another share took
+    /// its place). True = it was, and it is stopped.
+    pub async fn stop_screenshare_if(&mut self, sid: &str) -> bool {
+        if !self.screenshare.as_ref().is_some_and(|s| s.2.as_str() == sid) {
+            return false;
+        }
+        self.stop_screenshare().await;
+        true
     }
 
     /// Install the capture-died hook for the camera (see `camera_dead_hook`).
@@ -7705,6 +7821,8 @@ impl CallSession {
                             // RC2: accepted only once a frame has come through THIS pipeline (a PLAYING
                             // state alone said nothing about import or negotiation failures downstream).
                             let flowing = first_frame_flag(&appsink);
+                            // (12.1.15: the source's size is watched from before it plays, see lk_publish SourceSizeWatch)
+                            crate::lk_publish::install_source_size_watch(&pipeline);
                             if leased_play(lease, &pipeline, 6000, "screen capture start") {
                                 // Windows keeps the negotiation check: d3d11screencapturesrc has no keepalive resend,
                                 // so a still desktop could deliver nothing within the wait.
@@ -7789,6 +7907,7 @@ impl CallSession {
             .downcast::<gstreamer_app::AppSink>()
             .map_err(|_| anyhow::anyhow!("screenshare sink not an AppSink"))?;
         crate::lk_publish::wire_appsink_to_source(&appsink, source);
+        crate::lk_publish::install_source_size_watch(&pipeline);
         if !leased_play(lease, &pipeline, 8000, "screen capture start") {
             set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "screen capture");
             anyhow::bail!("screenshare pipeline start failed or revoked (the capture is not running)");
@@ -8024,11 +8143,11 @@ impl CallSession {
         // (installed by the app; Windows-only today) stops the share instead of the
         // old freeze-last-frame-forever behavior. Deliberate stop/restart never fires
         // it (the stop flag flips first — watch_pipeline_bus_notify checks it).
-        let on_dead: Option<Box<dyn FnOnce() + Send>> = self
-            .share_dead_hook
-            .clone()
-            .map(|h| Box::new(move || h()) as Box<dyn FnOnce() + Send>);
-        let bus_stop = crate::lk_publish::watch_pipeline_bus_notify(&pipeline, on_dead);
+        let (on_dead, on_resized) = self.share_end_notifiers(&publication.sid(), &screencast);
+        if let Ok(mut p) = self.share_resize_pace.lock() {
+            *p = ShareResizeBackoff::new(); // a fresh share: a fresh count of size-change restarts
+        }
+        let bus_stop = crate::lk_publish::watch_share_bus(&pipeline, on_dead, on_resized);
         // Call-lifetime publisher stats (legacy [lk-stats] 3s log — the ship-gate format —
         // plus the in-call "stream health" feed). Shares the bus watcher's stop flag, so
         // stop/restart/close all end it. Replaces the old 16x3s bounded diagnostic loop.
@@ -8158,6 +8277,20 @@ impl CallSession {
     /// of the D-Bus session), so the user is NOT re-prompted. We move it out of the tuple,
     /// rebuild against its existing fd/node_id, and store it back under the new sid.
     /// Bounded: the unpublish is wrapped in a 3s timeout so a dead SFU can't hang the caller.
+    /// The live share's source changed size (a shared window was resized; the capture is dead or stalled, see
+    /// lk_publish `watch_share_bus`): start the capture again on the SAME portal session, learning the size anew.
+    /// True = that share was still the live one and has been restarted. On an error the share is over.
+    /// `sid` = the share the change was seen on: if it is no longer the live one (stopped, or restarted by a
+    /// quality change, which learned the new size itself), nothing happens.
+    pub async fn restart_screenshare_resized(&mut self, sid: &str) -> Result<bool> {
+        if !self.screenshare.as_ref().is_some_and(|s| s.2.as_str() == sid) {
+            return Ok(false);
+        }
+        eprintln!("[call] the shared source changed size: restarting the capture on the same share (no new portal dialog)");
+        self.restart_screenshare().await?;
+        Ok(true)
+    }
+
     pub async fn restart_screenshare(&mut self) -> Result<()> {
         use livekit::options::VideoEncoding;
         use livekit::track::LocalVideoTrack;
@@ -8170,15 +8303,20 @@ impl CallSession {
             Ok(l) => Some(l),
             Err(_) => None,
         };
+        // 5-6: the resume epoch this restart belongs to (a Leave during it voids its hand-off to the rejoin)
+        let carry_epoch = crate::share_carry::resume_epoch();
         // Take the live share apart; if not sharing, nothing to do.
         let Some((old_pipeline, screencast, old_sid, old_bus_stop)) = self.screenshare.take() else {
             return Ok(());
         };
+        // (12.1.15: the size-change pacing learns that a capture came up, whichever restart brought it up)
+        let changes_seen = self.share_resize_pace.lock().map(|p| p.seen()).unwrap_or(0);
 
         // 1) Stop the old capture IMMEDIATELY (NULL the pipeline) so the readback loop and
         //    encoder feed halt before we touch the network — same ordering as close().
         old_bus_stop.store(true, std::sync::atomic::Ordering::Relaxed); // let the old bus thread exit
-        let _ = old_pipeline.set_state(gst::State::Null);
+        // (bounded since 12.1.15: this also stops a capture that died mid-renegotiation, with the call's mutex held)
+        set_state_bounded(old_pipeline.upcast_ref(), gst::State::Null, 4000, "screen capture (restart)");
 
         // 2) Unpublish the old track, BOUNDED so a dead SFU can't park us forever.
         let _ = tokio::time::timeout(
@@ -8227,6 +8365,14 @@ impl CallSession {
         {
             Ok(p) => p,
             Err(e) => {
+                // 5-6 (fix1216): the re-publish failed because the call dropped (it ends now and the auto-rejoin follows):
+                // the source waits for the rejoin (share_carry) instead of being closed — back on the same source, or
+                // "Share again"
+                // (only while the call is still ours: a Leave meanwhile ended the lease and the epoch — closed below)
+                if e.to_string() == crate::call_health::NOT_CONNECTED_ERR && lease.valid() {
+                    crate::share_carry::keep_after_lost(screencast, carry_epoch).await;
+                    return Err(e.context("re-publish screenshare failed"));
+                }
                 // 12.1.13: the share is over; so is its portal session (bounded: the call's mutex is held)
                 let _ = tokio::time::timeout(std::time::Duration::from_secs(3), screencast.close()).await;
                 return Err(e.context("re-publish screenshare failed"));
@@ -8247,6 +8393,10 @@ impl CallSession {
             }
             Err(e) => {
                 self.unpublish_orphaned_track(publication.sid(), "screen-share restart").await;
+                // 12.1.15: the share is over, so is its portal session (the capture restarts on its own now, after a
+                // size change: a failed one must not leave the desktop's "being shared" sign up). Bounded: the
+                // call's mutex is held.
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(3), screencast.close()).await;
                 return Err(e);
             }
         };
@@ -8254,11 +8404,11 @@ impl CallSession {
         // (installed by the app; Windows-only today) stops the share instead of the
         // old freeze-last-frame-forever behavior. Deliberate stop/restart never fires
         // it (the stop flag flips first — watch_pipeline_bus_notify checks it).
-        let on_dead: Option<Box<dyn FnOnce() + Send>> = self
-            .share_dead_hook
-            .clone()
-            .map(|h| Box::new(move || h()) as Box<dyn FnOnce() + Send>);
-        let bus_stop = crate::lk_publish::watch_pipeline_bus_notify(&pipeline, on_dead);
+        let (on_dead, on_resized) = self.share_end_notifiers(&publication.sid(), &screencast);
+        let bus_stop = crate::lk_publish::watch_share_bus(&pipeline, on_dead, on_resized);
+        if let Ok(mut p) = self.share_resize_pace.lock() {
+            p.restarted(changes_seen, std::time::Instant::now());
+        }
         // Fresh stats task for the fresh track (the old one exited via old_bus_stop).
         spawn_publish_stats_task(
             "screen",
@@ -9119,7 +9269,12 @@ impl CallSession {
         }
         if let Some((_pipeline, screencast, sid, _bus_stop)) = screenshare {
             let _ = tokio::time::timeout(NET_T, lp.unpublish_track(&live_sid("screen", &sid))).await;
-            let _ = tokio::time::timeout(NET_T, screencast.close()).await;
+            // D02.2 (12.1.16): an auto-rejoin keeps the cast (its capture is NULLed above) for the rejoined call
+            if let Some(screencast) = crate::share_carry::share_closing(Some(screencast)) {
+                let _ = tokio::time::timeout(NET_T, screencast.close()).await;
+            }
+        } else {
+            let _ = crate::share_carry::share_closing(None); // (disarms: nothing to carry)
         }
         if let Some(h) = camera {
             let _ = tokio::time::timeout(NET_T, lp.unpublish_track(&live_sid("camera", &h.sid))).await;
@@ -9141,6 +9296,24 @@ impl CallSession {
         set_active_speakers(Vec::new());
         local_identity_cell().lock().unwrap().clear();
         eprintln!("[call] room closed — teardown complete");
+    }
+
+    /// LAB gates only (fix1216 round 2; never in a release: cfg tinhat_env_selftests, and the env name is on
+    /// scripts/release-binary-check.sh's hook list): with TINHAT_LABDRIVE_DROP set, end this call with the SAME
+    /// recoverable terminal drop the room / the link watch would send (one per call, the latch) — the desktop twin of the
+    /// web gate's STATE_MISMATCH case: the app's own drop path then decides (auto-rejoin, or "Connection lost" + Rejoin).
+    #[cfg(tinhat_env_selftests)]
+    pub fn lab_force_terminal_drop(&self) -> bool {
+        if std::env::var_os("TINHAT_LABDRIVE_DROP").is_none() {
+            return false;
+        }
+        let mut w = self.link.lock().unwrap();
+        if !w.terminal() {
+            return false;
+        }
+        eprintln!("[call] lab: a recoverable terminal drop (TINHAT_LABDRIVE_DROP)");
+        let _ = self.link_tx.send(CallEvent::ConnectionState { reconnecting: false, disconnected: true, recoverable: true });
+        true
     }
 
     /// Self-test (no devices, no peers): connect with E2EE + publish a synthetic
@@ -10414,6 +10587,48 @@ pub fn set_capture_barred(on: bool) {
     crate::capture_lease::set_barred(on); // Layer 2: a closed bar admits no lease and voids the live ones
 }
 
+/// 5-1 (fix1216): the mic's transmission gate, lock-free. ONLY the app writes it, on the Qt thread, wherever it sets the
+/// mic's intent (CallController's micMuted: the mute button, push-to-talk, the handoff, a join) and on Leave — before the
+/// call's mutex is taken, which a share restart may hold for seconds. Nothing on the call's tasks writes it: a queued
+/// write there could reopen it after a newer mute (review r1).
+fn mic_tx_muted_flag() -> &'static std::sync::atomic::AtomicBool {
+    static F: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    &F
+}
+fn mic_tx_left_flag() -> &'static std::sync::atomic::AtomicBool {
+    static F: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    &F
+}
+/// The app's mic intent (Qt thread). After a Leave nothing reopens the gate (a push-to-talk press while the left call's
+/// teardown still waits for the call, review r2) until the next join starts ([`mic_tx_new_call`]).
+pub fn set_mic_tx_muted(on: bool) {
+    if !on && mic_tx_left_flag().load(std::sync::atomic::Ordering::SeqCst) {
+        return;
+    }
+    mic_tx_muted_flag().store(on, std::sync::atomic::Ordering::SeqCst);
+}
+/// A Leave: the gate closes and stays closed until the next join starts.
+pub fn mic_tx_leave() {
+    mic_tx_left_flag().store(true, std::sync::atomic::Ordering::SeqCst);
+    mic_tx_muted_flag().store(true, std::sync::atomic::Ordering::SeqCst);
+}
+/// A join starts (the app sets the new call's intent right after).
+pub fn mic_tx_new_call() {
+    mic_tx_left_flag().store(false, std::sync::atomic::Ordering::SeqCst);
+}
+pub fn mic_tx_muted() -> bool {
+    mic_tx_muted_flag().load(std::sync::atomic::Ordering::SeqCst)
+}
+/// What the encoder gets for one 10 ms frame: the frame, or silence while the same-room gate holds the mic or the user's
+/// mute / a Leave has closed the gate.
+pub(crate) fn mic_tx_frame(frame: Vec<i16>, sameroom_live: bool, tx_muted: bool) -> Vec<i16> {
+    if sameroom_live && !tx_muted {
+        frame
+    } else {
+        vec![0i16; frame.len()]
+    }
+}
+
 /// Pad Watch Layer 2 (WATCH-LEASE/DESIGN.md §2): a lease for a capture / publish of THIS call session (`kg` = its
 /// keyring generation, the session's identity in [`crate::capture_lease`]).
 fn session_lease(kg: u64, kind: crate::capture_lease::Kind) -> Result<crate::capture_lease::Lease> {
@@ -10789,6 +11004,41 @@ fn pw_dump_objects_lenient(text: &str) -> (Vec<serde_json::Value>, usize) {
         }
     }
     (objects, skipped)
+}
+
+/// 5-1 (fix1216): the mic's own gate — a mute / Leave silences what the encoder gets, whatever holds the call's lock.
+#[cfg(test)]
+mod mic_tx_gate_tests {
+    use super::*;
+    #[test]
+    fn a_closed_gate_sends_silence_and_the_mic_follows_the_users_mute() {
+        let f = vec![1200i16, -800, 30000];
+        assert_eq!(mic_tx_frame(f.clone(), true, false), f, "live: the frame");
+        assert_eq!(mic_tx_frame(f.clone(), true, true), vec![0, 0, 0], "muted / left: silence");
+        assert_eq!(mic_tx_frame(f.clone(), false, false), vec![0, 0, 0], "same-room gate: silence");
+        // the feeder uses it, with the lock-free flag
+        let src = include_str!("call.rs");
+        assert!(src.contains("let frame = mic_tx_frame(frame, crate::sameroom::tx_live(), mic_tx_muted());"));
+        // nothing in the call's code writes it (only the app's Qt thread does: a late write here could reopen it)
+        let at = src.find("mod mic_tx_gate_tests {").unwrap();
+        let tests = &src[at..at + src[at..].find("\n}\n").unwrap()];
+        assert_eq!(src.matches("set_mic_tx_muted(").count() - tests.matches("set_mic_tx_muted(").count(), 1, "only its definition");
+        // review r2: after a Leave nothing reopens it until the next join starts
+        mic_tx_new_call();
+        set_mic_tx_muted(false);
+        assert!(!mic_tx_muted());
+        mic_tx_leave();
+        assert!(mic_tx_muted(), "a Leave closes it");
+        set_mic_tx_muted(false);
+        assert!(mic_tx_muted(), "a push-to-talk press after the Leave can't reopen it");
+        mic_tx_new_call();
+        set_mic_tx_muted(false);
+        assert!(!mic_tx_muted(), "the next join opens it");
+        set_mic_tx_muted(true);
+        assert!(mic_tx_muted());
+        mic_tx_new_call();
+        set_mic_tx_muted(false);
+    }
 }
 
 #[cfg(test)]
@@ -12575,7 +12825,9 @@ fn start_mic_capture(
             }
             // 11.3 same room: a linked peer holds the room mic → the encoder gets silence (the track stays
             // published; no mute icon flaps on anyone's tile).
-            let frame = if crate::sameroom::tx_live() { frame } else { vec![0i16; frame.len()] };
+            // 5-1 (fix1216): the user's mute / a Leave silences the encoder at once through mic_tx_muted, which the app sets
+            // without the call's lock (a share restart holding it for seconds no longer keeps the mic on the air).
+            let frame = mic_tx_frame(frame, crate::sameroom::tx_live(), mic_tx_muted());
             // 5) Feed libwebrtc. queue_size_ms=0 => OnData runs synchronously here; the await
             //    returns immediately (no back-pressure, no rust-sdks #408/#420 hang).
             let af = AudioFrame {
@@ -13131,12 +13383,24 @@ fn monitor_tap(sink: &gstreamer_app::AppSink, store: fn(f32)) -> Result<gst::Flo
     Ok(gst::FlowSuccess::Ok)
 }
 
+/// A13.0 (2026-11-13): why the last `start_mic_monitor` returned false ("watching", "unavailable", "nosignal"; "" =
+/// it started). The app's Settings row words it (meter_hint.rs) instead of always saying "unplugged".
+static MIC_MONITOR_WHY: Mutex<&'static str> = Mutex::new("");
+fn set_mic_monitor_why(why: &'static str) {
+    *MIC_MONITOR_WHY.lock().unwrap() = why;
+}
+pub fn mic_monitor_why() -> &'static str {
+    *MIC_MONITOR_WHY.lock().unwrap()
+}
+
 /// Start the standalone pre/post-denoise mic monitor. Returns false if one is already running
 /// or the pipeline can't be built. Safe to call alongside a live call (separate pipewiresrc).
 pub fn start_mic_monitor() -> bool {
+    set_mic_monitor_why("nosignal"); // until it starts: a failure below names its own reason
     // Layer 2 (Astra r3 #1): the meter holds a lease from here; a Watch press NULLs what it built, also mid-start
     let Some(lease) = crate::capture_lease::take(crate::capture_lease::Kind::Meter, None) else {
         eprintln!("[mic-monitor] watching — the meter opens no microphone (Talk here first)");
+        set_mic_monitor_why("watching");
         return false;
     };
     let mut cell = mic_monitor_cell().lock().unwrap();
@@ -13144,9 +13408,11 @@ pub fn start_mic_monitor() -> bool {
     // under the cell lock and again once PLAYING (a watch beginning meanwhile tears it down: retire_mic_monitor_if_barred)
     if capture_barred() {
         eprintln!("[mic-monitor] watching — the meter opens no microphone (Talk here first)");
+        set_mic_monitor_why("watching");
         return false;
     }
     if cell.is_some() {
+        set_mic_monitor_why("");
         // Idempotent SUCCESS: a live monitor satisfies the request (the Settings→noise-test
         // handoff relies on this — its superseded stop leaves the previous monitor running,
         // and returning false here made the caller show "plugin unavailable" over working
@@ -13165,6 +13431,7 @@ pub fn start_mic_monitor() -> bool {
              gst-plugin-rsaudiofx (gst-plugins-rs), NOT gst-plugins-bad; the old message named \
              the wrong package and sent people to reinstall something they already had."
         );
+        set_mic_monitor_why("unavailable");
         return false;
     }
     let src = audio_src_fragment(mic_target().lock().unwrap().clone().as_deref());
@@ -13227,10 +13494,12 @@ pub fn start_mic_monitor() -> bool {
     if capture_barred() || !lease.commit() {
         set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "mic meter");
         eprintln!("[mic-monitor] watching began while starting — stopped");
+        set_mic_monitor_why("watching");
         return false;
     }
     eprintln!("[mic-monitor] started (pre/post-denoise meter)");
     *cell = Some(pipeline);
+    set_mic_monitor_why("");
     true
 }
 

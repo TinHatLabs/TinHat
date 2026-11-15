@@ -52,6 +52,17 @@ pub async fn get_state_sender(room: &Room, event_type: &str, state_key: &str) ->
     v.get("sender").and_then(|s| s.as_str()).map(str::to_string)
 }
 
+/// The content AND the sender of one custom state event, from the SAME event (never two reads that a sync could split).
+pub async fn get_state_with_sender(room: &Room, event_type: &str, state_key: &str) -> Option<(Value, String)> {
+    let raw = room
+        .get_state_event(StateEventType::from(event_type), state_key)
+        .await
+        .ok()??;
+    let v = raw_to_value(&raw)?;
+    let sender = v.get("sender").and_then(|s| s.as_str()).unwrap_or_default().to_string();
+    Some((v.get("content").cloned()?, sender))
+}
+
 /// All state events of a type as `(state_key, sender, content)`.
 pub async fn get_state_all(room: &Room, event_type: &str) -> Vec<(String, String, Value)> {
     let mut out = Vec::new();
@@ -276,6 +287,9 @@ pub const TINHAT_MEMBER_STATE_EVENTS: &[&str] = &[
     // widgets W1: the space's Sticky note — the friend group's (with roles active the reconciler owns it:
     // `edit_space_note`, RBAC §2)
     "dev.tinhat.note",
+    // Memories photos: each member writes only their OWN list (state_key = own user id; Matrix enforces that), event
+    // ids + a sort time only (memphotos.rs, docs/MEMORIES-PHOTOS.md)
+    "dev.tinhat.memories",
     // Call membership. A room whose state_default is 50 (the Matrix default for a
     // hand-made private room) silently blocks members from publishing these, and the
     // symptom is not "you cannot call" — it is peers reporting "can't key us" mid-call,

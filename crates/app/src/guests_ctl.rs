@@ -31,7 +31,7 @@ use cxx_qt_lib::QString;
 use serde_json::{json, Value};
 
 use crate::guests::{
-    arrivals, bar_plan, copy_offered, departures, is_guest_account, is_guests_room, is_waiter_id, local_role, merge_role, notice_text, pane_plan,
+    arrivals, bar_plan, copy_offered, departures, guest_confirm, notice_action, is_guest_account, is_guests_room, is_waiter_id, local_role, merge_role, notice_text, pane_plan,
     parse_doc, parse_guest_state, parse_waiting, waiting_rows, waiting_text, BarButton, GuestRoomState, GuestsDoc, PaneButton, Waiter,
     EXPLAIN, GUESTS_TYPE, WAITING_TYPE, WORDS,
 };
@@ -125,6 +125,8 @@ pub const CHECKING: &str = "Checking…";
 pub const SECTION: &str = "Guest room";
 pub const LINK_LABEL: &str = "Guest link";
 /// "Copy guest link" (store.ts copyGuestLink).
+/// P10: the toast after New link copied the new link (the web's store.ts LINK_COPIED)
+pub const LINK_COPIED: &str = "New guest link copied — the old one stopped working";
 pub const COPIED: &str = "Guest link copied — whoever opens it waits at the door until someone lets them in";
 pub const OFF_NO_LINK: &str = "The guest room is off — there's no guest link right now.";
 pub const NO_LINK: &str = "There's no guest link for you to copy.";
@@ -234,6 +236,9 @@ struct RoomView {
     /// "join" / "leave" / "invite" / "knock" / "ban"
     membership: Option<String>,
     power_levels: Value,
+    /// P10 (Sunday QoL): guest accounts joined to the room now (the Turn off confirm names them); -1 = not known here
+    /// (this device isn't in the room, so its member list isn't either)
+    guests_in: i64,
 }
 
 #[derive(Default)]
@@ -414,6 +419,11 @@ fn view_json(st: &Store, me: &str, offered: bool) -> Value {
         "note": note,
         "noteError": doc.is_none() && st.loaded && !st.error.is_empty(),
         "busy": busy,
+        // P10 (Sunday QoL): what Turn off / New link will do, asked before they act (guests.rs guest_confirm)
+        "confirm": {
+            "off": guest_confirm("off", view.map_or(-1, |v| v.guests_in), waiting.len()),
+            "link": guest_confirm("link", view.map_or(-1, |v| v.guests_in), waiting.len()),
+        },
         "words": { "copy": WORDS.copy, "pane": WORDS.pane, "section": SECTION, "explain": EXPLAIN, "letIn": WORDS.let_in, "turnAway": WORDS.turn_away, "link": LINK_LABEL },
     })
 }
@@ -460,13 +470,18 @@ fn write_seen(seen: &[String]) {
 /// "Ana is waiting to come in as a guest": the chime always; the in-app toast (with Open) and the OS notification
 /// (Desktop notifications on; click → the room) unless the room is the open room in a focused window — its row is
 /// right there. Returns the OS notification's id, to withdraw it.
-async fn announce(room_id: &str, w: &Waiter) -> Option<u32> {
+async fn announce(room_id: &str, w: &Waiter, can_admit: bool) -> Option<u32> {
     let text = notice_text(&w.name);
     crate::notify::toast_action("sound:notify".to_string());
     if crate::notify::is_open_room(room_id) {
         return None;
     }
-    crate::notify::toast_action(format!("guest-waiting:{room_id}\t{text}"));
+    // A27.4 (Sunday QoL): whoever may let guests in gets Let in on the in-app notice (a third field: the waiting id)
+    if notice_action(can_admit) == "letIn" {
+        crate::notify::toast_action(format!("guest-waiting:{room_id}\t{text}\t{}", w.id));
+    } else {
+        crate::notify::toast_action(format!("guest-waiting:{room_id}\t{text}"));
+    }
     if !crate::notify::enabled() {
         return None;
     }
@@ -507,19 +522,28 @@ async fn check_room(client: &matrix_sdk::Client, rid: &str, guests_changed: bool
     }
     let waiting = crate::appstate::get_state(&room, WAITING_TYPE, "").await.map(|c| parse_waiting(&c)).unwrap_or_default();
     let power_levels = crate::appstate::get_state(&room, "m.room.power_levels", "").await.unwrap_or(Value::Null);
+    let guests_in = if room.state() != matrix_sdk::RoomState::Joined {
+        -1
+    } else {
+        room.members_no_sync(matrix_sdk::RoomMemberships::JOIN)
+            .await
+            .map(|ms| ms.iter().filter(|m| is_guest_account(m.user_id().as_str())).count() as i64)
+            .unwrap_or(-1)
+    };
     let view = RoomView {
         room_id: rid.to_string(),
         state: guests.as_ref().and_then(parse_guest_state),
         waiting,
         membership: Some(membership_name(room.state()).to_string()),
         power_levels,
+        guests_in,
     };
     if crate::session::generation() != gen {
         return;
     }
     let ok = offered();
     let now = crate::appstate::now_ms() as f64;
-    let (plan, close) = {
+    let (plan, close, can_admit) = {
         let mut st = lock();
         let doc_on = st.doc.as_ref().map(|d| d.on);
         let before = read_seen();
@@ -529,14 +553,16 @@ async fn check_room(client: &matrix_sdk::Client, rid: &str, guests_changed: bool
         }
         let close: Vec<u32> = plan.close.iter().filter_map(|id| st.notes.remove(id)).collect();
         st.shown = plan.shown.clone();
+        let doc_role = st.doc.as_ref().filter(|d| d.room.as_deref() == Some(view.room_id.as_str())).map(GuestsDoc::role);
+        let can_admit = merge_role(local_role(&me, view.membership.as_deref(), &view.power_levels), doc_role).can_admit;
         st.view = Some(view);
-        (plan, close)
+        (plan, close, can_admit)
     };
     publish();
     close_notes(close);
     for w in &plan.announce {
         eprintln!("[guests] {} knocked", w.id);
-        if let Some(n) = announce(rid, w).await {
+        if let Some(n) = announce(rid, w, can_admit).await {
             let mut st = lock();
             if st.shown.contains(&w.id) {
                 st.notes.insert(w.id.clone(), n);
@@ -596,6 +622,7 @@ pub fn on_sync(client: &matrix_sdk::Client, response: &matrix_sdk::sync::SyncRes
                 WAITING_TYPE | "m.room.canonical_alias" => watched = true,
                 "m.room.power_levels" if known.as_deref() == Some(room) => watched = true,
                 "m.room.member" if key == me => watched = true, // joined it just now (or left it)
+                "m.room.member" if known.as_deref() == Some(room) => watched = true, // P10: a guest came in / left (the confirm's count)
                 _ => {}
             }
         };
@@ -735,7 +762,15 @@ fn manage(what: Manage) {
                     st.error.clear();
                 }
                 eprintln!("[guests] {} ok", what.path());
-                toast(what.done().to_string(), 5000);
+                // P10: New link copies the new link (the confirm said so)
+                let link = if matches!(what, Manage::Link) { lock().doc.as_ref().and_then(|d| d.link.clone()) } else { None };
+                let sink = lock().sink.clone();
+                match (link, sink) {
+                    (Some(l), Some(qt)) => {
+                        let _ = qt.queue(move |o| o.copy_ready(QString::from(&l), QString::from(LINK_COPIED)));
+                    }
+                    _ => toast(what.done().to_string(), 5000),
+                }
             }
             Err(f) => toast(format!("{}: {}", what.fail(), error_text(&f)), 6000),
         }
@@ -967,6 +1002,7 @@ mod tests {
             waiting,
             membership: Some(membership.into()),
             power_levels: json!({ "users": { ME: level }, "users_default": 0, "invite": 0 }),
+            guests_in: 0,
         }
     }
     fn ids(v: &[&str]) -> Vec<String> {

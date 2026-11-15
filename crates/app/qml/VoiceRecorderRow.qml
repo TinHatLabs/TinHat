@@ -59,6 +59,16 @@ FocusScope {
         id: player
         source: row.reviewing && row.vs.fileUrl ? row.vs.fileUrl : ""
         audioOutput: AudioOutput {}
+        // QOL A00.1: the draft preview is one of the players too (one at a time, NowPlaying.qml)
+        onPlaybackStateChanged: playbackState === MediaPlayer.PlayingState
+                                ? NowPlaying.playing(row._npDraft) : NowPlaying.stopped(row._npDraft)
+        Component.onDestruction: NowPlaying.stopped(row._npDraft)
+    }
+    property string _npDraft: ""
+    Component.onCompleted: row._npDraft = NowPlaying.newId("draft")
+    Connections {
+        target: NowPlaying
+        function onPauseRequested(id) { if (id === row._npDraft) player.pause() }
     }
 
     ColumnLayout {
@@ -254,13 +264,16 @@ FocusScope {
             GlowButton {
                 id: sendBtn
                 app: row.app
-                text: ""
+                // L1 A00.3: after a failed send it says "Retry" (Tin Hat Web's SendButton); a label like the text
+                // composer's Send, dropped on a narrow view (its width rule)
+                readonly property bool again: String(row.vs.error || "").length > 0
+                text: (row.conv && row.conv.width < 360) ? "" : (again ? "Retry" : "Send")
                 icon.name: "document-send-symbolic"
                 busy: row.sending || row.st === "finalizing"
                 enabled: row.st === "recording" || row.st === "review"
-                Accessible.name: "Send voice message"
+                Accessible.name: again ? "Send voice message again" : "Send voice message"
                 Accessible.description: "Ctrl+Enter"
-                Controls.ToolTip.text: "Send voice message (Ctrl+Enter)"
+                Controls.ToolTip.text: (again ? "Try sending again" : "Send voice message") + " (Ctrl+Enter)"
                 Controls.ToolTip.visible: hovered
                 Controls.ToolTip.delay: 600
                 onClicked: { player.stop(); row.conv.vnSend() }
@@ -268,15 +281,17 @@ FocusScope {
         }
     }
 
-    // the error under the row (Couldn't send — try again / too large / the microphone stopped); Send retries
+    // the error under the row (Couldn't send — try again / too large / the microphone stopped); Send retries.
+    // QOL A00.2: else why the recording stopped by itself (the 15-minute limit / a call), in the plain colour — the web's
+    // `d.error || d.note`
     Controls.Label {
         Layout.leftMargin: 12
         Layout.fillWidth: true
         wrapMode: Text.Wrap
-        visible: row.reviewing && String(row.vs.error || "").length > 0
+        visible: row.reviewing && String(row.vs.error || row.vs.note || "").length > 0
         textFormat: Text.PlainText
-        text: String(row.vs.error || "")
-        color: Th.statusErrorFg
+        text: String(row.vs.error || row.vs.note || "")
+        color: String(row.vs.error || "").length > 0 ? Th.statusErrorFg : Th.textMuted
         font.pointSize: Kirigami.Theme.smallFont.pointSize
     }
     }

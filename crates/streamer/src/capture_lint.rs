@@ -94,6 +94,7 @@ pub const ALLOW_PLAYING: &[(&str, &str, Gate)] = &[
     ("crates/streamer/src/lk_publish.rs", "gl_dmabuf_tail_scales_to_i420", NoCapture("unit test (synthetic source: videotestsrc)")),
     ("crates/streamer/src/lk_publish.rs", "capped_head_negotiates_without_a_max_framerate_field", NoCapture("unit test (synthetic source: videotestsrc)")),
     ("crates/streamer/src/lk_publish.rs", "presized_cpu_capture_never_renegotiates_its_source", NoCapture("unit test (synthetic source: videotestsrc)")),
+    ("crates/streamer/src/lk_publish.rs", "a_new_size_at_the_source_restarts_a_share_once", NoCapture("unit test (synthetic source: videotestsrc)")),
     ("crates/streamer/src/voicenote.rs", "decode_with", NoCapture("decoder: reads back a finished voice-note file (filesrc ! oggdemux ! opusdec)")),
     ("crates/streamer/src/voicenote.rs", "decode_failure_after_valid_audio_is_refused", NoCapture("unit test (synthetic source: audiotestsrc encoded into a file)")),
 ];

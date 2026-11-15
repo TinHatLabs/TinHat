@@ -1,7 +1,7 @@
 {
   "v": 1,
   "declinedShownMs": 6000,
-  "about": "Tin Hat DM ringing (RINGING.md §5): what a dev.tinhat.call.decline {ring} room event means to this device. 'declined' = the room is a two-person room (dm), I am in (or joining) that room's call and the ring is one of MY call.member event ids: show the text and play the end tone; 'dismiss' = in a dm, MY other device declined the ring (one of the room's live call.member event ids from someone else) while my incoming card is up: the card and the ring go; 'none' = nothing. senderJoined = the decliner's room membership is join (someone who has left can't decline). rings: which call.member event ids own/live hold: the room's call.member state events that are live sessions (the shared live-session rule) of senders whose membership is exactly join, own = mine, live = others', in event order. A ring id is the core's call_decline_content rule: '$' + 1..254 more UTF-8 bytes, no control or white-space characters. Fresh = within 60 s of now either way. Byte-identical copies: web src/features/calls/testvectors/ringdecline.json (the owner), desktop crates/app/src/testvectors/ringdecline.json. Each case: event, ctx {me, dm, senderJoined, inCallHere, cardUp, ownRings, liveRings} at now, want. texts: [display name, the words shown]. declinedShownMs: how long the caller's '<name> declined' stays on screen (web toast, desktop passive notification); gates read the stable log line / DOM marker instead (tools README).",
+  "about": "Tin Hat DM ringing (RINGING.md §5): what a dev.tinhat.call.decline {ring} room event means to this device. 'declined' = the room is a two-person room (dm), I am in (or joining) that room's call and the ring is one of MY call.member event ids: show the text and play the end tone; 'dismiss' = in a dm, MY other device declined the ring (one of the room's live call.member event ids from someone else) while my incoming card is up: the card and the ring go; 'none' = nothing. senderJoined = the decliner's room membership is join (someone who has left can't decline). rings: which call.member event ids own/live hold: the room's call.member state events that are live sessions (the shared live-session rule) of senders whose membership is exactly join, own = mine, live = others', in event order. A ring id is the core's call_decline_content rule: '$' + 1..254 more UTF-8 bytes, no control or white-space characters. Fresh = within 60 s of now either way. Byte-identical copies: web src/features/calls/testvectors/ringdecline.json (the owner), desktop crates/app/src/testvectors/ringdecline.json. Each case: event, ctx {me, dm, senderJoined, inCallHere, cardUp, ownRings, liveRings} at now, want. texts: [display name, the words shown]. declinedShownMs: how long the caller's '<name> declined' stays on screen (web toast, desktop passive notification); gates read the stable log line / DOM marker instead (tools README). pick (P8, 2026-11-13): the ring a Decline names = declineRing(live, dm): in a two-person room the newest of the others' live ring ids (live is in event order) that passes the ring-id rule, else null (no Decline: a group call card offers Dismiss only); the event sent is {type: dev.tinhat.call.decline, content: {ring}}.",
   "now": 1793174400000,
   "cases": [
     {
@@ -1585,5 +1585,56 @@
       "Zoë 🎮",
       "Zoë 🎮 declined"
     ]
+  ],
+  "pick": [
+    {
+      "name": "a DM ring: the caller's live membership",
+      "dm": true,
+      "live": [
+        "$b1"
+      ],
+      "want": "$b1"
+    },
+    {
+      "name": "the caller has two devices in the call: the newest",
+      "dm": true,
+      "live": [
+        "$b1",
+        "$b2"
+      ],
+      "want": "$b2"
+    },
+    {
+      "name": "a group call: nothing to decline",
+      "dm": false,
+      "live": [
+        "$b1"
+      ],
+      "want": null
+    },
+    {
+      "name": "no live ring (the caller hung up): nothing",
+      "dm": true,
+      "live": [],
+      "want": null
+    },
+    {
+      "name": "a malformed newest id is skipped",
+      "dm": true,
+      "live": [
+        "$b1",
+        "$bad id"
+      ],
+      "want": "$b1"
+    },
+    {
+      "name": "only malformed ids: nothing",
+      "dm": true,
+      "live": [
+        "nodollar",
+        "$"
+      ],
+      "want": null
+    }
   ]
 }

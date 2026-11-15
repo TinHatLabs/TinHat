@@ -61,7 +61,143 @@
    "repeat": false
   }
  ],
- "doc": "Push to talk's key rules, one file byte-identical in the desktop and web repos (launch-gate 2026-11-07).",
+ "doc": "Push to talk's key rules, one file byte-identical in the desktop and web repos (launch-gate 2026-11-07). hold + mic (2026-11-13, BRB privacy): a key press while I am away (BRB) never opens the mic and going away ends a hold; with push to talk on the mic is muted unless the key is held and I am not away; with it off the mute button decides (BRB mutes through it, and a person who unmutes by hand while away owns that). tail (P15, 2026-11-13): a release keeps the mic open tailMs more so the last word isn't cut (a press in that time continues the hold); while away (BRB) the release is immediate. pressExact (4-1, 2026-11-14): a press starts a hold only when no OTHER modifier is held (Shift+F10 with an F10 key is the menu key, not push to talk; Shift+Ctrl with a Ctrl key is a chord) and nothing handled the press already (web: defaultPrevented; the desktop's shortcuts take their key before any press), then the press rule above. pressPopup (4-2): while a dialog, menu or other popup owns the keyboard focus no press starts a hold (with Ctrl as the key, a Ctrl in the \"Send as text?\" dialog or a keyboard menu transmitted); otherwise the pressExact rule.",
+ "hold": [
+  {
+   "away": false,
+   "down": true,
+   "speaks": true
+  },
+  {
+   "away": true,
+   "down": true,
+   "speaks": false
+  },
+  {
+   "away": false,
+   "down": false,
+   "speaks": false
+  },
+  {
+   "away": true,
+   "down": false,
+   "speaks": false
+  }
+ ],
+ "mic": [
+  {
+   "away": false,
+   "holding": false,
+   "manualMuted": false,
+   "muted": false,
+   "pttOn": false
+  },
+  {
+   "away": true,
+   "holding": false,
+   "manualMuted": false,
+   "muted": false,
+   "pttOn": false
+  },
+  {
+   "away": false,
+   "holding": false,
+   "manualMuted": true,
+   "muted": true,
+   "pttOn": false
+  },
+  {
+   "away": true,
+   "holding": false,
+   "manualMuted": true,
+   "muted": true,
+   "pttOn": false
+  },
+  {
+   "away": false,
+   "holding": true,
+   "manualMuted": false,
+   "muted": false,
+   "pttOn": false
+  },
+  {
+   "away": true,
+   "holding": true,
+   "manualMuted": false,
+   "muted": false,
+   "pttOn": false
+  },
+  {
+   "away": false,
+   "holding": true,
+   "manualMuted": true,
+   "muted": true,
+   "pttOn": false
+  },
+  {
+   "away": true,
+   "holding": true,
+   "manualMuted": true,
+   "muted": true,
+   "pttOn": false
+  },
+  {
+   "away": false,
+   "holding": false,
+   "manualMuted": false,
+   "muted": true,
+   "pttOn": true
+  },
+  {
+   "away": true,
+   "holding": false,
+   "manualMuted": false,
+   "muted": true,
+   "pttOn": true
+  },
+  {
+   "away": false,
+   "holding": false,
+   "manualMuted": true,
+   "muted": true,
+   "pttOn": true
+  },
+  {
+   "away": true,
+   "holding": false,
+   "manualMuted": true,
+   "muted": true,
+   "pttOn": true
+  },
+  {
+   "away": false,
+   "holding": true,
+   "manualMuted": false,
+   "muted": false,
+   "pttOn": true
+  },
+  {
+   "away": true,
+   "holding": true,
+   "manualMuted": false,
+   "muted": true,
+   "pttOn": true
+  },
+  {
+   "away": false,
+   "holding": true,
+   "manualMuted": true,
+   "muted": false,
+   "pttOn": true
+  },
+  {
+   "away": true,
+   "holding": true,
+   "manualMuted": true,
+   "muted": true,
+   "pttOn": true
+  }
+ ],
  "press": [
   {
    "key": "Ctrl",
@@ -133,5 +269,132 @@
    "starts": true,
    "textFocus": false
   }
- ]
+ ],
+ "pressExact": [
+  {
+   "handled": false,
+   "key": "F10",
+   "otherMods": false,
+   "starts": true,
+   "textFocus": false
+  },
+  {
+   "handled": false,
+   "key": "F10",
+   "otherMods": true,
+   "starts": false,
+   "textFocus": false
+  },
+  {
+   "handled": false,
+   "key": "F10",
+   "otherMods": true,
+   "starts": false,
+   "textFocus": true
+  },
+  {
+   "handled": true,
+   "key": "F10",
+   "otherMods": false,
+   "starts": false,
+   "textFocus": false
+  },
+  {
+   "handled": false,
+   "key": "Ctrl",
+   "otherMods": false,
+   "starts": true,
+   "textFocus": false
+  },
+  {
+   "handled": false,
+   "key": "Ctrl",
+   "otherMods": true,
+   "starts": false,
+   "textFocus": false
+  },
+  {
+   "handled": true,
+   "key": "Ctrl",
+   "otherMods": false,
+   "starts": false,
+   "textFocus": false
+  },
+  {
+   "handled": false,
+   "key": "Ctrl",
+   "otherMods": false,
+   "starts": false,
+   "textFocus": true
+  },
+  {
+   "handled": false,
+   "key": "F13",
+   "otherMods": false,
+   "starts": true,
+   "textFocus": true
+  },
+  {
+   "handled": false,
+   "key": "Alt",
+   "otherMods": true,
+   "starts": false,
+   "textFocus": false
+  }
+ ],
+ "pressPopup": [
+  {
+   "key": "Ctrl",
+   "otherMods": false,
+   "popup": true,
+   "starts": false,
+   "textFocus": false
+  },
+  {
+   "key": "Ctrl",
+   "otherMods": false,
+   "popup": false,
+   "starts": true,
+   "textFocus": false
+  },
+  {
+   "key": "F13",
+   "otherMods": false,
+   "popup": true,
+   "starts": false,
+   "textFocus": false
+  },
+  {
+   "key": "F13",
+   "otherMods": false,
+   "popup": false,
+   "starts": true,
+   "textFocus": false
+  },
+  {
+   "key": "Alt",
+   "otherMods": false,
+   "popup": true,
+   "starts": false,
+   "textFocus": false
+  },
+  {
+   "key": "Ctrl",
+   "otherMods": false,
+   "popup": true,
+   "starts": false,
+   "textFocus": true
+  }
+ ],
+ "tail": [
+  {
+   "away": false,
+   "ms": 250
+  },
+  {
+   "away": true,
+   "ms": 0
+  }
+ ],
+ "tailMs": 250
 }

@@ -26,6 +26,15 @@ import dev.tinhat.app   // Th: the settings.* tokens; Motion
 
 Window {
     id: win
+    // A13.3 (2026-11-13): a saved device that isn't plugged in stays visible as itself ("Your saved device (not connected)") instead of the
+    // list showing "System default" as if that were the choice (the web's withSaved, callbridge.ts)
+    // A22.5: a setting's "Change key…" opens Shortcuts with its search filled in (ShortcutsPane takes it once)
+    property string shortcutsPreset: ""
+    function withSaved(model, saved) {
+        var s = String(saved || "")
+        if (s.length === 0 || model.some(function (d) { return d.node === s })) return model
+        return model.concat([{ node: s, label: "Your saved device (not connected)" }])
+    }
     required property var app            // Main.qml root: the controllers (settings, callctl, …) and the m* mirrors
     property var core: null              // AppCore (Appearance)
 
@@ -198,7 +207,6 @@ Window {
             // the persisted mic-DSP toggles live on the Audio pane — load them so the switches show real state even
             // before any call refreshed them
             win.app.callctl.refreshMicDenoise(); win.app.callctl.refreshMicApm(); win.app.callctl.refreshMicAec()
-            win.app.diagnostics.refresh()
             win.sNotify = s.desktopNotifications
             win.opened()
         } else {
@@ -360,6 +368,27 @@ Window {
         confirmText: "Remove"
         destructive: true
         onConfirmed: win.app.settings.clearAvatar()
+    }
+    // P10 (Sunday QoL): Settings → Guests' Turn off / New link confirm (guests_ctl.rs view_json `confirm`)
+    ConfirmDialog {
+        id: guestsConfirmOff
+        app: win.app
+        readonly property var words: (win.app.mGuests && win.app.mGuests.confirm) ? win.app.mGuests && win.app.mGuests.confirm["off"] : null
+        dialogTitle: guestsConfirmOff.words ? String(guestsConfirmOff.words.title) : ""
+        message: guestsConfirmOff.words ? String(guestsConfirmOff.words.body) : ""
+        confirmText: guestsConfirmOff.words ? String(guestsConfirmOff.words.confirm) : "OK"
+        destructive: true
+        onConfirmed: win.app.guestsCtl.turnOff()
+    }
+    ConfirmDialog {
+        id: guestsConfirmLink
+        app: win.app
+        readonly property var words: (win.app.mGuests && win.app.mGuests.confirm) ? win.app.mGuests && win.app.mGuests.confirm["link"] : null
+        dialogTitle: guestsConfirmLink.words ? String(guestsConfirmLink.words.title) : ""
+        message: guestsConfirmLink.words ? String(guestsConfirmLink.words.body) : ""
+        confirmText: guestsConfirmLink.words ? String(guestsConfirmLink.words.confirm) : "OK"
+        destructive: false
+        onConfirmed: win.app.guestsCtl.newLink()
     }
     ConfirmDialog {
         id: removeEmailConfirm
@@ -789,7 +818,9 @@ Window {
                             }
                             trailing: [
                                 ThButton { app: win.app; text: "Change photo…"; icon.name: "insert-image-symbolic"; enabled: !win.sBusy; onClicked: avatarDialog.open() },
-                                ThButton { app: win.app; flat: true; text: "Remove"; visible: win.sAvatar.length > 0; enabled: !win.sBusy; onClicked: removeAvatarConfirm.open() }
+                                ThButton { app: win.app; flat: true; text: "Remove"; visible: win.sAvatar.length > 0; enabled: !win.sBusy; onClicked: removeAvatarConfirm.open() },
+                                // A02.4 (Sunday QoL): your address, to give a friend — not only inside the people pickers
+                                ThButton { app: win.app; flat: true; text: "Copy my address"; icon.name: "edit-copy-symbolic"; onClicked: { win.app.copyToClipboard(win.sUserId); win.app.settingsToast("Copied your address", 2000) } }
                             ]
                         }
                     }
@@ -1077,7 +1108,7 @@ Window {
                     SettingsSection {
                         visible: win.app.serverOn("presence")   // selfhost: Reach statuses are the server's
                         title: "Your status"
-                        hint: "Turning it off stops it at once — it leaves other people's screens within about 20 seconds and nothing is kept. Messages, typing and read receipts are separate; other Matrix apps may share a status on their own."
+                        hint: "Turning it off stops it at once — it leaves other people's screens within about 20 seconds and nothing is kept. Messages, typing and read receipts are separate; other chat apps may share a status on their own."
                         SettingsRow {
                             app: win.app
                             anchorId: "privacy.share-status"
@@ -1172,7 +1203,7 @@ Window {
                             app: win.app
                             anchorId: "privacy.never-record"
                             label: "Never record me"
-                            description: "When a call is recorded (🔴 REC in everyone's call header), your camera, screen shares and voice are left out. Takes effect when you join a call."
+                            description: "When a call is recorded (🔴 REC in everyone's call header), your camera, screen shares and voice are left out. Changes apply at once, also during a call."
                             toggle: recordSw
                             trailing: ThSwitch {
                                 id: recordSw
@@ -1184,26 +1215,16 @@ Window {
                     }
                     SettingsSection {
                         title: "Diagnostics"
+                        // P18: no on/off switch any more (it gated nothing but this button); nothing is collected in the
+                        // background either way — the report is made only when you press the button
                         SettingsRow {
                             app: win.app
                             anchorId: "privacy.diagnostics"
-                            label: "Diagnostic reports"
-                            description: "Off by default. Nothing is collected in the background and nothing is ever uploaded."
-                            toggle: diagSw
-                            trailing: ThSwitch {
-                                id: diagSw
-                                Accessible.name: "Allow creating diagnostic reports"
-                                checked: win.app.diagnostics.enabled
-                                onToggled: win.app.diagnostics.setOptIn(checked)
-                            }
-                        }
-                        SettingsRow {
-                            app: win.app
                             label: "Create a report"
                             description: win.app.diagnostics.status.length > 0 ? win.app.diagnostics.status
                                 : "Writes a text file to your home folder: your app log with tokens and keys stripped, plus your audio and video settings. Read it, then send it to your server's owner if you like. Messages are never logged."
                             trailing: [
-                                ThButton { app: win.app; text: "Create report"; enabled: win.app.diagnostics.enabled; onClicked: win.app.diagnostics.createReport() },
+                                ThButton { app: win.app; text: "Create report"; onClicked: win.app.diagnostics.createReport() },
                                 ThButton { app: win.app; flat: true; text: "Open report"; visible: win.app.diagnostics.reportPath.length > 0; onClicked: LinkGate.openLocal("file://" + win.app.diagnostics.reportPath) }
                             ]
                         }
@@ -1287,7 +1308,7 @@ Window {
                             iconColor: win.sXsign ? Th.settingsSuccessFg : Th.settingsErrorFg
                             label: "Verification"
                             chip: win.sXsign ? "Verified" : ""
-                            description: win.sXsign ? "This device is cross-signed — it can read your encrypted messages."
+                            description: win.sXsign ? "This device is verified — it can read your encrypted messages."
                                                     : "Not verified — encrypted messages can't be read here yet."
                             trailing: ThButton { app: win.app; highlighted: true; text: "Verify…"; visible: !win.sXsign; onClicked: win.handOff("security", "verify") }   // 10.1 (TH-SET-11)
                         }
@@ -1317,7 +1338,7 @@ Window {
                                 spacing: 8
                                 Controls.Label {
                                     Layout.fillWidth: true
-                                    text: "Enter your account password. You get a recovery key to write down."
+                                    text: "Enter your account password. You get a Security Key to write down."
                                     color: Th.settingsHintFg
                                     font.pixelSize: Math.round(12 * Th.textScale)
                                     wrapMode: Text.Wrap
@@ -1352,8 +1373,15 @@ Window {
                             app: win.app
                             anchorId: "security.devices"
                             visible: win.sDevices.length === 0
-                            label: win.sBusy ? "Loading your sessions…" : "Couldn't load your sessions"
-                            description: win.sBusy ? "" : "Close and reopen Settings to try again."
+                            // D10.8 / A36.2: "devices" like the rest of the pane (and the web), and a way out of the failure
+                            label: win.sBusy ? "Loading your devices…" : "Couldn't load your devices"
+                            description: win.sBusy ? "" : "Check your connection, then try again."
+                            trailing: ThButton {
+                                app: win.app
+                                text: "Try again"
+                                visible: !win.sBusy
+                                onClicked: win.app.settings.refresh()
+                            }
                         }
                         Repeater {
                             model: win.sDevices
@@ -1378,7 +1406,7 @@ Window {
                                     onClicked: trustDialog.show(devRow.modelData.id, devRow.modelData.name || devRow.modelData.id)
                                 }
                                 HoverHandler { id: devHover }
-                                Controls.ToolTip.text: "Session " + devRow.modelData.id
+                                Controls.ToolTip.text: "Device " + devRow.modelData.id
                                 Controls.ToolTip.visible: devHover.hovered
                                 Controls.ToolTip.delay: 600
                             }
@@ -1514,12 +1542,14 @@ Window {
                     readonly property var w: guestsPage.g.words || ({})
                     readonly property var plan: guestsPage.g.pane || null
                     readonly property var buttons: guestsPage.plan ? guestsPage.plan.buttons : []
+                    // P10 (Sunday QoL): Turn off / New link confirm (guests_ctl.rs view_json `confirm`; Main.qml guestConfirm)
+                    function ask(what) { (what === "off" ? guestsConfirmOff : guestsConfirmLink).open() }
                     function run(id) {
                         switch (id) {
                         case "turnOn": win.app.guestsCtl.turnOn(); break
-                        case "turnOff": win.app.guestsCtl.turnOff(); break
+                        case "turnOff": guestsPage.ask("off"); break   // P10: ask first, naming who is affected
                         case "copy": win.app.guestsCtl.copyLink(); break
-                        case "newLink": win.app.guestsCtl.newLink(); break
+                        case "newLink": guestsPage.ask("link"); break
                         case "open": win.app.guestsCtl.openRoom(); break   // joins it first when needed; Main.qml closes Settings (onOpenReady)
                         }
                     }
@@ -1613,7 +1643,7 @@ Window {
                                 Layout.preferredWidth: 240
                                 textRole: "label"
                                 Accessible.name: "Input device"
-                                model: [{ node: "", label: "System default" }].concat(win.app.mInputs)
+                                model: win.withSaved([{ node: "", label: "System default" }].concat(win.app.mInputs), win.app.mInputName)
                                 currentIndex: { for (var i = 0; i < model.length; i++) if (model[i].node === win.app.mInputName) return i; return 0 }
                                 onActivated: (i) => win.app.callctl.setInput(model[i].node)
                             }
@@ -1623,8 +1653,9 @@ Window {
                             anchorId: "audio.input-level"
                             label: "Input level"
                             // 10.1 (TH-SET-12)
+                            // A13.0 (2026-11-13): the reason the meter shows nothing (meter_hint.rs), not always "unplugged"
                             description: (!win.app.callctl.micMonitoring && win.audioSettled)
-                                         ? "No signal from this microphone — it may be unplugged or in use by another app. Pick another one above."
+                                         ? (win.app.callctl.status, win.app.mInCall, win.app.callctl.micMeterHint())   // (review) re-read when the call / watch state changes
                                          : "Talk and watch the bars move."
                             MeterBox { level: win.app.mMicLevel; live: win.app.callctl.micMonitoring }
                         }
@@ -1715,7 +1746,7 @@ Window {
                                 Layout.preferredWidth: 240
                                 textRole: "label"
                                 Accessible.name: "Output device"
-                                model: [{ node: "", label: "System default" }].concat(win.app.mOutputs)
+                                model: win.withSaved([{ node: "", label: "System default" }].concat(win.app.mOutputs), win.app.mOutputName)
                                 currentIndex: { for (var i = 0; i < model.length; i++) if (model[i].node === win.app.mOutputName) return i; return 0 }
                                 onActivated: (i) => win.app.callctl.setOutput(model[i].node)
                             }
@@ -1839,6 +1870,13 @@ Window {
                                 checked: win.app.callctl.pushToTalk
                                 onToggled: win.app.callctl.applyPushToTalk(checked)
                             }
+                            // A22.5 (2026-11-13): the key is changed here too, not only in Shortcuts (the web: the same link)
+                            ThButton {
+                                app: win.app
+                                flat: true
+                                text: "Change key…"
+                                onClicked: { win.shortcutsPreset = "Push to talk"; win.currentKey = "shortcuts" }
+                            }
                         }
                         // 10.5: the "You're muted" reminder can also make a sound (off by default)
                         SettingsRow {
@@ -1876,7 +1914,7 @@ Window {
                             app: win.app
                             anchorId: "calls.pad"   // the Settings search lands here (settings_index.json)
                             label: "Let my other verified devices control my calls here"
-                            description: "While this device is in a call, your phone (or another device of yours) can play sounds, mute you and set people's volumes here. Only your own verified devices can; the call bar shows a chip while one does."
+                            description: "Pad lets you use your phone as a remote, a mic or a camera for the call on your computer. This switch is for the remote: while this device is in a call, your phone (or another device of yours) can play sounds, mute you and set people's volumes here. Only your own verified devices can; the call bar shows a chip while one does."
                             toggle: padSw
                             trailing: ThSwitch {
                                 id: padSw
@@ -1942,7 +1980,7 @@ Window {
                                 Layout.preferredWidth: 240
                                 textRole: "label"
                                 Accessible.name: "Camera"
-                                model: [{ node: "", label: "Default (first camera)" }].concat(win.app.mCameras)
+                                model: win.withSaved([{ node: "", label: "Default (first camera)" }].concat(win.app.mCameras), win.app.mCameraName)
                                 currentIndex: { for (var i = 0; i < model.length; i++) if (model[i].node === win.app.mCameraName) return i; return 0 }
                                 onActivated: (i) => win.app.callctl.setCamera(model[i].node)
                             }
@@ -2256,7 +2294,16 @@ Window {
                                     from: 0; to: 100; stepSize: 5
                                     Accessible.name: "Sound volume"
                                     value: { var v = parseInt(win.app.settings.pref("snd.volume")); return isNaN(v) ? 70 : v }
-                                    onMoved: win.app.settings.applyPref("snd.volume", String(Math.round(value)))
+                                    // D07.1: the end of a press (the pointer let go, a key released) or a wheel step (moved without a
+                                    // press) plays a sound at the new level; a new press or drag cancels a preview still waiting
+                                    onMoved: { win.app.settings.applyPref("snd.volume", String(Math.round(value))); if (pressed) volPreviewTimer.stop(); else volPreviewTimer.restart() }
+                                    onPressedChanged: if (pressed) volPreviewTimer.stop(); else volPreviewTimer.restart()
+                                    VolumePreview { id: volPreviewRule }
+                                    Timer {
+                                        id: volPreviewTimer
+                                        interval: volPreviewRule.debounceMs
+                                        onTriggered: win.app.previewSound(volPreviewRule.file(win.app.settings.pref("snd.notify"), win.app.settings.pref("snd.notify.variant")), true)
+                                    }
                                 }
                                 Controls.Label {
                                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -2280,7 +2327,7 @@ Window {
                     app: win.app
                     title: win.paneInfo.shortcuts.t
                     description: win.paneInfo.shortcuts.d
-                    ShortcutsPane { Layout.fillWidth: true; app: win.app }
+                    ShortcutsPane { Layout.fillWidth: true; app: win.app; preset: win.shortcutsPreset; onPresetTaken: win.shortcutsPreset = "" }
                 }
 
                 // ================================ Overlay ================================

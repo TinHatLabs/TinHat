@@ -16,7 +16,11 @@
 //!   helper, stay up and say so.
 //! - **A binary on Linux**: `exec()` replaces this process; it returns only when it failed, so a return = failed,
 //!   stay up. (The platform guarantees the rest.)
-//! - **Windows**: a successful `CreateProcess` (spawn `Ok`) is the guarantee; a spawn `Err` = failed, stay up.
+//! - **Windows** (12.1.14, update_switch.rs): a successful `CreateProcess` is NOT enough (a DLL Windows refuses kills
+//!   the new process in the loader, after CreateProcess returned). The child writes the token into the ack file we
+//!   named, first thing in `main()`; we hold its process handle. "Running" = the token is there and the process is
+//!   not gone. A spawn `Err`, an exit, or nothing within update_switch::START_TIMEOUT = failed: stop it, put the
+//!   folders back, stay up and say so.
 //!
 //! On a failure the app keeps running, logs `[relaunch] FAILED: <reason> — still running` and shows [`FAILED_MESSAGE`].
 
@@ -276,8 +280,70 @@ pub fn ack_if_asked() {
             Err(e) => eprintln!("[relaunch] could not tell the previous instance that we run ({e})"),
         }
     }
-    #[cfg(not(unix))]
+    #[cfg(windows)]
+    {
+        // 12.1.14 (update_switch.rs): the previous instance switched an update in and watches for this file; it holds
+        // our process handle, so a file with the token = we run. The handle stays open (default sharing: the parent
+        // may still delete it to call the restart off) until we hold the single-instance lock (settled()).
+        use std::io::Write;
+        let p = std::path::PathBuf::from(p);
+        let ok_place = token_of(&p).is_some() && ack_dir().is_some_and(|d| p.parent() == Some(d.as_path()));
+        if !ok_place {
+            eprintln!("[relaunch] the hand-over file isn't ours ({}) — not answering", p.display());
+            return;
+        }
+        let token = token_of(&p).unwrap_or_default();
+        match std::fs::OpenOptions::new().write(true).create_new(true).open(&p) {
+            Ok(mut f) => match f.write_all(format!("{token}\n").as_bytes()).and_then(|_| f.flush()) {
+                Ok(()) => {
+                    eprintln!("[relaunch] started; told the previous instance");
+                    *CHILD_ACK.lock().unwrap() = Some((p, f));
+                }
+                Err(e) => eprintln!("[relaunch] could not tell the previous instance that we run ({e})"),
+            },
+            Err(e) => eprintln!("[relaunch] could not tell the previous instance that we run ({e})"),
+        }
+    }
+    #[cfg(not(any(unix, windows)))]
     let _ = p;
+}
+
+/// 12.1.14, Windows: a fresh hand-over file name for a supervised start (update_switch::win::hand_over) and its
+/// token. Files older than 10 minutes in the folder are leftovers and go first.
+#[cfg(windows)]
+pub fn new_ack_path_windows() -> Result<(std::path::PathBuf, String), String> {
+    let dir = ack_dir().ok_or_else(|| "no cache folder".to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| format!("cannot create {}: {e}", dir.display()))?;
+    if let Ok(rd) = std::fs::read_dir(&dir) {
+        for e in rd.flatten() {
+            let p = e.path();
+            let old = e
+                .metadata()
+                .and_then(|m| m.modified())
+                .ok()
+                .and_then(|t| t.elapsed().ok())
+                .is_some_and(|age| age > Duration::from_secs(600));
+            if token_of(&p).is_some() && old {
+                let _ = std::fs::remove_file(&p);
+            }
+        }
+    }
+    let token = format!("{:032x}", rand::random::<u128>());
+    let p = dir.join(format!("{token}.ack"));
+    if std::fs::symlink_metadata(&p).is_ok() {
+        return Err(format!("{} already exists", p.display()));
+    }
+    Ok((p, token))
+}
+
+/// 12.1.14, Windows: we hold the single-instance lock, so the previous instance is gone and the hand-over is done:
+/// remove our file. (Unix keeps it for the process's life: there the lock on it is the liveness proof.)
+pub fn settled() {
+    #[cfg(windows)]
+    if let Some((p, f)) = CHILD_ACK.lock().unwrap().take() {
+        drop(f);
+        let _ = std::fs::remove_file(&p);
+    }
 }
 
 /// 12.1.8 (assembly-044 review): what the previous instance does once the child runs. The app stays usable while it

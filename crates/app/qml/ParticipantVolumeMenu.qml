@@ -59,6 +59,33 @@ ThMenu {
     // let it hang off the bottom/right edge with the sliders cut off).
     margins: 6
 
+    // P9 (12.1.16): the tile's view rows — Pin / Unpin, and Full screen on a share (AppCore.tileViewItems, the shared
+    // testvectors/tile-gestures). Only when opened from a call tile (viewTile set); the left bar's menu has none.
+    property var viewTile: null
+    onClosed: viewTile = null
+    readonly property var viewItems: (menu.app && menu.viewTile && menu.app.tileViewItems) ? menu.app.tileViewItems({
+        share: menu.viewTile.share, self: menu.viewTile.self, fake: menu.viewTile.fake,
+        pinned: menu.app.pinnedTile === menu.viewTile.id, fullscreen: menu.app.shareFullscreen === menu.viewTile.id }) : []
+    Controls.MenuItem {
+        objectName: "tileViewRow0"
+        visible: menu.viewItems.length > 0
+        height: visible ? implicitHeight : 0
+        text: LinkGate.plain(visible ? menu.viewItems[0][1] : "")
+        icon.name: "window-pin-symbolic"
+        onTriggered: menu.app.tileViewRun(menu.viewItems[0][0], menu.viewTile.id)
+    }
+    Controls.MenuItem {
+        objectName: "tileViewRow1"
+        visible: menu.viewItems.length > 1
+        height: visible ? implicitHeight : 0
+        text: LinkGate.plain(visible ? menu.viewItems[1][1] : "")
+        icon.name: visible && menu.viewItems[1][0] === "leaveFullscreen" ? "view-restore-symbolic" : "view-fullscreen-symbolic"
+        onTriggered: menu.app.tileViewRun(menu.viewItems[1][0], menu.viewTile.id)
+    }
+    Controls.MenuSeparator {
+        visible: menu.viewItems.length > 0
+        height: visible ? implicitHeight : 0
+    }
     Controls.MenuItem {
         text: "Message"
         icon.name: "mail-message-new-symbolic"

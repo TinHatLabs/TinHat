@@ -120,11 +120,41 @@ ColumnLayout {
         Layout.margins: Kirigami.Units.smallSpacing
         visible: !island.panelRef.activeInvited   // nothing to filter until you join
         placeholderText: "Filter rooms…"
+        // the web's useTip(filterWrap, "Ctrl+F"): the key, while the field is empty
+        readonly property string keyHint: {
+            var h = island.app && island.app.actions ? island.app.actions : null
+            var ks = h ? h.keysFor("nav.roomList.filter") : []
+            return ks.length > 0 ? String(ks[0]) : ""
+        }
+        Controls.ToolTip.text: keyHint
+        Controls.ToolTip.visible: hovered && text.length === 0 && keyHint.length > 0
+        Controls.ToolTip.delay: 700
         onTextChanged: { island.panelRef.query = text; roomView.positionViewAtBeginning() }   // 10.1 (TH-NAV-12): the match is never off-screen
         Keys.onEscapePressed: text = ""
-        // Enter opens the first match; Down hands focus to the list.
-        onAccepted: island.panelRef.openFirstMatch()
-        Keys.onDownPressed: roomView.forceActiveFocus()
+        // P1 (2026-11-14): typing never opens a room (Kirigami's auto-accept opened — and marked read — every room typed
+        // past, and Esc's empty field the first room). Enter acts on the highlighted first match; Down hands focus to
+        // the list.
+        autoAccept: false
+        // Kirigami's SearchField binds StandardKey.Find (Ctrl+F) itself: the table's nav.roomList.filter key (Main.qml,
+        // keysFor — it follows Settings → Shortcuts) is the only one; two Shortcuts on Ctrl+F made it ambiguous
+        focusSequences: []
+        onAccepted: island.acceptFilter()
+        Keys.onDownPressed: roomView.kbEnter(true)   // a11y round 2 (M2): the first room that matches
+    }
+
+    // Enter in the filter: what a click on its first match does (rowGesture: open, or the join dialog for a listed room
+    // you are not in; an invite or an empty filter: nothing) — the web's roomFilter.ts filterEnter
+    function acceptFilter() {
+        var id = island.panelRef.filterFirstId
+        if (!id || !island.roomModelRef) return
+        for (var i = 0; i < island.roomModelRef.count; i++) {
+            if (island.roomModelRef.get(i).rid !== id) continue
+            var r = island.roomModelRef.get(i).room
+            var g = island.rowGesture({ gesture: "click", membership: String(r.membership || "") })
+            if (g === "askJoin") island.panelRef.joinRequested(r.id, r.name)
+            else if (g === "open") island.panelRef.roomActivated(r.id)
+            return
+        }
     }
 
     // Ctrl+K on a pending invite (Main.qml showInvite): bring its row into view as soon as the list holds it — the rail
@@ -164,6 +194,82 @@ ColumnLayout {
         spacing: 1
         bottomMargin: 8   // 11.0: the account card is its own island now (no floating card to clear)
         model: island.roomModelRef
+        // a11y round 2 (M2; the web's room list does the same, src/features/nav/RoomList.tsx): the list is ONE Tab stop
+        // ("Rooms"); Tab lands on the room on screen (else the first that matches the filter), Down in the filter on the
+        // first match; Up/Down walk the rooms the filter shows, Home/End the ends, Return opens (or asks to join, as a
+        // click does), Escape goes back to the filter. Controls inside a row (Accept / Decline, Now playing) keep their
+        // own Tab stops. Its own index (kbIndex), painted as the hover wash + the focus ring (rooms.item.ring.focus),
+        // read out through an accessibility announcement; no current item (the list keeps the focus itself, as the
+        // message list does).
+        property int kbIndex: -1
+        property string kbRid: ""        // the keyboard row's ROOM: the list re-sorts and shrinks under it
+        activeFocusOnTab: true
+        keyNavigationEnabled: false
+        currentIndex: -1
+        Accessible.role: Accessible.List
+        Accessible.name: "Rooms"
+        function kbMatches(i) {   // the shared filter (ThRoomList roomShown, ACTIONS.md §10.8)
+            return island.panelRef.roomShown(island.roomModelRef.get(i).room)
+        }
+        function kbStep(from, dir) {   // the next row the filter shows from `from` (exclusive) in `dir`, -1 = none
+            for (var i = from + dir; i >= 0 && i < count; i += dir) if (kbMatches(i)) return i
+            return -1
+        }
+        function kbResolve() {   // the keyboard row's index from its room (-1 when the room left the list)
+            if (kbRid.length === 0) { kbIndex = -1; return }
+            for (var i = 0; i < count; i++) if (island.roomModelRef.get(i).rid === kbRid) { kbIndex = i; return }
+            kbIndex = -1; kbRid = ""
+        }
+        onCountChanged: if (kbRid.length > 0) kbResolve()
+        Connections {
+            target: island.panelRef
+            function on_ModelRevChanged() { if (roomView.kbRid.length > 0) roomView.kbResolve() }
+        }
+        function kbGo(i) {
+            if (i < 0 || i >= count) return
+            kbIndex = i
+            kbRid = String(island.roomModelRef.get(i).rid)
+            positionViewAtIndex(i, ListView.Contain)
+            var r = island.roomModelRef.get(i).room
+            // its name and place ("Game night, 2 of 5" — what a screen reader says for a web list item)
+            var at = 0, of = 0
+            for (var j = 0; j < count; j++) if (kbMatches(j)) { of++; if (j <= i) at++ }
+            if (r && typeof Accessible.announce === "function") Accessible.announce(String(r.name || "") + ", " + at + " of " + of)
+        }
+        // fromFilter: the first match; else the room on screen when the filter shows it, else the first match
+        function kbEnter(fromFilter) {
+            var at = -1
+            if (!fromFilter) for (var i = 0; i < count; i++) if (island.roomModelRef.get(i).rid === island.panelRef.currentRoomId && kbMatches(i)) { at = i; break }
+            if (at < 0) at = kbStep(-1, 1)
+            if (!activeFocus) { _kbEntering = true; forceActiveFocus(Qt.OtherFocusReason); _kbEntering = false }
+            if (at >= 0) kbGo(at)
+        }
+        property bool _kbEntering: false
+        onActiveFocusChanged: { if (!activeFocus) { kbIndex = -1; kbRid = "" } else if (!_kbEntering && kbIndex < 0) Qt.callLater(function () { if (roomView.activeFocus && roomView.kbIndex < 0) roomView.kbEnter(false) }) }
+        function _kbKey(event) {
+            if (event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier)) return false
+            var k = event.key
+            return k === Qt.Key_Up || k === Qt.Key_Down || k === Qt.Key_Home || k === Qt.Key_End || k === Qt.Key_Escape
+                || k === Qt.Key_Return || k === Qt.Key_Enter
+        }
+        Keys.onShortcutOverride: (event) => { if (_kbKey(event)) event.accepted = true }
+        Keys.onPressed: (event) => {
+            if (!_kbKey(event)) return
+            kbResolve()
+            var k = event.key
+            if (k === Qt.Key_Up) { var u = kbStep(kbIndex < 0 ? count : kbIndex, -1); if (u >= 0) kbGo(u) }
+            else if (k === Qt.Key_Down) { var d = kbStep(kbIndex, 1); if (d >= 0) kbGo(d) }
+            else if (k === Qt.Key_Home) kbGo(kbStep(-1, 1))
+            else if (k === Qt.Key_End) kbGo(kbStep(count, -1))
+            else if (k === Qt.Key_Escape) { if (filterField.visible) filterField.forceActiveFocus(Qt.ShortcutFocusReason) }
+            else if (kbIndex >= 0 && kbIndex < count) {   // Return / Enter: what a click does (on the room it names)
+                var r = island.roomModelRef.get(kbIndex).room
+                var g = island.rowGesture({ gesture: "click", membership: String(r.membership || "") })
+                if (g === "askJoin") island.panelRef.joinRequested(r.id, r.name)
+                else if (g === "open") island.panelRef.roomActivated(r.id)
+            }
+            event.accepted = true
+        }
         HoverHandler {
             id: listHover
             onHoveredChanged: if (!hovered && island.panelRef._pendingResort) { island.panelRef._pendingResort = false; island.panelRef._syncRooms() }
@@ -174,13 +280,14 @@ ColumnLayout {
         delegate: Item {
             id: row
             required property var room
+            required property int index
+            readonly property bool kbCurrent: roomView.activeFocus && roomView.kbIndex === row.index   // a11y round 2 (M2)
             width: ListView.view ? ListView.view.width : 0
             // Filter-as-visibility: typing in the filter only toggles row heights,
             // it never rebuilds delegates.
-            readonly property bool matches: {
-                var q = island.panelRef.query.trim().toLowerCase()
-                return q.length === 0 || String(room.name).toLowerCase().indexOf(q) >= 0
-            }
+            readonly property bool matches: island.panelRef.roomShown(room)   // the shared filter (ACTIONS.md §10.8)
+            // P1: the filter's first match (the one its Enter acts on) wears the hover wash
+            readonly property bool filterFirst: island.panelRef.filterFirstId.length > 0 && room.id === island.panelRef.filterFirstId
             visible: matches
             readonly property bool isInvite: room.membership === "invite"
             // Listed but not joined: a public/space-restricted room discovered in the
@@ -240,7 +347,7 @@ ColumnLayout {
             // hover / selected wash
             readonly property color washColor: row.selected
                 ? Th.roomsItemBgSelected
-                : (rowMa.containsMouse ? Th.roomsItemBgHover : "transparent")
+                : ((rowMa.containsMouse || row.kbCurrent || row.filterFirst) ? Th.roomsItemBgHover : "transparent")
             Rectangle {
                 anchors.fill: parent
                 anchors.leftMargin: Kirigami.Units.smallSpacing
@@ -249,6 +356,9 @@ ColumnLayout {
                 radius: island.panelRef._a.radius
                 color: row.washColor
                 Behavior on color { ColorAnimation { duration: island.panelRef._a.dur } }
+                // a11y round 2 (M2): the keyboard row's focus ring (the web's .row:focus-visible inset 1 px ring)
+                border.width: row.kbCurrent ? 1 : 0
+                border.color: Th.roomsItemRingFocus
             }
 
             MouseArea {
@@ -337,10 +447,13 @@ ColumnLayout {
                     color: Th.roomsItemFavouriteIcon
                     isMask: true
                 }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 72   // 10.1 (TH-NAV-09): the invite actions can no longer crush the name to nothing
+                    spacing: 0
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
-                    Layout.minimumWidth: 72   // 10.1 (TH-NAV-09): the invite actions can no longer crush the name to nothing
                     text: row.room.name
                     elide: Text.ElideRight
                     // Dimmed while you are not in it, so "haven't joined" reads at a
@@ -349,6 +462,18 @@ ColumnLayout {
                     // …and while it is muted (TH-NAV-06): you did that, the list should say so.
                     opacity: row.room.muted === true ? 0.55 : 1
                     font.bold: (row.room.unread || 0) > 0 || row.isInvite
+                }
+                // D09.4 (Sunday QoL): a DM invite shows who is really asking — the inviter's full address, server
+                // included, in grey under the name (a display name alone can copy anyone's; the web's RoomList.tsx)
+                Controls.Label {
+                    textFormat: Text.PlainText
+                    Layout.fillWidth: true
+                    visible: row.isInvite && row.room.dm === true && String(row.room.peer || "").length > 0
+                    text: String(row.room.peer || "")
+                    elide: Text.ElideMiddle
+                    color: Th.roomsItemNotJoinedFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
                 }
                 ThIcon {
                     visible: row.room.muted === true && !row.isInvite
@@ -715,16 +840,30 @@ ColumnLayout {
     }
 
     // empty state
-    Controls.Label {
+    ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         visible: !island.panelRef.activeInvited && island.panelRef._matchCount === 0
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        wrapMode: Text.Wrap
-        color: Th.roomsEmptyFg
-        text: island.panelRef.query.length > 0 ? "No matching rooms"
-            : ((island.panelRef.app && island.panelRef.app.login && island.panelRef.app.login.syncDown) ? "Can't reach the server — your rooms will show up when it's back"
-            : ((island.panelRef.app && island.panelRef.app.mBusy) ? "Catching up…" : "No rooms here yet"))   // 10.1 (TH-STATE-05)
+        spacing: 10
+        Item { Layout.fillHeight: true }
+        Controls.Label {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.Wrap
+            color: Th.roomsEmptyFg
+            text: island.panelRef.query.length > 0 ? "No matching rooms"
+                : ((island.panelRef.app && island.panelRef.app.login && island.panelRef.app.login.syncDown) ? "Can't reach the server — your rooms will show up when it's back"
+                : ((island.panelRef.app && island.panelRef.app.mBusy) ? "Catching up…" : "No rooms here yet"))   // 10.1 (TH-STATE-05)
+        }
+        // A10.3: no room matches — the same text in Ctrl+K, which also finds people and actions (the web's empty state)
+        ThButton {
+            Layout.alignment: Qt.AlignHCenter
+            visible: island.panelRef.query.trim().length > 0
+            app: island.panelRef._a
+            icon.name: "edit-find"
+            text: "Search everywhere"
+            onClicked: { island.disarm(); island.app.searchEverywhere(island.panelRef.query) }
+        }
+        Item { Layout.fillHeight: true }
     }
 }

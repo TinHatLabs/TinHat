@@ -13,9 +13,9 @@ use crate::table::{action_by_id, table, App};
 use crate::{bindings, keys};
 
 /// Every entry point by name (the vector files' `kind`), in the reference's `API` order.
-pub const KINDS: [&str; 17] = [
+pub const KINDS: [&str; 18] = [
     "sequence", "checkBinding", "effective", "matchKey", "setBinding", "shortcuts", "evaluate", "row", "menu", "place", "target",
-    "palette", "choices", "fold", "score", "drawer", "summary",
+    "palette", "choices", "fold", "score", "roomFilter", "drawer", "summary",
 ];
 
 /// The entry point named `kind` on `input`, or None when there is no such entry point.
@@ -36,6 +36,7 @@ pub fn dispatch(kind: &str, input: &Value) -> Option<Value> {
         "choices" => choices(input),
         "fold" => fold(input),
         "score" => score(input),
+        "roomFilter" => room_filter(input),
         "drawer" => drawer(input),
         "summary" => summary(input),
         _ => return None,
@@ -241,6 +242,35 @@ pub fn score(input: &Value) -> Value {
     };
     let mut o = obj();
     o.insert("tier".into(), num(tier));
+    Value::Object(o)
+}
+
+/// roomFilter {query, rooms: [{name, aliases?, membership?, unread?, mention?}]} → {text, unread, mention, active, shown,
+/// first} — the room list's filter (ACTIONS.md §10.8). A row's `name` and each alias that is not a string count as "" /
+/// are left out, `membership` defaults to "join", `unread` / `mention` are true only when `true`.
+pub fn room_filter(input: &Value) -> Value {
+    let Some(input) = input.as_object() else { return err("bad-input") };
+    let Some(query) = is_str(input.get("query")) else { return err("bad-input") };
+    let Some(rs) = input.get("rooms").and_then(Value::as_array) else { return err("bad-input") };
+    let mut rows: Vec<pal::RoomFilterRow> = Vec::new();
+    for r in rs {
+        let Some(r) = r.as_object() else { return err("bad-input") };
+        rows.push(pal::RoomFilterRow {
+            name: is_str(r.get("name")).unwrap_or("").to_string(),
+            aliases: r.get("aliases").and_then(Value::as_array).map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default(),
+            membership: is_str(r.get("membership")).unwrap_or("join").to_string(),
+            unread: matches!(r.get("unread"), Some(Value::Bool(true))),
+            mention: matches!(r.get("mention"), Some(Value::Bool(true))),
+        });
+    }
+    let (f, shown, first) = pal::room_filter_run(query, &rows);
+    let mut o = obj();
+    o.insert("text".into(), s(&f.text));
+    o.insert("unread".into(), Value::Bool(f.unread));
+    o.insert("mention".into(), Value::Bool(f.mention));
+    o.insert("active".into(), Value::Bool(f.active));
+    o.insert("shown".into(), Value::Array(shown.into_iter().map(Value::Bool).collect()));
+    o.insert("first".into(), num(first.map(|i| i as f64).unwrap_or(-1.0)));
     Value::Object(o)
 }
 

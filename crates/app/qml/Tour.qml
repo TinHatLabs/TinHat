@@ -44,12 +44,18 @@ Kirigami.OverlaySheet {
                 + "per-person volumes" + (tour.app && tour.app.serverMemories !== false ? ", and record the call for Memories to relive later" : "")
                 + ". Native, encrypted, and yours."
         },
+        // A01.6 / D01.8 / P4 (Sunday QoL): the friend who came from an invite — where it is, and how to start a chat
+        // (= Tin Hat Web's Tour.tsx; main.rs tour_copy_tests)
+        {
+            icon: "mail-message-symbolic",
+            title: "Say hi",
+            body: "Got here from an invite? The room or DM you were invited to is in your room list — open it and say hi. To start your own, use the + above your rooms for a new DM or a new room."
+        },
         {
             icon: "view-list-details-symbolic",
             title: "Find your way around",
-            body: "A persistent Discord-style Spaces sidebar — or tuck it into a corner dock "
-                + "to spare an OLED panel (toggle in ☰ → \"Tuck nav into corner\"). "
-                + "Drag the space bubbles to reorder them however you like."
+            // A34.4: the toggle left the ☰ menu in 11.2 — it is the account island's button (and Settings → Appearance)
+            body: "A persistent Discord-style Spaces sidebar — or tuck it into a corner dock to spare an OLED panel (the \"Tuck nav into corner\" button next to your name, or Settings → Appearance). Drag the space bubbles to reorder them however you like."
         },
         {
             icon: "preferences-desktop-color",
@@ -111,6 +117,31 @@ Kirigami.OverlaySheet {
     // Every dismissal path (Done, Skip, ESC, click-away) lands here. Treat as "seen"
     // so the tour doesn't auto-pop again.
     onClosed: if (tour.app) tour.finished()
+
+    // a11y round 2 (M8): the tour is modal, so it takes the keyboard when it opens (it sat dimmed on top while Tab, the
+    // arrows and typing went to the room behind it — keys typed into the draft under it): the focus goes to Next
+    // (Space = Next, Tab walks Skip · Back · Next inside the sheet, Escape = Skip), and its own text is read out. Connected, not an onOpened handler (Kirigami's sheet may carry its own).
+    focus: true
+    function _kbOpened() {
+        nextButton.forceActiveFocus(Qt.PopupFocusReason)
+        nextButton.Accessible.announce("Welcome to Tin Hat. " + tour.cards[tour.step].title)   // (an Item speaks: the sheet is a Popup)
+    }
+    Component.onCompleted: tour.openedChanged.connect(function () { if (tour.opened) tour._kbOpened() })   // (opened is also a property)
+    // another modal on top of the tour (the first-run crash-log consent) closes: Qt hands the focus back to the tour's
+    // own sheet, not to a control in it — Next takes it again. Only from INSIDE the tour's popup (never the overlay or
+    // the window root a closing dialog leaves the focus on for a moment while another dialog is still up)
+    Connections {
+        target: nextButton.Window.window
+        function onActiveFocusItemChanged() {
+            var a = nextButton.Window.activeFocusItem
+            if (!tour.opened || !a || a === nextButton) return
+            for (var p = nextButton.parent; p; p = p.parent) {
+                if (String(p).indexOf("QQuickOverlay") === 0 || p === nextButton.Window.contentItem) return
+                if (p === a) { nextButton.forceActiveFocus(Qt.PopupFocusReason); return }
+                if (String(p).indexOf("QQuickPopupItem") === 0) return   // the tour's own popup: no further up
+            }
+        }
+    }
 
     showCloseButton: false
     header: Kirigami.Heading {
@@ -232,6 +263,7 @@ Kirigami.OverlaySheet {
                 onClicked: tour.back()
             }
             GlowButton {
+                id: nextButton
                 app: tour.app
                 text: tour.step >= tour.count - 1 ? "Done" : "Next"
                 onClicked: tour.next()

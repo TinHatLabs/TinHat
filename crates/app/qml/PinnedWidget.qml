@@ -239,7 +239,7 @@ Item {
     }
 
     // ── ⋯ / right-click: Jump to message · Unpin (when permitted) ──
-    Controls.Menu {
+    KeyMenu {
         id: rowMenu
         modal: false
         property var pin: null

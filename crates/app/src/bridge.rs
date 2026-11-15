@@ -116,6 +116,12 @@ pub mod qobject {
         #[cxx_name = "checkClock"]
         fn check_clock(self: Pin<&mut LoginController>);
 
+        /// P8 (2026-11-13): QML: login.declineIncoming(roomId) — the incoming card's Decline (ringglue.rs `decline`: tells
+        /// the caller + my other devices + the server; QML takes the card and the ring down itself)
+        #[qinvokable]
+        #[cxx_name = "declineIncoming"]
+        fn decline_incoming(self: &LoginController, room_id: &QString);
+
         // QML: login.labDriveHooks() — the lab gate's paddrive steps row / find-action / ptt-state may run (never in a release)
         #[qinvokable]
         #[cxx_name = "labDriveHooks"]
@@ -243,6 +249,10 @@ pub mod qobject {
         // on screen and sends its cancel if one is still live (fix/recovery-escape-desktop).
         #[qinvokable]
         fn reset_device_verification(self: Pin<&mut LoginController>);
+        // QML: login.saveRecoveryKey(fileUrl, localDate) — L1 A28.1: write the Security Key on screen to a file (Tin Hat
+        // Web's Download: the same text, key_file_text; localDate = "yyyy-MM-dd" from QML). "" = saved, else a sentence.
+        #[qinvokable]
+        fn save_recovery_key(self: &LoginController, file_url: &QString, local_date: &QString) -> QString;
         // QML: login.offersStartOver(sasState, sasIncoming, verified) — which screens carry the way out
         // (start_over::offers_start_over; the web's offersStartOver, same table).
         #[qinvokable]
@@ -584,7 +594,7 @@ fn session_file() -> PathBuf {
     data_dir().join("session.json")
 }
 
-fn store_dir() -> PathBuf {
+pub(crate) fn store_dir() -> PathBuf {
     data_dir().join("store")
 }
 
@@ -1454,9 +1464,11 @@ impl qobject::LoginController {
                 }
                 Err(e) => {
                     eprintln!("[create] DM failed: {e}");
-                    let _ = qt.queue(move |mut o| {
-                        o.as_mut().set_status(QString::from(&format!("Couldn't start that chat: {e}")))
-                    });
+                    // the server's answer in plain words (2026-11-13, D09.2): a refused invite fails the whole create
+                    let (status, errcode, message) = crate::people::error_parts(&e);
+                    let own_server = crate::dm_target::server_of(&own).to_string();
+                    let text = crate::people::invite_failure(status, &errcode, &message, uid.as_str(), &own_server, true).1;
+                    let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&text)));
                 }
             }
         });
@@ -1683,7 +1695,9 @@ impl qobject::LoginController {
                         Ok(()) => format!("Invited {who}"),
                         Err(e) => {
                             eprintln!("[rooms] invite {who} to {rid} failed: {e}");
-                            format!("Couldn't invite {who}")
+                            // plain words from the server's answer (2026-11-13, A02.0)
+                            let (status, errcode, message) = crate::people::error_parts(&e);
+                            crate::people::invite_failure(status, &errcode, &message, &who, crate::dm_target::server_of(&own), false).1
                         }
                     },
                     None => "That room isn't loaded yet".to_string(),
@@ -1824,6 +1838,9 @@ impl qobject::LoginController {
                 match client.sync_once(settings.clone()).await {
                     Ok(response) => {
                         crate::justme_ctl::note_sync_ok();
+                        // L1 D08.2: every good sync (the first after an outage included): what failed for lack of
+                        // connection sends itself again (a cheap store scan when nothing waits; a few times at most)
+                        crate::room::resend_after_reconnect();
                         if failures > 0 {
                             failures = 0;
                             let _ = qt.queue(|mut o| o.as_mut().set_sync_down(false));
@@ -1847,6 +1864,7 @@ impl qobject::LoginController {
                         crate::widgets_ctl::note_sync(&response); // widgets: call history + Up next follow the sync
                         crate::call_ctl::rotation_on_sync(&response); // calls round M2: a member / device change wakes the key rotation
                         crate::note_ctl::on_sync(&response); // widgets W1: a shown space's Sticky note follows the sync
+                        crate::memories_photos::on_sync(&response); // Memories photos (2-3): list changes + redactions refresh an open window
                         crate::guests_ctl::on_sync(&client, &response); // selfhost: the Guests room's on/off + who waits (docs/GUESTS.md)
                         // Feed to-device events (EC peers' media keys arrive here) to
                         // the call layer. Done in the sync loop because to-device
@@ -2127,15 +2145,26 @@ async fn room_entry(
         Some(mxc) => resolve_avatar(client, &mxc).await.unwrap_or_default(),
         None => String::new(),
     };
+    // D09.3: a DM whose other person hasn't accepted yet — ConversationView.qml says "Waiting for Sam to join"
+    let waiting_for = crate::nav::dm_waiting_for(room, is_dm, membership, &peer).await;
     // Ctrl+K lists pending invites newest first (ACTIONS.md §4.3 lists.invite): when we were invited, in ms (0 = unknown)
     let invited_at = if membership == "invite" { crate::nav::invite_recency_ms(room).await } else { 0 };
+    let call_on = crate::rtc::call_going_on(room).await;
+    // P8 (lab A, 2026-11-14): a room with a live call that holds exactly two joined people — the rule the DM Decline
+    // uses (ringglue.rs, the web's getJoinedMemberCount() === 2); m.direct (`dm`) can be missing on the invitee's side
+    let two_person = call_on
+        && crate::ringglue::joined_count(
+            room.members_no_sync(matrix_sdk::RoomMemberships::JOIN).await.ok().map(|ms| ms.len()),
+            room.joined_members_count(),
+        ) == 2;
     let mut entry = serde_json::json!({
         "id": room.room_id().to_string(),
         "name": name,
         // 9.3: Alt+Up/Down and Ctrl+K step through ROOMS — a space is a room in Matrix, but
         // opening one as a conversation shows an empty timeline.
         "space": room.is_space(),
-        "call": crate::rtc::call_going_on(room).await,
+        "call": call_on,
+        "twoPerson": two_person,
         // 10.1 (TH-NOTIF-03): see nav.rs — muted = 0, mentions-only = highlights.
         "unread": if muted {
             0
@@ -2147,6 +2176,7 @@ async fn room_entry(
         "highlight": unread.highlight_count > 0,
         "dm": is_dm,
         "peer": peer,
+        "waitingFor": waiting_for,
         "favourite": favourite,
         "avatar": avatar,
         "membership": membership,
@@ -2265,7 +2295,10 @@ async fn rooms_json(client: &Client) -> String {
     let unread_of = |v: &serde_json::Value| {
         !v["muted"].as_bool().unwrap_or(false) && v["unread"].as_u64().unwrap_or(0) > 0
     };
-    let unread_dm_of = |v: &serde_json::Value| unread_of(v) && v["dm"].as_bool().unwrap_or(false);
+    // D03.3: an unread mention sorts with the new DMs (nav::sort_rooms, testvectors/room-sort.json)
+    let unread_dm_of = |v: &serde_json::Value| {
+        unread_of(v) && (v["dm"].as_bool().unwrap_or(false) || v["highlight"].as_bool().unwrap_or(false))
+    };
     rooms.sort_by(|a, b| {
         let a_inv = a.1["membership"].as_str() == Some("invite");
         let b_inv = b.1["membership"].as_str() == Some("invite");
@@ -2275,7 +2308,7 @@ async fn rooms_json(client: &Client) -> String {
         let b_call = b.1["call"].as_bool().unwrap_or(false);
         b_inv
             .cmp(&a_inv) // pending invites first
-            .then_with(|| unread_dm_of(&b.1).cmp(&unread_dm_of(&a.1))) // then new DMs
+            .then_with(|| unread_dm_of(&b.1).cmp(&unread_dm_of(&a.1))) // then new DMs + unread mentions
             .then_with(|| b_fav.cmp(&a_fav)) // then favourites
             .then_with(|| b_call.cmp(&a_call))
             .then_with(|| unread_of(&b.1).cmp(&unread_of(&a.1))) // then anything unread
@@ -3365,7 +3398,9 @@ async fn do_register(
         if e.is_timeout() {
             "The server didn't answer in time.".to_string()
         } else {
-            format!("Couldn't reach {server}: {e}")
+            // A14.6: one sentence on the form, the reqwest chain in the log
+            eprintln!("[register] {server}: {e}");
+            crate::login_errors::unreachable_text(server)
         }
     };
     // 1. The code — a clear sentence before anything else is typed for nothing.
@@ -3568,7 +3603,12 @@ fn save_session(client: &Client, session: &MatrixSession) -> Result<(), String> 
 async fn build_client(server: &str) -> Result<Client, String> {
     let homeserver_url = resolve_homeserver(server).await?;
     let pass = store_passphrase().await?;
-    base_builder(pass.as_deref())?
+    let mut builder = base_builder(pass.as_deref())?;
+    if crate::recorder_keys::active() {
+        // the Memories recorder: the same stores, but its crypto store never keeps a chat key (recorder_keys.rs)
+        builder = crate::recorder_keys::builder(builder, &store_dir(), pass.as_deref()).await?;
+    }
+    builder
         .homeserver_url(homeserver_url)
         .build()
         .await
@@ -3735,6 +3775,10 @@ impl crate::sas_driver::SasUi for QtSasUi {
 
 impl qobject::LoginController {
     /// fix/verify-request — this device's clock vs the server's → clockNote ("" = fine or couldn't tell).
+    pub fn decline_incoming(&self, room_id: &QString) {
+        runtime().spawn(crate::ringglue::decline(room_id.to_string()));
+    }
+
     pub fn check_clock(self: Pin<&mut Self>) {
         let Some(client) = self.rust().client.clone() else { return };
         spawn_clock_check(client, self.qt_thread());
@@ -4142,6 +4186,25 @@ impl qobject::LoginController {
         runtime().spawn(ended.cancel_on_wire(false));
     }
 
+    /// L1 A28.1: write the Security Key now on screen to `file_url` (a FileDialog url, already percent-decoded by QML).
+    /// The file is Tin Hat Web's Download (key_file_text, testvectors/security-key-file); readable by its owner only
+    /// on Unix. "" = saved, else what went wrong in plain words.
+    pub fn save_recovery_key(&self, file_url: &QString, local_date: &QString) -> QString {
+        let key = self.recovery_key().to_string();
+        let path = crate::platform::path_from_file_url(&file_url.to_string());
+        if key.trim().is_empty() || path.is_empty() {
+            return QString::from("There's no Security Key on screen to save.");
+        }
+        let user = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
+        match write_private(&path, &key_file_text(&key, &user, &local_date.to_string())) {
+            Ok(()) => QString::default(),
+            Err(e) => {
+                eprintln!("[verify] saving the Security Key failed: {e}");
+                QString::from("Couldn't save the file there. Try another folder, or copy the key instead.")
+            }
+        }
+    }
+
     /// The ways out of the waiting / cancelled screens (fix/recovery-escape-desktop; the web's wayOut →
     /// resetVerification): end whatever flow is showing — a live request gets its cancel on the wire, the same code
     /// as Cancel (m.user) — and go back to the first screen, where the dialog opens the Security Key or Start over.
@@ -4458,24 +4521,8 @@ async fn do_complete_password_reset(
 /// text still goes to the log.
 pub(crate) fn friendly_login_error(raw: &str) -> String {
     eprintln!("[login] {raw}");
-    let l = raw.to_ascii_lowercase();
-    if l.contains("m_forbidden") || l.contains("invalid username") || l.contains("invalid password") || l.contains("forbidden") {
-        "Wrong username or password.".to_string()
-    } else if l.contains("m_limit_exceeded") || l.contains("429") || l.contains("too many") {
-        "Too many attempts — wait a minute and try again.".to_string()
-    } else if l.contains("m_user_deactivated") {
-        "That account has been deactivated.".to_string()
-    } else if l.contains("dns") || l.contains("resolve") || l.contains("no such host") {
-        "Can't find that server — check the address.".to_string()
-    } else if l.contains("timed out") || l.contains("timeout") || l.contains("connection refused") || l.contains("unreachable") || l.contains("connect") || l.contains("network") {
-        "Can't reach the server — check your connection and the address.".to_string()
-    } else if l.contains("certificate") || l.contains("tls") || l.contains("ssl") {
-        "The server's certificate isn't trusted on this machine.".to_string()
-    } else if l.contains("not a valid homeserver") || l.contains("well-known") || l.contains("unsupported") {
-        "That doesn't look like a Matrix server.".to_string()
-    } else {
-        format!("Sign-in failed: {raw}")
-    }
+    // D08.6 / D08.5: the rules live in login_errors.rs (shared vectors with the web); the raw chain stays in the log
+    crate::login_errors::friendly_login_text(raw)
 }
 
 fn matrix_error_message(body: &str) -> Option<String> {
@@ -4508,5 +4555,98 @@ fn device_display_name() -> &'static str {
         "Tin Hat (Windows)"
     } else {
         "Tin Hat (Linux)"
+    }
+}
+
+/// L1 A28.1: the Security Key's groups of 4 (Tin Hat Web's firstrun.ts keyGroups): a key with spaces splits on them,
+/// one without is cut into fours.
+pub(crate) fn key_groups(key: &str) -> Vec<String> {
+    let t = key.trim();
+    if t.is_empty() {
+        return Vec::new();
+    }
+    if t.chars().any(char::is_whitespace) {
+        return t.split_whitespace().map(str::to_string).collect();
+    }
+    let c: Vec<char> = t.chars().collect();
+    c.chunks(4).map(|g| g.iter().collect()).collect()
+}
+
+/// L1 A28.1: the Security Key file's text (Tin Hat Web's keyFileText; testvectors/security-key-file, byte for byte).
+pub(crate) fn key_file_text(key: &str, user_id: &str, date: &str) -> String {
+    [
+        "Tin Hat Security Key".to_string(),
+        String::new(),
+        format!("Account: {user_id}"),
+        format!("Saved: {date}"),
+        String::new(),
+        key_groups(key).join(" "),
+        String::new(),
+        "This key unlocks your encrypted messages when you sign in on a new device.".to_string(),
+        "Keep it private: with it and your password, anyone could read your messages.".to_string(),
+        String::new(),
+    ]
+    .join("\n")
+}
+
+/// Write `text` to `path`, readable by its owner only on Unix (the Security Key).
+fn write_private(path: &str, text: &str) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut o = std::fs::OpenOptions::new();
+    o.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        o.mode(0o600);
+    }
+    let mut f = o.open(path)?;
+    // an existing file keeps its mode under OpenOptions::mode: make it the owner's first, then write (astra review)
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        f.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+    }
+    f.write_all(text.as_bytes())?;
+    f.flush()
+}
+
+#[cfg(test)]
+mod key_file_tests {
+    #[test]
+    fn shared_vectors() {
+        let v: serde_json::Value = serde_json::from_str(include_str!("../../../testvectors/security-key-file/vectors.json")).unwrap();
+        for c in v["groups"].as_array().unwrap() {
+            let want: Vec<String> = c["groups"].as_array().unwrap().iter().map(|g| g.as_str().unwrap().to_string()).collect();
+            assert_eq!(super::key_groups(c["key"].as_str().unwrap()), want, "{}", c["name"]);
+        }
+        let files = v["files"].as_array().unwrap();
+        assert!(files.len() >= 2);
+        for c in files {
+            let t = super::key_file_text(c["key"].as_str().unwrap(), c["userId"].as_str().unwrap(), c["date"].as_str().unwrap());
+            assert_eq!(t, c["text"].as_str().unwrap(), "{}", c["name"]);
+            assert!(!t.contains('\r'));
+        }
+    }
+
+    #[test]
+    fn written_for_its_owner_only() {
+        let dir = std::env::temp_dir().join(format!("sun-l1-keyfile-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("tinhat-security-key.txt");
+        // an existing world-readable file is made the owner's before the key goes in
+        std::fs::write(&p, "old").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o644)).unwrap();
+        }
+        super::write_private(p.to_str().unwrap(), "secret\n").unwrap();
+        assert_eq!(std::fs::read_to_string(&p).unwrap(), "secret\n");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(std::fs::metadata(&p).unwrap().permissions().mode() & 0o777, 0o600);
+        }
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

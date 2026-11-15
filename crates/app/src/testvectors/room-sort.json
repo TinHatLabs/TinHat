@@ -1,0 +1,160 @@
+{
+  "_doc": "The room list's order (D03.3): pending invites, then rooms that are personal and new — an unread DM or a room with an unread mention (highlight) — then favourites, then an active call, then anything else unread, then recency (newest first; none last), then name. Muted rooms never count as unread. Owned by the desktop (crates/app/src/testvectors/room-sort.json, nav.rs sort_rooms); the web's src/features/nav/testvectors/room-sort.json is a byte copy (model.ts sortRooms). rows are the input in list order; out = the ids sorted.",
+  "cases": [
+    {
+      "name": "a_mention_sorts_above_plain_unread",
+      "rows": [
+        {
+          "id": "!plain",
+          "name": "Plain",
+          "unread": 5,
+          "recency": 300
+        },
+        {
+          "id": "!ping",
+          "name": "Ping",
+          "unread": 1,
+          "highlight": true,
+          "recency": 100
+        }
+      ],
+      "out": [
+        "!ping",
+        "!plain"
+      ]
+    },
+    {
+      "name": "a_mention_sorts_with_unread_dms_above_favourites",
+      "rows": [
+        {
+          "id": "!fav",
+          "name": "Fav",
+          "favourite": true,
+          "recency": 900
+        },
+        {
+          "id": "!dm",
+          "name": "Ana",
+          "dm": true,
+          "unread": 1,
+          "recency": 200
+        },
+        {
+          "id": "!ping",
+          "name": "Ping",
+          "unread": 2,
+          "highlight": true,
+          "recency": 300
+        }
+      ],
+      "out": [
+        "!ping",
+        "!dm",
+        "!fav"
+      ]
+    },
+    {
+      "name": "invites_stay_first",
+      "rows": [
+        {
+          "id": "!ping",
+          "name": "Ping",
+          "unread": 2,
+          "highlight": true,
+          "recency": 300
+        },
+        {
+          "id": "!inv",
+          "name": "Invite",
+          "membership": "invite",
+          "recency": 10
+        }
+      ],
+      "out": [
+        "!inv",
+        "!ping"
+      ]
+    },
+    {
+      "name": "a_muted_mention_is_not_new",
+      "rows": [
+        {
+          "id": "!muted",
+          "name": "Muted",
+          "unread": 3,
+          "highlight": true,
+          "muted": true,
+          "recency": 900
+        },
+        {
+          "id": "!plain",
+          "name": "Plain",
+          "unread": 1,
+          "recency": 100
+        }
+      ],
+      "out": [
+        "!plain",
+        "!muted"
+      ]
+    },
+    {
+      "name": "a_read_room_with_a_stale_highlight_flag_is_not_new",
+      "rows": [
+        {
+          "id": "!stale",
+          "name": "Stale",
+          "unread": 0,
+          "highlight": true,
+          "recency": 900
+        },
+        {
+          "id": "!plain",
+          "name": "Plain",
+          "unread": 1,
+          "recency": 100
+        }
+      ],
+      "out": [
+        "!plain",
+        "!stale"
+      ]
+    },
+    {
+      "name": "the_rest_keeps_its_order",
+      "rows": [
+        {
+          "id": "!b",
+          "name": "B",
+          "recency": 100
+        },
+        {
+          "id": "!c",
+          "name": "C",
+          "call": true,
+          "recency": 50
+        },
+        {
+          "id": "!a",
+          "name": "A",
+          "recency": 200
+        },
+        {
+          "id": "!n",
+          "name": "N"
+        },
+        {
+          "id": "!m",
+          "name": "M"
+        }
+      ],
+      "out": [
+        "!c",
+        "!a",
+        "!b",
+        "!m",
+        "!n"
+      ]
+    }
+  ]
+}

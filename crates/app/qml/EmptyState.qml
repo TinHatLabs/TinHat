@@ -26,8 +26,15 @@ Item {
     property string iconName: "documentinfo-symbolic"
     property string title: ""
     property string explanation: ""
+    // A01.0 (Sunday QoL): buttons under the words (the web's EmptyState children)
+    default property alias actions: actionRow.data
 
-    readonly property string shownTitle: empty.title
+    // QOL A29.0: a loading state says what loads (the mark's own "Still …" after 10 s without progress)
+    property string loadingLabel: ""
+    // QOL A29.3: an optional button under the copy ("Try again"); `actionClicked` when pressed
+    property string actionText: ""
+    signal actionClicked()
+    readonly property string shownTitle: empty.loading && empty.loadingLabel.length > 0 ? busyMark.shownLabel : empty.title
     readonly property string shownExplanation: empty.explanation
 
     // 12.0: the height of what it draws, so a layout gives it a real slot. With no implicit size a
@@ -66,10 +73,12 @@ Item {
 
             // LOADING → the house busy mark (11.0, GPU.md §2.5: still — no spinner loop).
             ThBusyIndicator {
+                id: busyMark
                 anchors.centerIn: parent
                 size: 48
                 visible: empty.loading
                 running: visible
+                label: empty.loadingLabel
             }
 
             // idle → a tinted Kirigami icon.
@@ -103,6 +112,19 @@ Item {
             text: empty.shownExplanation
             color: Th.emptyBodyFg
             wrapMode: Text.WordWrap
+        }
+        RowLayout {
+            id: actionRow
+            Layout.alignment: Qt.AlignHCenter
+            spacing: Kirigami.Units.smallSpacing
+            visible: children.length > 0
+        }
+        ThButton {
+            Layout.alignment: Qt.AlignHCenter
+            app: empty.app
+            visible: empty.actionText.length > 0 && !empty.loading
+            text: empty.actionText
+            onClicked: empty.actionClicked()
         }
     }
 }

@@ -416,7 +416,10 @@ Item {
                 SectionLabel { app: simple.app; text: "Density" }
                 RowLayout {
                     spacing: 12
-                    Accessible.role: Accessible.RadioButton
+                    // A25.7: a named group of three radio buttons (it told screen readers it was ONE radio button; the
+                    // web: role="radiogroup" aria-label="Density")
+                    Accessible.role: Accessible.Grouping
+                    Accessible.name: "Density"
                     Repeater {
                         model: [["compact", "Compact"], ["normal", "Normal"], ["touch", "Touch"]]
                         delegate: Controls.RadioButton {

@@ -30,21 +30,14 @@ pub mod qobject {
     extern "RustQt" {
         #[qobject]
         #[qml_element]
-        #[qproperty(bool, enabled)] //      QML: diagnostics.enabled — opt-in, default OFF
         #[qproperty(QString, status)] //    QML: last action's result (path, or an error)
         #[qproperty(QString, report_path)] // QML: the file we just wrote (empty until then)
         type DiagnosticsController = super::DiagnosticsControllerRust;
 
-        /// QML: diagnostics.setEnabled(on) — persist the opt-in.
-        #[qinvokable]
-        fn set_opt_in(self: Pin<&mut DiagnosticsController>, on: bool);
         /// QML: diagnostics.createReport() — write a REDACTED report next to the log and
         /// expose its path. No network access; the user chooses whether to share it.
         #[qinvokable]
         fn create_report(self: Pin<&mut DiagnosticsController>);
-        /// QML: diagnostics.refresh() — mirror the persisted opt-in into `enabled`.
-        #[qinvokable]
-        fn refresh(self: Pin<&mut DiagnosticsController>);
     }
 
     impl cxx_qt::Threading for DiagnosticsController {}
@@ -52,24 +45,10 @@ pub mod qobject {
 
 #[derive(Default)]
 pub struct DiagnosticsControllerRust {
-    enabled: bool,
     status: QString,
     report_path: QString,
 }
 
-fn opt_in_path() -> std::path::PathBuf {
-    let base = std::env::var_os("XDG_CONFIG_HOME")
-        .map(std::path::PathBuf::from)
-        .filter(|p| !p.as_os_str().is_empty())
-        .unwrap_or_else(|| {
-            std::path::PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".config")
-        });
-    base.join("tinhat/diagnostics-opt-in")
-}
-
-fn opted_in() -> bool {
-    std::fs::read_to_string(opt_in_path()).map(|s| s.trim() == "1").unwrap_or(false)
-}
 
 /// Bridge the `log` crate (livekit/libwebrtc) into tracing, then RUST_LOG-driven logging to stderr (also surfaces
 /// matrix-sdk's tracing). stderr is the session log file (main.rs / platform redirect it).
@@ -188,31 +167,8 @@ fn settings_summary() -> String {
 }
 
 impl qobject::DiagnosticsController {
-    pub fn set_opt_in(mut self: Pin<&mut Self>, on: bool) {
-        let p = opt_in_path();
-        if let Some(d) = p.parent() {
-            let _ = std::fs::create_dir_all(d);
-        }
-        let _ = std::fs::write(&p, if on { "1" } else { "0" });
-        self.as_mut().set_enabled(on);
-        self.as_mut().set_status(QString::from(if on {
-            "Diagnostics ON. Nothing is sent automatically — press “Create report” to write a file you can read and share."
-        } else {
-            "Diagnostics OFF. Nothing is collected."
-        }));
-    }
-
-    pub fn refresh(mut self: Pin<&mut Self>) {
-        let on = opted_in();
-        self.as_mut().set_enabled(on);
-    }
-
+    // P18: no opt-in switch: it gated nothing but this button. The report is made only when the user presses it.
     pub fn create_report(mut self: Pin<&mut Self>) {
-        if !opted_in() {
-            self.as_mut()
-                .set_status(QString::from("Turn diagnostics on first — nothing is collected while it's off."));
-            return;
-        }
         let log = crate::platform::live_log_path()
             .and_then(|p| std::fs::read_to_string(p).ok())
             .unwrap_or_default();
@@ -237,15 +193,22 @@ impl qobject::DiagnosticsController {
             redact(&tail),
         );
         let dir = crate::platform::home_dir();
-        let path = dir.join("tinhat-diagnostics.txt");   // 10.1 (TH-PKG-16)
+        // 10.1 (TH-PKG-16); A34.3: its own name, stamped with the local time, so a new report never replaces the last
+        let now = match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+            Ok(d) => d.as_millis() as i64,
+            Err(e) => -(e.duration().as_millis() as i64),
+        };
+        let path = free_report_path(&dir, &report_file_name(now + system_offset_ms(now)));
         match std::fs::write(&path, body) {
             Ok(_) => {
                 // QML builds "file://" + reportPath — keep the property in the
                 // prefixable form (plain path on unix, /C:/-style on Windows).
                 let p = crate::platform::qml_file_prefix_path(&path);
                 self.as_mut().set_report_path(QString::from(&p));
+                // A34.3: people read the system's own path (C:\Users\…), never the /C:/ form QML needs
+                let shown = path.display();
                 self.as_mut().set_status(QString::from(&format!(
-                    "Report written to {p} — open it, then send it to your server's owner in chat if you're happy with it."
+                    "Report written to {shown} — open it, then send it to your server's owner in chat if you're happy with it."
                 )));
                 eprintln!("[diag] report written to {p}");
             }
@@ -254,6 +217,45 @@ impl qobject::DiagnosticsController {
             }
         }
     }
+}
+
+/// The report's file name for `local_ms` = epoch ms shifted by the local UTC offset (QOL sweep A34.3):
+/// tinhat-diagnostics-YYYY-MM-DD-HHMMSS.txt. Tin Hat Web's reportName.ts; shared vectors testvectors/report-name.
+pub(crate) fn report_file_name(local_ms: i64) -> String {
+    let secs = local_ms.div_euclid(1000);
+    let (days, sod) = (secs.div_euclid(86_400), secs.rem_euclid(86_400));
+    // days since 1970-01-01 → civil date (H. Hinnant's days_from_civil, inverted)
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
+    format!("tinhat-diagnostics-{y:04}-{m:02}-{d:02}-{:02}{:02}{:02}.txt", sod / 3600, sod % 3600 / 60, sod % 60)
+}
+
+/// This computer's UTC offset (ms) at `now_ms`, from Qt's system time zone (Windows too); 0 when it can't be read.
+fn system_offset_ms(now_ms: i64) -> i64 {
+    let z = cxx_qt_lib::QTimeZone::system_time_zone();
+    if z.is_null() || !z.is_valid() {
+        return 0;
+    }
+    let at = cxx_qt_lib::QDateTime::from_msecs_since_epoch(now_ms, &cxx_qt_lib::QTimeZone::utc());
+    i64::from(z.offset_from_utc(&at)) * 1000
+}
+
+/// `dir/name`, or `dir/<stem>-2.txt`, `-3`, … when that is taken (two reports in one second, a repeated DST hour).
+pub(crate) fn free_report_path(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
+    let first = dir.join(name);
+    if !first.exists() {
+        return first;
+    }
+    let stem = name.strip_suffix(".txt").unwrap_or(name);
+    // never an occupied name: the numbers run on until one is free
+    (2u64..).map(|n| dir.join(format!("{stem}-{n}.txt"))).find(|p| !p.exists()).unwrap_or(first)
 }
 
 /// The last `max` bytes of a log as text. A cut lands anywhere, so unless the whole log fits, the first partial line
@@ -285,6 +287,52 @@ pub(crate) fn tail_text(b: &[u8], max: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::redact;
+
+    const REPORT_NAME_VECTORS: &str = include_str!("../../../testvectors/report-name/vectors.json");
+
+    #[test]
+    fn report_file_names_follow_the_shared_vectors() {
+        let v: serde_json::Value = serde_json::from_str(REPORT_NAME_VECTORS).unwrap();
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 7);
+        for c in cases {
+            assert_eq!(super::report_file_name(c["localMs"].as_i64().unwrap()), c["file"].as_str().unwrap(), "{}", c["name"]);
+        }
+    }
+
+    #[test]
+    fn a_report_never_reuses_the_fixed_name_and_the_status_shows_the_native_path() {
+        let src = include_str!("diagnostics.rs").split("#[cfg(test)]").next().unwrap();
+        let fixed = ["dir.join(\"tinhat-diagnostics", ".txt\")"].concat();
+        assert!(!src.contains(&fixed), "the report still goes to one fixed file");
+        assert!(src.contains("let shown = path.display();") && src.contains("\"Report written to {shown} — "), "the status shows the system's own path");
+    }
+
+    #[test]
+    fn a_name_already_taken_gets_a_number() {
+        let dir = std::env::temp_dir().join(format!("tinhat-report-name-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let name = "tinhat-diagnostics-2026-11-14-140233.txt";
+        assert_eq!(super::free_report_path(&dir, name), dir.join(name));
+        std::fs::write(dir.join(name), "a").unwrap();
+        assert_eq!(super::free_report_path(&dir, name), dir.join("tinhat-diagnostics-2026-11-14-140233-2.txt"));
+        std::fs::write(dir.join("tinhat-diagnostics-2026-11-14-140233-2.txt"), "b").unwrap();
+        assert_eq!(super::free_report_path(&dir, name), dir.join("tinhat-diagnostics-2026-11-14-140233-3.txt"));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// The byte copy equals the web's vectors (`TINHAT_WEB_DIR` = a tinhat-web tree, else `$HOME/tinhat-web`;
+    /// skipped when neither has the file).
+    #[test]
+    fn report_name_vectors_are_the_webs() {
+        let dir = std::env::var_os("TINHAT_WEB_DIR").map(std::path::PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("tinhat-web")));
+        let Some(dir) = dir else { return };
+        let path = dir.join("testvectors/report-name/vectors.json");
+        match std::fs::read_to_string(&path) {
+            Ok(theirs) => assert!(REPORT_NAME_VECTORS == theirs, "testvectors/report-name differs from {}", path.display()),
+            Err(_) => eprintln!("SKIPPED: no web vectors at {}", path.display()),
+        }
+    }
 
     #[test]
     fn a_marker_after_text_that_changes_length_when_lowercased_is_still_cut() {

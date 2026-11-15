@@ -322,6 +322,35 @@ fn example_14_pad_the_pad_button_beside_join_as_an_action_where_one_of_my_other_
     assert_eq!(json!([it["label"], it["keys"], it["defaults"]]), json!(["Pad", [], []]));
 }
 
+
+#[test]
+fn example_15_qol_l3_ctrl_slash_opens_the_shortcuts_ctrl_f_filters_the_rooms_in_both_apps_the_room_filter_the_find_row() {
+    for app in ["desktop", "web"] {
+        let a = dispatch("matchKey", &json!({"app": app, "key": "Ctrl+/", "scope": "main", "typing": true})).unwrap();
+        assert_eq!(a["actions"], json!(["app.shortcuts.open"]), "{app} Ctrl+/");
+        let f = dispatch("matchKey", &json!({"app": app, "key": "Ctrl+F", "scope": "main", "typing": false})).unwrap();
+        assert_eq!(f["actions"], json!(["nav.roomList.filter"]), "{app} Ctrl+F");
+    }
+    // the room list's filter: accents, the DM's handle (never its server), is:unread; the first match skips an invite
+    let rooms = json!([
+        {"name": "Movie night", "membership": "invite"},
+        {"name": "Café night", "membership": "join", "aliases": ["#cafe:example.org"]},
+        {"name": "Alex", "membership": "join", "aliases": ["@alexw:example.org"], "unread": true},
+    ]);
+    let rf = |q: &str| dispatch("roomFilter", &json!({"query": q, "rooms": rooms})).unwrap();
+    assert_eq!(rf("cafe"), json!({"text": "cafe", "unread": false, "mention": false, "active": true, "shown": [false, true, false], "first": 1}));
+    assert_eq!(rf("night")["first"], json!(1));
+    assert_eq!(rf("alexw")["shown"], json!([false, false, true]));
+    assert_eq!(rf("example")["shown"], json!([false, false, false]));
+    assert_eq!(rf("is:unread")["shown"], json!([false, false, true]));
+    assert_eq!(rf("  ")["first"], json!(-1));
+    // "@" + text ends with the find row (P6), not counted in total
+    let p = palette(&json!({"app": "web", "snapshot": {"subjects": {"person": {"@zoe:x": {"name": "Zoë", "values": {}}}}}, "query": "@ zoe "}));
+    let rows: Vec<Value> = p["items"].as_array().unwrap().iter().map(|i| json!([i["kind"], i["id"], i["label"]])).collect();
+    assert_eq!(rows, vec![json!(["person", "@zoe:x", "Zoë"]), json!(["find", "zoe", "Find people named \"zoe\"…"])]);
+    assert_eq!(p["total"], json!(1));
+}
+
 // ---- the table's own rules ------------------------------------------------------------------------------------------
 
 #[test]
@@ -635,5 +664,18 @@ fn robustness_mutated_vector_inputs() {
         }
         let other = KINDS[r.int(KINDS.len())];
         assert!(dispatch(other, input).is_some_and(|o| o.is_object()));
+    }
+}
+
+/// The table is authored directly in canonical JSON (ACTIONS.md §1); the web's actions.test.ts checks the same.
+#[test]
+fn table_is_canonical_and_names_no_retired_generator() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let raw = std::fs::read_to_string(dir.join("actions.json")).expect("actions.json");
+    let v: Value = serde_json::from_str(&raw).expect("actions.json parses");
+    assert!(raw == tinhat_theme::canon::pretty_json(&v), "actions.json is not canonical (keys in code-point order, 2-space indent, final newline)");
+    for f in ["actions.json", "ACTIONS.md"] {
+        let text = std::fs::read_to_string(dir.join(f)).expect(f);
+        assert!(!text.contains("build_actions") && !text.contains("tools/actions/gen/"), "{f} names the retired generator");
     }
 }

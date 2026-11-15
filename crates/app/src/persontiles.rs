@@ -376,7 +376,7 @@ pub fn key_alias_base(identity: &str, attrs: &HashMap<String, String>) -> String
     }
 }
 
-/// How long a Pad connection's leave waits for the same person's next connection (ms).
+/// How long a person's last connection's leave waits for their next one (ms): a Pad mode switch, or since D02.3 any blip.
 pub const PAD_LEAVE_GRACE_MS: u64 = 5_000;
 
 /// The call chimes follow PEOPLE (persontiles.ts PersonChimes, 2026-11-06): a join chimes only for a person with
@@ -408,11 +408,10 @@ impl PersonChimes {
         if present.iter().any(|o| o != identity && chime_person(o, &attrs_of(o)) == p) {
             return "";
         }
-        if is_pad_identity(identity) {
-            self.pending.insert(p, now + PAD_LEAVE_GRACE_MS);
-            return "";
-        }
-        "leave"
+        // D02.3 (2026-11-13): every person's last connection waits the grace (was: a Pad one only), so a blip — the same
+        // person back within it — plays neither the leave nor the join chime; a real leave chimes when the grace ends
+        self.pending.insert(p, now + PAD_LEAVE_GRACE_MS);
+        ""
     }
 
     /// The held-back leaves that are due: each person still away = one leave chime.

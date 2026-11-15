@@ -7,7 +7,8 @@
 //!                     250 ms; an answer for older text is dropped)
 //!   a look-up         YOUR homeserver's profile look-up for a typed username/address nobody listed (your server asks
 //!                     theirs over federation), status + errcode → people::lookup_outcome's plain words
-//! Members of the room/space (joined or invited) are dimmed; someone picked here is added to them.
+//! Members of the room/space (joined or invited) are dimmed; someone invited here is added to them once the server said
+//! yes (invite(); a failure keeps them pickable with the reason, 2026-11-13).
 
 use core::pin::Pin;
 use std::collections::{HashMap, HashSet};
@@ -16,7 +17,7 @@ use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::QString;
 use serde_json::{json, Value};
 
-use crate::people::{lookup_outcome, rank_people, section_title, DirectoryHit, KnownPerson, LookupKind, Outcome, DIRECTORY_MAX};
+use crate::people::{empty_note, invite_failure, invite_step, InviteEvent, Sent, lookup_outcome, rank_people, section_title, DirectoryHit, KnownPerson, LookupKind, Outcome, SearchState, DIRECTORY_MAX};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -35,6 +36,9 @@ pub mod qobject {
         #[qproperty(QString, kind)] //      QML: kind — what the text is: empty / name / username / address
         #[qproperty(QString, me)] //        QML: me — your own address (the "Copy my address" footer)
         #[qproperty(QString, own_server)] // QML: ownServer
+        #[qproperty(QString, empty_note)] // QML: emptyNote — the empty list's line (what to type / Searching… / failed)
+        #[qproperty(bool, search_failed)] // QML: searchFailed — the directory search failed (Try again)
+        #[qproperty(bool, retry_pending)] // QML: retryPending — a look-up worth another try is on screen (QML's timer)
         type PeopleController = super::PeopleControllerRust;
 
         /// QML: open(roomId) — a fresh picker; roomId's members are dimmed ("" = none, New DM).
@@ -49,6 +53,18 @@ pub mod qobject {
         /// QML: picked(mxid) — they were invited here: dim them from now on.
         #[qinvokable]
         fn picked(self: Pin<&mut PeopleController>, mxid: &QString);
+        /// QML: invite(roomId, mxid, name) — invite them to the room/space (2026-11-13, A02.0): "Inviting…" until the
+        /// answer; a success dims them; a failure keeps them pickable (pick again = try again) with the reason. Ends
+        /// with invited().
+        #[qinvokable]
+        fn invite(self: Pin<&mut PeopleController>, room_id: &QString, mxid: &QString, name: &QString);
+        /// QML: retry() — Try again: the directory search and a failed look-up worth another try, now.
+        #[qinvokable]
+        fn retry(self: Pin<&mut PeopleController>);
+
+        /// The answer to invite(): ok + the words to show (plain words when it failed).
+        #[qsignal]
+        fn invited(self: Pin<&mut PeopleController>, mxid: QString, ok: bool, text: QString);
     }
 
     impl cxx_qt::Threading for PeopleController {}
@@ -74,12 +90,20 @@ pub struct PeopleControllerRust {
     kind: QString,
     me: QString,
     own_server: QString,
+    empty_note: QString,
+    search_failed: bool,
+    retry_pending: bool,
     text: String,
     room_id: String,
     known: Vec<KnownPerson>,
     members: Vec<String>,
     dir_term: String,
     dir_hits: Vec<DirectoryHit>,
+    /// the directory search for `dir_term` failed
+    dir_failed: bool,
+    sent: HashMap<String, Sent>,
+    /// look-ups on the wire (a retry never starts a second one for the same person)
+    lookup_inflight: HashSet<String>,
     looked: HashMap<String, Looked>,
     /// mxc → a local file url ("" = failed)
     avatars: HashMap<String, String>,
@@ -151,19 +175,20 @@ impl qobject::PeopleController {
         let c = client.clone();
         let t = term.clone();
         crate::bridge::runtime().spawn(async move {
-            let hits = match c.search_users(&t, DIRECTORY_MAX as u64).await {
-                Ok(r) => r
-                    .results
-                    .into_iter()
-                    .map(|u| DirectoryHit {
-                        mxid: u.user_id.to_string(),
-                        name: u.display_name.unwrap_or_default(),
-                        avatar: u.avatar_url.map(|m| m.to_string()).unwrap_or_default(),
-                    })
-                    .collect(),
+            let hits: Option<Vec<DirectoryHit>> = match c.search_users(&t, DIRECTORY_MAX as u64).await {
+                Ok(r) => Some(
+                    r.results
+                        .into_iter()
+                        .map(|u| DirectoryHit {
+                            mxid: u.user_id.to_string(),
+                            name: u.display_name.unwrap_or_default(),
+                            avatar: u.avatar_url.map(|m| m.to_string()).unwrap_or_default(),
+                        })
+                        .collect(),
+                ),
                 Err(e) => {
                     eprintln!("[people] directory search failed: {e}");
-                    Vec::new()
+                    None
                 }
             };
             let _ = qt.queue(move |mut o| {
@@ -173,7 +198,8 @@ impl qobject::PeopleController {
                 {
                     let mut r = o.as_mut().rust_mut();
                     r.dir_term = t;
-                    r.dir_hits = hits;
+                    r.dir_failed = hits.is_none();
+                    r.dir_hits = hits.unwrap_or_default();
                 }
                 o.as_mut().rebuild();
             });
@@ -181,6 +207,9 @@ impl qobject::PeopleController {
         // the look-up row (a typed username/address nobody listed): your server asks for their profile, once
         let ranked = self.ranked();
         if let Some(target) = ranked.rows.iter().find(|r| r.lookup).map(|r| r.mxid.clone()) {
+            if self.rust().lookup_inflight.contains(&target) {
+                return;
+            }
             match self.rust().looked.get(&target) {
                 None => {}
                 Some(Looked::Done { outcome, at, .. }) if retryable(outcome) && at.elapsed() > RETRY => {}
@@ -197,6 +226,7 @@ impl qobject::PeopleController {
             if !retry {
                 self.as_mut().rust_mut().looked.insert(target.clone(), Looked::Looking);
             }
+            self.as_mut().rust_mut().lookup_inflight.insert(target.clone());
             self.as_mut().rebuild();
             let own = self.own_server().to_string();
             let qt = self.qt_thread();
@@ -209,6 +239,7 @@ impl qobject::PeopleController {
                         return; // the picker was opened again since
                     }
                     let at = std::time::Instant::now();
+                    o.as_mut().rust_mut().lookup_inflight.remove(&target);
                     o.as_mut().rust_mut().looked.insert(target, Looked::Done { outcome, name, avatar, at });
                     o.as_mut().rebuild();
                 });
@@ -224,11 +255,76 @@ impl qobject::PeopleController {
         self.as_mut().rebuild();
     }
 
+    pub fn invite(mut self: Pin<&mut Self>, room_id: &QString, mxid: &QString, name: &QString) {
+        let id = mxid.to_string();
+        if matches!(self.rust().sent.get(&id), Some(Sent::Inviting)) || self.rust().members.contains(&id) {
+            return;
+        }
+        let Some(client) = crate::session::client() else { return };
+        let (rid, shown, own, opened) = (room_id.to_string(), name.to_string(), self.own_server().to_string(), self.rust().open_seq);
+        // people.rs invite_step: in flight, not yet a member
+        let (_, sent) = invite_step(&self.rust().members, &self.rust().sent, &id, InviteEvent::Start);
+        self.as_mut().rust_mut().sent = sent;
+        self.as_mut().rebuild();
+        let qt = self.qt_thread();
+        crate::bridge::runtime().spawn(async move {
+            let res: Result<(), String> = match (matrix_sdk::ruma::RoomId::parse(&rid), matrix_sdk::ruma::UserId::parse(&id)) {
+                (Ok(r), Ok(u)) => match client.get_room(&r) {
+                    Some(room) => room.invite_user_by_id(&u).await.map_err(|e| {
+                        let (status, errcode, message) = crate::people::error_parts(&e);
+                        eprintln!("[people] invite failed: {status} {errcode}");
+                        invite_failure(status, &errcode, &message, &id, &own, false).1
+                    }),
+                    None => Err("That room isn't loaded yet".to_string()),
+                },
+                _ => Err(format!("{id} isn't a username or an address like @name:their.server")),
+            };
+            let _ = qt.queue(move |mut o| {
+                let (ok, text) = match res {
+                    Ok(()) => (true, format!("Invited {}", if shown.trim().is_empty() { id.as_str() } else { shown.trim() })),
+                    Err(t) => (false, t),
+                };
+                if o.rust().open_seq != opened {
+                    // the picker was opened again since: its rows are someone else's now, but the answer is still said
+                    // (with no person: it must not touch the new opening's field or choice)
+                    o.as_mut().invited(QString::default(), ok, QString::from(text.as_str()));
+                    return;
+                }
+                // people.rs invite_step: only a yes makes them a member (dimmed); a no keeps them pickable with the reason
+                let (members, sent) = invite_step(&o.rust().members, &o.rust().sent, &id, InviteEvent::Answer { ok, text: &text });
+                {
+                    let mut r = o.as_mut().rust_mut();
+                    r.members = members;
+                    r.sent = sent;
+                }
+                o.as_mut().rebuild();
+                o.as_mut().invited(QString::from(id.as_str()), ok, QString::from(text.as_str()));
+            });
+        });
+    }
+
+    pub fn retry(mut self: Pin<&mut Self>) {
+        // a failed look-up worth another try goes again now (search() only retries one older than RETRY)
+        // "Searching…" again until the new directory answer is in
+        self.as_mut().rust_mut().dir_term.clear();
+        let old = std::time::Instant::now().checked_sub(RETRY * 2);
+        if let Some(old) = old {
+            for l in self.as_mut().rust_mut().looked.values_mut() {
+                if let Looked::Done { outcome, at, .. } = l {
+                    if retryable(outcome) {
+                        *at = old;
+                    }
+                }
+            }
+        }
+        self.search();
+    }
+
     fn ranked(&self) -> crate::people::Ranked {
         let r = self.rust();
         let own = self.own_server().to_string();
         let me = self.me().to_string();
-        let hits: &[DirectoryHit] = if r.dir_term == crate::people::atrim(&r.text) { &r.dir_hits } else { &[] };
+        let hits: &[DirectoryHit] = if r.dir_term == crate::people::atrim(&r.text) && !r.dir_failed { &r.dir_hits } else { &[] };
         rank_people(&r.text, &own, &me, &r.known, hits, &r.members)
     }
 
@@ -239,13 +335,37 @@ impl qobject::PeopleController {
         let mut want_avatars: Vec<String> = Vec::new();
         let mut rows: Vec<Value> = Vec::with_capacity(ranked.rows.len());
         let mut last = None;
+        let mut retry_pending = false;
         for row in &ranked.rows {
+            if row.lookup {
+                if let Some(Looked::Done { outcome, .. }) = self.rust().looked.get(&row.mxid) {
+                    retry_pending |= retryable(outcome);
+                }
+            }
+            let sent = if row.member { None } else { self.rust().sent.get(&row.mxid).cloned() };
             let (name, mxc, note, pickable, anyway, look) = if row.member {
                 (row.name.clone(), row.avatar.clone(), String::new(), false, false, "")
+            } else if let Some(sent) = sent {
+                // an invite from this picker: in flight, or failed with the reason (pick again = try again)
+                let (shown, pic) = match self.rust().looked.get(&row.mxid) {
+                    Some(Looked::Done { name, avatar, .. }) if row.lookup => (if name.trim().is_empty() { row.name.clone() } else { name.trim().to_string() }, avatar.clone()),
+                    _ => (row.name.clone(), row.avatar.clone()),
+                };
+                // the same block as below: a failed look-up still wins over a failed invite (the web's pickable())
+                let blocked = match self.rust().looked.get(&row.mxid) {
+                    Some(Looked::Done { outcome, .. }) => !outcome.pickable && (row.lookup || !retryable(outcome)),
+                    // a look-up row is pickable only once its look-up said yes (the web's pickable())
+                    _ => row.lookup,
+                };
+                match sent {
+                    Sent::Inviting => (shown, pic, "Inviting…".to_string(), false, false, "inviting"),
+                    Sent::Failed(t) => (shown, pic, t, !blocked, false, "failed"),
+                }
             } else if !row.lookup {
-                // a failed look-up blocks that person in every row (a directory or room row can't re-enable them)
+                // a failed look-up blocks that person in every row (a directory or room row can't re-enable them), except
+                // a failure worth another try (their server was busy or unreachable): a listed row proves they exist
                 match self.rust().looked.get(&row.mxid) {
-                    Some(Looked::Done { outcome, .. }) if !outcome.pickable => {
+                    Some(Looked::Done { outcome, .. }) if !outcome.pickable && !retryable(outcome) => {
                         (row.name.clone(), row.avatar.clone(), outcome.text.clone(), false, false, outcome.kind.as_str())
                     }
                     _ => (row.name.clone(), row.avatar.clone(), String::new(), true, false, ""),
@@ -285,6 +405,22 @@ impl qobject::PeopleController {
         }
         let json = Value::Array(rows).to_string();
         let kind = serde_json::to_value(ranked.query.kind).ok().and_then(|v| v.as_str().map(str::to_owned)).unwrap_or_default();
+        let search = {
+            let r = self.rust();
+            let t = crate::people::atrim(&r.text);
+            if t.is_empty() {
+                SearchState::Idle
+            } else if r.dir_term != t {
+                SearchState::Searching
+            } else if r.dir_failed {
+                SearchState::Failed
+            } else {
+                SearchState::Idle
+            }
+        };
+        self.as_mut().set_empty_note(QString::from(empty_note(ranked.query.kind, search)));
+        self.as_mut().set_search_failed(search == SearchState::Failed);
+        self.as_mut().set_retry_pending(retry_pending);
         self.as_mut().set_kind(QString::from(kind.as_str()));
         self.as_mut().set_pick(ranked.pick);
         self.as_mut().set_fallback(ranked.fallback);

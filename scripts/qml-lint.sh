@@ -115,8 +115,104 @@ else
     fatal=$((fatal + 1))
 fi
 
+# 12.1.15: the share picker's "Custom…" panel. ShareQuick.qml's rules run by the QML engine against the shared
+# testvectors/share-custom-quick (the web's shareQuick.test.ts runs the same file), AppCore.qml's lists against the
+# vectors' lists, and the panel's words and wiring in StreamPopover.qml.
+if [ -x "$QMLRUN" ]; then
+    cq=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/share-custom-quick-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$cq" | grep -q "VERDICT: PASS"; then
+        echo "$cq" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: share-custom-quick: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.16 (L2, P2 a): the "Jump to NEW" pill's "seen" rule on a real ListView (scripts/new-pill-test.qml).
+if [ -x "$QMLRUN" ]; then
+    np=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/new-pill-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$np" | grep -q "VERDICT: PASS"; then
+        echo "$np" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: new-pill: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.15 (review A3-5): a restart that waits for the call treats a reconnecting or still-hanging-up call as a call
+# (Main.qml's uiScaleCallUp, the after-call Timer, the updater's callUp, read from the file and evaluated).
+if [ -x "$QMLRUN" ]; then
+    rq=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/restart-after-call-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$rq" | grep -q "VERDICT: PASS"; then
+        echo "$rq" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: restart-after-call: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.16 (L6: P9): double-click a call tile + the tile menu's Pin / Full screen rows: AppCore.qml's rules against the shared
+# testvectors/tile-gestures (the web's tileGestures.test.ts runs the same file) and their wiring.
+if [ -x "$QMLRUN" ]; then
+    tg=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/tile-gestures-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$tg" | grep -q "VERDICT: PASS"; then
+        echo "$tg" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: tile-gestures: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.16 (lane sun-qol-parked): the QOL sweep leftovers' rules against the vectors Tin Hat Web runs too, and their wiring
+if [ -x "$QMLRUN" ]; then
+    qp=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/qol-parked-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$qp" | grep -q "VERDICT: PASS"; then
+        echo "$qp" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: qol-parked: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# A33.3 / A33.4 (12.1.16): a remembered window spot on an unplugged screen is not restored; pop-outs step down-right
+# (ScreenFit.qml's rules + the wiring in WindowMemory / AppCore / WatchPartyWindow).
+if [ -x "$QMLRUN" ]; then
+    sq=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/screen-fit-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$sq" | grep -q "VERDICT: PASS"; then
+        echo "$sq" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: screen-fit: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.16 (QOL A21.1/A21.3/A21.5/D06.6): the Pad's words against the shared testvectors/pad-words (the web's
+# src/features/pad/words.test.ts runs the same file): PadWindow.qml's computer words, "Leave that call" next to the
+# greyed Watch, the mic's visible reason, and Settings → Calls → Pad's description.
+if [ -x "$QMLRUN" ]; then
+    pw=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/pad-words-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$pw" | grep -q "VERDICT: PASS"; then
+        echo "$pw" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: pad-words: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# A31.6 (12.1.16): ThToolButton's screen-reader name leaves the tip's shortcut to the description (the real rule, evaluated).
+if [ -x "$QMLRUN" ]; then
+    aq=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/a11y-tip-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$aq" | grep -q "VERDICT: PASS"; then
+        echo "$aq" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: a11y-tip: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.16 (L6: A06.1 / A06.0 / A06.5): the share popover loaded for real (qmltestrunner, offscreen, stand-in app + call
+# controller): it fits a short window with its action row on screen, the Linux source button keeps the picked audio, and
+# the pills work from the keyboard.
+spt=$(bash "$HERE/share-popover-test.sh" "$(pwd)" 2>&1)
+if [ $? -ne 0 ] || ! echo "$spt" | grep -q "VERDICT: PASS"; then
+    echo "$spt" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: share-popover: /"
+    fatal=$((fatal + 1))
+fi
+
 if [ "$fatal" -eq 0 ]; then
-    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat / window-keys / identity-rule errors (${layout} layout-positioning warnings, non-fatal)"
+    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat / window-keys / identity-rule / share-custom-quick / share-popover / tile-gestures / pad-words / screen-fit / a11y-tip / qol-parked errors (${layout} layout-positioning warnings, non-fatal)"
     exit 0
 fi
 echo "QMLLINT FAIL: $fatal file(s) would fail to load"

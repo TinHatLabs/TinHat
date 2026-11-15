@@ -48,6 +48,7 @@ Kirigami.ApplicationWindow {
         onFocusCalendarEvent: (id) => calendarWindow.focusEvent(id)
         onOpenCalendarWindow: calendarWindow.openOrRaise()
         onMirrored: root._maybeAutoShowTour()
+        onSrAnnounce: (t, u) => srVoice.say(t, u)   // a11y round 2 (M3): call events said to a screen reader
         onBootReveal: (why) => { if (mainMemo.wantMaximized) root.showMaximized(); else root.visible = true; root.raise(); root.requestActivate(); bootctl.finish() }
         onThemeEditorOpened: settingsWindow.close()   // THEMES-UI §13.1: the editor works on the live app
     }
@@ -69,7 +70,7 @@ Kirigami.ApplicationWindow {
         width: root.width
         spacing: 0
         visible: (bootctl.safeMode && !safeModeBanner.dismissed)
-                 || (root.mLoggedIn && ((!root.mVerified && !login.firstDevicePending && !root.mGuestAccount) || login.syncDown || root.mUpdateAvailable || root.mUpdateDownloading || root.mUpdateReady))
+                 || (root.mLoggedIn && ((!root.mVerified && !login.firstDevicePending && !root.mGuestAccount) || login.syncDown || root.updateBannerUp))
                  || root.uiScalePending
                  || updater.restartFailed.length > 0   // 12.1.8: e.g. Windows "Open the installed app" failed with nothing else up
                  || root.restartAfterCall               // 12.1.8: an update restart waits for the call to end
@@ -267,10 +268,10 @@ Kirigami.ApplicationWindow {
             Layout.rightMargin: root.bannerMargin
             Layout.topMargin: root.bannerMargin
             Layout.bottomMargin: root.flatLayout ? Kirigami.Units.smallSpacing : 0
-            visible: root.mUpdateAvailable || root.mUpdateDownloading || root.mUpdateReady
+            visible: root.updateBannerUp
             type: root.mUpdateReady ? Kirigami.MessageType.Positive : Kirigami.MessageType.Information
             text: LinkGate.plain(root.mUpdateReady
-                ? ("Update installed (v" + root.mLatestVersion + ") — restart to apply.")
+                ? ((Qt.platform.os === "windows" ? "Update downloaded and checked (v" : "Update installed (v") + root.mLatestVersion + ") — restart to apply.")
                 : (root.mUpdateDownloading
                    ? (updater.channel === "flatpak" ? root.mUpdateStatus : "Downloading update…")   // 10.0.2: the portal path narrates itself
                    : ("Update available: v" + root.mAppVersion + " → v" + root.mLatestVersion
@@ -278,7 +279,8 @@ Kirigami.ApplicationWindow {
             actions: [
                 Kirigami.Action {
                     text: "What's new"
-                    visible: root.mUpdateAvailable && root.mReleaseNotes.length > 0
+                    // P17: still offered once the update is downloaded (the Restart-now strip)
+                    visible: (root.mUpdateAvailable || root.mUpdateReady) && root.mReleaseNotes.length > 0
                     onTriggered: updateNotesSheet.open()
                 },
                 // Self-update path (AppImage / user-writable install).
@@ -298,6 +300,13 @@ Kirigami.ApplicationWindow {
                     visible: root.mUpdateReady
                     enabled: !updater.restarting
                     onTriggered: updater.restart()
+                },
+                // P17: hide the strip until a newer version than this one appears (Settings → About still offers it)
+                Kirigami.Action {
+                    text: "Later"
+                    visible: !root.mUpdateDownloading && (root.mUpdateAvailable || root.mUpdateReady)
+                    enabled: !updater.restarting
+                    onTriggered: root.hideUpdateUntilNext()
                 }
             ]
         }
@@ -471,6 +480,15 @@ Kirigami.ApplicationWindow {
     property alias mShareQuality: core.mShareQuality
     property alias mCamQuality: core.mCamQuality
     property alias mRecvQuality: core.mRecvQuality
+    property alias mChatBackgrounds: core.mChatBackgrounds     // docs/AMBIENCE.md (AppearancePane)
+    property alias mChatEffects: core.mChatEffects
+    property alias mChatEffectsPause: core.mChatEffectsPause
+    // sun-gamebg: the "Game art backgrounds" switch + the feature's words, read as app.* by AppearancePane, BackgroundSheet
+    // and ConversationView (they lived on AppCore only: undefined here, so the switch showed off, did nothing, and the
+    // row + the sheet's tile had no words; r6)
+    property alias mChatGameArt: core.mChatGameArt
+    readonly property string gameArtWords: core.gameArtWords
+    readonly property AmbienceController ambience: core.c_ambience
     property alias mCallUnfocusedSaver: core.mCallUnfocusedSaver   // 10.8.1: the unfocused master switch (AppearancePane)
     property alias mMusicPlaying: core.mMusicPlaying
     property alias mNcAvailable: core.mNcAvailable
@@ -575,6 +593,7 @@ Kirigami.ApplicationWindow {
     // keepWindow: the OS changed the window itself (minimised, hidden, its own full-screen exit) — put the call layout
     // back but leave the window as the OS put it (review pass 2)
     function leaveShareFullscreen(keepWindow) {
+        core._fsHeld = null
         if (core.shareFullscreen.length === 0) return
         core.shareFullscreen = ""
         root.pinnedTile = core._fsPrevPinned
@@ -597,11 +616,34 @@ Kirigami.ApplicationWindow {
     }
     Connections {
         target: callctl
-        function onInCallChanged() { if (!callctl.inCall) root.leaveShareFullscreen() }
+        function onInCallChanged() { if (!callctl.inCall) { fsCarryTimer.stop(); core._fsHeld = null; root.leaveShareFullscreen() } }
         function onVideoTilesChanged() {
             if (core.shareFullscreen.length === 0) return
-            if (String(callctl.videoTiles).indexOf("\"" + core.shareFullscreen + "\"") === -1) root.leaveShareFullscreen()
+            if (String(callctl.videoTiles).indexOf("\"" + core.shareFullscreen + "\"") !== -1) {
+                // (review) the same tile came back inside the grace: the hold is over
+                if (core._fsHeld) { fsCarryTimer.stop(); core._fsHeld = null }
+                return
+            }
+            // D02.3: the full-screen share left — hold the full screen for the grace; the same participant's share coming
+            // back in that time takes it (a blip), else the window goes back as before (fsCarryTimer)
+            if (!core._fsHeld) {
+                core._fsHeld = core._heldOf(core.shareFullscreen)
+                if (!core._fsHeld) { root.leaveShareFullscreen(); return }
+                fsCarryTimer.restart()
+            }
+            var to = String(callctl.carryTile(core._fsHeld.participant, core._fsHeld.kind, core._fsHeld.until, String(callctl.videoTiles), Date.now()))
+            if (to.length > 0) {
+                fsCarryTimer.stop()
+                core._fsHeld = null
+                core.shareFullscreen = to
+                root.pinnedTile = to
+            }
         }
+    }
+    Timer {
+        id: fsCarryTimer
+        interval: 5050
+        onTriggered: if (core._fsHeld) { core._fsHeld = null; root.leaveShareFullscreen() }
     }
     property alias callSideFrac: core.callSideFrac
     property alias callAnimate: core.callAnimate
@@ -633,6 +675,15 @@ Kirigami.ApplicationWindow {
     property alias mInstalling: core.mInstalling
     property alias mUpdateStatus: core.mUpdateStatus
     property alias mReleaseNotes: core.mReleaseNotes
+    // P17: "Later" on the update strip hides it until a NEWER version shows up (the version is stored; web: update.ts
+    // updateLaterHides, the same rule). A download the user started always shows.
+    property string updateLaterFor: settings ? settings.uiPref("update-later-for") : ""
+    readonly property bool updateBannerUp: (mUpdateAvailable || mUpdateDownloading || mUpdateReady)
+        && (mUpdateDownloading || updateLaterFor.length === 0 || updateLaterFor !== mLatestVersion)
+    function hideUpdateUntilNext() {
+        updateLaterFor = mLatestVersion
+        if (settings) settings.applyUiPref("update-later-for", mLatestVersion)
+    }
     property alias mActivity: core.mActivity
     property alias _activityRaw: core._activityRaw
     property alias mStatuses: core.mStatuses
@@ -754,6 +805,9 @@ Kirigami.ApplicationWindow {
     function presenceOf(mxid) { return core.presenceOf(mxid) }
     function presenceWord(state) { return core.presenceWord(state) }
     function roomNameOf(id) { return core.roomNameOf(id) }
+    function announceIncoming(roomName, who) { core.announceIncoming(roomName, who) }   // a11y round 2 (M3)
+    function helpKey(id, def) { return actionsHost.helpKey(id, def) }   // A12.2: the call bar's tooltips name the key it has now
+    function incomingCardJson(dm, room, who, namesJson, other) { return core.incomingCardJson(dm, room, who, namesJson, other) }   // A15.2/A15.6
     property alias mCalEvents: core.mCalEvents
     property alias _calEventsRaw: core._calEventsRaw
     property alias mCalGames: core.mCalGames
@@ -793,7 +847,10 @@ Kirigami.ApplicationWindow {
     // any call state counts (joined, joining, the call layer's own flag, or a failed call still on screen): a restart is
     // never offered as "now" while one of them is up (lab 2026-11-01: a call whose mic failed showed "In call" with
     // mInCall false)
-    readonly property bool uiScaleCallUp: root.mInCall || root.mConnecting || root.mCallFailed || (callctl ? callctl.inCall === true : false)
+    // 12.1.15 (review A3-5): a call that is reconnecting after a drop, or whose leave is still tearing down, is a call too
+    // (inCall, connecting and callFailed are all false then): no deferred restart (update, App size, the Flatpak hand-over)
+    // may run while it would rejoin, only after the real end. scripts/restart-after-call-test.qml
+    readonly property bool uiScaleCallUp: root.mInCall || root.mConnecting || root.mCallFailed || core.mReconnecting || core.mHangingUp || (callctl ? (callctl.inCall === true || callctl.reconnecting === true || callctl.hangingUp === true) : false)
     // 12.1.8 (assembly-044 review): an update restart (not App size) that waits for the call to end
     property bool restartAfterCall: false
     onUiScalePendingChanged: if (!uiScalePending) uiScaleRestartAfterCall = false
@@ -866,6 +923,16 @@ Kirigami.ApplicationWindow {
     function _syncTileModel() { return core._syncTileModel() }
     function _rebuildSelfviewRow() { return core._rebuildSelfviewRow() }
     function tileMxid(p) { return core.tileMxid(p) }
+    function tileWords() { return core.tileWords() }
+    function tileDoubleAction(t) { return core.tileDoubleAction(t) }
+    function tileViewItems(t) { return core.tileViewItems(t) }
+    // P9: a tile's double-click / menu row, done (fullscreen toggles; reset = the tile's own view reset, done by the tile)
+    function tileViewRun(what, tileId) {
+        if (what === "pin") root.pinnedTile = tileId
+        else if (what === "unpin") { if (root.pinnedTile === tileId) root.pinnedTile = "" }
+        else if (what === "fullscreen") root.enterShareFullscreen(tileId)
+        else if (what === "leaveFullscreen") root.leaveShareFullscreen()
+    }
     function isParticipantOf(p, mxid) { return core.isParticipantOf(p, mxid) }
     function sameParticipant(a, b) { return core.sameParticipant(a, b) }
     function tileKey(md) { return core.tileKey(md) }
@@ -925,7 +992,7 @@ Kirigami.ApplicationWindow {
     function ensureOverlay() { return core.ensureOverlay() }
     function playCallChime(kind) { return core.playCallChime(kind) }
     function playUiSound(kind) { return core.playUiSound(kind) }
-    function previewSound(file) { return core.previewSound(file) }
+    function previewSound(file, restart) { return core.previewSound(file, restart) }
     function startRing() { return core.startRing() }
     function stopRing() { return core.stopRing() }
     // 10.6 (REACH A5.6, audit 15d): the OS notification only when the window is NOT active — the
@@ -989,13 +1056,24 @@ Kirigami.ApplicationWindow {
 
     // 10.0 incoming calls: the card over everything + the ring; Join/Switch opens the room and
     // hands the call controller the switch (leave-then-join when already in a call).
+    // a11y round 2 (M3): the screen-reader voice of the window (AppCore.srAnnounce): an accessibility announcement
+    // (polite, or assertive when urgent) — the web's live regions (ui/announce.tsx). Draws nothing.
+    Item {
+        id: srVoice
+        width: 1; height: 1
+        Accessible.role: Accessible.StaticText
+        function say(t, urgent) { Accessible.announce(t, urgent ? Accessible.Assertive : Accessible.Polite) }
+    }
     IncomingCallToast {
         id: incomingToast
         app: root
         parent: Controls.Overlay.overlay
         z: 1000
-        width: Math.min(parent.width - Kirigami.Units.gridUnit * 2, Kirigami.Units.gridUnit * 28)
-        anchors.horizontalCenter: parent.horizontalCenter
+        // A15.3 (2026-11-13): once the ring is over the card settles into the top-right corner, narrower and one line
+        // (it stayed big at top centre until Join, Dismiss or the call's end)
+        width: incomingToast.settled ? Math.min(parent.width - Kirigami.Units.gridUnit * 2, Kirigami.Units.gridUnit * 20)
+                                     : Math.min(parent.width - Kirigami.Units.gridUnit * 2, Kirigami.Units.gridUnit * 28)
+        x: incomingToast.settled ? parent.width - width - Kirigami.Units.gridUnit : (parent.width - width) / 2
         anchors.top: parent.top
         anchors.topMargin: Kirigami.Units.gridUnit
         onJoinRequested: function (roomId) {
@@ -1027,7 +1105,11 @@ Kirigami.ApplicationWindow {
             // with Open (the chime and the OS notification come from Rust, guests_ctl.rs announce)
             if (action.indexOf("guest-waiting:") === 0) {
                 var gt = action.indexOf("\t"), gRoom = action.substring(14, gt > 0 ? gt : action.length)
-                if (gt > 0) root.showPassiveNotification(LinkGate.plain(action.substring(gt + 1)), 8000, "Open", function () { root.openRoomId(gRoom) })
+                // A27.4 (Sunday QoL): a third field = the waiting id → Let in on the notice (guests_ctl.rs announce)
+                var gRest = gt > 0 ? action.substring(gt + 1) : "", gt2 = gRest.indexOf("\t")
+                var gText = gt2 >= 0 ? gRest.substring(0, gt2) : gRest, gId = gt2 >= 0 ? gRest.substring(gt2 + 1) : ""
+                if (gt > 0 && gId.length > 0) root.showPassiveNotification(LinkGate.plain(gText), 8000, "Let in", function () { root.guestsCtl.letIn(gId) })
+                else if (gt > 0) root.showPassiveNotification(LinkGate.plain(gText), 8000, "Open", function () { root.openRoomId(gRoom) })
                 return
             }
             if (action.indexOf("invite-room:") === 0) {
@@ -1040,28 +1122,36 @@ Kirigami.ApplicationWindow {
             // with Accept / Decline) or "invite:home:<id>" (a room → Home).
             if (action.indexOf("invite:") === 0) {
                 var inv = action.substring(7), c = inv.indexOf(":")
-                root.visible = true; root.raise(); root.requestActivate()
+                root.bringToFront()
                 if (c > 0 && nav.activeSpace !== inv.substring(0, c)) nav.selectSpace(inv.substring(0, c))
                 return
             }
-            if (action.indexOf("join:") === 0) { root.requestActivate(); incomingToast.join(action.substring(5)); return }
+            if (action.indexOf("join:") === 0) { root.bringToFront(); incomingToast.join(action.substring(5)); return }
             // 10.1 (TH-GAP-06 / TH-CAL-11): a clicked message toast opens the room; a clicked
             // reminder opens the event.
             if (action.indexOf("open:") === 0) {
-                root.visible = true; root.raise(); root.requestActivate()
+                root.bringToFront()
                 root.openRoomId(action.substring(5))
+                return
+            }
+            // threads (docs/THREADS.md): a thread reply's toast opens the room and the thread ("thread:<room>\t<root>")
+            if (action.indexOf("thread:") === 0) {
+                var tr = action.substring(7), tk = tr.indexOf("\t")
+                root.bringToFront()   // L2 A33.2: un-minimised, like every other notification click
+                if (tk > 0) root.openThread(tr.substring(0, tk), tr.substring(tk + 1))
+                else root.openRoomId(tr)
                 return
             }
             // docs/NOTIF-ACTIONS.md: Reply where no inline field (or not trusted) — the room with the composer focused
             if (action.indexOf("compose:") === 0) {
-                root.visible = true; root.raise(); root.requestActivate()
+                root.bringToFront()
                 root.openRoomId(action.substring(8))
                 Qt.callLater(function () { if (root.roomShown && root.conversationView) root.conversationView.focusComposer() })
                 return
             }
             if (action.indexOf("calendar:") === 0) {
                 var rest = action.substring(9), k = rest.indexOf("/")
-                root.visible = true; root.raise(); root.requestActivate()
+                root.bringToFront()
                 if (k > 0) root.openCalendarEvent(rest.substring(0, k), rest.substring(k + 1))
                 return
             }
@@ -1069,13 +1159,18 @@ Kirigami.ApplicationWindow {
     }
     // selfhost: the guest room's answers (guests_ctl.rs): its toasts where the person is looking, the guest link onto the
     // clipboard, "Open the Guests room" (joined first when needed) — Settings steps aside for the room
+    // A11.2 / D03.8: what Mark all as read did ("Marked 3 rooms in Home as read", "Nothing to mark as read in Home")
+    Connections {
+        target: nav
+        function onMarkedRead(text) { root.showPassiveNotification(LinkGate.plain(text), "short") }
+    }
     Connections {
         target: guestsCtl
         function onToast(text, timeoutMs) { root.settingsToast(text, timeoutMs) }
         function onCopyReady(link, text) { root.copyToClipboard(link); root.settingsToast(text, 5000) }
         function onOpenReady(roomId) {
             settingsWindow.close()
-            root.visible = true; root.raise(); root.requestActivate()
+            root.bringToFront()
             root.openRoomId(roomId)
         }
     }
@@ -1103,7 +1198,23 @@ Kirigami.ApplicationWindow {
     function senderColor(mxid) { return core.senderColor(mxid) }
     function dayLabel(ms) { return core.dayLabel(ms) }
     function sameDay(a, b) { return core.sameDay(a, b) }
+    // A33.2: a click on a notification (or a toast's Open) brings the window back for real — un-minimised (a minimised
+    // window that was only raised stayed in the taskbar), and maximised / full screen again if it was. Best effort on
+    // Wayland, where the minimised state isn't reported to the app.
+    property int _lastShownVisibility: Window.Windowed
+    function bringToFront() {
+        if (root.visibility === Window.Minimized || root.visibility === Window.Hidden) {
+            if (root._lastShownVisibility === Window.Maximized) root.showMaximized()
+            else if (root._lastShownVisibility === Window.FullScreen) root.showFullScreen()
+            else root.showNormal()
+        } else {
+            root.visible = true
+        }
+        root.raise(); root.requestActivate()
+    }
     onVisibilityChanged: {
+        if (root.visibility === Window.Windowed || root.visibility === Window.Maximized || root.visibility === Window.FullScreen)
+            root._lastShownVisibility = root.visibility
         root._applyVisibilityPause()   // Window signal; the work lives in the core
         // Pad QOL: the OS took the window out of full screen (its own key / gesture): a share's full screen is over too
         if (core.shareFullscreen.length > 0 && root.visibility !== Window.FullScreen) root.leaveShareFullscreen(true)
@@ -1195,6 +1306,14 @@ Kirigami.ApplicationWindow {
              : root.clockMode === "24" ? Qt.formatTime(d, "HH:mm")
              : Qt.formatTime(d, Locale.ShortFormat)
     }
+    // A05.5: a message's full date (the stamp's tooltip) follows the same clock setting — "Wed, Sep 23, 2026 6:06:30 AM"
+    // with 12 h, "… 06:06:30" with 24 h (the web's fmtFull); the system clock keeps the system's long format.
+    function fmtFull(ms) {
+        var d = new Date(ms)
+        if (root.clockMode === "12") return Qt.formatDate(d, "ddd, MMM d, yyyy") + " " + Qt.formatTime(d, "h:mm:ss AP")
+        if (root.clockMode === "24") return Qt.formatDate(d, "ddd, MMM d, yyyy") + " " + Qt.formatTime(d, "HH:mm:ss")
+        return Qt.formatDateTime(d, Locale.LongFormat)
+    }
     readonly property int durSlow: Motion.durSlow
 
 
@@ -1211,6 +1330,7 @@ Kirigami.ApplicationWindow {
         tileVolMenu.participant = md.participant || ""   // 9.4: corners target a full identity
         // Same fallback as the tile's name strip: display name, else the localpart.
         tileVolMenu.name = (md.name && md.name.length > 0) ? md.name : root.localpart(md.participant || "")
+        tileVolMenu.viewTile = { id: String(md.id || ""), share: md.screenshare === true, self: false, fake: root.fakeCall === true }   // P9
         // Mapped INTO root.contentItem, the item it pops at (fix/sliders-volume): mapToItem(null) gave window coordinates,
         // and the content sits under the window-wide banner strip (header), so with a banner up (unverified device,
         // update, offline, safe mode) the menu opened one banner-height (~50 px) below the pointer.
@@ -1358,13 +1478,31 @@ Kirigami.ApplicationWindow {
             if (rooms[i].id === id) { root.ctxRoomAlias = String(rooms[i].alias || ""); root.ctxRoomPublic = rooms[i].publicJoin === true; break }
         root.ctxRoomFav = false
         root.ctxSpaceInvited = false
+        root.ctxSpaceUnread = 0
         var sps = root.mNavSpaces || []
         for (var s = 0; s < sps.length; s++)
-            if (sps[s].key === id) { root.ctxSpaceInvited = sps[s].membership === "invite"; break }
+            if (sps[s].key === id) { root.ctxSpaceInvited = sps[s].membership === "invite"; root.ctxSpaceUnread = Number(sps[s].unread) || 0; break }
         spaceMenu.popup()
     }
+    // A11.3: right-click on Home / Favourites / People / Rooms (NavIsland) — their only menu item, Mark all as read
+    property string ctxMetaKey: ""
+    property string ctxMetaLabel: ""
+    function openMetaContext(key, label) {
+        root.ctxMetaKey = key
+        root.ctxMetaLabel = label
+        metaMenu.popup()
+    }
+    KeyMenu {
+        id: metaMenu
+        Controls.MenuItem {
+            text: "Mark all as read"
+            icon.name: "checkmark-symbolic"
+            onTriggered: { nav.markSpaceRead(root.ctxMetaKey, root.ctxMetaLabel); root.showPassiveNotification(LinkGate.plain("Marking everything in " + root.ctxMetaLabel + " as read…"), "short") }
+        }
+    }
     property bool ctxSpaceInvited: false   // RBAC §7.3: the menu's space is a pending invite
-    Controls.Menu {
+    property int ctxSpaceUnread: 0         // A11.2: Mark all as read only when there is something to read
+    KeyMenu {
         id: spaceMenu
         // RBAC §7.1: first, when a member.
         Controls.MenuItem {
@@ -1378,7 +1516,10 @@ Kirigami.ApplicationWindow {
         Controls.MenuItem {
             text: "Mark all as read"
             icon.name: "checkmark-symbolic"
-            onTriggered: { nav.markSpaceRead(root.ctxRoomId); root.showPassiveNotification(LinkGate.plain("Marking everything in " + root.ctxRoomName + " as read…"), "short") }
+            // A11.2: only when the space has something unread; the outcome arrives as nav's markedRead note
+            visible: !root.ctxSpaceInvited && root.ctxSpaceUnread > 0
+            height: visible ? implicitHeight : 0
+            onTriggered: { nav.markSpaceRead(root.ctxRoomId, root.ctxRoomName); root.showPassiveNotification(LinkGate.plain("Marking everything in " + root.ctxRoomName + " as read…"), "short") }
         }
         Controls.MenuItem {
             text: "Invite people…"
@@ -1424,6 +1565,9 @@ Kirigami.ApplicationWindow {
                 root.ctxRoomNotify = String(root.mNavRooms[i].notifyMode || "all")
                 root.ctxRoomAlias = String(root.mNavRooms[i].alias || "")
                 root.ctxRoomPublic = root.mNavRooms[i].publicJoin === true
+                root.ctxRoomMembership = String(root.mNavRooms[i].membership || "join")
+                root.ctxRoomCall = root.mNavRooms[i].call === true
+                root._syncRoomNotifyMenu()
                 roomMenu.popup()
                 return
             }
@@ -1587,6 +1731,30 @@ Kirigami.ApplicationWindow {
     property string ctxRoomNotify: "all"   // "all" | "mentions" | "mute"
     property string ctxRoomAlias: ""
     property bool ctxRoomPublic: false
+    // A04.1 (2026-11-14): the row's membership ("join" | "invite" | "none") — joined-only items hide on an invite or a
+    // listed room you are not in (the web's menus.tsx), and Leave reads "Decline invite" / hides
+    property string ctxRoomMembership: "join"
+    property bool ctxRoomCall: false   // A04.3: a call is live in the room (the row's `call`)
+    // A04.3 (2026-11-14): the room menu's call item — the web's roomMenuCall.ts, the same rule (tools/qol-l3-test.mjs)
+    // BEGIN room-menu-call
+    function roomMenuCall(membership, callLive, inThisCall) {
+        if (membership !== "join" || inThisCall) return ""
+        return callLive ? "Join the active call" : "Start a call"
+    }
+    // END room-menu-call
+    // A04.1: a submenu has no `visible`: the Notifications submenu is taken out of the room menu for an invite / a listed
+    // room you are not in and put back at its place for a joined one (takeMenu keeps the object; offscreen-checked)
+    property int _roomNotifyIndex: -1
+    function _syncRoomNotifyMenu() {
+        var at = -1
+        for (var i = 0; i < roomMenu.count; i++) if (roomMenu.menuAt(i) === roomNotifyMenu) { at = i; break }
+        if (root._roomNotifyIndex < 0) root._roomNotifyIndex = at
+        var want = root.ctxRoomMembership === "join"
+        if (want && at < 0 && root._roomNotifyIndex >= 0) roomMenu.insertMenu(root._roomNotifyIndex, roomNotifyMenu)
+        else if (!want && at >= 0) roomMenu.takeMenu(at)
+    }
+    readonly property string ctxRoomCallLabel: root.roomMenuCall(root.ctxRoomMembership, root.ctxRoomCall,
+                                                                 root.mInCall === true && root.mCallRoomId === root.ctxRoomId)
     /// The link "Copy link" / Share hand out for a room or space (12.0.6, share_link.rs; the web's roomInviteLink): this
     /// server's own web app at `#/room/<alias or id>` (the alias when published, readable and resolvable anywhere),
     /// matrix.to with a via hint for another server's room.
@@ -1627,14 +1795,13 @@ Kirigami.ApplicationWindow {
     function inviteBlip(code) { var c = String(code || ""); return /^TH-/i.test(c) ? c.substring(3) : c }
     function inviteMessage(inv) {
         var server = root.mInviteServer.length > 0 ? root.mInviteServer : root.myServer()
-        var until = (inv.expiresAt === null || inv.expiresAt === undefined) ? "" : (" It's good until " + Qt.formatDate(new Date(inv.expiresAt), "MMMM d") + ".")
-        // selfhost (the web's inviteMessage without an install URL): Tin Hat Web on this server, the app optional
+        var until = (inv.expiresAt === null || inv.expiresAt === undefined) ? "" : Qt.formatDate(new Date(inv.expiresAt), "MMMM d")
+        // selfhost (the web's inviteMessage without an install URL): Tin Hat Web on this server, the app optional.
+        // A14.0: the text (one-tap link first, the manual steps under it) is InviteLink.inviteMessageText, shared
+        // with the web through testvectors/invite-message/vectors.json.
         var web = String(login.serverWebUrl() || "")
         if (web.length === 0) web = "https://" + server + "/"
-        return "You're invited to " + server + " on Tin Hat.\n"
-             + "1. Open " + web + " in your browser (or install the Tin Hat app).\n"
-             + "2. Pick \"Create an account\" under the sign-in button.\n"
-             + "3. Server: " + server + " — invite code: " + root.inviteBlip(inv.code) + "." + until
+        return InviteLink.inviteMessageText(server, web, inv.code, until, "")
     }
     function copyToClipboard(text) {
         clipboardHelper.text = text
@@ -1643,10 +1810,12 @@ Kirigami.ApplicationWindow {
         clipboardHelper.text = ""
     }
 
-    Controls.Menu {
+    KeyMenu {
         id: roomMenu
         Controls.MenuItem {
             text: root.ctxRoomFav ? "Unfavourite" : "Favourite"
+            visible: root.ctxRoomMembership === "join"   // A04.1
+            height: visible ? implicitHeight : 0
             // 10.1 (TH-ICON-03): the pack's two-state star, not the static outline "rating" glyph.
             icon.name: root.ctxRoomFav ? "starred-symbolic" : "non-starred-symbolic"
             onTriggered: {
@@ -1665,11 +1834,27 @@ Kirigami.ApplicationWindow {
         Controls.MenuItem {
             text: "Invite people…"
             icon.name: "list-add-user"
+            visible: root.ctxRoomMembership === "join"   // A04.1
+            height: visible ? implicitHeight : 0
             onTriggered: inviteDialog.open()
+        }
+        // A04.3: the room's call without the double-click — opens the room and runs call.join on it (the double-click's
+        // and the call button's path: its gates, the switch when in another call, the consent sheets)
+        Controls.MenuItem {
+            text: LinkGate.plain(root.ctxRoomCallLabel)
+            icon.name: "call-start-symbolic"
+            visible: root.ctxRoomCallLabel.length > 0
+            height: visible ? implicitHeight : 0
+            onTriggered: {
+                var id = root.ctxRoomId
+                if (room.roomId !== id || root.roomShown === false) root.openRoomId(id)
+                root.actions.run("call.join", { source: "host", target: { room: id } })
+            }
         }
         // Per-room notification level. Writes a SERVER push rule, so the choice follows
         // the account everywhere (web included) instead of being a per-install setting.
         Controls.Menu {
+            id: roomNotifyMenu
             title: "Notifications"
             Controls.MenuItem {
                 text: "All messages"
@@ -1696,6 +1881,14 @@ Kirigami.ApplicationWindow {
             visible: root.ctxRoomId === room.roomId && root.serverMemories   // selfhost: only where the server records
             height: visible ? implicitHeight : 0
             onTriggered: { recordConfirm.forRoom = ""; room.recordOn ? room.setRecordCall(false) : recordConfirm.open() }
+        }
+        Controls.MenuItem {
+            // chat backgrounds (docs/AMBIENCE.md): everyone can look; moderators (both people in a DM) change it
+            text: LinkGate.plain(root.ambience.word("menu"))
+            icon.name: "insert-image-symbolic"
+            visible: root.ctxRoomId === room.roomId
+            height: visible ? implicitHeight : 0
+            onTriggered: backgroundSheet.open()
         }
         Controls.MenuItem {
             text: "Change photo…"
@@ -1740,6 +1933,8 @@ Kirigami.ApplicationWindow {
         Controls.MenuItem {
             text: "Pop out chat"
             icon.name: "window-new"
+            visible: root.ctxRoomMembership === "join"   // A04.1
+            height: visible ? implicitHeight : 0
             // Open (or focus, if already open) a floating chat bubble for this room.
             onTriggered: {
                 if (floatingCtl.isOpen(root.ctxRoomId)) floatingChats.focusBubble(root.ctxRoomId)
@@ -1749,11 +1944,15 @@ Kirigami.ApplicationWindow {
         }
         Controls.MenuSeparator {}
         Controls.MenuItem {
-            text: "Leave room"
+            // A04.1: an invite declines (the web's label); a listed room you are not in has nothing to leave
+            text: root.ctxRoomMembership === "invite" ? "Decline invite" : "Leave room"
             icon.name: "go-previous-symbolic"
+            visible: root.ctxRoomMembership !== "none"
+            height: visible ? implicitHeight : 0
             onTriggered: leaveConfirm.open()
         }
     }
+    BackgroundSheet { id: backgroundSheet; app: root; roomCtl: room }
     ConfirmDialog {
         id: recordConfirm
         // 11.0: the room it records ("" = the open room): the call status line's Rec asks for the CALL's room
@@ -1761,8 +1960,8 @@ Kirigami.ApplicationWindow {
         app: root
         dialogTitle: "Record calls in this room?"
         confirmText: "Start recording"
-        destructive: true
-        message: "Calls in this room get recorded for the Memories tab — every stream and voice separately, so replays can switch points of view.\n\nNo extra participant appears: everyone in the call sees a 🔴 REC cue in their call header instead (and anyone who turned on \"Never record me\" in Settings → Calls is left out of the recording entirely — their cue says so). Stop any time with the ⏹ Rec button."
+        destructive: false   // A18.2 (2026-11-13): starting a recording destroys nothing — the normal button, not the red one
+        message: "Calls in this room get recorded for the Memories tab — every stream and voice separately, so replays can switch points of view.\n\nNo extra participant appears: everyone in the call sees a 🔴 REC cue in their call header instead (and anyone who turned on \"Never record me\" in Settings → Privacy is left out of the recording entirely — their cue says so). Stop any time with the ⏹ Rec button."
         onConfirmed: {
             var fr = recordConfirm.forRoom
             recordConfirm.forRoom = ""
@@ -1801,16 +2000,35 @@ Kirigami.ApplicationWindow {
     function _pttKeyName(k) {
         return k === Qt.Key_Control ? "Ctrl" : k === Qt.Key_Alt ? "Alt" : k === Qt.Key_Shift ? "Shift" : k === Qt.Key_Meta ? "Meta" : "other"
     }
+    // 4-2 (2026-11-14): a dialog, menu or other popup owns the keyboard (its items live in the window's overlay, e.g.
+    // ConfirmDialog's "Send as text?" and the keyboard menus): no push-to-talk start there
+    function _pttPopupFocus() {
+        var ov = Controls.Overlay.overlay
+        for (var it = root.activeFocusItem; it; it = it.parent) if (ov && it === ov) return true
+        return false
+    }
+    // 12.1.16 (4-2, review round): a dialog, menu or popup that takes the keyboard during a key hold ends it (the ordinary
+    // release; a mouse-opened menu too) — a held key isn't meant for what has just opened
+    Connections {
+        target: root
+        function onActiveFocusItemChanged() {
+            if (root._pttHeldKey !== "" && root._pttPopupFocus()) {
+                root._pttHeldKey = ""
+                if (callctl && callctl.pttSpeaking) callctl.pttHold(false)
+            }
+        }
+    }
     function _pttTextFocus() {
         var f = root.activeFocusItem
         return !!f && f.cursorPosition !== undefined && f.readOnly !== true
     }
-    function tinhatPttKeyEvent(key, down) {
+    // 4-1: otherMods = a modifier held besides the key (ptt_bridge.cpp): Shift+F10 is the menu key, never an F10 hold
+    function tinhatPttKeyEvent(key, down, otherMods) {
         if (!callctl) return
         if (actionsHost.isPttKey(key)) {
             if (down === true) {
                 var name = root._pttKeyName(key)
-                if (callctl.pttPressStarts(name, root._pttTextFocus())) { root._pttHeldKey = name; callctl.pttHold(true) }
+                if (callctl.pttPressStartsExact(name, otherMods === true, root._pttTextFocus(), root._pttPopupFocus())) { root._pttHeldKey = name; callctl.pttHold(true) }
             } else if (root._pttHeldKey !== "") {
                 root._pttHeldKey = ""
                 callctl.pttHold(false)
@@ -1857,7 +2075,8 @@ Kirigami.ApplicationWindow {
         // 2026-11-12 (feat/people-search): the add-people picker (PeoplePicker.qml; the web's PeoplePicker.tsx). A plain
         // username still means your server (login.createDm → dm_target.rs, the web's dmTarget.ts, shared vectors).
         readonly property string target: newDmPicker.selectedMxid
-        onOpened: newDmPicker.reset("")   // type right away (the web's autoFocus)
+        property string prefill: ""   // P6: Ctrl+K's "Find people named …" opens it with the text typed there
+        onOpened: { newDmPicker.reset(newDmDialog.prefill); newDmDialog.prefill = "" }   // type right away (the web's autoFocus)
         customFooterActions: [
             Kirigami.Action {
                 text: "Message"
@@ -1892,6 +2111,15 @@ Kirigami.ApplicationWindow {
             }
         }
     }
+
+    /** Ctrl+K with `text` already typed (the room filter's "Search everywhere", A10.3; the web's searchEverywhere). */
+    function searchEverywhere(text) {
+        var t = String(text || "").trim()
+        quickSwitcher.open()
+        Qt.callLater(function () { quickSwitcher.setQuery(t) })   // after onAboutToShow's reset
+    }
+    /** New DM with `text` already in the people picker's field (Ctrl+K's "Find people named …", P6). */
+    function openNewDm(text) { newDmDialog.prefill = String(text || ""); newDmDialog.open() }
 
     ConfirmDialog {
         id: joinConfirm
@@ -1934,7 +2162,7 @@ Kirigami.ApplicationWindow {
                 roomId: root.ctxRoomId
                 implicitWidth: Kirigami.Units.gridUnit * 22
                 Layout.fillWidth: true
-                onPicked: (mxid) => login.inviteToRoom(root.ctxRoomId, mxid)
+                // the picker sends the invite itself and shows how it went (2026-11-13, A02.0)
             }
             Controls.Label {
                 text: "They'll get an invite they can accept or decline. Remove someone again from the member list on the right."
@@ -2102,7 +2330,7 @@ Kirigami.ApplicationWindow {
     // room column's + (newMenu below); the Game Reel → the room header; Add widget → Edit layout's toolbar; the corner
     // dock → Settings › Appearance; updates, the tour and shortcuts → Settings › About & help; Verify → the verify
     // banner + Settings › Devices & security; Refresh rooms is gone (sync is live). ----
-    Controls.Menu {
+    KeyMenu {
         id: appMenu
         modal: false   // 10.1 (TH-SHELL-18): every other menu is non-modal; this one dimmed the whole window
         Controls.MenuItem {
@@ -2184,6 +2412,16 @@ Kirigami.ApplicationWindow {
                 onTriggered: root.editCurrentTheme()
             }
         }
+        // round 4 (P-A7): Particles ▸ right after Theme (ParticlesMenu.qml; the web's ambience/particlesMenu.ts)
+        ParticlesMenu {
+            id: particlesMenu
+            app: root
+            roomCtl: room
+            roomOpen: root.roomShown && String(room.roomId).length > 0
+            onOpenSheet: backgroundSheet.open()
+            // Settings → Appearance at the Performance section (its indexed row; the web's PERFORMANCE_ROW)
+            onOpenSettings: { settingsWindow.openAt("appearance"); settingsWindow.jumpTo("appearance.gpu-saver") }
+        }
         Controls.MenuSeparator {}
         Controls.MenuItem {
             text: "Icon gallery"
@@ -2223,6 +2461,30 @@ Kirigami.ApplicationWindow {
             newRoomDialog.open()
         }
     }
+    // P10 (Sunday QoL): the Guests room bar's Turn off / New link ask first, naming who is affected (guests_ctl.rs
+    // view_json `confirm`, guests.rs guest_confirm; the web's GuestConfirm.tsx). Settings → Guests has its own copy.
+    // (two dialogs: ConfirmDialog styles its danger button once, so one dialog can't switch between the two)
+    ConfirmDialog {
+        id: guestConfirmOff
+        app: root
+        readonly property var words: (root.mGuests && root.mGuests.confirm) ? root.mGuests && root.mGuests.confirm["off"] : null
+        dialogTitle: guestConfirmOff.words ? String(guestConfirmOff.words.title) : ""
+        message: guestConfirmOff.words ? String(guestConfirmOff.words.body) : ""
+        confirmText: guestConfirmOff.words ? String(guestConfirmOff.words.confirm) : "OK"
+        destructive: true
+        onConfirmed: root.guestsCtl.turnOff()
+    }
+    ConfirmDialog {
+        id: guestConfirmLink
+        app: root
+        readonly property var words: (root.mGuests && root.mGuests.confirm) ? root.mGuests && root.mGuests.confirm["link"] : null
+        dialogTitle: guestConfirmLink.words ? String(guestConfirmLink.words.title) : ""
+        message: guestConfirmLink.words ? String(guestConfirmLink.words.body) : ""
+        confirmText: guestConfirmLink.words ? String(guestConfirmLink.words.confirm) : "OK"
+        destructive: false
+        onConfirmed: root.guestsCtl.newLink()
+    }
+    function askGuestConfirm(what) { (what === "off" ? guestConfirmOff : guestConfirmLink).open() }
     ConfirmDialog {
         id: logoutConfirm
         app: root
@@ -2333,6 +2595,8 @@ Kirigami.ApplicationWindow {
             // everything else reads exactly as before (the web's dialogs.tsx shortcutRows does the same)
             Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("nav.quickSwitcher.open", "Ctrl+K"); font.bold: true }            Controls.Label { text: "Jump to any room" }
             Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("app.settings.open", "Ctrl+,"); font.bold: true }            Controls.Label { text: "Settings" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("nav.roomList.filter", "Ctrl+F"); font.bold: true }         Controls.Label { text: "Filter rooms" }
+            Controls.Label { textFormat: Text.PlainText; text: actionsHost.helpKey("app.shortcuts.open", "Ctrl+/"); font.bold: true }          Controls.Label { text: "Keyboard shortcuts" }
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 text: (actionsHost.changedActions.indexOf("nav.room.previous") >= 0 || actionsHost.changedActions.indexOf("nav.room.next") >= 0)
@@ -2364,8 +2628,9 @@ Kirigami.ApplicationWindow {
     Connections {
         target: settings
         function onBugReportStatusChanged() {
-            if (settings.bugReportStatus.indexOf("Report failed") === 0) bugReportDialog.keepNote = true
-            else if (settings.bugReportStatus.indexOf("Report sent") === 0) { bugReportDialog.keepNote = false; bugReportDialog.clearForm() }
+            // L1 A34.0: the note stays in the box until a report is SENT (Cancel / Esc / a click outside keep it)
+            if (settings.bugReportStatus.indexOf("Report sent") === 0) bugReportDialog.sendDone(true)
+            else if (settings.bugReportStatus.indexOf("Report failed") === 0) bugReportDialog.sendDone(false)
         }
     }
     // #7 Music: pick a local audio file to stream into the active call (selectedFile is a
@@ -2400,7 +2665,7 @@ Kirigami.ApplicationWindow {
     // Never opens on Linux (sources are [] there — the KDE portal shows its own picker).
     // A Controls.Menu with a Repeater — the exact pattern the Share-audio-output menu
     // uses (proven to render on this stack; a Kirigami.Dialog+Repeater collapsed empty).
-    Controls.Menu {
+    KeyMenu {
         id: sharePicker
         property var sources: []
         MenuSectionLabel { app: root; text: "Share your screen" }
@@ -2509,6 +2774,7 @@ Kirigami.ApplicationWindow {
         rooms: root.mRooms
         onChosen: (roomId) => root.openRoomId(roomId)
         onInviteChosen: (roomId) => root.showInvite(roomId)   // a pending invite: where it waits (ACTIONS.md §14.3)
+        onFindPeople: (text) => root.openNewDm(text)          // P6: "Find people named …" → New DM, the text in its field
     }
     // 11.0 step 3 (buttons): what every action button, the palette and (later) a key run through. `ui` = the surfaces
     // the id → command map opens (ActionsHost.exec); an island that moves one of them re-points it here.
@@ -2591,7 +2857,11 @@ Kirigami.ApplicationWindow {
     EcOutputsPopup { id: ecOutputsPopup; app: root; ctl: callctl }
     Shortcut { sequences: actionsHost.keysFor("soundboard.open"); context: Qt.ApplicationShortcut; enabled: root.serverSoundboard; onActivated: { root.soundboardRefresh(); soundboardPanel.openOrRaise() } }
     Shortcut { sequences: actionsHost.keysFor("calendar.open"); context: Qt.ApplicationShortcut; onActivated: calendarWindow.openOrRaise() }   // 0.8.26 calendar (E for events)
+    // A23.1 / A23.5 (2026-11-14): Ctrl+/ = Keyboard shortcuts, Ctrl+F = Filter rooms (the main window's; the web's keys)
+    Shortcut { sequences: actionsHost.keysFor("app.shortcuts.open"); context: Qt.ApplicationShortcut; onActivated: shortcutsDialog.open() }
+    Shortcut { sequences: actionsHost.keysFor("nav.roomList.filter"); enabled: root.keysHere && root.mLoggedIn === true; onActivated: actionsHost.run("nav.roomList.filter", { source: "key" }) }
     function openCallSettings() { settingsWindow.openAt("calls") }
+    function openStreamPopover() { streamPopover.open() }
     // The URL a sound is played/published from (the server's clip cache for myinstants).
     function soundboardClipUrl(u) { return soundboardCtl.clipUrl(u) }
     function soundboardRefresh() { if (room.roomId.length > 0) soundboardCtl.refresh(room.roomId) }
@@ -2645,7 +2915,7 @@ Kirigami.ApplicationWindow {
         inCall: root.mInCall
         watchPlayback: root.mWatchPlayback
         watchInParty: root.mWatchInParty
-        onRefreshRequested: { room.fetchMemoriesFor(memoriesWindow.roomId); room.fetchClipsFor(memoriesWindow.roomId) }   // 10.1 (TH-MEM-09)
+        onRefreshRequested: if (root.serverMemories) { room.fetchMemoriesFor(memoriesWindow.roomId); room.fetchClipsFor(memoriesWindow.roomId) }   // 10.1 (TH-MEM-09); recordings only where the server records
         // Y1 (0.8.15): ONE Rust-side call. It joins the party and reads the CURRENT
         // playback state from the store — following a live replay of the same memory
         // (updatedAt < 60s) instead of resetting everyone to 0, else starting fresh.
@@ -2685,6 +2955,7 @@ Kirigami.ApplicationWindow {
         onRemoveAt: (i) => watchCtl.removeAt(i)                 // 11.4
         onMoveItem: (from, to) => watchCtl.moveItem(from, to)   // 11.4
         onClearQueue: watchCtl.clearQueue()                     // 11.4
+        onRestoreQueue: (rid, json) => watchCtl.restoreQueue(rid, json)   // QOL A16.2 (P11): Undo after Clear
         // 11.3 QOL (QOL.md §5): one write each through the controller's queue edit path (vectors queueops.json)
         onMoveToNext: (from) => watchCtl.moveToNext(from, watchPartyWindow.nowUrl)
         onClearPlayed: watchCtl.clearPlayed(watchPartyWindow.nowUrl)
@@ -3006,6 +3277,8 @@ Kirigami.ApplicationWindow {
     }
     // 10.1 (TH-SET-11), now between windows: a surface of THIS window opened from Settings — Settings steps aside, this
     // window comes forward, and closing that surface brings Settings back on the pane you left (`pane` "" = no return).
+    // A28.3: a locked message's "Verify this device…" (ChatBubble.qml)
+    function openVerifySheet() { verifySheet.open() }
     property string _returnToSettingsPane: ""
     property var _handOffPopup: null
     function settingsHandOff(pane, what, arg) {
@@ -3015,7 +3288,7 @@ Kirigami.ApplicationWindow {
         case "backup": pop = verifySheet; break          // 10.1 (TH-SET-03): the verify sheet shows progress + the key
         case "noiseTest": pop = noiseTestSheet; break
         case "shortcuts": pop = shortcutsDialog; break
-        case "bugReport": if (!bugReportDialog.keepNote) bugReportDialog.clearForm(); pop = bugReportDialog; break
+        case "bugReport": pop = bugReportDialog; break
         case "whatsNew": pop = updateNotesSheet; break
         case "signOut": pop = logoutConfirm; break
         case "rowEditor": pop = actionsHost.rowEditorDialog; break
@@ -3223,11 +3496,19 @@ Kirigami.ApplicationWindow {
                 }
                 // TINHAT_GUI_OPENROOM="0".."N" picks that room index; "!room:id" (9.3) picks that
                 // room; anything else = first.
-                var idx = parseInt(login.autoOpenRoom)
+                // threads (docs/THREADS.md): "<room>#threads" also opens the Threads list, "<room>#thread:<root>" a thread
+                var spec = login.autoOpenRoom, hashAt = spec.indexOf("#")
+                var roomSpec = hashAt > 0 ? spec.substring(0, hashAt) : spec
+                var threadSpec = hashAt > 0 ? spec.substring(hashAt + 1) : ""
+                var idx = parseInt(roomSpec)
                 if (isNaN(idx) || idx < 0 || idx >= root.mRooms.length) idx = 0
-                if (login.autoOpenRoom.charAt(0) === "!")
-                    for (var ri = 0; ri < root.mRooms.length; ri++) if (root.mRooms[ri].id === login.autoOpenRoom) { idx = ri; break }
+                if (roomSpec.charAt(0) === "!")
+                    for (var ri = 0; ri < root.mRooms.length; ri++) if (root.mRooms[ri].id === roomSpec) { idx = ri; break }
                 root.openRoomId(root.mRooms[idx].id)
+                if (threadSpec === "threads" || threadSpec.indexOf("thread:") === 0) {
+                    var openRid = root.mRooms[idx].id, openRoot = threadSpec === "threads" ? "" : threadSpec.substring(7)
+                    Qt.callLater(function () { root.openThread(openRid, openRoot) })
+                }
                 // Verification aid: tuck the nav away for a full-width fake-call capture.
                 // Set the mode in-memory only (NOT setNavMode) so the screenshot hook never
                 // persists "corner" over the user's saved preference.
@@ -3277,6 +3558,10 @@ Kirigami.ApplicationWindow {
             root.layoutStyle = settings.uiPref("layout-style") === "flat" ? "flat" : "islands"   // 10.8
             Motion.gifAutoplay = settings.uiPref("gif-autoplay") !== "0"   // 11.0 (GPU.md §2.6): default on
             core.mCallUnfocusedSaver = root.lowgpu.unfocusedSaverOn(settings.uiPref("call-unfocused-saver"))   // 10.8.1: default OFF
+            core.mChatBackgrounds = root.ambience.prefOn(settings.uiPref(root.ambience.prefKey("backgrounds")), true)   // docs/AMBIENCE.md
+            core.mChatEffects = root.ambience.prefOn(settings.uiPref(root.ambience.prefKey("effects")), true)
+            core.mChatEffectsPause = root.ambience.prefOn(settings.uiPref(root.ambience.prefKey("pause")), true)
+            core.mChatGameArt = ["0", "false"].indexOf(String(settings.uiPref("chat-game-art"))) < 0   // sun-gamebg: default ON
             var cm = settings.uiPref("clock"); root.clockMode = (cm === "12" || cm === "24") ? cm : "system"
             lastRoomTimer.tries = 0
             lastRoomTimer.restart()
@@ -3356,6 +3641,13 @@ Kirigami.ApplicationWindow {
         onStartOverRequested: (pw) => login.startOver(pw)
         offersStartOver: login.offersStartOver(login.sasState, login.sasIncoming, login.verified)
         onSasResetRequested: login.resetDeviceVerification()
+        // L1 A28.1: "Save as file…" — the file is written in Rust (key_file_text, the web's Download); a saved file ticks
+        // "I've saved this key" (the web's keySaved)
+        onSaveKeyRequested: (url) => {
+            var err = login.saveRecoveryKey(url, Qt.formatDate(new Date(), "yyyy-MM-dd"))
+            if (err.length === 0) { verifySheet.keySavedToFile(); root.settingsToast("Security Key saved to the file.", 4000) }
+            else root.settingsToast(err, 6000)
+        }
     }
 
     // A device we're already signed in to can be asked to verify a NEW one, so the
@@ -3401,7 +3693,7 @@ Kirigami.ApplicationWindow {
     // in-call bar's gear). Grouped with section headers so the ~20 rows read as
     // five short lists, not one grab-bag; selection marks are NATIVE check
     // indicators (CheckMenuItem — labels no longer shift when picked).
-    Controls.Menu {
+    KeyMenu {
         id: devicesMenu
         modal: true
         MenuSectionLabel { app: root; text: "Devices" }
@@ -3775,6 +4067,14 @@ Kirigami.ApplicationWindow {
         running: Qt.application.arguments.indexOf("--tinhat-streampop") >= 0 && root.callShown
         onTriggered: streamPopover.open()
     }
+    // Lab builds only (with --tinhat-streampop): the measurement rigs' screen-share autostart presses "Start sharing"
+    // once the popover is up. The switch is read in Rust under the lab cfg (ambience_ctl.rs lab_autoshare; a release
+    // build always says no), never here: QML can't be compiled out.
+    Timer {
+        interval: 8000
+        running: root.callShown && core.c_ambience.labAutoshare()
+        onTriggered: streamPopover.startShare()
+    }
     // --tinhat-tunein (+ TINHAT_GUI_AUTOJOIN): tune in to the first recording-only
     // share that appears (the recording-only receiver gate: hidden+muted -> tuned in).
     Timer {
@@ -4028,16 +4328,46 @@ Kirigami.ApplicationWindow {
         else if (s.do === "status") { r = { status: String(callctl.status), error: String(callctl.lastError || ""), sharing: callctl.sharing === true, camera: callctl.cameraOn === true, watching: callctl.watching === true, noCapture: callctl.noCapture === true, inCall: root.mInCall, room: root.mCallRoomId, hangingUp: callctl.hangingUp === true, reconnecting: callctl.reconnecting === true, connecting: callctl.connecting === true, callFailed: callctl.callFailed === true } }
         // review round 4 UI-1 (the assembly's real-input PTT gate; lab gates only): a stored button row (null = the
         // default), where an action's button is on screen (window coordinates + the window's), push to talk's state
-        else if ((s.do === "row" || s.do === "find-action" || s.do === "ptt-state" || s.do === "focus-base" || s.do === "focus-composer" || s.do === "find-more" || s.do === "ptt-key-override") && !login.labDriveHooks()) { r = "refused" }
+        else if ((s.do === "row" || s.do === "find-action" || s.do === "ptt-state" || s.do === "focus-base" || s.do === "focus-composer" || s.do === "find-more" || s.do === "ptt-key-override" || s.do === "focus-now"
+                  || s.do === "brb" || s.do === "ptt-hold" || s.do === "cards" || s.do === "decline" || s.do === "pin" || s.do === "pin-state"
+                  || s.do === "force-drop") && !login.labDriveHooks()) { r = "refused" }
+        // fix1216 round 2 (lab builds only): pin a participant's tile (as its pin button does), the pin's state, and a
+        // recoverable terminal drop through the call's own drop path (callctl.labForceDrop: its own env fence too)
+        else if (s.do === "pin") {
+            var pt = null, pts = []
+            try { pts = JSON.parse(String(callctl.videoTiles || "[]")) } catch (e3) {}
+            for (var pi = 0; pi < pts.length; pi++) if (core.isParticipantOf(String(pts[pi].participant || ""), String(s.participant || "")) && String(pts[pi].kind || "video") === String(s.kind || "video")) { pt = pts[pi]; break }
+            if (pt) { root.pinnedTile = String(pt.id); r = { pinned: String(pt.id) } } else r = "no tile"
+        }
+        else if (s.do === "pin-state") {
+            var ps = [], pin = String(root.pinnedTile || ""), who = ""
+            try { ps = JSON.parse(String(callctl.videoTiles || "[]")) } catch (e4) {}
+            for (var pj = 0; pj < ps.length; pj++) if (String(ps[pj].id) === pin) who = String(ps[pj].participant || "") + "|" + String(ps[pj].kind || "video")
+            r = { pinned: pin, tile: who, inCall: root.mInCall, reconnecting: callctl.reconnecting === true, failed: callctl.callFailed === true, status: String(callctl.status) }
+        }
+        else if (s.do === "force-drop") { r = callctl.labForceDrop() ? "dropping" : "refused (no drop hook)" }
+        // sun-l5 lab gates (lab builds only, refused above in a release): BRB, a push-to-talk hold (the key handler's call),
+        // the incoming cards and their Decline, by the same calls as their buttons
+        else if (s.do === "brb") { afkCtl.setAfk(s.on === true); r = "brb " + (s.on === true) }
+        else if (s.do === "ptt-hold") { callctl.pttHold(s.down === true); r = "hold " + (s.down === true) }
+        else if (s.do === "cards") { r = incomingToast.calls.map(function (c) { return { roomId: c.roomId, who: c.who, declinable: incomingToast.declinable(c.roomId), settled: incomingToast.settled } }) }
+        else if (s.do === "decline") { incomingToast.decline(String(s.room || "")); r = "declined " + String(s.room || "") }
         else if (s.do === "row") { r = root.layoutStore.setRow(String(s.island || ""), String(s.row || ""), s.value === undefined ? null : s.value) || "ok" }
         else if (s.do === "find-action") { r = root._findActionButton(String(s.action || "")) }
         else if (s.do === "ptt-key-override") { actionsHost.labPttKeys = s.keys || []; r = "ptt keys " + JSON.stringify(s.keys || []) }
         else if (s.do === "focus-base") { pttBaseItem.forceActiveFocus(); r = String(root.activeFocusItem).slice(0, 80) }
         else if (s.do === "focus-composer") { r = root._labFocusComposer() }
         else if (s.do === "find-more") { r = root._labFindMore() }
+        // 12.1.16 fix round (the real-key gate scripts/ptt-keys-gate.sh): what has the keyboard, its name, and whether a popup holds it
+        else if (s.do === "focus-now") { var fi = root.activeFocusItem; r = { item: String(fi).slice(0, 60), name: fi ? String((fi.Accessible && fi.Accessible.name) || fi.text || "") : "", popup: root._pttPopupFocus() } }
         else if (s.do === "ptt-state") { r = { ptt: callctl.pushToTalk === true, speaking: callctl.pttSpeaking === true, micMuted: callctl.micMuted === true, inCall: root.mInCall, winX: root.x, winY: root.y, active: root.active === true, keysHere: root.keysHere === true, focus: String(root.activeFocusItem).slice(0, 80) } }
         else r = padWindow.drive(s)
         console.log("[paddrive] #" + n + " " + s.do + " -> " + (typeof r === "object" ? JSON.stringify(r) : String(r)) + " t=" + Date.now())
+    }
+    Connections {   // fix1216 round 2: the lab gate counts the call chimes (D02.3: a blip plays none)
+        target: root._hookArg("--tinhat-paddrive") !== null ? callctl : null
+        ignoreUnknownSignals: true
+        function onPersonChime(kind) { console.log("[paddrive] chime " + kind + " t=" + Date.now()) }
     }
     Connections {
         target: root._hookArg("--tinhat-paddrive") !== null ? padCtl : null
@@ -4470,20 +4800,45 @@ Kirigami.ApplicationWindow {
                         // "Fill the app" hides the conversation so the call owns the whole content area.
                         hidden: root.callMaximized && root.callShown
                         onAvatarActivated: (mxid) => { root.profileMxid = mxid; profileFlyout.open() }
+                        // threads (docs/THREADS.md): a summary / "Reply in thread" opens the thread in the Threads tab
+                        onThreadOpenRequested: (threadRoot, opener) => rightPanel.openThread(threadRoot, opener)
+                        onThreadJumpRequested: (threadRoot, target) => rightPanel.openThread(threadRoot, null, target)
                         Component.onCompleted: root.conversationView = conversation
                         Component.onDestruction: if (root.conversationView === conversation) root.conversationView = null
                     }
                         // 10.1 (TH-CONV-03): before any room is open the timeline island says where to start; with the nav
                         // in the drawer (corner mode, a narrow window) it points at the handle instead.
                         EmptyState {
+                            id: startEmpty
                             anchors.centerIn: parent
                             width: Math.min(parent.width - Kirigami.Units.gridUnit * 4, Kirigami.Units.gridUnit * 28)
                             visible: root.mLoggedIn && !root.roomShown && !root.mBusy
                             app: root
+                            // A01.0 / P4 (Sunday QoL): no rooms at all (spaces don't count) once the room list has
+                            // arrived → "No rooms yet" + New DM / New room (first_run.rs no_rooms_plan; the web's Shell.tsx)
+                            readonly property var noRooms: {
+                                if (core._roomsRaw.length === 0) return null
+                                var rs = root.mRooms || [], joined = 0, invited = 0
+                                for (var i = 0; i < rs.length; i++) {
+                                    if (rs[i].space) continue
+                                    if (rs[i].membership === "invite") invited++; else joined++
+                                }
+                                return JSON.parse(String(nav.noRoomsPlan(joined, invited)))
+                            }
                             iconName: root.navInDrawer ? "documentinfo-symbolic" : "dialog-messages-symbolic"
-                            title: root.navInDrawer ? "Your rooms are tucked away" : "Pick a room to start"
+                            title: root.navInDrawer ? "Your rooms are tucked away" : (noRooms ? noRooms.title : "Pick a room to start")
                             explanation: root.navInDrawer ? "Hover the handle in the top-left corner to open Spaces and rooms."
-                                                          : "Your rooms are on the left. Ctrl+K jumps to any of them, Alt+↑/↓ steps through the list."
+                                                          : (noRooms ? noRooms.explanation
+                                                                     : "Your rooms are on the left. Ctrl+K jumps to any of them, Alt+↑/↓ steps through the list.")
+                            Repeater {
+                                model: (!root.navInDrawer && startEmpty.noRooms) ? startEmpty.noRooms.buttons : []
+                                delegate: ThButton {
+                                    required property string modelData
+                                    text: modelData === "newDm" ? "New DM…" : "New room…"
+                                    highlighted: modelData === "newDm"
+                                    onClicked: modelData === "newDm" ? newMenu.dmRequested() : newMenu.roomRequested("", "")
+                                }
+                            }
                         }
                     }
                 }
@@ -4513,6 +4868,8 @@ Kirigami.ApplicationWindow {
                         members: root.mMembers
                         summary: root.mRoomSummary
                         roomId: room.roomId
+                        roomCtl: room            // threads: the list's threadsJson
+                        gif: root.gifCtl         // threads: a thread's composer
                         activity: root.mActivity
                         statuses: root.mStatuses
                         myStatus: root.mMyStatus
@@ -4659,7 +5016,7 @@ Kirigami.ApplicationWindow {
         onSetActivity: (game) => activityCtl.setActivity(game, "", (root.mActivity && root.mActivity.game === game) ? String(root.mActivity.code || "") : "")
         onPostStatus: (text, ttlMin) => statusCtl.postStatus(text, ttlMin)
         onToggleNavRequested: root.toggleSidebar()
-        onBugReportRequested: { if (!bugReportDialog.keepNote) bugReportDialog.clearForm(); bugReportDialog.open(); if (root.navInDrawer) cornerNav.close() }
+        onBugReportRequested: { bugReportDialog.open(); if (root.navInDrawer) cornerNav.close() }
         onDmOpenRequested: (roomId) => { root.openDmFromRail(roomId); if (root.navInDrawer) cornerNav.close() }                        // 10.6 (REACH §1.3)
         onDmInviteRequested: (roomId, accept) => { if (accept) login.acceptInvite(roomId); else login.rejectInvite(roomId) }
         onPrivacySettingsRequested: { if (root.navInDrawer) cornerNav.close(); settingsWindow.openAt("privacy") }       // 10.6 (REACH §2.7)
@@ -4767,10 +5124,26 @@ Kirigami.ApplicationWindow {
         editModeObj.openEdit()
     }
     /** Reset layout on this device (EDITMODE-UI §9): the device-local override, at once. */
+    // L1 A17.1: with unsaved layout changes open, Reset asks first (they used to go without a word; the reset itself has
+    // its Restore). Tin Hat Web: editmode/store.ts resetOnThisDevice + RESET_ASK (the same words).
     function resetLayoutHere() {
+        if (editModeObj.open && editModeObj.dirty) { resetAsk.open(); return }
+        root.resetLayoutNow()
+    }
+    function resetLayoutNow() {
         if (editModeObj.open) editModeObj.cancel()
         layoutStoreObj.setOverride()
         root.settingsToast("Layout reset on this device.", 3000)
+    }
+    ConfirmDialog {
+        id: resetAsk
+        app: root
+        dialogTitle: "Reset the layout on this device?"
+        message: "Your unsaved layout changes will be lost too."
+        confirmText: "Reset"
+        cancelText: "Keep editing"
+        destructive: true
+        onConfirmed: root.resetLayoutNow()
     }
     Shortcut {   // EDITMODE-UI §1: layout.edit (Ctrl+E) opens edit mode (works while typing, with every button hidden); editing = Done
         sequences: actionsHost.keysFor("layout.edit")
@@ -4778,7 +5151,7 @@ Kirigami.ApplicationWindow {
         onActivated: root.openEditLayout(false)
     }
     // the way in that always works (EDITMODE-UI §10): right-click (a long press) on a gap / the margin / the host
-    Controls.Menu {
+    KeyMenu {
         id: gapMenu
         objectName: "gapMenu"
         modal: false
@@ -5032,7 +5405,19 @@ Kirigami.ApplicationWindow {
         return null
     }
     function dmPeerOf(id) { var e = root._roomListEntry(id); return e && e.dm ? String(e.peer || "") : "" }
+    // P8: a live call's room with exactly two joined people (bridge.rs rooms twoPerson = the Decline's own rule)
+    function twoPersonCall(id) { var e = root._roomListEntry(id); return !!e && e.twoPerson === true }
     function dmPictureOf(id) { var e = root._roomListEntry(id); return e && e.dm ? String(e.avatar || "") : "" }
+    /// threads (docs/THREADS.md): open a room (when it isn't the one shown) and its Threads panel on the thread whose
+    /// root is rootEventId (a notification, the Memories photo viewer's "Comments"). The web's bus openThread.
+    function openThread(roomId, rootEventId) {
+        if (!roomId) return
+        if (!root.room || root.room.roomId !== roomId) root.openRoomId(roomId)
+        // review #13: only while that room is still the one shown (another navigation may have run meanwhile)
+        Qt.callLater(function () {
+            if (root.roomInfoPanel && root.room && root.room.roomId === roomId) root.roomInfoPanel.openThread(String(rootEventId || ""), null)
+        })
+    }
     function openRoomId(id) {
         if (!id || id.length === 0) return
         settings.applyUiPref("last-room", id)   // 10.1 (TH-SHELL-06): restored on the next launch
@@ -5061,6 +5446,15 @@ Kirigami.ApplicationWindow {
     // pinned popover's path); another room opens first and the jump follows once its timeline holds the event (a
     // bounded wait: up to 15 s, checked every 250 ms only while a jump is pending; then jumpTo's own "isn't loaded").
     property var _pendingJump: null
+    // Memories photos: the chat menu's Add / Remove answers here (the Memories window shows its own while it is open)
+    Connections {
+        target: room
+        function onMemoryPhotosNoticeChanged() {
+            if (memoriesWindow.visible) return
+            var t = String(room.memoryPhotosNotice || ""), i = t.indexOf("|")
+            if (t.length > 0) root.showPassiveNotification(LinkGate.plain(i >= 0 ? t.slice(i + 1) : t), 3000)
+        }
+    }
     function jumpToEvent(roomId, eventId) {
         if (!roomId || !eventId) return
         if (room.roomId === roomId && root.roomShown && root.conversationView) { root._pendingJump = null; root.conversationView.jumpTo(eventId); return }
@@ -5077,7 +5471,8 @@ Kirigami.ApplicationWindow {
             if (!p) { stop(); return }
             var cv = root.conversationView
             var here = room.roomId === p.room && !!cv
-            if (here && cv.hasEvent(p.id)) { root._pendingJump = null; stop(); cv.jumpTo(p.id); return }
+            // A05.1: once the room's first load has landed, jumpTo pages back for an older message itself
+            if (here && (cv.hasEvent(p.id) || cv._markerFrozen)) { root._pendingJump = null; stop(); cv.jumpTo(p.id); return }
             if (Date.now() - p.at > 15000) { root._pendingJump = null; stop(); if (here) cv.jumpTo(p.id) }
         }
     }

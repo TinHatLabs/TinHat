@@ -289,6 +289,10 @@ pub struct PaletteSpec {
     pub boosts: Boosts,
     /// inclusive code-point ranges that separate words
     pub separators: Vec<(f64, f64)>,
+    /// accent folding (ACTIONS.md §10.3, 2026-11-14): code-point ranges dropped (the combining marks)
+    pub fold_drop: Vec<(u32, u32)>,
+    /// accent folding: a lower-case letter → its base letters ("é" → "e", "ß" → "ss")
+    pub fold_letters: HashMap<char, String>,
     pub texts: Value,
 }
 
@@ -758,8 +762,29 @@ fn palette_spec(v: &Value) -> R<PaletteSpec> {
             _ => return Err(format!("{at}: not a [lo, hi] pair")),
         }
     }
+    let fo = o_of(field(o, "fold", at)?, "palette.fold")?;
+    let mut fold_drop = Vec::new();
+    for (i, r) in field(fo, "drop", "palette.fold")?.as_array().ok_or("palette.fold.drop: not a list")?.iter().enumerate() {
+        let at = format!("palette.fold.drop[{i}]");
+        match r.as_array().map(Vec::as_slice) {
+            Some([lo, hi]) => fold_drop.push((num_of(lo, &at)? as u32, num_of(hi, &at)? as u32)),
+            _ => return Err(format!("{at}: not a [lo, hi] pair")),
+        }
+    }
+    let mut fold_letters = HashMap::new();
+    for (k, v) in o_of(field(fo, "letters", "palette.fold")?, "palette.fold.letters")? {
+        let mut cs = k.chars();
+        match (cs.next(), cs.next(), v.as_str()) {
+            (Some(c), None, Some(b)) => {
+                fold_letters.insert(c, b.to_string());
+            }
+            _ => return Err(format!("palette.fold.letters.{k}: one character → a string")),
+        }
+    }
     Ok(PaletteSpec {
         max_results: max as usize,
+        fold_drop,
+        fold_letters,
         prefixes,
         kind_order: strs_of(field(o, "kindOrder", at)?, "palette.kindOrder")?,
         tiers,

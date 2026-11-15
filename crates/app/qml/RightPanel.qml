@@ -93,7 +93,18 @@ Item {
 
     FallbackTheme { id: fallbackTheme }
     readonly property var _a: app || fallbackTheme   // sizes and motion; colours are Th's panel.* / members.* / profile.card.*
-    property int tab: 1   // 0 = Info, 1 = Members
+    property int tab: 1   // 0 = Info, 1 = Members, 2 = Threads (docs/THREADS.md)
+    // threads: the main view's RoomController (the list's threadsJson) and the GIF controller for a thread's composer
+    property var roomCtl: null
+    property var gif: null
+    /// threads: open the Threads tab on one thread (root) or on its list (""); `opener` gets the focus back on close
+    function openThread(root, opener, focusEvent) {
+        panel.tab = 2
+        panel.shown = true
+        if (String(root || "").length > 0) threadsPane.openThread(root, opener, focusEvent)
+        else threadsPane.openRoot = ""
+    }
+    readonly property bool threadsShown: panel.shown && panel.tab === 2
     // Info pane: whether the name/topic inline editor is open.
     property bool editingInfo: false
     onTabChanged: if (tab !== 0) editingInfo = false
@@ -295,6 +306,12 @@ Item {
                 checkable: true; autoExclusive: true
                 checked: panel.tab === 1
                 onClicked: panel.tab = 1
+            }
+            Controls.Button {
+                text: "Threads"
+                checkable: true; autoExclusive: true
+                checked: panel.tab === 2
+                onClicked: panel.tab = 2
             }
             Item { Layout.fillWidth: true }
             // Edit room name/topic (Info tab; only if we may change either).
@@ -755,6 +772,20 @@ Item {
             Controls.ScrollBar.vertical: FoxScrollBar { app: panel._a }   // 10.1 (TH-DS-05): the house scrollbar everywhere
         }
 
+        // ---- Threads pane (docs/THREADS.md) ----
+        ThreadsPane {
+            id: threadsPane
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: panel.tab === 2
+            active: panel.shown && panel.tab === 2
+            app: panel.app
+            roomCtl: panel.roomCtl
+            roomId: panel.roomId
+            gif: panel.gif
+            onAvatarActivated: (mxid) => panel.avatarClicked(mxid)
+        }
+
         // Loading state — shown before the live member sync lands. The disk cache makes
         // repeat opens instant; this only appears on a first-ever (cache-miss) open, so it
         // reads as "loading" instead of looking broken/empty.
@@ -791,7 +822,7 @@ Item {
 
     // ---- Per-member moderation menu (kick / ban / change power) ----
     // Opened from a member row's overflow button or right-click; acts on panel.actorMxid.
-    Controls.Menu {
+    KeyMenu {
         id: memberMenu
         modal: true
         Controls.MenuItem {
@@ -864,22 +895,29 @@ Item {
     }
 
     // Power-level picker (Member / Moderator / Admin) — the common presets.
-    Controls.Menu {
+    KeyMenu {
         id: powerMenu
         modal: true
         Repeater {
             model: [{ t: "Admin", v: 100 }, { t: "Moderator", v: 50 }, { t: "Member", v: 0 }]   // 10.1 (TH-COPY-11): roles, not power-level numbers
             delegate: Controls.MenuItem {
                 required property var modelData
-                // Only offer levels strictly below our own — the server rejects
-                // granting power at/above the actor's level (matches canActOn).
-                visible: modelData.v < panel.myPower
+                // P13: levels up to our own (Matrix forbids only ABOVE your own level, so an Admin can make an
+                // Admin). Our own level can't be undone by us, so it asks first (web roleChoices.ts: the same rule).
+                visible: modelData.v <= panel.myPower
                 height: visible ? implicitHeight : 0
                 checkable: true
                 checked: panel.actorPower === modelData.v
                 text: LinkGate.plain(modelData.t)
                 onTriggered: {
-                    panel.setMemberPower(panel.actorMxid, modelData.v)
+                    if (modelData.v >= panel.myPower && modelData.v !== panel.actorPower) {
+                        roleConfirm.role = modelData.t
+                        roleConfirm.level = modelData.v
+                        roleConfirm.target = panel.actorMxid
+                        roleConfirm.open()
+                    } else {
+                        panel.setMemberPower(panel.actorMxid, modelData.v)
+                    }
                     // the click toggled `checked` imperatively, killing the binding —
                     // restore it so the next popup reflects the (new) actor's level
                     checked = Qt.binding(function () { return panel.actorPower === modelData.v })
@@ -894,10 +932,24 @@ Item {
         dialogTitle: panel.actorMembership === "invite" ? "Withdraw invite?" : "Kick member?"
         confirmText: panel.actorMembership === "invite" ? "Withdraw" : "Kick"
         destructive: true
+        askReason: panel.actorMembership !== "invite"   // A30.2: like the space confirms (they see the reason)
         message: panel.actorMembership === "invite"
             ? "Withdraw the invite for " + panel.actorName + "? They can be invited again later."
             : "Remove " + panel.actorName + " from this room? They can rejoin if it's public or re-invited."
-        onConfirmed: panel.kickUser(panel.actorMxid, "")
+        onConfirmed: panel.kickUser(panel.actorMxid, kickConfirm.reason)
+    }
+    // P13: giving someone our own level (web RightPanel.tsx roleConfirmWords: the same words)
+    ConfirmDialog {
+        id: roleConfirm
+        app: panel.app
+        property string role: ""
+        property int level: 0
+        property string target: ""
+        dialogTitle: "Make " + panel.actorName + (/^[AEIOU]/.test(role) ? " an " : " a ") + role + "?"
+        confirmText: "Make " + role
+        destructive: true
+        message: "They'll have the same power as you, and you won't be able to undo it."
+        onConfirmed: panel.setMemberPower(roleConfirm.target, roleConfirm.level)
     }
     ConfirmDialog {
         id: banConfirm
@@ -905,7 +957,8 @@ Item {
         dialogTitle: "Ban member?"
         confirmText: "Ban"
         destructive: true
+        askReason: true
         message: "Ban " + panel.actorName + " from this room? They won't be able to rejoin until unbanned."
-        onConfirmed: panel.banUser(panel.actorMxid, "")
+        onConfirmed: panel.banUser(panel.actorMxid, banConfirm.reason)
     }
 }

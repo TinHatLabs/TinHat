@@ -143,7 +143,7 @@ fn localpart(mxid: &str) -> String {
     mxid.trim_start_matches('@').split(':').next().unwrap_or(mxid).to_string()
 }
 
-fn now_ms() -> f64 {
+pub(crate) fn now_ms() -> f64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as f64).unwrap_or(0.0)
 }
 
@@ -170,8 +170,15 @@ pub fn record_sync(notifications: &std::collections::BTreeMap<matrix_sdk::ruma::
             }
             let (Some(e), Some(s)) = (v.get("event_id").and_then(Value::as_str), v.get("sender").and_then(Value::as_str)) else { continue };
             let t = v.get("origin_server_ts").and_then(Value::as_f64).unwrap_or(0.0);
+            // 1-2 (threads): the thread it is in (the relation is outside the encryption), for its badge read point
+            let th = tinhat_widgets::threads::thread_of(v.get("content").unwrap_or(&Value::Null));
+            if let Ok(mut g) = mention_threads().lock() {
+                g.insert(e.to_string(), th.clone());
+            }
+            // 1-3: on screen = its own timeline is (a thread's mention isn't seen because the room's main timeline is)
+            let shown = !first && crate::notify::room_attended_for_thread(room, &th);
             let mut m = Mention::new(room, e, s, t);
-            if first || crate::notify::is_open_room(room) {
+            if first || shown {
                 m.seen = true;
             }
             let next = add_mention(&st.list, m);
@@ -191,29 +198,146 @@ pub fn record_sync(notifications: &std::collections::BTreeMap<matrix_sdk::ruma::
     }
 }
 
-/// 2026-10-23: this device's mentions in `room` not seen yet and newer than `read_ts` (ms: this account's own read
-/// receipt there, from any device) — notify::badge_counts; the server can't count mentions in an encrypted room.
-pub(crate) fn unseen_in(room: &str, read_ts: u64) -> u64 {
-    let Ok(mut st) = store().lock() else { return 0 };
+/// 1-2 (threads): this device's unseen mentions in `room` — (event id, ts) — for notify::badge_counts, which reads each
+/// one against its own timeline's receipts.
+pub(crate) fn unseen_list(room: &str) -> Vec<(String, f64)> {
+    let Ok(mut st) = store().lock() else { return Vec::new() };
     ensure_loaded(&mut st);
-    count_unseen_after(&st.list, room, read_ts)
+    st.list.iter().filter(|m| m.r == room && !m.seen).map(|m| (m.e.clone(), m.t)).collect()
 }
 
+/// 1-2: the thread each recorded mention is in ("" = the main timeline), as far as this run has seen it (record_sync;
+/// [`resolve_threads_later`] looks the rest up). Absent = not known yet: neither main nor a thread.
+pub(crate) fn mention_threads() -> &'static Mutex<std::collections::HashMap<String, String>> {
+    static T: std::sync::OnceLock<Mutex<std::collections::HashMap<String, String>>> = std::sync::OnceLock::new();
+    T.get_or_init(Default::default)
+}
+
+/// 2026-10-23's single-read-point rule (one unthreaded receipt for the room) — 1-2 replaced it in the badge with
+/// notify::count_unseen_by_thread; kept for its tests.
+#[cfg(test)]
 fn count_unseen_after(list: &[Mention], room: &str, read_ts: u64) -> u64 {
     list.iter().filter(|m| m.r == room && !m.seen && m.t > read_ts as f64).count() as u64
 }
 
-/// A room is on screen in this app (`notify::set_attending` / `update_view_room`): its mentions so far are read.
+/// A room is on screen in this app (`notify::set_attending` / `update_view`): its mentions so far are read —
+/// 1-3: those of the timelines on screen (threads::seen_on_attend), not a closed thread's. A mention whose thread isn't
+/// known yet (recorded in an earlier run) waits for its lookup, then this runs again.
 pub fn room_attended(room: &str) {
+    let shown = crate::notify::shown_threads(room);
+    let Ok(mut st) = store().lock() else { return };
+    ensure_loaded(&mut st);
+    let threads = mention_threads().lock().map(|g| g.clone()).unwrap_or_default();
+    let ids = attended_seen_ids(&st.list, room, &shown, now_ms(), &threads);
+    let unknown: Vec<String> = st.list.iter().filter(|m| m.r == room && !m.seen && !threads.contains_key(&m.e)).map(|m| m.e.clone()).collect();
+    if !unknown.is_empty() {
+        resolve_threads_later(room, unknown);
+    }
+    if ids.is_empty() {
+        return;
+    }
+    let mut list = st.list.clone();
+    for e in &ids {
+        list = mark_seen(&list, &SeenSel { e: Some(e.clone()), r: None, up_to: None });
+    }
+    st.list = list;
+    persist(&st);
+    push(&st);
+}
+
+/// 1-3: the unseen mentions of `room` a room coming on screen marks seen: by each mention's thread (`threads`: event →
+/// thread, as recorded or looked up). A mention whose thread isn't known is not marked (it isn't known to be on screen).
+pub(crate) fn attended_seen_ids(list: &[Mention], room: &str, shown: &[String], up_to: f64, threads: &HashMap<String, String>) -> Vec<String> {
+    let ms: Vec<(String, f64, String)> = list
+        .iter()
+        .filter(|m| m.r == room && !m.seen)
+        .filter_map(|m| threads.get(&m.e).map(|th| (m.e.clone(), m.t, th.clone())))
+        .collect();
+    tinhat_widgets::threads::seen_on_attend(&ms, shown, up_to)
+}
+
+/// A mention's thread lookup answered (`content` = the event's content) or failed (None): only an answer is recorded —
+/// a failed lookup leaves the thread unknown, so the mention stays unseen until its timeline is known to be on screen
+/// (Mark as read and "Mark all as seen" still clear it). True = recorded.
+pub(crate) fn record_lookup(threads: &mut HashMap<String, String>, event: &str, content: Option<&Value>) -> bool {
+    let Some(c) = content else { return false };
+    threads.insert(event.to_string(), tinhat_widgets::threads::thread_of(c));
+    true
+}
+
+/// What Mark as read clears in the Mentions list (D03.4): the room's mentions up to `up_to`, whatever their thread.
+fn read_selection(room: &str, up_to: f64) -> SeenSel {
+    SeenSel { e: None, r: Some(room.to_string()), up_to: Some(up_to) }
+}
+/// What "Mark all as seen" clears: everything.
+fn all_selection() -> SeenSel {
+    SeenSel::default()
+}
+
+/// When each mention's thread lookup was last tried (a failed one waits [`RESOLVE_RETRY`] before the next try).
+fn resolve_tries() -> &'static Mutex<HashMap<String, std::time::Instant>> {
+    static R: OnceLock<Mutex<HashMap<String, std::time::Instant>>> = OnceLock::new();
+    R.get_or_init(Default::default)
+}
+const RESOLVE_RETRY: std::time::Duration = std::time::Duration::from_secs(120);
+
+/// 1-2 / 1-3: look up, in the background, the thread of mentions recorded in an earlier run (the relation is outside the
+/// encryption; one event at a time, 5 s each, a failure retried after [`RESOLVE_RETRY`]). When something resolved and
+/// the room is on screen, [`room_attended`] runs again.
+pub(crate) fn resolve_threads_later(room: &str, events: Vec<String>) {
+    let now = std::time::Instant::now();
+    let todo: Vec<String> = match resolve_tries().lock() {
+        Ok(mut g) => {
+            let due: Vec<String> = events.into_iter().filter(|e| g.get(e).is_none_or(|t| now.duration_since(*t) >= RESOLVE_RETRY)).collect();
+            for e in &due {
+                g.insert(e.clone(), now);
+            }
+            due
+        }
+        Err(_) => return,
+    };
+    if todo.is_empty() {
+        return;
+    }
+    let gen = crate::session::generation();
+    let room = room.to_string();
+    crate::bridge::runtime().spawn(async move {
+        let Some(client) = crate::session::client() else { return };
+        let Ok(rid) = matrix_sdk::ruma::RoomId::parse(&room) else { return };
+        let Some(r) = client.get_room(&rid) else { return };
+        let mut any = false;
+        for e in todo {
+            let Ok(eid) = matrix_sdk::ruma::OwnedEventId::try_from(e.as_str()) else { continue };
+            let fut: std::pin::Pin<Box<dyn std::future::Future<Output = _> + Send + '_>> = Box::pin(r.load_or_fetch_event(&eid, None));
+            let v = match tokio::time::timeout(std::time::Duration::from_secs(5), fut).await {
+                Ok(Ok(ev)) => Some(ev.raw().deserialize_as::<Value>().unwrap_or_default()),
+                _ => None, // failed / timed out: tried again after RESOLVE_RETRY
+            };
+            if crate::session::generation() != gen {
+                return;
+            }
+            if let Ok(mut g) = mention_threads().lock() {
+                any |= record_lookup(&mut g, &e, v.as_ref().map(|v| v.get("content").unwrap_or(&Value::Null)));
+            }
+        }
+        if any && crate::notify::is_open_room(&room) {
+            room_attended(&room);
+        }
+    });
+}
+
+/// D03.4: a room marked read — its mentions up to `up_to` (ms; when its newest event was looked up) are read.
+pub fn room_seen_up_to(room: &str, up_to: f64) {
     let Ok(mut st) = store().lock() else { return };
     ensure_loaded(&mut st);
     if !st.list.iter().any(|m| m.r == room && !m.seen) {
         return;
     }
-    st.list = mark_seen(&st.list, &SeenSel { e: None, r: Some(room.to_string()), up_to: Some(now_ms()) });
+    st.list = mark_seen(&st.list, &read_selection(room, up_to));
     persist(&st);
     push(&st);
 }
+
 
 /// Hand every view its counts, summary and the rows it wants (resolving what is not resolved yet in the background).
 fn push(st: &Store) {
@@ -392,7 +516,7 @@ impl qobject::MentionsController {
     pub fn mark_all_seen(self: Pin<&mut Self>) {
         if let Ok(mut st) = store().lock() {
             ensure_loaded(&mut st);
-            st.list = mark_seen(&st.list, &SeenSel::default());
+            st.list = mark_seen(&st.list, &all_selection());
             persist(&st);
             push(&st);
         }
@@ -402,6 +526,31 @@ impl qobject::MentionsController {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn marking_an_older_message_read_keeps_a_newer_mentions_highlight() {
+        let list = vec![Mention::new("!a:x", "$b", "@b:x", 2000.0)];
+        // the receipt went out at 3000, after mention B, but it points at message A from 1000
+        let read = crate::notify::read_point(&[(Some(1000), 3000)]);
+        assert_eq!(read, 1000);
+        assert_eq!(count_unseen_after(&list, "!a:x", read), 1, "B is newer than what was read");
+    }
+
+    #[test]
+    fn a_receipt_on_a_newer_event_still_reads_the_mention() {
+        let list = vec![Mention::new("!a:x", "$b", "@b:x", 2000.0)];
+        let read = crate::notify::read_point(&[(Some(2500), 2600)]);
+        assert_eq!(count_unseen_after(&list, "!a:x", read), 0);
+    }
+
+    #[test]
+    fn the_read_point_is_the_furthest_receipt_and_falls_back_to_the_receipts_time() {
+        use crate::notify::read_point;
+        assert_eq!(read_point(&[]), 0);
+        assert_eq!(read_point(&[(Some(1000), 9000), (Some(2500), 3000)]), 2500, "public and private: the further one");
+        assert_eq!(read_point(&[(None, 3000)]), 3000, "target unknown: never brings back what was read elsewhere");
+        assert_eq!(read_point(&[(None, 0), (Some(1000), 1100)]), 1000);
+    }
 
     #[test]
     fn a_badge_counts_unseen_mentions_after_the_accounts_own_read_receipt() {
@@ -417,5 +566,41 @@ mod tests {
         assert_eq!(count_unseen_after(&list, "!a:x", 1500), 1, "read elsewhere between them: only the newer one");
         assert_eq!(count_unseen_after(&list, "!a:x", 2500), 0, "read elsewhere after both: none come back");
         assert_eq!(count_unseen_after(&list, "!other:x", 2500), 1, "per room");
+    }
+}
+
+#[cfg(test)]
+mod fix1216_seen_tests {
+    use super::*;
+
+    /// 1-3: the room's main timeline coming on screen marks the main mention seen, not the one in a closed thread;
+    /// that thread's view coming on screen marks its own.
+    #[test]
+    fn a_closed_threads_mention_stays_unseen_when_the_room_shows() {
+        let list = vec![Mention::new("!r", "$main", "@a:x", 100.0), Mention::new("!r", "$inA", "@a:x", 200.0), Mention::new("!other", "$o", "@a:x", 50.0)];
+        let threads: HashMap<String, String> = [("$inA".to_string(), "$rootA".to_string()), ("$main".to_string(), String::new())].into_iter().collect();
+        assert_eq!(attended_seen_ids(&list, "!r", &[String::new()], 1000.0, &threads), vec!["$main".to_string()]);
+        assert_eq!(attended_seen_ids(&list, "!r", &["$rootA".to_string()], 1000.0, &threads), vec!["$inA".to_string()]);
+        assert!(attended_seen_ids(&list, "!r", &[], 1000.0, &threads).is_empty(), "nothing on screen");
+        // review: a mention from an earlier run whose thread isn't known yet is not marked by the main timeline showing
+        let mut more = list.clone();
+        more.push(Mention::new("!r", "$old", "@a:x", 150.0));
+        assert_eq!(attended_seen_ids(&more, "!r", &[String::new()], 1000.0, &threads), vec!["$main".to_string()], "unknown waits for its lookup");
+    }
+
+    /// 1-3 ruling (a), launch-gate 11-14: a mention from an earlier run whose thread lookup FAILS stays unseen while its
+    /// room shows; Mark as read and "Mark all as seen" still clear it.
+    #[test]
+    fn a_failed_thread_lookup_keeps_the_mention_unseen_but_read_and_mark_all_clear_it() {
+        let list = vec![Mention::new("!r", "$old", "@a:x", 150.0)];
+        let mut threads: HashMap<String, String> = HashMap::new();
+        assert!(!record_lookup(&mut threads, "$old", None), "a failed lookup records nothing");
+        assert!(attended_seen_ids(&list, "!r", &[String::new()], 1000.0, &threads).is_empty(), "the room on screen: still unseen");
+        assert!(mark_seen(&list, &read_selection("!r", 1000.0))[0].seen, "Mark as read clears it");
+        assert!(mark_seen(&list, &all_selection())[0].seen, "Mark all as seen clears it");
+        assert!(!mark_seen(&list, &read_selection("!other", 1000.0))[0].seen, "another room's Mark as read doesn't");
+        // and an answer later records it (main here): then the main timeline showing marks it
+        assert!(record_lookup(&mut threads, "$old", Some(&json!({"body": "hi"}))));
+        assert_eq!(attended_seen_ids(&list, "!r", &[String::new()], 1000.0, &threads), vec!["$old".to_string()]);
     }
 }

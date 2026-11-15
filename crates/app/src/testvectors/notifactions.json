@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "about": "Tin Hat notification actions (docs/NOTIF-ACTIONS.md): Reply and Mark as read on a message notification. Byte-identical copies: web src/features/push/testvectors/notifactions.json (the owner), desktop crates/app/src/testvectors/notifactions.json. whitespace = the code points trimmed from both ends of a reply after CRLF and lone CR became LF. replyContent: the typed text -> the m.room.message content to send (null = nothing is sent). readMarkers: the notified event in a room of my own server -> the POST /rooms/{room}/read_markers body (null = no Mark as read; event id rule: '$' + 1..254 more UTF-8 bytes, no control, white-space or listed white-space characters). offer: what a message notification carries (keys in order; 'default' = the click). outcome: an invoked key (publicReceipt = the receiptRule answer for the room) -> what the app does (open = open the room; compose = open it with the composer focused; send = send content then thenRead when present; read = send markers; failed = post the failure note with that body; none = nothing). failedNote: the failure note's body for a typed text (first failedTextMax code points of the trimmed text). receiptRule: which read receipt a room gets (Mark as read, and every receipt both apps send): a public m.read only when the room is mine = isManaged(create, own) (the m.room.create sender and every v12 additional_creators entry on my own server); anything else, a missing create event (null) included, gets m.read.private next to m.fully_read. Fail-private on purpose: rooms on connected Tin Hat servers get m.read.private too until the connected-servers list exists. The phone apps (iOS, Android) adopt these cases too.",
+  "about": "Tin Hat notification actions (docs/NOTIF-ACTIONS.md): Reply and Mark as read on a message notification. Byte-identical copies: web src/features/push/testvectors/notifactions.json (the owner), desktop crates/app/src/testvectors/notifactions.json. whitespace = the code points trimmed from both ends of a reply after CRLF and lone CR became LF. replyContent: the typed text -> the m.room.message content to send (null = nothing is sent). readMarkers: the notified event in a room of my own server -> the POST /rooms/{room}/read_markers body (null = no Mark as read; event id rule: '$' + 1..254 more UTF-8 bytes, no control, white-space or listed white-space characters). offer: what a message notification carries (keys in order; 'default' = the click). outcome: an invoked key (publicReceipt = the receiptRule answer for the room) -> what the app does (open = open the room; compose = open it with the composer focused; send = send content then thenRead when present; read = send markers; failed = post the failure note with that body; none = nothing). failedNote: the failure note's body for a typed text (first failedTextMax code points of the trimmed text). receiptRule: which read receipt a room gets (Mark as read, and every receipt both apps send): a public m.read only when the room is mine = isManaged(create, own) (the m.room.create sender and every v12 additional_creators entry on my own server); anything else, a missing create event (null) included, gets m.read.private next to m.fully_read. Fail-private on purpose: rooms on connected Tin Hat servers get m.read.private too until the connected-servers list exists. The phone apps (iOS, Android) adopt these cases too. threadReply (threads, docs/THREADS.md): the typed text + the notified event's thread root (\"\" = not in a thread; the root comes from the event's m.relates_to, threads vectors thread_of) + the notified event -> the content a quick reply sends (null = nothing): replyContent's, plus m.relates_to {rel_type m.thread, event_id root, is_falling_back true, m.in_reply_to the notified event (the root when no usable event)} when root is an event id other than the notified event.",
   "words": {
     "reply": "Reply",
     "markRead": "Mark as read",
@@ -816,6 +816,124 @@
     {
       "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "want": "Open Tin Hat to send it: “xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx”"
+    }
+  ],
+  "threadReply": [
+    {
+      "note": "a reply to a message in the main timeline: plain, as replyContent",
+      "text": "on my way",
+      "root": "",
+      "event": "$ev1",
+      "want": {
+        "msgtype": "m.text",
+        "body": "on my way",
+        "m.mentions": {}
+      }
+    },
+    {
+      "note": "a reply to a thread message: the thread + the spec's fallback reply to the notified event",
+      "text": "on my way",
+      "root": "$root1",
+      "event": "$ev1",
+      "want": {
+        "msgtype": "m.text",
+        "body": "on my way",
+        "m.mentions": {},
+        "m.relates_to": {
+          "rel_type": "m.thread",
+          "event_id": "$root1",
+          "is_falling_back": true,
+          "m.in_reply_to": {
+            "event_id": "$ev1"
+          }
+        }
+      }
+    },
+    {
+      "note": "trimmed like replyContent",
+      "text": "  ok \r\n",
+      "root": "$root1",
+      "event": "$ev1",
+      "want": {
+        "msgtype": "m.text",
+        "body": "ok",
+        "m.mentions": {},
+        "m.relates_to": {
+          "rel_type": "m.thread",
+          "event_id": "$root1",
+          "is_falling_back": true,
+          "m.in_reply_to": {
+            "event_id": "$ev1"
+          }
+        }
+      }
+    },
+    {
+      "note": "nothing typed: nothing is sent",
+      "text": " \n ",
+      "root": "$root1",
+      "event": "$ev1",
+      "want": null
+    },
+    {
+      "note": "the notified event IS the root (a main-timeline message with a thread): plain",
+      "text": "yes",
+      "root": "$root1",
+      "event": "$root1",
+      "want": {
+        "msgtype": "m.text",
+        "body": "yes",
+        "m.mentions": {}
+      }
+    },
+    {
+      "note": "a root that isn't an event id: plain",
+      "text": "yes",
+      "root": "root1",
+      "event": "$ev1",
+      "want": {
+        "msgtype": "m.text",
+        "body": "yes",
+        "m.mentions": {}
+      }
+    },
+    {
+      "note": "no usable notified event: the fallback points at the root",
+      "text": "yes",
+      "root": "$root1",
+      "event": "",
+      "want": {
+        "msgtype": "m.text",
+        "body": "yes",
+        "m.mentions": {},
+        "m.relates_to": {
+          "rel_type": "m.thread",
+          "event_id": "$root1",
+          "is_falling_back": true,
+          "m.in_reply_to": {
+            "event_id": "$root1"
+          }
+        }
+      }
+    },
+    {
+      "note": "non-ASCII text and ids",
+      "text": "très bien 👍",
+      "root": "$röot",
+      "event": "$évent",
+      "want": {
+        "msgtype": "m.text",
+        "body": "très bien 👍",
+        "m.mentions": {},
+        "m.relates_to": {
+          "rel_type": "m.thread",
+          "event_id": "$röot",
+          "is_falling_back": true,
+          "m.in_reply_to": {
+            "event_id": "$évent"
+          }
+        }
+      }
     }
   ]
 }

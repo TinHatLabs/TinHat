@@ -259,7 +259,9 @@ Item {
                 objectName: "editTool:done"
                 accent: true
                 label: tb.em.readOnly ? "Close" : "Done"
-                tip: tb.em.readOnly ? "" : (tb.em.dirty ? "Save and close (Ctrl+E)" : "Close (Ctrl+E)")
+                // A17.2: the key layout.edit has now (web editmode/hints.ts doneTip: the same words)
+                readonly property var editKeys: (tb.em.app && tb.em.app.actions) ? tb.em.app.actions.keysFor("layout.edit") : []
+                tip: tb.em.readOnly ? "" : ((tb.em.dirty ? "Save and close" : "Close") + (editKeys.length > 0 ? " (" + editKeys[0] + ")" : ""))
                 onClicked: { tb.closePanels(); tb.em.done() }
                 Keys.onTabPressed: { if (tb.editLayer) tb.editLayer.focusFirst() }
             }

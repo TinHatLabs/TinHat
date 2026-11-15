@@ -51,6 +51,21 @@ Item {
     // A shared GifController (gifCtl) passed down from Main.qml. Optional — the GIF button
     // hides when it's unset.
     property var gif: null
+    // threads (docs/THREADS.md): "" = the room's main timeline; a root = this view is that thread's panel (its `room`
+    // controller has the same threadRoot). The main view asks its host to open a thread (a summary, "Reply in thread");
+    // `opener` = the control focus returns to when the thread closes (null = the message list).
+    property string threadRoot: ""
+    signal threadOpenRequested(string root, var opener)
+    // threads: a loaded root has replies I haven't read (the header's Threads dot)
+    property bool mThreadsUnread: false
+    // threads: the summaries' "5 min ago" moves on once a minute
+    property int threadTick: 0
+    Timer { interval: 60000; running: conv.threadRoot.length === 0; repeat: true; onTriggered: conv.threadTick++ }
+    function _canThread(md) {
+        // a real, readable main-timeline message (Tin Hat Web's canThread)
+        return conv.threadRoot.length === 0 && md && md.echo !== true && md.redacted !== true && md.undecryptable !== true
+            && String(md.id || "").indexOf("$") === 0 && (md.threadId === undefined || String(md.threadId) === "")
+    }
     // 10.0.6: since 9.4 the composer's buttons sit at the RIGHT end of the row, so a popup
     // anchored at its button's left edge (a Popup's x defaults to 0) opened past the window's right
     // edge and was clipped there — the GIF grid and the emoji picker showed one column. Popup x is
@@ -75,7 +90,7 @@ Item {
     }
     // right-click a composer row → "Edit buttons…" (the row editor), like the header, the account card and the call bar
     function openRowMenu(rm, title) { composerRowMenu.rowModel = rm; composerRowMenu.rowTitle = title; composerRowMenu.popup() }
-    Controls.Menu {
+    KeyMenu {
         id: composerRowMenu
         property var rowModel: null
         property string rowTitle: ""
@@ -190,6 +205,15 @@ Item {
     }
 
     // ---- Controller mirror (no direct getter binding; see note above) ----
+    // D09.3 (Sunday QoL): a DM whose other person hasn't accepted yet — "Waiting for Sam to join" (first_run.rs, the room
+    // list's `waitingFor`; the web's ConversationView.tsx) as the empty state and under the last message
+    readonly property string waitingFor: {
+        var a = conv.app, id = conv.room ? String(conv.room.roomId || "") : ""
+        if (!a || !id || typeof a._roomListEntry !== "function") return ""
+        var e = a._roomListEntry(id)
+        return e ? String(e.waitingFor || "") : ""
+    }
+    readonly property string waitingExplain: "They'll see your messages once they join."
     property var mMessages: []
     property string _soundTail: ""   // 10.0: newest row id seen — a new REMOTE tail plays the receive sound
     property double _soundTailTs: 0   // 10.3: … and only when it is NEWER (a deleted tail slides back, no chime)
@@ -213,7 +237,8 @@ Item {
     property string _vnRoom: ""
     readonly property bool vnActive: String(conv.vs.state || "idle") !== "idle"
     readonly property bool vnInCall: conv.vs.inCall === true || (!!conv.app && conv.app.mInCall === true)
-    readonly property bool vnShowMic: !!conv.room && conv.room.roomId.length > 0 && conv.mCanSendMessage
+    // threads: no mic in a thread's composer (voice notes stay in the main composer for now) — Send shows instead
+    readonly property bool vnShowMic: conv.threadRoot.length === 0 && !!conv.room && conv.room.roomId.length > 0 && conv.mCanSendMessage
                                       && composer.text.length === 0 && conv.staged.length === 0 && conv.editToId.length === 0
     property string _vnPrevState: "idle"
     // review r1 #7: the controller follows the shown room at once (room change → vnSync), and every action names its room
@@ -257,6 +282,7 @@ Item {
     function vnStart() {
         if (conv.vnInCall) { conv._toast("You're in a call — voice messages are off until you leave", "short"); return }
         if (conv.vs.busyElsewhere === true) { conv._toast("A voice message is being recorded in another room", "short"); return }
+        NowPlaying.recording()   // QOL A00.1: a note / clip playing in the timeline must not bleed into the recording
         voiceCtl.start(conv.vnSync()); conv.vnRefresh()
     }
     function vnStop() { voiceCtl.stop(conv.vnSync()); conv.vnRefresh() }
@@ -348,6 +374,14 @@ Item {
     property string editToId: ""
     property string editToBody: ""
     readonly property bool composing: replyToId.length > 0 || editToId.length > 0
+    // L1 A09.1: the unsent draft {text, marks} set aside while an edit uses the box (draftStep below)
+    property var _draftStash: null
+    // L1: the refused edits/deletes (room.opFailedJson) and GIFs (gif.sendFailedJson) lists last read, and the newest
+    // seq handled from each (a list holds the last 8: two failures between polls are both handled)
+    property string _opFailRaw: ""
+    property string _gifFailRaw: ""
+    property real _opFailSeq: 0
+    property real _gifFailSeq: 0
 
     // ---- 9.3: per-room memory (draft, compose target, scroll place) --------------------------
     // Lives on the host (`app.chatMemory`) so it survives the view being recreated; a bubble
@@ -366,6 +400,21 @@ Item {
     // line — the marker used to latch onto the first message that arrived while you were watching.
     property string _frozenTailId: ""
     property bool _dividerSettled: false
+    // A35.1: the NEW line belongs above everything loaded (more unread than loaded rows, older history exists): it
+    // waits for older pages instead of landing on the oldest loaded row
+    property bool _newWaiting: false
+    // P2 a: the NEW line has been on screen (or jumped to) since the room opened: the "Jump to NEW" pill goes
+    property bool _newSeen: false
+    // P2 a: older pages the pill may still load looking for the NEW line (0 = not looking)
+    property int _newHunt: 0
+    // A05.1 / A35.2: a reply quote / pin / notification jump to a message older than what is loaded pages back for it
+    // (at most 12 pages of 50 — the web looks 6 pages of 100 back); "" = not looking
+    property string _jumpHunt: ""
+    property int _jumpPages: 0
+    // a page one of the hunts asked for is on its way: the next timeline poll that finds it landed takes the next step
+    // (review: the 120 ms poll can miss loadingOlder's whole true→false flip, so no edge of it is waited for)
+    property bool _huntAsked: false
+    property string _huntFirstId: ""   // the oldest row when that page was asked for
     // 10.1 (TL-06): the controller's status line ("Couldn't reach the server…"); "" = fine.
     property string mStatus: ""
     // "N new messages" on the jump chip while the reader is scrolled up.
@@ -383,7 +432,7 @@ Item {
         if (_sameDay(ts, now.getTime())) return "Today"
         var y = new Date(now.getTime() - 86400000)
         if (_sameDay(ts, y.getTime())) return "Yesterday"
-        return Qt.formatDate(d, "ddd, MMM d")
+        return Qt.formatDate(d, conv.dayNeedsYear(ts, now.getTime()) ? "ddd, MMM d, yyyy" : "ddd, MMM d")   // A05.2
     }
 
     // Keyed-revision timeline model. Reassigning a JS-array model resets the ListView — EVERY
@@ -427,6 +476,8 @@ Item {
         conv.replyToId = ""; conv.replyToBody = ""; conv.editToId = ""; conv.editToBody = ""
         conv.unreadMarker = ""; conv._markerFrozen = false; conv.unreadDividerId = ""
         conv._frozenTailId = ""; conv._dividerSettled = false
+        conv._newWaiting = false; conv._newSeen = false; conv._newHunt = 0
+        conv._jumpHunt = ""; conv._jumpPages = 0; conv._huntAsked = false
         conv.newBelow = 0
         conv.flashId = ""
         conv.staged = []
@@ -440,6 +491,11 @@ Item {
         if (old.length > 0) conv._remember(old)
         conv._roomIdSeen = rid
         conv._resetTimeline()
+        conv._draftStash = null   // L1: the old room's set-aside draft went into its memory (_remember: draftToKeep)
+        conv._opFailRaw = conv.room ? (conv.room.opFailedJson || "") : ""
+        conv._gifFailRaw = conv.gif ? (conv.gif.sendFailedJson || "") : ""
+        conv._opFailSeq = conv._newestSeq(conv._opFailRaw)
+        conv._gifFailSeq = conv._newestSeq(conv._gifFailRaw)
         composer.text = ""
         composer._mentions = []
         var mem = conv.memory[rid]
@@ -456,7 +512,7 @@ Item {
         conv._unreadHint = 0
         if (conv.app && conv.app.mRooms) {
             var rooms = conv.app.mRooms
-            for (var i = 0; i < rooms.length; i++) if (rooms[i].id === rid) { conv._unreadHint = rooms[i].unread || 0; break }
+            for (var i = 0; i < rooms.length; i++) if (rooms[i].id === rid) { conv._unreadHint = conv.newLineHint(conv.threadRoot, rooms[i].unread || 0); break }
         }
     }
     function _remember(rid) {
@@ -468,7 +524,7 @@ Item {
             if (idx >= 0 && idx < msgModel.count) topId = msgModel.get(idx).eventId
         }
         conv.memory[rid] = ({
-            draft: conv.editToId.length > 0 ? "" : composer.text,
+            draft: conv.draftToKeep(conv._draftState()),   // L1: never an edit's text, the draft it set aside
             replyToId: conv.replyToId, replyToBody: conv.replyToBody, replyToName: conv.replyToName,
             staged: conv.staged,   // 10.1 (TH-CONV-10): thumbnails survive a room switch like the draft does
             atBottom: atBottom, topId: topId
@@ -524,31 +580,62 @@ Item {
         if (appended > 0 && !msgView.stickBottom && !msgView.settling) conv.newBelow += appended
     }
 
+    // BEGIN catching-up pure
+    // tools/catching-up-test.mjs runs this block on testvectors/catching-up/vectors.json; the web's
+    // src/features/chat/lib/catchup.ts is the same rules on a byte copy of the vectors.
+    // A35.1: where the NEW line search starts when the read marker isn't among the loaded rows: `hint` (the room's
+    // unread count) rows from the end. "more" = there are more unread than loaded rows and older history exists:
+    // load older first (the line used to land on the oldest loaded row). null = no NEW line.
+    // 12.1.16 fix 1-7: the unread count the NEW line may use: the room's on the main timeline, none in a thread's view
+    // (the room's count doesn't describe a thread, so a thread shows no NEW line).
+    function newLineHint(threadRoot, roomUnread) {
+        return threadRoot.length > 0 ? 0 : Math.max(0, roomUnread)
+    }
+    function newLineStart(len, hint, canBack) {
+        if (hint <= 0) return null
+        if (hint >= len && canBack) return "more"
+        return Math.max(-1, len - 1 - hint)
+    }
+    // P2 a: the "Jump to NEW" pill shows while there is a NEW line (or one waiting for older history) that hasn't
+    // been on screen since the room opened.
+    function newPillShown(hasLine, waiting, seen) {
+        return (hasLine || waiting) && !seen
+    }
+    // A05.2: a day separator names the year when the day isn't in this year ("Tue, Jun 15, 2025").
+    function dayNeedsYear(ts, nowTs) {
+        return new Date(ts).getFullYear() !== new Date(nowTs).getFullYear()
+    }
+    // END catching-up pure
+
     // 9.3: where the NEW line goes — computed once the marker is frozen; stable afterwards.
     function _recomputeDivider() {
         if (conv.unreadDividerId.length > 0 || conv._dividerSettled) return
         var arr = conv.mMessages
         if (arr.length === 0) return
-        var start = -1
-        if (conv.unreadMarker.length > 0) {
-            for (var i = 0; i < arr.length; i++) if (arr[i].id === conv.unreadMarker) { start = i; break }
-            if (start < 0) {
-                // The marker is older than the loaded window (or on a hidden event type). 10.1
-                // (TL-12): trust the room list's count instead of calling the whole window new —
-                // the divider lands that many rows from the end.
-                if (conv._unreadHint <= 0) return
-                start = Math.max(-1, arr.length - 1 - conv._unreadHint)
-            }
-        } else if (conv._unreadHint <= 0) {
-            return
-        }
-        // 10.1 (TL-01): only rows up to the freeze-time tail are candidates.
+        // 10.1 (TL-01): only rows up to the freeze-time tail are candidates — and the unread count is measured from
+        // there too (review: messages arriving meanwhile must not count as the older unread ones)
         var end = arr.length
         if (conv._frozenTailId.length > 0)
             for (var t = arr.length - 1; t >= 0; t--) if (arr[t].id === conv._frozenTailId) { end = t + 1; break }
-        for (var j = start + 1; j < end; j++) {
-            if (arr[j].sender !== conv.myId && arr[j].echo !== true) { conv.unreadDividerId = arr[j].id; return }
+        var start = -1
+        var s0 = null
+        if (conv.unreadMarker.length > 0) {
+            for (var i = 0; i < arr.length; i++) if (arr[i].id === conv.unreadMarker) { start = i; break }
+            // The marker is older than the loaded window (or on a hidden event type). 10.1 (TL-12): trust the room
+            // list's count instead of calling the whole window new — the divider lands that many rows from the end.
+            if (start < 0) s0 = conv.newLineStart(end, conv._unreadHint, conv.mHasMore)
+            if (start < 0 && s0 === null) return
+        } else {
+            // no read marker at all: the same rule (A35.1 review: it used to call the whole loaded window new)
+            s0 = conv.newLineStart(end, conv._unreadHint, conv.mHasMore)
+            if (s0 === null) return
         }
+        if (s0 === "more") { conv._newWaiting = true; return }   // A35.1
+        if (s0 !== null) start = s0
+        for (var j = start + 1; j < end; j++) {
+            if (arr[j].sender !== conv.myId && arr[j].echo !== true) { conv.unreadDividerId = arr[j].id; conv._newWaiting = false; return }
+        }
+        conv._newWaiting = false
         // The frozen window has been scanned with no candidate: it stays that way for this open.
         if (conv._frozenTailId.length > 0) conv._dividerSettled = true
     }
@@ -567,7 +654,7 @@ Item {
     // instead of on the next 120 ms tick (the header switched, the old messages lingered).
     Connections {
         target: conv.room
-        function onRoomIdChanged() { if (conv.room && msgModel && msgView && conv.room.roomId !== conv._roomIdSeen) conv._switchRoom(conv.room.roomId); conv.vnRefresh() }
+        function onRoomIdChanged() { if (conv.room && msgModel && msgView && conv.room.roomId !== conv._roomIdSeen) conv._switchRoom(conv.room.roomId); conv.vnRefresh(); if (conv.room && conv.room.roomId) conv.room.inMyMemories(conv.room.roomId, "") }   // Memories photos: warm my list for the menu
     }
     Timer {
         // 11.0 (GPU.md §2.8, R14): 120 ms while the window is focused, 1 s otherwise (lowgpu interval_for)
@@ -587,6 +674,8 @@ Item {
             conv.mRoomName = conv.room.roomName
             conv.mBusy = conv.room.busy
             conv.mStatus = conv.room.status || ""   // 10.1 (TL-06): a failed load says so
+            if ((conv.room.opFailedJson || "") !== conv._opFailRaw) { conv._opFailRaw = conv.room.opFailedJson || ""; conv._opFailSeq = conv._eachNew(conv._opFailRaw, conv._opFailSeq, conv._opFailed) }
+            if (conv.gif && (conv.gif.sendFailedJson || "") !== conv._gifFailRaw) { conv._gifFailRaw = conv.gif.sendFailedJson || ""; conv._gifFailSeq = conv._eachNew(conv._gifFailRaw, conv._gifFailSeq, conv._gifFailed) }
             conv.mLoadingOlder = conv.room.loadingOlder
             conv.mHasMore = conv.room.hasMore
             conv.mCanPin = conv.room.canPin === true
@@ -623,6 +712,9 @@ Item {
                     parsed = conv.mMessages
                 } else parsed = conv._dropIgnored(parsed)
                 conv.mMessages = parsed
+                var tu = false
+                for (var ti = 0; ti < parsed.length && !tu; ti++) if (parsed[ti].thread && parsed[ti].thread.unread > 0) tu = true
+                conv.mThreadsUnread = tu
                 // 10.0 receive sound: a NEW newest row from someone else, in the primary view, and
                 // not a history load. The first parse after a room open only seeds the tail.
                 if (conv.mMessages.length > 0) {
@@ -652,6 +744,15 @@ Item {
                 conv._recomputeDivider()
                 var mem = conv.memory[rid]
                 if (mem && mem.atBottom === false && mem.topId) Qt.callLater(function() { conv._restoreScroll(mem.topId) })
+            }
+            // A35.1 (review): a waiting line is placed once messages AND hasMore are synced (the last page can only
+            // end the history, with no new rows)
+            if (conv._newWaiting && conv._markerFrozen) conv._recomputeDivider()
+            // A05.1 + P2 a: a hunt's page has landed — the oldest row changed, the history ended, or the page failed
+            // (loadingOlder alone isn't proof: the live loop clears it too)
+            if (conv._huntAsked && !conv.room.loadingOlder
+                    && ((msgModel.count > 0 && msgModel.get(0).eventId !== conv._huntFirstId) || !conv.mHasMore || conv.mStatus.length > 0)) {
+                conv._huntAsked = false; conv._huntStep()
             }
             msgView._fillIfShort()   // 10.5.2
         }
@@ -686,9 +787,57 @@ Item {
         }
         console.log("[chat] the remembered place " + topId + " is not loaded any more — opening at the latest")
     }
+    // threads: a jump to a reply in a thread opens the thread centred on it (the host routes it)
+    signal threadJumpRequested(string root, string eventId)
+    // P2 a: "Jump to NEW" — centre the NEW line (its first message flashes, as a reply jump does); when it waits for older history (A35.1), load
+    // older pages until it lands (at most 12 pages of 50), then jump.
+    function jumpToNew() {
+        if (conv.unreadDividerId.length > 0) {
+            for (var i = 0; i < msgModel.count; i++) {
+                if (msgModel.get(i).eventId === conv.unreadDividerId) {
+                    conv._newHunt = 0
+                    wheelAnim.stop()
+                    msgView.settling = false; settleTimer.stop()
+                    msgView.stickBottom = false
+                    msgView.positionViewAtIndex(i, ListView.Center)
+                    conv.flashId = conv.unreadDividerId
+                    flashTimer.restart()
+                    conv._newSeen = true
+                    return
+                }
+            }
+        }
+        if (conv._newWaiting && conv.mHasMore && conv.room) {
+            if (conv._newHunt <= 0) conv._newHunt = 12
+            if (!conv.room.loadingOlder) msgView._huntOlder()
+            else { conv._huntAsked = true; conv._huntFirstId = msgModel.count > 0 ? msgModel.get(0).eventId : "" }   // the page already on its way counts as this step
+            return
+        }
+        conv._newHunt = 0
+        conv._newSeen = true   // nothing to find (the history ended): the pill goes
+    }
+    // A05.1 + P2 a: a page a hunt asked for has landed (the poll saw it): the message jump looks again; "Jump to NEW"
+    // places the line if it can now (a page may change only hasMore), jumps, or asks for one more page
+    function _huntStep() {
+        if (conv._jumpHunt.length > 0) conv._jumpTo(conv._jumpHunt)
+        if (conv._newHunt > 0) {
+            if (conv._markerFrozen) conv._recomputeDivider()
+            if (conv.unreadDividerId.length > 0) { conv.jumpToNew(); return }
+            conv._newHunt--
+            if (conv._newHunt > 0 && conv._newWaiting && conv.mHasMore && conv.room) msgView._huntOlder()
+            else { conv._newHunt = 0; conv._newHuntDone() }
+        }
+    }
+    // P2 a: the pill's pages ran out without the line: the history ended (nothing to find: the pill goes), or it is
+    // further back than 12 pages — the pill stays for another try
+    function _newHuntDone() {
+        if (!conv.mHasMore || !conv._newWaiting) conv._newSeen = true
+        else conv._toast("The NEW line is further back — scroll up to find it", "short")
+    }
     function _jumpTo(eventId) {
         for (var i = 0; i < msgModel.count; i++) {
             if (msgModel.get(i).eventId === eventId) {
+                conv._jumpHunt = ""; conv._jumpPages = 0
                 msgView.settling = false; settleTimer.stop()
                 msgView.stickBottom = false
                 msgView.positionViewAtIndex(i, ListView.Center)
@@ -697,6 +846,20 @@ Item {
                 return
             }
         }
+        // threads (review #16): a message in a thread never shows in the main timeline — open its thread instead
+        if (conv.threadRoot.length === 0 && conv.room && conv.room.threadOfEvent) {
+            var t = String(conv.room.threadOfEvent(eventId) || "")
+            if (t.length > 0) { conv.threadJumpRequested(t, eventId); return }
+        }
+        // A05.1 / A35.2: not loaded — look further back, as the web does, before giving up
+        if (conv._jumpHunt !== eventId) { conv._jumpHunt = eventId; conv._jumpPages = 12 }
+        if (conv._jumpPages > 0 && conv.mHasMore && conv.room) {
+            conv._jumpPages--
+            if (!conv.room.loadingOlder) msgView._huntOlder()
+            else { conv._huntAsked = true; conv._huntFirstId = msgModel.count > 0 ? msgModel.get(0).eventId : "" }
+            return
+        }
+        conv._jumpHunt = ""; conv._jumpPages = 0
         conv._toast("That message isn't loaded — scroll up to find it", "short")
     }
     // Media chip resolved (this view's own controller) → open externally.
@@ -748,9 +911,16 @@ Item {
     property bool ctxMsgRedacted: false
     property bool ctxMsgPinned: false
     property bool ctxMsgEcho: false
+    // L1 A38.0: a failed send's own Retry / Delete in the message menu (the keyboard's way to them; the web's menu has them)
+    property bool ctxMsgFailed: false
+    property string ctxMsgTxn: ""
     property string ctxMsgName: ""
+    property bool ctxMsgIsImage: false     // Memories photos: "Add to Memories" on my own image
+    property real ctxMsgTs: 0
+    property bool ctxMsgInMemories: false
     property bool ctxMsgIsDice: false   // widgets W3: a dice roll is never edited
     property bool ctxMsgIsPoll: false   // widgets W3: nor is a poll
+    property bool ctxMsgCanThread: false   // threads: "Reply in thread" (main timeline only)
 
     function copyText(t) {
         if (conv.app && conv.app.copyToClipboard) { conv.app.copyToClipboard(String(t)); return }
@@ -789,8 +959,14 @@ Item {
         conv.ctxMsgSender = md.sender !== undefined ? String(md.sender) : ""   // account safety
         conv.ctxMsgPinned = md.pinned === true
         conv.ctxMsgEcho = md.echo === true
+        conv.ctxMsgFailed = md.echo === true && md.failed === true
+        conv.ctxMsgTxn = md.txn !== undefined ? String(md.txn) : ""
         conv.ctxMsgIsDice = md.dice !== undefined && md.dice !== null && md.redacted !== true
         conv.ctxMsgIsPoll = md.poll !== undefined && md.poll !== null && md.redacted !== true
+        conv.ctxMsgIsImage = mt === "m.image"
+        conv.ctxMsgTs = Number(md.ts) || Date.now()
+        conv.ctxMsgInMemories = conv.ctxMsgIsImage && mine && md.id !== undefined && conv.room.inMyMemories(conv.room.roomId, String(md.id))
+        conv.ctxMsgCanThread = conv._canThread(md)
         if (conv.ctxMsgId.length === 0) return
         // from the keyboard (a11y pass): at the message, not at the mouse pointer
         if (at) {
@@ -804,19 +980,16 @@ Item {
     property string replyToName: ""
     function startReply(id, body, name) {
         msgView.kbHold = false   // a11y pass: the composer takes the focus on purpose
-        conv.editToId = ""; conv.editToBody = ""
-        conv.replyToId = id
-        conv.replyToBody = body
+        conv._draft({ op: "reply", id: id, body: body })   // L1: leaving an edit for a reply gives the draft back
         conv.replyToName = (name !== undefined && name !== null) ? String(name) : ""
         composer.forceActiveFocus()
     }
     function startEdit(id, body) {
         msgView.kbHold = false   // a11y pass: the composer takes the focus on purpose
-        conv.replyToId = ""; conv.replyToBody = ""
-        conv.editToBody = body
-        conv.editToId = id
+        conv._draft({ op: "edit", id: id, body: body })   // L1 A09.1: the unsent draft is set aside, not overwritten
+        composer.forceActiveFocus(); composer.cursorPosition = composer.text.length
     }
-    Controls.Menu {
+    KeyMenu {
         id: msgMenu
         // a11y pass: a keyboard-opened menu hands the focus back to the message list; if an action took it elsewhere
         // (Reply → the composer), the keyboard row is cleared as when the focus leaves the list
@@ -856,6 +1029,14 @@ Item {
             onTriggered: conv.startReply(conv.ctxMsgId, conv.ctxMsgBody, conv.ctxMsgSenderName)
         }
         Controls.MenuItem {
+            // threads (docs/THREADS.md): open (or start) this message's thread in the Threads panel
+            text: "Reply in thread"
+            icon.name: "dialog-messages-symbolic"
+            visible: conv.ctxMsgCanThread
+            height: visible ? implicitHeight : 0
+            onTriggered: conv.threadOpenRequested(conv.ctxMsgId, null)
+        }
+        Controls.MenuItem {
             text: "Edit"
             icon.name: "document-edit-symbolic"
             // 10.1 (TH-MSG-01): never on media — an edit sends m.text, which REPLACES the attachment.
@@ -878,11 +1059,23 @@ Item {
             onTriggered: conv.askSaveMedia(conv.ctxMsgId, conv.ctxMsgName)
         }
         Controls.MenuItem {
+            // Memories photos (docs/MEMORIES-PHOTOS.md): my own image onto / off my Memories list; removing
+            // never deletes the message (the web's "memories-photo" menu item, the same words)
+            text: LinkGate.plain(conv.ctxMsgInMemories ? "Remove from Memories" : "Add to Memories")
+            icon.name: conv.ctxMsgInMemories ? "list-remove-symbolic" : "image-x-generic"
+            visible: conv.ctxMsgIsImage && conv.ctxMsgMine && !conv.ctxMsgRedacted && !conv.ctxMsgEcho && conv.ctxMsgId.indexOf("$") === 0
+            height: visible ? implicitHeight : 0
+            onTriggered: {
+                if (conv.ctxMsgInMemories) conv.room.removeFromMemories(conv.room.roomId, conv.ctxMsgId, false)
+                else conv.room.addToMemories(conv.room.roomId, conv.ctxMsgId, conv.ctxMsgTs)
+            }
+        }
+        Controls.MenuItem {
             text: "Copy text"
             icon.name: "edit-copy-symbolic"
             visible: !conv.ctxMsgRedacted
             height: visible ? implicitHeight : 0
-            onTriggered: conv.copyText(conv.ctxMsgBody)
+            onTriggered: { conv.copyText(conv.ctxMsgBody); conv._toast("Text copied", "short") }   // A39.5: as Copy link does
         }
         Controls.MenuItem {
             text: "Copy link"
@@ -894,11 +1087,26 @@ Item {
                 conv._toast("Message link copied", "short")
             }
         }
+        Controls.MenuItem {
+            text: "Retry"
+            icon.name: "view-refresh"
+            visible: conv.ctxMsgFailed && conv.ctxMsgTxn.length > 0
+            height: visible ? implicitHeight : 0
+            onTriggered: conv.room.retrySend(conv.ctxMsgTxn)
+        }
+        Controls.MenuItem {
+            text: "Delete"
+            icon.name: "delete-symbolic"
+            visible: conv.ctxMsgFailed && conv.ctxMsgTxn.length > 0
+            height: visible ? implicitHeight : 0
+            onTriggered: conv.room.discardEcho(conv.ctxMsgTxn)
+        }
         Controls.MenuSeparator {}
         Controls.MenuItem {
             text: "Delete"
             icon.name: "delete-symbolic"
-            visible: conv.ctxMsgMine && !conv.ctxMsgRedacted && !conv.ctxMsgEcho
+            // A30.0: a moderator (the room's redact level) may delete anyone's message, as the role promises
+            visible: (conv.ctxMsgMine || (!!conv.room && conv.room.canRedactOthers === true)) && !conv.ctxMsgRedacted && !conv.ctxMsgEcho
             height: visible ? implicitHeight : 0
             onTriggered: msgDeleteConfirm.open()
         }
@@ -934,6 +1142,24 @@ Item {
         message: "Delete this message for everyone?"
         onConfirmed: conv.room.redactMessage(conv.ctxMsgId)
     }
+    // P21: "/word" that isn't a command asks before it goes out as text (web Composer.tsx + lib/markdown.ts
+    // unknownSlashWords: the same words); Cancel keeps the text in the box.
+    ConfirmDialog {
+        id: slashConfirm
+        app: conv.app
+        property string cmd: ""
+        // 4-4: what the question is about, taken when it opens (_sendSnap); "Send as text" sends only that
+        property var asked: null
+        dialogTitle: "Unknown command — send as text?"
+        confirmText: "Send as text"
+        message: "There's no /" + cmd + " command. The ones you can use: /me, /shrug, /tableflip, /unflip, /lenny."
+        onConfirmed: {
+            if (slashConfirm.asked && conv.draftSame(slashConfirm.asked, conv._sendSnap())) conv.sendComposer(true)
+            else conv._notify("The message box changed, so nothing was sent. Check it and send again.")
+            slashConfirm.asked = null
+        }
+        onClosed: composer.forceActiveFocus()
+    }
 
     // ---- 9.3: staged attachments (preview before they go) ------------------------------------
     // Drop / pick → a strip above the composer with a thumbnail (or a file chip) and an ✕;
@@ -946,9 +1172,20 @@ Item {
         var isImage = /\.(png|jpe?g|gif|webp|bmp|avif)$/.test(lower)
         var arr = conv.staged.slice()
         for (var i = 0; i < arr.length; i++) if (arr[i].url === url) return
-        arr.push({ url: String(url), name: name, isImage: isImage })
+        // QOL A08.7: the size shows on the chip (RoomController.localFileSize: the file's bytes, 0 = unknown)
+        var size = conv.room && conv.room.localFileSize ? Number(conv.room.localFileSize(String(url))) : 0
+        arr.push({ url: String(url), name: name, isImage: isImage, size: size })
         conv.staged = arr
         composer.forceActiveFocus()
+    }
+    /// QOL A08.7: a staged file's size (ChatBubble.fmtSize's rule = the web's lib/format fmtSize)
+    function fmtSize(bytes) {
+        if (!bytes || bytes <= 0) return ""
+        var u = ["B", "KB", "MB", "GB"]
+        var i = 0
+        var n = bytes
+        while (n >= 1024 && i < u.length - 1) { n /= 1024; i++ }
+        return (i === 0 ? n : n.toFixed(1)) + " " + u[i]
     }
     function unstage(i) { var arr = conv.staged.slice(); arr.splice(i, 1); conv.staged = arr }
     // 9.3.2: Ctrl+V with an image (a screenshot, a browser's "Copy image") or files copied in a
@@ -986,6 +1223,50 @@ Item {
                 text: "Drop to attach — you can add a message before it goes"
                 color: Th.dropInlineFg
                 font.bold: true
+            }
+        }
+    }
+
+    // the room's shared background + particles (docs/AMBIENCE.md), behind the message list: the scene everywhere, its
+    // particles only in the main view (pop-out chats get the still scene)
+    AmbienceLayer {
+        app: conv.app
+        x: msgView.x; y: msgView.y; width: msgView.width; height: msgView.height
+        visible: !conv.hidden && shown
+        list: msgView
+        // particles only in the room's MAIN view (3-7, as on the web): a floating chat passes its own window as host, a
+        // thread panel is not primary; hidden runs nothing
+        particles: conv.primary && conv.host === null && !conv.hidden
+        imageSource: conv.room ? String(conv.room.backgroundImage) : ""
+        imageCells: conv.room ? String(conv.room.backgroundImageCells) : ""
+        background: {
+            var raw = conv.room ? String(conv.room.backgroundJson) : ""
+            if (!conv.app || !conv.app.ambience) return ({ kind: "unset", preset: null, effect: "none", image: null, by: "" })
+            if (raw.length === 0) return JSON.parse(conv.app.ambience.parse("", ""))
+            var o = JSON.parse(raw)
+            return JSON.parse(conv.app.ambience.parse(JSON.stringify(o.content), o.sender))
+        }
+        // sun-gamebg: the game people here play, where the room set no background of its own (docs: testvectors/gamebg)
+        artShown: chatGameArt.hasArt
+        GameArtLayer {
+            id: chatGameArt
+            app: conv.app
+            roomId: conv.room ? String(conv.room.roomId) : ""
+            backgroundJson: {
+                var raw = conv.room ? String(conv.room.backgroundJson) : ""
+                if (raw.length === 0) return ""
+                try { return JSON.stringify(JSON.parse(raw).content) } catch (e) { return "" }
+            }
+            backgroundsOn: !!conv.app && conv.app.mChatBackgrounds
+            gameArtOn: !!conv.app && conv.app.mChatGameArt
+            viewHidden: conv.hidden
+            roleColours: {
+                var out = []
+                for (var k in conv.mRoleTags) {
+                    var c = String(conv.mRoleTags[k].color || "")
+                    if (c.length > 0 && out.indexOf(c) < 0) out.push(c)
+                }
+                return out.sort()
             }
         }
     }
@@ -1200,6 +1481,43 @@ Item {
                     || (contentY - originY) >= contentHeight - height - bottomSlack   // originY-relative
             }
             onContentYChanged: if (!settling) stickBottom = calcNearBottom()
+            // P2 a: every scroll may bring the NEW line on screen (the pill goes then)
+            Connections {
+                target: msgView
+                function onContentYChanged() { if (!conv._newSeen && conv.unreadDividerId.length > 0) msgView._newCheckSeen() }
+            }
+            Connections {
+                target: conv
+                function onUnreadDividerIdChanged() { if (conv.unreadDividerId.length > 0) Qt.callLater(msgView._newCheckSeen) }
+            }
+            // P2 a: the NEW line's row is on screen: the pill has done its job. The row's index is cached (rows only move
+            // on a prepend).
+            property int _newIdx: -1
+            function _newIndex() {
+                var id = conv.unreadDividerId
+                if (_newIdx >= 0 && _newIdx < count && msgModel.get(_newIdx).eventId === id) return _newIdx
+                _newIdx = -1
+                for (var i = count - 1; i >= 0; i--) if (msgModel.get(i).eventId === id) { _newIdx = i; break }
+                return _newIdx
+            }
+            function _newCheckSeen() {
+                if (conv._newSeen || conv.unreadDividerId.length === 0) return
+                var di = _newIndex()
+                var it = di >= 0 ? itemAtIndex(di) : null
+                if (it && it.y + it.height > contentY && it.y < contentY + height) conv._newSeen = true
+            }
+            // P2 a: one older page for "Jump to NEW", anchored like _maybeLoadOlder (but wherever the reader is)
+            function _huntOlder() {
+                var ti = _topIndexProbe()
+                if (ti < 0) ti = 0
+                var it = itemAtIndex(ti)
+                olderAnchorOff = it ? (contentY - it.y) : 0
+                olderAnchor = count - ti
+                stickBottom = false
+                conv._huntAsked = true
+                conv._huntFirstId = count > 0 ? msgModel.get(0).eventId : ""
+                conv.room.loadOlder()
+            }
             onStickBottomChanged: if (stickBottom) conv.newBelow = 0
             property int olderAnchor: -1
             property int topIndex: 0
@@ -1274,6 +1592,9 @@ Item {
                 positionViewAtEnd()
                 conv.newBelow = 0
                 if (conv.reader && conv.room) conv.room.markRead()
+                conv._newHunt = 0; conv._jumpHunt = ""; conv._jumpPages = 0; conv._huntAsked = false   // no hunt pulls the view back up
+                olderAnchor = -1; olderAnchorOff = 0   // …nor the page it asked for (its anchor would restore the old place)
+                if (conv.room && conv.room.trimToLatest) conv.room.trimToLatest()   // A35.4: back to the default depth
             }
 
             // 10.1 (TL-14): the start of the conversation is a stable header row — hitting the
@@ -1289,6 +1610,19 @@ Item {
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
             }
+            // D09.3: "Waiting for Sam to join" under the last message of a DM the other person hasn't accepted yet
+            footer: Item {
+                width: msgView.width
+                height: (conv.waitingFor.length > 0 && msgView.count > 0) ? Kirigami.Units.gridUnit * 2.4 : 0
+                visible: height > 0
+                Controls.Label {
+                    anchors.centerIn: parent
+                    textFormat: Text.PlainText
+                    text: conv.waitingFor
+                    color: Th.timelineStartFg
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                }
+            }
             // The history spinner floats over the viewport instead of inserting itself as a
             // header (which shoved the content down ~36 px on every page).
             ThBusyIndicator {   // 11.0 (GPU.md §2.5): still
@@ -1297,9 +1631,63 @@ Item {
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.topMargin: Kirigami.Units.smallSpacing
+                label: "Loading older messages"   // QOL A29.0: its screen-reader name
                 running: conv.mLoadingOlder
                 visible: running
                 size: 27
+            }
+
+            // P2 a: "Jump to NEW" (pinned to the top of the viewport) — back to where you left off in a busy room. Shows
+            // until the NEW line has been on screen; loads older history first when the line is above what is loaded.
+            Rectangle {
+                id: newPill
+                parent: msgView
+                z: 20
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.topMargin: Kirigami.Units.largeSpacing
+                visible: msgView.count > 0 && conv.newPillShown(conv.unreadDividerId.length > 0, conv._newWaiting, conv._newSeen)
+                implicitWidth: newPillRow.implicitWidth + 22
+                implicitHeight: 32
+                radius: 16
+                color: Th.timelineJumpBgUnread
+                border.width: 1
+                border.color: Th.timelineJumpBorderUnread
+                Accessible.role: Accessible.Button
+                Accessible.name: "Jump to NEW"
+                Accessible.description: "Jump to where you left off"
+                Accessible.onPressAction: conv.jumpToNew()
+                Row {
+                    id: newPillRow
+                    anchors.centerIn: parent
+                    spacing: 6
+                    ThIcon {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 16; height: 16
+                        app: conv.app
+                        name: "go-up-symbolic"
+                        color: Th.timelineJumpIconUnread
+                        isMask: true
+                    }
+                    Controls.Label {
+                        textFormat: Text.PlainText
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Jump to NEW"
+                        color: Th.timelineJumpFgUnread
+                        font.bold: true
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    }
+                }
+                MouseArea {
+                    id: newPillMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: conv.jumpToNew()
+                }
+                Controls.ToolTip.text: "Jump to where you left off"
+                Controls.ToolTip.visible: newPillMa.containsMouse
+                Controls.ToolTip.delay: 500
             }
 
             // Jump-to-latest chip (pinned to the viewport). 9.3: says how many arrived below.
@@ -1359,6 +1747,15 @@ Item {
                 // a11y pass: the keyboard row (msgView.kbIndex) — its menu opens at the bubble, and what is read out
                 readonly property string spoken: conv._name(modelData.senderName, modelData.sender) + ": " + (modelData.body !== undefined ? String(modelData.body) : "")
                 function openMenuFromKeys() { conv._openMenuFor(modelData, mine, msgBubble) }
+                // chat backgrounds (docs/AMBIENCE.md): this row's panels for the particle layer
+                function ambRects(target, out) {
+                    if (daypill.parent.visible) {
+                        var p = daypill.mapToItem(target, 0, 0)
+                        out.push({ id: eventId + ":d", x: p.x, y: p.y, w: daypill.width, h: daypill.height, rl: daypill.height / 2, rr: daypill.height / 2 })
+                    }
+                    msgBubble.ambRects(target, eventId, out)
+                }
+                function ambNameColour() { return msgBubble.ambNameColour() }
                 readonly property var modelData: (rev, conv._msgById[eventId] ? conv._msgById[eventId].payload : ({}))
                 width: ListView.view ? ListView.view.width - ListView.view.barGutter : 0   // 10.0.3: clear the scroll bar
                 implicitHeight: col.implicitHeight
@@ -1490,6 +1887,12 @@ Item {
                         onUnreact: (reactionId) => conv.room.unreact(reactionId)
                         onMenuRequested: conv._openMenuFor(msgDelegate.modelData, msgDelegate.mine)
                         onReplyRequested: conv.startReply(msgDelegate.modelData.id, msgDelegate.modelData.body || "", msgDelegate.modelData.senderName || "")
+                        // threads (docs/THREADS.md): the summary under a root (main timeline only) + "Reply in thread"
+                        canThread: conv._canThread(msgDelegate.modelData)
+                        threadInfo: (conv.threadRoot.length === 0 && msgDelegate.modelData.thread) ? msgDelegate.modelData.thread : null
+                        threadText: threadInfo ? (conv.threadTick, conv.room.threadSummaryText(threadInfo.count, threadInfo.lastName || "", threadInfo.lastTs)) : ""
+                        threadLabel: threadInfo ? (conv.threadTick, conv.room.threadSummaryLabel(threadInfo.count, threadInfo.lastName || "", threadInfo.lastTs)) : ""
+                        onThreadRequested: (opener) => conv.threadOpenRequested(msgDelegate.modelData.id, opener)
                         onEditRequested: conv.startEdit(msgDelegate.modelData.id, msgDelegate.modelData.body || "")
                         onMoreReactRequested: { conv.ctxMsgId = msgDelegate.modelData.id; reactPicker.open() }
                         onQuoteClicked: (id) => conv._jumpTo(id)
@@ -1520,9 +1923,13 @@ Item {
                     readonly property bool _loading: conv.mBusy || msgView.fillingEmpty
                     loading: _loading
                     // 10.1 (TL-06): a load that FAILED is not an empty room.
-                    iconName: conv.mStatus.length > 0 ? "network-disconnect-symbolic" : "dialog-messages-symbolic"
-                    title: _loading ? "" : (conv.mStatus.length > 0 ? "Couldn't load this conversation" : "No messages")
-                    explanation: _loading ? "" : (conv.mStatus.length > 0 ? conv.mStatus : "Say something to get started.")
+                    iconName: conv.mStatus.length > 0 ? "network-disconnect-symbolic" : (conv.waitingFor.length > 0 ? "contact-new-symbolic" : "dialog-messages-symbolic")
+                    title: _loading ? "" : (conv.mStatus.length > 0 ? "Couldn't load this conversation" : (conv.waitingFor.length > 0 ? conv.waitingFor : "No messages"))
+                    explanation: _loading ? "" : (conv.mStatus.length > 0 ? conv.mStatus : (conv.waitingFor.length > 0 ? conv.waitingExplain : "Say something to get started."))
+                    // QOL A29.0 / A29.3: the loading state says what loads; a failed load is no dead end
+                    loadingLabel: "Loading messages…"
+                    actionText: !_loading && conv.mStatus.length > 0 ? "Try again" : ""
+                    onActionClicked: { conv.room.refresh() }
                 }
             }
             Controls.Label {
@@ -1673,7 +2080,9 @@ Item {
                         Controls.ToolTip.text: "Cancel (Esc)"
                         Controls.ToolTip.visible: hovered
                         Controls.ToolTip.delay: 400
-                        onClicked: conv.cancelCompose()
+                        // L1 A09.0: the ✕ does what Escape does: drop the reply/edit target, keep the typed text
+                        // and the staged files (it used to wipe both on one click)
+                        onClicked: { conv.cancelTarget(); composer.forceActiveFocus() }
                     }
                 }
             }
@@ -1716,6 +2125,7 @@ Item {
                             spacing: 6
                             Kirigami.Icon { source: "document-send-symbolic"; Layout.preferredWidth: 18; Layout.preferredHeight: 18 }
                             Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.name; elide: Text.ElideMiddle; color: Th.composerStagedFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                            Controls.Label { textFormat: Text.PlainText; visible: text.length > 0; text: conv.fmtSize(modelData.size); color: Th.composerStagedFg; opacity: 0.7; font.pointSize: Kirigami.Theme.smallFont.pointSize }
                         }
                         Rectangle {
                             anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 3
@@ -1724,7 +2134,7 @@ Item {
                             ThIcon { anchors.centerIn: parent; width: 12; height: 12; app: conv.app; name: "window-close-symbolic"; color: Th.composerStagedRemoveIcon; isMask: true }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: conv.unstage(index) }
                         }
-                        Controls.ToolTip.text: modelData.name
+                        Controls.ToolTip.text: modelData.name + (conv.fmtSize(modelData.size).length > 0 ? " · " + conv.fmtSize(modelData.size) : "")
                         Controls.ToolTip.visible: chipHover.hovered
                         Controls.ToolTip.delay: 500
                         HoverHandler { id: chipHover }
@@ -1923,7 +2333,7 @@ Item {
                     }
                     wrapMode: TextEdit.Wrap
                     placeholderText: conv.editToId.length > 0 ? "Edit your message…"
-                        : (conv.replyToId.length > 0 ? "Reply…" : "Message " + conv._shownName)
+                        : (conv.replyToId.length > 0 ? "Reply…" : (conv.threadRoot.length > 0 ? "Reply in thread…" : "Message " + conv._shownName))
                     // a11y pass: a screen reader names the field after what it is for (the web's aria-label)
                     Accessible.name: placeholderText
                     Keys.onUpPressed: (event) => {
@@ -1966,8 +2376,8 @@ Item {
                         if (mentionPopup.visible) mentionPopup.close()
                         else if (emojiPopup.visible) emojiPopup.close()
                         // 10.1 (TH-CONV-04): Escape cancels the reply/edit TARGET only — never the text you
-                        // typed or the files you staged (the ✕ in the reply bar / on each thumbnail do that
-                        // explicitly). Leaving an edit empties the box (that text was the old message);
+                        // typed or the files you staged (L1 A09.0: so does the reply bar's ✕; a thumbnail's
+                        // ✕ removes that file). Leaving an edit gives back the draft it set aside (A09.1);
                         // leaving a reply keeps what you wrote.
                         else if (conv.composing) conv.cancelTarget()
                         else msgView.jumpToLatest()   // Discord: Esc = back to the newest, mark read
@@ -2210,6 +2620,16 @@ Item {
                                 color: Th.gifStatusFg
                                 font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
                             }
+                            // QOL A08.5: a failed load is no dead end (the same search again)
+                            ThButton {
+                                id: gifRetry
+                                Layout.alignment: Qt.AlignHCenter
+                                app: conv.app
+                                flat: true
+                                visible: bubbleGifPopup.gifs.length === 0 && !!conv.gif && !conv.gif.loading && conv.gif.error.length > 0
+                                text: "Try again"
+                                onClicked: conv.gif.search(bubbleGifSearch.text)
+                            }
                             Controls.Label {
                                 Layout.fillWidth: true
                                 horizontalAlignment: Text.AlignRight
@@ -2354,6 +2774,129 @@ Item {
             }   // composerBox
     }
 
+    // ---- the draft rules (L1 "don't lose what I typed") ------------------------------------------
+    // BEGIN composer-draft pure
+    // The composer's draft rules (L1 "don't lose what I typed"), shared with Tin Hat Web (src/features/chat/lib/composerDraft.ts)
+    // through testvectors/composer-draft/vectors.json. draftStep(state, op) -> {st, fx}; state = {text, marks, target ("" |
+    // "reply" | "edit"), id, body, stash (null | {text, marks}: the draft set aside while an edit uses the box)}.
+    function draftStep(st, op) {
+        var s = { text: st.text, marks: st.marks, target: st.target, id: st.id, body: st.body, stash: st.stash }
+        var fx = ""
+        function clear() { s.target = ""; s.id = ""; s.body = "" }
+        function back() {
+            var b = s.stash
+            s.stash = null
+            s.text = b ? b.text : ""
+            s.marks = b ? b.marks : []
+        }
+        var has = String(s.text).trim().length > 0
+        if (op.op === "type") {
+            s.text = op.text
+            if (op.marks) s.marks = op.marks
+        } else if (op.op === "reply") {
+            if (s.target === "edit") back()
+            s.target = "reply"; s.id = op.id; s.body = op.body
+        } else if (op.op === "edit") {
+            if (s.target !== "edit") s.stash = { text: s.text, marks: s.marks }
+            s.text = op.body; s.marks = []
+            s.target = "edit"; s.id = op.id; s.body = op.body
+        } else if (op.op === "cancel") {
+            if (s.target === "edit") back()
+            clear()
+        } else if (op.op === "send") {
+            var files = op.files || 0
+            if (s.target === "edit") {
+                if (!has) fx = "empty-edit"
+                else {
+                    // unchanged = the same text but trailing whitespace (a new leading indent is a code block), nobody picked
+                    var rtrim = function (t) { return String(t).replace(/\s+$/, "") }
+                    fx = (s.body.length > 0 && rtrim(s.text) === rtrim(s.body) && (!s.marks || s.marks.length === 0)) ? "unchanged" : "edit"
+                    back(); clear()
+                }
+            } else if (s.target === "reply") {
+                if (!has) fx = files > 0 ? "reply-needs-text" : "none"
+                else { fx = "reply"; s.text = ""; s.marks = []; clear() }
+            } else if (!has && files === 0) fx = "none"
+            else { fx = "send"; s.text = ""; s.marks = [] }
+        } else if (op.op === "failed") {
+            if (s.target === "") {
+                s.stash = { text: s.text, marks: s.marks }
+                s.text = op.text; s.marks = []
+                s.target = "edit"; s.id = op.id; s.body = ""
+                fx = "put-back"
+            } else fx = "kept-out"
+        }
+        return { st: s, fx: fx }
+    }
+    // What the room remembers as its draft: never the text of an edit (that was the old message), the draft set aside.
+    function draftToKeep(st) { return st.target === "edit" ? (st.stash ? st.stash.text : "") : st.text }
+    // A failed edit / delete / GIF in plain words. cls: forbidden | too-large | rate | network | other (failClass).
+    function failText(kind, cls, putBack) {
+        var why = cls === "forbidden" ? "you don't have permission here"
+            : cls === "too-large" ? "it's too large for the server"
+            : cls === "rate" ? "the server is busy, try again in a moment"
+            : cls === "network" ? "no connection" : ""
+        var head = kind === "edit" ? "Your edit wasn't saved" : kind === "delete" ? "The message wasn't deleted" : "Your GIF wasn't sent"
+        return head + (why.length > 0 ? " (" + why + ")." : ".") + (putBack ? " It's back in the message box." : "")
+    }
+    // 4-4 (L8 P21): "Send as text" sends only what the question was asked about: the room, the text, the reply/edit
+    // target, the picked people, the staged files (the set-aside draft doesn't count). asked/now = {room, state, files}.
+    function draftSame(a, b) {
+        function key(x) {
+            var s = x.state
+            return JSON.stringify([x.room, s.text, s.target, s.id, s.marks || [], x.files || []])
+        }
+        return key(a) === key(b)
+    }
+    // END composer-draft pure
+
+    // The rules' state from the view's own (composer text + picked mentions, the reply/edit target, the stash) and back.
+    function _draftState() {
+        var ed = conv.editToId.length > 0
+        return { text: composer.text, marks: composer._mentions, target: ed ? "edit" : (conv.replyToId.length > 0 ? "reply" : ""),
+                 id: ed ? conv.editToId : conv.replyToId, body: ed ? conv.editToBody : conv.replyToBody, stash: conv._draftStash }
+    }
+    function _draftApply(st) {
+        conv._draftStash = st.stash
+        conv.editToBody = st.target === "edit" ? st.body : ""
+        conv.editToId = st.target === "edit" ? st.id : ""
+        conv.replyToBody = st.target === "reply" ? st.body : ""
+        conv.replyToId = st.target === "reply" ? st.id : ""
+        if (st.target !== "reply") conv.replyToName = ""
+        if (composer.text !== st.text) { composer.text = st.text; composer.cursorPosition = composer.text.length }
+        composer._mentions = st.marks
+    }
+    // 4-4: the send's inputs now (draftSame)
+    function _sendSnap() {
+        // a copy: the picked-people list can change in place
+        return JSON.parse(JSON.stringify({ room: conv._roomIdSeen, state: conv._draftState(), files: conv.staged.map(function (f) { return String(f.url) }) }))
+    }
+    function _draft(op) { var r = conv.draftStep(conv._draftState(), op); conv._draftApply(r.st); return r.fx }
+    function _notify(text) { if (conv.app && conv.app.notify) conv.app.notify(text, "long") }
+    // A failures list (opFailedJson / sendFailedJson): the newest seq in it, and `fn` for each record newer than `seen`
+    // (returns the new newest).
+    function _failList(raw) { try { var a = JSON.parse(raw || "[]"); return Array.isArray(a) ? a : [] } catch (e) { return [] } }
+    function _newestSeq(raw) { var a = conv._failList(raw), n = 0; for (var i = 0; i < a.length; i++) n = Math.max(n, a[i].seq || 0); return n }
+    function _eachNew(raw, seen, fn) {
+        var a = conv._failList(raw), n = seen
+        for (var i = 0; i < a.length; i++) if ((a[i].seq || 0) > seen) { fn(a[i]); n = Math.max(n, a[i].seq || 0) }
+        return n
+    }
+    // A refused edit comes back into the box (A20.0); a refused delete says so. Plain words (failText), no SDK error.
+    function _opFailed(f) {
+        if (!f || f.room !== conv._roomIdSeen) return
+        if (f.kind === "edit") {
+            var back = conv.primary || conv.visible
+            var fx = back ? conv._draft({ op: "failed", id: f.id, text: f.text || "" }) : "kept-out"
+            conv._notify(conv.failText("edit", f.cls, fx === "put-back"))
+            if (fx === "put-back") composer.forceActiveFocus()
+        } else if (f.kind === "delete") conv._notify(conv.failText("delete", f.cls, false))
+    }
+    // A20.1: a GIF that didn't go used to vanish without a word
+    function _gifFailed(f) {
+        if (f && f.room === conv._roomIdSeen && conv.visible) conv._notify(conv.failText("gif", f.cls, false))
+    }
+
     // ---- send paths -------------------------------------------------------------------------
     // Slash commands (Discord's everyday set): /me, /shrug, /tableflip, /unflip, /lenny.
     function _expandSlash(t) {
@@ -2364,72 +2907,82 @@ Item {
         else if (/^\/lenny\b/i.test(s)) s = s.replace(/^\/lenny\s?/i, "") + " ( ͡° ͜ʖ ͡°)"
         return s.trim()
     }
-    function sendComposer() {
+    // P21: the commands the composer knows (web lib/markdown.ts SLASH_COMMANDS + unknownSlash: the same rule).
+    // "" for normal text, a known command, "//escaped" and paths like "/home/me".
+    function _unknownSlash(t) {
+        var m = /^\/([A-Za-z][\w-]*)(?:\s|$)/.exec(String(t).replace(/^\s+/, ""))
+        if (!m) return ""
+        return ["me", "shrug", "tableflip", "unflip", "lenny"].indexOf(m[1].toLowerCase()) !== -1 ? "" : m[1]
+    }
+    function sendComposer(asText) {
         var t = composer.text
         if (!conv.room) return
         var hasText = t.trim().length > 0
-        if (!hasText && conv.staged.length === 0) return
+        // L1: what this send does comes from the shared draft rules; nothing changes until it goes
+        var st0 = conv._draftState()
+        var plan = conv.draftStep(st0, { op: "send", files: conv.staged.length }).fx
+        if (plan === "none") return
+        // P21: "Send as text" sends exactly what was typed (no face expansion: "/shrug-test" stays "/shrug-test")
+        var expand = asText === true ? function (s) { return String(s).trim() } : conv._expandSlash
+        if (hasText && asText !== true && conv.editToId.length === 0 && conv._unknownSlash(t).length > 0) {
+            slashConfirm.cmd = conv._unknownSlash(t)
+            slashConfirm.asked = conv._sendSnap()
+            slashConfirm.open()
+            return
+        }
         // 10.1 (TH-CONV-05): attachments can't carry a reply relation yet, so sending files
         // under an armed reply used to leave the reply ARMED — and the next line you typed was
         // quietly threaded under a message from ten minutes ago. Ask for a line of text instead.
-        if (!hasText && conv.replyToId.length > 0) {
+        if (plan === "reply-needs-text") {
             if (conv.app && conv.app.notify) conv.app.notify("Type something to go with the reply, or cancel the reply first", "short")
             return
         }
-        if (!hasText && conv.editToId.length > 0) { conv.editToId = ""; conv.editToBody = "" }
+        // A09.4: an empty edit is refused (it used to close the edit and do nothing)
+        if (plan === "empty-edit") {
+            if (conv.app && conv.app.notify) conv.app.notify("An edit can't be empty. To remove the message, use Delete in its menu.", "short")
+            return
+        }
         if (hasText) {
-            if (conv.editToId.length > 0) {
-                conv.room.editMessage(conv.editToId, t)
-                conv.editToId = ""; conv.editToBody = ""
+            if (plan === "edit") {
+                // L1 A09.3: the people picked while editing go with it (the original's links are kept in Rust)
+                conv.room.editMessageMentions(st0.id, t, JSON.stringify(composer._mentions))
+            } else if (plan === "unchanged") {
+                // A09.4: nothing changed, nothing is sent (no "(edited)" on an identical message)
             } else if (conv.replyToId.length > 0) {
                 // 10.1 (TH-GAP-14): "/me" inside a reply used to post literally.
-                var rt = /^\/me\s+\S/i.test(t) ? "* " + conv._expandSlash(t.replace(/^\/me\s+/i, "")) : conv._expandSlash(t)
+                var rt = /^\/me\s+\S/i.test(t) ? "* " + expand(t.replace(/^\/me\s+/i, "")) : expand(t)
                 // 10.6 (REACH A5.2): mentions picked while replying are kept (with their links); the
                 // parent's sender is mentioned by Rust, so the person replied to is notified.
                 var rlive = composer._mentions.filter(function (m) { return t.indexOf("@" + m.name) !== -1 })
                 if (rlive.length > 0) conv.room.sendReplyMentions(conv.replyToId, rt, JSON.stringify(rlive))
                 else conv.room.sendReply(conv.replyToId, rt)
-                conv.replyToId = ""; conv.replyToBody = ""
             } else if (/^\/me\s+\S/i.test(t)) {
                 conv.room.sendEmote(t.replace(/^\/me\s+/i, ""))
             } else if (composer._mentions.length > 0) {
                 var live = composer._mentions.filter(function (m) { return t.indexOf("@" + m.name) !== -1 })
-                if (live.length > 0) conv.room.sendWithMentions(conv._expandSlash(t), JSON.stringify(live))
-                else conv.room.send(conv._expandSlash(t))
+                if (live.length > 0) conv.room.sendWithMentions(expand(t), JSON.stringify(live))
+                else conv.room.send(expand(t))
             } else {
-                conv.room.send(conv._expandSlash(t))
+                conv.room.send(expand(t))
             }
         }
         for (var i = 0; i < conv.staged.length; i++) conv.room.sendAttachment(conv.staged[i].url)
-        if (conv.app && conv.app.playUiSound) conv.app.playUiSound("send")   // 10.0
-        // Whatever was sent, the compose target is consumed (TH-CONV-05).
-        conv.replyToId = ""; conv.replyToBody = ""; conv.editToId = ""; conv.editToBody = ""
+        if (conv.app && conv.app.playUiSound && (plan !== "unchanged" || conv.staged.length > 0)) conv.app.playUiSound("send")   // 10.0
+        // Whatever was sent, the compose target is consumed (TH-CONV-05); an edit gives back the draft it set aside (A09.1).
+        conv._draft({ op: "send", files: conv.staged.length })
         conv.staged = []
-        composer.text = ""
-        composer._mentions = []
         mentionPopup.close(); emojiPopup.close()
         conv.stopTyping()
         // Sending = you are at the bottom now.
         msgView.stickBottom = true
         Qt.callLater(msgView.positionViewAtEnd)
     }
-    function cancelCompose() {
-        conv.replyToId = ""; conv.replyToBody = ""; conv.editToId = ""; conv.editToBody = ""
-        composer.text = ""
-        composer._mentions = []
-        conv.staged = []
-        mentionPopup.close(); emojiPopup.close()
-        conv.stopTyping()
-    }
-    // 10.1 (TH-CONV-04): drop the reply/edit target, keep the draft (an edit's text was the old
-    // message, so leaving an edit does empty the box).
+    // 10.1 (TH-CONV-04): drop the reply/edit target, keep the draft. L1 A09.1: leaving an edit gives back the draft it
+    // set aside (it used to empty the box: the draft was gone).
     function cancelTarget() {
-        var wasEdit = conv.editToId.length > 0
-        conv.replyToId = ""; conv.replyToBody = ""; conv.replyToName = ""; conv.editToId = ""; conv.editToBody = ""
-        if (wasEdit) { composer.text = ""; composer._mentions = [] }
+        conv._draft({ op: "cancel" })
         mentionPopup.close(); emojiPopup.close()
     }
-    onEditToIdChanged: if (conv.editToId.length > 0) { composer.text = conv.editToBody; composer.forceActiveFocus(); composer.cursorPosition = composer.text.length }
 
     // Typing notice: `true` on the first keystroke, auto-cleared after 4 s idle (or on send /
     // cancel / empty). Only a `primary` view sends it — a bubble must stay silent.

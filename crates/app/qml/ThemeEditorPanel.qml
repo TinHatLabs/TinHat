@@ -212,7 +212,7 @@ FocusScope {
             }
             Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: Th.settingsThemeEditorDivider }
         }
-        Controls.Menu {
+        KeyMenu {
             id: moreMenu
             Controls.MenuItem { text: "Save as a new theme…"; icon.name: "list-add-symbolic"; onTriggered: saveAsDialog.openFor() }
             Controls.MenuItem { text: "Export…"; icon.name: "document-save-symbolic"; onTriggered: panel.exportFile() }

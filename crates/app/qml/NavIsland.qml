@@ -14,6 +14,10 @@ Item {
     // 11.0 (EDITMODE-UI §8, the Side monitor preset — `opts.nav.orient = "h"`): the bubbles left→right, the pill under
     property bool horizontal: false
     visible: island.railRef._meta.length > 0
+    // A11.3: the meta bubbles' menu (Home · Favourites · People · Rooms): Mark all as read, when there is something unread
+    function openMenu(sp) {
+        if (sp && (Number(sp.unread) || 0) > 0 && island.app && island.app.openMetaContext) island.app.openMetaContext(sp.key, sp.label)
+    }
     implicitWidth: island.horizontal ? hrow.implicitWidth : col.implicitWidth
     implicitHeight: island.horizontal ? 52 : col.implicitHeight
 
@@ -38,7 +42,16 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: if (island.railRef.navController) island.railRef.navController.selectSpace(metaBubble.modelData.key)
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton   // A11.3: right-click = Mark all as read
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.RightButton) island.openMenu(metaBubble.modelData)
+                        else if (island.railRef.navController) island.railRef.navController.selectSpace(metaBubble.modelData.key)
+                    }
+                }
+                RailFocus {   // a11y round 2 (M2): a Tab stop, Return selects
+                    name: metaBubble.modelData.label
+                    current: metaBubble.selected
+                    onActivated: if (island.railRef.navController) island.railRef.navController.selectSpace(metaBubble.modelData.key)
                 }
                 Controls.ToolTip.text: modelData.label
                 Controls.ToolTip.visible: metaMa.containsMouse
@@ -67,7 +80,16 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: if (island.railRef.navController) island.railRef.navController.selectSpace(hBubble.modelData.key)
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton   // A11.3: right-click = Mark all as read
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.RightButton) island.openMenu(hBubble.modelData)
+                        else if (island.railRef.navController) island.railRef.navController.selectSpace(hBubble.modelData.key)
+                    }
+                }
+                RailFocus {   // a11y round 2 (M2): a Tab stop, Return selects
+                    name: hBubble.modelData.label
+                    current: hBubble.selected
+                    onActivated: if (island.railRef.navController) island.railRef.navController.selectSpace(hBubble.modelData.key)
                 }
                 Controls.ToolTip.text: modelData.label
                 Controls.ToolTip.visible: hMa.containsMouse

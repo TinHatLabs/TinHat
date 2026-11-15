@@ -1,0 +1,18 @@
+{
+  "about": "A20.2: a soundboard upload's failure in plain words, never the raw cause. Desktop soundboard.rs upload_fail_words, web media/soundboard/uploadWords.ts. Byte-identical in both repos.",
+  "cases": [
+    { "kind": "too-big", "status": 0, "want": "That clip is bigger than 3 MB. Try a shorter one." },
+    { "kind": "unreadable", "status": 0, "want": "That file couldn't be read." },
+    { "kind": "network", "status": 0, "want": "Couldn't reach the server. Check your connection and try again." },
+    { "kind": "signed-out", "status": 0, "want": "You're not signed in." },
+    { "kind": "server", "status": 413, "want": "That clip is bigger than 3 MB. Try a shorter one." },
+    { "kind": "server", "status": 401, "want": "The server didn't accept your sign-in. Try again in a moment." },
+    { "kind": "server", "status": 403, "want": "The server didn't accept your sign-in. Try again in a moment." },
+    { "kind": "server", "status": 500, "want": "The server couldn't take that clip. Try again in a moment." },
+    { "kind": "server", "status": 400, "want": "The server couldn't take that clip. Try again in a moment." },
+    { "kind": "bad-reply", "status": 200, "want": "The server couldn't take that clip. Try again in a moment." },
+    { "kind": "not-listed", "status": 0, "want": "Uploaded, but it couldn't be added to your sounds. Try again." },
+    { "kind": "picture", "status": 0, "want": "Couldn't remove this photo's location, so it wasn't sent" },
+    { "kind": "something-new", "status": 0, "want": "The server couldn't take that clip. Try again in a moment." }
+  ]
+}

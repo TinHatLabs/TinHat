@@ -14,9 +14,12 @@
 //! way), integers rounded with [`quality::r`] = `x ≤ 0 ? 0 : floor(x + 0.5)`, printed like ECMAScript's
 //! `Number::toString` ([`js_number`]). Strings compare in code-point order (= Rust's `str` order).
 
+pub mod ambience; // chat backgrounds + particle effects: the shared core (web src/features/chat/ambience/core.ts)
 pub mod animimg;
 pub mod clocks;
 pub mod dice;
+pub mod exifstrip; // "location is removed from photos you send" (docs/PHOTO-METADATA.md)
+pub mod gamebg; // "Match the game" chat backgrounds (testvectors/gamebg)
 pub mod gamenight; // widgets W2: Game night (WIDGETS.md §23)
 pub mod gameservers;
 pub mod history;
@@ -24,15 +27,18 @@ pub mod json;
 pub mod justme; // widgets W2: "Is it just me?" (WIDGETS.md §20)
 pub mod lowgpu;
 pub mod memories; // widgets W2: Memories (WIDGETS.md §21)
+pub mod memphotos; // Memories photos: the timeline, the dev.tinhat.memories lists (docs/MEMORIES-PHOTOS.md)
 pub mod mentions;
 pub mod note;
 pub mod people;
 pub mod polls;
 pub mod quality;
 pub mod recent;
+pub mod recvstats; // the [recv-stats] log line (no widget: the shared formatter)
 pub mod registry;
 pub mod rxq;
 pub mod soundpad; // widgets W2: the Soundboard pad (WIDGETS.md §22)
+pub mod threads; // m.thread: relations, summaries, unread, receipts targets (docs/THREADS.md)
 pub mod time;
 pub mod voicenote; // voice notes: waveform, duration, the event content (docs/VOICE-NOTES.md §5)
 

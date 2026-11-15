@@ -1,0 +1,147 @@
+{
+ "about": "Pin and full screen follow a blip (D02.3, 2026-11-13). When the pinned or full-screen tile leaves the call the app holds {participant, kind, until = now + graceMs} (graceMs = the leave-chime grace); carryTarget(held, tiles, now) = the id of the first tile of the same participant (the LiveKit identity, device included) and kind (absent = video) while now < until, else null; the app then pins / full-screens that tile again. Byte-identical: desktop crates/app/src/testvectors/tilecarry.json (the owner; tilecarry.rs), web src/features/calls/testvectors/tilecarry.json (tilecarry.ts).",
+ "cases": [
+  {
+   "held": {
+    "kind": "screenshare",
+    "participant": "@sam:x:S1",
+    "until": 5000
+   },
+   "name": "the pinned share comes back with a new track inside the grace: carried",
+   "now": 3000,
+   "tiles": [
+    {
+     "id": "vid_selfview",
+     "kind": "video",
+     "participant": "You"
+    },
+    {
+     "id": "vid_cam9",
+     "kind": "video",
+     "participant": "@sam:x:S1"
+    },
+    {
+     "id": "vid_ss9",
+     "kind": "screenshare",
+     "participant": "@sam:x:S1"
+    }
+   ],
+   "want": "vid_ss9"
+  },
+  {
+   "held": {
+    "kind": "screenshare",
+    "participant": "@sam:x:S1",
+    "until": 5000
+   },
+   "name": "after the grace: not carried (a real leave)",
+   "now": 5000,
+   "tiles": [
+    {
+     "id": "vid_ss9",
+     "kind": "screenshare",
+     "participant": "@sam:x:S1"
+    }
+   ],
+   "want": null
+  },
+  {
+   "held": {
+    "kind": "screenshare",
+    "participant": "@sam:x:S1",
+    "until": 5000
+   },
+   "name": "the same person's camera is not their share",
+   "now": 100,
+   "tiles": [
+    {
+     "id": "vid_cam9",
+     "kind": "video",
+     "participant": "@sam:x:S1"
+    }
+   ],
+   "want": null
+  },
+  {
+   "held": {
+    "kind": "screenshare",
+    "participant": "@sam:x:S1",
+    "until": 5000
+   },
+   "name": "another device of the same person is another participant",
+   "now": 100,
+   "tiles": [
+    {
+     "id": "vid_ss2",
+     "kind": "screenshare",
+     "participant": "@sam:x:PHONE"
+    }
+   ],
+   "want": null
+  },
+  {
+   "held": {
+    "kind": "video",
+    "participant": "@amy:x:A1",
+    "until": 5000
+   },
+   "name": "a pinned camera comes back (the avatar first, then the camera): only the camera",
+   "now": 1000,
+   "tiles": [
+    {
+     "id": "avatar_@amy:x:A1",
+     "kind": "avatar",
+     "participant": "@amy:x:A1"
+    }
+   ],
+   "want": null
+  },
+  {
+   "held": {
+    "kind": "video",
+    "participant": "@amy:x:A1",
+    "until": 5000
+   },
+   "name": "a pinned camera comes back: carried",
+   "now": 2000,
+   "tiles": [
+    {
+     "id": "vid_cam3",
+     "kind": "video",
+     "participant": "@amy:x:A1"
+    }
+   ],
+   "want": "vid_cam3"
+  },
+  {
+   "held": {
+    "kind": "video",
+    "participant": "@amy:x:A1",
+    "until": 5000
+   },
+   "name": "no kind on a tile (an older tile shape) reads as video",
+   "now": 2000,
+   "tiles": [
+    {
+     "id": "vid_cam4",
+     "participant": "@amy:x:A1"
+    }
+   ],
+   "want": "vid_cam4"
+  },
+  {
+   "held": null,
+   "name": "nothing held",
+   "now": 0,
+   "tiles": [
+    {
+     "id": "vid_ss9",
+     "kind": "screenshare",
+     "participant": "@sam:x:S1"
+    }
+   ],
+   "want": null
+  }
+ ],
+ "graceMs": 5000
+}

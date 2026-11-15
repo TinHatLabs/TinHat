@@ -13,8 +13,11 @@
 //!   public_receipt_ok    the pure decision (create event or none, my server) → may this room get a public m.read?
 //!   markers_body         the `POST /rooms/{room}/read_markers` body for one event under that decision
 //!   send_read_markers    fully-read marker + receipt on one event (Mark as read: notification, room list, DM strip)
-//!   send_read_receipt    the receipt alone (the open room's reading position)
-//!   own_read_up_to       where my own receipt sits, public or private (the unread divider)
+//!   send_read_receipt    the receipt alone (the open room's reading position); threads (MSC3771): with a thread —
+//!                        "main" for the main timeline, a root for a thread's panel; never an unthreaded fallback
+//!   own_read_up_to       where my own receipt sits, public or private, unthreaded or "main" (the unread divider)
+//!   my_thread_receipts   threads: my receipts that count for these threads (unthreaded + each thread's), for the
+//!                        unread dots (tinhat_widgets::threads::thread_unread)
 //!
 //! `tests::every_receipt_send_goes_through_receipts_rs` walks crates/ and fails on any send outside this file.
 
@@ -64,12 +67,47 @@ pub(crate) async fn send_read_markers(room: &Room, event: &str) -> Result<(), St
     room.send_multiple_receipts(receipts).await.map_err(|e| e.to_string())
 }
 
-/// The receipt alone (unthreaded), public or private as [`public_receipt_here`] says.
-pub(crate) async fn send_read_receipt(room: &Room, event: &matrix_sdk::ruma::EventId) -> Result<(), String> {
-    use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType as SendReceiptType;
+/// threads: the receipt thread for `thread` ("" = unthreaded, "main", or a thread's root).
+pub(crate) fn receipt_thread(thread: &str) -> Result<matrix_sdk::ruma::events::receipt::ReceiptThread, String> {
     use matrix_sdk::ruma::events::receipt::ReceiptThread;
+    Ok(match thread {
+        "" => ReceiptThread::Unthreaded,
+        "main" => ReceiptThread::Main,
+        root => ReceiptThread::Thread(matrix_sdk::ruma::OwnedEventId::try_from(root).map_err(|e| e.to_string())?),
+    })
+}
+
+/// The receipt alone, public or private as [`public_receipt_here`] says. threads (MSC3771, spec v1.4): `thread` = ""
+/// (unthreaded), "main" (the main timeline: reading it never clears a thread) or a thread's root (its panel). A refused
+/// threaded receipt (400: most likely an event the server files under another thread) is NOT retried unthreaded —
+/// that would clear every thread (review 2026-11-13); the next read tries again.
+pub(crate) async fn send_read_receipt(room: &Room, event: &matrix_sdk::ruma::EventId, thread: &str) -> Result<(), String> {
+    use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType as SendReceiptType;
     let ty = if public_receipt_here(room).await { SendReceiptType::Read } else { SendReceiptType::ReadPrivate };
-    room.send_single_receipt(ty, ReceiptThread::Unthreaded, event.to_owned()).await.map_err(|e| e.to_string())
+    room.send_single_receipt(ty, receipt_thread(thread)?, event.to_owned()).await.map_err(|e| {
+        eprintln!("[threads] the server refused a {} receipt: {e}", if thread.is_empty() { "unthreaded" } else if thread == "main" { "main" } else { "thread" });
+        e.to_string()
+    })
+}
+
+/// threads: my receipts that count for `roots` (core thread_unread): the unthreaded one and each thread's, public and
+/// private, with each receipt's own time. Local store reads only.
+pub(crate) async fn my_thread_receipts(room: &Room, roots: &[String]) -> Vec<tinhat_widgets::threads::MyReceipt> {
+    use matrix_sdk::ruma::events::receipt::ReceiptType;
+    let own = room.own_user_id();
+    let mut out = Vec::new();
+    let mut threads: Vec<&str> = vec![""];
+    threads.extend(roots.iter().map(|r| r.as_str()));
+    for t in threads {
+        let Ok(th) = receipt_thread(t) else { continue };
+        for ty in [ReceiptType::Read, ReceiptType::ReadPrivate] {
+            if let Ok(Some((eid, r))) = room.load_user_receipt(ty, &th, own).await {
+                let ts = r.ts.map(|x| i64::from(x.0)).unwrap_or(0);
+                out.push(tinhat_widgets::threads::MyReceipt { event_id: eid.to_string(), ts, thread: t.to_string() });
+            }
+        }
+    }
+    out
 }
 
 /// Where my own unthreaded receipt sits: of my public and private receipts, the one on the later event ("" = none
@@ -82,7 +120,27 @@ pub(crate) async fn send_read_receipt(room: &Room, event: &matrix_sdk::ruma::Eve
 pub(crate) async fn own_read_up_to(room: &Room) -> String {
     use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
     let own = room.own_user_id();
-    let load = |ty| async move { room.load_user_receipt(ty, &ReceiptThread::Unthreaded, own).await.ok().flatten().map(|(e, _)| e) };
+    // threads (MSC3771): the main timeline's receipts are "main" now; an unthreaded one (older apps, Mark as read) counts
+    // too — per type, the later of the two (by the same event-time rule)
+    let load_one = |ty, th| async move { room.load_user_receipt(ty, &th, own).await.ok().flatten().map(|(e, _)| e) };
+    let load = |ty: ReceiptType| async move {
+        let un = load_one(ty.clone(), ReceiptThread::Unthreaded).await;
+        let main = load_one(ty, ReceiptThread::Main).await;
+        match (un, main) {
+            (Some(a), Some(b)) if a != b => {
+                let ts = |id: matrix_sdk::ruma::OwnedEventId| async move {
+                    let ev = Box::pin(room.load_or_fetch_event(&id, None)).await.ok()?;
+                    ev.raw().get_field::<u64>("origin_server_ts").ok().flatten()
+                };
+                let (ta, tb) = tokio::time::timeout(std::time::Duration::from_secs(2), async { tokio::join!(ts(a.clone()), ts(b.clone())) })
+                    .await
+                    .unwrap_or((None, None));
+                // the main receipt is the one this app keeps moving: it wins a tie or an unknown time
+                Some(if later_receipt(ta, tb, false) { a } else { b })
+            }
+            (a, b) => b.or(a),
+        }
+    };
     let (public, private) = (load(ReceiptType::Read).await, load(ReceiptType::ReadPrivate).await);
     let (public, private) = match (public, private) {
         (None, None) => return String::new(),

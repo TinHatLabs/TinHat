@@ -28,6 +28,25 @@ Item {
     // (same covers, same odds on every screen); the live main tier is only the idle preview.
     readonly property var stripPool: (spin && spin.pool && spin.pool.length) ? spin.pool : mainPool
     readonly property bool hasResult: !!spin && !!spin.winner && !spin.superseded && !spin.voided
+
+    // QOL A19.1: what a greyed Spin / Re-spin / Veto says on hover (a disabled button gets no hover of its own, so
+    // the button's slot shows it). SHARED LOGIC: Tin Hat Web's calendar/model/reelQol.ts reelWhyNot, rule for rule;
+    // tools/reel-qol-test.mjs runs it on the shared vectors (crates/app/src/testvectors/reel-qol.json).
+    // BEGIN reel-whynot pure (tools/reel-qol-test.mjs)
+    function reelWhyNot(button, s) {
+        if (button === "spin") {
+            if (s.hasResult) return s.respinsLeft <= 0 ? "No re-spins left tonight" : ""
+            return s.canSpin ? "" : s.notice
+        }
+        if (s.canVeto) return ""
+        if (s.myVetoesLeft <= 0) return "You've used your veto for tonight"
+        if (s.respinsLeft <= 0) return "No re-spins left tonight — a veto needs one"
+        return ""
+    }
+    // END reel-whynot pure
+    readonly property var _whySnap: ({ hasResult: panel.hasResult, notice: snap.notice ? String(snap.notice) : "",
+                                       respinsLeft: Number(snap.respinsLeft || 0), myVetoesLeft: Number(snap.myVetoesLeft || 0),
+                                       canSpin: snap.canSpin === true, canVeto: snap.canVeto === true })
     // 10.5.2 admin "Reset spins" (the web's, 2026-09-23: an admin hit the re-spin limit while testing and had
     // no way back). Voids tonight's spins and stops their re-spins counting (ctl.resetSpins → games.rs
     // do_reset_spins / games_model::reset_writes) in a form every client already reads — desktop 10.5.0 /
@@ -296,21 +315,43 @@ Item {
                     // 10.1 (TH-REEL-08): once a spin stands the primary button IS the re-spin (respin() keeps
                     // tonight's vetoes and counts against the limit) — it was a permanently grey "Spin again"
                     // next to a "2 re-spins left" label with no button for them.
-                    ReelButton {
-                        text: panel.spinning ? "Spinning…" : (panel.hasResult ? "Re-spin" : "Spin")
-                        primary: true
-                        enabled: !panel.spinning && !ctl.busy && !ctl.resetting && (panel.hasResult ? (snap.respinsLeft > 0) : snap.canSpin === true)
-                        hint: panel.hasResult ? "Spin again, keeping tonight's vetoes — " + snap.respinsLeft + " left" : ""
-                        onClicked: panel.hasResult ? ctl.respin() : ctl.spin()
-                        radius: panel.app.radius
+                    // QOL A19.1: a greyed Spin / Veto says why on hover. A disabled button gets no hover of its own, so
+                    // each sits in a slot whose HoverHandler shows the reason (reelWhyNot above).
+                    Item {
+                        implicitWidth: spinBtn.implicitWidth
+                        implicitHeight: spinBtn.implicitHeight
+                        HoverHandler { id: spinWhyHover }
+                        ReelButton {
+                            id: spinBtn
+                            anchors.fill: parent
+                            text: panel.spinning ? "Spinning…" : (panel.hasResult ? "Re-spin" : "Spin")
+                            primary: true
+                            enabled: !panel.spinning && !ctl.busy && !ctl.resetting && (panel.hasResult ? (snap.respinsLeft > 0) : snap.canSpin === true)
+                            hint: panel.hasResult ? "Spin again, keeping tonight's vetoes — " + snap.respinsLeft + " left" : ""
+                            onClicked: panel.hasResult ? ctl.respin() : ctl.spin()
+                            radius: panel.app.radius
+                            readonly property string whyNot: panel.spinning || ctl.busy || ctl.resetting ? "" : panel.reelWhyNot("spin", panel._whySnap)
+                            T.ToolTip.visible: (hint.length > 0 && hovered) || (!enabled && whyNot.length > 0 && spinWhyHover.hovered)
+                            T.ToolTip.text: !enabled && whyNot.length > 0 ? whyNot : hint
+                        }
                     }
-                    ReelButton {
+                    Item {
                         visible: panel.hasResult
-                        text: "Veto"
-                        enabled: snap.canVeto === true && !panel.spinning && !ctl.busy && !ctl.resetting
-                        hint: "One per person per night; the reel re-spins without this game" + (snap.myVetoesLeft !== undefined ? " — " + snap.myVetoesLeft + " left" : "")
-                        onClicked: ctl.veto()
-                        radius: panel.app.radius
+                        implicitWidth: vetoBtn.implicitWidth
+                        implicitHeight: vetoBtn.implicitHeight
+                        HoverHandler { id: vetoWhyHover }
+                        ReelButton {
+                            id: vetoBtn
+                            anchors.fill: parent
+                            text: "Veto"
+                            enabled: snap.canVeto === true && !panel.spinning && !ctl.busy && !ctl.resetting
+                            hint: "One per person per night; the reel re-spins without this game" + (snap.myVetoesLeft !== undefined ? " — " + snap.myVetoesLeft + " left" : "")
+                            onClicked: ctl.veto()
+                            radius: panel.app.radius
+                            readonly property string whyNot: panel.spinning || ctl.busy || ctl.resetting ? "" : panel.reelWhyNot("veto", panel._whySnap)
+                            T.ToolTip.visible: (hint.length > 0 && hovered) || (!enabled && whyNot.length > 0 && vetoWhyHover.hovered)
+                            T.ToolTip.text: !enabled && whyNot.length > 0 ? whyNot : hint
+                        }
                     }
                     Text { textFormat: Text.PlainText; visible: panel.hasResult && (snap.respinsLeft !== undefined); text: snap.respinsLeft + " re-spin" + (snap.respinsLeft === 1 ? "" : "s") + " left"; color: Th.reelMetaFg; font.pixelSize: 12 }
                     ReelButton {

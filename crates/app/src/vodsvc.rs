@@ -618,6 +618,11 @@ async fn set_record_consent(room: &matrix_sdk::Room) {
 }
 
 pub async fn run() {
+    // Call keys only (2026-11-14): every client built from here on drops chat keys before they reach its store, and
+    // never reads one an older recorder stored. Deleting those is opt-in (TINHAT_VOD_PURGE_CHAT_KEYS=1), before the
+    // store opens.
+    crate::recorder_keys::set_active();
+    crate::recorder_keys::purge_on_start(&crate::bridge::store_dir());
     let base = std::env::var("TINHAT_VOD_DIR").unwrap_or_else(|_| "/vods".to_string());
     if std::fs::create_dir_all(&base).is_err() {
         eprintln!("[vod] FATAL: cannot create TINHAT_VOD_DIR {base}");

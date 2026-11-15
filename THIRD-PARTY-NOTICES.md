@@ -1,8 +1,7 @@
 # Third-party notices
 
 Tin Hat is AGPL-3.0-or-later (see LICENSE). It builds on the following components, which keep their
-own licences. Nothing here is copyleft-incompatible; no GPL-only runtime library ships in the
-bundle (libmpv and yt-dlp were dropped in 10.0).
+own licences. Nothing here is incompatible with the AGPL.
 
 ## Linked into the binary (Rust crates, C++)
 
@@ -14,6 +13,7 @@ bundle (libmpv and yt-dlp were dropped in 10.0).
 | tokio, serde, reqwest, rustls, ring/aws-lc-rs, zbus, ashpd and ~560 further crates | MIT, Apache-2.0, BSD, ISC, Zlib, Unicode-3.0, MPL-2.0 (as_variant, eyeball, readlock, imbl, bitmaps), CC0/MIT-0 (blake3, constant_time_eq, dunce), Unlicense — the full per-crate list: `cargo metadata` / `cargo license` in the source tree |
 | NVIDIA Video Codec SDK headers (NvEncoder/NvDecoder samples) | MIT (samples), NVIDIA Software Licence (headers) |
 | Boost (via libwebrtc build) | BSL-1.0 |
+| mpvqt v1.2.0 (the watch-party player item) — **Linux download (.bin) only**, linked statically since 12.1.16 | LGPL-2.1-only OR LGPL-3.0-only, © 2023 George Florea Bănuș — see "mpvqt in the Linux download" below |
 
 ## Dynamically linked at runtime (system or Flatpak runtime)
 
@@ -27,6 +27,27 @@ bundle (libmpv and yt-dlp were dropped in 10.0).
 | RNNoise (gst audiornnoise) | BSD-3-Clause |
 | libva / Mesa VA-API drivers | MIT |
 | glibc | LGPL-2.1 |
+| libmpv (watch party and Memories player; the system's on Linux, bundled in the Flatpak) | GPL-2.0-or-later (mpv's default build) |
+| mpvqt (Flatpak: bundled as its own shared library) | LGPL-2.1-only OR LGPL-3.0-only |
+
+yt-dlp (Unlicense) is not linked: the player runs it as a separate program (the system's, or the Flatpak's copy).
+
+## mpvqt in the Linux download
+
+The Linux download (`tinhat-<version>-x86_64.bin`) contains mpvqt 1.2.0, unmodified, built from KDE's release
+tarball `mpvqt-1.2.0.tar.xz` (https://download.kde.org/stable/mpvqt/, sha256
+`8660ad79c0d60fed77f29b36e1742841466af5405de702c81a121e6eeb625ebb`; the same files as tag `v1.2.0` of
+https://invent.kde.org/libraries/mpvqt) and linked statically, so the download keeps working when a distribution
+renames mpvqt's shared library. mpvqt is © 2023 George
+Florea Bănuș and is licensed LGPL-2.1-only OR LGPL-3.0-only; its licence texts ship in its source (`LICENSES/`) and are
+at https://www.gnu.org/licenses/.
+
+You may use Tin Hat with a changed mpvqt. Next to each Linux download, the release publishes mpvqt's exact source
+(`mpvqt-1.2.0.tar.xz`, with KDE's signature `mpvqt-1.2.0.tar.xz.sig`) and its licence texts (`LGPL-2.1-only.txt`, and `LGPL-3.0-only.txt`, which includes the
+GPL-3.0 text). Tin Hat's complete source for the same release (its tag, with the libwebrtc patches in
+`vendor/webrtc-sys/libwebrtc-patches/`) is published under the AGPL. `scripts/mpvqt-static.sh` builds the library the
+release uses; point `TINHAT_MPVQT_STATIC` at your own build of mpvqt and build Tin Hat as `BUILDING.md` describes to
+link the two again. The Flatpak keeps mpvqt as a separate shared library.
 
 ## Flatpak bundle: NVIDIA NVRTC
 

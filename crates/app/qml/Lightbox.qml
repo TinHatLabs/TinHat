@@ -81,7 +81,11 @@ Item {
         // Drag to pan once zoomed in.
         DragHandler { enabled: img.scale > 1.0; target: img }
         // Swallow taps on the image so the backdrop MouseArea doesn't close it mid-interaction.
-        TapHandler { onTapped: {} }
+        // QOL A08.6: a double-click toggles 2× (Tin Hat Web's Lightbox), back to fit re-centres.
+        TapHandler {
+            onTapped: {}
+            onDoubleTapped: { var s = img.scale > 1.0 ? 1.0 : 2.0; img.scale = s; if (s <= 1.0) { img.x = 0; img.y = 0 } }
+        }
     }
 
     Controls.Label {

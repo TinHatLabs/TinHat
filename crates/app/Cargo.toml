@@ -1,6 +1,6 @@
 [package]
 name = "tinhat-app"
-version = "12.1.13"
+version = "12.1.16"
 edition.workspace = true
 license.workspace = true
 description = "Tin Hat native KDE/Kirigami app (Qt6/QML + Rust core via CXX-Qt)"
@@ -31,6 +31,11 @@ matrix-sdk = { version = "0.19", default-features = false, features = ["e2e-encr
 # desktop-notification preview can name `latest_event::LatestEventValue::Remote`
 # (the cached latest event matrix-sdk does NOT re-export at the top level).
 matrix-sdk-base = "0.19"
+# recorder_keys.rs: the Memories recorder's crypto store keeps call keys only (the CryptoStore trait + its types);
+# already in the tree via matrix-sdk, same version.
+matrix-sdk-crypto = "0.19"
+# recorder_keys.rs: the CryptoStore trait names Zeroizing<String> (already in the tree via matrix-sdk-crypto)
+zeroize = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "time", "fs", "sync"] }  # sync: soundboard.rs PlayGate (already on via matrix-sdk)
 # Bounded-concurrency inline-image resolves in the room loader (already in the
 # dependency tree via matrix-sdk).

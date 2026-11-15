@@ -582,10 +582,13 @@ Controls.Popup {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     Layout.leftMargin: 16; Layout.rightMargin: 16
-                    visible: pad.mic === "ptt"
+                    // why the mic can't be pressed, in plain sight: push to talk, or muted for everyone (12.1.16 QOL D06.6:
+                    // Tin Hat Web's phones have no tooltip; both apps show the same line)
+                    objectName: "padMyNote"
+                    visible: pad.mic === "ptt" || pad.mic === "server"
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
-                    text: pad.why("ptt", "mic")
+                    text: pad.mic === "server" ? pad.why("server-muted", "mic") : pad.why("ptt", "mic")
                     color: Th.callStatusBarCountFg
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
@@ -621,13 +624,27 @@ Controls.Popup {
                             }
                             ThButton { app: pad.app; text: "Watch"; enabled: !pad.inOtherCall; onClicked: pad.app.callctl.watchCall(pad.roomId) }
                         }
-                        Controls.Label {
-                            textFormat: Text.PlainText
+                        // 12.1.16 QOL A21.3: the note says why Watch is greyed, and "Leave that call" next to it does it
+                        // (Tin Hat Web's PadExtras.tsx LeaveFirst; words in testvectors/pad-words)
+                        RowLayout {
                             Layout.fillWidth: true
-                            wrapMode: Text.WordWrap
-                            color: Th.soundboardSectionHintFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
-                            text: pad.inOtherCall ? "Leave your call on this computer first." : "Joins on this computer to watch — muted, sound off. Everyone sees you joined."
+                            spacing: 10
+                            Controls.Label {
+                                textFormat: Text.PlainText
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                color: Th.soundboardSectionHintFg
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                text: pad.inOtherCall ? "Leave your call on this computer first." : "Joins on this computer to watch — muted, sound off. Everyone sees you joined."
+                            }
+                            ThButton {
+                                objectName: "padLeaveThatCall"
+                                app: pad.app
+                                visible: pad.inOtherCall
+                                flat: true
+                                text: "Leave that call"
+                                onClicked: pad.app.callctl.leaveCall()
+                            }
                         }
                     }
                 }
@@ -1190,6 +1207,7 @@ Controls.Popup {
         if (d === "web-results") return { n: pad.webResults.length, urls: pad.webResults.map(function (x) { return x.url }), searching: !!pad.app.soundboardCtl && pad.app.soundboardCtl.searching === true }
         if (d === "web-tap") { var w = pad.webResults[Number(s.i || 0)]; return w && pad.webUsable ? pad.tapWeb(w.url, w.name) : "inert" }
         if (d === "web-star") { var w2 = pad.webResults[Number(s.i || 0)]; if (!w2) return "inert"; pad.starWeb(w2.name, w2.url); return "starred " + w2.url }
+        if (d === "leave-that-call") { if (!pad.inOtherCall) return "inert"; pad.app.callctl.leaveCall(); return "left" }
         if (d === "pad-watch") { if (pad.sharers.length === 0 || pad.inOtherCall) return "inert"; pad.app.callctl.watchCall(pad.roomId); return "watching " + pad.roomId }
         if (d === "party-play") return pad.partyDrive ? pad.partyPlay(!pad.opt("party:play", pad.party.playing === true)) : "inert"
         if (d === "party-next") return pad.partyDrive && pad.party.next.length > 0 ? pad.partyNext() : "inert"
