@@ -20,7 +20,7 @@ pub const PREF: &str = "ui-scale";
 /// where it isn't on the proven list, i.e. what TINHAT_UI_SCALE_LIVE=1 does; "0" = restart-only there. Kept per device.
 /// 12.1.11: absent = the platform's default (`live_by_default`): ON on Wayland (12.1.9 ran clean with the DPR walk
 /// guard), so the switch is the off-ramp there. The guard (ui_scale_bridge.cpp) covers the live path wherever it runs
-/// (not `windows`).
+/// (12.1.17: on `windows` too).
 pub const LIVE_PREF: &str = "ui-scale-live";
 
 /// Any value → a size the app uses: clamped to MIN..=MAX and snapped to the nearest step (a half step rounds up).

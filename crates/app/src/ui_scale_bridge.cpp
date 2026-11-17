@@ -255,12 +255,12 @@ void applyNow(double factor) {
     if (dc) dc->setEnabled(QtWarningMsg, warnOn);
     g_current = factor;
 #if TINHAT_UI_SCALE_QPA
-    // the guarded walk (above) runs for every Qt Quick window while its DPR change is delivered. Not on the `windows`
-    // plugin yet: the live change there is the shipped, crash-free path, and this guard has not run on Windows (a Windows
-    // run first; docs/UI-ZOOM.md). TINHAT_UI_SCALE_GUARD=0/1 forces it off/on (gates).
+    // the guarded walk (above) runs for every Qt Quick window while its DPR change is delivered, on EVERY platform.
+    // 12.1.17: also on `windows` — 12.1.16 left it off there, and a live size change crashed Tin Hat on Windows in the
+    // field (0xC0000005 in Qt6Quick 6.8.3: QQuickItem::childItems on a freed item <- updatePixelRatioHelper x N, the
+    // same class; docs/UI-ZOOM.md). TINHAT_UI_SCALE_GUARD=0 turns it off (gates: scripts/dprwalk/).
     g_walk = WalkStats();
-    const QByteArray forced = qgetenv("TINHAT_UI_SCALE_GUARD");
-    const bool guard = forced == "1" || (forced != "0" && QGuiApplication::platformName() != QLatin1String("windows"));
+    const bool guard = qgetenv("TINHAT_UI_SCALE_GUARD") != "0";
     if (guard)
         for (const QPointer<QWindow> &w : wins)
             if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w.data())) qw->installEventFilter(dprGuard());
