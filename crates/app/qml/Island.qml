@@ -94,7 +94,7 @@ Item {
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
-                        font.pixelSize: 13
+                        font.pixelSize: Th.px(13)
                         font.weight: Font.DemiBold
                         color: Th.editmodePlaceholderFg
                         text: ph.t.name
@@ -107,7 +107,7 @@ Item {
                         wrapMode: Text.Wrap
                         maximumLineCount: 2
                         elide: Text.ElideRight
-                        font.pixelSize: 12
+                        font.pixelSize: Th.px(12)
                         color: Th.editmodePlaceholderFg
                         text: ph.t.absent
                     }
@@ -116,8 +116,8 @@ Item {
                     anchors.centerIn: parent
                     visible: ph.isShort
                     spacing: 8
-                    Text { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.editmodePlaceholderFg; text: ph.t.name }
-                    Text { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; font.pixelSize: 12; color: Th.editmodePlaceholderFg; text: ph.t.absent; visible: ph.t.absent.length > 0 }
+                    Text { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; font.pixelSize: Th.px(13); font.weight: Font.DemiBold; color: Th.editmodePlaceholderFg; text: ph.t.name }
+                    Text { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; font.pixelSize: Th.px(12); color: Th.editmodePlaceholderFg; text: ph.t.absent; visible: ph.t.absent.length > 0 }
                 }
             }
         }

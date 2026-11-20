@@ -17,7 +17,7 @@ import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app   // Th: the calendar.* tokens
 
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: cal
     required property var app
     // 10.1 (TH-CAL-22 / TH-MEM-08 / TH-WP-15): remembered size (+ position off Wayland) across runs.
@@ -535,7 +535,7 @@ Window {
                     app: cal.app; name: "view-calendar-symbolic"; color: Th.calendarHeaderIcon
                     width: 26; height: 26; active: true
                 }
-                Kirigami.Heading {
+                ThHeading {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     level: 2
                     visible: cal.containers.length <= 1   // 10.1 (TH-VIS-19): the picker already names the room
@@ -644,7 +644,7 @@ Window {
                 horizontalAlignment: Text.AlignHCenter
                 text: "This room belongs to a space you haven't joined, so this is the room's own calendar. The squad calendar lives in the space — ask an admin to invite you (right-click the space → Invite people)."
                 color: Th.calendarBannerFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
         // 0.8.27 — people in the room I opened from who are not in this space (they can't see this).
@@ -667,7 +667,7 @@ Window {
                           + " yet, so they can't see this calendar: " + cal.missing.map(function (p) { return p.name }).join(", ")
                           + (cal.canInvite ? "" : ". A space admin can invite them.")
                     color: Th.calendarBannerFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 ThButton {
                     app: cal.app;
@@ -688,7 +688,7 @@ Window {
                 anchors.centerIn: parent
                 text: "Scheduling here unlocks the first time a space admin opens this space in Tin Hat 10 — ask an admin to open it once."
                 color: Th.calendarBannerFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
         Rectangle {
@@ -696,7 +696,7 @@ Window {
             visible: cal.errorText.length > 0
             implicitHeight: visible ? 30 : 0
             color: Th.calendarBannerErrorBg
-            Controls.Label { textFormat: Text.PlainText; anchors.centerIn: parent; text: cal.errorText; color: Th.calendarBannerFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+            Controls.Label { textFormat: Text.PlainText; anchors.centerIn: parent; text: cal.errorText; color: Th.calendarBannerFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
         }
 
         // ---- body -------------------------------------------------------------------------
@@ -717,7 +717,7 @@ Window {
                     RowLayout {
                         Layout.fillWidth: true
                         Controls.ToolButton { icon.name: "go-previous-symbolic"; onClicked: cal.shiftMonth(-1); Controls.ToolTip.text: "Previous month"; Controls.ToolTip.visible: hovered; Accessible.name: "Previous month" }
-                        Kirigami.Heading {
+                        ThHeading {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             level: 3
                             text: Qt.formatDate(new Date(cal.viewYear, cal.viewMonth, 1), "MMMM yyyy")
@@ -741,7 +741,7 @@ Window {
                             elide: Text.ElideRight
                             text: cal.undated.length + (cal.undated.length === 1 ? " proposal" : " proposals") + " awaiting a time — see Upcoming"
                             color: Th.calendarMetaFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                         Controls.Label {
                             visible: cal.canEdit   // 10.1 (TH-CAL-21): don't invite an action that does nothing
@@ -751,11 +751,17 @@ Window {
                             elide: Text.ElideRight
                             text: "Double-click a day to schedule"
                             color: Th.calendarMetaFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                     }
                     Controls.DayOfWeekRow {
+                        id: dowRow
                         Layout.fillWidth: true
+                        // P22: the weekday names take the window's font (the person's text size, ThWindow.qml); the row
+                        // sized itself once, at the platform size, so its height follows its own font here (also when
+                        // the size changes while the Calendar is open)
+                        Layout.preferredHeight: dowFm.height + dowRow.topPadding + dowRow.bottomPadding
+                        FontMetrics { id: dowFm; font: dowRow.font }
                         locale: grid.locale
                         delegate: Controls.Label {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -851,7 +857,7 @@ Window {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: (modelData.game && modelData.game.length > 0 ? modelData.game : modelData.title)
                                                 color: Th.calendarFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                                 font.strikeout: modelData.canceled
                                                 elide: Text.ElideRight
                                             }
@@ -862,7 +868,7 @@ Window {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: modelData.effStart ? cal.fmtTime(modelData.effStart).replace(":00", "").replace(" ", "").toLowerCase() : ""
                                                 color: Th.calendarChipTimeFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale
                                             }
                                         }
                                         MouseArea {
@@ -876,7 +882,7 @@ Window {
                                     visible: cell.evs.length > cell.chipCap
                                     text: "+" + (cell.evs.length - cell.chipCap) + " more" + (cellMa.containsMouse ? " — click the day" : "")
                                     color: cellMa.containsMouse ? Th.calendarDayMoreFgHover : Th.calendarDayMoreFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 }
                             }
                             // main-game label: on the range's first day and at the start of each week
@@ -887,7 +893,7 @@ Window {
                                 anchors.leftMargin: 8; anchors.bottomMargin: 6
                                 text: cell.mainGame ? ((cell.mainGame.game && cell.mainGame.game.length > 0) ? cell.mainGame.game : cell.mainGame.title) : ""
                                 color: cell.mainGame ? cal.chipColor(cell.mainGame) : "transparent"
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale
                                 font.bold: true
                                 opacity: 0.9
                                 elide: Text.ElideRight
@@ -912,7 +918,7 @@ Window {
                 // ===== UPCOMING =====
                 ColumnLayout {
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { level: 3; text: "Coming up"; color: Th.calendarFg }
+                    ThHeading { level: 3; text: "Coming up"; color: Th.calendarFg }
                     Controls.ScrollView {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -976,7 +982,7 @@ Window {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: modelData.effStart ? (cal.fmtDay(modelData.effStart) + "\n" + cal.fmtTime(modelData.effStart)) : "time to be decided"
                                                 color: Th.calendarMetaFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                             }
                                         }
                                         ColumnLayout {
@@ -989,7 +995,7 @@ Window {
                                                       + (modelData.freePlay && modelData.kind !== "freeplay" ? "  ·  free play allowed" : "")
                                                       + (modelData.joinIfYouCan ? "  ·  join if you can" : "")
                                                 color: Th.calendarMetaFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
@@ -1010,7 +1016,7 @@ Window {
                                             text: (modelData.rsvp ? modelData.rsvp.yes.length : 0) + " going"
                                                   + ((modelData.rsvp && modelData.rsvp.maybe.length > 0) ? " · " + modelData.rsvp.maybe.length + " maybe" : "")
                                             color: Th.calendarMetaFg
-                                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                         }
                                         Rectangle {
                                             visible: cal.myStatus(modelData).length > 0
@@ -1019,7 +1025,7 @@ Window {
                                             Controls.Label {
                                                 id: myLbl; anchors.centerIn: parent
                                                 text: cal.myStatus(modelData) === "yes" ? "you're in" : (cal.myStatus(modelData) === "maybe" ? "maybe" : "can't")
-                                                color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9
+                                                color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale
                                             }
                                         }
                                     }
@@ -1031,7 +1037,7 @@ Window {
                                     }
                                 }
                             }
-                            Kirigami.Heading { visible: cal.pastEvents.length > 0; level: 4; text: "Past"; color: Th.calendarMetaFg; Layout.topMargin: 12 }
+                            ThHeading { visible: cal.pastEvents.length > 0; level: 4; text: "Past"; color: Th.calendarMetaFg; Layout.topMargin: 12 }
                             Repeater {
                                 model: cal.pastEvents.slice(0, 12)
                                 delegate: Controls.ItemDelegate {
@@ -1050,7 +1056,7 @@ Window {
                     spacing: Kirigami.Units.smallSpacing
                     RowLayout {
                         Layout.fillWidth: true
-                        Kirigami.Heading { level: 3; text: "Games & standing rules"; color: Th.calendarFg }
+                        ThHeading { level: 3; text: "Games & standing rules"; color: Th.calendarFg }
                         Item { Layout.fillWidth: true }
                         ThButton {
                             app: cal.app;
@@ -1153,7 +1159,7 @@ Window {
                                         RowLayout {
                                             Layout.fillWidth: true
                                             Rectangle { Layout.preferredWidth: 12; Layout.preferredHeight: 12; radius: 6; color: modelData.color }   // 10.1 (TH-CAL-09): a layout child sizes from Layout.*, so this drew 0×0
-                                            Kirigami.Heading { textFormat: Text.PlainText; level: 4; text: modelData.name; color: Th.calendarFg }
+                                            ThHeading { textFormat: Text.PlainText; level: 4; text: modelData.name; color: Th.calendarFg }
                                             Controls.Label {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 visible: !!(modelData.server && modelData.server.length > 0)
@@ -1222,7 +1228,7 @@ Window {
                             Layout.fillWidth: true
                             Layout.margins: 12
                             spacing: 8
-                            Kirigami.Heading { level: 3; text: cal.dId.length > 0 ? "Edit event" : "New event"; color: Th.calendarFg }
+                            ThHeading { level: 3; text: cal.dId.length > 0 ? "Edit event" : "New event"; color: Th.calendarFg }
                             ThTextField {
                                 id: titleField
                                 Layout.fillWidth: true
@@ -1245,7 +1251,7 @@ Window {
                                 Controls.ToolTip.text: "Which game — pick one or type a new one"
                                 Controls.ToolTip.visible: hovered
                             }
-                            Controls.Label { text: "What kind of night"; color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                            Controls.Label { text: "What kind of night"; color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                             Flow {
                                 Layout.fillWidth: true
                                 spacing: 6
@@ -1270,7 +1276,7 @@ Window {
                                 wrapMode: Text.WordWrap
                                 text: cal.kindHint(cal.dKind)
                                 color: Th.calendarMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                             // 0.8.27: a main-game range is whole days — first day … last day.
                             RowLayout {
@@ -1297,7 +1303,7 @@ Window {
                                     Layout.fillWidth: true
                                     text: "Click days in the grid to set the first day"
                                     color: Th.calendarMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     elide: Text.ElideRight
                                 }
                             }
@@ -1333,14 +1339,14 @@ Window {
                                 visible: cal.dKind !== "focus"
                                 text: cal.validKey(cal.dDate) ? (cal.fmtDayLong(cal.keyToDate(cal.dDate).getTime()) + " · " + cal.timeSlots[Math.floor(cal.dTime / 15)] + " " + cal.tz()) : "Pick a valid date"
                                 color: Th.calendarMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                             // proposal options
                             ColumnLayout {
                                 visible: cal.dKind === "proposal"
                                 Layout.fillWidth: true
                                 spacing: 4
-                                Controls.Label { text: "Proposed times (people vote, you lock one in)"; color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                Controls.Label { text: "Proposed times (people vote, you lock one in)"; color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 Repeater {
                                     model: cal.dOptions
                                     delegate: RowLayout {
@@ -1425,13 +1431,13 @@ Window {
                                     radius: 9; implicitHeight: 18; implicitWidth: kindLbl.implicitWidth + 14
                                     color: cal.tint(cal.kindColor(detail.ev.kind), 0.22)
                                     border.width: 1; border.color: cal.kindColor(detail.ev.kind)
-                                    Controls.Label { textFormat: Text.PlainText; id: kindLbl; anchors.centerIn: parent; text: cal.kindLabel(detail.ev.kind); color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 }
+                                    Controls.Label { textFormat: Text.PlainText; id: kindLbl; anchors.centerIn: parent; text: cal.kindLabel(detail.ev.kind); color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale }
                                 }
                                 Rectangle {
                                     visible: !!(detail.ev.game && detail.ev.game.length > 0)
                                     radius: 9; implicitHeight: 18; implicitWidth: gameLbl.implicitWidth + 14
                                     color: cal.tint(cal.chipColor(detail.ev), 0.22)
-                                    Controls.Label { textFormat: Text.PlainText; id: gameLbl; anchors.centerIn: parent; text: detail.ev.game || ""; color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 }
+                                    Controls.Label { textFormat: Text.PlainText; id: gameLbl; anchors.centerIn: parent; text: detail.ev.game || ""; color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale }
                                 }
                                 // 9.0 Game Reel: a session with no game yet offers the picker (DESIGN §4.1).
                                 Controls.AbstractButton {
@@ -1441,13 +1447,13 @@ Window {
                                     hoverEnabled: true
                                     onClicked: cal.pickGame(detail.ev.id)
                                     background: Rectangle { radius: 9; color: (pickBtn.hovered ? Th.calendarPickGameBgHover : Th.calendarPickGameBg); border.width: 1; border.color: Th.calendarPickGameBorder }
-                                    contentItem: Controls.Label { id: pickLbl; text: "🎲 Game TBD · pick tonight's game"; color: Th.calendarPickGameFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                    contentItem: Controls.Label { id: pickLbl; text: "🎲 Game TBD · pick tonight's game"; color: Th.calendarPickGameFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                                 }
                                 Rectangle {
                                     visible: detail.ev.canceled === true
                                     radius: 9; implicitHeight: 18; implicitWidth: canLbl.implicitWidth + 14
                                     color: Th.calendarCanceledBg
-                                    Controls.Label { id: canLbl; anchors.centerIn: parent; text: "Canceled"; color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 }
+                                    Controls.Label { id: canLbl; anchors.centerIn: parent; text: "Canceled"; color: Th.calendarFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale }
                                 }
                                 Item { Layout.fillWidth: true }
                                 Controls.ToolButton { visible: detail.ev.canEdit === true; icon.name: "document-edit-symbolic"; Controls.ToolTip.text: "Edit"; Controls.ToolTip.visible: hovered; onClicked: cal.startEdit(detail.ev) }
@@ -1468,7 +1474,7 @@ Window {
                                     onClicked: { deleteConfirm.targetId = detail.ev.id; deleteConfirm.open() }
                                 }
                             }
-                            Kirigami.Heading { textFormat: Text.PlainText; Layout.fillWidth: true; level: 2; text: detail.ev.title || ""; color: Th.calendarFg; wrapMode: Text.WordWrap }
+                            ThHeading { textFormat: Text.PlainText; Layout.fillWidth: true; level: 2; text: detail.ev.title || ""; color: Th.calendarFg; wrapMode: Text.WordWrap }
                             RowLayout {
                                 spacing: 8
                                 ThIcon { app: cal.app; name: "view-calendar-upcoming-events-symbolic"; width: 18; height: 18; color: Th.calendarDetailWhenIcon }
@@ -1477,13 +1483,14 @@ Window {
                             Flow {
                                 Layout.fillWidth: true
                                 spacing: 6
-                                Controls.Label { visible: detail.ev.freePlay === true && detail.ev.kind !== "freeplay"; text: "✓ free play allowed"; color: Th.calendarDetailFreePlayFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
-                                Controls.Label { visible: detail.ev.joinIfYouCan === true; text: "✓ join if you can"; color: Th.calendarDetailJoinIfYouCanFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                Controls.Label { visible: detail.ev.freePlay === true && detail.ev.kind !== "freeplay"; text: "✓ free play allowed"; color: Th.calendarDetailFreePlayFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
+                                Controls.Label { visible: detail.ev.joinIfYouCan === true; text: "✓ join if you can"; color: Th.calendarDetailJoinIfYouCanFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                             }
                             RowLayout {
                                 spacing: 6
                                 Avatar { app: cal.app; size: 20; name: detail.ev.creator ? detail.ev.creator.name : ""; seed: detail.ev.createdBy || ""; imageSource: detail.ev.creator ? detail.ev.creator.avatar : "" }
-                                Controls.Label { textFormat: Text.PlainText; text: "Organised by " + (detail.ev.creator ? detail.ev.creator.name : ""); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                // (no prestige token: "Organised by <name>" is a sentence — GAMES-V1-SPEC §3.2)
+                                Controls.Label { textFormat: Text.PlainText; text: "Organised by " + (detail.ev.creator ? detail.ev.creator.name : ""); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                             }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -1498,7 +1505,7 @@ Window {
                                 Layout.fillWidth: true
                                 spacing: 2
                                 visible: !!((detail.ev.rules && detail.ev.rules.length > 0) || (cal.gameFor(detail.ev) && cal.gameFor(detail.ev).rules && cal.gameFor(detail.ev).rules.length > 0))
-                                Controls.Label { text: "Rules"; color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                Controls.Label { text: "Rules"; color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 Controls.Label { textFormat: Text.PlainText; visible: !!(detail.ev.rules && detail.ev.rules.length > 0); Layout.fillWidth: true; text: detail.ev.rules || ""; color: Th.calendarFg; wrapMode: Text.WordWrap }
                                 Controls.Label {
                                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -1525,7 +1532,7 @@ Window {
                                 spacing: 6
                                 Controls.Label {
                                     text: detail.ev.chosen >= 0 ? "Time locked in" : "When can you make it? (tick every time that works)"
-                                    color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 }
                                 Repeater {
                                     model: detail.ev.options || []
@@ -1560,7 +1567,7 @@ Window {
                                                     }
                                                 }
                                             }
-                                            Controls.Label { textFormat: Text.PlainText; text: (modelData.votes ? modelData.votes.length : 0) + (modelData.votes && modelData.votes.length === 1 ? " can" : " can"); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                            Controls.Label { textFormat: Text.PlainText; text: (modelData.votes ? modelData.votes.length : 0) + (modelData.votes && modelData.votes.length === 1 ? " can" : " can"); color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                             ThButton {
                                                 app: cal.app;
                                                 visible: detail.ev.canEdit === true && detail.ev.chosen < 0
@@ -1580,7 +1587,7 @@ Window {
                             }
 
                             // RSVP
-                            Controls.Label { text: detail.ev.past === true ? "This one already happened" : "Are you in?"; color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }   // 10.1 (TH-CAL-18)
+                            Controls.Label { text: detail.ev.past === true ? "This one already happened" : "Are you in?"; color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }   // 10.1 (TH-CAL-18)
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: 6
@@ -1616,13 +1623,13 @@ Window {
                             Controls.Label {
                                 visible: !cal.canEdit
                                 text: "RSVPs open once a space admin has opened this calendar."
-                                color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                             // who's in
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 4
-                                Controls.Label { text: "Who's in"; color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                Controls.Label { text: "Who's in"; color: Th.calendarMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 Controls.Label {
                                     visible: !!(!detail.ev.rsvp || (detail.ev.rsvp.yes.length === 0 && detail.ev.rsvp.maybe.length === 0))
                                     text: "Nobody yet — be the first."
@@ -1640,6 +1647,9 @@ Window {
                                             Row {
                                                 id: yesRow; anchors.centerIn: parent; spacing: 5
                                                 Avatar { app: cal.app; size: 20; name: modelData.name; seed: modelData.mxid; imageSource: modelData.avatar; anchors.verticalCenter: parent.verticalCenter }
+                                                // mini games v1: the person's prestige token (the box is 1 px narrower: 4 px with the row's 5)
+                                                Item { anchors.verticalCenter: parent.verticalCenter; visible: yesTok.rank > 0; width: yesTok.size - 1; height: yesTok.size
+                                                    PrestigeToken { id: yesTok; mxid: String(modelData.mxid || ""); roomId: cal.roomId; gap: false } }
                                                 Controls.Label { textFormat: Text.PlainText; text: modelData.name; color: Th.calendarFg; anchors.verticalCenter: parent.verticalCenter }
                                             }
                                         }
@@ -1653,6 +1663,8 @@ Window {
                                             Row {
                                                 id: mayRow; anchors.centerIn: parent; spacing: 5
                                                 Avatar { app: cal.app; size: 20; name: modelData.name; seed: modelData.mxid; imageSource: modelData.avatar; anchors.verticalCenter: parent.verticalCenter }
+                                                Item { anchors.verticalCenter: parent.verticalCenter; visible: mayTok.rank > 0; width: mayTok.size - 1; height: mayTok.size
+                                                    PrestigeToken { id: mayTok; mxid: String(modelData.mxid || ""); roomId: cal.roomId; gap: false } }   // mini games v1
                                                 Controls.Label { textFormat: Text.PlainText; text: modelData.name + " (maybe)"; color: Th.calendarFg; anchors.verticalCenter: parent.verticalCenter }
                                             }
                                         }
@@ -1664,7 +1676,7 @@ Window {
                                     Layout.fillWidth: true
                                     text: "Can't make it: " + (detail.ev.rsvp ? detail.ev.rsvp.no.map(function (p) { return p.name }).join(", ") : "")
                                     color: Th.calendarMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     wrapMode: Text.WordWrap
                                 }
                             }
@@ -1676,7 +1688,7 @@ Window {
                             Layout.fillWidth: true
                             Layout.margins: 12
                             spacing: 8
-                            Kirigami.Heading {
+                            ThHeading {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 level: 3
                                 text: cal.validKey(cal.selectedDay) ? cal.fmtDayLong(cal.keyToDate(cal.selectedDay).getTime()) : ""
@@ -1729,14 +1741,14 @@ Window {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: cal.fmtTime(modelData.effStart) + (modelData.end > modelData.effStart ? " – " + cal.fmtTime(modelData.end) : "")
                                                       + (modelData.game ? "  ·  " + modelData.game : "") + "  ·  " + cal.kindLabel(modelData.kind)
-                                                color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.fillWidth: true
+                                                color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; elide: Text.ElideRight; Layout.fillWidth: true
                                             }
                                             Controls.Label {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: (modelData.rsvp ? modelData.rsvp.yes.length : 0) + " going"
                                                       + ((modelData.rsvp && modelData.rsvp.maybe.length > 0) ? " · " + modelData.rsvp.maybe.length + " maybe" : "")
                                                       + (cal.myStatus(modelData) === "yes" ? "  ·  you're in" : "")
-                                                color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                color: Th.calendarMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                             }
                                         }
                                     }
@@ -1757,7 +1769,7 @@ Window {
                                 text: cal.reminders ? "You get a desktop reminder 30 minutes before anything you're going to, and a heads-up when someone schedules something new."
                                                     : "Reminders are off (bell in the header)."
                                 color: Th.calendarMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                         }
                     }

@@ -128,6 +128,9 @@ Controls.Dialog {
     // this screen: Escape asks first (keyAsk, the web's KEY_SKIP_* words). Closing it is not a cancel: it used to go
     // through sasCancelled and log "You cancelled" over a key that was made; it goes back to the first screen instead.
     readonly property bool keyUnsaved: dlg.sasState === "recovery-done" && !savedCheck.checked
+    // the shot guard: a Security Key on screen (the state only, never the key)
+    readonly property bool _keyOnScreen: dlg.visible && dlg.sasState === "recovery-done"
+    on_KeyOnScreenChanged: console.log("[shot-guard] security key " + (dlg._keyOnScreen ? "SHOWN" : "hidden"))
     closePolicy: dlg.keyUnsaved ? Controls.Popup.NoAutoClose : (Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutside)
     onRejected: {
         if (dlg.sasState === "recovery-done") dlg.sasResetRequested()
@@ -412,7 +415,7 @@ Controls.Dialog {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: parent.modelData.e
-                            font.pointSize: 24
+                            font.pointSize: 24 * Th.textScale
                         }
                         Controls.Label {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup

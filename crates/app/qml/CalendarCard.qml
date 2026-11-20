@@ -116,13 +116,13 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
-            Controls.Label { text: "📅"; font.pixelSize: 14 }
+            Controls.Label { text: "📅"; font.pixelSize: Th.px(14) }
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 Layout.fillWidth: true
                 text: card.live ? card.kindLabel(card.live) : "Calendar event"
                 color: card.fgDim
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 font.bold: true
                 elide: Text.ElideRight
                 opacity: 0.9
@@ -132,7 +132,7 @@ Rectangle {
                 text: "CANCELLED"
                 color: Th.calendarCardCancelledFg
                 font.bold: true
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
         Controls.Label {
@@ -142,7 +142,7 @@ Rectangle {
             text: card.live ? (card.live.title + (card.live.game ? "  ·  " + card.live.game : "")) : ""
             color: card.fg
             font.bold: true
-            font.pointSize: Kirigami.Theme.defaultFont.pointSize + 1
+            font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 1) * Th.textScale
             font.strikeout: card.canceled
             wrapMode: Text.WordWrap
         }
@@ -172,7 +172,7 @@ Rectangle {
             wrapMode: Text.WordWrap
             maximumLineCount: 3
             elide: Text.ElideRight
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
         Controls.Label {
             visible: card.live === null
@@ -180,7 +180,7 @@ Rectangle {
             text: "Open the calendar for the details and to RSVP."
             color: card.fgDim
             wrapMode: Text.WordWrap
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
         Controls.Label {
             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -194,7 +194,7 @@ Rectangle {
                 return parts.length > 0 ? parts.join(" · ") : "Nobody has answered yet"
             }
             color: card.fgDim
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             elide: Text.ElideRight
         }
         RowLayout {

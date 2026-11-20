@@ -843,6 +843,62 @@ impl<'a> Solver<'a> {
         };
         clamp(b, mn, mx)
     }
+    /// v1.3 keep (§7.6 step 4a): a known island's registry keep along a, when its effective basis is auto or share (a
+    /// fixed or pm size is the user's own choice) and it is not folded — min(sc(len), fdiv(pm × L, 1000)); else None.
+    fn keep_len(&self, n: &SN, a: Axis, l: i64) -> Option<i64> {
+        if n.kind != Kind::Island || is_compat_ref(&n.rf) || self.folded.contains(&*n.rf) {
+            return None;
+        }
+        let (len, pm) = def_of(&n.rf)?.keep[a.idx()]?;
+        let s = self.size_of(n, a);
+        if s.fixed.is_some() || s.pm.is_some() {
+            return None;
+        }
+        Some(self.sc(len).min(fdiv(pm * l, 1000)))
+    }
+    /// v1.3 keep (§7.6 step 4a, Q-KEEP), after the grow / shrink passes and before squeeze-out: a child below its keep
+    /// takes the free length left over, then what its foldable auto / pm island siblings (no keep) hold above their
+    /// minimum, last child first. The free length is length no child had (Σ base stays ≤ L) and a transfer keeps Σ base,
+    /// so overflow, breach and squeeze-out are exactly v1.2's (squeeze-out happens only when every auto / pm child is
+    /// already at its minimum).
+    #[allow(clippy::too_many_arguments)]
+    fn keep_move(&self, kids: &[N], a: Axis, l: i64, base: &mut [i64], mins: &[i64], maxs: &[i64], free0: i64) {
+        let keeps: Vec<Option<i64>> = kids.iter().map(|c| self.keep_len(c, a, l)).collect();
+        let mut free = free0;
+        for i in 0..kids.len() {
+            let Some(want) = keeps[i] else { continue };
+            let mut d = clamp(want, mins[i], maxs[i]) - base[i];
+            if d <= 0 {
+                continue;
+            }
+            let f = d.min(free);
+            base[i] += f;
+            free -= f;
+            d -= f;
+            for j in (0..kids.len()).rev() {
+                if d <= 0 {
+                    break;
+                }
+                if j == i || keeps[j].is_some() || !Self::keep_donor(&kids[j]) {
+                    continue;
+                }
+                let s = self.size_of(&kids[j], a);
+                if !(s.auto || s.pm.is_some()) {
+                    continue;
+                }
+                let take = d.min((base[j] - mins[j]).max(0));
+                base[j] -= take;
+                base[i] += take;
+                d -= take;
+            }
+        }
+    }
+    /// v1.3 keep donors: known islands whose registry allows `fold` (the widgets: their minimum is their folded height,
+    /// less than their natural folds or scrolls them). Nothing else gives way: an account bar or a container would clip
+    /// or overflow inside.
+    fn keep_donor(n: &SN) -> bool {
+        n.kind == Kind::Island && !is_compat_ref(&n.rf) && def_of(&n.rf).is_some_and(|d| d.collapse_allows("fold"))
+    }
     fn weight(&self, n: &SN, a: Axis) -> i64 {
         let s = self.size_of(n, a);
         if s.fixed.is_some() || s.auto || s.pm.is_some() {
@@ -939,6 +995,7 @@ impl<'a> Solver<'a> {
                     need -= take;
                 }
             }
+            self.keep_move(kids, a, l, &mut base, &mins, &maxs, 0);
             for i in (0..ku).rev() {
                 if need <= 0 {
                     break;
@@ -952,6 +1009,9 @@ impl<'a> Solver<'a> {
             if need > 0 {
                 breach = true;
             }
+        }
+        if !over {
+            self.keep_move(kids, a, l, &mut base, &mins, &maxs, r.max(0));
         }
         Dist { base, mins, maxs, g, l, over, breach, squeezed }
     }

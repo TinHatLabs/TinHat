@@ -246,7 +246,7 @@ Item {
                     Column {
                         anchors.centerIn: parent
                         spacing: 4
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "🎲"; font.pixelSize: 18; color: Th.widgetUpNextTbdFg }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "🎲"; font.pixelSize: Th.px(18); color: Th.widgetUpNextTbdFg }
                         WidgetText { anchors.horizontalCenter: parent.horizontalCenter; horizontalAlignment: Text.AlignHCenter; role: "chip"; text: "Game\nTBD"; maximumLineCount: 2; wrapMode: Text.Wrap; lineHeight: 0.85; color: Th.widgetUpNextTbdFg }
                     }
                 }

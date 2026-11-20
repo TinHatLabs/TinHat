@@ -69,7 +69,7 @@ ThMenu {
                 Layout.preferredWidth: Math.max(118, Math.ceil(8.75 * fontInfo.pixelSize))
                 text: modelData.label
                 color: menu.muted[dialRow.cat] ? Th.callVolumeLabelFgMuted : Th.callVolumeLabelFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             ThSlider {
                 callHandle: true
@@ -104,7 +104,7 @@ ThMenu {
                 text: Math.round(menu.vals[dialRow.cat] * 100) + "%"
                 color: Th.callVolumeValueFg
                 horizontalAlignment: Text.AlignRight
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Controls.ToolButton {
                 icon.name: menu.muted[dialRow.cat] ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"

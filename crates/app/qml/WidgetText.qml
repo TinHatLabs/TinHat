@@ -6,12 +6,13 @@
 import QtQuick
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
+import dev.tinhat.app
 
 Text {
     id: t
     property string role: "text"
     property bool semibold: false             // "W-meta 600" and friends
-    readonly property real body: Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10
+    readonly property real body: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale   // A31.4: the person's text size
     readonly property real factor: role === "meta" || role === "num" ? 0.85
         : role === "label" || role === "chip" ? 0.75
         : role === "date" ? 1.1

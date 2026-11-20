@@ -188,6 +188,9 @@ fn main() {
             QmlModule::new("dev.tinhat.app").qml_files([
                 "qml/Main.qml",
                 "qml/AppCore.qml",
+                "qml/ClipProbe.qml", // P22 text size gate hook (env TINHAT_GUI_CLIPPROBE only)
+                "qml/ThHeading.qml", // A31.4: Kirigami.Heading at the person's text size
+                "qml/ThWindow.qml", // P22: a secondary window whose font carries the person's text size
                 "qml/GameReelPanel.qml",
                 "qml/GameArtLayer.qml", // sun-gamebg: "Match the game" art in the chat background
                 "qml/GameReelWindow.qml",
@@ -289,6 +292,7 @@ fn main() {
                 "qml/ScreenFit.qml", // A33.3 / A33.4: remembered window spots stay on a connected screen
                 "qml/ShareQuick.qml", // 12.1.15: the share picker's "Custom…" panel (the rules; shared vectors with the web)
                 "qml/VolumePreview.qml", // 12.1.16 (D07.1): the Sound volume slider's preview (shared vectors with the web)
+                "qml/RoomMissing.qml", // 12.1.16: a link to a room this account isn't in (shared vectors with the web)
                 "qml/Lightbox.qml",
                 "qml/OverlayWindow.qml",
                 "qml/CamGlTest.qml",
@@ -330,6 +334,8 @@ fn main() {
                 "qml/GameArtGallery.qml", // TINHAT_GAMEBG_GALLERY: "Match the game" review captures (sun-gamebg)
                 "qml/LevelMeter.qml",     //   the house level meter (was Main.qml's inline component)
                 "qml/RoleBadge.qml", // RBAC: the one role chip (members list, RightPanel)
+                "qml/PrestigeToken.qml", // mini games v1: the prestige token left of a name (GAMES-V1-SPEC §3.1)
+                "qml/PersonName.qml", // mini games v1: a name label + its prestige token (GAMES-V1-SPEC §3.2)
                 "qml/SpaceInviteCard.qml", // RBAC: invited-space card in the room panel (§7.3)
                 "qml/StatusChip.qml", // 10.6: a custom status pill (docs/REACH.md A4.5)
                 "qml/PresenceLine.qml", // 10.6: the profile card's presence line (REACH §2.6 + A4.5)
@@ -358,6 +364,13 @@ fn main() {
                 "qml/ClocksWidget.qml", // widgets W1: People's clocks
                 "qml/DiceWidget.qml", // widgets W3: Dice
                 "qml/DiceCard.qml", // widgets W3: a roll as a card (the widget's last roll, the chat card)
+                "qml/GamePanel.qml", // mini games v1 (GAMES-V1-SPEC.md)
+                "qml/PlayCallChips.qml", // mini games v1 (GAMES-V1-SPEC.md)
+                "qml/PlayingCard.qml", // mini games v1 (GAMES-V1-SPEC.md)
+                "qml/HoldemTable.qml", // mini games v1 (GAMES-V1-SPEC.md)
+                "qml/RigTable.qml", // mini games v1 (GAMES-V1-SPEC.md)
+                "qml/RigSymbol.qml", // mini games v1: The Rig's reel symbols (the web's SVG paths)
+                "qml/GameChatCard.qml", // mini games v1 (GAMES-V1-SPEC.md)
                 "qml/PollsWidget.qml", // widgets W3: Polls
                 "qml/PollCard.qml", // widgets W3: a poll as a card (the chat)
                 "qml/VoiceRecorderRow.qml", // voice notes: the composer's recorder / review row (docs/VOICE-NOTES.md §2)
@@ -405,6 +418,8 @@ fn main() {
             .qml_file(QmlFile::from("qml/LinkGate.qml").singleton(true))
             // QOL A00.1: one player at a time (voice notes, audio, video; a recording pauses them)
             .qml_file(QmlFile::from("qml/NowPlaying.qml").singleton(true))
+            // mini games v1 (GAMES-V1-SPEC §3): the prestige ranks every name label reads (AppCore mirrors PrestigeController)
+            .qml_file(QmlFile::from("qml/Prestige.qml").singleton(true))
             // 11.0 step 5: the theme editor's pure helpers (targets + colour maths; the web's targets.ts + colour.ts)
             .qml_file(QmlFile::from("qml/ThemeEditorLib.qml").singleton(true)),
         )
@@ -434,6 +449,7 @@ fn main() {
         .file("src/space.rs") // SpaceController (RBAC: space settings, members, roles, rooms)
         .file("src/invites.rs") // InviteController (10.4: registration invite codes for operators)
         .file("src/guests_ctl.rs") // GuestsController (selfhost: the guest room — Settings → Guests, the bar, the notices)
+        .file("src/prestige.rs") // PrestigeController (mini games v1: the prestige rank store, GAMES-V1-SPEC §3.4)
         .file("src/presence.rs") // PresenceController (10.6: opt-in presence + "at the computer" pings, docs/REACH.md)
         .file("src/theme_ctl.rs") // ThemeController (themes, desktop C1: the engine → the Th singleton)
         .file("src/theme_editor.rs") // ThemeEditorController (11.0 step 5: the theme editor, share cards, the Pick tool)
@@ -446,6 +462,7 @@ fn main() {
         .file("src/dice_ctl.rs") // DiceController (widgets W3: rolling with the OS CSPRNG, private rolls, the Dice history)
         .file("src/polls_ctl.rs") // PollsController (widgets W3: the Polls widget's Small line + samples; the poll card's JSON)
         .file("src/gameservers_ctl.rs") // GameServersController (11.1: the Game servers widget's data, docs/GAMESERVERS.md)
+        .file("src/play_ctl.rs") // PlayController (mini games v1: Hold'em + The Rig tables, chips, cards; GAMES-V1-SPEC.md)
         .file("src/justme_ctl.rs") // JustMeController (widgets W2: "Is it just me?" — the checker, WIDGETS.md §20)
         .file("src/memories_ctl.rs") // MemoriesController (widgets W2: the Memories widget's data, WIDGETS.md §21)
         .file("src/gamenight_ctl.rs") // GameNightController (widgets W2: Game night's rules + my Reel credit, WIDGETS.md §23)
@@ -627,6 +644,25 @@ fn main() {
             }
         } else {
             qt_private_missing(&format!("{qt_headers}/QtGui|QtCore/{qt_version}"));
+        }
+        // 12.1.17 (the monitor-DPI guard in ui_scale_bridge.cpp, docs/UI-ZOOM.md): QtQuick's private headers and the QML
+        // ones they include, of THIS Qt (the bundle ships it, so the private layout matches at run time). Without
+        // QtQuick + QtQml the guard is compiled out, which a release build must never do quietly.
+        let quick_private: Vec<(std::path::PathBuf, &str)> = ["QtQml", "QtQmlModels", "QtQmlMeta", "QtQmlWorkerScript", "QtQuick"]
+            .iter()
+            .map(|m| (std::path::Path::new(&qt_headers).join(m).join(&qt_version), *m))
+            .filter(|(v, _)| v.is_dir())
+            .collect();
+        let has = |m: &str| quick_private.iter().any(|(_, x)| *x == m);
+        if std::env::var_os("TINHAT_NO_QT_PRIVATE").is_none() && has("QtQuick") && has("QtQml") {
+            for (v, m) in &quick_private {
+                build.include(v);
+                build.include(v.join(m));
+            }
+            // the bridge stops with #error if the guard would still be compiled out (a header missing inside the dirs)
+            build.define("TINHAT_REQUIRE_DPR_GUARD", None);
+        } else {
+            qt_private_missing(&format!("{qt_headers}/QtQuick|QtQml/{qt_version} (the monitor-DPI guard)"));
         }
         // 2b) MpvQt (watch-party) — bare-metal port: source-built MSVC MpvQt in the
         //     Kirigami prefix (C:\kde\install, override via TINHAT_MPVQT_PREFIX). When

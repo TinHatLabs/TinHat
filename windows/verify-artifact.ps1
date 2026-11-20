@@ -158,6 +158,13 @@ if ($exeText.Contains("TINHAT-LAB-BUILD")) {
     "verify FAIL: TINHAT-LAB-BUILD marker present - a LAB build that trusts a development update key"
     $fail++
 }
+# 12.1.17: the update gates' probe bypass (TINHAT_LAB_SKIP_PROBE, update_switch.rs) exists only in lab-update-key builds;
+# its name in an exe means the downloaded update would be switched in without the check that keeps people on a version
+# that starts. Refused by name, independently of the marker above.
+if ($exeText.Contains("TINHAT_LAB_SKIP_PROBE")) {
+    "verify FAIL: TINHAT_LAB_SKIP_PROBE present - a LAB build that can skip the update's start check"
+    $fail++
+}
 # Calls round M1 (2026-10-27): a LAB build (--features lab-call-host) answers the "call hosted elsewhere" sheet from
 # the TINHAT_TEST_CALL_HOST environment variable - the user's consent bypassed. A release build never reads it, so its
 # name is never in a publishable exe (same refusal as sign-desktop-feeds).

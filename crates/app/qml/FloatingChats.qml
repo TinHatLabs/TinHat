@@ -196,7 +196,7 @@ Item {
             RoomController { id: bubbleRoom }
             Component.onCompleted: bubbleRoom.open(roomId)
 
-            Window {
+            ThWindow {   // P22: the person's text size reaches the pop-out chat's controls (ThWindow.qml)
                 id: bubbleWin
                 // title flips so KWin's title-matched rules can still apply per-mode (KWin
                 // matches wmclass+title, not objectName). objectName is internal-only but
@@ -243,7 +243,7 @@ Item {
                     opacity: shown ? 1 : 0
                     visible: opacity > 0.01
                     Behavior on opacity { NumberAnimation { duration: Motion.durSlow } }
-                    Controls.Label { id: bubbleToastLabel; anchors.centerIn: parent; width: Math.min(implicitWidth, bubbleWin.width - 48); elide: Text.ElideRight; color: Th.chatHeadToastFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                    Controls.Label { id: bubbleToastLabel; anchors.centerIn: parent; width: Math.min(implicitWidth, bubbleWin.width - 48); elide: Text.ElideRight; color: Th.chatHeadToastFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                     Timer { id: bubbleToastT; interval: 2600; onTriggered: bubbleToast.shown = false }
                 }
 
@@ -308,6 +308,12 @@ Item {
                                     seed: Seeds.avatarSeed(slot.roomId, mgr.app ? mgr.app.dmPeerOf(slot.roomId) : "")   // §6
                                     imageSource: slot.meta.avatar || (mgr.app ? mgr.app.dmPictureOf(slot.roomId) : "")
                                 }
+                                PrestigeToken {   // mini games v1: a DM chat head is its person (4 px before the name)
+                                    mxid: mgr.app ? String(mgr.app.dmPeerOf(slot.roomId) || "") : ""
+                                    roomId: String(slot.roomId || "")
+                                    gap: false
+                                    Layout.rightMargin: 4 - Kirigami.Units.smallSpacing
+                                }
                                 Controls.Label {
                                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                     Layout.fillWidth: true
@@ -342,7 +348,7 @@ Item {
                             room: bubbleRoom
                             gif: mgr.gif
                             // 10.1 (TH-FLOAT-08): an avatar tap was dead in a bubble — open the profile in the main window.
-                            onAvatarActivated: (mxid) => { if (mgr.app && mgr.app.openProfileFlyout) mgr.app.openProfileFlyout(mxid) }
+                            onAvatarActivated: (mxid) => { if (mgr.app && mgr.app.openProfileFlyout) mgr.app.openProfileFlyout(mxid, roomId) }
                             // Thread the RESOLVED name (same source as the window title) so the
                             // composer placeholder shows "Message AetherBot", never a raw room id.
                             displayName: slot.meta.name
@@ -366,7 +372,7 @@ Item {
                             text: "◢"   // ◢ lower-right triangle grip hint
                             color: Qt.alpha(Th.chatHeadGripFg, 1)   // the token's alpha is the item's opacity (§3.8)
                             opacity: Th.chatHeadGripFg.a
-                            font.pixelSize: 12
+                            font.pixelSize: Th.px(12)
                         }
                     }
                 }

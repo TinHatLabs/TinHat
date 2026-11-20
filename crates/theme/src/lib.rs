@@ -37,6 +37,7 @@
 //! | [`editor`] | `editor.ts` | THEMES-UI.md §13: the theme editor — edits, history, readability, save / export |
 //! | [`palette`] | `palette.ts` | the theme editor's Simple palette: groups, swatches, what follows them; the `swatch` / `group` edits |
 //! | [`look`] | `look.ts` | ENGINE.md §10: the look beyond colours — island shadow, density, fonts, text size |
+//! | [`personal`] | `personal.ts` | P22 (12.1.17): the PERSON's text size + density over every theme, the one-time migration, row/line heights |
 //! | [`share`] | `share.ts` | THEMES-UI.md §14: theme share cards — the message, reading one back, Keep |
 //! | [`probe`] | `probe.ts` | THEMES-UI.md §15: the Pick tool's probe colours and the Pick list |
 //! | [`recent`] | `recent.ts` | THEMES-UI.md §12: the ☰ Theme menu's recent themes (per device) — read, record a pick, the menu's rows |
@@ -68,6 +69,7 @@ pub mod look;
 pub mod maths;
 pub mod ops;
 pub mod palette;
+pub mod personal;
 mod parsers;
 pub mod probe;
 pub mod recent;

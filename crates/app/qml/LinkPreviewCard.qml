@@ -70,7 +70,7 @@ Item {
                     // the tokens' alpha is the item's opacity (docs/MIGRATING-THEME.md §3.8)
                     color: card.onAccent ? Qt.alpha(Th.linkPreviewSiteFgOwn, 1) : Qt.alpha(Th.linkPreviewSiteFg, 1)
                     opacity: (card.onAccent ? Th.linkPreviewSiteFgOwn : Th.linkPreviewSiteFg).a
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85 * Th.textScale
                     font.letterSpacing: 0.8
                     elide: Text.ElideRight
                 }
@@ -98,7 +98,7 @@ Item {
                     wrapMode: Text.Wrap
                     maximumLineCount: 3
                     elide: Text.ElideRight
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 // Wide image below the text.
                 Image {

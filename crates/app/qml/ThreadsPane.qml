@@ -181,7 +181,7 @@ Item {
                             textFormat: Text.PlainText
                             text: row.it.rootName || ""
                             font.weight: Font.DemiBold
-                            font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                            font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                             color: row.unread > 0 ? Th.panelLinkFg : Th.panelFg
                             elide: Text.ElideRight
                         }
@@ -199,7 +199,7 @@ Item {
                             textFormat: Text.PlainText
                             text: row.sumText
                             color: Th.membersMetaFg
-                            font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                            font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                             elide: Text.ElideRight
                         }
                     }
@@ -231,7 +231,7 @@ Item {
                     : (tp.listData.error === true ? "Couldn't load the threads"
                     : (tp.filter === "mine" ? "You're not in any threads here yet" : "No threads here yet"))
                 color: Th.panelHintFg
-                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
             }
         }
     }

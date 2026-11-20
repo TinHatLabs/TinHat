@@ -21,7 +21,7 @@ Controls.Dialog {
     width: Math.min(600, (parent ? parent.width : 600) - Kirigami.Units.gridUnit * 2)
     height: Math.min(implicitHeight, (parent ? parent.height : 800) * 0.8)
     standardButtons: Controls.Dialog.Close
-    readonly property real body: Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10
+    readonly property real body: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale   // A31.4: the person's text size
 
     contentItem: Flickable {
         id: gFlick

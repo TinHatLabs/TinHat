@@ -31,6 +31,7 @@ pub mod qobject {
         #[qproperty(QString, room_id)] //       QML: roomId
         #[qproperty(QString, room_name)] //     QML: roomName
         #[qproperty(QString, messages_json)] // QML: messagesJson — JSON [{sender,body,ts,id}]
+        #[qproperty(QString, read_tail)] // QML: readTail — 12.1.17 round 2: a hidden photo newer than every row ("" = none)
         #[qproperty(QString, status)] //        QML: status (errors)
         #[qproperty(QString, op_failed_json)] // QML: opFailedJson — L1: the last refused edits / deletes, newest last (at most 8: push_failure) [{seq, room, kind ("edit" | "delete"), id, text, cls (fail_class)}]; the view handles each new seq once and puts a refused edit back in the box
         #[qproperty(bool, busy)] //             QML: busy
@@ -63,6 +64,7 @@ pub mod qobject {
         #[qproperty(bool, can_change_photo)] //     QML: canChangePhoto — may WE set the room picture?
         #[qproperty(QString, background_json)] //   QML: backgroundJson — {content, sender} of dev.tinhat.chat.background ("" = absent; docs/AMBIENCE.md)
         #[qproperty(bool, can_set_background)] //  QML: canSetBackground — may WE change the room's background (its power levels)?
+        #[qproperty(bool, can_set_background_known)] // QML: canSetBackgroundKnown — false until canSetBackground was read for this room (bgsheet-1220)
         #[qproperty(QString, background_image)] //  QML: backgroundImage — file URL of the background's own image when core imageShown said yes ("" = the preset)
         #[qproperty(QString, background_image_cells)] // QML: backgroundImageCells — its colour cells (every pixel, ambience::image_cells) as JSON
         #[qproperty(QString, media_resolved)] //    QML: mediaResolved — {"id","url"} for INLINE playback (no launch)
@@ -357,6 +359,11 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "takeDownMemory"]
         fn take_down_memory(self: Pin<&mut RoomController>, room_id: &QString, event_id: &QString);
+        /// QML: room.deleteMemoryPhoto(roomId, eventId) — 12.1.17: a moderator's Delete in the photo viewer (redacts the
+        /// message: gone from the chat and from Memories; the photo isn't in the chat, so its delete lives there too).
+        #[qinvokable]
+        #[cxx_name = "deleteMemoryPhoto"]
+        fn delete_memory_photo(self: Pin<&mut RoomController>, room_id: &QString, event_id: &QString);
         /// QML: room.addMemoryPhotos(roomId, urlsJson) — "Add photos": each image file sent to that room's chat and
         /// added to my Memories (["file://…"], from the picker, a paste or a drop).
         #[qinvokable]
@@ -366,6 +373,11 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "inMyMemories"]
         fn in_my_memories(self: &RoomController, room_id: &QString, event_id: &QString) -> bool;
+        /// QML: room.hiddenInChat(roomId, eventId) — 12.1.17: is this a photo the chat hid at its last load (it is in its
+        /// sender's Memories)? A jump to it opens the Memories viewer instead of hunting the history.
+        #[qinvokable]
+        #[cxx_name = "hiddenInChat"]
+        fn hidden_in_chat(self: &RoomController, room_id: &QString, event_id: &QString) -> bool;
         /// QML: room.memoriesTimeline(sessionsJson, photosJson, filter) — the shared timeline (memphotos::timeline).
         #[qinvokable]
         #[cxx_name = "memoriesTimeline"]
@@ -379,6 +391,11 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "saveMemoryPhoto"]
         fn save_memory_photo(self: Pin<&mut RoomController>, media_url: &QString, dest: &QString);
+        /// QML: room.memoryPhotoExts() — the file types "Add photos" takes, as a JSON list of extensions (12.1.17:
+        /// memories_photos::PHOTO_EXTS, the web's image/* minus SVG: phone photos included).
+        #[qinvokable]
+        #[cxx_name = "memoryPhotoExts"]
+        fn memory_photo_exts(self: &RoomController) -> QString;
         /// QML: room.memoryPhotosGate() — the gate hook TINHAT_GUI_MEMPHOTOS (file urls to add once; "" in every real
         /// launch). MemoriesWindow.qml logs [memphotos] lines while it is set.
         #[qinvokable]
@@ -443,6 +460,7 @@ pub struct RoomControllerRust {
     room_id: QString,
     room_name: QString,
     messages_json: QString,
+    read_tail: QString,
     status: QString,
     op_failed_json: QString,
     busy: bool,
@@ -469,6 +487,7 @@ pub struct RoomControllerRust {
     can_change_photo: bool,
     background_json: QString,
     can_set_background: bool,
+    can_set_background_known: bool,
     background_image: QString,
     background_image_cells: QString,
     record_on: bool,
@@ -569,6 +588,8 @@ impl qobject::RoomController {
         self.as_mut().set_record_on(false);
         self.as_mut().set_background_json(QString::default());
         self.as_mut().set_can_set_background(false);
+        // bgsheet-1220: not known until the first state read below (the sheet is neutral meanwhile, never read-only)
+        self.as_mut().set_can_set_background_known(false);
         self.as_mut().set_background_image(QString::default());
         self.as_mut().set_background_image_cells(QString::default());
         {
@@ -697,24 +718,41 @@ impl qobject::RoomController {
             let Ok(rid) = RoomId::parse(&room_id) else { return };
             // A room joined a moment ago can be one sync away from the local store: wait for it
             // briefly instead of leaving the spinner up for good (`busy` was never cleared).
+            // (12.1.16) a link to a room this account isn't in: keep waiting while the first sync isn't done
+            // (room_missing, the web's rule; the task is aborted when another room opens)
             let mut found = client.get_room(&rid);
-            for _ in 0..40 {
-                if found.is_some() {
-                    break;
-                }
+            let mut waited: u64 = 0;
+            while found.is_none() && !room_missing(false, ROOM_SYNCED.load(Ordering::Relaxed), waited) {
                 tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                waited += 250;
                 found = client.get_room(&rid);
             }
+            // 12.1.17 (review): the first sync can land between that last look and the flag it sets; look once more, or a
+            // room the sync just brought is called missing for the second before the reopen below
+            let found = found.or_else(|| client.get_room(&rid));
             let Some(room) = found else {
                 eprintln!("[room] {room_id} gen={gen}: not in the local store after 10 s — nothing to load");
                 let started = room_id.clone();
                 let _ = qt.queue(move |mut o| {
                     if is_current(&o, gen, &started) {
                         o.as_mut().set_busy(false);
-                        o.as_mut().set_status(QString::from("Couldn't open this room on this device yet — try again in a moment."));
+                        // a link to a room this account isn't in: RoomMissing.qml shows the way back on these words
+                        o.as_mut().set_status(QString::from(ROOM_MISSING_EXPLANATION));
                     }
                 });
-                return;
+                // a room that arrives later (a slow sync, a join on another device) still opens
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                    if client.get_room(&rid).is_some() {
+                        let again = room_id.clone();
+                        let _ = qt.queue(move |mut o| {
+                            if is_current(&o, gen, &again) {
+                                o.as_mut().open(&QString::from(&again));
+                            }
+                        });
+                        return;
+                    }
+                }
             };
             watch_room_keys(&client);
             // Subscribe BEFORE the first load, so an update that lands in between is not missed.
@@ -799,9 +837,10 @@ impl qobject::RoomController {
                             Some((content, sender)) => serde_json::json!({ "content": content, "sender": sender }).to_string(),
                             None => String::new(),
                         };
-                        let can = match room.power_levels().await {
-                            Ok(pl) => pl.user_can_send_state(room.own_user_id(), matrix_sdk::ruma::events::StateEventType::from(ty)),
-                            Err(_) => false,
+                        // bgsheet-1220: power levels that can't be read are "not known", not "may not"
+                        let (can, known) = match room.power_levels().await {
+                            Ok(pl) => (pl.user_can_send_state(room.own_user_id(), matrix_sdk::ruma::events::StateEventType::from(ty)), true),
+                            Err(_) => (false, false),
                         };
                         let started = room_id.clone();
                         let bg2 = bg.clone();
@@ -814,6 +853,7 @@ impl qobject::RoomController {
                                     o.as_mut().set_background_json(QString::from(&bg2));
                                 }
                                 o.as_mut().set_can_set_background(can);
+                                o.as_mut().set_can_set_background_known(known);
                             }
                         });
                         bg_last = bg;
@@ -1134,12 +1174,16 @@ impl qobject::RoomController {
                     let id = m.get("id").and_then(|i| i.as_str())?.to_owned();
                     Some((id, m.get("ts").and_then(|t| t.as_u64()).unwrap_or(0)))
                 });
-            // threads: a thread's panel that shows only its root has nothing to read yet (the root sits in the main
-            // timeline; a thread receipt on it would be refused)
-            if !thread.is_empty() && latest.as_ref().map(|(i, _)| i == &thread).unwrap_or(true) {
-                return;
-            }
-            let Some((mut id, ts)) = latest else {
+            // 10.3: housekeeping newer than the newest bubble is read too — the receipt goes there, or the server keeps
+            // counting it (see newest_nonrow). 12.1.17 round 2 (review #2): a thread's panel has its own (its photos the
+            // chat hides), so a hidden tail — even a thread whose only reply is hidden — is read too.
+            let nonrow = newest_nonrow().lock().ok().and_then(|g| g.get(&nonrow_key(&room_id, &thread)).cloned());
+            let Some(id) = receipt_target(latest, nonrow, &thread) else {
+                // threads: a thread's panel that shows only its root and has nothing hidden has nothing to read yet (the
+                // root sits in the main timeline; a thread receipt on it would be refused)
+                if !thread.is_empty() {
+                    return;
+                }
                 // 10.6 (REACH A5.6, audit 15a): a room with no chat bubble yet — an accepted DM
                 // nobody has written in — still gets its receipt, on its newest event of any kind
                 // (what "Mark as read" does), or the invite's own count stays and the DM would sit
@@ -1148,14 +1192,9 @@ impl qobject::RoomController {
                 empty_room_receipt(&room_id).await;
                 return;
             };
-            // 10.3: housekeeping newer than the newest bubble is read too — the receipt goes there,
-            // or the server keeps counting it (see newest_nonrow). threads: never thread events (main view only).
-            if let Ok(g) = newest_nonrow().lock().map_err(|_| ()).and_then(|g| if thread.is_empty() { Ok(g) } else { Err(()) }) {
-                if let Some((nid, nts)) = g.get(&room_id) {
-                    if *nts > ts && !nid.is_empty() {
-                        id = nid.clone();
-                    }
-                }
+            #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a gate hook (12.1.18 assembly fence)
+            if std::env::var_os("TINHAT_GUI_MEMHIDE").is_some() {
+                eprintln!("[memhide] receipt room={room_id} thread={} target={id}", if thread.is_empty() { "main" } else { &thread });
             }
             let Ok(room) = room_by_id(&room_id).await else { return };
             if let Ok(eid) = matrix_sdk::ruma::EventId::parse(&id) {
@@ -2365,12 +2404,12 @@ impl qobject::RoomController {
 
     pub fn add_to_memories(self: Pin<&mut Self>, room_id: &QString, event_id: &QString, ts: f64) {
         let eid = event_id.to_string();
-        self.memory_photo_op(room_id, "Added to Memories", move |room| async move { crate::memories_photos::add(&room, &eid, ts).await });
+        self.memory_photo_op(room_id, tinhat_widgets::memphotos::ADDED_TOAST, move |room| async move { crate::memories_photos::add(&room, &eid, ts).await });
     }
 
     pub fn remove_from_memories(self: Pin<&mut Self>, room_id: &QString, event_id: &QString, also_delete: bool) {
         let eid = event_id.to_string();
-        let words = if also_delete { "Removed from Memories and the chat" } else { "Removed from Memories. It stays in the chat." };
+        let words = if also_delete { "Removed from Memories and the chat" } else { tinhat_widgets::memphotos::REMOVED_TOAST };
         self.memory_photo_op(room_id, words, move |room| async move {
             crate::memories_photos::remove(&room, &eid).await?;
             if also_delete {
@@ -2384,7 +2423,17 @@ impl qobject::RoomController {
 
     pub fn take_down_memory(self: Pin<&mut Self>, room_id: &QString, event_id: &QString) {
         let eid = event_id.to_string();
-        self.memory_photo_op(room_id, "Removed from Memories. It stays in the chat.", move |room| async move { crate::memories_photos::take_down(&room, &eid).await });
+        self.memory_photo_op(room_id, tinhat_widgets::memphotos::REMOVED_TOAST, move |room| async move { crate::memories_photos::take_down(&room, &eid).await });
+    }
+
+    pub fn delete_memory_photo(self: Pin<&mut Self>, room_id: &QString, event_id: &QString) {
+        let eid = event_id.to_string();
+        self.memory_photo_op(room_id, tinhat_widgets::memphotos::DELETED_TOAST, move |room| async move {
+            let e = matrix_sdk::ruma::EventId::parse(&eid).map_err(|e| e.to_string())?;
+            room.redact(&e, None, None).await.map_err(|e| format!("Couldn't delete it ({e})"))?;
+            crate::memories_photos::forget(room.room_id().as_str(), &eid);
+            Ok(())
+        });
     }
 
     pub fn add_memory_photos(self: Pin<&mut Self>, room_id: &QString, urls_json: &QString) {
@@ -2392,7 +2441,7 @@ impl qobject::RoomController {
         if urls.is_empty() {
             return;
         }
-        self.memory_photo_op(room_id, "Added to Memories", move |room| async move {
+        self.memory_photo_op(room_id, tinhat_widgets::memphotos::ADDED_TOAST, move |room| async move {
             let mut first_err: Option<String> = None;
             for u in urls {
                 let path = crate::memories_photos::local_path(&u);
@@ -2403,6 +2452,10 @@ impl qobject::RoomController {
             }
             first_err.map_or(Ok(()), Err)
         });
+    }
+
+    pub fn hidden_in_chat(&self, room_id: &QString, event_id: &QString) -> bool {
+        crate::memories_photos::hidden_in_chat(&room_id.to_string(), &event_id.to_string())
     }
 
     pub fn in_my_memories(&self, room_id: &QString, event_id: &QString) -> bool {
@@ -2456,6 +2509,10 @@ impl qobject::RoomController {
                 o.as_mut().set_memory_photos_notice(QString::from(&format!("{n}|{words}")));
             });
         });
+    }
+
+    pub fn memory_photo_exts(&self) -> QString {
+        QString::from(&serde_json::to_string(crate::memories_photos::PHOTO_EXTS).unwrap_or_else(|_| "[]".into()))
     }
 
     /// Compiled only outside a release (cfg tinhat_env_selftests, build.rs): a release build never reads the variable,
@@ -4754,10 +4811,39 @@ fn note_newest_nonrow(room_id: &str, update: &matrix_sdk::sync::RoomUpdate) {
         }
     }
     let Some(b) = best else { return };
+    note_nonrow(room_id, b.0, b.1);
+}
+
+/// newest_nonrow's key: the room for its main timeline, room \0 root for a thread's panel (12.1.17 round 2).
+fn nonrow_key(room_id: &str, thread: &str) -> String {
+    if thread.is_empty() { room_id.to_owned() } else { format!("{room_id}\u{0}{thread}") }
+}
+
+/// 12.1.17 round 2 (review #2/#3): what a read receipt targets. `latest` = the newest row (a server event), `nonrow` = the
+/// view's newest event without a row (housekeeping, or a photo the chat hides because it is in Memories), `thread` = the
+/// panel's root ("" = the main timeline). The newer of the two; a thread's root is no target (it sits in the main
+/// timeline). None = nothing to read here (the main timeline's caller then takes its empty-room path). The hidden tail's
+/// time is ordered by the timeline, not the clock (review r2 #6: load_room_data stores it newer than every row when the
+/// timeline puts it last).
+pub(crate) fn receipt_target(latest: Option<(String, u64)>, nonrow: Option<(String, u64)>, thread: &str) -> Option<String> {
+    let latest = latest.filter(|(id, _)| thread.is_empty() || id != thread);
+    match (latest, nonrow.filter(|(id, _)| !id.is_empty())) {
+        (Some((l, lt)), Some((n, nt))) => Some(if nt > lt { n } else { l }),
+        (Some((l, _)), None) => Some(l),
+        // review r2 #1: a main timeline whose rows are all hidden reads its hidden tail (a "main" receipt); the empty-room
+        // fallback (an unthreaded receipt on the room's newest event, which may sit in a thread) is for empty rooms only
+        (None, Some((n, _))) => Some(n),
+        _ => None,
+    }
+}
+
+/// Remember a room's newest event that has no chat row (housekeeping; 12.1.17: a photo the chat hides because it is in
+/// Memories): mark_read moves the receipt to it when it is newer than the newest row. `room_id` = nonrow_key.
+fn note_nonrow(room_id: &str, id: String, ts: u64) {
     if let Ok(mut g) = newest_nonrow().lock() {
         let e = g.entry(room_id.to_owned()).or_insert((String::new(), 0));
-        if b.1 >= e.1 {
-            *e = b;
+        if ts >= e.1 {
+            *e = (id, ts);
         }
     }
 }
@@ -4821,6 +4907,8 @@ pub(crate) struct Loaded {
     /// (event id, url) pairs whose link preview is not cached yet — filled in the
     /// background after this snapshot is on screen (never on the load path).
     previews_wanted: Vec<(String, String)>,
+    /// 12.1.17 round 2: the view's newest event when it is a photo the chat hides ("" = a row is the newest)
+    read_tail: String,
 }
 
 impl Loaded {
@@ -4835,6 +4923,7 @@ impl Loaded {
         o.as_mut().set_pinned_count(self.pinned_count);
         o.as_mut().set_dice_json(QString::from(&self.dice_json));
         o.as_mut().set_polls_json(QString::from(&self.polls_json));
+        o.as_mut().set_read_tail(QString::from(&self.read_tail));
         {
             let mut r = o.as_mut().rust_mut();
             r.own_name = self.own_name;
@@ -5497,6 +5586,9 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
     // load_older) extends the tail from the stored continuation token. (10.5.2: the
     // walk itself is `sync_window`, driven here by real /messages pages.)
     let rid_key = room.room_id().to_string();
+    // 12.1.17 (docs/MEMORIES-PHOTOS.md "In the chat"): what the chat hides — a photo its sender's own Memories list
+    // names (memphotos::hidden_in_chat, fail closed); read before the window is locked (state-store reads, review)
+    let mem_idx = crate::memories_photos::chat_index(room).await;
     let win_arc = timeline_window_for(&rid_key);
     let mut win = win_arc.lock().await;
     // 10.5.2: keys that arrived since this window last decrypted → re-try its unreadable events, BEFORE
@@ -5610,6 +5702,15 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
     let pinned_ids: std::collections::HashSet<String> = pin_order.iter().cloned().collect();
     // widgets W3: the window's poll responses and ends (the cards are tallied after the loop)
     let mut poll_rels: Vec<serde_json::Value> = Vec::new();
+    // 12.1.17: the photos the chat hides (mem_idx): id → (sender, its name) for the reply quotes, the newest of them
+    // (the read receipt still moves past it) and a stub each (an echo of it is delivered).
+    let mut in_memories: std::collections::HashMap<String, (String, String)> = std::collections::HashMap::new();
+    let mut hidden_newest: Option<(String, u64)> = None;
+    // review r2 #6: the newest hidden photo is newer than every row (timeline order); each hidden photo → how many rows
+    // the window had met before it (= rows newer than it: the row before it is found by position, never by clock)
+    let mut hidden_is_tail = false;
+    let mut rows_newer: Vec<(String, usize)> = Vec::new();
+    let mut hidden_stubs: Vec<serde_json::Value> = Vec::new();
     {
         for (vi, v) in src.iter().enumerate() {
             // threads: the main timeline leaves thread replies (and what relates to them) out; a panel its thread's
@@ -5786,6 +5887,27 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
                 .and_then(|c| c.get("msgtype"))
                 .and_then(|m| m.as_str())
                 .unwrap_or("m.text");
+            // 12.1.17: a photo in its sender's own Memories leaves the chat (it still heads its own comments' panel)
+            if id != view && crate::memories_photos::hidden_event(mem_idx.as_ref(), v) {
+                let sn = if let Some(n) = names.get(sender) {
+                    n.clone()
+                } else {
+                    let n = resolve_member_name(room, sender).await;
+                    names.insert(sender.to_string(), n.clone());
+                    n
+                };
+                in_memories.insert(id.to_string(), (sender.to_string(), sn));
+                // review r2 #6: the window runs newest first, so the first hidden photo met is the newest, and it is the
+                // view's tail when no row has been met yet (timeline order, never equal clocks)
+                if hidden_newest.is_none() {
+                    hidden_newest = Some((id.to_string(), ts));
+                    hidden_is_tail = msgs.is_empty();
+                }
+                rows_newer.push((id.to_string(), msgs.len()));
+                let txn = v.pointer("/unsigned/transaction_id").and_then(|t| t.as_str()).unwrap_or("");
+                hidden_stubs.push(serde_json::json!({"id": id, "sender": sender, "msgtype": msgtype, "body": body, "ts": ts, "serverTxn": txn}));
+                continue;
+            }
             // HTML formatted body (markdown rendered) — shown as rich text when present.
             let formatted_raw = content
                 .and_then(|c| {
@@ -5954,10 +6076,19 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
                 "themeShare": theme_share,
                 "pinSnippet": pin_snippet,
                 "dice": dice,
+                // mini games v1 (GAMES-V1-SPEC.md §6.6): a game card's pointer block (kind, game, server, table, round); the
+                // card is drawn from the room's own server's record (PlayController.cardView), never from these numbers
+                "game": content.and_then(|c| c.get(crate::play_wire::CARD_KEY)).filter(|_| !redacted).filter(|g| crate::play_wire::card_of(&serde_json::json!({ crate::play_wire::CARD_KEY: g })).is_some()).cloned().unwrap_or(serde_json::Value::Null),
                 // threads (docs/THREADS.md): the thread this message is in ("" = main) + the summary under a root
                 "threadId": thread_id,
                 "thread": thread_json,
             }));
+            // 12.1.17: a photo posted by Memories' "Add photos" (its marker) is quiet: no receive sound
+            if crate::memories_photos::post_event(v) {
+                if let Some(m) = msgs.last_mut() {
+                    m["quiet"] = serde_json::json!(true);
+                }
+            }
         }
     }
     drop(win); // derive is done with the window; media/receipt fetches below are slow
@@ -6009,6 +6140,10 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
             if let Some((sn, b)) = by_id.get(&rid) {
                 m["replyToSender"] = serde_json::json!(sn);
                 m["replyToBody"] = serde_json::json!(b);
+            } else if let Some((_, sn)) = in_memories.get(&rid) {
+                // 12.1.17: a reply to a photo the chat hides quotes it as "Photo in Memories" (a click opens it there)
+                m["replyToSender"] = serde_json::json!(sn);
+                m["replyToBody"] = serde_json::json!(tinhat_widgets::memphotos::QUOTE);
             }
         }
     }
@@ -6034,7 +6169,8 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
     // reload → send receipt …) and marked rooms read while merely open/scrolled-up.
     // Our read marker is sent explicitly from QML via mark_read() when the newest
     // message is actually visible at the bottom of the timeline.
-    attach_read_receipts(room, &mut msgs).await;
+    // 12.1.17 round 2 (review #8): a receipt resting on a photo the chat hides shows on the row before it (by position)
+    attach_read_receipts(room, &mut msgs, &rows_newer).await;
 
     // 9.3: link previews — attach what the cache already knows; note what it does not
     // (the caller back-fills those off the load path). Bounded to the newest rows.
@@ -6151,7 +6287,62 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
     // + time) is delivered and dropped; the rest render at the tail as pending / sent /
     // failed rows, in the order they were sent.
     let own_avatar = sender_avatar(room, &my_id, &mut avatars).await;
-    let echoes = echo_store_undelivered(room.room_id().as_str(), &msgs, view);
+    // 12.1.17: what the chat hid this load (a jump to one opens Memories; a newest one still takes the read receipt)
+    crate::memories_photos::note_hidden(room.room_id().as_str(), in_memories.keys().cloned(), view.is_empty());
+    // the gates' hook (TINHAT_GUI_MEMHIDE=1, never set in a real launch): which image rows this load shows / hides.
+    // Compiled only outside a release (cfg tinhat_env_selftests, build.rs; launch-gate 11-15 16:49: no new release env
+    // switches): a release build never reads the variable, and scripts/release-binary-check.sh refuses one that names it.
+    #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a gate hook
+    if std::env::var_os("TINHAT_GUI_MEMHIDE").is_some() {
+        let shown: Vec<&str> = msgs.iter().filter(|m| m.get("msgtype").and_then(|t| t.as_str()) == Some("m.image")).filter_map(|m| m.get("id").and_then(|i| i.as_str())).collect();
+        let mut hid: Vec<&str> = in_memories.keys().map(String::as_str).collect();
+        hid.sort();
+        let quiet: Vec<&str> = msgs.iter().filter(|m| m.get("quiet").and_then(|q| q.as_bool()) == Some(true)).filter_map(|m| m.get("id").and_then(|i| i.as_str())).collect();
+        let quotes: Vec<String> = msgs
+            .iter()
+            .filter(|m| m.get("replyToBody").and_then(|b| b.as_str()) == Some(tinhat_widgets::memphotos::QUOTE))
+            .filter_map(|m| m.get("id").and_then(|i| i.as_str()).map(|i| format!("{i}>{}", m.get("replyTo").and_then(|r| r.as_str()).unwrap_or(""))))
+            .collect();
+        let seen: Vec<String> = msgs
+            .iter()
+            .filter_map(|m| {
+                let r = m.get("receipts")?.as_array()?;
+                let who: Vec<&str> = r.iter().filter_map(|x| x.get("userId").and_then(|u| u.as_str())).collect();
+                Some(format!("{}:{}", m.get("id")?.as_str()?, who.join("+")))
+            })
+            .collect();
+        eprintln!(
+            "[memhide] room={} view={} images=[{}] hidden=[{}] quiet=[{}] quotes=[{}] seen=[{}] index={}",
+            room.room_id(),
+            if view.is_empty() { "main" } else { view },
+            shown.join(","),
+            hid.join(","),
+            quiet.join(","),
+            quotes.join(","),
+            seen.join(","),
+            if mem_idx.is_some() { "ok" } else { "none" }
+        );
+    }
+    // round 2 (review #2/#3): for the thread's panel too (keyed by its root), and the view's read tail: the hidden photo
+    // when it is newer than every row (QML marks read when it moves while the view sits at its end)
+    let newest_row_ts = msgs.iter().filter(|m| m.get("echo").and_then(|e| e.as_bool()) != Some(true)).filter_map(|m| m.get("ts").and_then(|t| t.as_u64())).max().unwrap_or(0);
+    let read_tail = match &hidden_newest {
+        Some((hid, _)) if hidden_is_tail => hid.clone(),
+        _ => String::new(),
+    };
+    if let Some((hid, hts)) = hidden_newest.take() {
+        // the timeline's order wins over equal (or skewed) clocks: a tail is stored newer than every row
+        let ts = if hidden_is_tail { hts.max(newest_row_ts + 1) } else { hts.min(newest_row_ts.saturating_sub(1)) };
+        note_nonrow(&nonrow_key(room.room_id().as_str(), view), hid, ts);
+    }
+    // an echo of a hidden photo is delivered too (its row is in Memories, not missing)
+    let echoes = if hidden_stubs.is_empty() {
+        echo_store_undelivered(room.room_id().as_str(), &msgs, view)
+    } else {
+        let mut all = msgs.clone();
+        all.extend(hidden_stubs);
+        echo_store_undelivered(room.room_id().as_str(), &all, view)
+    };
     if !echoes.is_empty() {
         let cur = serde_json::to_string(&msgs).unwrap_or_else(|_| "[]".into());
         for e in echoes {
@@ -6180,6 +6371,7 @@ async fn load_room_data(room: &Room, want: usize, view: &str) -> Result<Loaded, 
         own_name: my_name,
         own_avatar,
         previews_wanted,
+        read_tail,
     })
 }
 
@@ -6210,7 +6402,14 @@ pub(crate) async fn sender_avatar(
 
 /// Attach read-receipt reader names ({userId,name}) to the tail messages — i.e. which
 /// members have read up to each of the most recent messages. Local store reads only.
-async fn attach_read_receipts(room: &Room, msgs: &mut [serde_json::Value]) {
+/// 12.1.17 round 2 (review #8, r2 #6): the row a receipt on a hidden photo shows on: the row just before it in the
+/// timeline (`rows`, oldest first; `newer` = how many rows are newer than the photo), as the web maps a non-row event's
+/// receipt to the row before it. None = no row before it is loaded.
+fn row_before(rows: usize, newer: usize) -> Option<usize> {
+    rows.checked_sub(newer)?.checked_sub(1)
+}
+
+async fn attach_read_receipts(room: &Room, msgs: &mut [serde_json::Value], hidden: &[(String, usize)]) {
     use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
     let my_id = room.own_user_id().to_string();
     let n = msgs.len();
@@ -6250,6 +6449,36 @@ async fn attach_read_receipts(room: &Room, msgs: &mut [serde_json::Value]) {
         }
         if !arr.is_empty() {
             m["receipts"] = serde_json::json!(arr);
+        }
+    }
+    // 12.1.17 round 2 (review #8): readers whose receipt rests on a photo the chat hides show on the row before it
+    let rows = msgs.len();
+    for (hid, newer) in hidden {
+        let Some(i) = row_before(rows, *newer).filter(|i| *i >= start) else { continue };
+        let Ok(eid) = matrix_sdk::ruma::EventId::parse(hid) else { continue };
+        let Ok(readers) = room.load_event_receipts(ReceiptType::Read, &ReceiptThread::Unthreaded, &eid).await else { continue };
+        for (uid, _receipt) in readers {
+            let uid_s = uid.to_string();
+            if uid_s == my_id {
+                continue;
+            }
+            let have = msgs[i].get("receipts").and_then(|r| r.as_array()).is_some_and(|a| a.iter().any(|r| r.get("userId").and_then(|u| u.as_str()) == Some(uid_s.as_str())));
+            if have {
+                continue;
+            }
+            let name = if let Some(nm) = names.get(&uid_s) {
+                nm.clone()
+            } else {
+                let nm = resolve_member_name(room, &uid_s).await;
+                names.insert(uid_s.clone(), nm.clone());
+                nm
+            };
+            let av = sender_avatar(room, &uid_s, &mut avatars).await;
+            let entry = serde_json::json!({ "userId": uid_s, "name": name, "avatar": av });
+            match msgs[i].get_mut("receipts").and_then(|r| r.as_array_mut()) {
+                Some(a) => a.push(entry),
+                None => msgs[i]["receipts"] = serde_json::json!([entry]),
+            }
         }
     }
 }
@@ -6536,7 +6765,12 @@ async fn load_threads_json(room: &Room, pages: u32) -> String {
     let mut avatars: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     let mut items = Vec::new();
     let mut list = Vec::new();
+    // 12.1.17: a photo in Memories isn't listed (its comments live in Memories' viewer, which opens its thread)
+    let mem_idx = crate::memories_photos::chat_index(room).await;
     for v in &roots {
+        if crate::memories_photos::hidden_event(mem_idx.as_ref(), v) {
+            continue;
+        }
         let Some(t) = crate::threads_rows::root_thread(v, &plan.seen, &me, &receipts, &plan.ts_of) else { continue };
         let root = crate::threads_rows::ev_id(v).to_string();
         let sender = v.get("sender").and_then(|s| s.as_str()).unwrap_or("").to_string();
@@ -6791,6 +7025,7 @@ pub(crate) fn forget_session() {
     keys_epochs().lock().unwrap_or_else(|p| p.into_inner()).clear();
     backups_done().lock().unwrap_or_else(|p| p.into_inner()).clear();
     newest_nonrow().lock().unwrap_or_else(|p| p.into_inner()).clear();
+    crate::memories_photos::forget_hidden(); // 12.1.17: the photos the chat hid
     pinned_rows().lock().unwrap_or_else(|p| p.into_inner()).clear();
     theme_shares().lock().unwrap_or_else(|p| p.into_inner()).clear();
     thread_windows().lock().unwrap_or_else(|p| p.into_inner()).clear(); // threads: their fetched events
@@ -8355,7 +8590,11 @@ mod photo_location_tests {
     /// refuse_picture_bytes (not one), then be added here with what it sends.
     #[test]
     fn every_request_body_is_a_known_kind_r3_1() {
-        const KNOWN: [(&str, &str); 33] = [
+        const KNOWN: [(&str, &str); 36] = [
+            // mini games: the play API's JSON bodies (moves, tables, wallet) + the OpenID exchanges for a play session
+            // (the play client's and the prestige store's): never a user's file
+            ("play_net.rs:call", "JSON"), ("play_net.rs:sign_in", "JSON: the OpenID token for a play session"),
+            ("prestige.rs:own_session", "JSON: the OpenID token for a play session"),
             ("bridge.rs:body_json", "reads a reply"), ("bridge.rs:do_complete_password_reset", "JSON"),
             ("bridge.rs:do_request_password_reset", "JSON"), ("bridge.rs:gate_login", "JSON"), ("bridge.rs:raw_join", "JSON"),
             ("call_ctl.rs:uplink_probe", "speed test: zeros"), ("flatpak.rs:apply", "D-Bus"), ("flatpak.rs:monitor_loop", "D-Bus"),
@@ -8595,6 +8834,62 @@ mod thread_redaction_tests {
     }
 }
 
+/// A room link to a room this account isn't in (PM 2026-11-14): `open` waits this long for the room to reach the local
+/// store, then sets this status, which ConversationView (RoomMissing.qml) shows with a way back. Tin Hat Web's
+/// roomMissing.ts; shared vectors testvectors/room-missing.
+const ROOM_MISSING_WAIT_MS: u64 = 10_000;
+const ROOM_MISSING_EXPLANATION: &str = "You're not in it, or it doesn't exist. Ask someone in it to invite you.";
+/// A sync pass has completed for this session (bridge.rs sets it after each good pass, clears it at sign-out).
+pub(crate) static ROOM_SYNCED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Whether an open room should stop loading and say it can't be opened (the web's roomMissing).
+fn room_missing(known: bool, synced: bool, elapsed_ms: u64) -> bool {
+    !known && synced && elapsed_ms >= ROOM_MISSING_WAIT_MS
+}
+
+#[cfg(test)]
+mod room_missing_tests {
+    const VECTORS: &str = include_str!("../../../testvectors/room-missing/vectors.json");
+
+    #[test]
+    fn room_missing_words_and_wait_are_the_vectors() {
+        let v: serde_json::Value = serde_json::from_str(VECTORS).unwrap();
+        assert_eq!(super::ROOM_MISSING_WAIT_MS, v["waitMs"].as_u64().unwrap());
+        assert_eq!(super::ROOM_MISSING_EXPLANATION, v["words"]["explanation"].as_str().unwrap());
+        for c in v["cases"].as_array().unwrap() {
+            let got = super::room_missing(c["known"].as_bool().unwrap(), c["synced"].as_bool().unwrap(), c["elapsedMs"].as_u64().unwrap());
+            assert_eq!(got, c["missing"].as_bool().unwrap(), "{}", c["name"]);
+        }
+        let src = include_str!("room.rs");
+        let src = &src[..src.find("mod room_missing_tests").unwrap()];
+        assert!(src.contains("while found.is_none() && !room_missing(false, ROOM_SYNCED.load(Ordering::Relaxed), waited) {"), "open waits by the rule");
+        assert!(src.contains("set_status(QString::from(ROOM_MISSING_EXPLANATION))"), "the status carries the words");
+        assert!(src.contains("o.as_mut().open(&QString::from(&again));"), "a room that arrives later still opens");
+        assert!(src.contains("let found = found.or_else(|| client.get_room(&rid));\n            let Some(room) = found else {"), "one more look after the wait (review: the sync's boundary)");
+        assert!(!src.contains(&["on this device ", "yet — try again"].concat()), "the old 'yet' words are gone");
+        // the shared row (12.1.17): "synced" = the first sync from the NETWORK; ROOM_SYNCED is set only by a good network
+        // sync pass of the sync loop (never by the store a start restores), so a cache start keeps loading
+        assert!(v["synced"].as_str().unwrap().contains("NETWORK"));
+        assert!(v["cases"].as_array().unwrap().iter().any(|c| c["cacheSynced"] == true && c["synced"] == false && c["missing"] == false));
+        let bridge = include_str!("bridge.rs");
+        assert_eq!(bridge.matches("ROOM_SYNCED.store(true").count(), 1, "one place sets it: after a network sync pass");
+        assert!(bridge.contains("crate::room::ROOM_SYNCED.store(true, std::sync::atomic::Ordering::Relaxed);"), "a sync pass sets it");
+        assert!(bridge.contains("crate::room::ROOM_SYNCED.store(false, std::sync::atomic::Ordering::Relaxed);"), "sign-out clears it");
+    }
+
+    /// The byte copy equals the web's vectors (`TINHAT_WEB_DIR` = a tinhat-web tree, else `$HOME/tinhat-web`;
+    /// skipped when neither has the file).
+    #[test]
+    fn room_missing_vectors_are_the_webs() {
+        let dir = std::env::var_os("TINHAT_WEB_DIR").map(std::path::PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("tinhat-web")));
+        let Some(dir) = dir else { return };
+        let path = dir.join("testvectors/room-missing/vectors.json");
+        match std::fs::read_to_string(&path) {
+            Ok(theirs) => assert!(VECTORS == theirs, "testvectors/room-missing differs from {}", path.display()),
+            Err(_) => eprintln!("SKIPPED: no web vectors at {}", path.display()),
+        }
+    }
+}
 
 // ---- chat backgrounds (docs/AMBIENCE.md) ----------------------------------------------------------------------------
 
@@ -8739,5 +9034,66 @@ mod ambience_cells_tests {
         for p in [ok, bomb_p, junk] {
             let _ = std::fs::remove_file(p);
         }
+    }
+}
+
+// 12.1.17 round 2 (assembly-1217 review #2/#3): where a read receipt goes when the view's newest event is a photo the chat
+// hides (it is in Memories). Before round 2 a thread's panel showing only its root returned without a receipt, and a
+// thread's hidden tail was never a target: the thread stayed unread on every other device.
+#[cfg(test)]
+mod receipt_target_tests {
+    use super::{nonrow_key, receipt_target};
+
+    fn t(id: &str, ts: u64) -> Option<(String, u64)> {
+        Some((id.to_string(), ts))
+    }
+
+    #[test]
+    fn main_timeline_the_newer_of_the_newest_row_and_the_hidden_tail() {
+        assert_eq!(receipt_target(t("$row", 10), t("$hidden", 20), ""), Some("$hidden".into()));
+        assert_eq!(receipt_target(t("$row", 30), t("$hidden", 20), ""), Some("$row".into()));
+        assert_eq!(receipt_target(t("$row", 10), None, ""), Some("$row".into()));
+        // review r2 #1: every row hidden: a main receipt on the hidden tail (never the empty-room fallback, which may
+        // land on a thread's event)
+        assert_eq!(receipt_target(None, t("$hidden", 20), ""), Some("$hidden".into()));
+        // no bubble and nothing hidden: the caller's empty-room path
+        assert_eq!(receipt_target(None, None, ""), None);
+    }
+
+    #[test]
+    fn a_threads_only_reply_hidden_is_still_read() {
+        // the panel shows only its root; its one reply is a photo the chat hides → the receipt goes to that reply
+        assert_eq!(receipt_target(t("$root", 5), t("$reply", 9), "$root"), Some("$reply".into()));
+        assert_eq!(receipt_target(None, t("$reply", 9), "$root"), Some("$reply".into()));
+        // a visible reply older than the hidden tail: the tail
+        assert_eq!(receipt_target(t("$r1", 7), t("$reply", 9), "$root"), Some("$reply".into()));
+        // nothing but the root: nothing to read (a thread receipt on the root would be refused)
+        assert_eq!(receipt_target(t("$root", 5), None, "$root"), None);
+        // an empty id never counts
+        assert_eq!(receipt_target(t("$root", 5), t("", 9), "$root"), None);
+    }
+
+    #[test]
+    fn each_view_keeps_its_own_hidden_tail() {
+        assert_eq!(nonrow_key("!r:x", ""), "!r:x");
+        assert_eq!(nonrow_key("!r:x", "$root"), "!r:x\u{0}$root");
+        assert_ne!(nonrow_key("!r:x", "$a"), nonrow_key("!r:x", "$b"));
+    }
+}
+
+// 12.1.17 round 2 (assembly-1217 review #8): a receipt on a photo the chat hides shows on the newest server row at or
+// before the photo's time (before round 2 it was dropped: that reader's "seen by" face disappeared).
+#[cfg(test)]
+mod row_before_tests {
+    use super::row_before;
+
+    #[test]
+    fn a_hidden_photos_receipt_lands_on_the_row_before_it_by_position() {
+        // 4 rows (oldest first); a photo with 1 row newer than it sits between rows 2 and 3 → row 2
+        assert_eq!(row_before(4, 1), Some(2));
+        assert_eq!(row_before(4, 0), Some(3)); // the photo is the newest: the last row
+        assert_eq!(row_before(4, 4), None); // older than every loaded row
+        assert_eq!(row_before(0, 0), None);
+        assert_eq!(row_before(3, 9), None);
     }
 }

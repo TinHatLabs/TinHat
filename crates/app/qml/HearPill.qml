@@ -72,7 +72,7 @@ Rectangle {
             width: Math.max(0, Math.min(implicitWidth, hp.width - 16 - hp.iconW - (hp.action.length > 0 ? 5 + hpAct.implicitWidth : 0)))
             elide: Text.ElideRight
             color: hp.fg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
         Controls.Label {
             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -82,7 +82,7 @@ Rectangle {
             text: "· " + (hp.compact && hp.shortAction.length > 0 ? hp.shortAction : hp.action)
             color: hpHover.hovered ? Th.hearPillActionFgHover
                                    : (hp.tone === "danger" ? Th.hearPillDangerActionFg : (hp.tone === "warn" ? Th.hearPillWarnActionFg : Th.hearPillInfoActionFg))
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             font.bold: true
             font.underline: hpHover.hovered
         }

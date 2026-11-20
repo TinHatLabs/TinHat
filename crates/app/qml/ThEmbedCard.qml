@@ -287,7 +287,7 @@ Item {
                         anchors.centerIn: parent
                         spacing: 4
                         ThIcon { width: 14; height: 14; anchors.verticalCenter: parent.verticalCenter; app: card.app; name: "video-television-symbolic"; color: Th.embedOverlayFg; isMask: true }
-                        Controls.Label { id: mpAddLbl; text: "Add to Media Party"; color: Th.embedOverlayFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                        Controls.Label { id: mpAddLbl; text: "Add to Media Party"; color: Th.embedOverlayFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                     }
                     MouseArea { id: mpAddMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: card.app.mediaPartyAdd(card.roomId, card.linkUrl, false) }
                 }
@@ -317,7 +317,7 @@ Item {
                     text: card.label
                     color: Th.embedOverlayFg
                     font.bold: true
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                 }
             }
             // Click anywhere on the poster → play inline.
@@ -363,7 +363,7 @@ Item {
                 Controls.ToolTip.visible: extMa.containsMouse
                 Controls.ToolTip.delay: 400
                 Controls.Label {
-                    anchors.centerIn: parent; text: "↗"; color: Th.embedOverlayFg; font.pixelSize: 12
+                    anchors.centerIn: parent; text: "↗"; color: Th.embedOverlayFg; font.pixelSize: Th.px(12)
                 }
                 MouseArea {
                     id: extMa

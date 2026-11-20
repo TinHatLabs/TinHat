@@ -32,7 +32,7 @@ Item {
     property bool grouped: false
     // P19: a grouped follow-up shows its clock on hover / focus only; Sending…, Not sent, the pin and (edited) always
     // show (web lib/stamp.ts clockQuiet: the same rule). The line keeps its height, so nothing moves.
-    readonly property bool clockQuiet: grouped && !pending && !failed && !pinned && !edited
+    readonly property bool clockQuiet: grouped && !pending && !failed && !pinned && !edited && !hasGameCard   // a game card shows its time on every card (the web's own-card frame, polish #26)
     property string body: ""
     property string sender: ""          // mxid
     property string senderName: ""      // resolved display (falls back to localpart)
@@ -138,6 +138,11 @@ Item {
     readonly property bool hasDiceCard: bubble.dice !== null && bubble.dice !== undefined && !bubble.redacted
     // widgets W3 (WIDGETS-UI.md §17.4): a poll — the row's `poll` (polls_ctl.rs card_json: the shared reader + tally); the
     // card replaces the body text (vote, results, End poll → pollVote / pollEnd for the conversation's RoomController)
+    // mini games v1 (GAMES-V1-SPEC.md §6.6): a game card — the row's `game` (the dev.tinhat.game pointer block); the card
+    // (GameChatCard.qml) asks the room's own server for the record and replaces the body line
+    property var gameCard: null
+    property string gameRoomId: ""   // the conversation's room (the card asks that room's space owner)
+    readonly property bool hasGameCard: bubble.gameCard !== null && bubble.gameCard !== undefined && !bubble.redacted
     property var poll: null
     readonly property bool hasPollCard: bubble.poll !== null && bubble.poll !== undefined && !bubble.redacted
     signal pollVote(var answers)
@@ -297,6 +302,8 @@ Item {
     readonly property bool isMedia: msgtype === "m.image" || msgtype === "m.file"
                                      || msgtype === "m.video" || msgtype === "m.audio"
     property string replyToSender: ""   // quoted-parent author (empty = not a reply)
+    property string replyToSenderId: "" // mini games v1: the quoted author's mxid (their prestige token), "" when unknown
+    property string roomId: ""          // mini games v1: the room (whose server's prestige rank the sender's token shows)
     property string replyToBody: ""     // quoted-parent snippet
     property bool edited: false         // show an "(edited)" marker
     property bool redacted: false       // render a "message deleted" placeholder
@@ -418,13 +425,20 @@ Item {
                 Layout.fillWidth: false   // a nested layout fills by default — the tag would be justified to the far edge
                 visible: !bubble.grouped && !bubble.mine && !bubble.isEmote
                 spacing: 6
+                PrestigeToken {   // mini games v1 (GAMES-V1-SPEC §3.2): 4 px before the name (the row's 6 less 2)
+                    id: senderTok
+                    mxid: bubble.sender
+                    roomId: bubble.roomId
+                    gap: false
+                    Layout.rightMargin: -2
+                }
                 Controls.Label {
                     id: ambName
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                    Layout.maximumWidth: bubble.maxBubble - (roleTag.visible ? roleTag.implicitWidth + 6 : 0)
+                    Layout.maximumWidth: bubble.maxBubble - (roleTag.visible ? roleTag.implicitWidth + 6 : 0) - (senderTok.visible ? senderTok.size + 4 : 0)
                     text: bubble.displayName
                     font.bold: true
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                     color: bubble.senderHue
                     elide: Text.ElideRight
                     font.underline: nameHover.hovered
@@ -513,7 +527,7 @@ Item {
                                 readonly property bool mineAlready: chip !== null && chip.mine === true
                                 width: 26; height: 24; radius: 6
                                 color: mineAlready ? Th.bubbleHoverBarButtonBgChecked : (qrMa.containsMouse ? Th.bubbleHoverBarButtonBgHover : "transparent")
-                                Controls.Label { textFormat: Text.PlainText; anchors.centerIn: parent; text: parent.modelData; font.pixelSize: 15 }
+                                Controls.Label { textFormat: Text.PlainText; anchors.centerIn: parent; text: parent.modelData; font.pixelSize: Th.px(15) }
                                 MouseArea {
                                     id: qrMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                     onClicked: {
@@ -632,12 +646,19 @@ Item {
                             anchors.leftMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 0
-                            Controls.Label {
-                                textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                text: bubble.replyToSender.length > 0 ? bubble.replyToSender : "Replying to an earlier message"
-                                color: bubble.mine ? Th.bubbleOwnQuoteFg : (bubble.replyToSender.length > 0 ? bubble.theme.senderColor(bubble.replyToSender) : Th.bubbleOtherQuoteFg)
-                                font.bold: true
-                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.95)
+                            RowLayout {   // mini games v1: the quoted author's prestige token
+                                spacing: 0
+                                PrestigeToken {
+                                    mxid: bubble.replyToSender.length > 0 ? bubble.replyToSenderId : ""
+                                    roomId: bubble.roomId
+                                }
+                                Controls.Label {
+                                    textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                                    text: bubble.replyToSender.length > 0 ? bubble.replyToSender : "Replying to an earlier message"
+                                    color: bubble.mine ? Th.bubbleOwnQuoteFg : (bubble.replyToSender.length > 0 ? bubble.theme.senderColor(bubble.replyToSender) : Th.bubbleOtherQuoteFg)
+                                    font.bold: true
+                                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.95 * Th.textScale)
+                                }
                             }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -647,7 +668,7 @@ Item {
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
                                 opacity: 0.85
-                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.95)
+                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.95 * Th.textScale)
                             }
                         }
                     }
@@ -716,6 +737,7 @@ Item {
                                  && !bubble.hasThemeCard   // 11.0: a theme share card replaces its body line
                                  && !bubble.hasDiceCard    // widgets W3: a dice card replaces its body line
                                  && !bubble.hasPollCard    // widgets W3: a poll card replaces its body line
+                                 && !bubble.hasGameCard    // mini games v1: a game card replaces its body line
                         // Rich text when a formatted_body (markdown/HTML) is present. 9.3: an
                         // emote reads "∗ Name does a thing" in italics; emoji-only lines go big.
                         // (security review 2026-10-26: `formatted` is richtext.rs's sanitised HTML; the name in an emote is
@@ -844,6 +866,21 @@ Item {
                         }
                     }
 
+                    // mini games v1 (GAMES-V1-SPEC.md §6.6): a game card in place of the body line
+                    Loader {
+                        active: bubble.hasGameCard
+                        visible: active
+                        Layout.preferredWidth: item ? item.implicitWidth : 0
+                        Layout.preferredHeight: item ? item.implicitHeight : 0
+                        // the web's own-message frame: the bubble's 12 × 8 padding round the card, nothing more
+                        sourceComponent: GameChatCard {
+                            app: bubble.app
+                            block: bubble.gameCard
+                            roomId: bubble.gameRoomId
+                            maxW: bubble.maxBubble - 24
+                        }
+                    }
+
                     // widgets W3 (WIDGETS-UI.md §16.4): a dice roll — the card in place of the body line
                     Loader {
                         active: bubble.hasDiceCard
@@ -930,7 +967,7 @@ Item {
                                     text: "Couldn't load this image — click to try again"
                                     elide: Text.ElideRight
                                     color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 }
                             }
                             MouseArea {
@@ -1116,7 +1153,7 @@ Item {
                                              + (bubble.durationMs > 0
                                                 ? "  ·  " + bubble.fmtTime(bubble.durationMs) : ""))
                                     color: Th.bubbleVideoMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     // the can't-play line wraps; the card grows past 96 px when the words need it (never cut)
                                     wrapMode: bubble.videoFailed ? Text.WordWrap : Text.NoWrap
                                     Layout.fillWidth: bubble.videoFailed
@@ -1187,7 +1224,7 @@ Item {
                                     text: bubble.fmtSize(bubble.fileSize)
                                     visible: bubble.fileSize > 0
                                     color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 }
                             }
                             // 10.1 (TH-MSG-13): a fetch in flight shows here; the toast says where a save went.
@@ -1280,14 +1317,14 @@ Item {
                                       + bubble.fmtTime(audioPlayer.duration > 0 ? audioPlayer.duration
                                                                                 : bubble.durationMs)
                                 color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                         }
                         Controls.Label {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                             text: bubble.body.length > 0 ? bubble.body : "audio"
                             color: bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             elide: Text.ElideRight
                             Layout.fillWidth: true
                         }
@@ -1334,7 +1371,7 @@ Item {
                             : (bubble.pending ? "Sending…"
                             : ((bubble.pinned ? "📌 " : "") + (bubble.edited ? "(edited) " : "") + (bubble.theme.fmtClock ? bubble.theme.fmtClock(bubble.ts) : Qt.formatTime(new Date(bubble.ts), Locale.ShortFormat))))   // 10.1 (TL-19 / TH-PREF-11): the app's clock setting, else the system's
                         horizontalAlignment: Text.AlignRight
-                        font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.92)
+                        font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.92 * Th.textScale)
                         opacity: bubble.failed ? 1.0 : ((bubble.clockQuiet && !bubbleHover.hovered && !bubble.activeFocus && !bubble.kbCurrent) ? 0.0 : 0.7)
                         color: bubble.failed ? Th.bubbleFgError : (bubble.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg)
                         HoverHandler { id: stampHover }
@@ -1354,7 +1391,7 @@ Item {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     text: bubble.sendError.length > 0 ? bubble.sendError : "Couldn't send"
                     color: Th.bubbleFgError
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                 }
                 // L1 A31.0 / D05.6: a screen reader names them as buttons and can press them (the web's <button>s); the
                 // keyboard reaches them through the message's menu (Retry / Delete, A38.0) — the list is one Tab stop
@@ -1363,7 +1400,7 @@ Item {
                     color: Th.bubbleRetryFg
                     font.bold: true
                     font.underline: retryHover.hovered
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                     Accessible.role: Accessible.Button
                     Accessible.name: "Retry sending this message"
                     Accessible.onPressAction: bubble.retryRequested(bubble.txn)
@@ -1374,7 +1411,7 @@ Item {
                     text: "Delete"
                     color: Th.bubbleDiscardFg
                     font.underline: discardHover.hovered
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                     Accessible.role: Accessible.Button
                     Accessible.name: "Delete this unsent message"
                     Accessible.onPressAction: bubble.discardRequested(bubble.txn)
@@ -1455,14 +1492,14 @@ Item {
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: modelData.key !== undefined ? modelData.key : ""
-                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                             }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 visible: modelData.count !== undefined && modelData.count > 1
                                 text: modelData.count
                                 color: Th.bubbleReactionCountFg
-                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                             }
                         }
                     }
@@ -1519,7 +1556,7 @@ Item {
                         text: bubble.threadText
                         elide: Text.ElideRight
                         color: Th.bubbleReactionCountFg
-                        font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                        font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                     }
                     Rectangle {
                         visible: threadSum.unread > 0
@@ -1573,7 +1610,7 @@ Item {
                     visible: bubble.receipts.length > 5
                     text: "+" + (bubble.receipts.length - 5)
                     color: Th.bubbleReceiptsFg
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.85)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * 0.85 * Th.textScale)
                 }
             }
         }

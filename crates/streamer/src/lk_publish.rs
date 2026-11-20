@@ -4794,6 +4794,51 @@ mod vp9_kf_iv_tests {
         assert!(!p.contains("TINHAT_LAB_"), "lab knobs never go into the shipped patch");
     }
 
+    /// The sender's length check (tinhat-tx-len-v1, 12.1.17): encryptFrame drops a frame SHORTER than its own clear
+    /// header (get_unencrypted_bytes) before it copies that header or sizes the payload as size - header; upstream read
+    /// past the frame there and then underflowed. The check sits in encryptFrame, ahead of both. The sender itself is
+    /// tested by tests/run-tinhat-tx-test.sh against the built archive (guarded frames: a one-byte overread faults).
+    #[test]
+    fn the_sender_drops_frames_shorter_than_their_header() {
+        let p = patch();
+        assert!(p.contains("constexpr char kTinHatTxLenStamp[] = \"tinhat-tx-len-v1\";"));
+        let lines: Vec<&str> = p.lines().collect();
+        let at = |want: &str| lines.iter().position(|l| *l == want);
+        let check = at("+  if (data_in.size() < static_cast<size_t>(unencrypted_bytes)) {")
+            .expect("the sender's length check is missing from the patch");
+        // the drop: nothing is handed to the sink on that path
+        assert_eq!(lines[check + 8], "+    return;", "the short frame must be dropped right there");
+        assert!(!lines[check..check + 10].iter().any(|l| l.contains("OnTransformedFrame")), "a short frame is never sent");
+        let header_copy = at("   webrtc::Buffer frame_header(unencrypted_bytes);").expect("header copy context");
+        let payload = at("   webrtc::Buffer payload(data_in.size() - unencrypted_bytes);").expect("payload sizing context");
+        let decrypt = lines.iter().position(|l| l.contains("FrameCryptorTransformer::decryptFrame() frame too short")).unwrap();
+        assert!(check < header_copy && header_copy < payload && payload < decrypt, "the check must guard encryptFrame's copy and sizing");
+    }
+
+    /// The shared vectors (testvectors/tx-len/vectors.json, byte-identical in tinhat-web; the cases themselves run
+    /// through the built sender in tests/tinhat_tx_test.cc and through the web worker in tools/tx-len-unit.mjs) carry
+    /// the patch's stamp, and every verdict follows from the rule: drop <=> shorter than the header (native and web).
+    #[test]
+    fn tx_len_vectors_match_the_patch() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testvectors/tx-len/vectors.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let stamp = v["stamp"].as_str().unwrap();
+        assert!(patch().contains(&format!("constexpr char kTinHatTxLenStamp[] = \"{stamp}\";")));
+        let cases = v["cases"].as_array().unwrap();
+        let mut drops = 0;
+        for c in cases {
+            let hex = c["hex"].as_str().unwrap();
+            let len = c["len"].as_u64().unwrap() as usize;
+            assert_eq!(hex.len(), 2 * len, "{hex}");
+            for (h, e) in [("header", "expect"), ("web_header", "web_expect")] {
+                let short = len < c[h].as_u64().unwrap() as usize;
+                assert_eq!(short, c[e].as_str().unwrap() == "drop", "{hex} {h}");
+            }
+            if c["expect"] == "drop" { drops += 1; }
+        }
+        assert!(drops > 0 && drops < cases.len(), "both verdicts are covered");
+    }
+
     /// The H.264-safe IV layout (tinhat-iv-v2): a Rust mirror of the patch's encoding, pinned to the shared vectors
     /// (testvectors/iv-layout, byte-identical in the web repo): counter = 8 base-255 digits + 1, domain bytes in 1..255
     /// with byte 0 >= 4. Every vector byte is nonzero, so H.264 RBSP escaping can't land inside the IV (the 12.1.8 v1

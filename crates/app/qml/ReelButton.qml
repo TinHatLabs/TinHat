@@ -27,7 +27,7 @@ T.Button {
         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         text: b.text
         color: b.primary ? Th.reelButtonPrimaryFg : Th.reelButtonFg
-        font.pixelSize: 13
+        font.pixelSize: Th.px(13)
         font.weight: b.primary ? Font.DemiBold : Font.Medium
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

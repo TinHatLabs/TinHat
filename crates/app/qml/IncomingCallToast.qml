@@ -178,7 +178,7 @@ Item {
                             text: parent.lines.sub
                             visible: !toast.settled   // A15.3: one line once settled
                             color: Th.callIncomingSubFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             elide: Text.ElideRight
                         }
                     }

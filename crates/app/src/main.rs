@@ -26,6 +26,9 @@ pub mod ringglue; // DM ringing glue: dev.tinhat.call.decline → "<name> declin
 pub mod quietrules; // 10.3: account push rules that keep call joins / room housekeeping out of the unread counts
 pub mod memories_photos; // Memories photos: the dev.tinhat.memories lists, fetch + decrypt on this device (docs/MEMORIES-PHOTOS.md)
 pub mod gameservers_ctl; // 11.1: GameServersController — the Game servers widget's data (docs/GAMESERVERS.md)
+pub mod play_wire; // mini games v1 (GAMES-V1-SPEC.md): the play client's pure rules — views, vseq, op ids, gameVisible (shared vectors testvectors/games)
+pub mod play_net; // mini games v1: OpenID → play session, the play API over HTTP, the play WebSocket
+pub mod play_ctl; // mini games v1: PlayController — tables, the open table's view, chips, cards, Settings → Games
 pub mod justme_ctl; // widgets W2: JustMeController — "Is it just me?" (WIDGETS.md §20)
 pub mod memories_ctl; // widgets W2: MemoriesController — the Memories widget's data (WIDGETS.md §21)
 pub mod gamenight_ctl; // widgets W2: GameNightController — Game night's rules + my Reel credit (WIDGETS.md §23)
@@ -72,6 +75,7 @@ pub mod e2ee_keys; // Element Call media-key (E2EE) exchange over Matrix
 pub mod keyrules; // the media-key trust rules (pure; = the web's features/calls/keyrules.ts)
 pub mod left_words; // 12.1.1: the "already left" words of a kick / Disconnect / Mute (= the web's spaces/leftWords.ts)
 pub mod identity; // identity fix 12.1.8: LiveKit identity → user by the call memberships (= the web's features/calls/identity.ts)
+pub mod unmuteask; // 12.1.17 (D04.6): ask to be unmuted — the pure rules (= web unmuteask.ts, shared vectors)
 pub mod callannounce; // a11y round 2 (M3): what a screen reader hears about calls (= web callannounce.ts)
 pub mod callannounce_ctl; // CallAnnounceController: those rules for QML
 pub mod mic_handoff; // PAD-PHONE Step B: "my phone has the mic" on this computer (pure; call_ctl carries it out)
@@ -97,8 +101,11 @@ pub mod foreign_room; // must-fix round: rooms on another server: may Tin Hat ch
 pub mod nav; // NavController — corner-dock navigation (spaces -> rooms drill-down)
 pub mod presence; // 10.6: PresenceController — opt-in Online/Away/In a call + the desktop's "at the computer" pings (docs/REACH.md)
 pub mod presence_model; // 10.6: the pure presence rules (cadence, idle → state, share transitions, reader map, §3.4 consent)
+pub mod prestige; // mini games v1: PrestigeController — the prestige rank store (GAMES-V1-SPEC §3.4; = the web's features/prestige/store.ts)
+pub mod prestige_cache; // mini games v1: the pure rank cache (= the web's rankCache.ts; shared testvectors/prestige-wire.json)
 pub mod pipvideo; // PipVideoItem — PiP pop-out CPU video surface (no GstGL; NVIDIA-safe)
 pub mod platform; // OS-specific glue: data paths, file:// URLs, bundle env, Windows update swap
+pub mod play_rules; // mini games v1: the pure client rules (prestige tiers, game visibility, rank server; shared vectors with the web's features/prestige/clientRules.ts)
 #[cfg(any(windows, test))]
 pub(crate) mod safe_unzip; // 2026-10-31: the self-updater's unzip — only plain files strictly inside the target (zip 9.0.5)
 pub mod notify; // OS desktop notifications (org.freedesktop.Notifications) for new highlights

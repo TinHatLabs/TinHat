@@ -1,0 +1,373 @@
+{
+ "v": 1,
+ "about": "Tin Hat mini games v1: the small UI derivations and the game art both apps draw the same way (byte-identical in the desktop and the web). None is a game rule: the server's view is the truth for what is legal; these only decide what a screen shows.",
+ "card_face": {
+  "about": "A wire card (rank 23456789TJQKA + suit cdhs) -> {rank, suit, red}. T is drawn as 10. Anything else -> null (nothing drawn).",
+  "cases": [
+   {
+    "card": "As",
+    "expect": {
+     "rank": "A",
+     "suit": "♠",
+     "red": false
+    }
+   },
+   {
+    "card": "Td",
+    "expect": {
+     "rank": "10",
+     "suit": "♦",
+     "red": true
+    }
+   },
+   {
+    "card": "2c",
+    "expect": {
+     "rank": "2",
+     "suit": "♣",
+     "red": false
+    }
+   },
+   {
+    "card": "Qh",
+    "expect": {
+     "rank": "Q",
+     "suit": "♥",
+     "red": true
+    }
+   },
+   {
+    "card": "1s",
+    "expect": null
+   },
+   {
+    "card": "as",
+    "expect": null
+   },
+   {
+    "card": "AS",
+    "expect": null
+   },
+   {
+    "card": "10d",
+    "expect": null
+   },
+   {
+    "card": "",
+    "expect": null
+   }
+  ]
+ },
+ "raise_preset": {
+  "about": "The raise bar's quick amounts (raise TO, this street). f = 0.5 (half pot) or 1 (pot): to = the highest bet on the street + floor(f x (the sum of hand.pots[].amount + the sum of seats[].bet + you.legal.call)), clamped to you.legal.raise.min..max. f = \"max\" -> raise.max. No legal raise -> null. legal.call false/absent counts 0. A quick button whose amount equals an earlier one's, or is >= raise.max (all-in covers it), is not shown.",
+  "cases": [
+   {
+    "id": "half-pot",
+    "in": {
+     "pots": [
+      24
+     ],
+     "bets": [
+      2,
+      10
+     ],
+     "call": 8,
+     "raise": {
+      "min": 18,
+      "max": 40
+     },
+     "f": 0.5
+    },
+    "expect": 32
+   },
+   {
+    "id": "pot-clamped-to-max",
+    "in": {
+     "pots": [
+      24
+     ],
+     "bets": [
+      2,
+      10
+     ],
+     "call": 8,
+     "raise": {
+      "min": 18,
+      "max": 40
+     },
+     "f": 1
+    },
+    "expect": 40
+   },
+   {
+    "id": "max",
+    "in": {
+     "pots": [
+      24
+     ],
+     "bets": [
+      2,
+      10
+     ],
+     "call": 8,
+     "raise": {
+      "min": 18,
+      "max": 40
+     },
+     "f": "max"
+    },
+    "expect": 40
+   },
+   {
+    "id": "small-pot-clamped-to-min",
+    "in": {
+     "pots": [
+      3
+     ],
+     "bets": [
+      0,
+      0
+     ],
+     "call": false,
+     "raise": {
+      "min": 2,
+      "max": 50
+     },
+     "f": 0.5
+    },
+    "expect": 2
+   },
+   {
+    "id": "pot-bet-open",
+    "in": {
+     "pots": [
+      10
+     ],
+     "bets": [
+      0,
+      0,
+      0
+     ],
+     "call": 0,
+     "raise": {
+      "min": 2,
+      "max": 99
+     },
+     "f": 1
+    },
+    "expect": 10
+   },
+   {
+    "id": "half-rounds-down",
+    "in": {
+     "pots": [
+      7
+     ],
+     "bets": [
+      0
+     ],
+     "call": 0,
+     "raise": {
+      "min": 2,
+      "max": 99
+     },
+     "f": 0.5
+    },
+    "expect": 3
+   },
+   {
+    "id": "side-pots-summed",
+    "in": {
+     "pots": [
+      30,
+      12
+     ],
+     "bets": [
+      0,
+      0
+     ],
+     "call": 0,
+     "raise": {
+      "min": 2,
+      "max": 99
+     },
+     "f": 0.5
+    },
+    "expect": 21
+   },
+   {
+    "id": "no-raise",
+    "in": {
+     "pots": [
+      24
+     ],
+     "bets": [
+      2,
+      10
+     ],
+     "call": 8,
+     "raise": null,
+     "f": 0.5
+    },
+    "expect": null
+   }
+  ]
+ },
+ "seat_slot": {
+  "about": "Where a Hold'em seat is drawn round the table: slot 0 = bottom centre, then clockwise. Rotated so MY seat is slot 0; watching (my_seat 0): seat 1 is slot 0. slot = (seat - base) mod seats, base = my_seat or 1. Slot k sits at angle 90deg + k x 360deg / seats (screen y down). Its centre, in % of the felt box: x = 50 + 46 cos(angle), y = 50 + 44 sin(angle), one decimal.",
+  "cases": [
+   {
+    "seat": 1,
+    "my_seat": 0,
+    "seats": 8,
+    "expect": 0
+   },
+   {
+    "seat": 5,
+    "my_seat": 0,
+    "seats": 8,
+    "expect": 4
+   },
+   {
+    "seat": 3,
+    "my_seat": 3,
+    "seats": 6,
+    "expect": 0
+   },
+   {
+    "seat": 1,
+    "my_seat": 3,
+    "seats": 6,
+    "expect": 4
+   },
+   {
+    "seat": 2,
+    "my_seat": 2,
+    "seats": 2,
+    "expect": 0
+   },
+   {
+    "seat": 1,
+    "my_seat": 2,
+    "seats": 2,
+    "expect": 1
+   },
+   {
+    "seat": 8,
+    "my_seat": 1,
+    "seats": 8,
+    "expect": 7
+   }
+  ]
+ },
+ "chip_label": {
+  "about": "The call strip's chip for a table (words.json chip.*): Hold'em = chip.holdem with {n} = seated; The Rig in a round = chip.rig with {n} = round; The Rig in its lobby = chip.rig_lobby with {n} = seated. A chip only for lobby | hand | pause | round: an `end` or `closed` table gets none (expect null).",
+  "cases": [
+   {
+    "table": {
+     "game": "holdem",
+     "status": "hand",
+     "seated": 3
+    },
+    "expect": "♠ Hold'em · 3 seated · Join"
+   },
+   {
+    "table": {
+     "game": "holdem",
+     "status": "lobby",
+     "seated": 0
+    },
+    "expect": "♠ Hold'em · 0 seated · Join"
+   },
+   {
+    "table": {
+     "game": "rig",
+     "status": "round",
+     "seated": 4,
+     "round": 2
+    },
+    "expect": "🎰 The Rig · round 2 · Join"
+   },
+   {
+    "table": {
+     "game": "rig",
+     "status": "lobby",
+     "seated": 3
+    },
+    "expect": "🎰 The Rig · 3 joined · Join"
+   },
+   {
+    "table": {
+     "game": "rig",
+     "status": "end",
+     "seated": 1,
+     "round": 5
+    },
+    "expect": null
+   },
+   {
+    "table": {
+     "game": "holdem",
+     "status": "end",
+     "seated": 2
+    },
+    "expect": null
+   },
+   {
+    "table": {
+     "game": "rig",
+     "status": "closed",
+     "seated": 0
+    },
+    "expect": null
+   },
+   {
+    "table": {
+     "game": "holdem",
+     "status": "pause",
+     "seated": 2
+    },
+    "expect": "♠ Hold'em · 2 seated · Join"
+   }
+  ]
+ },
+ "art": {
+  "about": "Content colours of the game art (felt, cards, chips, the machine): the same in every theme, like a photo; the chrome around them (panels, buttons, text) is the theme's.",
+  "feltCentre": "#1d5a4a",
+  "feltEdge": "#0b2a23",
+  "feltRim": "#3a2a1c",
+  "feltRimLight": "#5c4630",
+  "feltLine": "rgba(255, 255, 255, 0.10)",
+  "cardFace": "#f7f5ef",
+  "cardEdge": "rgba(0, 0, 0, 0.35)",
+  "cardBlack": "#16181d",
+  "cardRed": "#c8283c",
+  "cardBack": "#273b8f",
+  "cardBackLine": "#5b74d6",
+  "chip": "#d9a441",
+  "chipEdge": "#f4d58a",
+  "dealer": "#f2f2f2",
+  "dealerFg": "#111111",
+  "reelWindow": "#0d0f14",
+  "reelGlass": "rgba(255, 255, 255, 0.06)",
+  "reelLine": "rgba(255, 255, 255, 0.12)",
+  "machineBody": "#1b1f2a",
+  "machineTrim": "#c9a24a",
+  "machineTrimDark": "#8f6d27",
+  "spinFg": "#1a1206",
+  "shadeSoft": "rgba(0, 0, 0, 0.32)",
+  "shade": "rgba(0, 0, 0, 0.45)",
+  "shadeDeep": "rgba(0, 0, 0, 0.6)",
+  "glint": "rgba(255, 255, 255, 0.06)",
+  "win": "#3ad07a",
+  "loss": "#e0596a"
+ },
+ "symbol_colours": {
+  "hat": "#d8dde6",
+  "saucer": "#7fd3c7",
+  "dish": "#9db4ff",
+  "eye": "#f0c35a",
+  "moon": "#f5e7a1",
+  "lizard": "#8fd16a"
+ }
+}

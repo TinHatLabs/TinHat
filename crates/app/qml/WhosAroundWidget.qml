@@ -340,7 +340,7 @@ Item {
                 implicitHeight: 24
                 leftPadding: 10; rightPadding: 10
                 opacity: rr.padT && rr.padT.ready ? 1 : 0.5
-                font.pointSize: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * 0.85
+                font.pointSize: ((Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * 0.85) * Th.textScale
                 font.weight: Font.DemiBold
                 Controls.ToolTip.text: rr.padT ? (rr.padT.ready ? "Control the call on " + rr.padT.name + " from here — sounds, mute, volumes" : w.app.padWhyLine(rr.padT)) : ""
                 Controls.ToolTip.visible: hovered
@@ -357,7 +357,7 @@ Item {
                 text: "Join"
                 implicitHeight: 24
                 leftPadding: 10; rightPadding: 10
-                font.pointSize: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * 0.85
+                font.pointSize: ((Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * 0.85) * Th.textScale
                 font.weight: Font.DemiBold
                 onClicked: w.join(rr.g.room)
             }
@@ -430,6 +430,8 @@ Item {
                 presenceColor: w.dotOf(pr.who.pres)
                 presenceRing: Th.widgetBg
             }
+            // mini games v1: 4 px before the name (the row's 8 less 4); not about one room: your own server's rank
+            PrestigeToken { mxid: w.preview ? "" : String(pr.who.mxid || ""); roomId: ""; size: 12; gap: false; Layout.rightMargin: -4 }
             WidgetText {
                 Layout.fillWidth: true
                 role: "text"

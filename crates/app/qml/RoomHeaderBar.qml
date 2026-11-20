@@ -156,14 +156,22 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 spacing: 0
 
+                RowLayout {   // mini games v1: a DM header is its person: their prestige token before the name
+                    Layout.fillWidth: true
+                    spacing: 0
+                PrestigeToken {
+                    mxid: (headerBar.app && headerBar.app.dmPeerOf && headerBar.roomId.length > 0) ? String(headerBar.app.dmPeerOf(headerBar.roomId) || "") : ""
+                    roomId: headerBar.roomId
+                }
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     text: headerBar.roomName.length > 0 ? headerBar.roomName : "Room"
                     color: Th.headerTitleFg
                     font.bold: true
-                    font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.08
+                    font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.08 * Th.textScale
                     elide: Text.ElideRight
+                }
                 }
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -171,7 +179,7 @@ Item {
                     visible: text.length > 0
                     text: headerBar.subtitle
                     color: Th.headerSubtitleFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     elide: Text.ElideRight
                 }
             }
@@ -210,7 +218,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: nextUpChip.ev ? headerBar.nextUpText(nextUpChip.ev) : ""
                         color: Th.headerNextUpFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         elide: Text.ElideRight
                         width: Math.min(implicitWidth, 260)
                     }

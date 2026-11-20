@@ -14,8 +14,8 @@ ColumnLayout {
     property bool dim: false
     property bool showReason: false
     spacing: 6
-    Text { textFormat: Text.PlainText; text: tier.title; color: Th.reelSectionFg; font.pixelSize: 12; font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
-    Text { textFormat: Text.PlainText; visible: tier.subtitle.length > 0; text: tier.subtitle; color: Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+    Text { textFormat: Text.PlainText; text: tier.title; color: Th.reelSectionFg; font.pixelSize: Th.px(12); font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
+    Text { textFormat: Text.PlainText; visible: tier.subtitle.length > 0; text: tier.subtitle; color: Th.reelMetaFg; font.pixelSize: Th.px(11); wrapMode: Text.WordWrap; Layout.fillWidth: true }
     Flow {
         Layout.fillWidth: true
         spacing: 10
@@ -34,12 +34,12 @@ ColumnLayout {
                         Rectangle { visible: !!modelData.weight; anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 4; color: Th.reelOddsTrack
                                     Rectangle { width: parent.width * Math.min(1, modelData.odds || 0); height: 4; color: Th.reelOddsFill } }
                     }
-                    Text { textFormat: Text.PlainText; text: modelData.name || modelData.id; color: Th.reelFg; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                    Text { textFormat: Text.PlainText; text: modelData.name || modelData.id; color: Th.reelFg; font.pixelSize: Th.px(11); elide: Text.ElideRight; Layout.fillWidth: true }
                     Text {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         elide: Text.ElideRight
-                        color: Th.reelMetaFg; font.pixelSize: 10
+                        color: Th.reelMetaFg; font.pixelSize: Th.px(10)
                         text: tier.showReason ? (modelData.reason || "")
                               : (modelData.missing && modelData.missing.length) ? "Not " + modelData.missing.map(function (m) { return tier.panel.nameOf(m) }).join(", ")
                               : (modelData.owners || []).length + " of you would play this"
@@ -50,7 +50,7 @@ ColumnLayout {
                     visible: h.hovered && (modelData.explain || []).length > 0
                     anchors { left: parent.left; right: parent.right; top: parent.top }
                     height: t.implicitHeight + 10; radius: app.radiusSm; color: Th.reelTierExplainBg; z: 5
-                    Text { id: t; anchors { fill: parent; margins: 5 } text: (modelData.explain || []).join("\n"); color: Th.reelTierExplainFg; font.pixelSize: 10; wrapMode: Text.WordWrap }
+                    Text { id: t; anchors { fill: parent; margins: 5 } text: (modelData.explain || []).join("\n"); color: Th.reelTierExplainFg; font.pixelSize: Th.px(10); wrapMode: Text.WordWrap }
                 }
             }
         }

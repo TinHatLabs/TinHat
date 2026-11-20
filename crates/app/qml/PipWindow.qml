@@ -17,7 +17,7 @@ import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app // PipVideoItem (cxx-qt qml_element)
 
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: pip
     // The CallController + AudioPrefsController, injected by AppCore.openPip(). Colours: the pip.* tokens and, for the
     // window's own Kirigami.Theme / the quality menu's palette, the roles (Th).
@@ -29,6 +29,7 @@ Window {
     property string name: ""            // resolved display name
     property bool isShare: false        // screen share (vs camera) — picks the gain category
     property string volMxid: ""         // BARE mxid — the audio-prefs key (Main.qml tileMxid)
+    property string roomId: ""          // mini games v1: the call's room (whose server's prestige rank the caption shows)
     readonly property string volCat: isShare ? "screenshare" : "mic"
     // Display name, else the localpart of the identity (never the raw @user:server:DEVICE).
     readonly property string who: name.length > 0 ? name
@@ -121,14 +122,22 @@ Window {
             GradientStop { position: 0.0; color: "transparent" }
             GradientStop { position: 1.0; color: Th.pipCaptionBg }
         }
+        // mini games v1: the person's prestige token before the caption (0 wide at rank 0: the caption keeps its place)
+        PrestigeToken {
+            id: pipTok
+            anchors { left: parent.left; leftMargin: 6; verticalCenter: pipCaption.verticalCenter }
+            mxid: pip.volMxid
+            roomId: pip.roomId
+        }
         Controls.Label {
+            id: pipCaption
             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-            anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
+            anchors { left: parent.left; bottom: parent.bottom; margins: 6; leftMargin: 6 + pipTok.implicitWidth }
             text: pip.who + (pip.isShare ? " — stream" : "")
             color: Th.pipFg
             font.bold: true
             elide: Text.ElideRight
-            width: parent.width - 12
+            width: parent.width - 12 - pipTok.implicitWidth
         }
     }
 
@@ -211,7 +220,7 @@ Window {
                     color: Th.pipFg
                     Layout.preferredWidth: 40
                     horizontalAlignment: Text.AlignRight
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 // Quality pick — the same layers the tile's stream menu offers. Explicit
                 // colours throughout: a stock ToolButton's TEXT rendered invisible in this
@@ -230,7 +239,7 @@ Window {
                         anchors.centerIn: parent
                         text: pip.qualityLabel + " ▾"
                         color: Th.pipFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         font.bold: true
                     }
                     TapHandler { id: qualityTap; onTapped: pip.openQualityMenu() }

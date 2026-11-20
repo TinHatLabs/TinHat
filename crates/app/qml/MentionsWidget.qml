@@ -171,6 +171,7 @@ Item {
                     width: parent.width
                     spacing: 0
                     // the name keeps its width (at most 60 % of the line); the room elides first
+                    PrestigeToken { mxid: w.preview || w.sample ? "" : String(mr.r.s || ""); roomId: String(mr.r.r || ""); size: 12 }   // mini games v1
                     WidgetText { id: nameT; Layout.fillWidth: false; Layout.preferredWidth: Math.min(implicitWidth, parent.width * 0.6); role: "text"; semibold: mr.unseen; text: mr.r.name || ""; color: Th.widgetFg }
                     WidgetText { Layout.fillWidth: true; Layout.minimumWidth: 0; role: "meta"; text: mr.r.room ? " · " + mr.r.room : ""; color: Th.widgetMutedFg }
                     WidgetText { Layout.leftMargin: 8; role: "num"; text: w.whenText(mr.r.t || 0); color: Th.widgetMetaFg; opacity: mr.hot ? 0 : 1 }

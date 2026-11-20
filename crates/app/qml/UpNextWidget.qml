@@ -24,7 +24,7 @@ Item {
     property bool preview: false
     readonly property var wc: w.hostRef ? w.hostRef.widgets : null
     readonly property int days: (w.settings && w.settings.days) ? w.settings.days : 7
-    readonly property real body: Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10
+    readonly property real body: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale   // A31.4: the person's text size
 
     // ── the clock: one timeout at the earliest nextAt (a ring step / a phase change) ──
     property double now: Date.now()

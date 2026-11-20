@@ -1,0 +1,5732 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "tinhat-play-v1",
+ "title": "Tin Hat play contract v1 (frames, views, HTTP answers). Apps ignore unknown fields.",
+ "x-codes": {
+  "session": 401,
+  "guest": 403,
+  "not-member": 403,
+  "not-in-call": 403,
+  "remote-refused": 403,
+  "rig-hidden": 403,
+  "no-space": 403,
+  "wrong-server": 403,
+  "space-changed": 409,
+  "unavailable": 503,
+  "no-table": 404,
+  "no-wallet": 404,
+  "seated-elsewhere": 409,
+  "table-full": 409,
+  "one-per-room": 409,
+  "seated": 409,
+  "open-money": 409,
+  "rate": 429,
+  "off": 503,
+  "db": 503,
+  "stale": 409,
+  "not-your-turn": 409,
+  "phase": 409,
+  "bad": 400,
+  "bad-action": 409,
+  "bad-amount": 400,
+  "no-chips": 409,
+  "limit": 409,
+  "locked": 409,
+  "window": 409,
+  "taken": 409,
+  "rules": 409,
+  "greyed": 409,
+  "host-only": 403
+ },
+ "x-moves": {
+  "holdem": [
+   "sit",
+   "leave",
+   "deal",
+   "fold",
+   "check",
+   "call",
+   "raise",
+   "allin",
+   "away",
+   "kick",
+   "close"
+  ],
+  "rig": [
+   "join",
+   "leave",
+   "start",
+   "keep",
+   "market",
+   "dial",
+   "spin",
+   "call",
+   "audit",
+   "walk",
+   "mute",
+   "patch",
+   "nudge",
+   "whisper",
+   "peek",
+   "kick",
+   "close"
+  ],
+  "table_level": [
+   "sit",
+   "leave",
+   "deal",
+   "away",
+   "kick",
+   "close",
+   "join",
+   "start"
+  ],
+  "shapes": {
+   "holdem": [
+    [
+     "sit",
+     [
+      "space"
+     ],
+     [
+      "seat"
+     ],
+     false
+    ],
+    [
+     "leave",
+     [],
+     [],
+     false
+    ],
+    [
+     "deal",
+     [],
+     [],
+     false
+    ],
+    [
+     "fold",
+     [],
+     [],
+     true
+    ],
+    [
+     "check",
+     [],
+     [],
+     true
+    ],
+    [
+     "call",
+     [],
+     [],
+     true
+    ],
+    [
+     "raise",
+     [
+      "to"
+     ],
+     [],
+     true
+    ],
+    [
+     "allin",
+     [],
+     [],
+     true
+    ],
+    [
+     "away",
+     [
+      "on"
+     ],
+     [],
+     false
+    ],
+    [
+     "kick",
+     [
+      "u"
+     ],
+     [],
+     false
+    ],
+    [
+     "close",
+     [],
+     [],
+     false
+    ]
+   ],
+   "rig": [
+    [
+     "join",
+     [
+      "space"
+     ],
+     [],
+     false
+    ],
+    [
+     "leave",
+     [],
+     [],
+     false
+    ],
+    [
+     "start",
+     [],
+     [
+      "preset",
+      "bankroll",
+      "patch"
+     ],
+     false
+    ],
+    [
+     "keep",
+     [
+      "card"
+     ],
+     [],
+     true
+    ],
+    [
+     "market",
+     [
+      "side",
+      "stake"
+     ],
+     [],
+     true
+    ],
+    [
+     "market-pass",
+     [],
+     [],
+     true
+    ],
+    [
+     "dial",
+     [
+      "bet"
+     ],
+     [],
+     true
+    ],
+    [
+     "spin",
+     [],
+     [
+      "bet"
+     ],
+     true
+    ],
+    [
+     "call",
+     [
+      "card"
+     ],
+     [],
+     true
+    ],
+    [
+     "audit",
+     [
+      "spin"
+     ],
+     [],
+     true
+    ],
+    [
+     "walk",
+     [],
+     [],
+     true
+    ],
+    [
+     "mute",
+     [
+      "armed"
+     ],
+     [],
+     true
+    ],
+    [
+     "patch",
+     [],
+     [],
+     true
+    ],
+    [
+     "nudge",
+     [
+      "reel",
+      "step"
+     ],
+     [],
+     true
+    ],
+    [
+     "whisper",
+     [
+      "template"
+     ],
+     [
+      "person"
+     ],
+     true
+    ],
+    [
+     "whisper-text",
+     [
+      "text"
+     ],
+     [],
+     true
+    ],
+    [
+     "peek",
+     [
+      "mechanic",
+      "card"
+     ],
+     [],
+     true
+    ],
+    [
+     "kick",
+     [
+      "u"
+     ],
+     [],
+     false
+    ],
+    [
+     "close",
+     [],
+     [],
+     false
+    ]
+   ]
+  }
+ },
+ "$defs": {
+  "mxid": {
+   "type": "string",
+   "pattern": "^@[^:\\s]+:[^\\s]+$",
+   "maxLength": 255
+  },
+  "histPerson": {
+   "type": "string",
+   "pattern": "^(@[^:\\s]+:[^\\s]+|~[1-9][0-9]?)$",
+   "maxLength": 255
+  },
+  "room": {
+   "type": "string",
+   "pattern": "^![^:\\s]+:[^\\s]+$",
+   "maxLength": 255
+  },
+  "server": {
+   "type": "string",
+   "pattern": "^[A-Za-z0-9.-]+(:[0-9]{1,5})?$",
+   "maxLength": 255
+  },
+  "table": {
+   "type": "string",
+   "pattern": "^t[HR][A-Za-z0-9]{14}$"
+  },
+  "op": {
+   "type": "string",
+   "pattern": "^[A-Za-z0-9_-]{16,32}$"
+  },
+  "seatKey": {
+   "type": "string",
+   "pattern": "^[1-8]$"
+  },
+  "day": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+  },
+  "code": {
+   "enum": [
+    "session",
+    "guest",
+    "not-member",
+    "not-in-call",
+    "remote-refused",
+    "rig-hidden",
+    "no-space",
+    "wrong-server",
+    "space-changed",
+    "unavailable",
+    "no-table",
+    "no-wallet",
+    "seated-elsewhere",
+    "table-full",
+    "one-per-room",
+    "seated",
+    "open-money",
+    "rate",
+    "off",
+    "db",
+    "stale",
+    "not-your-turn",
+    "phase",
+    "bad",
+    "bad-action",
+    "bad-amount",
+    "no-chips",
+    "limit",
+    "locked",
+    "window",
+    "taken",
+    "rules",
+    "greyed",
+    "host-only"
+   ]
+  },
+  "clientKind": {
+   "enum": [
+    "desktop",
+    "web",
+    "ios-app",
+    "android-app",
+    "mac-app"
+   ]
+  },
+  "screen": {
+   "enum": [
+    "desktop",
+    "web",
+    "pad",
+    "ios-app",
+    "android-app",
+    "mac-app"
+   ]
+  },
+  "card": {
+   "type": "string",
+   "pattern": "^[2-9TJQKA][cdhs]$"
+  },
+  "symbol": {
+   "enum": [
+    "hat",
+    "saucer",
+    "dish",
+    "eye",
+    "moon",
+    "lizard"
+   ]
+  },
+  "reels": {
+   "type": "array",
+   "items": {
+    "enum": [
+     "hat",
+     "saucer",
+     "dish",
+     "eye",
+     "moon",
+     "lizard"
+    ]
+   },
+   "minItems": 3,
+   "maxItems": 3
+  },
+  "rigCard": {
+   "enum": [
+    "moon-monday",
+    "lizard-lane",
+    "hat-thief",
+    "twos-company",
+    "big-bet-tax",
+    "penny-pincher",
+    "cold-streak",
+    "skim",
+    "moon-tax",
+    "shy-hat",
+    "lizard-tax",
+    "underdog",
+    "rebound",
+    "hot-hat",
+    "slow-start",
+    "even-money"
+   ]
+  },
+  "template": {
+   "enum": [
+    "bet-size",
+    "not-moon",
+    "last-spin",
+    "reel-2",
+    "bluffing",
+    "trust-nobody"
+   ]
+  },
+  "closed": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "enum": [
+      "host",
+      "idle",
+      "no-call",
+      "restart",
+      "off",
+      "end",
+      "space-changed",
+      "empty"
+     ]
+    },
+    "at": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "reason",
+    "at"
+   ],
+   "additionalProperties": false
+  },
+  "holdemSeat": {
+   "type": "object",
+   "properties": {
+    "seat": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "u": {
+     "$ref": "#/$defs/mxid"
+    },
+    "stack": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "bet": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "state": {
+     "enum": [
+      "waiting",
+      "active",
+      "folded",
+      "allin",
+      "away",
+      "out",
+      "leaving"
+     ]
+    },
+    "cards": {
+     "enum": [
+      0,
+      2
+     ]
+    },
+    "connected": {
+     "type": "boolean"
+    },
+    "shown": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/card"
+     },
+     "minItems": 2,
+     "maxItems": 2
+    }
+   },
+   "required": [
+    "seat",
+    "u",
+    "stack",
+    "bet",
+    "state",
+    "cards",
+    "connected"
+   ],
+   "additionalProperties": false
+  },
+  "holdemPot": {
+   "type": "object",
+   "properties": {
+    "amount": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "eligible": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8
+     },
+     "minItems": 1,
+     "maxItems": 8
+    }
+   },
+   "required": [
+    "amount",
+    "eligible"
+   ],
+   "additionalProperties": false
+  },
+  "holdemHand": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "button": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "sb": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "bb": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "street": {
+     "enum": [
+      "preflop",
+      "flop",
+      "turn",
+      "river",
+      "showdown"
+     ]
+    },
+    "board": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/card"
+     },
+     "minItems": 0,
+     "maxItems": 5
+    },
+    "pots": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/holdemPot"
+     }
+    },
+    "total": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "to_act": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "seat": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 8
+        },
+        "turn": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "deadline": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "seat",
+        "turn",
+        "deadline"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    },
+    "last": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "seat": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 8
+        },
+        "a": {
+         "enum": [
+          "sb",
+          "bb",
+          "fold",
+          "check",
+          "call",
+          "bet",
+          "raise",
+          "allin",
+          "timeout"
+         ]
+        },
+        "to": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "seat",
+        "a"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    }
+   },
+   "required": [
+    "n",
+    "button",
+    "sb",
+    "bb",
+    "street",
+    "board",
+    "pots",
+    "total",
+    "to_act",
+    "last"
+   ],
+   "additionalProperties": false
+  },
+  "holdemResult": {
+   "type": "object",
+   "properties": {
+    "n": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "board": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/card"
+     },
+     "minItems": 0,
+     "maxItems": 5
+    },
+    "pots": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "amount": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+       },
+       "eligible": {
+        "type": "array",
+        "items": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 8
+        },
+        "minItems": 1,
+        "maxItems": 8
+       },
+       "winners": {
+        "type": "array",
+        "items": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 8
+        },
+        "minItems": 1,
+        "maxItems": 8
+       },
+       "paid": {
+        "type": "object",
+        "propertyNames": {
+         "$ref": "#/$defs/seatKey"
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       }
+      },
+      "required": [
+       "amount",
+       "eligible",
+       "winners",
+       "paid"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "returned": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/seatKey"
+     },
+     "additionalProperties": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+     }
+    },
+    "shown": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/seatKey"
+     },
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/card"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     }
+    },
+    "best": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/seatKey"
+     },
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "category": {
+        "enum": [
+         "high-card",
+         "pair",
+         "two-pair",
+         "trips",
+         "straight",
+         "flush",
+         "full-house",
+         "quads",
+         "straight-flush"
+        ]
+       },
+       "five": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/card"
+        },
+        "minItems": 5,
+        "maxItems": 5
+       }
+      },
+      "required": [
+       "category",
+       "five"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "net": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/mxid"
+     },
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "voided": {
+     "type": "boolean"
+    },
+    "next_at": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     ]
+    }
+   },
+   "required": [
+    "n",
+    "board",
+    "pots",
+    "returned",
+    "shown",
+    "best",
+    "net",
+    "voided",
+    "next_at"
+   ],
+   "additionalProperties": false
+  },
+  "holdemLegal": {
+   "type": "object",
+   "properties": {
+    "fold": {
+     "type": "boolean"
+    },
+    "check": {
+     "type": "boolean"
+    },
+    "call": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "raise": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "min": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "max": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "min",
+        "max"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    }
+   },
+   "required": [
+    "fold",
+    "check",
+    "call",
+    "raise"
+   ],
+   "additionalProperties": false
+  },
+  "holdemYou": {
+   "type": "object",
+   "properties": {
+    "seat": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "state": {
+     "enum": [
+      "waiting",
+      "active",
+      "folded",
+      "allin",
+      "away",
+      "out",
+      "leaving"
+     ]
+    },
+    "cards": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/card"
+     },
+     "minItems": 0,
+     "maxItems": 2
+    },
+    "legal": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/holdemLegal"
+      }
+     ]
+    },
+    "screens": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/screen"
+     }
+    },
+    "at_cap": {
+     "type": "boolean"
+    },
+    "cap": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 9007199254740991
+    },
+    "holdings": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "timeouts": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 2
+    },
+    "can_deal": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "seat",
+    "state",
+    "cards",
+    "legal",
+    "screens",
+    "at_cap",
+    "cap",
+    "holdings",
+    "timeouts"
+   ],
+   "additionalProperties": false
+  },
+  "holdemView": {
+   "type": "object",
+   "properties": {
+    "game": {
+     "const": "holdem"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "owner": {
+     "$ref": "#/$defs/server"
+    },
+    "vseq": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "now": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "status": {
+     "enum": [
+      "lobby",
+      "hand",
+      "pause",
+      "closed"
+     ]
+    },
+    "host": {
+     "$ref": "#/$defs/mxid"
+    },
+    "opts": {
+     "type": "object",
+     "properties": {
+      "sb": {
+       "const": 1
+      },
+      "bb": {
+       "const": 2
+      },
+      "seats": {
+       "type": "integer",
+       "minimum": 2,
+       "maximum": 8
+      },
+      "turn_s": {
+       "const": 30
+      }
+     },
+     "required": [
+      "sb",
+      "bb",
+      "seats",
+      "turn_s"
+     ],
+     "additionalProperties": false
+    },
+    "seats": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/holdemSeat"
+     },
+     "minItems": 0,
+     "maxItems": 8
+    },
+    "hand": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/holdemHand"
+      }
+     ]
+    },
+    "result": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/holdemResult"
+      }
+     ]
+    },
+    "closed": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/closed"
+      }
+     ]
+    },
+    "spectators": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "you": {
+     "$ref": "#/$defs/holdemYou"
+    }
+   },
+   "required": [
+    "game",
+    "table",
+    "room",
+    "space",
+    "owner",
+    "vseq",
+    "now",
+    "status",
+    "host",
+    "opts",
+    "seats",
+    "hand",
+    "result",
+    "closed",
+    "spectators"
+   ],
+   "additionalProperties": false
+  },
+  "rigPlayer": {
+   "type": "object",
+   "properties": {
+    "u": {
+     "$ref": "#/$defs/mxid"
+    },
+    "order": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "role": {
+     "enum": [
+      null,
+      "spinner",
+      "mechanic",
+      "sharp",
+      "railbird"
+     ]
+    },
+    "connected": {
+     "type": "boolean"
+    },
+    "left": {
+     "type": "boolean"
+    },
+    "spun": {
+     "type": "boolean"
+    },
+    "skipped": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "u",
+    "order",
+    "role",
+    "connected",
+    "left",
+    "spun",
+    "skipped"
+   ],
+   "additionalProperties": false
+  },
+  "rigBoardCard": {
+   "type": "object",
+   "properties": {
+    "card": {
+     "$ref": "#/$defs/rigCard"
+    },
+    "state": {
+     "enum": [
+      "open",
+      "dead",
+      "busted",
+      "wrong"
+     ]
+    },
+    "by": {
+     "$ref": "#/$defs/mxid"
+    },
+    "spin": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10
+    }
+   },
+   "required": [
+    "card",
+    "state"
+   ],
+   "additionalProperties": false
+  },
+  "rigHistory": {
+   "type": "object",
+   "properties": {
+    "spin": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10
+    },
+    "bet": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 3
+    },
+    "reels": {
+     "$ref": "#/$defs/reels"
+    },
+    "payout": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "result": {
+     "enum": [
+      "win",
+      "push",
+      "loss"
+     ]
+    },
+    "stamps": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "nudged",
+       "audited",
+       "called-right",
+       "called-wrong",
+       "refilled"
+      ]
+     }
+    }
+   },
+   "required": [
+    "spin",
+    "bet",
+    "reels",
+    "payout",
+    "result",
+    "stamps"
+   ],
+   "additionalProperties": false
+  },
+  "rigWhisper": {
+   "type": "object",
+   "properties": {
+    "spin": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10
+    },
+    "template": {
+     "$ref": "#/$defs/template"
+    },
+    "person": {
+     "$ref": "#/$defs/mxid"
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 60
+    }
+   },
+   "required": [
+    "spin"
+   ],
+   "additionalProperties": false
+  },
+  "rigReveal": {
+   "type": "object",
+   "properties": {
+    "seed": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "slots": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "slot": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "card": {
+        "$ref": "#/$defs/rigCard"
+       },
+       "owner": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "from_spin": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10
+       }
+      },
+      "required": [
+       "slot",
+       "card",
+       "owner",
+       "from_spin"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "mutes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "spin": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10
+       },
+       "owner": {
+        "$ref": "#/$defs/histPerson"
+       }
+      },
+      "required": [
+       "spin",
+       "owner"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "nudges": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "spin": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10
+       },
+       "by": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "reel": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "step": {
+        "enum": [
+         1,
+         -1
+        ]
+       }
+      },
+      "required": [
+       "spin",
+       "by",
+       "reel",
+       "step"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "calls": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "spin": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10
+       },
+       "card": {
+        "$ref": "#/$defs/rigCard"
+       },
+       "right": {
+        "type": "boolean"
+       },
+       "owner": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "$ref": "#/$defs/histPerson"
+         }
+        ]
+       }
+      },
+      "required": [
+       "spin",
+       "card",
+       "right",
+       "owner"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "peeks": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "who": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "target": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "card": {
+        "$ref": "#/$defs/rigCard"
+       },
+       "right": {
+        "type": "boolean"
+       },
+       "delta": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "who",
+       "target",
+       "card",
+       "right",
+       "delta"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "market": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "who": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "side": {
+        "enum": [
+         "up",
+         "not-up"
+        ]
+       },
+       "stake": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 2
+       },
+       "back": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       }
+      },
+      "required": [
+       "who",
+       "side",
+       "stake",
+       "back"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "whispers": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "who": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "spin": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 10
+       },
+       "template": {
+        "$ref": "#/$defs/template"
+       },
+       "person": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60
+       }
+      },
+      "required": [
+       "who",
+       "spin"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "spins": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "spin": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10
+       },
+       "bet": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "honest": {
+        "$ref": "#/$defs/reels"
+       },
+       "after_cards": {
+        "$ref": "#/$defs/reels"
+       },
+       "final": {
+        "$ref": "#/$defs/reels"
+       },
+       "honest_payout": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "payout": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "touched": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/rigCard"
+        }
+       },
+       "bit": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/rigCard"
+        }
+       },
+       "rake": {
+        "type": "object",
+        "propertyNames": {
+         "$ref": "#/$defs/rigCardKey"
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       }
+      },
+      "required": [
+       "spin",
+       "bet",
+       "honest",
+       "after_cards",
+       "final",
+       "honest_payout",
+       "payout",
+       "touched",
+       "bit",
+       "rake"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "up": {
+     "type": "boolean"
+    },
+    "net": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/histPerson"
+     },
+     "additionalProperties": {
+      "type": "integer"
+     }
+    }
+   },
+   "required": [
+    "seed",
+    "slots",
+    "mutes",
+    "nudges",
+    "calls",
+    "peeks",
+    "market",
+    "whispers",
+    "spins",
+    "up",
+    "net"
+   ],
+   "additionalProperties": false
+  },
+  "rigCardKey": {
+   "enum": [
+    "moon-monday",
+    "lizard-lane",
+    "hat-thief",
+    "twos-company",
+    "big-bet-tax",
+    "penny-pincher",
+    "cold-streak",
+    "skim",
+    "moon-tax",
+    "shy-hat",
+    "lizard-tax",
+    "underdog",
+    "rebound",
+    "hot-hat",
+    "slow-start",
+    "even-money"
+   ]
+  },
+  "rigRound": {
+   "type": "object",
+   "properties": {
+    "r": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "spinner": {
+     "$ref": "#/$defs/mxid"
+    },
+    "preset": {
+     "enum": [
+      "lite",
+      "full"
+     ]
+    },
+    "phase": {
+     "enum": [
+      "setup",
+      "turn",
+      "spin",
+      "land",
+      "nudge",
+      "payout",
+      "reveal"
+     ]
+    },
+    "spin": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10
+    },
+    "spins": {
+     "enum": [
+      8,
+      10
+     ]
+    },
+    "deadline": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     ]
+    },
+    "seed_commit": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "bankroll": {
+     "type": "object",
+     "properties": {
+      "start": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "now": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "start",
+      "now"
+     ],
+     "additionalProperties": false
+    },
+    "net": {
+     "type": "integer"
+    },
+    "dial": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 3
+    },
+    "bet": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 3
+      }
+     ]
+    },
+    "calls_left": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3
+    },
+    "call_used_this_spin": {
+     "type": "boolean"
+    },
+    "audit_used": {
+     "type": "boolean"
+    },
+    "walk_from": {
+     "enum": [
+      5,
+      6
+     ]
+    },
+    "peek_lock_after": {
+     "enum": [
+      3,
+      4
+     ]
+    },
+    "peeks_locked": {
+     "type": "boolean"
+    },
+    "features": {
+     "type": "object",
+     "properties": {
+      "mutes": {
+       "type": "boolean"
+      },
+      "nudge": {
+       "type": "boolean"
+      },
+      "whisper": {
+       "type": "boolean"
+      },
+      "patch": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "mutes",
+      "nudge",
+      "whisper",
+      "patch"
+     ],
+     "additionalProperties": false
+    },
+    "board": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/rigBoardCard"
+     },
+     "minItems": 10,
+     "maxItems": 16
+    },
+    "dead": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/rigCard"
+     },
+     "minItems": 3,
+     "maxItems": 4
+    },
+    "mechanics": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3
+    },
+    "refilled": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "spin": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10
+       }
+      },
+      "required": [
+       "spin"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "history": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/rigHistory"
+     },
+     "minItems": 0,
+     "maxItems": 10
+    },
+    "reels": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/reels"
+      }
+     ]
+    },
+    "nudge": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "open": {
+         "type": "boolean"
+        },
+        "deadline": {
+         "anyOf": [
+          {
+           "type": "null"
+          },
+          {
+           "type": "integer",
+           "minimum": 0,
+           "maximum": 9007199254740991
+          }
+         ]
+        },
+        "reel": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 3
+        },
+        "step": {
+         "enum": [
+          1,
+          -1
+         ]
+        }
+       },
+       "required": [
+        "open",
+        "deadline"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    },
+    "waiting_on": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 8
+    },
+    "paused": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "budget_ms": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "budget_ms"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    },
+    "audit": {
+     "type": "object",
+     "properties": {
+      "spin": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 10
+      },
+      "honest_reels": {
+       "$ref": "#/$defs/reels"
+      },
+      "honest_payout": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "touched": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 4
+      }
+     },
+     "required": [
+      "spin",
+      "honest_reels",
+      "honest_payout",
+      "touched"
+     ],
+     "additionalProperties": false
+    },
+    "reveal": {
+     "$ref": "#/$defs/rigReveal"
+    }
+   },
+   "required": [
+    "r",
+    "spinner",
+    "preset",
+    "phase",
+    "spin",
+    "spins",
+    "deadline",
+    "seed_commit",
+    "bankroll",
+    "net",
+    "dial",
+    "bet",
+    "calls_left",
+    "call_used_this_spin",
+    "audit_used",
+    "walk_from",
+    "peek_lock_after",
+    "peeks_locked",
+    "features",
+    "board",
+    "dead",
+    "mechanics",
+    "refilled",
+    "history",
+    "reels",
+    "nudge",
+    "waiting_on",
+    "paused"
+   ],
+   "additionalProperties": false
+  },
+  "rigEnd": {
+   "type": "object",
+   "properties": {
+    "rounds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "leaderboard": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "u": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "net": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "u",
+       "net"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "pit_boss": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/histPerson"
+      }
+     ]
+    }
+   },
+   "required": [
+    "rounds",
+    "leaderboard",
+    "pit_boss"
+   ],
+   "additionalProperties": false
+  },
+  "rigPeek": {
+   "type": "object",
+   "properties": {
+    "placed": {
+     "type": "boolean"
+    },
+    "mechanic": {
+     "$ref": "#/$defs/mxid"
+    },
+    "card": {
+     "$ref": "#/$defs/rigCard"
+    },
+    "locks_after": {
+     "enum": [
+      3,
+      4
+     ]
+    }
+   },
+   "required": [
+    "placed",
+    "locks_after"
+   ],
+   "additionalProperties": false
+  },
+  "rigMarket": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "properties": {
+      "side": {
+       "enum": [
+        "up",
+        "not-up"
+       ]
+      },
+      "stake": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 2
+      }
+     },
+     "required": [
+      "side",
+      "stake"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  },
+  "rigYou": {
+   "oneOf": [
+    {
+     "type": "object",
+     "properties": {
+      "role": {
+       "const": null
+      },
+      "screens": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/screen"
+       }
+      },
+      "at_cap": {
+       "type": "boolean"
+      },
+      "holdings": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "role",
+      "screens",
+      "at_cap",
+      "holdings"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "role": {
+       "const": "spinner"
+      },
+      "whispers": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/rigWhisper"
+       }
+      },
+      "screens": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/screen"
+       }
+      },
+      "at_cap": {
+       "type": "boolean"
+      },
+      "holdings": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "timeouts": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 2
+      }
+     },
+     "required": [
+      "role",
+      "whispers",
+      "screens",
+      "at_cap",
+      "holdings",
+      "timeouts"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "role": {
+       "const": "mechanic"
+      },
+      "deal": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/rigCard"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "kept": {
+       "type": "boolean"
+      },
+      "card": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "properties": {
+          "card": {
+           "$ref": "#/$defs/rigCard"
+          },
+          "bite": {
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 3
+          }
+         },
+         "required": [
+          "card",
+          "bite"
+         ],
+         "additionalProperties": false
+        }
+       ]
+      },
+      "busted": {
+       "type": "boolean"
+      },
+      "patch": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "properties": {
+          "card": {
+           "$ref": "#/$defs/rigCard"
+          },
+          "ok": {
+           "type": "boolean"
+          }
+         },
+         "required": [
+          "card",
+          "ok"
+         ],
+         "additionalProperties": false
+        }
+       ]
+      },
+      "mutes_left": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 2
+      },
+      "armed": {
+       "type": "boolean"
+      },
+      "rake": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "call_shares": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "nudge_left": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 1
+      },
+      "whisper_used": {
+       "type": "boolean"
+      },
+      "peek": {
+       "$ref": "#/$defs/rigPeek"
+      },
+      "market": {
+       "$ref": "#/$defs/rigMarket"
+      },
+      "market_done": {
+       "type": "boolean"
+      },
+      "screens": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/screen"
+       }
+      },
+      "at_cap": {
+       "type": "boolean"
+      },
+      "holdings": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "role",
+      "kept",
+      "card",
+      "busted",
+      "patch",
+      "mutes_left",
+      "armed",
+      "rake",
+      "call_shares",
+      "nudge_left",
+      "whisper_used",
+      "peek",
+      "market",
+      "market_done",
+      "screens",
+      "at_cap",
+      "holdings"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "role": {
+       "const": "sharp"
+      },
+      "nudge_left": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 1
+      },
+      "whisper_used": {
+       "type": "boolean"
+      },
+      "peek": {
+       "$ref": "#/$defs/rigPeek"
+      },
+      "market": {
+       "$ref": "#/$defs/rigMarket"
+      },
+      "market_done": {
+       "type": "boolean"
+      },
+      "screens": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/screen"
+       }
+      },
+      "at_cap": {
+       "type": "boolean"
+      },
+      "holdings": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "role",
+      "nudge_left",
+      "whisper_used",
+      "peek",
+      "market",
+      "market_done",
+      "screens",
+      "at_cap",
+      "holdings"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "role": {
+       "const": "railbird"
+      },
+      "nudge_left": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 1
+      },
+      "whisper_used": {
+       "type": "boolean"
+      },
+      "screens": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/screen"
+       }
+      },
+      "at_cap": {
+       "type": "boolean"
+      },
+      "holdings": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "role",
+      "nudge_left",
+      "whisper_used",
+      "screens",
+      "at_cap",
+      "holdings"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  },
+  "rigView": {
+   "type": "object",
+   "properties": {
+    "game": {
+     "const": "rig"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "owner": {
+     "$ref": "#/$defs/server"
+    },
+    "vseq": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "now": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "status": {
+     "enum": [
+      "lobby",
+      "round",
+      "end",
+      "closed"
+     ]
+    },
+    "host": {
+     "$ref": "#/$defs/mxid"
+    },
+    "opts": {
+     "type": "object",
+     "properties": {
+      "preset": {
+       "enum": [
+        "lite",
+        "full"
+       ]
+      },
+      "bankroll": {
+       "type": "integer",
+       "minimum": 3,
+       "maximum": 10
+      },
+      "patch": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "preset",
+      "bankroll",
+      "patch"
+     ],
+     "additionalProperties": false
+    },
+    "players": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/rigPlayer"
+     },
+     "minItems": 0,
+     "maxItems": 8
+    },
+    "round": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/rigRound"
+      }
+     ]
+    },
+    "end": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/rigEnd"
+      }
+     ]
+    },
+    "closed": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/closed"
+      }
+     ]
+    },
+    "spectators": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "you": {
+     "$ref": "#/$defs/rigYou"
+    }
+   },
+   "required": [
+    "game",
+    "table",
+    "room",
+    "space",
+    "owner",
+    "vseq",
+    "now",
+    "status",
+    "host",
+    "opts",
+    "players",
+    "round",
+    "end",
+    "closed",
+    "spectators"
+   ],
+   "additionalProperties": false
+  },
+  "view": {
+   "oneOf": [
+    {
+     "$ref": "#/$defs/holdemView"
+    },
+    {
+     "$ref": "#/$defs/rigView"
+    }
+   ]
+  },
+  "tableListing": {
+   "type": "object",
+   "properties": {
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "game": {
+     "enum": [
+      "holdem",
+      "rig"
+     ]
+    },
+    "status": {
+     "enum": [
+      "lobby",
+      "hand",
+      "pause",
+      "round",
+      "end",
+      "closed"
+     ]
+    },
+    "host": {
+     "$ref": "#/$defs/mxid"
+    },
+    "seated": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 8
+    },
+    "seats": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 8
+    },
+    "players": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/mxid"
+     },
+     "minItems": 0,
+     "maxItems": 8
+    },
+    "hand": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     ]
+    },
+    "round": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     ]
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "owner": {
+     "$ref": "#/$defs/server"
+    }
+   },
+   "required": [
+    "table",
+    "game",
+    "status",
+    "host",
+    "seated",
+    "seats",
+    "players",
+    "hand",
+    "round",
+    "space",
+    "owner"
+   ],
+   "additionalProperties": false
+  },
+  "c_auth": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "auth"
+    },
+    "session": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "client": {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "$ref": "#/$defs/clientKind"
+      },
+      "pad": {
+       "type": "boolean"
+      },
+      "v": {
+       "type": "string",
+       "maxLength": 32
+      }
+     },
+     "required": [
+      "kind"
+     ],
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "t",
+    "session",
+    "client"
+   ],
+   "additionalProperties": false
+  },
+  "c_sub": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "sub"
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    }
+   },
+   "required": [
+    "t",
+    "room"
+   ],
+   "additionalProperties": false
+  },
+  "c_unsub": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "unsub"
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    }
+   },
+   "required": [
+    "t",
+    "room"
+   ],
+   "additionalProperties": false
+  },
+  "c_open": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "open"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    }
+   },
+   "required": [
+    "t",
+    "table"
+   ],
+   "additionalProperties": false
+  },
+  "c_close": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "close"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    }
+   },
+   "required": [
+    "t",
+    "table"
+   ],
+   "additionalProperties": false
+  },
+  "c_ping": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "ping"
+    }
+   },
+   "required": [
+    "t"
+   ],
+   "additionalProperties": false
+  },
+  "c_act": {
+   "oneOf": [
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "sit"
+        },
+        "space": {
+         "$ref": "#/$defs/room"
+        },
+        "seat": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 8
+        }
+       },
+       "required": [
+        "do",
+        "space"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "leave"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "deal"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "fold"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "hand": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "turn": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "hand",
+        "turn"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "check"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "hand": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "turn": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "hand",
+        "turn"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "call"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "hand": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "turn": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "hand",
+        "turn"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "raise"
+        },
+        "to": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "do",
+        "to"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "hand": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "turn": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "hand",
+        "turn"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "allin"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "hand": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "turn": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        }
+       },
+       "required": [
+        "hand",
+        "turn"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "away"
+        },
+        "on": {
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "do",
+        "on"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "kick"
+        },
+        "u": {
+         "$ref": "#/$defs/mxid"
+        }
+       },
+       "required": [
+        "do",
+        "u"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "close"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "join"
+        },
+        "space": {
+         "$ref": "#/$defs/room"
+        }
+       },
+       "required": [
+        "do",
+        "space"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "leave"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "start"
+        },
+        "preset": {
+         "enum": [
+          "lite",
+          "full"
+         ]
+        },
+        "bankroll": {
+         "type": "integer",
+         "minimum": 3,
+         "maximum": 10
+        },
+        "patch": {
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "keep"
+        },
+        "card": {
+         "$ref": "#/$defs/rigCard"
+        }
+       },
+       "required": [
+        "do",
+        "card"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "market"
+        },
+        "side": {
+         "enum": [
+          "up",
+          "not-up"
+         ]
+        },
+        "stake": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 2
+        }
+       },
+       "required": [
+        "do",
+        "side",
+        "stake"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "market"
+        },
+        "side": {
+         "const": "pass"
+        }
+       },
+       "required": [
+        "do",
+        "side"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "dial"
+        },
+        "bet": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 3
+        }
+       },
+       "required": [
+        "do",
+        "bet"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "spin"
+        },
+        "bet": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 3
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "call"
+        },
+        "card": {
+         "$ref": "#/$defs/rigCard"
+        }
+       },
+       "required": [
+        "do",
+        "card"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "audit"
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 10
+        }
+       },
+       "required": [
+        "do",
+        "spin"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "walk"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "mute"
+        },
+        "armed": {
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "do",
+        "armed"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "patch"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "nudge"
+        },
+        "reel": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 3
+        },
+        "step": {
+         "enum": [
+          1,
+          -1
+         ]
+        }
+       },
+       "required": [
+        "do",
+        "reel",
+        "step"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "whisper"
+        },
+        "template": {
+         "$ref": "#/$defs/template"
+        },
+        "person": {
+         "$ref": "#/$defs/mxid"
+        }
+       },
+       "required": [
+        "do",
+        "template"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "whisper"
+        },
+        "text": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 60
+        }
+       },
+       "required": [
+        "do",
+        "text"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "peek"
+        },
+        "mechanic": {
+         "$ref": "#/$defs/mxid"
+        },
+        "card": {
+         "$ref": "#/$defs/rigCard"
+        }
+       },
+       "required": [
+        "do",
+        "mechanic",
+        "card"
+       ],
+       "additionalProperties": false
+      },
+      "at": {
+       "type": "object",
+       "properties": {
+        "round": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "spin": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10
+        },
+        "phase": {
+         "enum": [
+          "setup",
+          "turn",
+          "spin",
+          "land",
+          "nudge",
+          "payout",
+          "reveal"
+         ]
+        }
+       },
+       "required": [
+        "round",
+        "spin",
+        "phase"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a",
+      "at"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "kick"
+        },
+        "u": {
+         "$ref": "#/$defs/mxid"
+        }
+       },
+       "required": [
+        "do",
+        "u"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "close"
+        }
+       },
+       "required": [
+        "do"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  },
+  "clientFrame": {
+   "oneOf": [
+    {
+     "$ref": "#/$defs/c_auth"
+    },
+    {
+     "$ref": "#/$defs/c_sub"
+    },
+    {
+     "$ref": "#/$defs/c_unsub"
+    },
+    {
+     "$ref": "#/$defs/c_open"
+    },
+    {
+     "$ref": "#/$defs/c_close"
+    },
+    {
+     "$ref": "#/$defs/c_ping"
+    },
+    {
+     "$ref": "#/$defs/c_act"
+    }
+   ]
+  },
+  "s_hello": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "hello"
+    },
+    "v": {
+     "const": 1
+    },
+    "user": {
+     "$ref": "#/$defs/mxid"
+    },
+    "now": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "rig_hidden": {
+     "type": "boolean"
+    },
+    "wallets": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/room"
+     }
+    }
+   },
+   "required": [
+    "t",
+    "v",
+    "user",
+    "now",
+    "rig_hidden",
+    "wallets"
+   ],
+   "additionalProperties": false
+  },
+  "s_room": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "room"
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "owner": {
+     "$ref": "#/$defs/server"
+    },
+    "tables": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/tableListing"
+     }
+    }
+   },
+   "required": [
+    "t",
+    "room",
+    "space",
+    "owner",
+    "tables"
+   ],
+   "additionalProperties": false
+  },
+  "s_view": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "view"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "vseq": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "view": {
+     "$ref": "#/$defs/view"
+    }
+   },
+   "required": [
+    "t",
+    "table",
+    "vseq",
+    "view"
+   ],
+   "additionalProperties": false
+  },
+  "s_live": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "live"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "vseq": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "dial": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 3
+    }
+   },
+   "required": [
+    "t",
+    "table",
+    "vseq",
+    "dial"
+   ],
+   "additionalProperties": false
+  },
+  "s_ack": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "ack"
+    },
+    "op": {
+     "$ref": "#/$defs/op"
+    },
+    "ok": {
+     "type": "boolean"
+    },
+    "code": {
+     "anyOf": [
+      {
+       "const": ""
+      },
+      {
+       "$ref": "#/$defs/code"
+      }
+     ]
+    },
+    "dup": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "t",
+    "op",
+    "ok",
+    "code",
+    "dup"
+   ],
+   "additionalProperties": false
+  },
+  "s_wallet": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "wallet"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "balance": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "holdings": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "rank": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "cap": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 9007199254740991
+    },
+    "earned_today": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 24
+    }
+   },
+   "required": [
+    "t",
+    "space",
+    "balance",
+    "holdings",
+    "rank",
+    "cap"
+   ],
+   "additionalProperties": false
+  },
+  "s_rank": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "rank"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "u": {
+     "$ref": "#/$defs/mxid"
+    },
+    "rank": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "t",
+    "space",
+    "u",
+    "rank"
+   ],
+   "additionalProperties": false
+  },
+  "s_post": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "post"
+    },
+    "kind": {
+     "enum": [
+      "invite",
+      "result",
+      "summary"
+     ]
+    },
+    "game": {
+     "enum": [
+      "holdem",
+      "rig"
+     ]
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "round": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     ]
+    }
+   },
+   "required": [
+    "t",
+    "kind",
+    "game",
+    "table",
+    "room",
+    "space",
+    "round"
+   ],
+   "additionalProperties": false
+  },
+  "s_pong": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "pong"
+    },
+    "now": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "t",
+    "now"
+   ],
+   "additionalProperties": false
+  },
+  "s_bye": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "bye"
+    },
+    "code": {
+     "enum": [
+      "replaced",
+      "session",
+      "off",
+      "rate",
+      "bad",
+      "restart"
+     ]
+    }
+   },
+   "required": [
+    "t",
+    "code"
+   ],
+   "additionalProperties": false
+  },
+  "s_error": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "error"
+    },
+    "code": {
+     "$ref": "#/$defs/code"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "server": {
+     "$ref": "#/$defs/server"
+    }
+   },
+   "required": [
+    "t",
+    "code"
+   ],
+   "additionalProperties": false
+  },
+  "serverFrame": {
+   "oneOf": [
+    {
+     "$ref": "#/$defs/s_hello"
+    },
+    {
+     "$ref": "#/$defs/s_room"
+    },
+    {
+     "$ref": "#/$defs/s_view"
+    },
+    {
+     "$ref": "#/$defs/s_live"
+    },
+    {
+     "$ref": "#/$defs/s_ack"
+    },
+    {
+     "$ref": "#/$defs/s_wallet"
+    },
+    {
+     "$ref": "#/$defs/s_rank"
+    },
+    {
+     "$ref": "#/$defs/s_post"
+    },
+    {
+     "$ref": "#/$defs/s_pong"
+    },
+    {
+     "$ref": "#/$defs/s_bye"
+    },
+    {
+     "$ref": "#/$defs/s_error"
+    }
+   ]
+  },
+  "httpError": {
+   "type": "object",
+   "properties": {
+    "code": {
+     "$ref": "#/$defs/code"
+    },
+    "error": {
+     "type": "string",
+     "maxLength": 300
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "server": {
+     "$ref": "#/$defs/server"
+    }
+   },
+   "required": [
+    "code"
+   ],
+   "additionalProperties": false
+  },
+  "sessionRequest": {
+   "type": "object",
+   "properties": {
+    "openid": {
+     "type": "object",
+     "properties": {
+      "access_token": {
+       "type": "string",
+       "maxLength": 512
+      },
+      "matrix_server_name": {
+       "type": "string",
+       "maxLength": 255
+      },
+      "token_type": {
+       "const": "Bearer"
+      },
+      "expires_in": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "access_token",
+      "matrix_server_name",
+      "token_type",
+      "expires_in"
+     ],
+     "additionalProperties": false
+    },
+    "user_id": {
+     "$ref": "#/$defs/mxid"
+    },
+    "client": {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "$ref": "#/$defs/clientKind"
+      },
+      "v": {
+       "type": "string",
+       "maxLength": 32
+      },
+      "pad": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "kind"
+     ],
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "openid",
+    "user_id",
+    "client"
+   ],
+   "additionalProperties": false
+  },
+  "sessionAnswer": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "session": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "user": {
+     "$ref": "#/$defs/mxid"
+    },
+    "expires": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "wallets": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/room"
+     }
+    },
+    "rig_hidden": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "v",
+    "session",
+    "user",
+    "expires",
+    "wallets",
+    "rig_hidden"
+   ],
+   "additionalProperties": false
+  },
+  "walletRequest": {
+   "type": "object",
+   "properties": {
+    "space": {
+     "$ref": "#/$defs/room"
+    }
+   },
+   "required": [
+    "space"
+   ],
+   "additionalProperties": false
+  },
+  "spaceAnswer": {
+   "type": "object",
+   "properties": {
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "server": {
+     "$ref": "#/$defs/server"
+    }
+   },
+   "required": [
+    "space",
+    "server"
+   ],
+   "additionalProperties": false
+  },
+  "tableRequest": {
+   "oneOf": [
+    {
+     "type": "object",
+     "properties": {
+      "game": {
+       "const": "holdem"
+      },
+      "space": {
+       "$ref": "#/$defs/room"
+      },
+      "opts": {
+       "type": "object",
+       "properties": {
+        "seats": {
+         "type": "integer",
+         "minimum": 2,
+         "maximum": 8
+        }
+       },
+       "required": [],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "game",
+      "space",
+      "opts"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "game": {
+       "const": "rig"
+      },
+      "space": {
+       "$ref": "#/$defs/room"
+      },
+      "opts": {
+       "type": "object",
+       "properties": {
+        "preset": {
+         "enum": [
+          "lite",
+          "full"
+         ]
+        },
+        "bankroll": {
+         "type": "integer",
+         "minimum": 3,
+         "maximum": 10
+        },
+        "patch": {
+         "type": "boolean"
+        }
+       },
+       "required": [],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "game",
+      "space",
+      "opts"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  },
+  "me": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "user": {
+     "$ref": "#/$defs/mxid"
+    },
+    "balance": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "holdings": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "rank": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "cap": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 9007199254740991
+    },
+    "at_table": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "table": {
+         "$ref": "#/$defs/table"
+        },
+        "game": {
+         "enum": [
+          "holdem",
+          "rig"
+         ]
+        },
+        "room": {
+         "$ref": "#/$defs/room"
+        }
+       },
+       "required": [
+        "table",
+        "game",
+        "room"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    },
+    "earned_today": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 24
+    },
+    "day_max": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 24
+    },
+    "accrual_s": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3599
+    },
+    "chip_s": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "day": {
+     "$ref": "#/$defs/day"
+    },
+    "topup": {
+     "type": "object",
+     "properties": {
+      "available": {
+       "type": "boolean"
+      },
+      "next_day": {
+       "$ref": "#/$defs/day"
+      }
+     },
+     "required": [
+      "available",
+      "next_day"
+     ],
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "v",
+    "space",
+    "user",
+    "balance",
+    "holdings",
+    "rank",
+    "cap",
+    "at_table",
+    "earned_today",
+    "day_max",
+    "accrual_s",
+    "chip_s",
+    "day",
+    "topup"
+   ],
+   "additionalProperties": false
+  },
+  "journal": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "entries": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "tx": {
+        "type": "string",
+        "maxLength": 64
+       },
+       "at": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+         }
+        ]
+       },
+       "day": {
+        "$ref": "#/$defs/day"
+       },
+       "delta": {
+        "type": "integer"
+       },
+       "reason": {
+        "enum": [
+         "start",
+         "earn",
+         "topup",
+         "prestige",
+         "sit",
+         "cashout",
+         "rig-escrow",
+         "rig-settle",
+         "void",
+         "lab-grant"
+        ]
+       },
+       "ref": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "string",
+          "maxLength": 64
+         }
+        ]
+       }
+      },
+      "required": [
+       "tx",
+       "at",
+       "day",
+       "delta",
+       "reason",
+       "ref"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "next": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "maxLength": 64
+      }
+     ]
+    }
+   },
+   "required": [
+    "v",
+    "space",
+    "entries",
+    "next"
+   ],
+   "additionalProperties": false
+  },
+  "ranks": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "ranks": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/mxid"
+     },
+     "additionalProperties": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+     }
+    }
+   },
+   "required": [
+    "v",
+    "space",
+    "ranks"
+   ],
+   "additionalProperties": false
+  },
+  "tables": {
+   "type": "object",
+   "properties": {
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "owner": {
+     "$ref": "#/$defs/server"
+    },
+    "tables": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/tableListing"
+     }
+    }
+   },
+   "required": [
+    "space",
+    "owner",
+    "tables"
+   ],
+   "additionalProperties": false
+  },
+  "tableCreated": {
+   "type": "object",
+   "properties": {
+    "table": {
+     "$ref": "#/$defs/table"
+    }
+   },
+   "required": [
+    "table"
+   ],
+   "additionalProperties": false
+  },
+  "hands": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "hands": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "n": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+       },
+       "at": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "button": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 8
+       },
+       "board": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/card"
+        },
+        "minItems": 0,
+        "maxItems": 5
+       },
+       "you": {
+        "type": "object",
+        "properties": {
+         "seat": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+         },
+         "cards": {
+          "type": "array",
+          "items": {
+           "$ref": "#/$defs/card"
+          },
+          "minItems": 2,
+          "maxItems": 2
+         }
+        },
+        "required": [
+         "seat",
+         "cards"
+        ],
+        "additionalProperties": false
+       },
+       "actions": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "street": {
+           "enum": [
+            "preflop",
+            "flop",
+            "turn",
+            "river"
+           ]
+          },
+          "seat": {
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 8
+          },
+          "a": {
+           "enum": [
+            "sb",
+            "bb",
+            "fold",
+            "check",
+            "call",
+            "bet",
+            "raise",
+            "allin",
+            "timeout"
+           ]
+          },
+          "to": {
+           "type": "integer",
+           "minimum": 0,
+           "maximum": 9007199254740991
+          }
+         },
+         "required": [
+          "street",
+          "seat",
+          "a"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "shown": {
+        "type": "object",
+        "propertyNames": {
+         "$ref": "#/$defs/seatKey"
+        },
+        "additionalProperties": {
+         "type": "array",
+         "items": {
+          "$ref": "#/$defs/card"
+         },
+         "minItems": 2,
+         "maxItems": 2
+        }
+       },
+       "seats": {
+        "type": "object",
+        "propertyNames": {
+         "$ref": "#/$defs/seatKey"
+        },
+        "additionalProperties": {
+         "$ref": "#/$defs/histPerson"
+        }
+       },
+       "net": {
+        "type": "object",
+        "propertyNames": {
+         "$ref": "#/$defs/histPerson"
+        },
+        "additionalProperties": {
+         "type": "integer"
+        }
+       },
+       "voided": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "n",
+       "at",
+       "button",
+       "board",
+       "you",
+       "actions",
+       "shown",
+       "seats",
+       "net",
+       "voided"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "next": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     ]
+    }
+   },
+   "required": [
+    "v",
+    "hands",
+    "next"
+   ],
+   "additionalProperties": false
+  },
+  "round": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "r": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "spinner": {
+     "$ref": "#/$defs/histPerson"
+    },
+    "preset": {
+     "enum": [
+      "lite",
+      "full"
+     ]
+    },
+    "history": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/rigHistory"
+     }
+    },
+    "reveal": {
+     "$ref": "#/$defs/rigReveal"
+    }
+   },
+   "required": [
+    "v",
+    "table",
+    "r",
+    "spinner",
+    "preset",
+    "history",
+    "reveal"
+   ],
+   "additionalProperties": false
+  },
+  "summary": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "game": {
+     "enum": [
+      "holdem",
+      "rig"
+     ]
+    },
+    "room": {
+     "$ref": "#/$defs/room"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "owner": {
+     "$ref": "#/$defs/server"
+    },
+    "host": {
+     "$ref": "#/$defs/histPerson"
+    },
+    "status": {
+     "enum": [
+      "open",
+      "closed"
+     ]
+    },
+    "opened": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "closed": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     ]
+    },
+    "hands": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "rounds": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "biggest_pot": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "net": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/histPerson"
+     },
+     "additionalProperties": {
+      "type": "integer"
+     }
+    },
+    "leaderboard": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "u": {
+        "$ref": "#/$defs/histPerson"
+       },
+       "net": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "u",
+       "net"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "pit_boss": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/histPerson"
+      }
+     ]
+    }
+   },
+   "required": [
+    "v",
+    "table",
+    "game",
+    "room",
+    "space",
+    "owner",
+    "host",
+    "status",
+    "opened",
+    "closed",
+    "hands",
+    "rounds",
+    "biggest_pot",
+    "net",
+    "leaderboard",
+    "pit_boss"
+   ],
+   "additionalProperties": false
+  },
+  "chatCard": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "kind": {
+     "enum": [
+      "invite",
+      "result",
+      "summary"
+     ]
+    },
+    "game": {
+     "enum": [
+      "holdem",
+      "rig"
+     ]
+    },
+    "server": {
+     "$ref": "#/$defs/server"
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "round": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "v",
+    "kind",
+    "game",
+    "server",
+    "space",
+    "table"
+   ],
+   "additionalProperties": false
+  }
+ }
+}

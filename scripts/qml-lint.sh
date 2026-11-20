@@ -211,8 +211,66 @@ if [ $? -ne 0 ] || ! echo "$spt" | grep -q "VERDICT: PASS"; then
     fatal=$((fatal + 1))
 fi
 
+# 12.1.17: the Chat background sheet loaded for real (qmltestrunner, offscreen, stand-in app + room): people who can't
+# change the background see the other tiles greyed and their clicks change nothing; people who can see them clear.
+bgs=$(bash "$HERE/background-sheet-test.sh" "$(pwd)" 2>&1)
+if [ $? -ne 0 ] || ! echo "$bgs" | grep -q "VERDICT: PASS"; then
+    echo "$bgs" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: background-sheet: /"
+    fatal=$((fatal + 1))
+fi
+
+# 12.2.0 respin (#27): a game invite card after the call ENDED, GameChatCard.qml loaded for real (qmltestrunner, offscreen,
+# stand-in app + PlayController): mCallRoomId outlives the call, so the card is the full one with "Join the call".
+gcec=$(bash "$HERE/game-card-ended-call-test.sh" "$(pwd)" 2>&1)
+if [ $? -ne 0 ] || ! echo "$gcec" | grep -q "VERDICT: PASS"; then
+    echo "$gcec" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: game-card-ended-call: /"
+    fatal=$((fatal + 1))
+fi
+
+# 12.1.17 (P22): Th.qml's row()/gap() — the person's text size + density as QML draws them — against the shared vectors
+# testvectors/personal/metrics.json (crates/theme tests/personal.rs and the web's personal.test.ts run the same file).
+if [ -x "$QMLRUN" ]; then
+    pq=$(QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/personal-row-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$pq" | grep -q "VERDICT: PASS"; then
+        echo "$pq" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: personal-row: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.17 (P22): ClipProbe.qml (the text size gate's probe) reports planted clipped text and leaves intended cases alone
+if [ -x "$QMLRUN" ]; then
+    cpq=$(QT_QPA_PLATFORM=offscreen QT_ASSUME_STDERR_HAS_CONSOLE=1 \
+        QT_LOGGING_RULES="qml.debug=true;js.debug=true" timeout 60 "$QMLRUN" "$HERE/clip-probe-test.qml" -- "$(cd "$HERE/.." && pwd)" 2>&1)
+    if [ $? -ne 0 ] || ! echo "$cpq" | grep -q "VERDICT: PASS"; then
+        echo "$cpq" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: clip-probe: /"
+        fatal=$((fatal + 1))
+    fi
+fi
+
+# 12.1.17 (A31.4): every QML text size follows the person's text size (scripts/text-scale-lint.py)
+if ! tsl=$(python3 "$HERE/text-scale-lint.py" "$(cd "$HERE/.." && pwd)" 2>&1); then
+    echo "$tsl" | grep -E "TEXT-SCALE-LINT|FAIL" | head -10 | sed "s/^/QMLLINT FAIL: text-scale: /"
+    fatal=$((fatal + 1))
+fi
+
+# 12.1.17 (P22): the per-window font scope (ThWindow.qml) loaded for real: a secondary window's unsized controls take the
+# person's text size, that window only, never app-wide (a plain Window, the control, keeps the platform size).
+wfs=$(bash "$HERE/window-font-scope-test.sh" "$(cd "$HERE/.." && pwd)/crates/app/qml" 2>&1)
+if [ $? -ne 0 ] || ! echo "$wfs" | grep -q "VERDICT: PASS"; then
+    echo "$wfs" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: window-font-scope: /"
+    fatal=$((fatal + 1))
+fi
+
+# 12.1.18 review #2: the Chat background sheet at 150 %: every tile's caption inside its tile; 112 x 92 at 100 % as before
+bstt=$(bash "$HERE/background-sheet-textsize-test.sh" "$(cd "$HERE/.." && pwd)/crates/app/qml" 2>&1)
+if [ $? -ne 0 ] || ! echo "$bstt" | grep -q "VERDICT: PASS"; then
+    echo "$bstt" | grep -E "FAIL|rror" | head -10 | sed "s/^/QMLLINT FAIL: background-sheet-textsize: /"
+    fatal=$((fatal + 1))
+fi
+
 if [ "$fatal" -eq 0 ]; then
-    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat / window-keys / identity-rule / share-custom-quick / share-popover / tile-gestures / pad-words / screen-fit / a11y-tip / qol-parked errors (${layout} layout-positioning warnings, non-fatal)"
+    echo "QMLLINT PASS: no syntax / not-a-type / FINAL-override / alias-target / reserved-name / textFormat / window-keys / identity-rule / share-custom-quick / share-popover / background-sheet / game-card-ended-call / tile-gestures / pad-words / screen-fit / a11y-tip / qol-parked / personal-row / clip-probe / text-scale / window-font-scope errors (${layout} layout-positioning warnings, non-fatal)"
     exit 0
 fi
 echo "QMLLINT FAIL: $fatal file(s) would fail to load"

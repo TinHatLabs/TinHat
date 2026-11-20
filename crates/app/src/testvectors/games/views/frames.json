@@ -1,0 +1,514 @@
+{
+ "about": "Every WebSocket frame (JSON text, <= 16 KiB). The first client frame must be auth (the session never goes in the URL). Keep the newest vseq per table; a view is a full snapshot. Every act except dial gets an ack; a resend of an op already answered gets the same answer with dup: true. Apps ignore unknown fields and unknown frame types.",
+ "client": {
+  "auth": {
+   "t": "auth",
+   "session": "Q2hpcHNBcmVQbGF5TW9uZXlPbmx5LUFfVGVzdDAxMjM",
+   "client": {
+    "kind": "web",
+    "pad": false,
+    "v": "12.2.0"
+   }
+  },
+  "sub": {
+   "t": "sub",
+   "room": "!games:example.org"
+  },
+  "unsub": {
+   "t": "unsub",
+   "room": "!games:example.org"
+  },
+  "open": {
+   "t": "open",
+   "table": "tH3k9aB2cD4eF6gH"
+  },
+  "close": {
+   "t": "close",
+   "table": "tH3k9aB2cD4eF6gH"
+  },
+  "ping": {
+   "t": "ping"
+  },
+  "act_holdem_raise": {
+   "t": "act",
+   "table": "tH3k9aB2cD4eF6gH",
+   "op": "op-7f3a9c21b4d0e855",
+   "at": {
+    "hand": 1,
+    "turn": 1
+   },
+   "a": {
+    "do": "raise",
+    "to": 6
+   }
+  },
+  "act_holdem_sit": {
+   "t": "act",
+   "table": "tH3k9aB2cD4eF6gH",
+   "op": "op-a1b2c3d4e5f60718",
+   "a": {
+    "do": "sit",
+    "seat": 3,
+    "space": "!hangout:example.org"
+   }
+  },
+  "act_rig_join": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-a1b2c3d4e5f6071a",
+   "a": {
+    "do": "join",
+    "space": "!hangout:example.org"
+   }
+  },
+  "act_holdem_away": {
+   "t": "act",
+   "table": "tH3k9aB2cD4eF6gH",
+   "op": "op-a1b2c3d4e5f60719",
+   "a": {
+    "do": "away",
+    "on": false
+   }
+  },
+  "act_rig_start": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516273",
+   "a": {
+    "do": "start",
+    "preset": "lite",
+    "bankroll": 6,
+    "patch": true
+   }
+  },
+  "act_rig_dial": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516274",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "dial",
+    "bet": 3
+   }
+  },
+  "act_rig_spin": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516275",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "spin"
+   }
+  },
+  "act_rig_call": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516276",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "call",
+    "card": "underdog"
+   }
+  },
+  "act_rig_audit": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516277",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "audit",
+    "spin": 2
+   }
+  },
+  "act_rig_keep": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516278",
+   "at": {
+    "round": 1,
+    "spin": 0,
+    "phase": "setup"
+   },
+   "a": {
+    "do": "keep",
+    "card": "skim"
+   }
+  },
+  "act_rig_market": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516279",
+   "at": {
+    "round": 1,
+    "spin": 0,
+    "phase": "setup"
+   },
+   "a": {
+    "do": "market",
+    "side": "up",
+    "stake": 2
+   }
+  },
+  "act_rig_market_pass": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f4051627a",
+   "at": {
+    "round": 1,
+    "spin": 0,
+    "phase": "setup"
+   },
+   "a": {
+    "do": "market",
+    "side": "pass"
+   }
+  },
+  "act_rig_mute": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f4051627b",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "mute",
+    "armed": true
+   }
+  },
+  "act_rig_nudge": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f4051627c",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "nudge"
+   },
+   "a": {
+    "do": "nudge",
+    "reel": 3,
+    "step": 1
+   }
+  },
+  "act_rig_whisper_template": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f4051627d",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "whisper",
+    "template": "bluffing",
+    "person": "@dee:example.net"
+   }
+  },
+  "act_rig_whisper_text": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f4051627e",
+   "at": {
+    "round": 2,
+    "spin": 5,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "whisper",
+    "text": "watch the lizard"
+   }
+  },
+  "act_rig_peek": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f4051627f",
+   "at": {
+    "round": 2,
+    "spin": 3,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "peek",
+    "mechanic": "@dee:example.net",
+    "card": "moon-monday"
+   }
+  },
+  "act_rig_patch": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516280",
+   "at": {
+    "round": 2,
+    "spin": 4,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "patch"
+   }
+  },
+  "act_rig_walk": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-0c1d2e3f40516281",
+   "at": {
+    "round": 2,
+    "spin": 6,
+    "phase": "turn"
+   },
+   "a": {
+    "do": "walk"
+   }
+  }
+ },
+ "server": {
+  "hello": {
+   "t": "hello",
+   "v": 1,
+   "user": "@ana:example.org",
+   "now": 1763600000000,
+   "rig_hidden": false,
+   "wallets": [
+    "!hangout:example.org"
+   ]
+  },
+  "room": {
+   "t": "room",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "tables": [
+    {
+     "table": "tH3k9aB2cD4eF6gH",
+     "game": "holdem",
+     "status": "hand",
+     "host": "@ana:example.org",
+     "seated": 3,
+     "seats": 8,
+     "players": [
+      "@ana:example.org",
+      "@ben:example.org",
+      "@dee:example.net"
+     ],
+     "hand": 1,
+     "round": null,
+     "space": "!hangout:example.org",
+     "owner": "example.org"
+    },
+    {
+     "table": "tR7q2wE4rT6yU8iO",
+     "game": "rig",
+     "status": "round",
+     "host": "@ana:example.org",
+     "seated": 3,
+     "seats": 8,
+     "players": [
+      "@ana:example.org",
+      "@ben:example.org",
+      "@cy:example.org"
+     ],
+     "hand": null,
+     "round": 2,
+     "space": "!hangout:example.org",
+     "owner": "example.org"
+    }
+   ]
+  },
+  "view": {
+   "t": "view",
+   "table": "tH3k9aB2cD4eF6gH",
+   "vseq": 2,
+   "view": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 2,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 20,
+      "bet": 0,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 3,
+     "to_act": {
+      "seat": 6,
+      "turn": 1,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 4,
+      "a": "bb",
+      "to": 2
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 6,
+     "state": "active",
+     "cards": [
+      "Qs",
+      "Jc"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 2,
+      "raise": {
+       "min": 4,
+       "max": 20
+      }
+     },
+     "screens": [
+      "desktop",
+      "pad"
+     ],
+     "at_cap": false,
+     "cap": 100,
+     "holdings": 20,
+     "timeouts": 0
+    }
+   }
+  },
+  "live": {
+   "t": "live",
+   "table": "tR7q2wE4rT6yU8iO",
+   "vseq": 40,
+   "dial": 3
+  },
+  "ack_ok": {
+   "t": "ack",
+   "op": "op-7f3a9c21b4d0e855",
+   "ok": true,
+   "code": "",
+   "dup": false
+  },
+  "ack_dup": {
+   "t": "ack",
+   "op": "op-7f3a9c21b4d0e855",
+   "ok": true,
+   "code": "",
+   "dup": true
+  },
+  "ack_refused": {
+   "t": "ack",
+   "op": "op-0c1d2e3f40516276",
+   "ok": false,
+   "code": "greyed",
+   "dup": false
+  },
+  "wallet": {
+   "t": "wallet",
+   "space": "!hangout:example.org",
+   "balance": 38,
+   "holdings": 40,
+   "rank": 1,
+   "cap": 150
+  },
+  "rank": {
+   "t": "rank",
+   "space": "!hangout:example.org",
+   "u": "@dee:example.net",
+   "rank": 3
+  },
+  "post": {
+   "t": "post",
+   "kind": "invite",
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "round": null
+  },
+  "post_result": {
+   "t": "post",
+   "kind": "result",
+   "game": "rig",
+   "table": "tR7q2wE4rT6yU8iO",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "round": 2
+  },
+  "pong": {
+   "t": "pong",
+   "now": 1763600000000
+  },
+  "error": {
+   "t": "error",
+   "code": "not-in-call",
+   "room": "!games:example.org"
+  },
+  "error_wrong_server": {
+   "t": "error",
+   "code": "wrong-server",
+   "room": "!games:example.org",
+   "space": "!squad:other.example",
+   "server": "other.example"
+  },
+  "bye": {
+   "t": "bye",
+   "code": "replaced"
+  }
+ }
+}

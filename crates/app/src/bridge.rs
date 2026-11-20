@@ -70,6 +70,7 @@ pub mod qobject {
         #[qproperty(QString, auto_open_room)] // QML: autoOpenRoom — open a room (NO call) for screenshots (env TINHAT_GUI_OPENROOM)
         #[qproperty(QString, auto_fake_call)] // QML: autoFakeCall — render the call panel w/ placeholder tiles for screenshots (env TINHAT_GUI_FAKECALL)
         #[qproperty(QString, auto_dock)] //      QML: autoDock — env TINHAT_GUI_DOCK="corner" forces corner nav mode + pins it open for screenshots
+        #[qproperty(bool, auto_clip_probe)] //   QML: autoClipProbe — env TINHAT_GUI_CLIPPROBE (lab builds only): ClipProbe.qml lists clipped text (P22 text size gate)
         #[qproperty(QString, auto_theme)] //     QML: autoTheme — force a theme at launch (env TINHAT_THEME), for screenshots
         #[qproperty(QString, saved_theme)] //    QML: savedTheme — last chosen theme, restored from disk
         #[qproperty(QString, saved_nav_mode)] // QML: savedNavMode — "persistent" | "corner" nav, restored from disk
@@ -398,6 +399,7 @@ pub struct LoginControllerRust {
     auto_open_room: QString,
     auto_fake_call: QString,
     auto_dock: QString,
+    auto_clip_probe: bool,
     auto_theme: QString,
     saved_theme: QString,
     saved_nav_mode: QString,
@@ -481,6 +483,7 @@ impl Default for LoginControllerRust {
                 std::env::var("TINHAT_GUI_FAKECALL").unwrap_or_default().as_str(),
             ),
             auto_dock: QString::from(std::env::var("TINHAT_GUI_DOCK").unwrap_or_default().as_str()),
+            auto_clip_probe: clip_probe_requested(),
             auto_theme: QString::from(std::env::var("TINHAT_THEME").unwrap_or_default().as_str()),
             saved_theme: QString::from(read_saved_theme().as_str()),
             saved_nav_mode: QString::from(read_saved_nav_mode().as_str()),
@@ -601,6 +604,18 @@ pub(crate) fn store_dir() -> PathBuf {
 /// Where the chosen UI theme id is persisted (plain text: "oled", "goose", or any theme id the runtime knows).
 fn theme_file() -> PathBuf {
     data_dir().join("theme")
+}
+
+/// P22 text size gate (scripts/textsize-gate.sh): env TINHAT_GUI_CLIPPROBE loads ClipProbe.qml (the clipped-text and
+/// per-window font readings). A lab hook: compiled only outside a release (cfg tinhat_env_selftests, build.rs);
+/// scripts/release-binary-check.sh refuses a binary that names the variable.
+#[cfg(tinhat_env_selftests)]
+fn clip_probe_requested() -> bool {
+    std::env::var_os("TINHAT_GUI_CLIPPROBE").is_some()
+}
+#[cfg(not(tinhat_env_selftests))]
+fn clip_probe_requested() -> bool {
+    false
 }
 
 /// Read the last-chosen theme, defaulting to "oled". (Rust-backed rather than QtCore
@@ -1037,6 +1052,7 @@ impl qobject::LoginController {
             });
         }
         self.as_mut().rust_mut().initial_load = false;
+        crate::room::ROOM_SYNCED.store(false, std::sync::atomic::Ordering::Relaxed);
         self.as_mut().rust_mut().client = None;
         self.as_mut().rust_mut().signing_out = false;
         self.as_mut().set_user_id(QString::default());
@@ -2011,7 +2027,13 @@ impl qobject::LoginController {
                         // 10.5.1: the counts are our own decryption-aware tally of this
                         // sync's notifying events (the server's are encryption-blind and
                         // counted Element Call key events as messages).
-                        crate::notify::record_sync(&response.notifications);
+                        // 12.1.17 round 2: what the shared rule silences (a marked post, or a photo its sender listed)
+                        let silenced = crate::notify::silenced_notifications(&client, &response.notifications).await;
+                        crate::notify::record_sync(&response.notifications, &silenced);
+                        // 12.1.17: a main read receipt of mine in this batch retires the quiet photos recorded so far
+                        if let Some(me) = client.user_id() {
+                            crate::notify::note_receipts(&response, me.as_str());
+                        }
                         crate::mentions_ctl::record_sync(&response.notifications); // widgets W1: the Mentions list
                         crate::notify::scan_highlights(&client).await;
                         // 10.6 (REACH A5.1): a NEW invite announces itself (the first pass seeds).
@@ -2051,6 +2073,7 @@ impl qobject::LoginController {
                         }
 
                         let json = rooms_json(&client).await;
+                        crate::room::ROOM_SYNCED.store(true, std::sync::atomic::Ordering::Relaxed); // 12.1.16: room links (room.rs room_missing)
                         let _ = qt.queue(move |mut o| {
                             o.as_mut().set_rooms_json(QString::from(&json));
                             // Only end the initial "Loading rooms…" state — an unconditional

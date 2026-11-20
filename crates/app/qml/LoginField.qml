@@ -35,7 +35,7 @@ ColumnLayout {
         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
         text: field.label
         color: Th.loginFieldLabelFg
-        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         font.bold: true
         Layout.leftMargin: 4
     }

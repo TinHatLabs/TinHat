@@ -13,11 +13,11 @@ use tinhat_theme::{Colour, Resolved};
 pub const TH_FILE: &str = "qml/Th.qml";
 
 /// Names the singleton itself uses — never a colour's name.
-pub const RESERVED: [&str; 24] = [
+pub const RESERVED: [&str; 27] = [
     "themeId", "themeName", "variant", "names", "revision", "apply", "byId", "colourRef",
     "objectName", "th", "toString", "shapeRadius", "shapeGap", "shapeMargin", "shapeBorder",
     "fontUi", "fontChat", "fontCode", "textSize", "shapeShadow", "shapeDensity", "applyColours",
-    "textScale", "fontMono",
+    "textScale", "fontMono", "row", "gap", "px",
 ];
 
 /// One colour of Th.
@@ -189,7 +189,8 @@ pub fn th_qml(entries: &[Entry], default_theme: &Resolved, meta: (&str, &str, &s
          \x20   property int shapeMargin: 6\n\
          \x20   property int shapeBorder: 1\n\
          \x20   // the theme's look (ENGINE.md §10, THEMES-UI.md §13): fonts from the allowed lists (\"\" = the app's own; the chat\n\
-         \x20   // font is type.chat, else type.ui), the text size in per cent, the island shadow (px, 0 = none) and the density.\n\
+         \x20   // font is type.chat, else type.ui), the island shadow (px, 0 = none); the text size in per cent and the density\n\
+         \x20   // are the person's own (P22), layered over every theme.\n\
          \x20   // Main.qml puts fontUi + textSize on the window's font (every control inherits it); the house text components\n\
          \x20   // scale their sizes by textScale; fontMono is the code font (type.code, else the platform's monospace)\n\
          \x20   property string fontUi: \"\"\n\
@@ -200,6 +201,21 @@ pub fn th_qml(entries: &[Entry], default_theme: &Resolved, meta: (&str, &str, &s
          \x20   property string fontMono: fontCode.length > 0 ? fontCode : \"monospace\"\n\
          \x20   property int shapeShadow: 0\n\
          \x20   property string shapeDensity: \"normal\"\n\n",
+    );
+    s.push_str(
+        "    // P22 (12.1.17): textSize and shapeDensity are the PERSON's (Settings → Appearance → Text size / Density,\n\
+         \x20   // tinhat_theme::personal), never the theme's. row(base) = a list row of `base` px at 100 % / Cozy; gap(base) = the\n\
+         \x20   // space between groups — the shared vectors testvectors/personal/metrics.json (scripts/personal-row-test.qml)\n\
+         \x20   function row(base) {\n\
+         \x20       var d = shapeDensity === \"compact\" ? -8 : shapeDensity === \"touch\" ? 8 : 0\n\
+         \x20       var lo = shapeDensity === \"compact\" ? 24 : shapeDensity === \"touch\" ? 44 : 28\n\
+         \x20       return Math.max(Math.floor((2 * base * textSize + 100) / 200) + d, lo)\n\
+         \x20   }\n\
+         \x20   function gap(base) {\n\
+         \x20       return shapeDensity === \"compact\" ? Math.floor(base / 2) : shapeDensity === \"touch\" ? base * 2 : base\n\
+         \x20   }\n\
+         \x20   // A31.4 (12.1.17): a literal pixel size at the person's text size — exactly n at 100 % (pixel-identical default)\n\
+         \x20   function px(n) { return textSize === 100 ? n : Math.round(n * textSize / 100) }\n\n",
     );
     s.push_str(
         "    // Fill every colour from ThemeController.resolve() ({ <property>: color }) + the theme's meta and shape\n\

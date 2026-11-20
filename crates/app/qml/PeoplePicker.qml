@@ -187,6 +187,7 @@ ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
                             // name first and larger, the address smaller and dimmer (the web's rows)
+                            // (no prestige token: people search is outside any space's surfaces — rev 2 §3.3)
                             Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; Layout.maximumWidth: implicitWidth; text: hit.modelData.name; color: Th.invitePopoverFg; font.bold: true; font.pointSize: picker.baseSize; elide: Text.ElideRight }
                             Controls.Label { visible: hit.modelData.server.length > 0; textFormat: Text.PlainText; text: " · " + hit.modelData.server; color: Th.inviteHintFg; font.pointSize: picker.baseSize }
                             Item { Layout.fillWidth: true }

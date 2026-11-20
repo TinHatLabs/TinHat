@@ -144,7 +144,7 @@ Kirigami.OverlaySheet {
     }
 
     showCloseButton: false
-    header: Kirigami.Heading {
+    header: ThHeading {
         text: "Welcome to Tin Hat"
         color: Th.sheetTitleFg
     }
@@ -201,7 +201,7 @@ Kirigami.OverlaySheet {
                         }
                     }
 
-                    Kirigami.Heading {
+                    ThHeading {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter

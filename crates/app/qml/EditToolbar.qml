@@ -101,7 +101,7 @@ Item {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 visible: b.showLabel
                 anchors.verticalCenter: parent.verticalCenter
-                font.pixelSize: 13
+                font.pixelSize: Th.px(13)
                 font.weight: (b.accent || b.danger) ? Font.DemiBold : Font.Normal
                 color: b.accent ? Th.textOnAccent : b.danger ? Th.stateDangerBright : Th.textPrimary
                 text: b.label
@@ -117,7 +117,7 @@ Item {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     id: badgeText
                     anchors.centerIn: parent
-                    font.pixelSize: 11
+                    font.pixelSize: Th.px(11)
                     font.weight: Font.DemiBold
                     color: Th.textOnAccent
                     text: String(b.badge)
@@ -183,7 +183,7 @@ Item {
                 width: Math.min(implicitWidth, 220)
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
-                font.pixelSize: 13
+                font.pixelSize: Th.px(13)
                 color: Th.textSecondary
                 text: (tb.em.readOnly ? "Viewing" : "Editing") + ": <b><font color=\"" + Th.textPrimary + "\">" + tb.em.name.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</font></b>"
             }
@@ -389,8 +389,8 @@ Item {
                             anchors.rightMargin: 4
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 2
-                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: prow.modelData.name }
-                            Text { textFormat: Text.PlainText; width: parent.width; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: prow.modelData.line }
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: Th.px(13); font.weight: Font.DemiBold; color: Th.textPrimary; text: prow.modelData.name }
+                            Text { textFormat: Text.PlainText; width: parent.width; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight; font.pixelSize: Th.px(12); color: Th.textSecondary; text: prow.modelData.line }
                         }
                         Kirigami.Icon {
                             id: check
@@ -422,8 +422,8 @@ Item {
                         x: 36
                         width: parent.width - 42
                         anchors.verticalCenter: parent.verticalCenter
-                        Text { font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: "Previous" }
-                        Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: "What you had when you opened edit mode." }
+                        Text { font.pixelSize: Th.px(13); font.weight: Font.DemiBold; color: Th.textPrimary; text: "Previous" }
+                        Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: Th.px(12); color: Th.textSecondary; text: "What you had when you opened edit mode." }
                     }
                     MouseArea { id: prevMa; anchors.fill: parent; hoverEnabled: true; onClicked: { tb.closePanels(); tb.em.preset("previous") } }
                 }
@@ -458,7 +458,7 @@ Item {
                     width: parent.width
                     padding: 10
                     wrapMode: Text.Wrap
-                    font.pixelSize: 12
+                    font.pixelSize: Th.px(12)
                     color: Th.textSecondary
                     text: "Nothing hidden. Hide an island from its ⋯ menu to keep it here."
                 }
@@ -478,8 +478,8 @@ Item {
                             x: 40
                             width: parent.width - 40 - restoreBtn.width - 12
                             anchors.verticalCenter: parent.verticalCenter
-                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: hrow.t.name }
-                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: hrow.t.about }
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: Th.px(13); font.weight: Font.DemiBold; color: Th.textPrimary; text: hrow.t.name }
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: Th.px(12); color: Th.textSecondary; text: hrow.t.about }
                         }
                         MouseArea {
                             id: rowMa
@@ -527,8 +527,8 @@ Item {
                         x: 40
                         width: parent.width - 48
                         anchors.verticalCenter: parent.verticalCenter
-                        Text { font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: "New button island" }
-                        Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary; text: "A button row you fill yourself, Stream Deck style" }
+                        Text { font.pixelSize: Th.px(13); font.weight: Font.DemiBold; color: Th.textPrimary; text: "New button island" }
+                        Text { width: parent.width; elide: Text.ElideRight; font.pixelSize: Th.px(12); color: Th.textSecondary; text: "A button row you fill yourself, Stream Deck style" }
                     }
                     MouseArea { id: nbMa; anchors.fill: parent; hoverEnabled: true; onClicked: { tb.closePanels(); tb.em.newButtonIsland() } }
                 }
@@ -574,7 +574,7 @@ Item {
             spacing: 8
             Row {
                 spacing: 4
-                Text { anchors.verticalCenter: parent.verticalCenter; rightPadding: 4; font.pixelSize: 12; color: Th.textSecondary; text: "Look" }
+                Text { anchors.verticalCenter: parent.verticalCenter; rightPadding: 4; font.pixelSize: Th.px(12); color: Th.textSecondary; text: "Look" }
                 Repeater {
                     model: [{ id: "icon", label: "Icon" }, { id: "iconLabel", label: "Icon and label" }, { id: "label", label: "Label" }]
                     delegate: Rectangle {
@@ -586,7 +586,7 @@ Item {
                         color: tb.btnLook === modelData.id ? Th.accentBase : (lookMa.containsMouse ? Th.surfaceHover : "transparent")
                         border.width: 1
                         border.color: tb.btnLook === modelData.id ? Th.accentBase : Th.borderStrong
-                        Text { id: lookText; anchors.centerIn: parent; font.pixelSize: 12; color: tb.btnLook === parent.modelData.id ? Th.textOnAccent : Th.textPrimary; text: parent.modelData.label; textFormat: Text.PlainText }
+                        Text { id: lookText; anchors.centerIn: parent; font.pixelSize: Th.px(12); color: tb.btnLook === parent.modelData.id ? Th.textOnAccent : Th.textPrimary; text: parent.modelData.label; textFormat: Text.PlainText }
                         MouseArea { id: lookMa; anchors.fill: parent; hoverEnabled: true; onClicked: tb.btnLook = parent.modelData.id }
                         activeFocusOnTab: true
                         Keys.onReturnPressed: tb.btnLook = modelData.id
@@ -626,7 +626,7 @@ Item {
                     width: parent.width
                     padding: 10
                     wrapMode: Text.Wrap
-                    font.pixelSize: 12
+                    font.pixelSize: Th.px(12)
                     color: Th.textSecondary
                     text: "No action matches."
                 }
@@ -645,7 +645,7 @@ Item {
                             x: 8
                             anchors.bottom: parent.bottom
                             anchors.bottomMargin: 4
-                            font.pixelSize: 11
+                            font.pixelSize: Th.px(11)
                             font.weight: Font.DemiBold
                             font.capitalization: Font.AllUppercase
                             color: Th.textSecondary
@@ -665,7 +665,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             elide: Text.ElideRight
                             textFormat: Text.PlainText
-                            font.pixelSize: 13
+                            font.pixelSize: Th.px(13)
                             color: Th.textPrimary
                             text: brow.modelData.head ? "" : brow.modelData.item.label
                         }
@@ -720,7 +720,7 @@ Item {
                 id: drawerCol
                 width: parent.width
                 spacing: 6
-                Text { width: parent.width; wrapMode: Text.Wrap; font.pixelSize: 12; color: Th.textSecondary; text: "A button opens the island in a drawer under it. Pick its icon, then the island." }
+                Text { width: parent.width; wrapMode: Text.Wrap; font.pixelSize: Th.px(12); color: Th.textSecondary; text: "A button opens the island in a drawer under it. Pick its icon, then the island." }
                 Flow {
                     width: parent.width
                     spacing: 4
@@ -763,8 +763,8 @@ Item {
                             x: 40
                             width: parent.width - 48
                             anchors.verticalCenter: parent.verticalCenter
-                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold; color: Th.textPrimary; text: drow.t.name }
-                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: 12; color: Th.textSecondary
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: Th.px(13); font.weight: Font.DemiBold; color: Th.textPrimary; text: drow.t.name }
+                            Text { textFormat: Text.PlainText; width: parent.width; elide: Text.ElideRight; font.pixelSize: Th.px(12); color: Th.textSecondary
                                    text: drow.isHidden ? "Hidden now — a drawer brings it back" : "Moves into the drawer" }
                         }
                         function activate() { var em = tb.em, r = drow.modelData, ic = tb.drawerIcon, t = tb; em.newDrawer(r, ic); t.closePanels() }
@@ -796,7 +796,7 @@ Item {
             x: 12
             y: 10
             spacing: 10
-            Text { font.pixelSize: 13; color: Th.textPrimary; text: "Discard your layout changes?" }
+            Text { font.pixelSize: Th.px(13); color: Th.textPrimary; text: "Discard your layout changes?" }
             Row {
                 anchors.right: parent.right
                 spacing: 6

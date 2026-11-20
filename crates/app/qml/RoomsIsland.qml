@@ -57,7 +57,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: 44
         HoverHandler { id: headerHover }
-        Kirigami.Heading {
+        ThHeading {
             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             anchors.left: parent.left; anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
@@ -417,7 +417,7 @@ ColumnLayout {
             RowLayout {
                 id: mainRow
                 width: parent.width
-                height: 40
+                height: Th.row(40)   // P22: 40 at 100 % / Cozy; grows with the person's text size, Compact −8, Comfortable +8
                 spacing: Kirigami.Units.smallSpacing
                 Item { Layout.preferredWidth: Kirigami.Units.smallSpacing; Layout.preferredHeight: 1 }
                 Avatar {
@@ -451,6 +451,14 @@ ColumnLayout {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 72   // 10.1 (TH-NAV-09): the invite actions can no longer crush the name to nothing
                     spacing: 0
+                RowLayout {   // mini games v1: a DM row is its person: their prestige token before the name
+                    Layout.fillWidth: true
+                    spacing: 0
+                PrestigeToken {
+                    mxid: row.isDM && !row.isInvite ? row.peer : ""
+                    roomId: String(row.room.id || "")
+                    opacity: row.room.muted === true ? 0.55 : 1
+                }
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
@@ -463,6 +471,7 @@ ColumnLayout {
                     opacity: row.room.muted === true ? 0.55 : 1
                     font.bold: (row.room.unread || 0) > 0 || row.isInvite
                 }
+                }
                 // D09.4 (Sunday QoL): a DM invite shows who is really asking — the inviter's full address, server
                 // included, in grey under the name (a display name alone can copy anyone's; the web's RoomList.tsx)
                 Controls.Label {
@@ -472,7 +481,7 @@ ColumnLayout {
                     text: String(row.room.peer || "")
                     elide: Text.ElideMiddle
                     color: Th.roomsItemNotJoinedFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 }
                 ThIcon {
@@ -499,7 +508,7 @@ ColumnLayout {
                         anchors.centerIn: parent
                         text: row.isInvite ? "Invited" : "Not joined"
                         color: row.isInvite ? Th.roomsPillInviteFg : Th.roomsPillNotJoinedFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                 }
                 // invite actions
@@ -545,7 +554,7 @@ ColumnLayout {
                 text: row.showPresLine ? String(row.pres.label || "") + (row.presRoom.length > 0 ? " · " + row.presRoom : "") : ""
                 textFormat: Text.PlainText   // 10.6.0 review: a status is never markup
                 color: row.showPresLine && row.pres.chipColor ? row.pres.chipColor : Th.roomsItemStatusFg
-                font.pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))
+                font.pointSize: ((Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))) * Th.textScale
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
@@ -580,7 +589,7 @@ ColumnLayout {
                         : (prefix + "Set now playing…")
                     elide: Text.ElideRight
                     color: row.showActivity ? Th.roomsActivityFg : Th.roomsActivityPlaceholder
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                     font.italic: !row.showActivity
                 }
                 // Pencil — open the inline editor (open non-DM row only).
@@ -615,7 +624,7 @@ ColumnLayout {
                     text: row.activityGame
                     placeholderText: "What are you playing?"
                     onPressed: island.disarm()
-                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                    font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                     onAccepted: { island.panelRef.setActivity(text.trim()); island.panelRef.editingRoomId = ""; focus = false }
                 }
                 Controls.ToolButton {
@@ -694,13 +703,19 @@ ColumnLayout {
                                 seed: partRow.partMxid.length > 0 ? partRow.partMxid : partRow.modelData.name
                                 imageSource: partRow.modelData.avatar || ""
                             }
+                            PrestigeToken {   // mini games v1: 4 px before the name
+                                mxid: partRow.partMxid
+                                roomId: String(row.room.id || "")
+                                gap: false
+                                Layout.rightMargin: 4 - partContent.spacing
+                            }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
                                 text: partRow.modelData.name
                                 elide: Text.ElideRight
                                 color: Th.roomsCallerFg
-                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                             }
                             // unobtrusive muted glyph (only when this user is muted by us)
                             Kirigami.Icon {
@@ -806,16 +821,22 @@ ColumnLayout {
                 visible: row.statuses.length > 0
                 Repeater {
                     model: row.statuses
-                    delegate: Controls.Label {
-                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                    delegate: RowLayout {   // mini games v1: the person's prestige token before "Sam: playing …"
+                        id: stLine
                         required property var modelData
                         Layout.fillWidth: true
-                        text: String(modelData.name || modelData.userId || "") + ": " + String(modelData.text || "")
+                        spacing: 0
+                        PrestigeToken { mxid: String(stLine.modelData.userId || ""); roomId: String(row.room.id || "") }
+                        Controls.Label {
+                        textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
+                        Layout.fillWidth: true
+                        text: String(stLine.modelData.name || stLine.modelData.userId || "") + ": " + String(stLine.modelData.text || "")
                         elide: Text.ElideRight
                         wrapMode: Text.NoWrap
                         color: Th.roomsStatusFg
-                        font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                        font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                         font.italic: true
+                        }
                     }
                 }
             }

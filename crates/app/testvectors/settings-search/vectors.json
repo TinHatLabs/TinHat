@@ -4,6 +4,80 @@
  "note": "SETTINGS-WINDOW.md §4 matcher over settings-index.json v1; operator=false hides operator entries",
  "cases": [
   {
+   "q": "text size",
+   "operator": true,
+   "want": [
+    "appearance.text-size",
+    "appearance.app-size"
+   ]
+  },
+  {
+   "q": "text size",
+   "operator": false,
+   "want": [
+    "appearance.text-size",
+    "appearance.app-size"
+   ]
+  },
+  {
+   "q": "density",
+   "operator": true,
+   "want": [
+    "appearance.density"
+   ]
+  },
+  {
+   "q": "density",
+   "operator": false,
+   "want": [
+    "appearance.density"
+   ]
+  },
+  {
+   "q": "font size",
+   "operator": true,
+   "want": [
+    "appearance.text-size"
+   ]
+  },
+  {
+   "q": "font size",
+   "operator": false,
+   "want": [
+    "appearance.text-size"
+   ]
+  },
+  {
+   "q": "compact",
+   "operator": true,
+   "want": [
+    "appearance.density"
+   ]
+  },
+  {
+   "q": "compact",
+   "operator": false,
+   "want": [
+    "appearance.density"
+   ]
+  },
+  {
+   "q": "bigger text",
+   "operator": true,
+   "want": [
+    "appearance.app-size",
+    "appearance.text-size"
+   ]
+  },
+  {
+   "q": "bigger text",
+   "operator": false,
+   "want": [
+    "appearance.app-size",
+    "appearance.text-size"
+   ]
+  },
+  {
    "q": "mic",
    "operator": true,
    "want": [
@@ -405,7 +479,9 @@
    "operator": false,
    "want": [
     "appearance.app-size",
-    "appearance.app-size-live"
+    "appearance.app-size-live",
+    "appearance.text-size",
+    "appearance.density"
    ]
   },
   {

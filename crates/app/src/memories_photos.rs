@@ -456,6 +456,18 @@ pub async fn take_down(room: &Room, event_id: &str) -> Result<(), String> {
     write(room, |cur| mp::with_hidden(cur, event_id)).await
 }
 
+/// 12.1.17: the files "Add photos" takes (the picker's filter, a paste, a drop, the send itself): every picture type the
+/// app sends as an image, SVG excepted: Tin Hat Web's `accept="image/*"` minus image/svg+xml, by the extension's type
+/// (room::mime_for_ext). Phone photos (HEIC/HEIF, AVIF) are in: they go through the same cleaner as a chat photo
+/// (room::photo_bytes_for_upload), and like there no shipped Qt draws them, so their tile says it can't be shown here.
+pub const PHOTO_EXTS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "heif", "hif", "avif"];
+
+/// Is `ext` (any case, without the dot) a file "Add photos" takes? The one rule behind [`PHOTO_EXTS`] and send_photo.
+pub fn is_photo_ext(ext: &str) -> bool {
+    let mime = crate::room::mime_for_ext(&ext.to_lowercase());
+    mime.starts_with("image/") && mime != "image/svg+xml"
+}
+
 /// "Add photos": send one image file to the room's chat (encrypted where the room is: the chat's own upload rule,
 /// room::attach_upload_checked) and add it to my Memories. → the message's event id.
 pub async fn send_photo(room: &Room, path: &std::path::Path) -> Result<String, String> {
@@ -465,7 +477,7 @@ pub async fn send_photo(room: &Room, path: &std::path::Path) -> Result<String, S
     }
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
     let mime_s = crate::room::mime_for_ext(&ext);
-    if !mime_s.starts_with("image/") || mime_s == "image/svg+xml" {
+    if !is_photo_ext(&ext) {
         return Err("Only photos and screenshots can be added.".into());
     }
     let data = tokio::fs::read(path).await.map_err(|x| format!("read {}: {x}", path.display()))?;
@@ -497,7 +509,12 @@ pub async fn send_photo(room: &Room, path: &std::path::Path) -> Result<String, S
     )
     .await?;
     let content = crate::room::attachment_content(&mime, filename, source, w, h, size);
-    let content = serde_json::to_value(content).map_err(|x| x.to_string())?;
+    let mut content = serde_json::to_value(content).map_err(|x| x.to_string())?;
+    // 12.1.17: the Memories marker (inside the encryption): quiet at once for 12.1.17+ receivers; the chat hides the
+    // photo once my list names it (memphotos::memories_post / hidden_in_chat)
+    if let Some(o) = content.as_object_mut() {
+        o.insert(mp::POST_KEY.to_string(), json!({"v": 1}));
+    }
     let r = room.send_raw("m.room.message", content).await.map_err(|x| x.to_string())?;
     let eid = r.response.event_id.to_string();
     let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as f64).unwrap_or(0.0);
@@ -505,9 +522,134 @@ pub async fn send_photo(room: &Room, path: &std::path::Path) -> Result<String, S
     Ok(eid)
 }
 
+// ---- 12.1.17: a Memories photo leaves the chat (docs/MEMORIES-PHOTOS.md "In the chat") --------------------------------
+
+/// What the chat hides in this room now: every member's list (mine as I last wrote it, so my own add hides at once) +
+/// the moderators now → memphotos::chat_index. The web's memories/chatHide.ts roomChatIndex does the same.
+pub async fn chat_index(room: &Room) -> Option<mp::ChatIndex> {
+    let gen = crate::session::generation();
+    let me = room.own_user_id().to_string();
+    let mut all = crate::appstate::get_state_all(room, mp::MEMORIES_TYPE).await;
+    let mine_now = current_for_write(room, gen).await;
+    all.retain(|(k, _, _)| *k != me);
+    if !mine_now.is_null() {
+        all.push((me.clone(), me.clone(), mine_now));
+    }
+    if all.is_empty() {
+        return Some(mp::ChatIndex::default());
+    }
+    let states: Vec<Value> = all.iter().map(|(k, s, c)| json!({"state_key": k, "sender": s, "content": c})).collect();
+    let mut people: Vec<String> = all.iter().map(|(k, _, _)| k.clone()).collect();
+    people.sort();
+    people.dedup();
+    let mods = moderators(room, &people).await;
+    mp::chat_index(Some(&states), &mods)
+}
+
+/// A timeline event (JSON, decrypted where it could be) as the shared chat rules see it.
+pub fn chat_msg_of(v: &Value) -> Option<mp::ChatMsg<'_>> {
+    let content = v.get("content")?;
+    if !content.is_object() {
+        return None;
+    }
+    Some(mp::ChatMsg {
+        event_id: v.get("event_id")?.as_str()?,
+        sender: v.get("sender")?.as_str()?,
+        kind: v.get("type")?.as_str()?,
+        redacted: v.pointer("/unsigned/redacted_because").is_some(),
+        msgtype: content.get("msgtype").and_then(Value::as_str).unwrap_or(""),
+        marker: content.get(mp::POST_KEY),
+        in_thread: !tinhat_widgets::threads::thread_of(content).is_empty(),
+    })
+}
+
+/// Round 2 (shared vectors `counts`): (silenced, uncounted) for a timeline / notification event (JSON, decrypted).
+pub fn counts_event(index: Option<&mp::ChatIndex>, v: &Value) -> (bool, bool) {
+    mp::chat_counts(index, chat_msg_of(v).as_ref())
+}
+
+/// Is this event hidden from the chat by `index`?
+pub fn hidden_event(index: Option<&mp::ChatIndex>, v: &Value) -> bool {
+    mp::hidden_in_chat(index, chat_msg_of(v).as_ref())
+}
+
+/// A photo posted by "Add photos" (its marker): no notification, no receive sound, not counted unread.
+pub fn post_event(v: &Value) -> bool {
+    mp::memories_post(chat_msg_of(v).as_ref())
+}
+
+/// room → the photos the chat hid at its last load (a jump to one opens it in Memories instead of hunting the history).
+fn hidden_ids() -> &'static Mutex<HashMap<String, std::collections::HashSet<String>>> {
+    static H: OnceLock<Mutex<HashMap<String, std::collections::HashSet<String>>>> = OnceLock::new();
+    H.get_or_init(Default::default)
+}
+
+/// The room's load found these hidden photos (the main view's load replaces the set; a thread panel's adds to it).
+pub fn note_hidden(room_id: &str, ids: impl IntoIterator<Item = String>, replace: bool) {
+    if let Ok(mut m) = hidden_ids().lock() {
+        let e = m.entry(room_id.to_string()).or_default();
+        if replace {
+            e.clear();
+        }
+        e.extend(ids);
+    }
+}
+
+/// Did the chat hide this message at the room's last load?
+pub fn hidden_in_chat(room_id: &str, event_id: &str) -> bool {
+    hidden_ids().lock().map(|m| m.get(room_id).is_some_and(|s| s.contains(event_id))).unwrap_or(false)
+}
+
+/// Forget every room's hidden set (sign-out).
+pub fn forget_hidden() {
+    if let Ok(mut m) = hidden_ids().lock() {
+        m.clear();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 12.1.17: Memories takes phone photos (.heic/.heif/.avif) like Tin Hat Web (`image/*` minus SVG), and every way in
+    /// (the picker's filter, a paste, a drop, the gate hook: MemoriesWindow.qml addPhotoUrls) asks this one list.
+    #[test]
+    fn add_photos_takes_phone_photos_like_the_web() {
+        for e in ["heic", "HEIC", "heif", "hif", "avif", "png", "jpg", "jpeg", "gif", "webp", "bmp"] {
+            assert!(is_photo_ext(e), "{e} is a photo");
+        }
+        for e in ["svg", "txt", "mp4", "pdf", "", "heic.txt"] {
+            assert!(!is_photo_ext(e), "{e} is not");
+        }
+        // the list is exactly the rule (nothing listed that the send refuses, every phone format listed)
+        for e in PHOTO_EXTS {
+            assert!(is_photo_ext(e), "{e} listed but refused");
+        }
+        for e in ["heic", "heif", "hif", "avif"] {
+            assert!(PHOTO_EXTS.contains(&e), "{e} missing from the list");
+        }
+        // and the other way (review round): every extension the send maps to a picture (SVG aside) is listed
+        let room = include_str!("room.rs");
+        let m = &room[room.find("pub(crate) fn mime_for_ext(ext: &str)").expect("mime_for_ext")..];
+        let m = &m[..m.find("\n}\n").unwrap()];
+        let mut images = 0;
+        for line in m.lines().filter(|l| l.contains("=> \"image/") && !l.contains("image/svg+xml")) {
+            for ext in line[..line.find("=>").unwrap()].split('|').map(|x| x.trim().trim_matches('"')) {
+                assert!(PHOTO_EXTS.contains(&ext), "{ext} is sent as a picture but Add photos doesn't take it");
+                images += 1;
+            }
+        }
+        assert_eq!(images, PHOTO_EXTS.len(), "the list is exactly the picture types");
+        let q = include_str!("../qml/MemoriesWindow.qml");
+        let add = &q[q.find("function addPhotoUrls(urls)").expect("addPhotoUrls")..];
+        let add = &add[..add.find("\n    }\n").unwrap()];
+        assert!(add.contains("mem.photoExts.indexOf("), "addPhotoUrls asks the list: {add}");
+        assert!(!add.contains("(png|jpe?g|gif|webp|bmp)"), "no second, shorter list");
+        let picker = &q[q.find("id: addPhotosDialog").unwrap()..];
+        let picker = &picker[..picker.find("onAccepted").unwrap()];
+        assert!(picker.contains("nameFilters: [\"Images (\" + mem.photoExts.map("), "the picker's filter is the list: {picker}");
+        assert!(q.contains("readonly property var photoExts: mem.vodctl ? JSON.parse(String(mem.vodctl.memoryPhotoExts() || \"[]\")) : []"));
+    }
 
     #[test]
     fn comment_count_reads_the_thread_aggregation() {
@@ -535,6 +677,42 @@ mod tests {
         assert_eq!(rev_of(room), r0 + 2);
         // (review) a read of "$unknown" under way when its redaction arrived is not trusted
         assert!(invalidated_since(&key(crate::session::generation(), room, "$unknown"), before));
+    }
+
+    #[test]
+    fn a_timeline_event_as_the_chat_rules_see_it_12_1_17() {
+        let states = vec![json!({"state_key": "@a:x", "sender": "@a:x", "content": {"v": 1, "photos": [{"event_id": "$p", "ts": 1}]}})];
+        let idx = mp::chat_index(Some(&states), &[]);
+        let img = |id: &str, sender: &str| json!({"event_id": id, "sender": sender, "type": "m.room.message", "content": {"msgtype": "m.image", "body": "a.png"}});
+        assert!(hidden_event(idx.as_ref(), &img("$p", "@a:x")));
+        // someone else's message with that id, another photo, no index (fail closed)
+        assert!(!hidden_event(idx.as_ref(), &img("$p", "@b:x")));
+        assert!(!hidden_event(idx.as_ref(), &img("$q", "@a:x")));
+        assert!(!hidden_event(None, &img("$p", "@a:x")));
+        // redacted (the window's own mark), still encrypted, no content
+        let mut red = img("$p", "@a:x");
+        red["unsigned"] = json!({"redacted_because": {"type": "m.room.redaction"}});
+        assert!(!hidden_event(idx.as_ref(), &red));
+        assert!(!hidden_event(idx.as_ref(), &json!({"event_id": "$p", "sender": "@a:x", "type": "m.room.encrypted", "content": {"algorithm": "m.megolm.v1.aes-sha2"}})));
+        assert!(!hidden_event(idx.as_ref(), &json!({"event_id": "$p", "sender": "@a:x", "type": "m.room.message"})));
+        // the "Add photos" marker: quiet, never hidden by itself
+        let mut post = img("$n", "@a:x");
+        post["content"][mp::POST_KEY] = json!({"v": 1});
+        assert!(post_event(&post));
+        assert!(!hidden_event(idx.as_ref(), &post));
+        assert!(!post_event(&img("$n", "@a:x")));
+    }
+
+    #[test]
+    fn the_windows_words_are_the_shared_words_12_1_17() {
+        let qml = include_str!("../qml/MemoriesWindow.qml");
+        for w in [mp::ADD_TIP, mp::REMOVE_TEXT, mp::DELETE_TITLE, mp::DELETE_TEXT] {
+            assert!(qml.contains(&format!("\"{w}\"")), "MemoriesWindow.qml lacks {w:?}");
+        }
+        // the photo isn't in the chat any more: no "Show in chat", no "also posted in the chat"
+        assert!(!qml.contains("text: \"Show in chat\""));
+        assert!(!qml.contains("also posted in the chat"));
+        assert!(!qml.contains("The photo stays in the chat."));
     }
 
     #[test]

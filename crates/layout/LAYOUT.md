@@ -1,4 +1,4 @@
-# Tin Hat layout contract (LAYOUT.md) — format v1 · contract revision v1.2
+# Tin Hat layout contract (LAYOUT.md) — format v1 · contract revision v1.3
 
 2026-09-26 · islands plan commit **C0** (contract, vectors, independent checker) · TypeScript reference = commit **C1**
 (web `src/layout/`) · normative for the Rust port (desktop `crates/layout`, `tinhat-layout`).
@@ -13,6 +13,17 @@
   optional `into: true` (§8.1 step 1, §8.2): the edge of a row / col whose size is `auto` moves its child next to the gap
   instead of freezing the container (Classic's room-list gap `navcol | main` widens the room column). Edit mode always
   sends it (EDITMODE-UI.md §6). New vectors `op/resize-into-*` (7). Q-RESIZEINTO below.
+
+- **Revision v1.3** (2026-11-14, 12.1.17; solve only — the form, the document and every saved layout are unchanged):
+  the room list is no longer squeezed by the widgets. The registry gains an optional `keep` per island (only `rooms`:
+  `{h: {len: 280, pm: 400}}`); §7.6 step 4a gives such an island min(280 units, 40 % of its column) before its `auto` /
+  `pm` siblings (the widgets) get more than their minimum, which for the widgets is their folded height. A v1.2 build
+  reads the same saved layouts and draws them as before; a v1.3 build draws every saved layout with the keep (no
+  migration: the keep lives in the registry, not in the form; a room list you sized yourself, `fixed` or `pm`, has
+  none). Overflow, breach, squeeze-out, collapse decisions, minima and naturals are exactly v1.2's; only lengths inside
+  such a column move. Regenerated solve vectors + new `solve/keep-*`. Why a registry rule and not a size key: the
+  saved layouts would need a migration, a v1.2 reader would carry the key as unknown, and the PREFERENCE is the
+  product's, not the user's (Q-KEEP = this note and §7.6 step 4a).
 
 - **Source.** Distilled from ISLANDS-ARCH.md v2 §6 (research, P5b) and its schema draft; every spot where the P5
   prototype (`research/solve_proto.py`) and the study text disagreed, and every genuine ambiguity, is resolved in
@@ -466,6 +477,18 @@ its present children in order (n):
    whose effective basis is `auto` or `pm` down to their min; (2) `fixed` children down to their min; (3) children
    with a floor down to their floor; (4) **squeeze-out**: a child with floor 0 and base > 0 gets length 0, need −= its
    base + (g when n > 1), and it is **squeezed**. need still > 0 → C is in **breach**.
+4a. **Keep** (v1.3, Q-KEEP): a child that is a known island (not compat) with a registry `keep[a]` = `{len, pm}`, not
+   folded, whose effective basis (§3.3, view sizes included) is `auto` or `share`, has **keep** = min(sc(len),
+   fdiv(pm × L, 1000)); every other child has none. The **keep move** runs once per distribution run: after step 3
+   (or when R′ ≥ 0 and nothing grew) with **free** = the R′ left over, or — when C overflows — inside step 4 after pass
+   (3) and before the squeeze-out (4) with free = 0. For each child i with a keep, in order: d = clamp(keep, min, max) −
+   base; if d > 0: f = min(d, free) moves into its base (free −= f, d −= f); then, from the last child to the first,
+   each other child that is a known island whose registry `collapse` allows `fold` (the widgets: their minimum is their
+   folded height), without a keep and whose effective basis is `auto` or `pm`, gives min(d, max(0, base − min)) to it
+   (nothing else gives way: containers would overflow inside, an account bar would be clipped). The free length taken
+   is length no child had (Σ base stays ≤ L) and a transfer keeps Σ base, so overflow and breach are v1.2's, and so is
+   the squeeze-out: it happens only when pass (1) left every `auto` / `pm` child at its minimum, where nobody can give
+   way. Only lengths inside such a column move.
 5. **Squeezed children leave**: with `chip = min(sc(handle), len)`, C reserves `chip + g` at its end and distributes
    again over the remaining children in `max(0, len − chip − g)` with the first run's g (no gap squeeze), repeating
    while a run squeezes more (each run removes at least one child); overflow / breach accumulate. The chip rect is

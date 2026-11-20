@@ -44,6 +44,21 @@
 #define TINHAT_UI_SCALE_QPA 0
 #endif
 
+// The monitor-DPI guard (12.1.17, below) needs two of QtQuick's private headers: Windows only, where the bundle ships
+// this exact Qt (build.rs adds the version's private include dirs; a release build without them stops there).
+#if defined(_WIN32) && __has_include(<QtQuick/private/qquickwindow_p.h>)
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
+#include <QByteArrayList>
+#include <cstdio>
+#define TINHAT_DPR_MONITOR_GUARD 1
+#else
+#define TINHAT_DPR_MONITOR_GUARD 0
+#endif
+#if defined(_WIN32) && defined(TINHAT_REQUIRE_DPR_GUARD) && !TINHAT_DPR_MONITOR_GUARD
+#error "build.rs found QtQuick's private include dirs, but <QtQuick/private/qquickwindow_p.h> is missing: the monitor-DPI guard would be compiled out"
+#endif
+
 #if defined(_WIN32)
 #include <windows.h>
 #else
@@ -146,6 +161,8 @@ void collectItems(QQuickItem *item, QList<QPointer<QQuickItem>> &out, QList<QByt
 }
 
 bool g_inGuard = false;   // inside a guarded walk: a nested DPR event is left to Qt (no recursion)
+// the windows this App size change put the guard on (applyNow); 12.1.17: the monitor-DPI guard leaves exactly these to it
+QList<QPointer<QQuickWindow>> g_perWindow;
 
 // 1 + 2 above; false = the window itself went away (the event must not go on to it)
 bool guardedDprWalk(QQuickWindow *w) {
@@ -242,6 +259,100 @@ double g_current = 0.0;    // the factor Tin Hat last set (0 = none yet: Qt has 
 bool g_applying = false;   // inside apply(): a nested request is coalesced
 double g_pending = 0.0;    // … into this, applied when the outer one is done
 
+// -- The monitor-DPI guard (12.1.17 Stage B, Windows: docs/UI-ZOOM.md "Monitor scale changes") --
+// The guarded walk above covers only Tin Hat's own App size change (applyNow). Windows changes a window's DPR by itself
+// too: the display scale changed in Settings, or the window moved to a monitor with another scale (WM_DPICHANGED ->
+// QWindowsWindow -> QWindowPrivate::updateDevicePixelRatio -> QEvent::DevicePixelRatioChange -> the same unguarded
+// QQuickWindow::physicalDpiChanged walk). 12.1.17 Stage A measured it: a live 100 % <-> 125 % display change with a
+// picture room on screen crashed 4 times in 20 with the field stack (Qt6Quick +0x53674 / +0x104B40 / +0x104B61).
+// An application-wide event filter sees every DevicePixelRatioChange of a Qt Quick window before the window does
+// (app filters run before the window's own filters) and does what physicalDpiChanged does, in Qt's own order, safely:
+//   1. the new ratio is recorded as reported FIRST (QQuickWindowPrivate::lastReportedItemDevicePixelRatio, as Qt does
+//      before its walk), so Qt's own walk that follows returns at its qFuzzyCompare, and so does a nested change to the
+//      same ratio from inside a reaction;
+//   2. every item with contents is told ItemDevicePixelRatioHasChanged (QQuickItemPrivate::itemChange, exactly Qt's call,
+//      with Qt's float ratio) depth-first; each level's children are held as QPointers taken before any of them is
+//      told: an item deleted by an earlier one's reaction is skipped, never called;
+//   3. forcePolish(), what Qt does after its walk (it only schedules polish()).
+// The event then goes on: Kirigami's AlignedSize filter and QQuickWindow::event see it as before.
+// It stays out of Tin Hat's own App size change only where that change's per-window guard will take the event (a window
+// it holds, and not from inside its own walk): a nested change, or a window it doesn't hold, is guarded here instead of
+// falling through to Qt's walk (review 2026-11-16). A ratio that moved again while the walk ran (a nested change to
+// another ratio) gets one more full pass at the latest ratio, so no item is left at a stale one.
+// The method is an earlier Windows monitor-drag fix of the 11.2 time (Qt-private; the bundle ships this Qt).
+#if TINHAT_DPR_MONITOR_GUARD
+struct MonitorWalk {
+    int told = 0;
+    int gone = 0;
+    QByteArrayList goneTypes;   // the first few deleted items' class names (copied while they were alive)
+};
+
+void monitorWalk(QQuickItem *item, float dpr, MonitorWalk &m) {
+    const QPointer<QQuickItem> self(item);
+    const QByteArray here(item->metaObject()->className());
+    if (item->flags() & QQuickItem::ItemHasContents) {
+        ++m.told;
+        QQuickItemPrivate::get(item)->itemChange(QQuickItem::ItemDevicePixelRatioHasChanged, dpr);
+    }
+    if (!self) {   // its own reaction deleted it
+        ++m.gone;
+        if (m.goneTypes.size() < 6) m.goneTypes.append(here);
+        return;
+    }
+    const QList<QQuickItem *> kids = item->childItems();
+    QList<QPointer<QQuickItem>> guarded;
+    QByteArrayList names;
+    guarded.reserve(kids.size());
+    names.reserve(kids.size());
+    for (QQuickItem *k : kids) {
+        guarded.append(QPointer<QQuickItem>(k));
+        names.append(QByteArray(k->metaObject()->className()));
+    }
+    for (qsizetype i = 0; i < guarded.size(); ++i) {
+        if (QQuickItem *k = guarded.at(i).data()) {
+            monitorWalk(k, dpr, m);
+        } else {
+            ++m.gone;
+            if (m.goneTypes.size() < 6) m.goneTypes.append(names.at(i));
+        }
+    }
+}
+
+class MonitorDprGuard final : public QObject {
+public:
+    bool eventFilter(QObject *o, QEvent *e) override {
+        if (e->type() != QEvent::DevicePixelRatioChange) return false;
+        auto *w = qobject_cast<QQuickWindow *>(o);
+        if (!w) return false;
+#if TINHAT_UI_SCALE_QPA
+        if (g_applying && !g_inGuard && g_perWindow.contains(QPointer<QQuickWindow>(w))) return false;   // applyNow's guard has it
+#endif
+        QQuickWindowPrivate *d = QQuickWindowPrivate::get(w);
+        const qreal dpr = w->effectiveDevicePixelRatio();
+        const qreal was = d->lastReportedItemDevicePixelRatio;
+        if (qFuzzyCompare(dpr, was)) return false;   // Qt's walk returns here too
+        d->lastReportedItemDevicePixelRatio = dpr;
+        const QPointer<QQuickWindow> alive(w);
+        MonitorWalk m;
+        if (QQuickItem *root = w->contentItem()) monitorWalk(root, float(dpr), m);
+        if (!alive) return true;   // a reaction closed the window: nothing left to deliver to
+        qreal told = dpr;
+        for (int extra = 0; extra < 2 && !qFuzzyCompare(w->effectiveDevicePixelRatio(), told); ++extra) {
+            told = w->effectiveDevicePixelRatio();   // it moved during the walk: everyone gets the latest ratio
+            d->lastReportedItemDevicePixelRatio = told;
+            if (QQuickItem *root = w->contentItem()) monitorWalk(root, float(told), m);
+            if (!alive) return true;
+        }
+        d->forcePolish();
+        std::fprintf(stderr, "[dpr] monitor scale change '%s': %.2f -> %.2f (window DPR now %.2f), %d item(s) told, guarded%s%s\n",
+                     w->title().toUtf8().constData(), was, told, w->devicePixelRatio(), m.told,
+                     m.gone ? "; deleted during the change, skipped: " : " (nothing deleted)", m.goneTypes.join(", ").constData());
+        std::fflush(stderr);
+        return false;
+    }
+};
+#endif
+
 void applyNow(double factor) {
     QList<QPointer<QWindow>> wins;
     for (QWindow *w : QGuiApplication::allWindows()) wins.append(w);
@@ -263,7 +374,10 @@ void applyNow(double factor) {
     const bool guard = qgetenv("TINHAT_UI_SCALE_GUARD") != "0";
     if (guard)
         for (const QPointer<QWindow> &w : wins)
-            if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w.data())) qw->installEventFilter(dprGuard());
+            if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w.data())) {
+                qw->installEventFilter(dprGuard());
+                g_perWindow.append(qw);
+            }
     // each step can run app code synchronously (a handler may close a window): re-check the window after every one
     for (const QPointer<QWindow> &w : wins) {
         if (!w || !w->handle()) continue;   // not created yet: it starts at the new factor
@@ -277,6 +391,7 @@ void applyNow(double factor) {
     restoreMuted();
     for (const QPointer<QWindow> &w : wins)
         if (w) w->removeEventFilter(dprGuard());
+    g_perWindow.clear();
     // one line when the guard actually saved a walk: in the field it names the trigger (which item types went away)
     if (g_walk.gone > 0)
         qWarning("[ui-scale] guarded DPR walk: %d item(s) deleted during the change, skipped (%s); %d told, %d window(s)",
@@ -333,6 +448,24 @@ int tinhat_ui_scale_live_capable(void) { return (api().ok() && !g_restartOnly) ?
 
 // Why (for the start-up log line, so a restart-only build never goes unnoticed): 0 live, 1 built without Qt's private
 // headers, 2 this Qt lacks one of the three calls, 3 TINHAT_UI_SCALE_RESTART=1.
+// 12.1.17: the monitor-DPI guard (above) for every DevicePixelRatioChange that isn't Tin Hat's own App size change.
+// Right after QGuiApplication (ui_scale::apply_startup). 1 = on, 0 = not on this platform/build (only `windows` with
+// QtQuick's private headers).
+int tinhat_dpr_guard_install(void) {
+#if TINHAT_DPR_MONITOR_GUARD
+    if (!qobject_cast<QGuiApplication *>(QCoreApplication::instance())) return 0;
+    if (QGuiApplication::platformName() != QLatin1String("windows")) return 0;
+    static MonitorDprGuard *g = nullptr;   // lives as long as the app (never parented, never deleted)
+    if (!g) {
+        g = new MonitorDprGuard;
+        QCoreApplication::instance()->installEventFilter(g);
+    }
+    return 1;
+#else
+    return 0;
+#endif
+}
+
 int tinhat_ui_scale_why(void) {
     if (!TINHAT_UI_SCALE_QPA) return 1;
     if (!api().ok()) return 2;

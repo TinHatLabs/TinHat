@@ -14,7 +14,7 @@ import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app   // Th: the spaceSettings.* / roles.* / invite.* tokens
 
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: win
     required property var app
 
@@ -534,7 +534,7 @@ Window {
         ColumnLayout {
             anchors.fill: parent
             spacing: Kirigami.Units.smallSpacing
-            Kirigami.Heading { textFormat: Text.PlainText; level: 3; text: "Invite to " + (win.spaceName.length > 0 ? win.spaceName : "the space"); color: Th.invitePopoverFg; elide: Text.ElideRight; Layout.fillWidth: true }
+            ThHeading { textFormat: Text.PlainText; level: 3; text: "Invite to " + (win.spaceName.length > 0 ? win.spaceName : "the space"); color: Th.invitePopoverFg; elide: Text.ElideRight; Layout.fillWidth: true }
             HintLabel { app: win.app; Layout.fillWidth: true; font.pointSize: spacePicker.smallSize; text: "Search by name or username, or type someone's full address, like @name:their.server." }
             PeoplePicker {
                 id: spacePicker
@@ -580,7 +580,7 @@ Window {
                     seed: win.spaceId.length > 0 ? win.spaceId : win.spaceName
                     imageSource: (win.summary && win.summary.avatar) ? String(win.summary.avatar) : ""
                 }
-                Kirigami.Heading {
+                ThHeading {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
                     level: 3
@@ -600,7 +600,7 @@ Window {
                           + " · " + Number((win.summary && win.summary.roomCount) ? win.summary.roomCount : win.rooms.length)
                           + (Number((win.summary && win.summary.roomCount) ? win.summary.roomCount : win.rooms.length) === 1 ? " room" : " rooms")
                     color: Th.spaceSettingsHintFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     elide: Text.ElideRight
                 }
                 Kirigami.Separator { Layout.fillWidth: true; Layout.topMargin: Kirigami.Units.smallSpacing; Layout.bottomMargin: Kirigami.Units.smallSpacing }
@@ -669,7 +669,7 @@ Window {
                     contentItem: Row {
                         spacing: 6
                         ThIcon { anchors.verticalCenter: parent.verticalCenter; app: win.app; name: "go-previous-symbolic"; width: 16; height: 16; color: Th.spaceSettingsLeaveFg }
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: "Leave space"; color: Th.spaceSettingsLeaveFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize; font.bold: true }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "Leave space"; color: Th.spaceSettingsLeaveFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize * Th.textScale; font.bold: true }
                     }
                 }
             }
@@ -689,7 +689,7 @@ Window {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 2
-                    Kirigami.Heading { textFormat: Text.PlainText; level: 2; text: win.tabs[win.tab].t; color: Th.spaceSettingsTitleFg }
+                    ThHeading { textFormat: Text.PlainText; level: 2; text: win.tabs[win.tab].t; color: Th.spaceSettingsTitleFg }
                     Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: win.tabs[win.tab].d; color: Th.spaceSettingsHintFg; elide: Text.ElideRight }
                 }
                 // the status strip: the toast, where you are looking
@@ -708,7 +708,7 @@ Window {
                         width: Math.min(implicitWidth, parent.width - Kirigami.Units.largeSpacing * 2)
                         text: win.stripText
                         color: win.stripError ? Th.spaceSettingsStripFgError : Th.spaceSettingsStripFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         elide: Text.ElideRight
                     }
                 }
@@ -771,7 +771,7 @@ Window {
                                         anchors.centerIn: parent
                                         spacing: 2
                                         ThIcon { Layout.alignment: Qt.AlignHCenter; app: win.app; name: "insert-image-symbolic"; width: 20; height: 20; color: Th.spaceSettingsPhotoIcon; hovered: photoHover.hovered }
-                                        Controls.Label { text: "Change photo"; color: Th.spaceSettingsPhotoFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.bold: true }
+                                        Controls.Label { text: "Change photo"; color: Th.spaceSettingsPhotoFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; font.bold: true }
                                     }
                                 }
                                 HoverHandler { id: photoHover; enabled: win.canManageSpace; cursorShape: Qt.PointingHandCursor }
@@ -891,7 +891,7 @@ Window {
                                 return bits.join("  ·  ")
                             }
                             color: Th.spaceSettingsHintFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             elide: Text.ElideRight
                         }
                         Item { Layout.fillHeight: true; Layout.preferredHeight: Kirigami.Units.largeSpacing }
@@ -942,7 +942,7 @@ Window {
                                             anchors.centerIn: parent
                                             spacing: 6
                                             Controls.Label { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; text: pill.modelData.l; color: pill.on ? Th.spaceSettingsFilterFgSelected : Th.spaceSettingsFilterFg; font.bold: pill.on }
-                                            Controls.Label { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; text: pill.modelData.n; color: Th.spaceSettingsFilterCountFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                            Controls.Label { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; text: pill.modelData.n; color: Th.spaceSettingsFilterCountFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                         }
                                     }
                                 }
@@ -983,7 +983,7 @@ Window {
                                 text: secHeader.section + " — " + win.sectionCount(secHeader.section)
                                 color: win.sectionColor(secHeader.section)
                                 font.bold: true
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 font.letterSpacing: 0.4
                             }
                         }
@@ -1029,9 +1029,16 @@ Window {
                                     RowLayout {
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.smallSpacing
+                                        PrestigeToken {   // mini games v1: the member's prestige token (the space's server), 4 px before the name
+                                            id: memTok
+                                            mxid: String(mrow.modelData.mxid || "")
+                                            roomId: win.spaceId
+                                            gap: false
+                                            Layout.rightMargin: 4 - Kirigami.Units.smallSpacing
+                                        }
                                         Controls.Label {
                                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                            Layout.maximumWidth: parent.width
+                                            Layout.maximumWidth: parent.width - (memTok.visible ? memTok.size + 4 : 0)
                                             text: (mrow.modelData.name && String(mrow.modelData.name).length > 0) ? mrow.modelData.name : win.localpart(mrow.modelData.mxid)
                                             // 10.4 (space tags): the custom role's colour, else the hashed hue
                                             color: (mrow.modelData.tag && mrow.modelData.tag.color && String(mrow.modelData.tag.color).length > 0)
@@ -1039,7 +1046,7 @@ Window {
                                             font.bold: true
                                             elide: Text.ElideRight
                                         }
-                                        Controls.Label { visible: mrow.modelData.isMe === true; text: "you"; color: Th.spaceSettingsHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.italic: true }
+                                        Controls.Label { visible: mrow.modelData.isMe === true; text: "you"; color: Th.spaceSettingsHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; font.italic: true }
                                         Item { Layout.fillWidth: true }
                                     }
                                     Controls.Label {
@@ -1049,7 +1056,7 @@ Window {
                                               ? mrow.modelData.mxid + "  ·  " + mrow.modelData.reason
                                               : (mrow.modelData.mxid || "")
                                         color: Th.spaceSettingsHintFg
-                                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                         elide: Text.ElideMiddle
                                     }
                                 }
@@ -1082,7 +1089,7 @@ Window {
                                         anchors.centerIn: parent
                                         text: mrow.modelData.membership === "invite" ? "Invited" : "Banned"
                                         color: mrow.modelData.membership === "invite" ? Th.spaceSettingsMemberInvitedFg : Th.spaceSettingsMemberBannedFg
-                                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     }
                                 }
                                 ThToolButton {
@@ -1129,7 +1136,7 @@ Window {
                                 anchors.margins: Kirigami.Units.gridUnit
                                 spacing: Kirigami.Units.largeSpacing
                                 ThIcon { Layout.alignment: Qt.AlignHCenter; app: win.app; name: "security-medium-symbolic"; width: 40; height: 40; color: Th.rolesSetupIcon; active: true }
-                                Kirigami.Heading { Layout.fillWidth: true; level: 3; horizontalAlignment: Text.AlignHCenter; text: "Roles aren't set up in this space"; color: Th.spaceSettingsTitleFg; wrapMode: Text.WordWrap }
+                                ThHeading { Layout.fillWidth: true; level: 3; horizontalAlignment: Text.AlignHCenter; text: "Roles aren't set up in this space"; color: Th.spaceSettingsTitleFg; wrapMode: Text.WordWrap }
                                 Controls.Label {
                                     Layout.fillWidth: true
                                     horizontalAlignment: Text.AlignHCenter
@@ -1211,7 +1218,7 @@ Window {
                                                 visible: roleRow.modelData.isEveryone !== true
                                                 text: Number(roleRow.modelData.memberCount || 0)
                                                 color: Th.spaceSettingsHintFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                             }
                                         }
                                         background: Rectangle {
@@ -1305,7 +1312,7 @@ Window {
                                                     visible: win.editIsAdminRank || win.editIsEveryone
                                                     text: win.editIsAdminRank ? "fixed" : "everyone"
                                                     color: Th.spaceSettingsHintFg
-                                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                                 }
                                             }
                                         }
@@ -1386,7 +1393,7 @@ Window {
                                                 text: String(permGroup.modelData.group)
                                                 color: Th.rolesPermGroupFg
                                                 font.bold: true
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                                 font.letterSpacing: 0.6
                                             }
                                             Repeater {
@@ -1451,7 +1458,7 @@ Window {
                                                                 anchors.centerIn: parent
                                                                 text: permRow.honour ? "Honour system" : "Server-enforced"
                                                                 color: permRow.honour ? Th.rolesEnforcementHonourFg : Th.rolesEnforcementServerFg
-                                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                                             }
                                                         }
                                                     }
@@ -1491,7 +1498,7 @@ Window {
                                                                : "Unsaved changes")
                                               : "Changes apply to every room in this space"
                                         color: (win.roleDirty && win.editEditable) ? Th.rolesActionBarFgActive : Th.rolesActionBarFg
-                                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                         elide: Text.ElideRight
                                     }
                                     ThButton { app: win.app; flat: true; visible: win.roleDirty; text: "Discard"; onClicked: win.discardRoleNow() }
@@ -1509,7 +1516,7 @@ Window {
                                         visible: !win.editIsNew && !!win.editRole && win.editRole.deletable === true && !win.editIsEveryone && !win.roleDirty
                                         text: "Delete role"
                                         onClicked: deleteRoleConfirm.open()
-                                        contentItem: Text { text: "Delete role"; color: Th.rolesDeleteFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize; verticalAlignment: Text.AlignVCenter }
+                                        contentItem: Text { text: "Delete role"; color: Th.rolesDeleteFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize * Th.textScale; verticalAlignment: Text.AlignVCenter }
                                     }
                                 }
                             }
@@ -1530,7 +1537,7 @@ Window {
                                 anchors.rightMargin: Kirigami.Units.smallSpacing
                                 spacing: Kirigami.Units.smallSpacing
                                 ThIcon { app: win.app; name: "view-list-details-symbolic"; width: 16; height: 16; color: Th.spaceSettingsHintFg }
-                                Controls.Label { Layout.fillWidth: true; text: "Roles apply to every room in this space"; color: Th.spaceSettingsHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
+                                Controls.Label { Layout.fillWidth: true; text: "Roles apply to every room in this space"; color: Th.spaceSettingsHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; elide: Text.ElideRight }
                                 Rectangle {
                                     visible: win.outOfSync > 0
                                     implicitWidth: oosText.implicitWidth + 14
@@ -1539,7 +1546,7 @@ Window {
                                     color: Th.spaceSettingsSyncChipStaleBg
                                     border.width: 1
                                     border.color: Th.spaceSettingsSyncChipStaleBorder
-                                    Controls.Label { textFormat: Text.PlainText; id: oosText; anchors.centerIn: parent; text: win.outOfSync + (win.outOfSync === 1 ? " room out of sync" : " rooms out of sync"); color: Th.spaceSettingsSyncChipStaleFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { textFormat: Text.PlainText; id: oosText; anchors.centerIn: parent; text: win.outOfSync + (win.outOfSync === 1 ? " room out of sync" : " rooms out of sync"); color: Th.spaceSettingsSyncChipStaleFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 }
                                 ThButton {
                                     app: win.app
@@ -1635,7 +1642,7 @@ Window {
                                     color: Th.spaceSettingsRoomNotJoinedBg
                                     border.width: 1
                                     border.color: Th.spaceSettingsRoomNotJoinedBorder
-                                    Controls.Label { id: njText; anchors.centerIn: parent; text: "Not joined"; color: Th.spaceSettingsRoomNotJoinedFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { id: njText; anchors.centerIn: parent; text: "Not joined"; color: Th.spaceSettingsRoomNotJoinedFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 }
                                 Rectangle {
                                     visible: win.rolesActive && rrow.modelData.joined !== false
@@ -1646,7 +1653,7 @@ Window {
                                     color: ok ? Th.spaceSettingsSyncChipOkBg : Th.spaceSettingsSyncChipStaleBg
                                     border.width: 1
                                     border.color: ok ? Th.spaceSettingsSyncChipOkBorder : Th.spaceSettingsSyncChipStaleBorder
-                                    Controls.Label { id: syncText; anchors.centerIn: parent; text: parent.ok ? "Synced" : "Out of sync"; color: parent.ok ? Th.spaceSettingsSyncChipOkFg : Th.spaceSettingsSyncChipStaleFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { id: syncText; anchors.centerIn: parent; text: parent.ok ? "Synced" : "Out of sync"; color: parent.ok ? Th.spaceSettingsSyncChipOkFg : Th.spaceSettingsSyncChipStaleFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 }
                                 ThButton {
                                     app: win.app

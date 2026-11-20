@@ -1,0 +1,406 @@
+{
+ "v": 1,
+ "game": "holdem",
+ "step": "07-headsup-leaving",
+ "about": "Hand 2, heads-up: seat 4 timed out twice and is away (dealt out), eli (seat 8) is out of chips, seat 6 pressed Leave (their hand folds when the action reaches them). Seat 1 is the button = small blind and acts first preflop.",
+ "people": {
+  "seat1": "@ana:example.org",
+  "seat4": "@ben:example.org",
+  "seat6": "@dee:example.net",
+  "spectator": "@cy:example.org"
+ },
+ "views": {
+  "seat1": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 21,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 19,
+     "bet": 1,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "away",
+     "cards": 0,
+     "connected": false
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 58,
+     "bet": 2,
+     "state": "leaving",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 8,
+     "u": "@eli:example.org",
+     "stack": 0,
+     "bet": 0,
+     "state": "out",
+     "cards": 0,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 2,
+    "button": 1,
+    "sb": 1,
+    "bb": 6,
+    "street": "preflop",
+    "board": [],
+    "pots": [],
+    "total": 3,
+    "to_act": {
+     "seat": 1,
+     "turn": 1,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 6,
+     "a": "bb",
+     "to": 2
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 1,
+    "state": "active",
+    "cards": [
+     "7d",
+     "7s"
+    ],
+    "legal": {
+     "fold": true,
+     "check": false,
+     "call": 1,
+     "raise": {
+      "min": 4,
+      "max": 20
+     }
+    },
+    "screens": [
+     "desktop"
+    ],
+    "at_cap": false,
+    "cap": 150,
+    "holdings": 20,
+    "timeouts": 0
+   }
+  },
+  "seat4": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 21,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 19,
+     "bet": 1,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "away",
+     "cards": 0,
+     "connected": false
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 58,
+     "bet": 2,
+     "state": "leaving",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 8,
+     "u": "@eli:example.org",
+     "stack": 0,
+     "bet": 0,
+     "state": "out",
+     "cards": 0,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 2,
+    "button": 1,
+    "sb": 1,
+    "bb": 6,
+    "street": "preflop",
+    "board": [],
+    "pots": [],
+    "total": 3,
+    "to_act": {
+     "seat": 1,
+     "turn": 1,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 6,
+     "a": "bb",
+     "to": 2
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 4,
+    "state": "away",
+    "cards": [],
+    "legal": null,
+    "screens": [
+     "web"
+    ],
+    "at_cap": false,
+    "cap": 100,
+    "holdings": 10,
+    "timeouts": 2
+   }
+  },
+  "seat6": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 21,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 19,
+     "bet": 1,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "away",
+     "cards": 0,
+     "connected": false
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 58,
+     "bet": 2,
+     "state": "leaving",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 8,
+     "u": "@eli:example.org",
+     "stack": 0,
+     "bet": 0,
+     "state": "out",
+     "cards": 0,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 2,
+    "button": 1,
+    "sb": 1,
+    "bb": 6,
+    "street": "preflop",
+    "board": [],
+    "pots": [],
+    "total": 3,
+    "to_act": {
+     "seat": 1,
+     "turn": 1,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 6,
+     "a": "bb",
+     "to": 2
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 6,
+    "state": "leaving",
+    "cards": [
+     "Ah",
+     "3h"
+    ],
+    "legal": null,
+    "screens": [
+     "desktop",
+     "pad"
+    ],
+    "at_cap": false,
+    "cap": 100,
+    "holdings": 60,
+    "timeouts": 0
+   }
+  },
+  "spectator": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 21,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 19,
+     "bet": 1,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "away",
+     "cards": 0,
+     "connected": false
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 58,
+     "bet": 2,
+     "state": "leaving",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 8,
+     "u": "@eli:example.org",
+     "stack": 0,
+     "bet": 0,
+     "state": "out",
+     "cards": 0,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 2,
+    "button": 1,
+    "sb": 1,
+    "bb": 6,
+    "street": "preflop",
+    "board": [],
+    "pots": [],
+    "total": 3,
+    "to_act": {
+     "seat": 1,
+     "turn": 1,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 6,
+     "a": "bb",
+     "to": 2
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1
+  }
+ },
+ "moves": {
+  "seat1": [
+   "fold",
+   "call",
+   "raise",
+   "allin",
+   "leave",
+   "away",
+   "close"
+  ],
+  "seat4": [
+   "away",
+   "leave"
+  ],
+  "seat6": [
+   "leave"
+  ],
+  "spectator": []
+ },
+ "next": {
+  "fold": "08-voided-restart",
+  "check": "08-voided-restart",
+  "call": "08-voided-restart",
+  "raise": "08-voided-restart",
+  "allin": "08-voided-restart"
+ }
+}

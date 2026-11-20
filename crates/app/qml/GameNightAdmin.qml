@@ -73,13 +73,13 @@ Rectangle {
         spacing: 10
         RowLayout {
             Layout.fillWidth: true
-            Text { text: "Tune game night"; color: Th.reelFg; font.pixelSize: 16; font.weight: Font.DemiBold; Layout.fillWidth: true }
-            Text { textFormat: Text.PlainText; text: "rev " + (adm.settings.rev || 0) + (adm.dirty ? " · unsaved" : ""); color: adm.dirty ? Th.reelWarningFg : Th.reelMetaFg; font.pixelSize: 11 }
+            Text { text: "Tune game night"; color: Th.reelFg; font.pixelSize: Th.px(16); font.weight: Font.DemiBold; Layout.fillWidth: true }
+            Text { textFormat: Text.PlainText; text: "rev " + (adm.settings.rev || 0) + (adm.dirty ? " · unsaved" : ""); color: adm.dirty ? Th.reelWarningFg : Th.reelMetaFg; font.pixelSize: Th.px(11) }
             ReelButton { text: "Reset all to defaults"; quiet: true; radius: app.radius; onClicked: { var s = Object.assign({}, adm.defaults); s.rev = adm.settings.rev; adm.settings = s; adm.dirty = true; simTimer.restart() } }
             ReelButton { text: "Save"; primary: true; enabled: adm.dirty && !ctl.busy && adm.badRows.length === 0; hint: adm.badRows.length > 0 ? adm.floatRefusal : ""; radius: app.radius; onClicked: { adm.ctl.saveSettings(JSON.stringify(adm.settings)); adm.dirty = false } }
         }
-        Text { text: "Nothing here lets anyone choose a winner. Every change is logged with who and when (it is a state event)."; color: Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-        Text { textFormat: Text.PlainText; visible: adm.badRows.length > 0; text: adm.floatRefusal + ": " + adm.badRows.map(function (r) { return r.t }).join(", ") + "."; color: Th.reelWarningFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+        Text { text: "Nothing here lets anyone choose a winner. Every change is logged with who and when (it is a state event)."; color: Th.reelMetaFg; font.pixelSize: Th.px(11); wrapMode: Text.WordWrap; Layout.fillWidth: true }
+        Text { textFormat: Text.PlainText; visible: adm.badRows.length > 0; text: adm.floatRefusal + ": " + adm.badRows.map(function (r) { return r.t }).join(", ") + "."; color: Th.reelWarningFg; font.pixelSize: Th.px(11); wrapMode: Text.WordWrap; Layout.fillWidth: true }
         GridLayout {
             Layout.fillWidth: true
             columns: 2
@@ -91,7 +91,7 @@ Rectangle {
                     required property var modelData
                     Layout.fillWidth: true
                     spacing: 8
-                    Text { textFormat: Text.PlainText; text: modelData.t; color: Th.reelFg; font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
+                    Text { textFormat: Text.PlainText; text: modelData.t; color: Th.reelFg; font.pixelSize: Th.px(12); Layout.fillWidth: true; elide: Text.ElideRight }
                     T.SpinBox {
                         id: sb
                         readonly property real mult: modelData.step < 1 ? 100 : 1   // (not `scale`: Item's own — Qt 6.11 warns on the override)
@@ -101,11 +101,11 @@ Rectangle {
                         implicitWidth: 110; implicitHeight: 28
                         textFromValue: function (v) { return sb.mult === 1 ? String(v) : (v / sb.mult).toFixed(2) }
                         background: Rectangle { radius: app.radiusSm; color: Th.reelSpinboxBg; border.color: Th.reelSpinboxBorder }
-                        contentItem: Text { textFormat: Text.PlainText; text: sb.textFromValue(sb.value); color: Th.reelFg; font.pixelSize: 12; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        contentItem: Text { textFormat: Text.PlainText; text: sb.textFromValue(sb.value); color: Th.reelFg; font.pixelSize: Th.px(12); horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                         up.indicator: Rectangle { x: sb.width - width; width: 22; height: sb.height; color: "transparent"; Text { anchors.centerIn: parent; text: "+"; color: Th.reelSpinboxButtonFg } }
                         down.indicator: Rectangle { width: 22; height: sb.height; color: "transparent"; Text { anchors.centerIn: parent; text: "–"; color: Th.reelSpinboxButtonFg } }
                     }
-                    Text { textFormat: Text.PlainText; text: "(" + (adm.defaults[modelData.k] !== undefined ? adm.defaults[modelData.k] : "") + ")"; color: Th.reelMetaFg; font.pixelSize: 10; Layout.preferredWidth: 44 }
+                    Text { textFormat: Text.PlainText; text: "(" + (adm.defaults[modelData.k] !== undefined ? adm.defaults[modelData.k] : "") + ")"; color: Th.reelMetaFg; font.pixelSize: Th.px(10); Layout.preferredWidth: 44 }
                 }
             }
         }
@@ -129,18 +129,18 @@ Rectangle {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 4
-            Text { text: "Tonight under these values"; color: Th.reelSectionFg; font.pixelSize: 11; font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
+            Text { text: "Tonight under these values"; color: Th.reelSectionFg; font.pixelSize: Th.px(11); font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
             Repeater {
                 model: (adm.sim.tiers && adm.sim.tiers.main) ? adm.sim.tiers.main : []
                 delegate: RowLayout {
                     required property var modelData
                     Layout.fillWidth: true
-                    Text { textFormat: Text.PlainText; text: modelData.name || modelData.id; color: Th.reelFg; font.pixelSize: 12; Layout.preferredWidth: 200; elide: Text.ElideRight }
+                    Text { textFormat: Text.PlainText; text: modelData.name || modelData.id; color: Th.reelFg; font.pixelSize: Th.px(12); Layout.preferredWidth: 200; elide: Text.ElideRight }
                     Rectangle { Layout.fillWidth: true; height: 8; radius: 4; color: Th.reelOddsTrack; Rectangle { width: parent.width * Math.min(1, modelData.odds || 0); height: 8; radius: 4; color: Th.reelOddsFill } }
-                    Text { textFormat: Text.PlainText; text: Math.round((modelData.odds || 0) * 100) + "%"; color: Th.reelMetaFg; font.pixelSize: 11; Layout.preferredWidth: 40 }
+                    Text { textFormat: Text.PlainText; text: Math.round((modelData.odds || 0) * 100) + "%"; color: Th.reelMetaFg; font.pixelSize: Th.px(11); Layout.preferredWidth: 40 }
                 }
             }
-            Text { visible: !(adm.sim.tiers && adm.sim.tiers.main && adm.sim.tiers.main.length); text: "Change a value to preview the odds."; color: Th.reelMetaFg; font.pixelSize: 11 }
+            Text { visible: !(adm.sim.tiers && adm.sim.tiers.main && adm.sim.tiers.main.length); text: "Change a value to preview the odds."; color: Th.reelMetaFg; font.pixelSize: Th.px(11) }
         }
         // 10.5.2 credit
         ColumnLayout {
@@ -149,7 +149,7 @@ Rectangle {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
-                Text { text: "Credit"; color: Th.reelSectionFg; font.pixelSize: 11; font.letterSpacing: 1; font.capitalization: Font.AllUppercase; Layout.fillWidth: true }
+                Text { text: "Credit"; color: Th.reelSectionFg; font.pixelSize: Th.px(11); font.letterSpacing: 1; font.capitalization: Font.AllUppercase; Layout.fillWidth: true }
                 ReelButton { text: "Reset all credits"; quiet: true; enabled: !adm.ctl.busy; onClicked: adm.ctl.resetCredits(); radius: app.radius; hint: "Writes a logged adjustment that zeroes everyone as of now" }
             }
             Flow {
@@ -167,10 +167,10 @@ Rectangle {
                     height: 28
                     verticalAlignment: Text.AlignVCenter
                     text: adm.creditsEarn ? "A lost favourite earns credit; when it wins, the credit is spent." : "Free spins: nobody earns or spends credit, and credit doesn’t weight the reel."
-                    color: Th.reelMetaFg; font.pixelSize: 11
+                    color: Th.reelMetaFg; font.pixelSize: Th.px(11)
                 }
             }
-            Text { visible: adm.people.length === 0; text: "Nobody has credit yet — it builds up as favourites lose."; color: Th.reelMetaFg; font.pixelSize: 11 }
+            Text { visible: adm.people.length === 0; text: "Nobody has credit yet — it builds up as favourites lose."; color: Th.reelMetaFg; font.pixelSize: Th.px(11) }
             GridLayout {
                 Layout.fillWidth: true
                 columns: 2
@@ -183,9 +183,10 @@ Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 28
                         spacing: 6
-                        Text { textFormat: Text.PlainText; text: modelData.name; color: Th.reelFg; font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
-                        Text { textFormat: Text.PlainText; text: String(modelData.credit); color: modelData.hasFavorite ? Th.reelFg : Th.reelMetaFg; font.pixelSize: 13; font.weight: modelData.hasFavorite ? Font.DemiBold : Font.Normal; horizontalAlignment: Text.AlignRight; Layout.preferredWidth: 22 }
-                        Text { textFormat: Text.PlainText; text: modelData.offset ? (modelData.offset > 0 ? "+" : "") + modelData.offset + " adj." : ""; color: Th.reelMetaFg; font.pixelSize: 10; Layout.preferredWidth: 44 }
+                        PrestigeToken { mxid: String(modelData.mxid || ""); roomId: adm.ctl ? String(adm.ctl.containerId || "") : ""; gap: false; Layout.rightMargin: -2 }   // mini games v1: 4 px before the name
+                        Text { textFormat: Text.PlainText; text: modelData.name; color: Th.reelFg; font.pixelSize: Th.px(12); Layout.fillWidth: true; elide: Text.ElideRight }
+                        Text { textFormat: Text.PlainText; text: String(modelData.credit); color: modelData.hasFavorite ? Th.reelFg : Th.reelMetaFg; font.pixelSize: Th.px(13); font.weight: modelData.hasFavorite ? Font.DemiBold : Font.Normal; horizontalAlignment: Text.AlignRight; Layout.preferredWidth: 22 }
+                        Text { textFormat: Text.PlainText; text: modelData.offset ? (modelData.offset > 0 ? "+" : "") + modelData.offset + " adj." : ""; color: Th.reelMetaFg; font.pixelSize: Th.px(10); Layout.preferredWidth: 44 }
                         ReelButton { text: "–"; quiet: true; implicitWidth: 26; implicitHeight: 24; enabled: !adm.ctl.busy && modelData.credit > 0; hint: "−1 credit (logged)"; onClicked: adm.ctl.adjustCredit(modelData.mxid, -1, "Adjusted in Tune"); radius: app.radiusSm }
                         ReelButton { text: "+"; quiet: true; implicitWidth: 26; implicitHeight: 24; enabled: !adm.ctl.busy; hint: "+1 credit (logged) — spent when their favourite wins"; onClicked: adm.ctl.adjustCredit(modelData.mxid, 1, "Adjusted in Tune"); radius: app.radiusSm }
                         ReelButton { text: "Zero"; quiet: true; implicitHeight: 24; enabled: !adm.ctl.busy && !(modelData.credit === 0 && modelData.offset === 0); hint: "Back to 0 as of now (logged)"; onClicked: adm.ctl.zeroCredit(modelData.mxid); radius: app.radiusSm }

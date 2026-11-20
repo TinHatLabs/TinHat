@@ -399,39 +399,14 @@ Item {
                         Item { Layout.fillWidth: true }
                     }
                 }
-                SliderRow {
-                    panel: simple.panel
-                    label: "Text size"
-                    from: 80; to: 150; stepSize: 5
-                    value: simple.look.size
-                    valueText: simple.look.size + " %"
-                    onMoved: (v, g) => simple.edit({ op: "size", value: v === 100 ? null : v }, g)
-                }
-            }
-
-            // ---- 4. Density -----------------------------------------------------------------------------------------
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-                SectionLabel { app: simple.app; text: "Density" }
-                RowLayout {
-                    spacing: 12
-                    // A25.7: a named group of three radio buttons (it told screen readers it was ONE radio button; the
-                    // web: role="radiogroup" aria-label="Density")
-                    Accessible.role: Accessible.Grouping
-                    Accessible.name: "Density"
-                    Repeater {
-                        model: [["compact", "Compact"], ["normal", "Normal"], ["touch", "Touch"]]
-                        delegate: Controls.RadioButton {
-                            required property var modelData
-                            text: LinkGate.plain(modelData[1])
-                            checked: simple.look.density === modelData[0]
-                            onClicked: {
-                                simple.edit({ op: "density", value: modelData[0] === "normal" ? null : modelData[0] }, 0)
-                                checked = Qt.binding(() => simple.look.density === modelData[0])
-                            }
-                        }
-                    }
+                // P22 (12.1.17): the text size and the density are the person's own now (Settings → Appearance), the same on
+                // every theme; a theme no longer carries them (the web's Simple.tsx says the same)
+                Controls.Label {
+                    Layout.fillWidth: true
+                    textFormat: Text.PlainText
+                    wrapMode: Text.Wrap
+                    text: "Text size and density are your own settings, the same on every theme: Settings → Appearance."
+                    color: Th.settingsThemeNoteFg
                 }
             }
 

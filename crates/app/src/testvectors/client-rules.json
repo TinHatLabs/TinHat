@@ -1,0 +1,1878 @@
+{
+ "v": 1,
+ "prestige_tier": {
+  "about": "rank -> the token's look. Only a JSON integer >= 1 draws a token (2.5, \"3\", true, null, negatives: none). Tiers: 1 outline/muted; 2 filled/text; 3-4 filled/accent; 5-7 + ring; 8-12 + star; 13+ + a one-time shine.",
+  "cases": [
+   {
+    "rank": 0,
+    "expect": {
+     "tier": 0,
+     "glyph": "none",
+     "colour": "none",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 1,
+    "expect": {
+     "tier": 1,
+     "glyph": "outline",
+     "colour": "muted",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 2,
+    "expect": {
+     "tier": 2,
+     "glyph": "filled",
+     "colour": "text",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 3,
+    "expect": {
+     "tier": 3,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 4,
+    "expect": {
+     "tier": 3,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 5,
+    "expect": {
+     "tier": 4,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": true,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 7,
+    "expect": {
+     "tier": 4,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": true,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 8,
+    "expect": {
+     "tier": 5,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": true,
+     "star": true,
+     "shine": false
+    }
+   },
+   {
+    "rank": 12,
+    "expect": {
+     "tier": 5,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": true,
+     "star": true,
+     "shine": false
+    }
+   },
+   {
+    "rank": 13,
+    "expect": {
+     "tier": 6,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": true,
+     "star": true,
+     "shine": true
+    }
+   },
+   {
+    "rank": 40,
+    "expect": {
+     "tier": 6,
+     "glyph": "filled",
+     "colour": "accent",
+     "ring": true,
+     "star": true,
+     "shine": true
+    }
+   },
+   {
+    "rank": -1,
+    "expect": {
+     "tier": 0,
+     "glyph": "none",
+     "colour": "none",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": 2.5,
+    "expect": {
+     "tier": 0,
+     "glyph": "none",
+     "colour": "none",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": "3",
+    "expect": {
+     "tier": 0,
+     "glyph": "none",
+     "colour": "none",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": null,
+    "expect": {
+     "tier": 0,
+     "glyph": "none",
+     "colour": "none",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   },
+   {
+    "rank": true,
+    "expect": {
+     "tier": 0,
+     "glyph": "none",
+     "colour": "none",
+     "ring": false,
+     "star": false,
+     "shine": false
+    }
+   }
+  ]
+ },
+ "game_visible": {
+  "about": "Show a game only when the room's server says features.play === true. Hold'em: always then. The Rig: unless inside a phone app (phone_app = window.tinhatNative.info.platform is ios or android) where features.play_rig_phone_apps must be exactly true. Anything else: hidden.",
+  "cases": [
+   {
+    "id": "holdem-browser",
+    "game": "holdem",
+    "ctx": {
+     "play": true,
+     "phone_app": false
+    },
+    "expect": true
+   },
+   {
+    "id": "holdem-phone-app",
+    "game": "holdem",
+    "ctx": {
+     "play": true,
+     "phone_app": true,
+     "rig_phone_apps": false
+    },
+    "expect": true
+   },
+   {
+    "id": "rig-browser",
+    "game": "rig",
+    "ctx": {
+     "play": true,
+     "phone_app": false,
+     "rig_phone_apps": false
+    },
+    "expect": true
+   },
+   {
+    "id": "rig-phone-app-off",
+    "game": "rig",
+    "ctx": {
+     "play": true,
+     "phone_app": true,
+     "rig_phone_apps": false
+    },
+    "expect": false
+   },
+   {
+    "id": "rig-phone-app-absent",
+    "game": "rig",
+    "ctx": {
+     "play": true,
+     "phone_app": true
+    },
+    "expect": false
+   },
+   {
+    "id": "rig-phone-app-truthy-string",
+    "game": "rig",
+    "ctx": {
+     "play": true,
+     "phone_app": true,
+     "rig_phone_apps": "true"
+    },
+    "expect": false
+   },
+   {
+    "id": "rig-phone-app-on",
+    "game": "rig",
+    "ctx": {
+     "play": true,
+     "phone_app": true,
+     "rig_phone_apps": true
+    },
+    "expect": true
+   },
+   {
+    "id": "no-play-flag",
+    "game": "holdem",
+    "ctx": {
+     "phone_app": false
+    },
+    "expect": false
+   },
+   {
+    "id": "play-flag-not-true",
+    "game": "holdem",
+    "ctx": {
+     "play": 1,
+     "phone_app": false
+    },
+    "expect": false
+   },
+   {
+    "id": "unknown-game",
+    "game": "bingo",
+    "ctx": {
+     "play": true,
+     "phone_app": false
+    },
+    "expect": false
+   }
+  ]
+ },
+ "game_space": {
+  "about": "Which space's chips a room uses (rev 2b; Tin Hat's own, stricter-than-Matrix policy). Input = CURRENT resolved state only: the room (its m.room.create type; its m.space.parent events: state key = space id, content) and the spaces whose current, full state the caller holds (create-event sender and type, m.space.child events; partial = state still incomplete). A room whose create type is m.space: is-space. Candidates = the room's parents whose content.via is a list of 1-20 strings of 1-255 characters; order: content.canonical exactly true first, then space id by code point. Walk the candidates in order: a space the caller doesn't hold (or holds partially) -> unavailable (NEVER skipped); a candidate whose create type isn't m.space, or that doesn't list the room back with a valid via, is skipped; the first that lists it back is the game space. None -> no-space. Owner = the server part of the space's create-event SENDER (never a via). Server mode: an owner other than this server -> wrong-server (space + owner named). No child-only fallback, no walking up to parents of spaces.",
+  "cases": [
+   {
+    "id": "two-way-parent",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": true
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!S",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "the room names the space and the space lists the room: that space's chips"
+   },
+   {
+    "id": "one-way-parent-refused",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": []
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "a room admin claiming a space that doesn't list the room gets nothing"
+   },
+   {
+    "id": "space-lists-only-other-rooms",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!other",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        },
+        {
+         "room": "!another",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "the space has child links, but none for THIS room: a reader where any child link counts would pick !S (games-token, 11-19)"
+   },
+   {
+    "id": "child-only-refused",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": []
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "a space listing a room that names no parent gets nothing (no child-only fallback: the room must agree)"
+   },
+   {
+    "id": "canonical-wins",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!A",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": true
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!A": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!B": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!B",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "in two spaces: the canonical parent decides"
+   },
+   {
+    "id": "two-canonical-code-point",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!b",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": true
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": true
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!b": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!B": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!B",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "two canonical parents (Matrix allows it): the lowest space id by code point among them ('B' < 'b')"
+   },
+   {
+    "id": "no-canonical-code-point-order",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!b",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!b": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!B": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!B",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "two two-way parents, neither canonical: the lowest space id by code point"
+   },
+   {
+    "id": "canonical-not-true-literal",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!A",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": "true"
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!A": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!B": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!A",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "canonical must be the JSON true; \"true\" is not canonical, so plain code-point order decides ('A' < 'B')"
+   },
+   {
+    "id": "canonical-not-true-literal-higher-id",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!A",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": "true"
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!A": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!B": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!A",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "the string \"true\" on the HIGHER id: a reader that treats a truthy canonical as canonical picks !B (games-s1, 11-19)"
+   },
+   {
+    "id": "canonical-one-way-falls-through",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!A",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": true
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!A": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": []
+      },
+      "!B": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!B",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "the canonical parent is a known space that doesn't list the room back (known-invalid): the next one decides"
+   },
+   {
+    "id": "unknown-canonical-blocks",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!A",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": true
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!B": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "unavailable"
+    },
+    "why": "this server can't see the canonical parent's space: it must NOT fall through to B, or two servers could pick two economies"
+   },
+   {
+    "id": "partial-state-blocks",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ],
+       "partial": true
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "unavailable"
+    },
+    "why": "a space whose state is still partial (a fresh federated join) is unknown, not invalid"
+   },
+   {
+    "id": "not-a-space",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!X",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       },
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!X": {
+       "create_sender": "@x:example.org",
+       "create_type": null,
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!S": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!S",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "!X is an ordinary room with an m.space.child event in it: that means nothing, skip it"
+   },
+   {
+    "id": "not-a-space-sorts-first",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!A",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       },
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!A": {
+       "create_sender": "@x:example.org",
+       "create_type": null,
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!S": {
+       "create_sender": "@y:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!S",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "the ordinary room sorts BEFORE the real space: a reader without the space-type check picks !A (games-s1, 11-19)"
+   },
+   {
+    "id": "empty-via-ignored",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": []
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "an empty via is a removed link (Matrix rule)"
+   },
+   {
+    "id": "malformed-via",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!A",
+        "content": {
+         "via": "example.org"
+        }
+       },
+       {
+        "space": "!B",
+        "content": {
+         "via": [
+          ""
+         ]
+        }
+       },
+       {
+        "space": "!C",
+        "content": {
+         "via": [
+          7
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!A": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!B": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!C": {
+       "create_sender": "@x:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "via must be a list of 1-20 non-empty strings: a string, an empty string or a number is no link"
+   },
+   {
+    "id": "redacted-parent",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {}
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "a redacted parent event (empty content) is no link"
+   },
+   {
+    "id": "child-link-malformed",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": []
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "the space's child event for the room has an empty via: the space removed the link"
+   },
+   {
+    "id": "no-space-room",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!dm",
+      "parents": []
+     },
+     "spaces": {}
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "no-space"
+    },
+    "why": "a DM or a room in no space: no games, no token"
+   },
+   {
+    "id": "dm-in-a-space",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!dm",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!dm",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!S",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "a room someone calls a DM but that is properly in a space IS in that space (DM-ness is personal account data, not enforceable)"
+   },
+   {
+    "id": "space-itself",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!S",
+      "parents": [],
+      "create_type": "m.space"
+     },
+     "spaces": {}
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "is-space"
+    },
+    "why": "a space has no games of its own"
+   },
+   {
+    "id": "federated-space-other-server",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.net"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@bob:example.net",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!S",
+     "server": "example.net",
+     "why": "wrong-server"
+    },
+    "why": "the space was made on another server: that server keeps its chips; this one refuses and names it"
+   },
+   {
+    "id": "owner-from-create-sender-not-via",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "evil.example"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!S",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "the owner is the space's create-event sender's server; via is only a routing hint and never names the owner"
+   },
+   {
+    "id": "app-not-in-space",
+    "ctx": {
+     "mode": "app",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "evil.example"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {}
+    },
+    "expect": {
+     "space": null,
+     "server": null,
+     "why": "unavailable"
+    },
+    "why": "the app isn't joined to the space, so it can't check: no games (it never asks a server named by via)"
+   },
+   {
+    "id": "app-sees-two-way",
+    "ctx": {
+     "mode": "app",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!S",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!S": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!S",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "the app is in the space: it knows the owner from the space's create event and asks that server, which checks again"
+   },
+   {
+    "id": "subspace-direct-parent",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!Sub",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!Sub": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!Top": {
+       "create_sender": "@alice:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!Sub",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!Sub",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "a room whose selected parent is a subspace uses the subspace's chips; parents of parents are never walked"
+   },
+   {
+    "id": "names-top-and-sub",
+    "ctx": {
+     "mode": "server",
+     "decider": "example.org",
+     "room": {
+      "id": "!r",
+      "parents": [
+       {
+        "space": "!Top",
+        "content": {
+         "via": [
+          "example.org"
+         ]
+        }
+       },
+       {
+        "space": "!Sub",
+        "content": {
+         "via": [
+          "example.org"
+         ],
+         "canonical": true
+        }
+       }
+      ]
+     },
+     "spaces": {
+      "!Sub": {
+       "create_sender": "@b:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      },
+      "!Top": {
+       "create_sender": "@b:example.org",
+       "create_type": "m.space",
+       "children": [
+        {
+         "room": "!r",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        },
+        {
+         "room": "!Sub",
+         "content": {
+          "via": [
+           "example.org"
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "space": "!Sub",
+     "server": "example.org",
+     "why": ""
+    },
+    "why": "a room directly in both a top space and its subspace: depth plays no part, the same order rule decides (here canonical)"
+   }
+  ]
+ },
+ "rank_context": {
+  "about": "Which space's rank a token shows: a surface in a room = that room's game_space (none = no token); a space's own surfaces (members, settings) = that space; anything else (account card, Settings, search, DMs) = none.",
+  "cases": [
+   {
+    "id": "in-room",
+    "surface": {
+     "kind": "room",
+     "room": "!r",
+     "game_space": "!S"
+    },
+    "expect": {
+     "space": "!S"
+    }
+   },
+   {
+    "id": "room-no-space",
+    "surface": {
+     "kind": "room",
+     "room": "!dm",
+     "game_space": null
+    },
+    "expect": {
+     "space": null
+    }
+   },
+   {
+    "id": "space-members",
+    "surface": {
+     "kind": "space",
+     "space": "!S"
+    },
+    "expect": {
+     "space": "!S"
+    }
+   },
+   {
+    "id": "account-card",
+    "surface": {
+     "kind": "global"
+    },
+    "expect": {
+     "space": null
+    }
+   }
+  ]
+ },
+ "whisper_alone": {
+  "about": "The Rig: before a Whisper is sent, warn when the whisperer is the only CONNECTED House member (House = mechanic, sharp, railbird; not the Spinner; a member who left the round doesn't count; connected must be exactly true), because the Spinner would know who wrote it. The warning (both apps, word for word): \"You're the only House member here, so the Spinner will know this is from you.\" Never promise anonymity when it isn't true (launch-gate 11-19).",
+  "cases": [
+   {
+    "id": "others-connected",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "mechanic",
+      "connected": true
+     },
+     {
+      "u": "@b:x",
+      "role": "mechanic",
+      "connected": true
+     },
+     {
+      "u": "@c:x",
+      "role": "sharp",
+      "connected": true
+     }
+    ],
+    "whisperer": "@a:x",
+    "expect": {
+     "warn": false
+    },
+    "why": "two other House members are connected: the Spinner can't tell who"
+   },
+   {
+    "id": "only-one-connected",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "mechanic",
+      "connected": true
+     },
+     {
+      "u": "@b:x",
+      "role": "mechanic",
+      "connected": false
+     },
+     {
+      "u": "@c:x",
+      "role": "sharp",
+      "connected": false
+     }
+    ],
+    "whisperer": "@a:x",
+    "expect": {
+     "warn": true
+    },
+    "why": "everyone else in the House is disconnected: warn first"
+   },
+   {
+    "id": "one-other-connected",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "sharp",
+      "connected": true
+     },
+     {
+      "u": "@b:x",
+      "role": "mechanic",
+      "connected": true
+     },
+     {
+      "u": "@c:x",
+      "role": "sharp",
+      "connected": false
+     }
+    ],
+    "whisperer": "@a:x",
+    "expect": {
+     "warn": false
+    },
+    "why": "one other connected House member is enough to hide among"
+   },
+   {
+    "id": "spinner-is-not-house",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "mechanic",
+      "connected": true
+     },
+     {
+      "u": "@b:x",
+      "role": "mechanic",
+      "connected": false
+     }
+    ],
+    "whisperer": "@a:x",
+    "expect": {
+     "warn": true
+    },
+    "why": "the connected Spinner is not House: still alone"
+   },
+   {
+    "id": "left-member-not-counted",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "mechanic",
+      "connected": true
+     },
+     {
+      "u": "@b:x",
+      "role": "sharp",
+      "connected": true,
+      "left": true
+     }
+    ],
+    "whisperer": "@a:x",
+    "expect": {
+     "warn": true
+    },
+    "why": "a House member who left the round doesn't count, even if still connected"
+   },
+   {
+    "id": "railbird-counts",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "sharp",
+      "connected": true
+     },
+     {
+      "u": "@r:x",
+      "role": "railbird",
+      "connected": true
+     }
+    ],
+    "whisperer": "@a:x",
+    "expect": {
+     "warn": false
+    },
+    "why": "a Railbird is a House member (they can Whisper too)"
+   },
+   {
+    "id": "connected-must-be-true",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "mechanic",
+      "connected": true
+     },
+     {
+      "u": "@b:x",
+      "role": "sharp",
+      "connected": "true"
+     }
+    ],
+    "whisperer": "@a:x",
+    "expect": {
+     "warn": true
+    },
+    "why": "only a JSON true counts as connected"
+   },
+   {
+    "id": "whisperer-from-a-railbird",
+    "roster": [
+     {
+      "u": "@s:x",
+      "role": "spinner",
+      "connected": true
+     },
+     {
+      "u": "@r:x",
+      "role": "railbird",
+      "connected": true
+     },
+     {
+      "u": "@a:x",
+      "role": "mechanic",
+      "connected": false
+     }
+    ],
+    "whisperer": "@r:x",
+    "expect": {
+     "warn": true
+    },
+    "why": "a Railbird alone with only disconnected Mechanics: warn"
+   }
+  ]
+ }
+}

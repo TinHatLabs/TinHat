@@ -14,8 +14,8 @@ const cv = file("../crates/app/qml/ConversationView.qml");
 const body = cv.split("// BEGIN catching-up pure")[1]?.split("// END catching-up pure")[0];
 assert.ok(body, "ConversationView.qml lost its BEGIN catching-up pure / END catching-up pure markers");
 const ctx = vm.createContext({});
-vm.runInContext(`${body}\nvar cu = { newLineStart: newLineStart, newPillShown: newPillShown, dayNeedsYear: typeof dayNeedsYear === "function" ? dayNeedsYear : null, newLineHint: typeof newLineHint === "function" ? newLineHint : null };`, ctx);
-const { newLineStart, newPillShown, dayNeedsYear, newLineHint } = ctx.cu;
+vm.runInContext(`${body}\nvar cu = { newLineStart: newLineStart, newPillShown: newPillShown, dayNeedsYear: typeof dayNeedsYear === "function" ? dayNeedsYear : null, newLineHint: typeof newLineHint === "function" ? newLineHint : null, dividerAfterHide: typeof dividerAfterHide === "function" ? dividerAfterHide : null };`, ctx);
+const { newLineStart, newPillShown, dayNeedsYear, newLineHint, dividerAfterHide } = ctx.cu;
 const V = JSON.parse(file("../testvectors/catching-up/vectors.json"));
 
 test("newLineStart: the shared vectors (A35.1)", () => {
@@ -29,6 +29,15 @@ test("newLineHint: the shared vectors (fix 1-7: a thread's view has no NEW line 
   for (const c of V.newLineHint) assert.equal(newLineHint(c.threadRoot, c.roomUnread), c.out, c.name);
   assert.match(cv, /conv\._unreadHint = conv\.newLineHint\(conv\.threadRoot, rooms\[i\]\.unread \|\| 0\)/);
   assert.doesNotMatch(cv, /conv\._unreadHint = rooms\[i\]\.unread/, "the room's count straight into the hint again");
+});
+
+test("dividerAfterHide: the shared vectors (12.1.17 round 2, review #6: NEW on a row that left the chat moves on), and the view uses it", () => {
+  assert.equal(typeof dividerAfterHide, "function", "the pure block has no dividerAfterHide");
+  assert.ok(V.dividerAfterHide.length >= 10);
+  for (const c of V.dividerAfterHide) assert.equal(dividerAfterHide(c.rows, c.divider, c.dividerTs, c.me, c.tail, c.tailTs), c.out, c.name);
+  assert.match(cv, /var nx = conv\.dividerAfterHide\(conv\.mMessages, conv\.unreadDividerId, conv\._dividerTs, conv\.myId, conv\._frozenTailId, conv\._frozenTailTs\)/);
+  assert.match(cv, /conv\._frozenTailTs = conv\.mMessages\.length > 0 \? \(Number\(conv\.mMessages\[conv\.mMessages\.length - 1\]\.ts\) \|\| 0\) : 0/);
+  assert.match(cv, /conv\.unreadDividerId = arr\[j\]\.id; conv\._dividerTs = Number\(arr\[j\]\.ts\) \|\| 0/);
 });
 
 test("newPillShown: the shared vectors (P2 a)", () => {

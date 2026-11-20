@@ -246,7 +246,7 @@ Item {
         }
         contentItem: ColumnLayout {
             spacing: 8
-            Kirigami.Heading {
+            ThHeading {
                 level: 4
                 text: "Your status"
                 color: Th.statusPopoverTitleFg
@@ -265,7 +265,7 @@ Item {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
                 color: Th.statusPopoverHintFg
-                font.pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))
+                font.pointSize: ((Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))) * Th.textScale
                 // Never "Off" while the DELETE is still pending (A2.2): the switch and this line say so.
                 text: (panel.app && panel.app.mPresenceTurningOff) ? "Turning off…"
                     : ((panel.app && panel.app.mPresenceSharing) ? "On — people you share a room with see Online, Away or In a call."
@@ -295,12 +295,12 @@ Item {
                             id: presetRow
                             anchors.centerIn: parent
                             spacing: 6
-                            Text { textFormat: Text.PlainText; text: presetChip.modelData.emoji; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+                            Text { textFormat: Text.PlainText; text: presetChip.modelData.emoji; font.pixelSize: Th.px(13); anchors.verticalCenter: parent.verticalCenter }
                             Text {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 text: presetChip.modelData.text
                                 color: presetChip.current ? presetChip.hex : Th.statusPresetFg
-                                font.pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))
+                                font.pointSize: ((Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))) * Th.textScale
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             Rectangle { width: 8; height: 8; radius: 4; color: presetChip.hex; anchors.verticalCenter: parent.verticalCenter }
@@ -334,7 +334,7 @@ Item {
                         text: customChip.current ? ((panel.app.mMyPresenceStatus.emoji ? panel.app.mMyPresenceStatus.emoji + " " : "") + panel.app.mMyPresenceStatus.text) : "Custom…"
                         textFormat: Text.PlainText
                         color: Th.statusPresetFg
-                        font.pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))
+                        font.pointSize: ((Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))) * Th.textScale
                     }
                     MouseArea {
                         id: customMa
@@ -355,7 +355,7 @@ Item {
                     }
                 }
             }
-            // "Custom…": your own words (≤ 40), one emoji, a palette colour, when it clears.
+            // "Custom…": your own words (≤ 80, D07.6), one emoji, a palette colour, when it clears.
             ColumnLayout {
                 visible: panel._customOpen
                 Layout.fillWidth: true
@@ -380,7 +380,16 @@ Item {
                     ThTextField {
                         id: customText
                         Layout.fillWidth: true
-                        maximumLength: 40
+                        // 80 characters like the web (code points). No maximumLength: it counts UTF-16 units and
+                        // would cut a pasted emoji in half. 12.1.17 Stage B (#5): over 80, the longest prefix of WHOLE
+                        // graphemes within 80 (presence_model.rs cap_status_edit = the web's capStatusEdit), so a
+                        // pasted emoji sequence or a letter with its mark is never split.
+                        onTextEdited: {
+                            var ctl = panel.app ? panel.app.presenceCtl : null
+                            if (!ctl) return
+                            var c = String(ctl.capStatusEdit(text))
+                            if (c !== text) text = c
+                        }
                         placeholderText: "What are you up to?"
                         onAccepted: saveCustom.clicked()
                     }
@@ -406,7 +415,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
-                    Controls.Label { text: "Clear after"; color: Th.statusLabelFg; font.pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85)) }
+                    Controls.Label { text: "Clear after"; color: Th.statusLabelFg; font.pointSize: ((Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))) * Th.textScale }
                     ThComboBox {
                         Layout.fillWidth: true
                         model: panel._clearChoices

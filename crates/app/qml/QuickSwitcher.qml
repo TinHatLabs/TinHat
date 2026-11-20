@@ -345,7 +345,7 @@ Controls.Popup {
                                 visible: !!row.modelData.emoji
                                 anchors.centerIn: parent
                                 text: row.modelData.emoji ? row.modelData.emoji : ""
-                                font.pixelSize: 18
+                                font.pixelSize: Th.px(18)
                             }
                             ThIcon {
                                 // the find row (P6) wears the search glyph (the web's Lead)
@@ -358,6 +358,12 @@ Controls.Popup {
                                 color: row.off ? Th.actionPaletteItemFgDisabled : Th.actionPaletteIcon
                                 isMask: true
                             }
+                        }
+                        PrestigeToken {   // mini games v1: a person row (your own server's rank: no room), 4 px before the name
+                            mxid: row.modelData.kind === "person" ? String(row.modelData.id || "") : ""
+                            roomId: ""
+                            gap: false
+                            Layout.rightMargin: 4 - Kirigami.Units.smallSpacing
                         }
                         Controls.Label {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -380,7 +386,7 @@ Controls.Popup {
                                 anchors.centerIn: parent
                                 text: String(qs._texts.inviteMarker || "Invited")
                                 color: Th.roomsPillInviteFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                         }
                         UnreadBadge {
@@ -399,7 +405,7 @@ Controls.Popup {
                             visible: keyHint.length > 0
                             text: keyHint
                             color: Th.actionPaletteHintFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                         ThIcon {
                             visible: row.modelData.kind === "choice" && row.modelData.active === true
@@ -441,7 +447,7 @@ Controls.Popup {
             horizontalAlignment: Text.AlignHCenter
             text: String(qs._texts.tip || "")
             color: Th.switcherEmptyFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             elide: Text.ElideRight
         }
     }

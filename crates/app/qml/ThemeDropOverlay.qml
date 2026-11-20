@@ -18,7 +18,7 @@ Item {
             PathRectangle { x: 1; y: 1; width: ov.width - 2; height: ov.height - 2; radius: 8 }
         }
     }
-    Kirigami.Heading {
+    ThHeading {
         anchors.centerIn: parent
         level: 4
         text: "Drop the theme file to import it"

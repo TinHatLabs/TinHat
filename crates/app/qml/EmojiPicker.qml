@@ -149,7 +149,7 @@ Controls.Popup {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         anchors.centerIn: parent
                         text: modelData.e
-                        font.pixelSize: 22
+                        font.pixelSize: Th.px(22)
                     }
                     MouseArea {
                         id: ema

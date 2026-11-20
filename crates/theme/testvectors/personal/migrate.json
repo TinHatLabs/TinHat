@@ -1,0 +1,440 @@
+{
+  "cases": [
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "none migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "id": "t"
+      }
+    },
+    {
+      "density": null,
+      "expect": [],
+      "migrated": "1",
+      "name": "none migrated=1 text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "id": "t"
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "none migrated=None text-size=110 density=None",
+      "textSize": "110",
+      "theme": {
+        "id": "t"
+      }
+    },
+    {
+      "density": "compact",
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "none migrated=None text-size=None density=compact",
+      "textSize": null,
+      "theme": {
+        "id": "t"
+      }
+    },
+    {
+      "density": "bad",
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "none migrated=None text-size=bad density=bad",
+      "textSize": "bad",
+      "theme": {
+        "id": "t"
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": "0",
+      "name": "none migrated=0 text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "id": "t"
+      }
+    },
+    {
+      "density": "normal",
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "none migrated=None text-size=100 density=normal",
+      "textSize": "100",
+      "theme": {
+        "id": "t"
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "text-size",
+          "150"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size150 migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "type": {
+          "size": 150
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "text-size",
+          "90"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size80 migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "type": {
+          "size": 80
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size95 migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "type": {
+          "size": 95
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "text-size",
+          "110"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size115 migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "type": {
+          "size": 115
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "text-size",
+          "125"
+        ],
+        [
+          "density",
+          "touch"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size120-touch migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "shape": {
+          "density": "touch"
+        },
+        "type": {
+          "size": 120
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [],
+      "migrated": "1",
+      "name": "size120-touch migrated=1 text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "shape": {
+          "density": "touch"
+        },
+        "type": {
+          "size": 120
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "density",
+          "touch"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size120-touch migrated=None text-size=110 density=None",
+      "textSize": "110",
+      "theme": {
+        "shape": {
+          "density": "touch"
+        },
+        "type": {
+          "size": 120
+        }
+      }
+    },
+    {
+      "density": "compact",
+      "expect": [
+        [
+          "text-size",
+          "125"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size120-touch migrated=None text-size=None density=compact",
+      "textSize": null,
+      "theme": {
+        "shape": {
+          "density": "touch"
+        },
+        "type": {
+          "size": 120
+        }
+      }
+    },
+    {
+      "density": "bad",
+      "expect": [
+        [
+          "text-size",
+          "125"
+        ],
+        [
+          "density",
+          "touch"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size120-touch migrated=None text-size=bad density=bad",
+      "textSize": "bad",
+      "theme": {
+        "shape": {
+          "density": "touch"
+        },
+        "type": {
+          "size": 120
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "text-size",
+          "125"
+        ],
+        [
+          "density",
+          "touch"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": "0",
+      "name": "size120-touch migrated=0 text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "shape": {
+          "density": "touch"
+        },
+        "type": {
+          "size": 120
+        }
+      }
+    },
+    {
+      "density": "normal",
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "size120-touch migrated=None text-size=100 density=normal",
+      "textSize": "100",
+      "theme": {
+        "shape": {
+          "density": "touch"
+        },
+        "type": {
+          "size": 120
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "density",
+          "compact"
+        ],
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "compact migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "shape": {
+          "density": "compact"
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "badsize migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "shape": {
+          "density": "Touch"
+        },
+        "type": {
+          "size": "150"
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "outofbounds migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "type": {
+          "size": 200
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "fraction migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": {
+        "type": {
+          "size": 112.5
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": [
+        [
+          "look-personal",
+          "1"
+        ]
+      ],
+      "migrated": null,
+      "name": "notobject migrated=None text-size=None density=None",
+      "textSize": null,
+      "theme": "oled"
+    }
+  ],
+  "description": "migrate(marker, text-size, density, active theme) → the pref writes [key, value] in order; a valid pref is kept, defaults are not written, the marker is last"
+}

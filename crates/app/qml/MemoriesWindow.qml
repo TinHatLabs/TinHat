@@ -38,7 +38,7 @@ import org.kde.kirigami as Kirigami
 import dev.tinhat.app   // Th: the memories.* tokens
 import dev.tinhat.mpv
 
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: mem
     required property var app
     // 10.1 (TH-CAL-22 / TH-MEM-08 / TH-WP-15): remembered size (+ position off Wayland) across runs.
@@ -83,6 +83,18 @@ Window {
     }
     readonly property bool recIncluded: mem.mode.recordings === true && mem.filter !== "photos"
     property string selPhoto: ""
+    // 12.1.17 (Main.openMemoryPhoto): open THIS photo's viewer once the room's photos hold it (a jump in the chat to a
+    // photo that is in Memories lands here); forgotten after 20 s
+    property string pendingPhoto: ""
+    onPendingPhotoChanged: if (mem.pendingPhoto.length > 0) { pendingPhotoCap.restart(); mem._openPendingPhoto() }
+    onPhotosChanged: mem._openPendingPhoto()
+    Timer { id: pendingPhotoCap; interval: 20000; onTriggered: mem.pendingPhoto = "" }
+    function _openPendingPhoto() {
+        if (mem.pendingPhoto.length === 0 || mem.photoById(mem.pendingPhoto) === null) return
+        if (mem.sel !== null) mem.backToList()
+        mem.selPhoto = mem.pendingPhoto
+        mem.pendingPhoto = ""
+    }
     property var pendingPhotoUrls: []
     property string pendingPhotoRoom: ""
     readonly property var photosData: {
@@ -122,11 +134,13 @@ Window {
         return d.getFullYear() === t.getFullYear() ? base : base + ", " + d.getFullYear()
     }
     // "Add photos": images only (never SVG); an unencrypted room says first that the server can see them
+    // 12.1.17: the types "Add photos" takes (memories_photos::PHOTO_EXTS: the web's image/* minus SVG, phone photos in)
+    readonly property var photoExts: mem.vodctl ? JSON.parse(String(mem.vodctl.memoryPhotoExts() || "[]")) : []
     function addPhotoUrls(urls) {
         var imgs = []
         for (var i = 0; i < urls.length; i++) {
-            var u = String(urls[i]), l = u.toLowerCase()
-            if (/\.(png|jpe?g|gif|webp|bmp)$/.test(l)) imgs.push(u)
+            var u = String(urls[i]), l = u.toLowerCase(), dot = l.lastIndexOf(".")
+            if (dot >= 0 && mem.photoExts.indexOf(l.slice(dot + 1)) >= 0) imgs.push(u)
         }
         if (imgs.length === 0 || !mem.vodctl || mem.photosData.canAdd !== true) return
         if (mem.photosData.encrypted === false) { mem.pendingPhotoUrls = imgs; mem.pendingPhotoRoom = mem.roomId; unencryptedDlg.open(); return }
@@ -184,7 +198,7 @@ Window {
         id: addPhotosDialog
         title: "Add photos"
         fileMode: FileDialog.OpenFiles
-        nameFilters: ["Images (*.png *.jpg *.jpeg *.gif *.webp *.bmp)"]
+        nameFilters: ["Images (" + mem.photoExts.map(function(e) { return "*." + e }).join(" ") + ")"]
         onAccepted: { var l = []; for (var i = 0; i < selectedFiles.length; i++) l.push(String(selectedFiles[i])); mem.addPhotoUrls(l) }
     }
     ConfirmDialog {
@@ -198,6 +212,26 @@ Window {
             mem.pendingPhotoUrls = []
         }
         onCancelled: mem.pendingPhotoUrls = []
+    }
+    // 12.1.17: a moderator's Delete of someone else's photo (memphotos::DELETE_TITLE / DELETE_TEXT)
+    Controls.Dialog {
+        id: deletePhotoDlg
+        property string eventId: ""
+        title: "Delete this photo?"
+        modal: true
+        parent: Controls.Overlay.overlay
+        anchors.centerIn: parent
+        implicitWidth: Math.min(380, (parent ? parent.width : 380) - Kirigami.Units.gridUnit * 2)
+        standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
+        onOpened: { var ok = deletePhotoDlg.standardButton(Controls.Dialog.Ok); if (ok) ok.text = "Delete" }
+        onAccepted: {
+            if (!mem.vodctl) return
+            mem.vodctl.deleteMemoryPhoto(mem.roomId, deletePhotoDlg.eventId)
+            mem.selPhoto = ""
+        }
+        // the dialog's constant width minus its paddings (as ConfirmDialog.qml: its negotiated / available width follows this
+        // label's height through breeze's Dialog = a binding loop on implicitHeight at 150 % text)
+        Controls.Label { width: deletePhotoDlg.implicitWidth - deletePhotoDlg.leftPadding - deletePhotoDlg.rightPadding; textFormat: Text.PlainText; text: "It's deleted for everyone: from Memories and from the chat."; wrapMode: Text.Wrap }
     }
     Controls.Dialog {
         id: removePhotoDlg
@@ -217,9 +251,9 @@ Window {
             mem.selPhoto = ""
         }
         ColumnLayout {
-            width: parent ? parent.width : implicitWidth
+            width: removePhotoDlg.implicitWidth - removePhotoDlg.leftPadding - removePhotoDlg.rightPadding   // as deletePhotoDlg
             spacing: Kirigami.Units.largeSpacing
-            Controls.Label { textFormat: Text.PlainText; text: "The photo stays in the chat."; wrapMode: Text.Wrap; Layout.fillWidth: true }
+            Controls.Label { textFormat: Text.PlainText; text: "It goes back into the chat."; wrapMode: Text.Wrap; Layout.fillWidth: true }   // 12.1.17 (memphotos::REMOVE_TEXT)
             // only my own message: the chat lets people delete only their own
             Controls.CheckBox { id: alsoDeleteBox; visible: removePhotoDlg.mine; text: "Also delete it from the chat" }
         }
@@ -1368,7 +1402,7 @@ Window {
                     anchors.centerIn: parent
                     text: st.created ? "syncing…" : "loading…"
                     color: Th.memoriesTilePlaceholderFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     opacity: 0.8
                 }
             }
@@ -1394,7 +1428,7 @@ Window {
                         text: st.notStarted ? "joins at " + mem.fmtTime(st.tileOffset) : "left at " + mem.fmtTime(st.tileEnd)
                         color: Th.memoriesTileRestFg
                         font.bold: true
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                 }
             }
@@ -1417,12 +1451,18 @@ Window {
                         seed: st.track ? mem.userIdOf(st.track.identity) : ""
                         size: 18
                     }
+                    PrestigeToken {   // mini games v1: 4 px before the name (the row's 6 less 2)
+                        mxid: st.track ? mem.userIdOf(st.track.identity) : ""
+                        roomId: mem.roomId
+                        gap: false
+                        Layout.rightMargin: -2
+                    }
                     Controls.Label {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: st.personName
                         color: Th.memoriesTileNameFg
                         font.bold: true
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         elide: Text.ElideRight
                         Layout.maximumWidth: st.width * 0.5
                     }
@@ -1430,7 +1470,7 @@ Window {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: mem.kindGlyph(st.track ? st.track.kind : "") + (st.width >= 250 ? " " + st.povLabel : "")
                         color: Th.memoriesTileMetaFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
@@ -1438,7 +1478,7 @@ Window {
                         visible: st.povKey > 0
                         text: String(st.povKey)
                         color: Th.memoriesTileMetaFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         opacity: 0.7
                     }
                 }
@@ -1836,7 +1876,7 @@ Window {
             text: parent.text
             color: parent.fg
             font.bold: parent.bold
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
     }
     // One point of view (a person's camera or stream). Plain label, explicit state
@@ -1882,7 +1922,7 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
                 text: pb.pov ? mem.kindGlyph(pb.pov.kind) : ""
                 color: pb.onStage ? Th.memoriesPovMetaFgActive : Th.memoriesPovMetaFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -1898,14 +1938,14 @@ Window {
                 visible: pb.onStage || pb.upcoming || pb.gone
                 text: pb.onStage ? "· on stage" : (pb.upcoming ? "· joins " + mem.fmtTime(pb.pov.off) : "· left " + mem.fmtTime(pb.pov.end))
                 color: pb.onStage ? Th.memoriesPovMetaFgActive : Th.memoriesPovMetaFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 opacity: pb.onStage ? 0.9 : 1
             }
             Controls.Label { textFormat: Text.PlainText; // keyboard number
                 anchors.verticalCenter: parent.verticalCenter
                 text: pb.pov ? String(pb.pov.key) : ""
                 color: pb.onStage ? Th.memoriesPovMetaFgActive : Th.memoriesPovMetaFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 opacity: 0.6
             }
             // eye: hide/show this POV in the rail (secondary; appears on hover or when hidden)
@@ -1917,7 +1957,7 @@ Window {
                 Controls.Label {
                     anchors.centerIn: parent
                     text: pb.hidden ? "🚫" : "👁"
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     color: pb.onStage ? Th.memoriesPovMetaFgActive : Th.memoriesPovMetaFg
                 }
                 HoverHandler { id: eyeHover }
@@ -1974,7 +2014,7 @@ Window {
                 }
                 ColumnLayout {
                     spacing: 0
-                    Kirigami.Heading {
+                    ThHeading {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: mem.sel ? mem.fmtDateLong(mem.sel.start_ms) : "Memories"
                         color: Th.memoriesTitleFg
@@ -1986,7 +2026,7 @@ Window {
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                         color: Th.memoriesMetaFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         text: {
                             if (mem.sel) {
                                 var ppl = mem.peopleOf(mem.sel)
@@ -2049,7 +2089,8 @@ Window {
                     app: mem.app
                     text: "Add photos"
                     icon.name: "list-add-symbolic"
-                    Controls.ToolTip.text: "Add photos or screenshots to this room's Memories. They're also posted in the chat."
+                    // 12.1.17 (memphotos::ADD_TIP): Memories photos stay out of the chat
+                    Controls.ToolTip.text: "Add photos or screenshots to this room's Memories. They stay out of the chat (older apps still show them there)."
                     Controls.ToolTip.visible: hovered
                     onClicked: addPhotosDialog.open()
                 }
@@ -2205,7 +2246,7 @@ Window {
                 visible: mem.sel === null && mem.filter !== "recordings" && Number(mem.photosData.unavailable || 0) > 0
                 Layout.alignment: Qt.AlignHCenter
                 color: Th.memoriesMetaFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 text: { var n = Number(mem.photosData.unavailable || 0); return n + (n === 1 ? " photo" : " photos") + " can't be shown on this device yet." }
             }
             Component {
@@ -2238,7 +2279,7 @@ Window {
                             color: Th.memoriesCardPosterBg
                             border.width: 1
                             border.color: Th.memoriesCardPosterBorder
-                            Controls.Label { anchors.centerIn: parent; visible: pimg.status !== Image.Ready; text: "🖼"; color: Th.memoriesMetaFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.8 }
+                            Controls.Label { anchors.centerIn: parent; visible: pimg.status !== Image.Ready; text: "🖼"; color: Th.memoriesMetaFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.8 * Th.textScale }
                             Image {
                                 id: pimg
                                 anchors.fill: parent
@@ -2346,7 +2387,7 @@ Window {
                                 anchors.centerIn: parent
                                 visible: posterImg.status !== Image.Ready
                                 text: card.live ? "🔴" : (card.empty ? "∅" : (card.processing ? "⏳" : "📼"))
-                                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.8
+                                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.8 * Th.textScale
                                 color: Th.memoriesCardPosterFg
                             }
                             // duration badge
@@ -2375,7 +2416,7 @@ Window {
                                     text: mem.fmtDate(card.modelData.start_ms)
                                     color: Th.memoriesCardTitleFg
                                     font.bold: true
-                                    font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.1
+                                    font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.1 * Th.textScale
                                     elide: Text.ElideRight
                                 }
                                 // 11.0 (GPU.md §2.2, R6): STATIC — shown lit (it blinked every 1.2 s for the length of the call)
@@ -2389,7 +2430,7 @@ Window {
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                                 color: Th.memoriesCardMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 text: (card.modelData.room_name ? card.modelData.room_name + " · " : "")
                                     + "started by " + mem.shortName(card.modelData.started_by)
                             }
@@ -2416,7 +2457,7 @@ Window {
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                     color: Th.memoriesCardMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     text: {
                                         var names = []
                                         for (var i = 0; i < Math.min(3, card.people.length); i++) names.push(mem.shortName(card.people[i]))
@@ -2439,7 +2480,7 @@ Window {
                                     visible: card.openable && Number(mem.resumeAt[String(card.modelData.id)] || 0) > 5
                                     text: "resume at " + mem.fmtTime(Number(mem.resumeAt[String(card.modelData.id)] || 0))
                                     color: Th.memoriesCardResumeFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 }
                             }
                         }
@@ -2472,7 +2513,7 @@ Window {
                         spacing: 0
                         Layout.fillWidth: true
                         Controls.Label { textFormat: Text.PlainText; text: mem.viewing ? mem.fmtDateLong(mem.viewing.ts) : ""; font.bold: true; color: Th.memoriesFg; elide: Text.ElideRight; Layout.fillWidth: true }
-                        Controls.Label { textFormat: Text.PlainText; text: mem.viewing ? "shared by " + mem.viewing.name : ""; color: Th.memoriesMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                        Controls.Label { textFormat: Text.PlainText; text: mem.viewing ? "shared by " + mem.viewing.name : ""; color: Th.memoriesMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                     }
                     HeaderIconButton { app: mem.app; iconName: "go-up-symbolic"; tip: "Previous photo"; Accessible.name: "Previous photo"; enabled: mem.prevPhoto.length > 0; onClicked: mem.selPhoto = mem.prevPhoto }
                     HeaderIconButton { app: mem.app; iconName: "go-down-symbolic"; tip: "Next photo"; Accessible.name: "Next photo"; enabled: mem.nextPhoto.length > 0; onClicked: mem.selPhoto = mem.nextPhoto }
@@ -2531,11 +2572,21 @@ Window {
                             else if (typeof mem.app.jumpToEvent === "function") mem.app.jumpToEvent(mem.roomId, mem.viewing.event_id)
                         }
                     }
+                    // 12.1.17: no "Show in chat": a Memories photo isn't in the chat (memphotos::hidden_in_chat). Its chat-side
+                    // safety actions live here instead: Report… (someone else's photo) and a moderator's Delete
                     GlowButton {
+                        visible: mem.viewing !== null && mem.viewing.owner !== mem.photosData.me && !!mem.app && !!mem.app.safety
                         app: mem.app
-                        text: "Show in chat"
-                        icon.name: "mail-reply-sender-symbolic"
-                        onClicked: if (mem.viewing && mem.app && mem.app.jumpToEvent) mem.app.jumpToEvent(mem.roomId, mem.viewing.event_id)
+                        text: LinkGate.plain(mem.app && mem.app.safety ? String(mem.app.safety.w.report) : "")
+                        icon.name: "dialog-warning"
+                        onClicked: if (mem.viewing) mem.app.safety.openReport(mem.viewing.owner, mem.roomId, mem.viewing.event_id, mem.viewing.name)
+                    }
+                    GlowButton {
+                        visible: mem.viewing !== null && mem.viewing.owner !== mem.photosData.me && mem.photosData.iModerate === true
+                        app: mem.app
+                        text: "Delete"
+                        icon.name: "edit-delete-symbolic"
+                        onClicked: { deletePhotoDlg.eventId = mem.viewing.event_id; deletePhotoDlg.open() }
                     }
                     GlowButton {
                         app: mem.app
@@ -2656,7 +2707,7 @@ Window {
                                 text: mem.focusedTrack ? mem.povDescr(mem.focusedTrack) : ""
                                 color: Th.memoriesStageFg
                                 font.bold: true
-                                font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+                                font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale
                             }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -2681,7 +2732,7 @@ Window {
                         Controls.Label {
                             Layout.alignment: Qt.AlignHCenter
                             text: "🎧"
-                            font.pointSize: Kirigami.Theme.defaultFont.pointSize * 3
+                            font.pointSize: Kirigami.Theme.defaultFont.pointSize * 3 * Th.textScale
                         }
                         Controls.Label {
                             Layout.alignment: Qt.AlignHCenter
@@ -2693,7 +2744,7 @@ Window {
                             Layout.alignment: Qt.AlignHCenter
                             text: mem.videoTracks.length > 0 ? "pick a point of view below to see it" : "this memory has voices only"
                             color: Th.memoriesStageMetaFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                     }
                     // stage caption (who + what is on stage)
@@ -2717,6 +2768,12 @@ Window {
                                 name: mem.focusedTrack ? mem.shortName(mem.focusedTrack.identity) : ""
                                 seed: mem.focusedTrack ? mem.userIdOf(mem.focusedTrack.identity) : ""
                                 size: 22
+                            }
+                            PrestigeToken {   // mini games v1: 4 px before the name (the row's 7 less 3)
+                                mxid: mem.focusedTrack ? mem.userIdOf(mem.focusedTrack.identity) : ""
+                                roomId: mem.roomId
+                                gap: false
+                                Layout.rightMargin: -3
                             }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -2744,7 +2801,7 @@ Window {
                             text: mem.stageFlashText
                             color: Th.memoriesStageFg
                             font.bold: true
-                            font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+                            font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 3) * Th.textScale
                             opacity: stageFlashRect.opacity * 1.6
                         }
                     }
@@ -2790,7 +2847,7 @@ Window {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: "That's the end of this one"
                                 color: Th.memoriesStageFg
-                                font.pointSize: Kirigami.Theme.defaultFont.pointSize + 4
+                                font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 4) * Th.textScale
                                 font.bold: true
                             }
                             Controls.Label {
@@ -3026,7 +3083,7 @@ Window {
                     Controls.Label {
                         text: "· click one to put it on stage, or press its number"
                         color: Th.memoriesMetaFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
@@ -3053,6 +3110,14 @@ Window {
                                 name: povGroup.modelData.name
                                 seed: povGroup.modelData.user
                                 size: 24
+                            }
+                            // mini games v1: the person's prestige token, 4 px before the name (the row's 6: the box is 2 px
+                            // narrower than the glyph, which draws into the spacing); skipped at rank 0
+                            Item {
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: povTok.rank > 0   // not povTok.visible: under a hidden parent the child stays invisible
+                                width: povTok.size - 2; height: povTok.size
+                                PrestigeToken { id: povTok; mxid: String(povGroup.modelData.user || ""); roomId: mem.roomId; gap: false }
                             }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -3109,7 +3174,7 @@ Window {
                 Controls.Label {
                     text: "Clips"
                     color: Th.memoriesMetaFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.bold: true
                 }
                 Flow {
@@ -3147,7 +3212,7 @@ Window {
                 horizontalAlignment: Text.AlignHCenter
                 color: Th.memoriesMetaFg
                 opacity: 0.7
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 text: "Space play/pause · ← → 10s · Shift+← → 1 min · 1-9 put a point of view on stage · 0 voices only · M mute · F fullscreen · Esc back"
             }
         }

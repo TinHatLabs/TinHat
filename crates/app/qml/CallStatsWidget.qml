@@ -326,6 +326,7 @@ Item {
             width: parent.width - 38 - 6
             height: 18
             spacing: 4
+            PrestigeToken { mxid: w.sample ? "" : String(pr.row.who.mxid || ""); roomId: w.app ? String(w.app.mCallRoomId || "") : ""; size: 12; gap: false }   // mini games v1
             WidgetText { Layout.fillWidth: true; role: "text"; text: pr.row.who.name; color: Th.widgetFg }
             Repeater {
                 model: pr.row.chips
@@ -553,7 +554,12 @@ Item {
                     Avatar { Layout.preferredWidth: 20; Layout.preferredHeight: 20; app: w.app; size: 20; seed: fr.f.user; name: fr.who.name; imageSource: fr.who.avatar }
                     Column {
                         Layout.fillWidth: true
-                        WidgetText { width: parent.width; role: "text"; text: fr.who.name; color: Th.widgetFg }
+                        RowLayout {   // mini games v1: the person's prestige token (past calls: your own server's rank)
+                            width: parent.width
+                            spacing: 0
+                            PrestigeToken { mxid: w.sample ? "" : String(fr.f.user || ""); roomId: ""; size: 12 }
+                            WidgetText { Layout.fillWidth: true; role: "text"; text: fr.who.name; color: Th.widgetFg }
+                        }
                         WidgetText {
                             width: parent.width
                             role: "meta"
@@ -649,6 +655,7 @@ Item {
                 width: 316
                 spacing: 8
                 Avatar { Layout.preferredWidth: 20; Layout.preferredHeight: 20; app: w.app; size: 20; name: details.row ? details.row.who.name : ""; seed: details.row ? details.row.who.mxid : ""; imageSource: details.row ? (details.row.who.avatar || "") : "" }
+                PrestigeToken { mxid: details.row && !w.sample ? String(details.row.who.mxid || "") : ""; roomId: w.app ? String(w.app.mCallRoomId || "") : ""; size: 12; gap: false; Layout.rightMargin: -4 }   // mini games v1
                 WidgetText { Layout.fillWidth: true; role: "strong"; text: details.row ? details.row.who.name : ""; color: Th.widgetFg }
                 WidgetText {
                     role: "meta"

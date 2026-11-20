@@ -21,6 +21,8 @@ Item {
     property string anchorId: ""
     property var anchorIds: []
     property string label: ""
+    property string labelMxid: ""            // mini games v1: the label is this person's name → their prestige token before it
+    property string labelRoomId: ""          // … on this room's server ("" = your own server)
     property string description: ""
     property int descriptionFormat: Text.PlainText
     property color labelColor: Th.settingsRowLabelFg
@@ -176,9 +178,10 @@ Item {
             Layout.fillWidth: true
             visible: row.label.length > 0
             spacing: 8
+            PrestigeToken { id: labelTok; mxid: row.labelMxid; roomId: row.labelRoomId; gap: false; Layout.rightMargin: -4 }   // mini games v1: 4 px before the name
             Controls.Label {
                 Layout.fillWidth: row.chip.length === 0
-                Layout.maximumWidth: textBlock.width - (chipBox.visible ? chipBox.implicitWidth + 8 : 0)
+                Layout.maximumWidth: textBlock.width - (chipBox.visible ? chipBox.implicitWidth + 8 : 0) - (labelTok.visible ? labelTok.size + 4 : 0)
                 text: row.label
                 textFormat: row.labelFormat
                 color: row.labelColor

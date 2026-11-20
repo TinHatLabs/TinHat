@@ -28,7 +28,7 @@ build, `scripts/linux-start-gate.sh <binary>` in a freshly updated Arch system w
 print PASS: no `libMpvQt` in the binary's NEEDED list, nothing "not found" in `ldd`, and a real start to the sign-in
 screen under Xvfb.
 
-The binary must carry the five ship stamps (`tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`, `tinhat-vp9-kf-iv-v1`, `tinhat-iv-v2`, `tinhat-iv-rx-v1`) — `grep` them;
+The binary must carry the six ship stamps (`tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`, `tinhat-vp9-kf-iv-v1`, `tinhat-iv-v2`, `tinhat-iv-rx-v1`, `tinhat-tx-len-v1`) — `grep` them;
 a build without them linked the upstream (or an older) libwebrtc: encrypted AV1 will not decode, and encrypted VP9
 shares can wait or never start at the SFU.
 

@@ -106,7 +106,8 @@ fn admins_can_make_admins_after_a_confirm() {
 fn grouped_follow_ups_show_their_clock_on_hover_only() {
     // P19 (web lib/stamp.ts clockQuiet + its test: the same rule).
     let cb = include_str!("../qml/ChatBubble.qml");
-    assert!(cb.contains("readonly property bool clockQuiet: grouped && !pending && !failed && !pinned && !edited"));
+    // + a game card always shows its time (12.2.0 polish #26: the web's own-card frame shows it on every card)
+    assert!(cb.contains("readonly property bool clockQuiet: grouped && !pending && !failed && !pinned && !edited && !hasGameCard"));
     assert!(cb.contains(
         "opacity: bubble.failed ? 1.0 : ((bubble.clockQuiet && !bubbleHover.hovered && !bubble.activeFocus && !bubble.kbCurrent) ? 0.0 : 0.7)"
     ));
@@ -297,12 +298,17 @@ fn moderators_can_delete_others_messages() {
 
 #[test]
 fn the_density_row_is_a_named_group() {
-    // A25.7: three radio buttons in a group named "Density" (the web's radiogroup), not one radio button.
+    // A25.7 (12.1.16) named the theme editor's three Density radios as ONE group for screen readers. P22 (12.1.17) moves
+    // Density out of the theme editor into Settings → Appearance (the person's own setting, the same on every theme):
+    // there it is one combo box named "Density" (the web: AppearancePane's select, the same name), and the theme editor
+    // offers no Density control any more, only the note that points to Settings.
+    let a = include_str!("../qml/AppearancePane.qml");
+    let at = a.find(r#"anchorId: "appearance.density""#).expect("the Settings Density row");
+    let row = &a[at..(at + 1200).min(a.len())];
+    assert!(row.contains("ThComboBox") && row.contains(r#"Accessible.name: "Density""#), "a named Density combo in Settings");
     let t = include_str!("../qml/ThemeEditorSimple.qml");
-    let at = t.find(r#"SectionLabel { app: simple.app; text: "Density" }"#).expect("the Density section");
-    let row = &t[at..at + 600];
-    assert!(row.contains("Accessible.role: Accessible.Grouping") && row.contains(r#"Accessible.name: "Density""#));
-    assert!(!row.contains("Accessible.role: Accessible.RadioButton"));
+    assert!(!t.contains(r#"op: "density""#) && !t.contains(r#"text: "Density" }"#), "no Density control in the theme editor");
+    assert!(t.contains("Text size and density are your own settings, the same on every theme: Settings → Appearance."));
 }
 
 #[test]

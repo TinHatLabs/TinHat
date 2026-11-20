@@ -71,6 +71,28 @@ pub mod qobject {
         #[qinvokable]
         fn known(self: &ThemeController, id: &QString) -> bool;
 
+        /// P22 (12.1.17): QML: themeCtl.personal() — the person's text size + density, `{"density":…,"size":…}`
+        /// (tinhat_theme::personal: the prefs `ui-text-size` / `ui-density`, the same keys as the web's).
+        #[qinvokable]
+        fn personal(self: &ThemeController) -> QString;
+
+        /// P22: QML: themeCtl.setPersonal(size, density) — store the person's text size (one of 90/100/110/125/150) and
+        /// density (compact | normal | touch); a value that is not one of those leaves that pref as it is. Sets
+        /// `look` again for the theme in use and returns the person's new `{"density":…,"size":…}`.
+        #[qinvokable]
+        fn set_personal(self: Pin<&mut ThemeController>, size: i32, density: &QString) -> QString;
+
+        /// P22: QML: themeCtl.migratePersonal(id) — once per device (pref `ui-look-personal`): the theme `id`'s old
+        /// `type.size` / `shape.density` become the person's own (AppCore's bootstrap, before the first apply).
+        /// Returns whether it wrote anything besides the marker.
+        #[qinvokable]
+        fn migrate_personal(self: &ThemeController, id: &QString) -> bool;
+
+        /// P22 round 2: QML: themeCtl.setLayoutDensity(d) — the density of the layout form this device renders ("" =
+        /// none; the Handheld preset = "touch"). While a layout names one it is drawn instead of the person's
+        /// (tinhat_theme::personal::effective_density). Sets `look` again and returns the density now drawn.
+        #[qinvokable]
+        fn set_layout_density(self: Pin<&mut ThemeController>, density: &QString) -> QString;
     }
 
     // ---- themes step 1b (theme_store.rs, contract THEMES-SYNC.md / THEMES-UI.md): what the device renders, the
@@ -276,9 +298,61 @@ impl qobject::ThemeController {
         self.as_mut().set_adjusted(a.resolved.adjusted.len() as i32);
         // 11.0 (ISLANDS-ARCH §3.4): the island geometry of the theme (defaults for a theme without a `shape` block)
         self.as_mut().set_shape(QString::from(tinhat_theme::shape::read_shape(&a.doc).to_json().as_str()));
-        // 11.0 step 5 (ENGINE.md §10): fonts from the allowed lists, the text size, density, the island shadow
-        self.as_mut().set_look(QString::from(tinhat_theme::look::look_json(&tinhat_theme::look::read_look(&a.doc)).as_str()));
+        // 11.0 step 5 (ENGINE.md §10): fonts from the allowed lists and the island shadow of the theme; P22 (12.1.17):
+        // the text size and the density are the PERSON's (tinhat_theme::personal), never the theme's
+        self.as_mut().set_look(QString::from(effective_look_json(&a.doc).as_str()));
         colour_map(&a)
+    }
+
+    pub fn personal(&self) -> QString {
+        QString::from(tinhat_theme::personal::personal_json(personal_now()).as_str())
+    }
+
+    pub fn set_personal(mut self: Pin<&mut Self>, size: i32, density: &QString) -> QString {
+        use tinhat_theme::personal::{parse_density, parse_text_size, PREF_DENSITY, PREF_TEXT_SIZE};
+        let s = size.to_string();
+        if parse_text_size(Some(&s)).is_some() {
+            crate::settings::overlay_pref_write(&format!("ui-{PREF_TEXT_SIZE}"), &s);
+        }
+        let d = density.to_string();
+        if parse_density(Some(&d)).is_some() {
+            crate::settings::overlay_pref_write(&format!("ui-{PREF_DENSITY}"), &d);
+        }
+        let a = theme_rt::current();
+        self.as_mut().set_look(QString::from(effective_look_json(&a.doc).as_str()));
+        self.personal()
+    }
+
+    pub fn set_layout_density(mut self: Pin<&mut Self>, density: &QString) -> QString {
+        *LAYOUT_DENSITY.lock().unwrap_or_else(|e| e.into_inner()) = density.to_string();
+        let a = theme_rt::current();
+        let look = effective_look_json(&a.doc);
+        self.as_mut().set_look(QString::from(look.as_str()));
+        QString::from(drawn_density().as_str())
+    }
+
+    pub fn migrate_personal(&self, id: &QString) -> bool {
+        use tinhat_theme::personal::{migrate, PREF_DENSITY, PREF_MIGRATED, PREF_TEXT_SIZE};
+        let r = |k: &str| crate::settings::overlay_pref_read(&format!("ui-{k}"));
+        let (m, t, d) = (r(PREF_MIGRATED), r(PREF_TEXT_SIZE), r(PREF_DENSITY));
+        if m.as_deref() == Some("1") {
+            return false;
+        }
+        // a theme that can't be read right now (a file missing, the store not loaded): no marker — the move waits for a
+        // start where the person's theme is there, so its old size is never lost
+        let Ok(doc) = theme_rt::load_doc(&id.to_string(), &theme_rt::themes_dir()) else {
+            eprintln!("[theme] P22: theme {id} not readable yet; the text size move waits for the next start");
+            return false;
+        };
+        let writes = migrate(m.as_deref(), t.as_deref(), d.as_deref(), &doc);
+        let moved = writes.len() > 1;
+        for (k, v) in &writes {
+            crate::settings::overlay_pref_write(&format!("ui-{k}"), v);
+        }
+        if moved {
+            eprintln!("[theme] P22: the text size / density of theme {} are now this person's own: {writes:?}", id);
+        }
+        moved
     }
 
     pub fn known(&self, id: &QString) -> bool {
@@ -802,4 +876,28 @@ mod tests {
         let goose = theme_rt::try_resolve_in("goose", std::path::Path::new("/nonexistent")).unwrap();
         assert_eq!(goose.colour("surface.hover").unwrap().to_canonical(), "#321339"); // Qt.lighter(#2a1030, 1.18)
     }
+}
+
+/// P22 (12.1.17): the person's text size + density from the prefs (`ui-text-size`, `ui-density`).
+pub fn personal_now() -> tinhat_theme::personal::Personal {
+    use tinhat_theme::personal::{read_personal, PREF_DENSITY, PREF_TEXT_SIZE};
+    let r = |k: &str| crate::settings::overlay_pref_read(&format!("ui-{k}"));
+    read_personal(r(PREF_TEXT_SIZE).as_deref(), r(PREF_DENSITY).as_deref())
+}
+
+/// P22 round 2: the density of the layout form this device renders ("" = none), set by QML (themeCtl.setLayoutDensity).
+static LAYOUT_DENSITY: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
+
+/// The density drawn now: the layout's when it names one, else the person's.
+pub fn drawn_density() -> tinhat_theme::look::Density {
+    let l = LAYOUT_DENSITY.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    tinhat_theme::personal::effective_density(personal_now().density, Some(&Value::String(l)))
+}
+
+/// P22: the look the app draws for a theme document: its fonts and shadow, the person's size and the density drawn
+/// (the layout's, else the person's).
+pub fn effective_look_json(doc: &Value) -> String {
+    let mut p = personal_now();
+    p.density = drawn_density();
+    tinhat_theme::look::look_json(&tinhat_theme::personal::effective_look(doc, p))
 }

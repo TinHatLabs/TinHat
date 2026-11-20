@@ -70,7 +70,7 @@ Controls.AbstractButton {
                 elide: Text.ElideRight
                 text: tile.text
                 color: Th.settingsThemeTileFg
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize * Th.textScale
             }
         }
     }

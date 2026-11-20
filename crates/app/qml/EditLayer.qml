@@ -191,7 +191,7 @@ Item {
                     width: Math.max(0, chip.width - x - 10)
                     anchors.verticalCenter: parent.verticalCenter
                     elide: Text.ElideRight
-                    font.pixelSize: 12
+                    font.pixelSize: Th.px(12)
                     font.weight: Font.DemiBold
                     color: Th.editmodeHandleFg
                     text: isl.t.name
@@ -358,7 +358,7 @@ Item {
                             width: Math.max(0, tc.width - x - 8)
                             anchors.verticalCenter: parent.verticalCenter
                             elide: Text.ElideRight
-                            font.pixelSize: 12
+                            font.pixelSize: Th.px(12)
                             font.weight: Font.DemiBold
                             color: Th.editmodeHandleFg
                             text: el.em.islandName(tc.modelData)
@@ -556,7 +556,7 @@ Item {
             id: ghostName
             x: 22
             anchors.verticalCenter: parent.verticalCenter
-            font.pixelSize: 12
+            font.pixelSize: Th.px(12)
             font.weight: Font.DemiBold
             color: Th.editmodeHandleFg
             text: el.em.dragRef.length > 0 ? el.em.islandName(el.em.dragRef) : ""

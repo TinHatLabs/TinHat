@@ -193,7 +193,7 @@ Item {
                         elide: Text.ElideRight
                         text: cell.shownName
                         color: cell.usable ? cell.k.text : Th.settingsThemeMetaFg
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize * Th.textScale
                         font.bold: cell.selected
                     }
                     // the selected check: Ø14 at the caption's right padding, the card's accent + its onAccent glyph

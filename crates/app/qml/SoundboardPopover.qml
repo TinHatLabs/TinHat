@@ -265,7 +265,7 @@ Controls.Popup {
                 radius: 16
                 color: Th.soundboardDropBg
                 border.width: 2; border.color: Th.soundboardDropBorder
-                Controls.Label { anchors.centerIn: parent; text: "Drop to add this sound"; color: Th.soundboardDropFg; font.bold: true; font.pointSize: 14 }
+                Controls.Label { anchors.centerIn: parent; text: "Drop to add this sound"; color: Th.soundboardDropFg; font.bold: true; font.pointSize: 14 * Th.textScale }
             }
         }
     }
@@ -325,7 +325,7 @@ Controls.Popup {
                 visible: !card.isPlaying
                 textFormat: Text.PlainText
                 text: card.soundEmoji.length > 0 ? card.soundEmoji : "🔊"
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.6
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.6 * Th.textScale
             }
             Kirigami.Icon {
                 anchors.centerIn: parent
@@ -344,7 +344,7 @@ Controls.Popup {
             elide: Text.ElideRight
             maximumLineCount: 2
             wrapMode: Text.WordWrap
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
         // Hotkey badge.
         Rectangle {
@@ -353,7 +353,7 @@ Controls.Popup {
             width: 18; height: 18; radius: 5
             color: Th.soundboardHotkeyBg
             border.width: 1; border.color: Th.soundboardHotkeyBorder
-            Controls.Label { anchors.centerIn: parent; textFormat: Text.PlainText; text: card.hotkey; color: Th.soundboardHotkeyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+            Controls.Label { anchors.centerIn: parent; textFormat: Text.PlainText; text: card.hotkey; color: Th.soundboardHotkeyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
         }
         // Remove ✕ on hover (own sounds only).
         Controls.ToolButton {
@@ -430,7 +430,7 @@ Controls.Popup {
         Layout.fillWidth: true
         Layout.topMargin: 6
         Controls.Label { textFormat: Text.PlainText; text: title; color: Th.soundboardSectionFg; font.bold: true }
-        Controls.Label { textFormat: Text.PlainText; text: hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.fillWidth: true; elide: Text.ElideRight }
+        Controls.Label { textFormat: Text.PlainText; text: hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; Layout.fillWidth: true; elide: Text.ElideRight }
     }
 
     contentItem: ColumnLayout {
@@ -450,7 +450,7 @@ Controls.Popup {
             Controls.Label {
                 text: "Soundboard"
                 color: Th.soundboardTitleFg; font.bold: true
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+                font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale
             }
             Kirigami.SearchField {
                 id: searchField
@@ -513,7 +513,7 @@ Controls.Popup {
                     text: sheet.personalSounds.length === 0
                         ? "Nothing here yet — add a clip with + Add, or search below. Right-click any sound to favourite it."
                         : "No favourites match “" + sheet.query.trim() + "”."
-                    color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; wrapMode: Text.WordWrap
+                    color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; wrapMode: Text.WordWrap
                 }
                 // Room sounds
                 SectionHead {
@@ -534,7 +534,7 @@ Controls.Popup {
                     textFormat: Text.PlainText
                     text: sheet.roomSounds.length === 0 ? "Nothing shared yet — right-click a sound → Add to room sounds."
                                                         : "No room sounds match “" + sheet.query.trim() + "”."
-                    color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; wrapMode: Text.WordWrap
+                    color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; wrapMode: Text.WordWrap
                 }
                 // Recent
                 SectionHead {
@@ -565,14 +565,14 @@ Controls.Popup {
                     Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14
                     textFormat: Text.PlainText
                     text: "No results on the web for “" + sheet.query.trim() + "”."
-                    color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    color: Th.soundboardEmptyFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 Controls.Label {
                     Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.bottomMargin: 12
                     horizontalAlignment: Text.AlignRight
                     text: "Right-click a sound for more · web results by myinstants"
                     color: Th.soundboardFooterFg; opacity: 0.7
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale
                 }
             }
         }

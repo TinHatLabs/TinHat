@@ -207,7 +207,7 @@ ColumnLayout {
                 text: "+" + island.railRef._dmOverflow
                 color: Th.dmMoreFg
                 font.bold: true
-                font.pixelSize: 15
+                font.pixelSize: Th.px(15)
             }
         }
         MouseArea {

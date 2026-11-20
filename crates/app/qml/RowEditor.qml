@@ -203,7 +203,7 @@ Controls.Dialog {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "No buttons in this row"
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
 
@@ -213,7 +213,7 @@ Controls.Dialog {
             spacing: 24
             RowLayout {
                 spacing: 12
-                Controls.Label { text: "Look"; color: Th.dialogHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.minimumWidth: 36 }
+                Controls.Label { text: "Look"; color: Th.dialogHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; Layout.minimumWidth: 36 }
                 Repeater {
                     model: ["icon", "iconLabel", "label"]
                     delegate: ThRadioButton {
@@ -226,7 +226,7 @@ Controls.Dialog {
             }
             RowLayout {
                 spacing: 12
-                Controls.Label { text: "Size"; color: Th.dialogHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.minimumWidth: 36 }
+                Controls.Label { text: "Size"; color: Th.dialogHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; Layout.minimumWidth: 36 }
                 Repeater {
                     model: ["S", "M"]
                     delegate: ThRadioButton {
@@ -294,7 +294,7 @@ Controls.Dialog {
                                             anchors.centerIn: parent
                                             visible: !!itemRow.face && !!itemRow.face.emoji
                                             text: itemRow.face && itemRow.face.emoji ? itemRow.face.emoji : ""
-                                            font.pixelSize: 16
+                                            font.pixelSize: Th.px(16)
                                         }
                                         ThIcon {
                                             anchors.fill: parent
@@ -324,7 +324,7 @@ Controls.Dialog {
                                             Layout.fillWidth: true
                                             visible: itemRow.known
                                             text: "Hide when it doesn't apply"
-                                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                             checked: itemRow.x0.hideWhenOff === true
                                             onToggled: dlg.setFlag(itemRow.index, "hideWhenOff", checked)
                                         }
@@ -334,7 +334,7 @@ Controls.Dialog {
                                             visible: !!itemRow.face && !itemRow.known
                                             text: "Made by a newer Tin Hat — kept as it is"
                                             color: Th.dialogHintFg
-                                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                         }
                                     }
                                     ThToolButton {
@@ -441,7 +441,7 @@ Controls.Dialog {
                                     bottomPadding: 2
                                     text: grp.modelData.label
                                     color: Th.dialogHintFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     font.bold: true
                                 }
                                 Repeater {
@@ -505,7 +505,7 @@ Controls.Dialog {
                 Layout.preferredWidth: 16
                 horizontalAlignment: Text.AlignHCenter
                 text: dr.emoji
-                font.pixelSize: 14
+                font.pixelSize: Th.px(14)
             }
             ThIcon {
                 visible: dr.emoji.length === 0

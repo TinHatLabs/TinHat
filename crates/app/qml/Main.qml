@@ -337,6 +337,40 @@ Kirigami.ApplicationWindow {
     readonly property var guestsCtl: core.c_guestsCtl   // selfhost: the guest room (docs/GUESTS.md)
     readonly property var gameServersCtl: core.c_gameServers   // 11.1 the Game servers widget (docs/GAMESERVERS.md)
     readonly property var padCtl: core.c_padCtl   // Pad: the phone as a remote for my call (docs/PAD.md)
+    // mini games v1 (GAMES-V1-SPEC.md): the play controller, both apps' words, and the game panel (over the timeline
+    // island while a table is open or the Games picker is up; GamePanel.qml)
+    readonly property var playCtl: core.c_play
+    readonly property var playWords: { try { return JSON.parse(core.c_play.words()) } catch (e) { return ({}) } }
+    property bool gamePanelOpen: false
+    readonly property var playArt: { try { return JSON.parse(core.c_play.art()) } catch (e) { return ({}) } }   // ui.json art (both apps)
+    function openGames(tableId) {
+        root.gamePanelOpen = true
+        if (tableId && tableId.length > 0) root.playCtl.openTable(tableId)
+    }
+    // A chat card's "Join the call" (spec §4.5): join (or switch to) this room's call through the normal path (its gates
+    // and consent sheets), then open the table once that call's games are up. Given up after a minute.
+    property var pendingGame: null   // {room, table, at}
+    function joinCallForGame(roomId, tableId) {
+        if (!roomId) return
+        root.pendingGame = { room: String(roomId), table: String(tableId || ""), at: Date.now() }
+        if (root.mInCall && root.mCallRoomId === roomId) { root.openGames(root.pendingGame.table); root.pendingGame = null; return }
+        if (root.mInCall && root.mCallRoomId !== roomId) root.callctl.switchCall(roomId)
+        else root.callctl.joinCallPressed(roomId)
+    }
+    Timer {
+        interval: 500
+        repeat: true
+        running: root.pendingGame !== null
+        onTriggered: {
+            var p = root.pendingGame
+            if (!p) return
+            if (Date.now() - p.at > 60000) { root.pendingGame = null; return }
+            if (root.mInCall && root.mCallRoomId === p.room && root.playCtl.available) {
+                root.pendingGame = null
+                root.openGames(p.table)
+            }
+        }
+    }
     property alias mPadOn: core.mPadOn
     property alias mPadChips: core.mPadChips
     property alias mPadTargets: core.mPadTargets
@@ -467,6 +501,8 @@ Kirigami.ApplicationWindow {
     property alias mCallSharing: core.mCallSharing
     property alias mMicMuted: core.mMicMuted
     property alias mCallStatus: core.mCallStatus
+    property alias mUnmuteAsks: core.mUnmuteAsks   // 12.1.17: hands up for me
+    function unmuteAskOn(t) { return core.unmuteAskOn(t) }
     property alias mOutputs: core.mOutputs
     property alias _outputsRaw: core._outputsRaw
     property alias mOutputName: core.mOutputName
@@ -886,6 +922,10 @@ Kirigami.ApplicationWindow {
             updater.restart()
         }
     }
+    // P22 (12.1.17): Settings → Appearance → Text size / Density (the person's own, over every theme: AppCore)
+    readonly property var personalLook: core.personalLook
+    readonly property string layoutDensity: core.layoutDensity   // round 2: the layout form's density ("" = none)
+    function setPersonalLook(size, density) { core.setPersonalLook(size, density) }
     function setUiScale(p) {
         var n = settings.uiScaleNormalize(p)
         if (n === root.uiScale) return
@@ -1402,7 +1442,9 @@ Kirigami.ApplicationWindow {
     // 10.1 (TH-FLOAT-08, interim): a photo tapped in a floating chat-head opens HERE, so bring
     // this window forward instead of opening the lightbox behind the game.
     function openLightbox(url, w, h, alt) { root.raise(); root.requestActivate(); lightbox.show(url, w, h, alt) }
-    function openProfileFlyout(mxid) { root.profileMxid = mxid; root.raise(); root.requestActivate(); profileFlyout.open() }
+    // ctx = the surface it was opened from (a room, or a space's own id); none = no prestige token (rev 2 §3.3)
+    property string profileCtx: ""
+    function openProfileFlyout(mxid, ctx) { root.profileMxid = mxid; root.profileCtx = ctx ? String(ctx) : ""; root.raise(); root.requestActivate(); profileFlyout.open() }
     // widgets (step 2): the app menu's "Add widget…" (WidgetHost opens its gallery), Up next's "+ New event" and
     // "Game TBD · Pick" (the Game Reel on that event, its container first).
     signal widgetGalleryRequested()
@@ -1621,8 +1663,8 @@ Kirigami.ApplicationWindow {
     Kirigami.Theme.hoverColor: Th.accentBase
     Kirigami.Theme.focusColor: Th.accentBase
     color: Th.windowBg
-    // ENGINE.md §10 on the desktop (11.0 step 5): a theme's look puts its interface font (type.ui) and its text size
-    // (type.size) on the window's font — every control in the window inherits it, popups and dialogs included
+    // ENGINE.md §10 on the desktop (11.0 step 5): a theme's look puts its interface font (type.ui) and the PERSON's text size
+    // (P22, 12.1.17: Settings → Appearance, never the theme's type.size) on the window's font — every control inherits it
     // (ApplicationWindow font propagation); the house text components scale their own sizes by Th.textScale and the
     // messages take Th.fontChat / Th.fontMono. Only while the theme has them: without a look nothing is set here.
     Binding { target: root; property: "font.family"; value: Th.fontUi; when: Th.fontUi.length > 0; restoreMode: Binding.RestoreValue }
@@ -1686,7 +1728,7 @@ Kirigami.ApplicationWindow {
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 text: root.mInstalling ? "Copying… the installed app opens by itself when it's done."
                     : "No administrator needed. You can always do this later from Settings → About."
             }
@@ -2233,7 +2275,7 @@ Kirigami.ApplicationWindow {
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -2246,7 +2288,7 @@ Kirigami.ApplicationWindow {
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Controls.CheckBox {
                 id: newRoomIsSpace
@@ -2258,7 +2300,7 @@ Kirigami.ApplicationWindow {
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
     }
@@ -2313,14 +2355,14 @@ Kirigami.ApplicationWindow {
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Controls.Label {
                 text: "Haven't got a link? Make your own space and invite people to it."
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
     }
@@ -2562,7 +2604,7 @@ Kirigami.ApplicationWindow {
     Kirigami.OverlaySheet {
         id: updateNotesSheet
         parent: Controls.Overlay.overlay
-        header: Kirigami.Heading { textFormat: Text.PlainText; text: "What's new in Tin Hat " + (root.mLatestVersion.length > 0 ? root.mLatestVersion : root.mAppVersion) }
+        header: ThHeading { textFormat: Text.PlainText; text: "What's new in Tin Hat " + (root.mLatestVersion.length > 0 ? root.mLatestVersion : root.mAppVersion) }
         Controls.Label {
             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.preferredWidth: Kirigami.Units.gridUnit * 22
@@ -2739,7 +2781,7 @@ Kirigami.ApplicationWindow {
                         Layout.alignment: Qt.AlignHCenter
                         text: "Drop to attach in " + (root.mRoomName.length > 0 ? root.mRoomName : "this room")
                         font.bold: true
-                        font.pointSize: 14
+                        font.pointSize: 14 * Th.textScale
                         color: Th.dropCardFg
                     }
                     Controls.Label {
@@ -3073,7 +3115,7 @@ Kirigami.ApplicationWindow {
         onSyncRooms: spaceCtl.syncRooms()
         onSyncRoom: (roomId) => spaceCtl.syncRooms()   // v1: the controller reconciles the whole space
         onLeave: spaceCtl.leave()
-        onViewProfile: (mxid) => root.openProfileFlyout(mxid)
+        onViewProfile: (mxid) => root.openProfileFlyout(mxid, spaceSettingsWindow.spaceId)   // a space's own surface
         onMessageUser: (mxid) => login.createDm(mxid)
         onCopyLink: (link) => { root.copyToClipboard(link); root.showPassiveNotification("Space link copied", 2500) }
     }
@@ -3178,8 +3220,18 @@ Kirigami.ApplicationWindow {
                 color: (profileFlyout.profile.tagColor && String(profileFlyout.profile.tagColor).length > 0)
                        ? String(profileFlyout.profile.tagColor) : root.senderColor(root.profileMxid)
                 font.bold: true
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.2
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.2 * Th.textScale
                 wrapMode: Text.WordWrap
+                // mini games v1: the prestige token left of the centred name (first line); the label keeps its geometry.
+                // The context is where the flyout was opened (root.profileCtx: a room, a space's own surface, or none =
+                // no token: search, Who's around, … — rev 2 §3.3).
+                PrestigeToken {
+                    id: flyTok
+                    mxid: root.profileMxid
+                    roomId: root.profileCtx
+                    x: Math.round((parent.width - parent.contentWidth) / 2) - width
+                    y: Math.round((parent.lineCount > 0 ? parent.contentHeight / parent.lineCount : parent.height) / 2 - height / 2)
+                }
             }
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -3187,7 +3239,7 @@ Kirigami.ApplicationWindow {
                 horizontalAlignment: Text.AlignHCenter
                 text: root.profileMxid
                 color: Th.profileMxidFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 wrapMode: Text.WrapAnywhere
             }
             // 10.6 (REACH §2.6 item 4 + A4.5): "● Online" / "● In a call · <room>" / the status chip.
@@ -3260,6 +3312,20 @@ Kirigami.ApplicationWindow {
         id: settingsWindow
         app: root
         core: core
+    }
+    // P22 (12.1.17) text size gate (lab builds only, scripts/textsize-gate.sh): ClipProbe.qml lists the text
+    // the main window and the Settings window clip, menus included; nothing loads in normal use
+    Loader {
+        active: login.autoClipProbe
+        sourceComponent: Component {
+            ClipProbe {
+                windows: [root, settingsWindow, padWindow, memoriesWindow, watchPartyWindow, gameReelWindow, calendarWindow, spaceSettingsWindow]
+                names: ["main", "settings", "pad", "memories", "watchparty", "gamereel", "calendar", "spacesettings"]
+                // round 3: the look as drawn (the person's size; the density after the layout's own, e.g. Handheld = touch)
+                lookSize: Th.textSize
+                lookDensity: Th.shapeDensity
+            }
+        }
     }
     property alias settingsSheet: settingsWindow
     // the old About sheet's name: the ☰ menu's "About Tin Hat" and app.about open Settings → About & help
@@ -4261,6 +4327,53 @@ Kirigami.ApplicationWindow {
         var p = b.mapToItem(null, 0, 0)
         return { x: Math.round(p.x), y: Math.round(p.y), w: Math.round(b.width), h: Math.round(b.height), winX: root.x, winY: root.y }
     }
+    // 12.1.17 room-link gate (paddrive room-state / find-text, lab builds only): the room page as shown
+    function _labRoomState() {
+        var titles = [], pane = null
+        var walk = function (it, depth) {
+            if (!it || depth > 80 || !it.visible) return
+            if (it.shownTitle !== undefined && it.shownExplanation !== undefined && it.width > 0)
+                titles.push({ title: String(it.shownTitle), explanation: String(it.shownExplanation), loading: it.loading === true })
+            if (!pane && it.openRoot !== undefined && typeof it.openThread === "function") pane = it
+            var kids = it.children || []
+            for (var i = 0; i < kids.length; i++) walk(kids[i], depth + 1)
+        }
+        walk(root.contentItem, 0)
+        return { shown: root.roomShown === true, room: String(room.roomId || ""), busy: room.busy === true, status: String(room.status || ""),
+                 empty: titles, lastRoom: String(settings.uiPref("last-room") || ""), listed: String(login.roomsJson || "").indexOf("\"" + String(room.roomId || "") + "\"") >= 0,
+                 threads: !!(root.roomInfoPanel && root.roomInfoPanel.threadsShown), threadRoot: pane ? String(pane.openRoot || "") : "",
+                 winX: root.x, winY: root.y }
+    }
+    // where `text` (a link's words) sits inside a message's text on screen: the middle of it, window coordinates
+    function _labFindLink(text) {
+        var hit = root._labWalk(function (it) {
+            return typeof it.positionToRectangle === "function" && typeof it.getText === "function" && it.height > 0
+                && String(it.getText(0, it.length)).indexOf(text) >= 0
+        })
+        if (!hit) return "not found"
+        var at = String(hit.getText(0, hit.length)).indexOf(text) + Math.floor(text.length / 2)
+        var rc = hit.positionToRectangle(at)
+        var p = hit.mapToItem(null, rc.x, rc.y + rc.height / 2)
+        return { x: Math.round(p.x), y: Math.round(p.y), w: 0, h: 0, winX: root.x, winY: root.y }
+    }
+    // the popups' layer first (a dialog sits there, on top of the window's content), then the content
+    function _labWalkAll(pred) {
+        var hit = null
+        var walk = function (it, depth) {
+            if (!it || hit || depth > 80) return
+            if (it.visible && it.width > 0 && pred(it)) { hit = it; return }
+            var kids = it.children || []
+            for (var i = 0; i < kids.length && !hit; i++) walk(kids[i], depth + 1)
+        }
+        walk(root.overlay, 0)
+        return hit || root._labWalk(pred)
+    }
+    function _labFindText(text) {
+        var b = root._labWalkAll(function (it) { return it.text !== undefined && String(it.text) === text && typeof it.clicked === "function" && it.height > 0 })
+        if (!b) return "not found"
+        var p = b.mapToItem(null, 0, 0)
+        return { x: Math.round(p.x), y: Math.round(p.y), w: Math.round(b.width), h: Math.round(b.height), winX: root.x, winY: root.y, enabled: b.enabled === true }
+    }
     // the first visible ActionButton (it has the hold signal) drawing `action`: its rect in window coordinates (paddrive find-action)
     function _findActionButton(action) {
         var hit = null
@@ -4330,7 +4443,9 @@ Kirigami.ApplicationWindow {
         // default), where an action's button is on screen (window coordinates + the window's), push to talk's state
         else if ((s.do === "row" || s.do === "find-action" || s.do === "ptt-state" || s.do === "focus-base" || s.do === "focus-composer" || s.do === "find-more" || s.do === "ptt-key-override" || s.do === "focus-now"
                   || s.do === "brb" || s.do === "ptt-hold" || s.do === "cards" || s.do === "decline" || s.do === "pin" || s.do === "pin-state"
+                  || s.do === "open-room" || s.do === "open-thread" || s.do === "jump-event" || s.do === "room-state" || s.do === "find-text" || s.do === "find-link"
                   || s.do === "force-drop") && !login.labDriveHooks()) { r = "refused" }
+        else if ((s.do === "mic-late-hold" || s.do === "mic-agc") && !login.labDriveHooks()) { r = "refused" }   // R2 (12.1.17): lab builds only
         // fix1216 round 2 (lab builds only): pin a participant's tile (as its pin button does), the pin's state, and a
         // recoverable terminal drop through the call's own drop path (callctl.labForceDrop: its own env fence too)
         else if (s.do === "pin") {
@@ -4346,6 +4461,19 @@ Kirigami.ApplicationWindow {
             r = { pinned: pin, tile: who, inCall: root.mInCall, reconnecting: callctl.reconnecting === true, failed: callctl.callFailed === true, status: String(callctl.status) }
         }
         else if (s.do === "force-drop") { r = callctl.labForceDrop() ? "dropping" : "refused (no drop hook)" }
+        // R2 (12.1.17, lab builds only): the next late mic task (a moderator's-unmute restore, an AGC rebuild) waits s.ms
+        else if (s.do === "mic-late-hold") { r = callctl.labMicLateHold(Number(s.ms || 0)) ? "held " + Number(s.ms || 0) : "refused (no hold hook)" }
+        else if (s.do === "mic-agc") { callctl.applyMicAgc(s.on === true); r = "agc " + (s.on === true) }   // the Settings toggle's call
+        // 12.1.17 room-link gate (scripts/roomlink-gate.sh; lab builds only, refused above in a release): a room / a thread /
+        // a message opened the way a clicked notification or a widget's message opens it ("open:<room>" / "thread:<room>\t<root>" in onToastAction), what
+        // the room page shows, and where a visible control with exactly this text is (the gate clicks it with real input)
+        else if (s.do === "open-room") { root.bringToFront(); root.openRoomId(String(s.room || "")); r = "open " + String(s.room || "") }
+        else if (s.do === "open-thread") { root.bringToFront(); root.openThread(String(s.room || ""), String(s.root || "")); r = "thread " + String(s.room || "") + " " + String(s.root || "") }
+        // (a message's link from the Mentions / Pinned / Polls widgets or the Memories viewer: jumpToEvent)
+        else if (s.do === "jump-event") { root.bringToFront(); root.jumpToEvent(String(s.room || ""), String(s.event || "")); r = "jump " + String(s.room || "") + " " + String(s.event || "") }
+        else if (s.do === "room-state") { r = root._labRoomState() }
+        else if (s.do === "find-text") { r = root._labFindText(String(s.text || "")) }
+        else if (s.do === "find-link") { r = root._labFindLink(String(s.text || "")) }
         // sun-l5 lab gates (lab builds only, refused above in a release): BRB, a push-to-talk hold (the key handler's call),
         // the incoming cards and their Decline, by the same calls as their buttons
         else if (s.do === "brb") { afkCtl.setAfk(s.on === true); r = "brb " + (s.on === true) }
@@ -4705,7 +4833,7 @@ Kirigami.ApplicationWindow {
                             visible: root.mBusy
                             text: bootMark.shownLabel
                             color: Th.roomsLoadingFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                         RoomsIsland {
                             id: roomsIsl
@@ -4799,7 +4927,7 @@ Kirigami.ApplicationWindow {
                         displayName: root.mRoomName
                         // "Fill the app" hides the conversation so the call owns the whole content area.
                         hidden: root.callMaximized && root.callShown
-                        onAvatarActivated: (mxid) => { root.profileMxid = mxid; profileFlyout.open() }
+                        onAvatarActivated: (mxid) => { root.profileMxid = mxid; root.profileCtx = (room && room.roomId) ? String(room.roomId) : ""; profileFlyout.open() }
                         // threads (docs/THREADS.md): a summary / "Reply in thread" opens the thread in the Threads tab
                         onThreadOpenRequested: (threadRoot, opener) => rightPanel.openThread(threadRoot, opener)
                         onThreadJumpRequested: (threadRoot, target) => rightPanel.openThread(threadRoot, null, target)
@@ -4882,7 +5010,7 @@ Kirigami.ApplicationWindow {
                         canKick: root.mCanKick
                         canBan: root.mCanBan
                         canChangePower: root.mCanChangePower
-                        onAvatarClicked: (mxid) => { root.profileMxid = mxid; profileFlyout.open() }
+                        onAvatarClicked: (mxid) => { root.profileMxid = mxid; root.profileCtx = (room && room.roomId) ? String(room.roomId) : ""; profileFlyout.open() }
                         onSetActivity: (game) => activityCtl.setActivity(game, "", (root.mActivity && root.mActivity.game === game) ? String(root.mActivity.code || "") : "")
                         onPostStatus: (text, ttlMin) => statusCtl.postStatus(text, ttlMin)
                         // Room-settings edits + moderation -> RoomController invokables.
@@ -5213,6 +5341,11 @@ Kirigami.ApplicationWindow {
     // button rows (opts.<island>.rows.<row>) and your own button islands; edit mode (step 4) moves it into the synced
     // layout document. RowModel.qml reads the rows through `layoutStore`.
     LayoutStore { id: layoutStoreObj; app: root; layoutCtl: layoutCtl; editMode: editModeObj }
+    // P22 round 2: the layout form's own density (LAYOUT.md; the Handheld preset = touch) is drawn while it is on
+    Binding {
+        target: core; property: "layoutDensity"
+        value: layoutStoreObj.form && typeof layoutStoreObj.form.density === "string" ? layoutStoreObj.form.density : ""
+    }
     readonly property alias layoutStore: layoutStoreObj
     readonly property var layoutController: layoutCtl   // the engine for other components (ActionsHost: drawer subjects)
     property bool roomShown: false   // a room is open: openRoomId shows it; sign-out / leaving the open room close it
@@ -5434,6 +5567,16 @@ Kirigami.ApplicationWindow {
     // widgets W2 (the Memories widget): the Memories window on one memory — its room's list is fetched through the
     // window's own refresh path and the window opens that session once the list holds it (MemoriesWindow.pendingOpen →
     // its tryOpen: a live or processing memory shows the window's notice, like a click on its card)
+    // 12.1.17: the Memories window on one photo (a jump in the chat to a photo the chat hides because it is in Memories)
+    function openMemoryPhoto(roomId, eventId, roomName) {
+        if (!roomId || !eventId) return
+        if (memoriesWindow.roomId !== roomId) memoriesWindow.roomName = roomName || ""
+        memoriesWindow.roomId = roomId
+        room.fetchMemoriesFor(roomId); room.fetchClipsFor(roomId)
+        memoriesWindow.pendingPhoto = String(eventId)
+        memoriesWindow.openOrRaise()
+        memoriesWindow.fetchPhotos()
+    }
     function openMemory(roomId, sessionId, roomName) {
         if (!roomId || !sessionId) return
         memoriesWindow.roomId = roomId
@@ -5473,6 +5616,10 @@ Kirigami.ApplicationWindow {
             var here = room.roomId === p.room && !!cv
             // A05.1: once the room's first load has landed, jumpTo pages back for an older message itself
             if (here && (cv.hasEvent(p.id) || cv._markerFrozen)) { root._pendingJump = null; stop(); cv.jumpTo(p.id); return }
+            // 12.1.17 (review #3; room-link gate R14): the 15 s start once the room has loaded. A room still loading (not in
+            // the store before a slow first sync: room.rs waits for it) keeps the target, or a thread reply's link lost its
+            // thread when the sync took longer than that.
+            if (here && room.busy) { p.at = Date.now(); return }
             if (Date.now() - p.at > 15000) { root._pendingJump = null; stop(); if (here) cv.jumpTo(p.id) }
         }
     }

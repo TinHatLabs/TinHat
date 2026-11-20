@@ -1,0 +1,1147 @@
+{
+  "_about": "Ask to be unmuted (12.1.17, D04.6). Byte-identical in web src/features/calls/unmuteask.vectors.json and desktop crates/app/src/testvectors/unmuteask.json. Wire: a LiveKit data packet, reliable, topic 'tinhat.unmute_ask', payload askPayload (exactly the bytes below), sent by a server-muted person to everyone in the call. The ASKER is the packet's SFU sender identity, never anything in the payload. Older clients (12.1.15 and before) have no branch for this topic and drop it. parse: a receiver decodes the packet bytes as UTF-8 (invalid sequences become U+FFFD) and drops ONE leading byte-order mark (U+FEFF); then true only for text of at most maxPayloadBytes bytes of UTF-8 that is a JSON object whose 'v' is a finite whole number >= 1 (other keys ignored, so later versions stay asks). cooldownLeft(lastAskMs|null, nowMs): ms until the asker's button works again (null or a clock that went backwards = 0). verdict: what a RECEIVER does with an ask, checked in this order: the asker is my own account -> ignore:self; I can't moderate calls here -> ignore:not-moderator; either rank unknown -> ignore:unknown-rank (fail closed); my rank is not above the asker's -> ignore:rank; the asker isn't server-muted -> ignore:not-muted; a toast for this asker less than toastGapMs ago (0 <= now-last) -> hand (refresh the hand, no toast); else toast (hand + toast). No verdict ever unmutes: Unmute is the moderator's own click, which goes through the server's moderation API (which checks rank again). handShown(askedAtMs, nowMs, stillMuted): stillMuted and now-askedAt < handMs. label(leftMs): the asker's button text. Wording: the same strings in both apps.",
+  "topic": "tinhat.unmute_ask",
+  "askPayload": "{\"v\":1}",
+  "constants": {
+    "askCooldownMs": 30000,
+    "toastGapMs": 30000,
+    "handMs": 60000,
+    "undoMs": 5000,
+    "maxPayloadBytes": 256,
+    "askHoldMs": 10000
+  },
+  "parse": [
+    {
+      "in": "{\"v\":1}",
+      "out": true,
+      "name": "the payload"
+    },
+    {
+      "in": "{\"v\":2,\"extra\":\"x\"}",
+      "out": true,
+      "name": "a later version with more keys"
+    },
+    {
+      "in": "{\"v\":1.0}",
+      "out": true,
+      "name": "1.0 is a whole number"
+    },
+    {
+      "in": "{\"v\":0}",
+      "out": false,
+      "name": "v below 1"
+    },
+    {
+      "in": "{\"v\":-1}",
+      "out": false,
+      "name": "negative v"
+    },
+    {
+      "in": "{\"v\":1.5}",
+      "out": false,
+      "name": "not whole"
+    },
+    {
+      "in": "{\"v\":\"1\"}",
+      "out": false,
+      "name": "v as a string"
+    },
+    {
+      "in": "{\"v\":true}",
+      "out": false,
+      "name": "v as a bool"
+    },
+    {
+      "in": "{}",
+      "out": false,
+      "name": "no v"
+    },
+    {
+      "in": "[1]",
+      "out": false,
+      "name": "an array"
+    },
+    {
+      "in": "1",
+      "out": false,
+      "name": "a number"
+    },
+    {
+      "in": "null",
+      "out": false,
+      "name": "null"
+    },
+    {
+      "in": "",
+      "out": false,
+      "name": "empty"
+    },
+    {
+      "in": "not json",
+      "out": false,
+      "name": "garbage"
+    },
+    {
+      "in": "{\"v\":1e400}",
+      "out": false,
+      "name": "out of range"
+    },
+    {
+      "in": "{\"v\":0,\"v\":1}",
+      "out": true,
+      "name": "duplicate key: the last wins (both parsers)"
+    },
+    {
+      "in": "\ufeff{\"v\":1}",
+      "out": true,
+      "name": "one leading byte-order mark is dropped"
+    },
+    {
+      "in": "\ufeff\ufeff{\"v\":1}",
+      "out": false,
+      "name": "only one"
+    },
+    {
+      "in": " {\"v\":1} ",
+      "out": true,
+      "name": "JSON whitespace around it"
+    },
+    {
+      "in": "\ufeff{\"v\":1,\"pad\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+      "out": true,
+      "name": "the mark doesn't count: 256 bytes after it"
+    },
+    {
+      "in": "{\"v\":1,\"pad\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+      "out": true,
+      "name": "exactly 256 bytes"
+    },
+    {
+      "in": "{\"v\":1,\"pad\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+      "out": false,
+      "name": "257 bytes: too big"
+    },
+    {
+      "in": "{\"v\":1,\"pad\":\"\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\"}",
+      "out": true,
+      "name": "multi-byte: 256 bytes, 136 characters"
+    },
+    {
+      "in": "{\"v\":1,\"pad\":\"\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\"}",
+      "out": false,
+      "name": "multi-byte: 258 bytes, 137 characters (fewer than 256 characters, more than 256 bytes)"
+    }
+  ],
+  "cooldownLeft": [
+    {
+      "lastAskMs": null,
+      "nowMs": 1000,
+      "out": 0,
+      "name": "never asked"
+    },
+    {
+      "lastAskMs": 1000,
+      "nowMs": 1000,
+      "out": 30000,
+      "name": "just asked"
+    },
+    {
+      "lastAskMs": 1000,
+      "nowMs": 1001,
+      "out": 29999,
+      "name": "1 ms later"
+    },
+    {
+      "lastAskMs": 1000,
+      "nowMs": 30999,
+      "out": 1,
+      "name": "1 ms to go"
+    },
+    {
+      "lastAskMs": 1000,
+      "nowMs": 31000,
+      "out": 0,
+      "name": "exactly the cooldown"
+    },
+    {
+      "lastAskMs": 1000,
+      "nowMs": 99999,
+      "out": 0,
+      "name": "long ago"
+    },
+    {
+      "lastAskMs": 5000,
+      "nowMs": 4000,
+      "out": 0,
+      "name": "the clock went backwards: never locked"
+    }
+  ],
+  "verdict": [
+    {
+      "name": "a moderator who outranks a muted asker: toast",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "toast"
+    },
+    {
+      "name": "my own other device asks",
+      "in": {
+        "senderIsMe": true,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:self"
+    },
+    {
+      "name": "I can't moderate calls",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": false,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:not-moderator"
+    },
+    {
+      "name": "my rank unknown",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": null,
+        "senderRank": 0,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:unknown-rank"
+    },
+    {
+      "name": "their rank unknown",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": null,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:unknown-rank"
+    },
+    {
+      "name": "same rank",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 50,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:rank"
+    },
+    {
+      "name": "they outrank me",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 100,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:rank"
+    },
+    {
+      "name": "owner over moderator",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 100,
+        "senderRank": 50,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "toast"
+    },
+    {
+      "name": "negative ranks still compare",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 0,
+        "senderRank": -10,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "toast"
+    },
+    {
+      "name": "the asker isn't muted (a forged or late ask)",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": false,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:not-muted"
+    },
+    {
+      "name": "not a moderator AND not muted: not-moderator first",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": false,
+        "iModerate": false,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:not-moderator"
+    },
+    {
+      "name": "lower rank AND not muted: rank first",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": false,
+        "iModerate": true,
+        "myRank": 0,
+        "senderRank": 50,
+        "lastToastMs": null,
+        "nowMs": 100000
+      },
+      "out": "ignore:rank"
+    },
+    {
+      "name": "toasted 10 s ago: hand only",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": 90000,
+        "nowMs": 100000
+      },
+      "out": "hand"
+    },
+    {
+      "name": "toasted 1 ms short of the gap: hand only",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": 70001,
+        "nowMs": 100000
+      },
+      "out": "hand"
+    },
+    {
+      "name": "toasted exactly the gap ago: toast",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": 70000,
+        "nowMs": 100000
+      },
+      "out": "toast"
+    },
+    {
+      "name": "toast clock in the future: toast",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": 100001,
+        "nowMs": 100000
+      },
+      "out": "toast"
+    },
+    {
+      "name": "same instant: hand only",
+      "in": {
+        "senderIsMe": false,
+        "senderServerMuted": true,
+        "iModerate": true,
+        "myRank": 50,
+        "senderRank": 0,
+        "lastToastMs": 100000,
+        "nowMs": 100000
+      },
+      "out": "hand"
+    }
+  ],
+  "handShown": [
+    {
+      "askedAtMs": 1000,
+      "nowMs": 1000,
+      "stillMuted": true,
+      "out": true,
+      "name": "just asked"
+    },
+    {
+      "askedAtMs": 1000,
+      "nowMs": 60999,
+      "stillMuted": true,
+      "out": true,
+      "name": "1 ms before the end"
+    },
+    {
+      "askedAtMs": 1000,
+      "nowMs": 61000,
+      "stillMuted": true,
+      "out": false,
+      "name": "exactly handMs: gone"
+    },
+    {
+      "askedAtMs": 1000,
+      "nowMs": 5000,
+      "stillMuted": false,
+      "out": false,
+      "name": "unmuted: gone at once"
+    },
+    {
+      "askedAtMs": 5000,
+      "nowMs": 1000,
+      "stillMuted": true,
+      "out": true,
+      "name": "clock went backwards: shown while muted"
+    }
+  ],
+  "label": [
+    {
+      "leftMs": 0,
+      "out": "Ask to be unmuted"
+    },
+    {
+      "leftMs": 30000,
+      "out": "Asked \u2014 ask again in 30 s"
+    },
+    {
+      "leftMs": 29001,
+      "out": "Asked \u2014 ask again in 30 s"
+    },
+    {
+      "leftMs": 29000,
+      "out": "Asked \u2014 ask again in 29 s"
+    },
+    {
+      "leftMs": 1,
+      "out": "Asked \u2014 ask again in 1 s"
+    }
+  ],
+  "_aboutToast": "May an Undo / ask toast act? (12.1.17 Stage B, the review's #2). Every app keeps, per server-muted identity, the moderator who muted it and a REVISION: a number the app never hands out twice. nextMuteEpisode(prev{by,rev}|null, action, by, fresh): 'unmute' -> null (no mute on record); 'mute' -> prev unchanged when prev exists and prev.by == by (the same moderator's mute repeated or re-announced), else {by, rev: fresh} (a new mute, or a mute by someone else). The SENDER identity of a packet is 'by' (my own mutes: my own identity); someone who leaves the call takes their mute record with them (gone like an unmute; a re-enforced mute after a rejoin is a new revision). Each revision is read in the same step that records the mute (no wait in between). A toast whose button unmutes someone keeps the revisions it acts on: the moderator's Undo, those of the mutes it just made (each read as it was recorded); an ask's Unmute, those of the asker's devices when the ask ARRIVED (or, held, when the asker's mute record arrived). When pressed: toastMayAct(sameCall, revs[{at, now}]) where revs = every kept identity (at = its kept revision) plus every identity the press would act on NOW that it didn't keep (at = null: a device that joined or was muted since); now = that identity's revision at the press (null = not muted). Checked in this order: not the call the toast came from -> stale:call; any identity muted now under a revision other than at (a null at included) -> stale:rev (a newer mute: never lifted by an old toast); no identity still muted under its kept revision -> stale:not-muted (an empty list too); else act. Only 'act' unmutes (through the server's moderation API, which checks rank again). A stale press does nothing but close the toast and say why (wording toastStale*). muteScenarios: start with no record and fresh = 1, 2, 3, ... for the events in order; the toast is made after the first toastAfter events (at = the revision then, if muted) and pressed after all of them.",
+  "muteEpisode": [
+    {
+      "name": "a first mute",
+      "prev": null,
+      "action": "mute",
+      "by": "@a:s:A",
+      "fresh": 7,
+      "out": {
+        "by": "@a:s:A",
+        "rev": 7
+      }
+    },
+    {
+      "name": "the same moderator again: the same mute",
+      "prev": {
+        "by": "@a:s:A",
+        "rev": 7
+      },
+      "action": "mute",
+      "by": "@a:s:A",
+      "fresh": 8,
+      "out": {
+        "by": "@a:s:A",
+        "rev": 7
+      }
+    },
+    {
+      "name": "another moderator mutes them too: a new mute",
+      "prev": {
+        "by": "@a:s:A",
+        "rev": 7
+      },
+      "action": "mute",
+      "by": "@c:s:C",
+      "fresh": 8,
+      "out": {
+        "by": "@c:s:C",
+        "rev": 8
+      }
+    },
+    {
+      "name": "another device of the same moderator: a new mute",
+      "prev": {
+        "by": "@a:s:A",
+        "rev": 7
+      },
+      "action": "mute",
+      "by": "@a:s:A2",
+      "fresh": 9,
+      "out": {
+        "by": "@a:s:A2",
+        "rev": 9
+      }
+    },
+    {
+      "name": "an unmute ends it",
+      "prev": {
+        "by": "@a:s:A",
+        "rev": 7
+      },
+      "action": "unmute",
+      "by": "@c:s:C",
+      "fresh": 8,
+      "out": null
+    },
+    {
+      "name": "an unmute of someone not muted",
+      "prev": null,
+      "action": "unmute",
+      "by": "@a:s:A",
+      "fresh": 8,
+      "out": null
+    },
+    {
+      "name": "a moderator unknown so far (the SFU said so first)",
+      "prev": {
+        "by": "",
+        "rev": 3
+      },
+      "action": "mute",
+      "by": "@a:s:A",
+      "fresh": 4,
+      "out": {
+        "by": "@a:s:A",
+        "rev": 4
+      }
+    }
+  ],
+  "muteScenarios": [
+    {
+      "name": "my mute, my Undo",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": true,
+      "out": "act"
+    },
+    {
+      "name": "the review's case: lifted by another moderator, then muted again by them: my old Undo must not lift it",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ],
+        [
+          "unmute",
+          "@c:s:C"
+        ],
+        [
+          "mute",
+          "@c:s:C"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": true,
+      "out": "stale:rev"
+    },
+    {
+      "name": "lifted and muted again by ME: the old toast is still old",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ],
+        [
+          "unmute",
+          "@a:s:A"
+        ],
+        [
+          "mute",
+          "@a:s:A"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": true,
+      "out": "stale:rev"
+    },
+    {
+      "name": "the second toast of that is the live one",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ],
+        [
+          "unmute",
+          "@a:s:A"
+        ],
+        [
+          "mute",
+          "@a:s:A"
+        ]
+      ],
+      "toastAfter": 3,
+      "sameCall": true,
+      "out": "act"
+    },
+    {
+      "name": "another moderator mutes them on top of mine",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ],
+        [
+          "mute",
+          "@c:s:C"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": true,
+      "out": "stale:rev"
+    },
+    {
+      "name": "my mute re-announced (a repeat): still mine",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ],
+        [
+          "mute",
+          "@a:s:A"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": true,
+      "out": "act"
+    },
+    {
+      "name": "someone already lifted it",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ],
+        [
+          "unmute",
+          "@c:s:C"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": true,
+      "out": "stale:not-muted"
+    },
+    {
+      "name": "the call is over",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": false,
+      "out": "stale:call"
+    },
+    {
+      "name": "an ask made under the first mute, pressed after a lift and a new mute",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ],
+        [
+          "unmute",
+          "@c:s:C"
+        ],
+        [
+          "mute",
+          "@a:s:A"
+        ]
+      ],
+      "toastAfter": 1,
+      "sameCall": true,
+      "out": "stale:rev"
+    },
+    {
+      "name": "made when they weren't muted (nothing to act on)",
+      "events": [
+        [
+          "mute",
+          "@a:s:A"
+        ]
+      ],
+      "toastAfter": 0,
+      "sameCall": true,
+      "out": "stale:not-muted"
+    }
+  ],
+  "toastMayAct": [
+    {
+      "name": "one identity, same revision",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": 5
+        }
+      ],
+      "out": "act"
+    },
+    {
+      "name": "one identity, a newer revision",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": 9
+        }
+      ],
+      "out": "stale:rev"
+    },
+    {
+      "name": "one identity, not muted any more",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": null
+        }
+      ],
+      "out": "stale:not-muted"
+    },
+    {
+      "name": "nothing covered",
+      "sameCall": true,
+      "revs": [],
+      "out": "stale:not-muted"
+    },
+    {
+      "name": "another call wins over everything",
+      "sameCall": false,
+      "revs": [
+        {
+          "at": 5,
+          "now": 5
+        }
+      ],
+      "out": "stale:call"
+    },
+    {
+      "name": "a person: one device lifted, one still mine",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": null
+        },
+        {
+          "at": 6,
+          "now": 6
+        }
+      ],
+      "out": "act"
+    },
+    {
+      "name": "a person: one device muted again by someone, one still mine",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": 11
+        },
+        {
+          "at": 6,
+          "now": 6
+        }
+      ],
+      "out": "stale:rev"
+    },
+    {
+      "name": "a person: both lifted",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": null
+        },
+        {
+          "at": 6,
+          "now": null
+        }
+      ],
+      "out": "stale:not-muted"
+    },
+    {
+      "name": "a newer revision wins over not-muted",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": null
+        },
+        {
+          "at": 6,
+          "now": 12
+        }
+      ],
+      "out": "stale:rev"
+    },
+    {
+      "name": "a device the toast never saw is muted now (joined or muted since): never lifted",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": 5
+        },
+        {
+          "at": null,
+          "now": 8
+        }
+      ],
+      "out": "stale:rev"
+    },
+    {
+      "name": "a device the toast never saw, not muted: no matter",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": 5,
+          "now": 5
+        },
+        {
+          "at": null,
+          "now": null
+        }
+      ],
+      "out": "act"
+    },
+    {
+      "name": "only unseen devices, none muted",
+      "sameCall": true,
+      "revs": [
+        {
+          "at": null,
+          "now": null
+        }
+      ],
+      "out": "stale:not-muted"
+    }
+  ],
+  "_aboutHold": "An ask that arrives before the receiver knows the asker is server-muted (the call server mutes them BEFORE the moderator's request returns and the moderator announces it) is HELD, not dropped: at most one per asker, only from someone in the call who isn't me, at most 64 held at once. When a mute record for that asker arrives (a mute packet, or my own mute of them), a held ask still live by heldAskLive(heldAtMs, nowMs) (0 <= now - heldAt < askHoldMs; a clock that went backwards drops it) is decided then, exactly like a fresh ask (the verdict above, the toast gap included). It's dropped when the asker leaves or the call ends. Holding never unmutes anyone and never shows anything by itself. heldScenarios run holdPut(held, id, nowMs, max) -> true = held (first drops every entry no longer live at nowMs; refuses a NEW asker when max are held; an asker already held gets the new time) and holdTake(held, id, nowMs) -> true = decide it now (the entry is removed either way) on one map, in order; the 4th element of each op is the expected result.",
+  "heldScenarios": [
+    {
+      "name": "held, then its mute arrives 3 s later: decided",
+      "max": 64,
+      "ops": [
+        [
+          "put",
+          "@b:s:B",
+          1000,
+          true
+        ],
+        [
+          "take",
+          "@b:s:B",
+          4000,
+          true
+        ]
+      ]
+    },
+    {
+      "name": "taken once only",
+      "max": 64,
+      "ops": [
+        [
+          "put",
+          "@b:s:B",
+          1000,
+          true
+        ],
+        [
+          "take",
+          "@b:s:B",
+          2000,
+          true
+        ],
+        [
+          "take",
+          "@b:s:B",
+          2001,
+          false
+        ]
+      ]
+    },
+    {
+      "name": "the mute arrives too late: dropped",
+      "max": 64,
+      "ops": [
+        [
+          "put",
+          "@b:s:B",
+          1000,
+          true
+        ],
+        [
+          "take",
+          "@b:s:B",
+          11000,
+          false
+        ]
+      ]
+    },
+    {
+      "name": "never held",
+      "max": 64,
+      "ops": [
+        [
+          "take",
+          "@b:s:B",
+          1000,
+          false
+        ]
+      ]
+    },
+    {
+      "name": "one per asker: a second ask restarts the hold",
+      "max": 64,
+      "ops": [
+        [
+          "put",
+          "@b:s:B",
+          1000,
+          true
+        ],
+        [
+          "put",
+          "@b:s:B",
+          9000,
+          true
+        ],
+        [
+          "take",
+          "@b:s:B",
+          15000,
+          true
+        ]
+      ]
+    },
+    {
+      "name": "bounded: a full map refuses a new asker",
+      "max": 2,
+      "ops": [
+        [
+          "put",
+          "@a:s:A",
+          1000,
+          true
+        ],
+        [
+          "put",
+          "@b:s:B",
+          1000,
+          true
+        ],
+        [
+          "put",
+          "@c:s:C",
+          1000,
+          false
+        ],
+        [
+          "take",
+          "@c:s:C",
+          1001,
+          false
+        ]
+      ]
+    },
+    {
+      "name": "expired ones make room",
+      "max": 2,
+      "ops": [
+        [
+          "put",
+          "@a:s:A",
+          1000,
+          true
+        ],
+        [
+          "put",
+          "@b:s:B",
+          5000,
+          true
+        ],
+        [
+          "put",
+          "@c:s:C",
+          11000,
+          true
+        ],
+        [
+          "take",
+          "@a:s:A",
+          11001,
+          false
+        ],
+        [
+          "take",
+          "@c:s:C",
+          11002,
+          true
+        ]
+      ]
+    },
+    {
+      "name": "a full map still refreshes an asker already in it",
+      "max": 1,
+      "ops": [
+        [
+          "put",
+          "@a:s:A",
+          1000,
+          true
+        ],
+        [
+          "put",
+          "@a:s:A",
+          2000,
+          true
+        ],
+        [
+          "take",
+          "@a:s:A",
+          11500,
+          true
+        ]
+      ]
+    },
+    {
+      "name": "the clock went backwards: dropped",
+      "max": 64,
+      "ops": [
+        [
+          "put",
+          "@b:s:B",
+          5000,
+          true
+        ],
+        [
+          "take",
+          "@b:s:B",
+          4000,
+          false
+        ]
+      ]
+    }
+  ],
+  "heldAsk": [
+    {
+      "name": "just held",
+      "heldAtMs": 1000,
+      "nowMs": 1000,
+      "out": true
+    },
+    {
+      "name": "the mute lands 3 s later",
+      "heldAtMs": 1000,
+      "nowMs": 4000,
+      "out": true
+    },
+    {
+      "name": "1 ms before the end",
+      "heldAtMs": 1000,
+      "nowMs": 10999,
+      "out": true
+    },
+    {
+      "name": "exactly askHoldMs: dropped",
+      "heldAtMs": 1000,
+      "nowMs": 11000,
+      "out": false
+    },
+    {
+      "name": "the clock went backwards: dropped",
+      "heldAtMs": 5000,
+      "nowMs": 4000,
+      "out": false
+    }
+  ],
+  "_aboutUndoOffered": "A moderator's mute request can finish late. undoOffered(prevRev|null, since): when my mute's answer comes back, for each identity it muted, prevRev = the revision of the record it replaces (null = none) and since = the highest revision handed out when my request went out (revisions only grow). The Undo is offered only when every identity gives prevRev == null or prevRev <= since; otherwise someone muted them after my request left (a newer mute my late answer would overwrite) and the toast shows its text without the Undo button. Read prevRev in the same step that records my mute.",
+  "undoOffered": [
+    {
+      "name": "nothing on record",
+      "prevRev": null,
+      "since": 7,
+      "out": true
+    },
+    {
+      "name": "an older mute on record (mine or anyone's, before my request)",
+      "prevRev": 5,
+      "since": 7,
+      "out": true
+    },
+    {
+      "name": "the newest revision when my request left",
+      "prevRev": 7,
+      "since": 7,
+      "out": true
+    },
+    {
+      "name": "someone muted them after my request left",
+      "prevRev": 8,
+      "since": 7,
+      "out": false
+    }
+  ],
+  "wording": {
+    "askButton": "Ask to be unmuted",
+    "askSent": "Asked to be unmuted",
+    "askToast": "{name} asks to be unmuted",
+    "askToastAction": "Unmute",
+    "handTip": "{name} asks to be unmuted",
+    "muteToast": "Muted {name} for everyone",
+    "muteToastAction": "Undo",
+    "toastStaleCall": "That call is over",
+    "toastStaleRev": "{name} was muted again in the meantime, so nothing changed",
+    "toastStaleUnmuted": "{name} isn't muted any more"
+  }
+}

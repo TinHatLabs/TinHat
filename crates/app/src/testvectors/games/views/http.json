@@ -1,0 +1,845 @@
+{
+ "about": "Base: https://<server>/api/play/v1 (the room's own server, rankServerFor). Header Authorization: Play <session> on everything but POST /session. CORS *, no cookies. Errors: {code, error} with the status in errors.json. All bodies JSON.",
+ "endpoints": [
+  {
+   "method": "POST",
+   "path": "/session",
+   "def_req": "sessionRequest",
+   "def": "sessionAnswer",
+   "status": 200,
+   "req": {
+    "openid": {
+     "access_token": "<from POST /_matrix/client/v3/user/{me}/openid/request_token>",
+     "matrix_server_name": "example.org",
+     "token_type": "Bearer",
+     "expires_in": 3600
+    },
+    "user_id": "@ana:example.org",
+    "client": {
+     "kind": "desktop",
+     "v": "12.2.0",
+     "pad": false
+    }
+   },
+   "res": {
+    "v": 1,
+    "session": "Q2hpcHNBcmVQbGF5TW9uZXlPbmx5LUFfVGVzdDAxMjM",
+    "user": "@ana:example.org",
+    "expires": 1763628800000,
+    "wallets": [
+     "!hangout:example.org"
+    ],
+    "rig_hidden": false
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/rooms/{room}/space",
+   "def": "spaceAnswer",
+   "status": 200,
+   "about": "the room's game space as THIS server decides it (game_space, server mode). Errors: 403 not-member (naming nothing: not joined to the room AND its space), 403 no-space, 403 is-space never (a space is no-space here), 403 wrong-server {space, server} (the app shows it, never follows it), 503 unavailable.",
+   "req": null,
+   "res": {
+    "space": "!hangout:example.org",
+    "server": "example.org"
+   },
+   "errors": [
+    {
+     "status": 403,
+     "body": {
+      "code": "wrong-server",
+      "error": "this room's chips are kept by another server",
+      "space": "!squad:other.example",
+      "server": "other.example"
+     }
+    },
+    {
+     "status": 403,
+     "body": {
+      "code": "no-space",
+      "error": "games live in spaces"
+     }
+    },
+    {
+     "status": 503,
+     "body": {
+      "code": "unavailable",
+      "error": "this server can't see the room's space in full yet"
+     }
+    },
+    {
+     "status": 403,
+     "body": {
+      "code": "not-member",
+      "error": "not a member"
+     }
+    }
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/wallet",
+   "def_req": "walletRequest",
+   "def": "me",
+   "status": 201,
+   "about": "opt in to that space (after the app's one-time line); answers /me. Again when the wallet exists: 200, same answer. 403 not-member unless joined to the space; 403 wrong-server unless this server keeps it.",
+   "req": {
+    "space": "!hangout:example.org"
+   },
+   "res": {
+    "v": 1,
+    "space": "!hangout:example.org",
+    "user": "@ana:example.org",
+    "balance": 10,
+    "holdings": 10,
+    "rank": 0,
+    "cap": 100,
+    "at_table": null,
+    "earned_today": 0,
+    "day_max": 8,
+    "accrual_s": 0,
+    "chip_s": 3600,
+    "day": "2026-11-19",
+    "topup": {
+     "available": false,
+     "next_day": "2026-11-20"
+    }
+   }
+  },
+  {
+   "method": "DELETE",
+   "path": "/wallet?space={space}",
+   "status": 204,
+   "about": "Delete my chips in that space. 409 seated / open-money while anything of yours is in play there.",
+   "req": null,
+   "res": null
+  },
+  {
+   "method": "GET",
+   "path": "/me?space={space}",
+   "def": "me",
+   "status": 200,
+   "about": "runs the top-up check; 404 no-wallet before opting in",
+   "req": null,
+   "res": {
+    "v": 1,
+    "space": "!hangout:example.org",
+    "user": "@ana:example.org",
+    "balance": 38,
+    "holdings": 40,
+    "rank": 1,
+    "cap": 150,
+    "at_table": {
+     "table": "tH3k9aB2cD4eF6gH",
+     "game": "holdem",
+     "room": "!games:example.org"
+    },
+    "earned_today": 3,
+    "day_max": 8,
+    "accrual_s": 1260,
+    "chip_s": 3600,
+    "day": "2026-11-19",
+    "topup": {
+     "available": false,
+     "next_day": "2026-11-20"
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/me/journal?space={space}&before=<tx>&limit=50",
+   "def": "journal",
+   "status": 200,
+   "req": null,
+   "res": {
+    "v": 1,
+    "space": "!hangout:example.org",
+    "entries": [
+     {
+      "tx": "x9TQ2",
+      "at": null,
+      "day": "2026-11-19",
+      "delta": 1,
+      "reason": "earn",
+      "ref": null
+     },
+     {
+      "tx": "x9TQ1",
+      "at": 1763599940000,
+      "day": "2026-11-19",
+      "delta": -40,
+      "reason": "sit",
+      "ref": "tH3k9aB2cD4eF6gH"
+     },
+     {
+      "tx": "x9TQ0",
+      "at": 1763513600000,
+      "day": "2026-11-18",
+      "delta": 10,
+      "reason": "start",
+      "ref": null
+     }
+    ],
+    "next": null
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/ranks?space={space}&u=@ana:example.org&u=@dee:example.net (or ?room={room}&u=…)",
+   "def": "ranks",
+   "status": 200,
+   "about": "<= 100 ids; the caller joined to the space (or the room); only ranks above 0, only current space members with a wallet there (frozen wallets: no rank), nothing else",
+   "req": null,
+   "res": {
+    "v": 1,
+    "space": "!hangout:example.org",
+    "ranks": {
+     "@ana:example.org": 1,
+     "@dee:example.net": 3
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/rooms/{room}/tables",
+   "def": "tables",
+   "status": 200,
+   "req": null,
+   "res": {
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "tables": [
+     {
+      "table": "tH3k9aB2cD4eF6gH",
+      "game": "holdem",
+      "status": "hand",
+      "host": "@ana:example.org",
+      "seated": 3,
+      "seats": 8,
+      "players": [
+       "@ana:example.org",
+       "@ben:example.org",
+       "@dee:example.net"
+      ],
+      "hand": 1,
+      "round": null,
+      "space": "!hangout:example.org",
+      "owner": "example.org"
+     },
+     {
+      "table": "tR7q2wE4rT6yU8iO",
+      "game": "rig",
+      "status": "round",
+      "host": "@ana:example.org",
+      "seated": 3,
+      "seats": 8,
+      "players": [
+       "@ana:example.org",
+       "@ben:example.org",
+       "@cy:example.org"
+      ],
+      "hand": null,
+      "round": 2,
+      "space": "!hangout:example.org",
+      "owner": "example.org"
+     }
+    ]
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/rooms/{room}/tables",
+   "def_req": "tableRequest",
+   "def": "tableCreated",
+   "status": 201,
+   "about": "space = the one the app showed; 409 space-changed if the server's own answer differs (before any chip moves)",
+   "req": {
+    "game": "holdem",
+    "space": "!hangout:example.org",
+    "opts": {
+     "seats": 8
+    }
+   },
+   "res": {
+    "table": "tH3k9aB2cD4eF6gH"
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/rooms/{room}/tables",
+   "def_req": "tableRequest",
+   "def": "tableCreated",
+   "status": 201,
+   "req": {
+    "game": "rig",
+    "space": "!hangout:example.org",
+    "opts": {
+     "preset": "lite",
+     "bankroll": 6,
+     "patch": true
+    }
+   },
+   "res": {
+    "table": "tR7q2wE4rT6yU8iO"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/tables/{id}",
+   "def": "view",
+   "status": 200,
+   "about": "the caller's view (same as a view frame's view)",
+   "req": null,
+   "res": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 2,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 20,
+      "bet": 0,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 3,
+     "to_act": {
+      "seat": 6,
+      "turn": 1,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 4,
+      "a": "bb",
+      "to": 2
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 6,
+     "state": "active",
+     "cards": [
+      "Qs",
+      "Jc"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 2,
+      "raise": {
+       "min": 4,
+       "max": 20
+      }
+     },
+     "screens": [
+      "desktop",
+      "pad"
+     ],
+     "at_cap": false,
+     "cap": 100,
+     "holdings": 20,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/tables/{id}/hands?before=<n>&limit=50",
+   "def": "hands",
+   "status": 200,
+   "req": null,
+   "res": {
+    "v": 1,
+    "hands": [
+     {
+      "n": 1,
+      "at": 1763600000000,
+      "button": 6,
+      "board": [
+       "2c",
+       "9d",
+       "Ts",
+       "Kh",
+       "5s"
+      ],
+      "you": {
+       "seat": 1,
+       "cards": [
+        "As",
+        "Kd"
+       ]
+      },
+      "actions": [
+       {
+        "street": "preflop",
+        "seat": 1,
+        "a": "sb",
+        "to": 1
+       },
+       {
+        "street": "preflop",
+        "seat": 4,
+        "a": "bb",
+        "to": 2
+       },
+       {
+        "street": "preflop",
+        "seat": 6,
+        "a": "raise",
+        "to": 6
+       },
+       {
+        "street": "preflop",
+        "seat": 1,
+        "a": "call",
+        "to": 6
+       },
+       {
+        "street": "preflop",
+        "seat": 4,
+        "a": "call",
+        "to": 6
+       }
+      ],
+      "shown": {
+       "1": [
+        "As",
+        "Kd"
+       ],
+       "4": [
+        "9h",
+        "9c"
+       ],
+       "6": [
+        "Qs",
+        "Jc"
+       ]
+      },
+      "seats": {
+       "1": "@ana:example.org",
+       "4": "@ben:example.org",
+       "6": "@dee:example.net"
+      },
+      "net": {
+       "@ana:example.org": -20,
+       "@ben:example.org": -20,
+       "@dee:example.net": 40
+      },
+      "voided": false
+     }
+    ],
+    "next": null
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/tables/{id}/rounds/{r}",
+   "def": "round",
+   "status": 200,
+   "about": "a FINISHED Rig round only (404 no-table before its reveal)",
+   "req": null,
+   "res": {
+    "v": 1,
+    "table": "tR7q2wE4rT6yU8iO",
+    "r": 2,
+    "spinner": "@ben:example.org",
+    "preset": "full",
+    "history": [
+     {
+      "spin": 1,
+      "bet": 1,
+      "reels": [
+       "eye",
+       "moon",
+       "dish"
+      ],
+      "payout": 0,
+      "result": "loss",
+      "stamps": []
+     },
+     {
+      "spin": 2,
+      "bet": 2,
+      "reels": [
+       "dish",
+       "dish",
+       "eye"
+      ],
+      "payout": 8,
+      "result": "win",
+      "stamps": [
+       "nudged"
+      ]
+     },
+     {
+      "spin": 3,
+      "bet": 2,
+      "reels": [
+       "hat",
+       "eye",
+       "hat"
+      ],
+      "payout": 8,
+      "result": "win",
+      "stamps": [
+       "called-right",
+       "refilled"
+      ]
+     },
+     {
+      "spin": 4,
+      "bet": 2,
+      "reels": [
+       "saucer",
+       "lizard",
+       "moon"
+      ],
+      "payout": 0,
+      "result": "loss",
+      "stamps": [
+       "called-wrong"
+      ]
+     },
+     {
+      "spin": 5,
+      "bet": 2,
+      "reels": [
+       "eye",
+       "eye",
+       "lizard"
+      ],
+      "payout": 0,
+      "result": "loss",
+      "stamps": [
+       "nudged"
+      ]
+     }
+    ],
+    "reveal": {
+     "seed": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+     "slots": [
+      {
+       "slot": 1,
+       "card": "moon-monday",
+       "owner": "@dee:example.net",
+       "from_spin": 1
+      },
+      {
+       "slot": 2,
+       "card": "rebound",
+       "owner": "@cy:example.org",
+       "from_spin": 1
+      },
+      {
+       "slot": 2,
+       "card": "cold-streak",
+       "owner": "@cy:example.org",
+       "from_spin": 3
+      },
+      {
+       "slot": 3,
+       "card": "even-money",
+       "owner": "@eli:example.org",
+       "from_spin": 1
+      }
+     ],
+     "mutes": [
+      {
+       "spin": 5,
+       "owner": "@dee:example.net"
+      }
+     ],
+     "nudges": [
+      {
+       "spin": 2,
+       "by": "@cy:example.org",
+       "reel": 3,
+       "step": 1
+      },
+      {
+       "spin": 5,
+       "by": "@ana:example.org",
+       "reel": 3,
+       "step": 1
+      }
+     ],
+     "calls": [
+      {
+       "spin": 3,
+       "card": "rebound",
+       "right": true,
+       "owner": "@cy:example.org"
+      },
+      {
+       "spin": 4,
+       "card": "hot-hat",
+       "right": false,
+       "owner": null
+      }
+     ],
+     "peeks": [
+      {
+       "who": "@ana:example.org",
+       "target": "@dee:example.net",
+       "card": "moon-monday",
+       "right": true,
+       "delta": 3
+      },
+      {
+       "who": "@eli:example.org",
+       "target": "@cy:example.org",
+       "card": "underdog",
+       "right": false,
+       "delta": -2
+      }
+     ],
+     "market": [
+      {
+       "who": "@ana:example.org",
+       "side": "up",
+       "stake": 1,
+       "back": 3
+      },
+      {
+       "who": "@dee:example.net",
+       "side": "not-up",
+       "stake": 2,
+       "back": 0
+      }
+     ],
+     "whispers": [
+      {
+       "who": "@ana:example.org",
+       "spin": 2,
+       "template": "bet-size"
+      },
+      {
+       "who": "@dee:example.net",
+       "spin": 4,
+       "text": "watch the lizard"
+      }
+     ],
+     "spins": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "honest": [
+        "eye",
+        "dish",
+        "dish"
+       ],
+       "after_cards": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "final": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "honest_payout": 1,
+       "payout": 0,
+       "touched": [
+        "moon-monday"
+       ],
+       "bit": [
+        "moon-monday"
+       ],
+       "rake": {
+        "moon-monday": 1
+       }
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "honest": [
+        "dish",
+        "dish",
+        "dish"
+       ],
+       "after_cards": [
+        "dish",
+        "dish",
+        "dish"
+       ],
+       "final": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "honest_payout": 16,
+       "payout": 8,
+       "touched": [
+        "rebound",
+        "even-money"
+       ],
+       "bit": [],
+       "rake": {}
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "honest": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "after_cards": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "final": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "honest_payout": 8,
+       "payout": 8,
+       "touched": [],
+       "bit": [],
+       "rake": {}
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "honest": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "after_cards": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "final": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "honest_payout": 0,
+       "payout": 0,
+       "touched": [],
+       "bit": [],
+       "rake": {}
+      },
+      {
+       "spin": 5,
+       "bet": 2,
+       "honest": [
+        "eye",
+        "eye",
+        "moon"
+       ],
+       "after_cards": [
+        "eye",
+        "eye",
+        "moon"
+       ],
+       "final": [
+        "eye",
+        "eye",
+        "lizard"
+       ],
+       "honest_payout": 2,
+       "payout": 0,
+       "touched": [
+        "cold-streak"
+       ],
+       "bit": [
+        "cold-streak"
+       ],
+       "rake": {
+        "cold-streak": 2
+       }
+      }
+     ],
+     "up": true,
+     "net": {
+      "@ben:example.org": 8,
+      "@ana:example.org": 5,
+      "@cy:example.org": 1,
+      "@dee:example.net": -4,
+      "@eli:example.org": -2,
+      "@gus:example.org": 0
+     }
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/tables/{id}/summary",
+   "def": "summary",
+   "status": 200,
+   "about": "what a chat card renders; hands for Hold'em, rounds + leaderboard + pit_boss for The Rig",
+   "req": null,
+   "res": {
+    "v": 1,
+    "table": "tH3k9aB2cD4eF6gH",
+    "game": "holdem",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "host": "@ana:example.org",
+    "status": "closed",
+    "opened": 1763596400000,
+    "closed": 1763600000000,
+    "hands": 24,
+    "rounds": 0,
+    "biggest_pot": 60,
+    "net": {
+     "@ana:example.org": -12,
+     "@ben:example.org": -10,
+     "@dee:example.net": 22
+    },
+    "leaderboard": [],
+    "pit_boss": null
+   }
+  }
+ ]
+}

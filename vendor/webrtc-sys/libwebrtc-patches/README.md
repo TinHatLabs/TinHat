@@ -4,7 +4,7 @@ Three patches ride on the rebuilt libwebrtc. All must be applied before
 running the build runners; each carries a grep-able vintage stamp so a stale
 archive can never masquerade as current (`strings <binary>` must show
 `tinhat-av1-e2ee-v2`, `tinhat-dav1d-fp-v1`, `tinhat-vp9-kf-iv-v1`,
-`tinhat-iv-v2` AND `tinhat-iv-rx-v1`; the third patch carries the last three).
+`tinhat-iv-v2`, `tinhat-iv-rx-v1` AND `tinhat-tx-len-v1`; the third patch carries the last four).
 
 Our `webrtc-sys` normally links the LiveKit prebuilt `libwebrtc` (release tag
 `webrtc-51ef663` — named after the LAST 7 hex chars of webrtc-sdk/webrtc commit
@@ -208,6 +208,60 @@ Tests:
 - Rust `the_libwebrtc_patch_carries_the_same_rule`: the receiver lines are in the patch and the raw-tail IV read is
   removed.
 
+## The sender's length check (`tinhat-tx-len-v1`, 12.1.17)
+
+Upstream `encryptFrame` copied the codec's clear header (`get_unencrypted_bytes`: the first H.264/H.265 slice NAL's
+offset + 2, 10 bytes for a VP8 keyframe and 3 for a delta frame, 1 for audio, 0 for VP9 and AV1) without checking the
+frame's length, then sized the sealed payload as `size − header`. A frame SHORTER than its own header (degenerate
+output of our own encoder, e.g. H.264 `00 00 01 65` = header 5 of 4 bytes, or a VP8 keyframe under 10 bytes) read
+past the end of the frame and then underflowed into a huge allocation, i.e. an abort of the whole app. Only the local
+encoder's output reaches this path. The sender now:
+
+- drops such a frame: never sent as is, never sealed. It logs the 1st, 2nd, 4th, 8th, … drop and leaves the cryptor
+  state alone (no key problem: the next frame seals normally). The receivers have had the matching check
+  (`size ≥ header + 2`) since `tinhat-iv-rx-v1`.
+- seals a frame exactly as long as its header with an empty payload (tag ‖ IV ‖ trailer = 30 bytes), which every
+  receiver accepts.
+- keeps the header length a `uint8_t`, as upstream does on both sides, so the wire behaviour is unchanged. An H.264
+  slice NAL at offset ≥ 254 wraps that length mod 256 on the sender and on every native receiver alike: such frames
+  stay as they were (sealed; they decrypt only at offset 254, and the wrapped header is SHORTER than the real one, so
+  no extra byte goes out in the clear). Moving both sides to `size_t` would be a wire change of its own.
+
+Tin Hat Web's worker (livekit-client `encodeFunction`) had the same shape: its typed-array view of the header threw a
+`RangeError` outside the per-frame `try` (no out-of-bounds read in JavaScript, nothing left unencrypted), which errored
+the track's whole encode stream. It drops such a frame too since 12.1.17 (same stamp; tinhat-web
+`src/features/calls/SENDER-LENGTH-CHECK.md`). Shared vectors: `testvectors/tx-len/vectors.json` (byte-identical in both
+repos; they also record the web's header where its NAL scanner differs on tiny frames, pre-existing).
+
+Tests:
+- `tests/run-tinhat-tx-test.sh <artifact dir>` (Linux, g++) / `tests/run-tinhat-tx-test.ps1 <artifact dir>` (Windows,
+  MSVC /MT, the same source): compiles `tests/tinhat_tx_test.cc` against a BUILT archive and drives that archive's own
+  sender and receiver. Each set runs in its own process (POSIX fork; Windows: the test re-runs itself with `--job K`,
+  crash dialogs off), and the independent AES-GCM check uses system OpenSSL on Linux (the archive's own BoringSSL is
+  prefixed `LK_*` there, so it can't stand in for it) and CNG (bcrypt) on Windows. A truncated vectors file is refused. Every frame handed to the sender sits at the end of a guarded mapping (the
+  next page is `PROT_NONE`), so a read of one byte past the frame kills the child (SIGSEGV) instead of passing
+  unnoticed (control: a planted one-byte overread must fault). Per codec (H.264, H.265, VP8, VP9, AV1, audio), each
+  set in its own child with a timeout:
+  - SHORT: frames shorter than their clear header must deliver NOTHING, the sender must survive, and a valid frame
+    after them must still be sealed;
+  - BOUNDARY: header, header + 1, header + 2 bytes (1–3 for VP9/AV1), key and delta frames, under key index 0 and 3:
+    sealed, the clear header kept as is (AV1: the wrapper), the trailer `[12, key index]`, the exact sealed length
+    (H.264/H.265: at least that), no plaintext run in the output, decrypted byte-identical by the archive's receiver;
+  - OVERSIZED: 1, 4 and 16 MiB frames, the same checks;
+  - H.264 WIDE HEADER: slice NAL offsets 251–253 (header 253–255) must round-trip; offsets 254–600 must be survived,
+    end in the trailer, and open INDEPENDENTLY (system OpenSSL AES-GCM under the derived key, AAD = the wrapped clear
+    header, body unescaped by the archive's `ParseRbsp`) to exactly the rest of the frame: no byte past the clear
+    header goes out unsealed (whether the archive's receiver decrypts them is printed, not asserted);
+  - VECTORS: every case of the shared vectors, each in its own child (drop: nothing delivered; seal: the BOUNDARY
+    checks + byte-identical decryption), always followed by a valid frame that must seal AND decrypt (the SHORT sets'
+    follow-up frame is decrypted as well).
+  **Shown able to fail:** on the 12.1.16 archive (`linux-x64-release-tinhat-12110-ivrx3`) the H.264, H.265 and VP8
+  SHORT children and all 22 "drop" vectors die (SIGSEGV: the read past the frame); on an archive whose check is off
+  by one (`<=`, a plant) the BOUNDARY sets and the 7 "exactly the header" vectors fail (dropped).
+- Rust `the_sender_drops_frames_shorter_than_their_header`: the check is in the patch, ahead of the header copy and
+  the payload sizing; `tx_len_vectors_match_the_patch`: the shared vectors carry the patch's stamp and every case's
+  verdict follows from its length and header.
+
 ## Rebuilding (how this was produced)
 
 On the build host: clone `livekit/rust-sdks` at tag `webrtc-51ef663`, cd
@@ -222,7 +276,7 @@ and keep the stamps), then copy `build-patched.sh` (Linux) /
 `win-build-patched.cmd` (Windows) into the recipe's `webrtc-sys/libwebrtc`
 directory and run it there. They are the recipe's build scripts minus patch
 application (idempotent) plus fail-fast compiles of the patched cryptor and
-dav1d objects, and they refuse an archive that lacks any of the three stamps. The
+dav1d objects, and they refuse an archive that lacks any of the stamps. The
 artifact directory defaults to `linux-x64-release` / `win-x64-release`;
 set `WEBRTC_ARTIFACTS_DIR` (a folder of its own, outside `src/`) to write a
 new archive beside an existing one instead of over it. `packaging/PKGBUILD`

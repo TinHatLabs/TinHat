@@ -117,6 +117,17 @@ pub(crate) async fn my_thread_receipts(room: &Room, roots: &[String]) -> Vec<tin
 /// misorder two events seconds apart. A receipt's own time is never used (a receipt sent later can point at an OLDER
 /// event: Mark as read on an old notification); a tie or an event that can't be loaded goes to the receipt this
 /// room's rule sends now (public in a room of my own server, else private), the one that keeps moving.
+/// 12.1.17 (notify.rs, the quiet Memories photos' ledger): is this m.receipt content (a sync batch's) one of mine on the
+/// main timeline (unthreaded or "main"; public or private)? A read, never a send.
+pub(crate) fn has_own_main_receipt(content: &Value, me: &str) -> bool {
+    let Some(events) = content.as_object() else { return false };
+    events.values().any(|per_type| {
+        ["m.read", "m.read.private"].iter().any(|ty| {
+            per_type.get(*ty).and_then(|u| u.get(me)).is_some_and(|r| matches!(r.get("thread_id").and_then(|t| t.as_str()), None | Some("main")))
+        })
+    })
+}
+
 pub(crate) async fn own_read_up_to(room: &Room) -> String {
     use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
     let own = room.own_user_id();
@@ -172,6 +183,16 @@ pub(crate) fn later_receipt(public_ts: Option<u64>, private_ts: Option<u64>, pre
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn own_main_receipts_in_a_sync_batch_12_1_17() {
+        let me = "@me:x";
+        assert!(has_own_main_receipt(&serde_json::json!({"$e": {"m.read": {"@me:x": {"ts": 1}}}}), me));
+        assert!(has_own_main_receipt(&serde_json::json!({"$e": {"m.read.private": {"@me:x": {"ts": 1, "thread_id": "main"}}}}), me));
+        assert!(!has_own_main_receipt(&serde_json::json!({"$e": {"m.read": {"@me:x": {"ts": 1, "thread_id": "$root"}}}}), me));
+        assert!(!has_own_main_receipt(&serde_json::json!({"$e": {"m.read": {"@you:x": {"ts": 1}}}}), me));
+        assert!(!has_own_main_receipt(&serde_json::json!([]), me));
+    }
 
     #[test]
     fn the_divider_takes_the_later_event_never_the_later_receipt() {
@@ -235,7 +256,9 @@ mod tests {
 
     /// The receipt READS (`ReceiptType::Read` on the event side), counted per file. A new one fails until it is
     /// reviewed here: loading a receipt is fine, sending one is not.
-    const READS: &[(&str, usize)] = &[("notify.rs", 1), ("room.rs", 1)];
+    // room.rs 2: attach_read_receipts loads each row's readers, and (12.1.17 round 2, review #8) the readers of a photo the
+    // chat hides — both LOADS (load_event_receipts), never a send
+    const READS: &[(&str, usize)] = &[("notify.rs", 1), ("room.rs", 2)];
 
     fn rs_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
         for e in std::fs::read_dir(dir).into_iter().flatten().flatten() {

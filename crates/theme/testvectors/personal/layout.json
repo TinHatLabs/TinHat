@@ -1,0 +1,125 @@
+{
+  "cases": [
+    {
+      "expect": "compact",
+      "layout": null,
+      "person": "compact"
+    },
+    {
+      "expect": "compact",
+      "layout": "compact",
+      "person": "compact"
+    },
+    {
+      "expect": "normal",
+      "layout": "normal",
+      "person": "compact"
+    },
+    {
+      "expect": "touch",
+      "layout": "touch",
+      "person": "compact"
+    },
+    {
+      "expect": "compact",
+      "layout": "Touch",
+      "person": "compact"
+    },
+    {
+      "expect": "compact",
+      "layout": "handheld",
+      "person": "compact"
+    },
+    {
+      "expect": "compact",
+      "layout": "",
+      "person": "compact"
+    },
+    {
+      "expect": "compact",
+      "layout": 5,
+      "person": "compact"
+    },
+    {
+      "expect": "normal",
+      "layout": null,
+      "person": "normal"
+    },
+    {
+      "expect": "compact",
+      "layout": "compact",
+      "person": "normal"
+    },
+    {
+      "expect": "normal",
+      "layout": "normal",
+      "person": "normal"
+    },
+    {
+      "expect": "touch",
+      "layout": "touch",
+      "person": "normal"
+    },
+    {
+      "expect": "normal",
+      "layout": "Touch",
+      "person": "normal"
+    },
+    {
+      "expect": "normal",
+      "layout": "handheld",
+      "person": "normal"
+    },
+    {
+      "expect": "normal",
+      "layout": "",
+      "person": "normal"
+    },
+    {
+      "expect": "normal",
+      "layout": 5,
+      "person": "normal"
+    },
+    {
+      "expect": "touch",
+      "layout": null,
+      "person": "touch"
+    },
+    {
+      "expect": "compact",
+      "layout": "compact",
+      "person": "touch"
+    },
+    {
+      "expect": "normal",
+      "layout": "normal",
+      "person": "touch"
+    },
+    {
+      "expect": "touch",
+      "layout": "touch",
+      "person": "touch"
+    },
+    {
+      "expect": "touch",
+      "layout": "Touch",
+      "person": "touch"
+    },
+    {
+      "expect": "touch",
+      "layout": "handheld",
+      "person": "touch"
+    },
+    {
+      "expect": "touch",
+      "layout": "",
+      "person": "touch"
+    },
+    {
+      "expect": "touch",
+      "layout": 5,
+      "person": "touch"
+    }
+  ],
+  "description": "effective_density(person, layout form density): the layout's density when the form names a valid one (the Handheld preset: touch), else the person's"
+}

@@ -337,7 +337,7 @@ ThMenu {
                 Layout.preferredWidth: Math.max(118, Math.ceil(8.75 * fontInfo.pixelSize))
                 text: modelData.label
                 color: menu._mutedFor(dialRow.cat) ? Th.callVolumeLabelFgMuted : Th.callVolumeLabelFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize   // 10.1 (TH-POP-20)
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale   // 10.1 (TH-POP-20)
             }
             ThSlider {
                 id: dialSlider
@@ -376,7 +376,7 @@ ThMenu {
                 text: Math.round(menu._valFor(dialRow.cat) * 100) + "%"
                 color: Th.callVolumeValueFg
                 horizontalAlignment: Text.AlignRight
-                font.pointSize: Kirigami.Theme.smallFont.pointSize   // 10.1 (TH-POP-20)
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale   // 10.1 (TH-POP-20)
             }
             // Per-category mute toggle.
             Controls.ToolButton {

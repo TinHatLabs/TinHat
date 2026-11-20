@@ -1,0 +1,141 @@
+{
+ "about": "Every code: HTTP status (an HTTP error body is {code, error}; a socket ack carries code only), and when.",
+ "codes": {
+  "session": {
+   "http": 401,
+   "when": "no / expired / unknown play session (HTTP) or a frame before auth (socket: bye session)"
+  },
+  "guest": {
+   "http": 403,
+   "when": "a guest account, the Memories recorder or the system account tried to sign in"
+  },
+  "not-member": {
+   "http": 403,
+   "when": "not joined to the room (as this server sees it), or the room isn't this server's"
+  },
+  "not-in-call": {
+   "http": 403,
+   "when": "needs a live call membership in the room (open a table, sit, join, watch)"
+  },
+  "remote-refused": {
+   "http": 403,
+   "when": "the user's server is not on this server's federation list"
+  },
+  "rig-hidden": {
+   "http": 403,
+   "when": "The Rig from an ios-app/android-app session while the owner's switch is off"
+  },
+  "no-space": {
+   "http": 403,
+   "when": "the room has no game space (in no space, or a space itself): games live in spaces"
+  },
+  "wrong-server": {
+   "http": 403,
+   "when": "the room's game space is kept by another server (the body names space + server: show it, never follow it)"
+  },
+  "space-changed": {
+   "http": 409,
+   "when": "the space you sent (create / wallet / sit / join) isn't the room's game space any more: refresh what you show"
+  },
+  "unavailable": {
+   "http": 503,
+   "when": "this server can't see the room's space in full (state unknown or still filling in): try again later"
+  },
+  "no-table": {
+   "http": 404,
+   "when": "no such table (or not visible to you; a table id alone grants nothing)"
+  },
+  "no-wallet": {
+   "http": 404,
+   "when": "you haven't opted in on this server (POST /wallet first)"
+  },
+  "seated-elsewhere": {
+   "http": 409,
+   "when": "one table at a time per person per server"
+  },
+  "table-full": {
+   "http": 409,
+   "when": "every seat taken (Hold'em) / 8 players (The Rig)"
+  },
+  "one-per-room": {
+   "http": 409,
+   "when": "an open table of that game already exists in this room"
+  },
+  "seated": {
+   "http": 409,
+   "when": "delete refused while you're at a table"
+  },
+  "open-money": {
+   "http": 409,
+   "when": "delete / prestige wait: something of yours is still in play"
+  },
+  "rate": {
+   "http": 429,
+   "when": "too many requests or frames (socket: over the limit again = closed)"
+  },
+  "off": {
+   "http": 503,
+   "when": "games are turned off on this server (the dashboard switch), or draining"
+  },
+  "db": {
+   "http": 503,
+   "when": "the games database is unavailable"
+  },
+  "stale": {
+   "http": 409,
+   "when": "the move named another turn (hand+turn / round+spin+phase): refresh from the newest view"
+  },
+  "not-your-turn": {
+   "http": 409,
+   "when": "not your turn (or not your role)"
+  },
+  "phase": {
+   "http": 409,
+   "when": "not allowed in this phase"
+  },
+  "bad": {
+   "http": 400,
+   "when": "malformed request or frame"
+  },
+  "bad-action": {
+   "http": 409,
+   "when": "a move that isn't allowed now (check facing a bet, Walk before walk_from, …)"
+  },
+  "bad-amount": {
+   "http": 400,
+   "when": "raise below the minimum / above your stack; dial outside 1..3 or above the bankroll; stake outside its range"
+  },
+  "no-chips": {
+   "http": 409,
+   "when": "not enough chips (sit with 0 and no top-up, Call needs bankroll >= 2, Peek needs 2, …)"
+  },
+  "limit": {
+   "http": 409,
+   "when": "a per-round count used up (Calls, Audit, Mutes, Nudge, Whisper, Peek)"
+  },
+  "locked": {
+   "http": 409,
+   "when": "Peek after the lock (after spin peek_lock_after)"
+  },
+  "window": {
+   "http": 409,
+   "when": "the Nudge window has closed"
+  },
+  "taken": {
+   "http": 409,
+   "when": "someone else's Nudge already won this spin"
+  },
+  "rules": {
+   "http": 409,
+   "when": "a Patch / keep that would break the machine rules (bites > 6, two Taxes, a card twice)"
+  },
+  "greyed": {
+   "http": 409,
+   "when": "that card is dead, busted or wrongly called (can't be Called or Patched in)"
+  },
+  "host-only": {
+   "http": 403,
+   "when": "only the table's host can do that"
+  }
+ }
+}

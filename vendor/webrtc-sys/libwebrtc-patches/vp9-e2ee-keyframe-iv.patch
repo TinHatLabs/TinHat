@@ -60,7 +60,29 @@
  uint8_t get_unencrypted_bytes(webrtc::TransformableFrameInterface* frame,
                                webrtc::FrameCryptorTransformer::MediaType type) {
    uint8_t unencrypted_bytes = 0;
-@@ -596,6 +626,60 @@
+@@ -587,6 +617,21 @@
+   auto key_set = key_handler->GetKeySet(key_index_);
+   uint8_t unencrypted_bytes = get_unencrypted_bytes(frame.get(), type_);
+ 
++  // PATCH (Tin Hat) tinhat-tx-len-v1: the frame must hold its own clear header (api/crypto/tinhat_iv.h, "The
++  // sender's length check"). A shorter frame from our own encoder made the copy below read past its end and the
++  // payload size (data_in.size() - unencrypted_bytes) underflow. It is dropped, never sent as is; the cryptor state
++  // is left alone (no key problem). Logged on the 1st, 2nd, 4th, 8th, ... drop.
++  if (data_in.size() < static_cast<size_t>(unencrypted_bytes)) {
++    static std::atomic<uint64_t> short_frames{0};
++    const uint64_t n = ++short_frames;
++    if ((n & (n - 1)) == 0) {
++      RTC_LOG(LS_WARNING) << "FrameCryptorTransformer::encryptFrame() frame shorter than its clear header ("
++                          << data_in.size() << " < " << static_cast<int>(unencrypted_bytes) << "), dropped; "
++                          << n << " so far (" << tinhat::kTinHatTxLenStamp << ")";
++    }
++    return;
++  }
++
+   webrtc::Buffer frame_header(unencrypted_bytes);
+   for (size_t i = 0; i < unencrypted_bytes; i++) {
+     frame_header[i] = data_in[i];
+@@ -596,6 +641,60 @@
    frame_trailer[0] = getIvSize();
    frame_trailer[1] = key_index_;
    webrtc::Buffer iv = makeIv(frame->GetSsrc(), frame->GetTimestamp());
@@ -121,7 +143,7 @@
  
    webrtc::Buffer payload(data_in.size() - unencrypted_bytes);
    for (size_t i = unencrypted_bytes; i < data_in.size(); i++) {
-@@ -726,11 +810,23 @@
+@@ -726,11 +825,23 @@
  
    uint8_t unencrypted_bytes = get_unencrypted_bytes(frame.get(), type_);
  
@@ -145,7 +167,7 @@
    webrtc::Buffer frame_trailer(2);
    frame_trailer[0] = data_in[data_in.size() - 2];
    frame_trailer[1] = data_in[data_in.size() - 1];
-@@ -773,10 +869,9 @@
+@@ -773,10 +884,9 @@
  
    auto key_set = key_handler->GetKeySet(key_index);
  
@@ -159,7 +181,7 @@
  
    // PATCH (Tin Hat) AV1 E2EE: drop the synthetic wrapper OBU prefix. It
    // is not part of the ciphertext or the AAD, it only existed to keep the RTP
-@@ -787,8 +882,8 @@
+@@ -787,8 +897,8 @@
      const size_t offset = Av1WrapperCiphertextOffset(data_in);
      // IV + 2-byte trailer + 16-byte GCM tag must fit after the wrapper;
      // anything less is not one of our frames.
@@ -170,7 +192,7 @@
        RTC_LOG(LS_WARNING)
            << "FrameCryptorTransformer::decryptFrame() malformed AV1 wrapper";
        if (last_dec_error_ != FrameCryptionState::kDecryptionFailed) {
-@@ -805,6 +900,17 @@
+@@ -805,6 +915,17 @@
      encrypted_buffer[i - skip_bytes] = data_in[i];
    }
  
@@ -188,7 +210,7 @@
    if (FrameIsH264(frame.get(), type_) &&
        NeedsRbspUnescaping(encrypted_buffer.data(), encrypted_buffer.size())) {
      encrypted_buffer.SetData(
-@@ -818,10 +924,28 @@
+@@ -818,10 +939,28 @@
  #endif // RTC_ENABLE_H265
    }
  
@@ -220,7 +242,7 @@
  
    webrtc::Buffer tag(encrypted_payload.data() + encrypted_payload.size() - 16, 16);
    std::vector<uint8_t> buffer;
-@@ -918,21 +1042,16 @@
+@@ -918,21 +1057,16 @@
  }
  
  webrtc::Buffer FrameCryptorTransformer::makeIv(uint32_t ssrc, uint32_t timestamp) {
@@ -252,7 +274,7 @@
  }
  
  uint8_t FrameCryptorTransformer::getIvSize() {
-@@ -976,6 +1095,9 @@
+@@ -976,6 +1110,9 @@
    auto timestamp = Timestamp::Millis(webrtc::TimeMillis())
                         .ms();   // use current time millis as timestamp
    auto iv = makeIv(timestamp);  // for data packets, ssrc is always 0
@@ -262,7 +284,7 @@
  
    std::vector<uint8_t> buffer;
    webrtc::Buffer payload(data.data(), data.size());
-@@ -1081,19 +1203,13 @@
+@@ -1081,19 +1218,13 @@
  }
  
  webrtc::Buffer DataPacketCryptor::makeIv(uint32_t timestamp) {
@@ -303,10 +325,11 @@
  
 --- /dev/null
 +++ b/api/crypto/tinhat_iv.h
-@@ -0,0 +1,169 @@
+@@ -0,0 +1,184 @@
 +/*
 + * PATCH (Tin Hat) — tinhat_iv.h: the sender's AES-GCM IV allocator (stamp tinhat-iv-v2), the VP9 keyframe IV
-+ * step (stamp tinhat-vp9-kf-iv-v1) and the receiver's trailer split (stamp tinhat-iv-rx-v1, at the end).
++ * step (stamp tinhat-vp9-kf-iv-v1), the receiver's trailer split (stamp tinhat-iv-rx-v1) and the sender's length
++ * check (stamp tinhat-tx-len-v1), both at the end.
 + * Header-only and std-only on purpose: the desktop repo's vendor/webrtc-sys/libwebrtc-patches/tests/tinhat_iv_test.cc
 + * compiles THIS file against real AES-GCM.
 + *
@@ -335,6 +358,7 @@
 +#define API_CRYPTO_TINHAT_IV_H_
 +
 +#include <array>
++#include <atomic>
 +#include <cstddef>
 +#include <cstdint>
 +#include <mutex>
@@ -469,6 +493,19 @@
 +  out->ct_len = out->iv_off;
 +  return true;
 +}
++
++// ---- The sender's length check (stamp tinhat-tx-len-v1, 12.1.17) ----
++// encryptFrame keeps a clear header in front of the sealed body: get_unencrypted_bytes' rule per codec (the first
++// H.264/H.265 slice NAL's offset + 2, 10 bytes for a VP8 keyframe and 3 for a delta frame, 1 for audio, 0 for VP9
++// and AV1). Upstream copied that many bytes without checking the frame's length, then sized the payload as
++// size - header: a frame SHORTER than its header (our own encoder's degenerate output, e.g. H.264 `00 00 01 65` =
++// header 5 of 4 bytes, a VP8 keyframe under 10 bytes) read past the end of the frame and underflowed into a huge
++// allocation (an abort of the whole process). Only our local encoder's output reaches this path. The sender now
++// DROPS such a frame (never sends it unencrypted); a frame exactly as long as its header seals an empty payload,
++// which every receiver accepts (tag || IV || trailer = 30 bytes, and the receiver's check is size >= header + 2).
++// The header length stays a uint8_t on both sides, as before: the wire behaviour is unchanged (libwebrtc-patches
++// README, "The sender's length check").
++constexpr char kTinHatTxLenStamp[] = "tinhat-tx-len-v1";
 +
 +}  // namespace tinhat
 +

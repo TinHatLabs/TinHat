@@ -34,7 +34,7 @@ Item {
         anchors.centerIn: parent
         visible: !cv.showArt && cv.emoji.length > 0
         text: cv.emoji
-        font.pixelSize: 16
+        font.pixelSize: Th.px(16)
         textFormat: Text.PlainText
     }
     Image {

@@ -83,6 +83,10 @@ Item {
 
     // 10.0.6: self-test sign-in (env TINHAT_GUI_LOGIN="user:password") — the headless gates run the
     // real sign-in form instead of needing a pre-signed profile (the Flatpak E2E gate on the Flatpak build machine).
+    // the shot guard (games lanes, 2026-11-19): screenshot tooling refuses a shot while a password field holds text; the
+    // app says when that changes (the state only, never the text)
+    readonly property bool _pwOnScreen: loginView.visible && passwordField.text.length > 0
+    on_PwOnScreenChanged: console.log("[shot-guard] password field " + (loginView._pwOnScreen ? "FILLED" : "empty"))
     property string autoLogin: ""
     property bool _autoLoginDone: false   // fires ONCE — the view stays instantiated after a sign-in
     // 10.1 (TH-FIRST-17 / TH-A11Y-04): the caret lands where you type next. (TH-FIRST-12): a sign-out
@@ -239,7 +243,7 @@ Item {
                     }
                 }
 
-                Kirigami.Heading {
+                ThHeading {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     level: 1
@@ -253,7 +257,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     text: loginView.showReset ? "Reset your password" : (loginView.showCreate ? "Create your account" : "Sign in to continue")
                     color: Th.loginSubtitleFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
 
                 Item { Layout.preferredHeight: Kirigami.Units.smallSpacing } // spacer
@@ -299,7 +303,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     text: "Your server is where your account lives. Its address is in your invite, like yourname.tinhat.me."
                     color: Th.loginSubtitleFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 // a bare name is a tinhat.me name: say which server it opens (the phone apps' "Opens <host>")
                 Controls.Label {
@@ -309,7 +313,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     text: loginView.serverHint
                     color: Th.loginSubtitleFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -319,7 +323,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     text: loginView.movedNote
                     color: Th.loginSubtitleFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 // the moved server's new address, taken only when the person asks (a quiet link, like the two below)
                 Controls.Label {
@@ -331,7 +335,7 @@ Item {
                     textFormat: Text.PlainText
                     text: "Use " + loginView.movedTo
                     color: (movedLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.underline: movedLinkArea.containsMouse || activeFocus
                     // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
                     activeFocusOnTab: movedLinkArea.enabled
@@ -398,7 +402,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     text: "Forgot your password?"
                     color: (resetLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.underline: resetLinkArea.containsMouse || activeFocus
                     // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
                     activeFocusOnTab: resetLinkArea.enabled
@@ -436,7 +440,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     text: "New here? Create an account"
                     color: (createLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.underline: createLinkArea.containsMouse || activeFocus
                     // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
                     activeFocusOnTab: createLinkArea.enabled
@@ -536,7 +540,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                         color: hint.error ? Th.loginErrorFg : Th.loginHintFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         text: hint.text
                     }
                     GlowButton {
@@ -556,14 +560,14 @@ Item {
                         visible: loginView.registerStatus.length > 0
                         text: loginView.registerStatus
                         color: (loginView.busy || loginView.registerStage === "created") ? Th.loginHintFg : Th.loginErrorFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                     Controls.Label {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         text: "Back to sign in"
                         color: (createBackArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         font.underline: createBackArea.containsMouse || activeFocus
                         // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
                         activeFocusOnTab: createBackArea.enabled
@@ -606,7 +610,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         text: loginView.resetNote
                         color: Th.loginSubtitleFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
 
                     Controls.Label {
@@ -616,7 +620,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         text: "We'll email you a link. Open it, then set a new password here."
                         color: Th.loginHintFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
 
                     LoginField {
@@ -678,7 +682,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         text: "Those two don't match."
                         color: Th.loginErrorFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                     GlowButton {
                         app: loginView.app
@@ -710,7 +714,7 @@ Item {
                         // "done" is good news, "Checking <host>…" is progress; anything else while idle is a problem.
                         color: (loginView.busy || loginView.resetStage.length > 0 || loginView.resetMode === "checking")
                                ? Th.loginHintFg : Th.loginErrorFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
 
                     Controls.Label {
@@ -719,7 +723,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         text: "Back to sign in"
                         color: (backLinkArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         font.underline: backLinkArea.containsMouse || activeFocus
                         // A01.1: a link the keyboard and a screen reader reach (the replace question's pattern below)
                         activeFocusOnTab: backLinkArea.enabled
@@ -749,7 +753,7 @@ Item {
                     visible: loginView.confirmReplace && !loginView.busy
                     text: loginView.replaceText
                     color: Th.loginSubtitleFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     Accessible.role: Accessible.AlertMessage
                 }
                 RowLayout {
@@ -765,7 +769,7 @@ Item {
                             textFormat: Text.PlainText
                             text: modelData[1]
                             color: (replArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             font.underline: replArea.containsMouse || activeFocus
                             activeFocusOnTab: true
                             Keys.onReturnPressed: replLabel.act()
@@ -797,7 +801,7 @@ Item {
                     // and "sign in again" are information, not errors.
                     color: loginView.busy ? Th.loginHintFg
                          : ((loginView.restoreProblem.length > 0 || /^(signed out|you were signed out|your saved session|sign in to set this computer up fresh)/i.test(loginView.status)) ? Th.loginHintFg : Th.loginErrorFg)
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 // 12.1.1: the way out of a session that didn't open (restore_err.rs). Quiet links like "Use <server>" above;
                 // only Start fresh forgets the session, and only when the person picks it.
@@ -821,7 +825,7 @@ Item {
                             textFormat: Text.PlainText
                             text: modelData[1]
                             color: (actArea.containsMouse || activeFocus) ? Th.loginLinkFgHover : Th.loginLinkFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             font.underline: actArea.containsMouse || activeFocus
                             // a link that works from the keyboard too (Tab, Enter / Space) and for assistive tech
                             activeFocusOnTab: true

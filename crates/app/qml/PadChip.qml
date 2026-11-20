@@ -46,7 +46,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             text: "📱"
             color: Th.padChipFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
         Controls.Label {
             id: label
@@ -56,7 +56,7 @@ Rectangle {
             text: "Pad · <b>" + chip.esc(chip.name) + "</b>"
             elide: Text.ElideRight
             color: Th.padChipFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
         Controls.AbstractButton {   // × — its own button, as on the web: Tab reaches it, Space (Qt's) or Enter presses it
             id: xBtn

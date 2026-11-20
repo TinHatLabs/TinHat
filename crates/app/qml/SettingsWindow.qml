@@ -24,7 +24,7 @@ import QtMultimedia
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app   // Th: the settings.* tokens; Motion
 
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: win
     // A13.3 (2026-11-13): a saved device that isn't plugged in stays visible as itself ("Your saved device (not connected)") instead of the
     // list showing "System default" as if that were the choice (the web's withSaved, callbridge.ts)
@@ -82,13 +82,14 @@ Window {
         notifications: { t: "Notifications",      i: "notifications",              d: "Desktop alerts and sounds" },
         shortcuts:     { t: "Shortcuts",          i: "input-keyboard-symbolic",    d: "Give any action a key" },
         overlay:       { t: "Overlay",            i: "window-pin-symbolic",        d: "See who's talking over fullscreen games" },
+        games:         { t: "Games",              i: "applications-games-symbolic", d: "Play chips, prestige, and deleting your chips" },
         about:         { t: "About & help",       i: "help-about-symbolic",        d: "Version, updates, help and sign out" }
     })
     readonly property var groups: [
         { g: "Account",       keys: ["profile", "privacy", "security", "invites", "guests"] },
         { g: "Voice & video", keys: ["audio", "calls"] },
         { g: "App",           keys: ["appearance", "notifications", "shortcuts", "overlay"] },
-        { g: "Tin Hat",       keys: ["about"] }
+        { g: "Tin Hat",       keys: ["games", "about"] }
     ]
     readonly property bool isOperator: !!(win.app && win.app.mInviteOperator)
     // selfhost (docs/GUESTS.md): Settings → Guests while the server offers the guest room (PANE_GATES), never for a
@@ -318,6 +319,7 @@ Window {
         case "notifications": return notifyPage
         case "shortcuts": return shortcutsPage
         case "overlay": return overlayPage
+        case "games": return gamesPage
         case "about": return aboutPage
         }
         return null
@@ -805,6 +807,7 @@ Window {
                             app: win.app
                             anchorId: "profile.photo"
                             label: win.sName.length > 0 ? win.sName : win.app.localpart(win.sUserId)
+                            labelMxid: win.sUserId   // mini games v1: your own prestige token (your own server)
                             labelPixelSize: 17
                             labelWeight: Font.DemiBold
                             description: win.sUserId
@@ -1269,6 +1272,7 @@ Window {
                                 anchorId: index === 0 ? "privacy.ignored" : ""
                                 iconName: "dialog-cancel-symbolic"
                                 label: win.app.localpart(String(modelData))
+                                labelMxid: String(modelData)   // mini games v1: their prestige token (your own server)
                                 description: String(modelData)
                                 trailing: ThButton {
                                     app: win.app
@@ -1623,6 +1627,105 @@ Window {
                     }
                 }
 
+                // ================================ Games (mini games v1) ================================
+                // GAMES-V1-SPEC.md §2.2: my chips on my own server (play money only), my prestige, the opt-in, and
+                // "Delete my chips on <server>" (refused while anything of mine is in play; the confirmation says chat cards
+                // stay and a return within 30 days starts at 0). Words: testvectors/games/words.json `settings` (both apps).
+                SettingsPage {
+                    id: gamesPage
+                    anchors.fill: parent
+                    visible: !win.searching && win.currentKey === "games"
+                    app: win.app
+                    title: win.paneInfo.games.t
+                    description: win.paneInfo.games.d
+                    readonly property var w: win.app.playWords && win.app.playWords.settings ? win.app.playWords.settings : ({})
+                    readonly property var ww: win.app.playWords && win.app.playWords.wallet ? win.app.playWords.wallet : ({})
+                    readonly property var st: {
+                        var s = win.app.playCtl ? win.app.playCtl.settingsJson : ""
+                        try { return s ? JSON.parse(s) : null } catch (e) { return null }
+                    }
+                    readonly property var spaces: gamesPage.st && gamesPage.st.spaces ? gamesPage.st.spaces : []
+                    property string deleting: ""
+                    property string deletingName: ""
+                    function fill(t, row) {
+                        return String(t === undefined ? "" : t).split("{space}").join(row ? String(row.name || row.space) : "")
+                            .split("{owner}").join(row ? String(row.owner || "") : "")
+                    }
+                    onVisibleChanged: if (visible && win.app.playCtl) win.app.playCtl.openSettings()
+
+                    // the web's GamesPane (polish #7): the Games card (one per space I have chips in), then How chips work
+                    function spaceName(row) { return row && row.name && row.name !== row.space ? String(row.name) : gamesPage.fill(gamesPage.w.a_space_on, row) }
+                    SettingsSection {
+                        title: String(win.app.playWords && win.app.playWords.chip ? win.app.playWords.chip.new : "Games")
+                        hint: String(gamesPage.w.intro || "")
+                        SettingsRow {
+                            app: win.app
+                            anchorId: "games.chips"
+                            visible: gamesPage.spaces.length === 0
+                            label: String(gamesPage.w.none || "")
+                        }
+                    }
+                    Repeater {
+                        model: gamesPage.spaces
+                        delegate: SettingsSection {
+                            required property var modelData
+                            title: ""
+                            SettingsRow {
+                                app: win.app
+                                visible: !modelData.wallet
+                                label: String(gamesPage.w.not_opted || "").split("{space}").join(gamesPage.spaceName(modelData))
+                                trailing: ThButton {
+                                    app: win.app
+                                    highlighted: true
+                                    visible: modelData.current === true
+                                    text: String(gamesPage.w.start || "")
+                                    Accessible.name: text
+                                    onClicked: win.app.playCtl.settingsOptIn()
+                                }
+                            }
+                            SettingsRow {
+                                app: win.app
+                                visible: !!modelData.wallet
+                                label: String(gamesPage.w.chips_in_name || "").split("{space}").join(gamesPage.spaceName(modelData))
+                                description: modelData.wallet ? String(gamesPage.w.space_line || "").replace("{owner}", modelData.owner).replace("{rank}", modelData.wallet.rank || 0)
+                                                                .replace("{cap}", modelData.wallet.cap).replace("{n}", modelData.wallet.earned_today || 0).replace("{max}", modelData.wallet.day_max || 8)
+                                                             : String(gamesPage.w.asking || "").replace("{owner}", modelData.owner)
+                                chip: modelData.wallet ? String(gamesPage.ww.chips || "").replace("{n}", modelData.wallet.holdings !== undefined ? modelData.wallet.holdings : modelData.wallet.balance) : ""
+                            }
+                            SettingsRow {
+                                app: win.app
+                                visible: !!modelData.wallet
+                                label: String(gamesPage.w.delete || "").split("{space}").join(gamesPage.spaceName(modelData))
+                                labelColor: Th.settingsDangerFg
+                                description: String(gamesPage.w.delete_desc || "")
+                                trailing: ThButton {
+                                    app: win.app
+                                    danger: true
+                                    text: String(gamesPage.w.delete_button || "")
+                                    Accessible.name: String(gamesPage.w.delete || "").split("{space}").join(gamesPage.spaceName(modelData))
+                                    onClicked: { gamesPage.deleting = String(modelData.space); gamesPage.deletingName = gamesPage.spaceName(modelData); gamesConfirmDelete.open() }
+                                }
+                            }
+                        }
+                    }
+                    SettingsSection {
+                        title: String(gamesPage.w.how_title || "")
+                        SettingsRow { app: win.app; label: String(gamesPage.w.how_earning_label || ""); description: String(gamesPage.w.how_earning || "") }
+                        SettingsRow { app: win.app; label: String(gamesPage.w.how_broke_label || ""); description: String(gamesPage.w.how_broke || "") }
+                        SettingsRow { app: win.app; label: String(gamesPage.w.how_cap_label || ""); description: String(gamesPage.w.how_cap || "") }
+                    }
+                    ConfirmDialog {
+                        id: gamesConfirmDelete
+                        app: win.app
+                        dialogTitle: String(gamesPage.w.delete_title || "")
+                        message: String(gamesPage.w.delete_body || "").split("{space}").join(gamesPage.deletingName)
+                        confirmText: String(gamesPage.w.delete_confirm || "")
+                        cancelText: String(gamesPage.w.cancel || "")
+                        destructive: true
+                        onConfirmed: win.app.playCtl.deleteChips(gamesPage.deleting)
+                    }
+                }
+
                 // ================================ Audio ================================
                 // (G) device + share-source choice lives here; the in-call chevrons keep their quick copies
                 SettingsPage {
@@ -1826,6 +1929,7 @@ Window {
                                         required property string modelData
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.largeSpacing
+                                        PrestigeToken { mxid: modelData; roomId: ""; gap: false; Layout.rightMargin: 4 - Kirigami.Units.largeSpacing }   // mini games v1: 4 px before the name
                                         Controls.Label {
                                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                             Layout.fillWidth: true
@@ -2307,7 +2411,7 @@ Window {
                                 }
                                 Controls.Label {
                                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
-                                    Layout.preferredWidth: 40
+                                    Layout.preferredWidth: Th.px(40)   // P22: grows with its scaled text ("100%" at 150 %)
                                     text: Math.round(sndVolume.value) + "%"
                                     color: Th.settingsLabelFg
                                     font.pixelSize: Math.round(13 * Th.textScale)

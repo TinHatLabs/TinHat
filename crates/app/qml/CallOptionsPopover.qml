@@ -139,14 +139,14 @@ T.Popup {
         property string badge: ""
         property color stateColor: Th.callbarPopoverBadgeFg
         Layout.fillWidth: true
-        Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: parent.title; font.bold: true; font.pointSize: Kirigami.Theme.defaultFont.pointSize + 1; color: Th.callbarPopoverTitleFg }
-        Controls.Label { textFormat: Text.PlainText; text: parent.badge; color: parent.stateColor; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.bold: true }
+        Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: parent.title; font.bold: true; font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 1) * Th.textScale; color: Th.callbarPopoverTitleFg }
+        Controls.Label { textFormat: Text.PlainText; text: parent.badge; color: parent.stateColor; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; font.bold: true }
     }
     component Hint: Controls.Label {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         color: Th.callbarPopoverHintFg
-        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
     }
 
     contentItem: ColumnLayout {
@@ -176,7 +176,7 @@ T.Popup {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
-                Controls.Label { text: "Level"; color: Th.callbarPopoverHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                Controls.Label { text: "Level"; color: Th.callbarPopoverHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                 Meter { level: app.mMicLevel }
                 // 10.5: the mic check (hear.rs — the RAW capture). Replaces "no signal", which read the
                 // processed audio and so appeared on every pause of a gated mic.
@@ -185,7 +185,7 @@ T.Popup {
                     visible: app.mInCall && st !== "ok" && st !== "wait"
                     text: st === "hint" ? "no sound yet" : (st === "dead" ? "nothing from this mic" : (st === "osmuted" ? "muted in system" : "volume 0 %"))
                     color: st === "hint" ? Th.callbarPopoverHintFg : Th.callbarPopoverFgError
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             // 10.5: who receives us — reported by the listeners' own apps (tinhat.rx), not guessed.
@@ -197,7 +197,7 @@ T.Popup {
                 wrapMode: Text.WordWrap
                 color: (app.mHear && app.mHear.heard && app.mHear.heard.not && app.mHear.heard.not.length > 0)
                        ? Th.callbarPopoverFgError : Th.callbarPopoverHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Kirigami.Separator { Layout.fillWidth: true; opacity: 0.5 }
             ThCheckBox {
@@ -225,7 +225,7 @@ T.Popup {
                     text: app.ecOutputLabels()
                     elide: Text.ElideRight
                     color: Th.callbarPopoverHintFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             Hint {
@@ -291,13 +291,13 @@ T.Popup {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
-                Controls.Label { text: "Level"; color: Th.callbarPopoverHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                Controls.Label { text: "Level"; color: Th.callbarPopoverHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                 Meter { level: app.mOutputLevel }
                 Controls.Label {
                     visible: app.mOutputMissing
                     text: "no output device"
                     color: Th.callbarPopoverFgError
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             Kirigami.Separator { Layout.fillWidth: true; opacity: 0.5 }

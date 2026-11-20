@@ -338,6 +338,54 @@ mod tests {
         assert!(!block.contains("primary: true"), "a thread panel is never the primary view");
     }
     #[test]
+    fn surfaces_only_the_cards() {
+        // 12.1.17 (the web's layer.wiring "surfaces"): every ambRects hands the particle layer the visible cards only,
+        // each id ending in its shared kind (amb::SURFACE_KINDS); never the NEW line, a row or a container
+        let mut seen = std::collections::BTreeSet::new();
+        for (name, qml) in [
+            ("ChatBubble.qml", include_str!("../qml/ChatBubble.qml")),
+            ("ConversationView.qml", include_str!("../qml/ConversationView.qml")),
+            ("AmbienceGallery.qml", include_str!("../qml/AmbienceGallery.qml")),
+            ("GameArtGallery.qml", include_str!("../qml/GameArtGallery.qml")),
+        ] {
+            let at = qml.find("function ambRects(").unwrap_or_else(|| panic!("{name}: no ambRects"));
+            // the function's body: up to the line that closes it at its own indent
+            let indent = qml[..at].rsplit('\n').next().unwrap().len();
+            let close = format!("\n{}}}", " ".repeat(indent));
+            let body = &qml[at..at + qml[at..].find(&close).unwrap_or_else(|| panic!("{name}: ambRects not closed"))];
+            assert!(!body.contains("NEW") && !body.to_lowercase().contains("newline") && !body.contains("unread"), "{name}: the NEW line is no surface");
+            let mut kinds = 0;
+            for part in body.split('"').skip(1).step_by(2) {
+                if let Some(k) = part.strip_prefix(':') {
+                    assert!(amb::SURFACE_KINDS.contains(&k), "{name}: collider kind \":{k}\" is not a card");
+                    seen.insert(k.to_string());
+                    kinds += 1;
+                }
+            }
+            assert!(kinds > 0, "{name}: ambRects names no kind");
+        }
+        let all: Vec<String> = amb::SURFACE_KINDS.iter().map(|k| k.to_string()).collect();
+        assert_eq!(seen.into_iter().collect::<Vec<_>>(), { let mut a = all; a.sort(); a });
+    }
+    #[test]
+    fn image_pick_is_shared() {
+        // 12.1.17 (the web's image_pick + BackgroundSheet): "Your own image…" offers the shared formats, HEIC / HEIF too
+        // (12.1.16's filter hid them without a word), and a picture this device can't read says so (customFormat)
+        let v: Value = serde_json::from_str(include_str!("../../../testvectors/ambience/vectors.json")).expect("vectors");
+        let exts: Vec<String> = v["image_pick"]["exts"].as_array().expect("image_pick.exts").iter().map(|e| format!("*.{}", e.as_str().unwrap())).collect();
+        assert!(exts.iter().any(|e| e == "*.heic") && exts.iter().any(|e| e == "*.heif"));
+        let filter = format!("nameFilters: [\"Images ({})\"]", exts.join(" "));
+        let sheet = include_str!("../qml/BackgroundSheet.qml");
+        assert!(sheet.contains(&filter), "the file dialog filter must be {filter}");
+        assert!(sheet.contains("Image.Error") && sheet.contains("dlg.w(\"customFormat\")"), "an unreadable picture must say so");
+        // review round: a pick still being read never lands in a reopened sheet or over a scene picked meanwhile, and Apply
+        // waits for it
+        assert!(sheet.lines().any(|l| l.trim_start().starts_with("onClosed:") && l.contains("pickProbe.source = \"\"")));
+        assert!(sheet.contains("onChosenChanged: if (chosen !== \"image\") { pickProbe.source = \"\""));
+        assert!(sheet.contains("pickProbe.status !== Image.Loading"));
+        assert!(words().get("customFormat").and_then(|v| v.as_str()).is_some_and(|s| s.contains("can't be used as a background")));
+    }
+    #[test]
     fn words_file_has_every_key() {
         for k in ["backgrounds", "effects", "pause", "pauseHelp", "pauseSaver", "menu", "title", "customPosted", "readOnly"] {
             assert!(words().get(k).and_then(|v| v.as_str()).is_some_and(|s| !s.is_empty()), "{k}");

@@ -705,7 +705,7 @@
         "buttons"
       ]
     },
-    "islandsNote": "Registry fields: presence, hideable, required, stackable, floatable, popout, maximizable (only the call: view.maximized honours it), multi, pref/min (vertical orientation), orientH (sizes when opts.<ref>.orient = 'h', the Side monitor rail), float (size when floated), collapse (allowed 'to' values), home (restore/repair placement, first applicable wins), group, and free-text notes (whenHidden, note). The call's 'bar' is the usable minimum of an active call (its control bar, layout units): the emergency arrangement never gives it less while the host has room (LAYOUT.md 7.12).",
+    "islandsNote": "Registry fields: presence, hideable, required, stackable, floatable, popout, maximizable (only the call: view.maximized honours it), multi, pref/min (vertical orientation), orientH (sizes when opts.<ref>.orient = 'h', the Side monitor rail), float (size when floated), collapse (allowed 'to' values), home (restore/repair placement, first applicable wins), group, and free-text notes (whenHidden, note). keep (v1.3, only the room list: the length it keeps along an axis before its auto / pm siblings — the widgets — get more than their minimum = their folded height; min(len, pm of the column), LAYOUT.md 7.6 step 4a). The call's 'bar' is the usable minimum of an active call (its control bar, layout units): the emergency arrangement never gives it less while the host has room (LAYOUT.md 7.12).",
     "islands": {
       "nav": {
         "presence": "always",
@@ -762,6 +762,7 @@
         "multi": false,
         "pref": {"w": {"fixed": 292}, "h": {"share": 1, "min": 160}},
         "min": {"w": 200, "h": 160},
+        "keep": {"h": {"len": 280, "pm": 400}},
         "float": {"w": {"fixed": 292}, "h": {"fixed": 560}},
         "collapse": ["hide", "drawer"],
         "home": [

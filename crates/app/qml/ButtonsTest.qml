@@ -89,7 +89,7 @@ Window {
     }
     component Label: Controls.Label {
         Layout.preferredWidth: 190
-        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         color: Th.textSecondary
     }
 

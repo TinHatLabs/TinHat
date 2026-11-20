@@ -81,8 +81,8 @@ Rectangle {
         spacing: 10
         RowLayout {
             Layout.fillWidth: true
-            Text { text: "My games"; color: Th.reelFg; font.pixelSize: 16; font.weight: Font.DemiBold; Layout.fillWidth: true }
-            Text { visible: ed.dirty; text: "unsaved"; color: Th.reelWarningFg; font.pixelSize: 11 }
+            Text { text: "My games"; color: Th.reelFg; font.pixelSize: Th.px(16); font.weight: Font.DemiBold; Layout.fillWidth: true }
+            Text { visible: ed.dirty; text: "unsaved"; color: Th.reelWarningFg; font.pixelSize: Th.px(11) }
             ReelButton { text: "Save"; primary: true; enabled: ed.dirty && !ctl.busy; onClicked: ed.save(); radius: app.radius }
         }
         // search
@@ -92,9 +92,9 @@ Rectangle {
             T.TextField {
                 id: searchField
                 anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10
-                color: Th.reelFieldFg; font.pixelSize: 13; verticalAlignment: TextInput.AlignVCenter
+                color: Th.reelFieldFg; font.pixelSize: Th.px(13); verticalAlignment: TextInput.AlignVCenter
                 placeholderText: ed.catalogOn ? "Add a game — type its name" : "Add a game — type its name, then press Enter"
-                Text { textFormat: Text.PlainText; visible: !searchField.text.length && !searchField.activeFocus; text: searchField.placeholderText; color: Th.reelFieldPlaceholder; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+                Text { textFormat: Text.PlainText; visible: !searchField.text.length && !searchField.activeFocus; text: searchField.placeholderText; color: Th.reelFieldPlaceholder; font.pixelSize: Th.px(13); anchors.verticalCenter: parent.verticalCenter }
                 onTextEdited: searchDebounce.restart()
                 // "Press Enter to add it by name" (the copy below) — now true (TH-REEL-01 / TH-GAP-19).
                 // QOL A19.5: with results, Enter adds the first one (it used to do nothing) — only results of THIS text:
@@ -120,8 +120,8 @@ Rectangle {
                         Image { source: ed.art(modelData.id); Layout.preferredWidth: 28; Layout.preferredHeight: 42; fillMode: Image.PreserveAspectCrop; asynchronous: true }
                         ColumnLayout {
                             Layout.fillWidth: true; spacing: 1
-                            Text { textFormat: Text.PlainText; text: modelData.name; color: Th.reelFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
-                            Text { textFormat: Text.PlainText; text: (modelData.year ? modelData.year + " · " : "") + (modelData.flags === null ? "checking…" : (modelData.flags && (modelData.flags.multiplayer || modelData.flags.coop || modelData.flags.onlinePvp || modelData.flags.onlineCoop)) ? "multiplayer" : "single-player"); color: Th.reelMetaFg; font.pixelSize: 10 }
+                            Text { textFormat: Text.PlainText; text: modelData.name; color: Th.reelFg; font.pixelSize: Th.px(12); elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { textFormat: Text.PlainText; text: (modelData.year ? modelData.year + " · " : "") + (modelData.flags === null ? "checking…" : (modelData.flags && (modelData.flags.multiplayer || modelData.flags.coop || modelData.flags.onlinePvp || modelData.flags.onlineCoop)) ? "multiplayer" : "single-player"); color: Th.reelMetaFg; font.pixelSize: Th.px(10) }
                         }
                         ReelButton { text: "+"; implicitWidth: 30; implicitHeight: 26; onClicked: ed.addTo("wouldPlay", modelData); radius: app.radiusSm; hint: "Add to would-play" }
                         ReelButton { text: "✕"; implicitWidth: 30; implicitHeight: 26; quiet: true; onClicked: ed.addTo("definitelyNot", modelData); radius: app.radiusSm; hint: "Definitely not" }
@@ -132,7 +132,7 @@ Rectangle {
         Text {
             visible: searchField.text.trim().length >= 2 && ed.results.length === 0
             text: ed.catalogOn ? "Nothing yet — Steam takes a moment. Not on Steam? Press Enter to add it by name." : "Press Enter to add it by name."
-            color: Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
+            color: Th.reelMetaFg; font.pixelSize: Th.px(11); wrapMode: Text.WordWrap; Layout.fillWidth: true
         }
         // lists
         GridLayout {
@@ -153,8 +153,8 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
                     spacing: 4
-                    Text { textFormat: Text.PlainText; text: modelData.title; color: Th.reelSectionFg; font.pixelSize: 11; font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
-                    Text { textFormat: Text.PlainText; text: modelData.hint; color: Th.reelMetaFg; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Text { textFormat: Text.PlainText; text: modelData.title; color: Th.reelSectionFg; font.pixelSize: Th.px(11); font.letterSpacing: 1; font.capitalization: Font.AllUppercase }
+                    Text { textFormat: Text.PlainText; text: modelData.hint; color: Th.reelMetaFg; font.pixelSize: Th.px(10); wrapMode: Text.WordWrap; Layout.fillWidth: true }
                     Repeater {
                         model: ed.prefs[modelData.key] || []
                         delegate: Rectangle {
@@ -165,13 +165,13 @@ Rectangle {
                             RowLayout {
                                 anchors.fill: parent; anchors.margins: 4; spacing: 6
                                 Image { source: ed.art(modelData); Layout.preferredWidth: 18; Layout.preferredHeight: 26; fillMode: Image.PreserveAspectCrop; asynchronous: true }
-                                Text { textFormat: Text.PlainText; text: ed.nameOf(modelData); color: Th.reelFg; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true }
+                                Text { textFormat: Text.PlainText; text: ed.nameOf(modelData); color: Th.reelFg; font.pixelSize: Th.px(12); elide: Text.ElideRight; Layout.fillWidth: true }
                                 ReelButton { visible: listKey === "wouldPlay"; text: (ed.prefs.favorites || []).indexOf(modelData) !== -1 ? "★" : "☆"; quiet: true; implicitWidth: 26; implicitHeight: 24; onClicked: ed.toggleFavorite(modelData); radius: app.radiusSm; hint: "Favorite" }
                                 ReelButton { text: "–"; quiet: true; implicitWidth: 26; implicitHeight: 24; onClicked: ed.remove(modelData); radius: app.radiusSm; hint: "Remove" }
                             }
                         }
                     }
-                    Text { visible: !(ed.prefs[modelData.key] || []).length; text: "—"; color: Th.reelMetaFg; font.pixelSize: 12 }
+                    Text { visible: !(ed.prefs[modelData.key] || []).length; text: "—"; color: Th.reelMetaFg; font.pixelSize: Th.px(12) }
                 }
             }
         }
@@ -184,8 +184,8 @@ Rectangle {
                 onToggled: { var p = Object.assign({}, ed.prefs); p.flexible = checked; ed.prefs = p; ed.dirty = true }
                 implicitHeight: 24
                 indicator: Rectangle { width: 18; height: 18; radius: 4; anchors.verticalCenter: parent.verticalCenter; color: flex.checked ? Th.reelCheckboxBgChecked : Th.reelCheckboxBg; border.color: flex.checked ? Th.reelCheckboxBorderChecked : Th.reelCheckboxBorder
-                                       Text { anchors.centerIn: parent; text: "✓"; visible: flex.checked; color: Th.reelCheckboxFg; font.pixelSize: 12 } }
-                contentItem: Text { leftPadding: 24; text: "I’ll play whatever wins. Your games still count toward what everyone owns."; color: Th.reelFg; font.pixelSize: 12; verticalAlignment: Text.AlignVCenter; wrapMode: Text.WordWrap }
+                                       Text { anchors.centerIn: parent; text: "✓"; visible: flex.checked; color: Th.reelCheckboxFg; font.pixelSize: Th.px(12) } }
+                contentItem: Text { leftPadding: 24; text: "I’ll play whatever wins. Your games still count toward what everyone owns."; color: Th.reelFg; font.pixelSize: Th.px(12); verticalAlignment: Text.AlignVCenter; wrapMode: Text.WordWrap }
                 Layout.fillWidth: true
             }
         }
@@ -200,8 +200,8 @@ Rectangle {
                 T.TextField {
                     id: steamField
                     anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10
-                    color: Th.reelFieldFg; font.pixelSize: 12; verticalAlignment: TextInput.AlignVCenter
-                    Text { visible: !steamField.text.length && !steamField.activeFocus; text: "Steam profile link (optional) — imports your multiplayer games"; color: Th.reelFieldPlaceholder; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                    color: Th.reelFieldFg; font.pixelSize: Th.px(12); verticalAlignment: TextInput.AlignVCenter
+                    Text { visible: !steamField.text.length && !steamField.activeFocus; text: "Steam profile link (optional) — imports your multiplayer games"; color: Th.reelFieldPlaceholder; font.pixelSize: Th.px(12); anchors.verticalCenter: parent.verticalCenter }
                 }
             }
             ReelButton { text: "Import"; enabled: steamField.text.trim().length > 2 && !ctl.busy; onClicked: ed.ctl.importSteamLibrary(steamField.text.trim(), true); radius: app.radius }
@@ -215,7 +215,7 @@ Rectangle {
             Text {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 text: impRow.imp.error ? impRow.imp.error : ed.importCountText((impRow.imp.items || []).length, Number(impRow.imp.pending) || 0)
-                color: impRow.imp.error ? Th.reelErrorFg : Th.reelMetaFg; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                color: impRow.imp.error ? Th.reelErrorFg : Th.reelMetaFg; font.pixelSize: Th.px(11); wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
             // 10.1 (TH-REEL-15): nothing is pre-ticked (the import is a suggestion, not a decision),
             // but the alternative used to be sixty clicks — one button takes the lot.
@@ -242,6 +242,6 @@ Rectangle {
                 }
             }
         }
-        Text { text: "The group sees your lists, favorite, vetoes and the Flexible flag. It never sees your Steam ID, playtime or full library; the import is forgotten the moment it is shown."; color: Th.reelMetaFg; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+        Text { text: "The group sees your lists, favorite, vetoes and the Flexible flag. It never sees your Steam ID, playtime or full library; the import is forgotten the moment it is shown."; color: Th.reelMetaFg; font.pixelSize: Th.px(10); wrapMode: Text.WordWrap; Layout.fillWidth: true }
     }
 }

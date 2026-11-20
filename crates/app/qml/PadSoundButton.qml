@@ -42,7 +42,7 @@ Controls.AbstractButton {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: pb.emoji.length > 0 ? pb.emoji : "🔊"
-                font.pixelSize: 20
+                font.pixelSize: Th.px(20)
                 color: Th.soundboardCardFg
             }
             Controls.Label {
@@ -55,7 +55,7 @@ Controls.AbstractButton {
                 text: pb.name
                 color: Th.soundboardCardFg
                 font.weight: Font.DemiBold
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
     }

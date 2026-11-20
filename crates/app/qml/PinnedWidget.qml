@@ -185,6 +185,7 @@ Item {
                 RowLayout {
                     width: parent.width
                     spacing: 8
+                    PrestigeToken { mxid: w.sample ? "" : String(pr.r.sender || ""); roomId: w.roomId; size: 12; gap: false; Layout.rightMargin: -4 }   // mini games v1: 4 px before the name
                     WidgetText { Layout.fillWidth: true; role: "text"; text: pr.r.senderName || ""; color: Th.widgetFg }
                     WidgetText { role: "num"; text: w.whenText(pr.r.ts || 0); color: Th.widgetMetaFg; opacity: pr.hot ? 0 : 1 }
                 }

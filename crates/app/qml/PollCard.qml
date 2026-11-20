@@ -28,7 +28,7 @@ Rectangle {
     readonly property bool ended: !!card.c && card.c.ended === true
     readonly property bool results: !!card.c && card.c.show === true
     readonly property bool open: !!card.c && !card.ended && card.c.pending !== true
-    readonly property real body: Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10
+    readonly property real body: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale   // A31.4: the person's text size
 
     implicitWidth: Math.max(260, Math.min(card.maxW, 360))
     implicitHeight: col.implicitHeight + 20

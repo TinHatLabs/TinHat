@@ -106,6 +106,7 @@ extern "C" {
     fn tinhat_ui_scale_preinit(factor: f64, force_restart: c_int);
     fn tinhat_ui_scale_apply(factor: f64) -> c_int;
     fn tinhat_ui_scale_apply_startup(factor: f64) -> c_int;
+    fn tinhat_dpr_guard_install() -> c_int;
     fn tinhat_ui_scale_live_capable() -> c_int;
     fn tinhat_ui_scale_why() -> c_int;
     fn tinhat_ui_scale_platform(buf: *mut std::ffi::c_char, cap: c_int) -> c_int;
@@ -214,6 +215,12 @@ pub fn apply_startup() {
         _ => "restart-only: TINHAT_UI_SCALE_RESTART=1".to_string(),
     };
     eprintln!("[ui-scale] App size {p}% at start; {why}");
+    // 12.1.17: the monitor-DPI guard (Windows: a display-scale change or a move to another-scale monitor runs Qt's DPR
+    // walk too; ui_scale_bridge.cpp). One line, so a build without it is noticed.
+    let guard = unsafe { tinhat_dpr_guard_install() } == 1;
+    if plat == "windows" {
+        eprintln!("[dpr] monitor scale changes: {}", if guard { "guarded" } else { "NOT guarded (built without QtQuick's private headers)" });
+    }
     // the size at start goes in before the first window on EVERY platform with the calls (Qt's supported moment, the
     // same factor QT_SCALE_FACTOR sets); only the live change of a running app is limited to live_allowed_on
     if p != DEFAULT && unsafe { tinhat_ui_scale_apply_startup(factor(p, env_factor())) } == 0 && unsafe { tinhat_ui_scale_why() } == 0 {

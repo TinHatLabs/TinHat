@@ -13763,6 +13763,66 @@
    }
   },
   {
+   "id": "prestige.accent.fg",
+   "area": "prestige",
+   "description": "Prestige token — ranks 3 and up: the filled hat, + its thin ring from rank 5, + the star from rank 8",
+   "default": "accent.bright",
+   "apps": [
+    "desktop",
+    "web"
+   ],
+   "sites": {
+    "desktop": 1,
+    "web": 1
+   },
+   "notes": "mini games v1 (GAMES-V1-SPEC §3.1; contract tools/prestige-tokens.py): new element, both apps (PrestigeToken.qml, web features/prestige/PrestigeToken.tsx); the default is a role so every theme draws it"
+  },
+  {
+   "id": "prestige.filled.fg",
+   "area": "prestige",
+   "description": "Prestige token — rank 2: the filled tin hat (the name's text colour)",
+   "default": "text.primary",
+   "apps": [
+    "desktop",
+    "web"
+   ],
+   "sites": {
+    "desktop": 1,
+    "web": 1
+   },
+   "notes": "mini games v1 (GAMES-V1-SPEC §3.1; contract tools/prestige-tokens.py): new element, both apps (PrestigeToken.qml, web features/prestige/PrestigeToken.tsx); the default is a role so every theme draws it"
+  },
+  {
+   "id": "prestige.outline.fg",
+   "area": "prestige",
+   "description": "Prestige token — rank 1: the outline tin hat to the left of a name (the name's muted text colour)",
+   "default": "text.muted",
+   "apps": [
+    "desktop",
+    "web"
+   ],
+   "sites": {
+    "desktop": 1,
+    "web": 1
+   },
+   "notes": "mini games v1 (GAMES-V1-SPEC §3.1; contract tools/prestige-tokens.py): new element, both apps (PrestigeToken.qml, web features/prestige/PrestigeToken.tsx); the default is a role so every theme draws it"
+  },
+  {
+   "id": "prestige.shine.highlight",
+   "area": "prestige",
+   "description": "Prestige token — rank 13 and up: the peak colour of the one-time shine when the token first appears in a focused window (then back to the accent)",
+   "default": "text.primary",
+   "apps": [
+    "desktop",
+    "web"
+   ],
+   "sites": {
+    "desktop": 1,
+    "web": 1
+   },
+   "notes": "mini games v1 (GAMES-V1-SPEC §3.1; contract tools/prestige-tokens.py): new element, both apps (PrestigeToken.qml, web features/prestige/PrestigeToken.tsx); the default is a role so every theme draws it"
+  },
+  {
    "id": "profile.bg",
    "area": "profile",
    "description": "Profile flyout fill",

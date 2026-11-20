@@ -614,7 +614,8 @@ impl qobject::ThemeEditorController {
         self.as_mut().set_preview_variant(QString::from(a.resolved.variant.as_str()));
         self.as_mut().set_preview_names(QString::from(a.resolved.names.as_str()));
         self.as_mut().set_preview_shape(QString::from(tinhat_theme::shape::read_shape(&doc).to_json().as_str()));
-        self.as_mut().set_preview_look(QString::from(tinhat_theme::look::look_json(&tinhat_theme::look::read_look(&doc)).as_str()));
+        // P22 (12.1.17): a preview draws the person's text size + density too (only the theme's fonts and shadow change)
+        self.as_mut().set_preview_look(QString::from(crate::theme_ctl::effective_look_json(&doc).as_str()));
         self.as_mut().set_preview_owner(QString::from(owner.as_str()));
         colour_map(&a)
     }

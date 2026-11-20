@@ -164,17 +164,21 @@ Item {
                 }
                 ColumnLayout {
                     spacing: 2
+                    RowLayout {   // mini games v1: the person's prestige token (this room's server)
+                        spacing: 0
+                    PrestigeToken { mxid: panel.cardMxid; roomId: panel.roomId }
                     Controls.Label {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: panel.cardName.length > 0 ? panel.cardName : panel.cardMxid
                         font.bold: true
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+                        font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale
+                    }
                     }
                     Controls.Label {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         text: panel.cardMxid
                         color: Th.profileCardHintFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                     // 10.6 (REACH §2.6 item 4 + A4.5): "● Online" / "● In a call · <room>" / the chip.
                     PresenceLine {
@@ -215,7 +219,7 @@ Item {
                          && (!panel.cardData.bio || panel.cardData.bio.length === 0))
                 text: "No profile set yet."
                 color: Th.profileCardHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             // account safety (safety.rs): Ignore… / Stop ignoring · Report… (the web's ProfileCard PersonButtons)
             RowLayout {
@@ -365,7 +369,7 @@ Item {
                 text: panel.summary.name || ""
                 color: Th.panelFg
                 font.bold: true
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15 * Th.textScale
                 wrapMode: Text.WordWrap
             }
             Controls.Label {
@@ -375,7 +379,7 @@ Item {
                 visible: !panel.editingInfo && text.length > 0
                 text: panel.summary.alias || ""
                 color: Th.panelHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
 
             // ---- Inline name + topic editor (shown via the pencil; gated per-field) ----
@@ -394,7 +398,7 @@ Item {
                     text: "Room name"
                     visible: panel.canChangeName
                     color: Th.panelSectionFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.bold: true
                 }
                 Controls.TextField {
@@ -407,7 +411,7 @@ Item {
                     text: "Topic"
                     visible: panel.canChangeTopic
                     color: Th.panelSectionFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.bold: true
                 }
                 Controls.TextArea {
@@ -460,7 +464,7 @@ Item {
                     Controls.Label {
                         text: panel.summary.encrypted ? "Encrypted" : "Not encrypted"
                         color: panel.summary.encrypted ? Th.panelEncryptionFgActive : Th.panelEncryptionFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                 }
             }
@@ -474,7 +478,7 @@ Item {
                 onLinkActivated: (link) => LinkGate.open(link)
                 color: Th.panelFg
                 wrapMode: Text.WordWrap
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 HoverHandler { cursorShape: parent.hoveredLink.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor }
             }
 
@@ -483,7 +487,7 @@ Item {
             Controls.Label {
                 text: "Now playing"
                 color: Th.panelSectionFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 font.bold: true
             }
             RowLayout {
@@ -540,7 +544,7 @@ Item {
             Controls.Label {
                 text: "Your status"
                 color: Th.panelSectionFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 font.bold: true
             }
             RowLayout {
@@ -554,7 +558,8 @@ Item {
                 }
                 Controls.ComboBox {
                     id: ttlCombo
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 3.2
+                    // P22: grows with the person's text size ("30m" was cut at 150 %; the web: RightPanel.module.css .ttl)
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 3.2 * Th.textScale
                     textRole: "t"; valueRole: "v"
                     model: [{t:"15m",v:15}, {t:"30m",v:30}, {t:"1h",v:60}, {t:"3h",v:180}, {t:"∞",v:0}]
                     Component.onCompleted: currentIndex = 1   // default 30m
@@ -632,7 +637,7 @@ Item {
                     }
                     color: panel.groupColor(secHeader.section)
                     font.bold: true
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             delegate: Item {
@@ -694,6 +699,10 @@ Item {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
+                            RowLayout {   // mini games v1: the member's prestige token (this room's server)
+                                Layout.fillWidth: true
+                                spacing: 0
+                            PrestigeToken { mxid: String(row.modelData.mxid || ""); roomId: panel.roomId }
                             Controls.Label {
                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                 Layout.fillWidth: true
@@ -708,6 +717,7 @@ Item {
                                 Controls.ToolTip.text: row.modelData.mxid || ""
                                 Controls.ToolTip.visible: nameHover.hovered && (row.modelData.mxid || "").length > 0
                                 Controls.ToolTip.delay: 500
+                            }
                             }
                             // 10.6 (A4.5): a custom status is the member row's secondary line, as a chip.
                             StatusChip {
@@ -728,7 +738,7 @@ Item {
                                 text: st.length > 0 ? st : row.modelData.mxid
                                 color: st.length > 0 ? Th.membersStatusFg : Th.membersMetaFg
                                 font.italic: st.length > 0
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 elide: Text.ElideRight
                             }
                         }

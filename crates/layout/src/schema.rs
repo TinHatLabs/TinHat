@@ -128,6 +128,9 @@ pub struct IslandDef {
     pub home: Vec<Value>,
     /// the call: the usable minimum of its control bar (layout units), 0 elsewhere
     pub bar: i64,
+    /// v1.3 (LAYOUT.md §7.6 step 4a): per axis (w, h) the `(len, pm)` the island keeps before its auto / pm siblings get
+    /// more than their minimum — min(sc(len), pm of the parent's inner length); only the room list has one
+    pub keep: [Option<(i64, i64)>; 2],
 }
 
 impl IslandDef {
@@ -199,6 +202,11 @@ fn strings(v: Option<&Value>) -> Vec<String> {
     v.and_then(Value::as_array).map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()
 }
 
+fn keep_of(d: &Value, a: &str) -> Option<(i64, i64)> {
+    let k = d.get("keep")?.get(a).filter(|v| v.is_object())?;
+    Some((num(k, "len"), num(k, "pm")))
+}
+
 fn read_def(id: &str, d: &Value) -> IslandDef {
     let flag = |k: &str| d.get(k) == Some(&Value::Bool(true));
     let presence = match d.get("presence").and_then(Value::as_str) {
@@ -232,6 +240,7 @@ fn read_def(id: &str, d: &Value) -> IslandDef {
         collapse: strings(d.get("collapse")),
         home: d.get("home").and_then(Value::as_array).cloned().unwrap_or_default(),
         bar: d.get("bar").and_then(Value::as_f64).map(|b| b as i64).unwrap_or(0),
+        keep: [keep_of(d, "w"), keep_of(d, "h")],
     }
 }
 

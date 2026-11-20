@@ -1,0 +1,500 @@
+{
+ "v": 2,
+ "about": "games-token: how both apps read the ranks API answer (GAMES-V1-SPEC rev 2 §3.4: GET /ranks?space=!S&u=…) and the play socket's rank frame (§6.3). Web features/prestige/rankCache.ts and desktop crates/app/src/prestige_cache.rs replay this file (byte copies). answer: the ids asked for space `space`; want = the rank per asked id (0 = no token), or null = not a version-1 answer FOR THAT SPACE (a failed read: what was known stays, read again in a minute). push.want = {space, u, rank} applied (to that space on the server whose socket sent it), or null = ignored. Numbers are compared as JSON numbers: 2.0 is the integer 2 (both apps).",
+ "answers": [
+  {
+   "id": "plain",
+   "asked": [
+    "@a:x",
+    "@b:y"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": {
+     "@a:x": 2
+    }
+   },
+   "want": {
+    "@a:x": 2,
+    "@b:y": 0
+   },
+   "space": "!S"
+  },
+  {
+   "id": "empty-ranks",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": {}
+   },
+   "want": {
+    "@a:x": 0
+   },
+   "space": "!S"
+  },
+  {
+   "id": "not-asked-ignored",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": {
+     "@a:x": 3,
+     "@zz:x": 9
+    }
+   },
+   "want": {
+    "@a:x": 3
+   },
+   "space": "!S"
+  },
+  {
+   "id": "extra-fields-ignored",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": {
+     "@a:x": 5
+    },
+    "balance": 40
+   },
+   "want": {
+    "@a:x": 5
+   },
+   "space": "!S"
+  },
+  {
+   "id": "rank-not-integer",
+   "asked": [
+    "@a:x",
+    "@b:x",
+    "@c:x",
+    "@d:x",
+    "@e:x",
+    "@f:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": {
+     "@a:x": 2.5,
+     "@b:x": "3",
+     "@c:x": true,
+     "@d:x": null,
+     "@e:x": -4,
+     "@f:x": 0
+    }
+   },
+   "want": {
+    "@a:x": 0,
+    "@b:x": 0,
+    "@c:x": 0,
+    "@d:x": 0,
+    "@e:x": 0,
+    "@f:x": 0
+   },
+   "space": "!S"
+  },
+  {
+   "id": "big-rank",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": {
+     "@a:x": 40
+    }
+   },
+   "want": {
+    "@a:x": 40
+   },
+   "space": "!S"
+  },
+  {
+   "id": "port-ids",
+   "asked": [
+    "@a:example.org:8448"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": {
+     "@a:example.org:8448": 1
+    }
+   },
+   "want": {
+    "@a:example.org:8448": 1
+   },
+   "space": "!S"
+  },
+  {
+   "id": "wrong-version",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 2,
+    "ranks": {
+     "@a:x": 2
+    },
+    "space": "!S"
+   },
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "no-version",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "ranks": {
+     "@a:x": 2
+    },
+    "space": "!S"
+   },
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "version-string",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": "1",
+    "ranks": {
+     "@a:x": 2
+    },
+    "space": "!S"
+   },
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "ranks-array",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S",
+    "ranks": [
+     2
+    ]
+   },
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "ranks-missing",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!S"
+   },
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "body-array",
+   "asked": [
+    "@a:x"
+   ],
+   "body": [
+    1
+   ],
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "body-null",
+   "asked": [
+    "@a:x"
+   ],
+   "body": null,
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "body-string",
+   "asked": [
+    "@a:x"
+   ],
+   "body": "ok",
+   "want": null,
+   "space": "!S"
+  },
+  {
+   "id": "other-space",
+   "space": "!S",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": "!T",
+    "ranks": {
+     "@a:x": 2
+    }
+   },
+   "want": null
+  },
+  {
+   "id": "space-missing",
+   "space": "!S",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "ranks": {
+     "@a:x": 2
+    }
+   },
+   "want": null
+  },
+  {
+   "id": "space-not-string",
+   "space": "!S",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1,
+    "space": 7,
+    "ranks": {
+     "@a:x": 2
+    }
+   },
+   "want": null
+  },
+  {
+   "id": "version-1.0",
+   "space": "!S",
+   "asked": [
+    "@a:x"
+   ],
+   "body": {
+    "v": 1.0,
+    "space": "!S",
+    "ranks": {
+     "@a:x": 2.0
+    }
+   },
+   "want": {
+    "@a:x": 2
+   }
+  }
+ ],
+ "pushes": [
+  {
+   "id": "plain",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 3
+   },
+   "want": {
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 3
+   }
+  },
+  {
+   "id": "zero-clears",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 0
+   },
+   "want": {
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 0
+   }
+  },
+  {
+   "id": "port-id",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:example.org:8448",
+    "rank": 1
+   },
+   "want": {
+    "space": "!S",
+    "u": "@a:example.org:8448",
+    "rank": 1
+   }
+  },
+  {
+   "id": "extra-fields",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 2,
+    "balance": 7
+   },
+   "want": {
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 2
+   }
+  },
+  {
+   "id": "other-frame",
+   "frame": {
+    "t": "wallet",
+    "space": "!S",
+    "balance": 38,
+    "holdings": 40,
+    "rank": 1,
+    "cap": 150
+   },
+   "want": null
+  },
+  {
+   "id": "rank-string",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x",
+    "rank": "3"
+   },
+   "want": null
+  },
+  {
+   "id": "rank-fraction",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 2.5
+   },
+   "want": null
+  },
+  {
+   "id": "rank-negative",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x",
+    "rank": -1
+   },
+   "want": null
+  },
+  {
+   "id": "rank-missing",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x"
+   },
+   "want": null
+  },
+  {
+   "id": "bad-user",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "ana",
+    "rank": 2
+   },
+   "want": null
+  },
+  {
+   "id": "user-no-server",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@ana",
+    "rank": 2
+   },
+   "want": null
+  },
+  {
+   "id": "user-not-string",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": 7,
+    "rank": 2
+   },
+   "want": null
+  },
+  {
+   "id": "frame-array",
+   "frame": [
+    "rank"
+   ],
+   "want": null
+  },
+  {
+   "id": "frame-null",
+   "frame": null,
+   "want": null
+  },
+  {
+   "id": "space-missing",
+   "frame": {
+    "t": "rank",
+    "u": "@a:x",
+    "rank": 3
+   },
+   "want": null
+  },
+  {
+   "id": "space-not-a-room-id",
+   "frame": {
+    "t": "rank",
+    "space": "S",
+    "u": "@a:x",
+    "rank": 3
+   },
+   "want": null
+  },
+  {
+   "id": "space-not-string",
+   "frame": {
+    "t": "rank",
+    "space": [
+     "!S"
+    ],
+    "u": "@a:x",
+    "rank": 3
+   },
+   "want": null
+  },
+  {
+   "id": "rank-2.0",
+   "frame": {
+    "t": "rank",
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 2.0
+   },
+   "want": {
+    "space": "!S",
+    "u": "@a:x",
+    "rank": 2
+   }
+  }
+ ]
+}

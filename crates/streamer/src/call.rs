@@ -72,11 +72,18 @@ pub enum CallEvent {
     /// (`by_name` = their display name as the packet carried it, may be ""). Fired for
     /// peers AND for the local participant (identity == ours) — the app locks the mic
     /// button on the latter and republishes the mic when it clears.
-    ServerMuteChanged { identity: String, muted: bool, by: String, by_name: String },
+    /// 12.1.17 Stage B: `revs` = every server-mute revision, read in the same step that recorded this change (empty
+    /// for an unmute): what a held ask released by this mute keeps.
+    ServerMuteChanged { identity: String, muted: bool, by: String, by_name: String, revs: Vec<(String, u64)> },
     /// RBAC: the SFU removed US (`Disconnected{ParticipantRemoved}`); `by`/`by_name` come
     /// from the `disconnect` packet addressed to us just before, else empty. Always
     /// followed by the terminal `ConnectionState { disconnected: true, recoverable: false }`.
     RemovedByModerator { by: String, by_name: String },
+    /// 12.1.17 (D04.6): `identity` asks to be unmuted (a `tinhat.unmute_ask` packet; the SFU sender is the asker).
+    /// The app decides whether to show it (it must hold moderate_calls and outrank them); it never unmutes anyone.
+    /// 12.1.17 Stage B: `revs` = every server-mute revision as this ask was RECEIVED (the app's toast keeps those, not
+    /// the ones of whenever it gets to the event).
+    UnmuteAsk { identity: String, revs: Vec<(String, u64)> },
 }
 
 /// Stable per-track id / QML objectName for a remote video tile.
@@ -5809,6 +5816,49 @@ fn moderation_data_packet(json: &str, destination: Vec<String>) -> livekit::Data
     }
 }
 
+// ── Ask to be unmuted (12.1.17, D04.6; app crates/app/src/unmuteask.rs + its shared vectors) ──────────────
+// Its OWN topic, not a new `tinhat.moderation` action: 12.1.15 and older have no branch for this topic and drop the
+// packet silently (a new action would log "unparseable packet" here and cost a permissions lookup on the web).
+pub const UNMUTE_ASK_TOPIC: &str = "tinhat.unmute_ask";
+/// The payload, byte for byte (the asker is the packet's sender identity, never anything in here).
+pub const UNMUTE_ASK_PAYLOAD: &str = "{\"v\":1}";
+const UNMUTE_ASK_MAX_BYTES: usize = 256;
+
+/// Is this packet text an ask? One leading byte-order mark dropped, then at most 256 bytes of UTF-8, a JSON object
+/// whose `v` is a finite whole number >= 1.
+pub fn parse_unmute_ask(text: &str) -> bool {
+    let text = text.strip_prefix('\u{feff}').unwrap_or(text); // one byte-order mark (the web's decoder drops it too)
+    if text.len() > UNMUTE_ASK_MAX_BYTES {
+        return false;
+    }
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(text) else { return false };
+    match v.as_object().and_then(|o| o.get("v")).and_then(|x| x.as_f64()) {
+        Some(n) => n.is_finite() && n.fract() == 0.0 && n >= 1.0,
+        None => false,
+    }
+}
+
+/// Send an ask to everyone in the call (reliable). Err = not in a call / the send failed.
+pub async fn publish_unmute_ask() -> Result<(), String> {
+    let Some(lp) = aux_participant().lock().unwrap().clone() else { return Err("You're not in a call".into()) };
+    let pkt = livekit::DataPacket {
+        payload: UNMUTE_ASK_PAYLOAD.as_bytes().to_vec(),
+        topic: Some(UNMUTE_ASK_TOPIC.to_string()),
+        reliable: true,
+        destination_identities: Vec::new(),
+    };
+    match lp.publish_data(pkt).await {
+        Ok(()) => {
+            eprintln!("[call] unmute ask sent");
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("[call] unmute ask failed: {e}");
+            Err(format!("{e}"))
+        }
+    }
+}
+
 /// proto `TrackSource` values (livekit_protocol) — what the SFU's `can_publish_sources` lists.
 pub const SRC_UNKNOWN: i32 = 0;
 pub const SRC_CAMERA: i32 = 1;
@@ -5843,6 +5893,10 @@ struct Moderation {
     /// (me included). Fed by packets (peers), by my own sends (the SFU never echoes a data
     /// packet to its sender), by the join-time state read, and by my permission updates.
     muted: HashMap<String, (String, String)>,
+    /// 12.1.17 Stage B: identity -> the revision of its mute in `muted` (next_mute_episode; never handed out twice in
+    /// this process). The app's Undo / ask toasts keep it and act only while it is unchanged ([`server_mute_rev`]).
+    /// Changed only through `set_muted` / `clear_muted`, with `muted`.
+    revs: HashMap<String, u64>,
     /// I am server-muted: a packet / the room state / the SFU said so. Locks the mic button
     /// and refuses soundboard publishes.
     me_muted: bool,
@@ -5865,6 +5919,46 @@ fn moderation() -> &'static Mutex<Moderation> {
 fn forget_all_moderation() {
     *moderation().lock().unwrap() = Moderation::default();
 }
+
+/// 12.1.17 Stage B (app unmuteask.rs + the shared vectors' `_aboutToast`; web unmuteask.ts nextMuteEpisode): the mute
+/// record after a mute / unmute of one identity. An unmute ends it (None); a mute keeps `prev` when the same moderator's
+/// mute is already on record (a repeat / re-announce), else starts a new revision `fresh` (a number never used before).
+pub fn next_mute_episode(prev: Option<(&str, u64)>, action: &str, by: &str, fresh: u64) -> Option<(String, u64)> {
+    if action != "mute" {
+        return None;
+    }
+    match prev {
+        Some((b, rev)) if b == by => Some((b.to_string(), rev)),
+        _ => Some((by.to_string(), fresh)),
+    }
+}
+static MUTE_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+impl Moderation {
+    /// `id` is server-muted by `by` (`name` = their display name): the record + its revision. Returns (the revision,
+    /// the revision of the record it replaced), both read in the same step (my own mute's Undo keeps the first; the
+    /// second tells whether a newer mute was overtaken).
+    fn set_muted(&mut self, id: &str, by: &str, name: &str) -> (u64, Option<u64>) {
+        let fresh = MUTE_SEQ.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+        let prev = match (self.muted.get(id), self.revs.get(id)) {
+            (Some((b, _)), Some(r)) => Some((b.as_str(), *r)),
+            _ => None,
+        };
+        let replaced = prev.map(|(_, r)| r);
+        let rev = next_mute_episode(prev, "mute", by, fresh).map_or(fresh, |(_, r)| r);
+        self.muted.insert(id.to_string(), (by.to_string(), name.to_string()));
+        self.revs.insert(id.to_string(), rev);
+        (rev, replaced)
+    }
+    /// Every current server-mute revision (identity, revision), under the caller's lock.
+    fn revs_now(&self) -> Vec<(String, u64)> {
+        self.revs.iter().filter(|(id, _)| self.muted.contains_key(*id)).map(|(id, r)| (id.clone(), *r)).collect()
+    }
+    /// `id` isn't server-muted any more (its revision goes with it).
+    fn clear_muted(&mut self, id: &str) -> Option<(String, String)> {
+        self.revs.remove(id);
+        self.muted.remove(id)
+    }
+}
 /// A clone of the event channel's sender, so out-of-loop paths (my own moderation sends)
 /// can raise `CallEvent`s. Set on connect, cleared on close.
 fn event_sender() -> &'static Mutex<Option<tokio::sync::mpsc::UnboundedSender<CallEvent>>> {
@@ -5884,6 +5978,23 @@ pub fn i_am_server_muted() -> bool {
 /// `(by identity, by display name)` for a server-muted identity, if any.
 pub fn server_mute_info(identity: &str) -> Option<(String, String)> {
     moderation().lock().unwrap().muted.get(identity).cloned()
+}
+/// 12.1.17 Stage B (round 2): the highest revision handed out so far (revisions only grow): a request's watermark.
+pub fn mute_seq_now() -> u64 {
+    MUTE_SEQ.load(std::sync::atomic::Ordering::SeqCst)
+}
+/// Every current server-mute revision (identity, revision): what an ask carries from the moment it was received.
+pub fn mute_revs_snapshot() -> Vec<(String, u64)> {
+    moderation().lock().unwrap().revs_now()
+}
+/// 12.1.17 Stage B: the revision of `identity`'s server mute (None = not server-muted as far as I know).
+pub fn server_mute_rev(identity: &str) -> Option<u64> {
+    let m = moderation().lock().unwrap();
+    if m.muted.contains_key(identity) {
+        m.revs.get(identity).copied()
+    } else {
+        None
+    }
 }
 /// `{"<identity>":{"by":"<identity>","name":"<name>"}}` — tile enrichment.
 pub fn server_muted_json() -> String {
@@ -5915,7 +6026,7 @@ pub fn set_server_muted_from_state(by: &str, by_name: &str) {
     let mut m = moderation().lock().unwrap();
     m.me_muted = true;
     if !me.is_empty() {
-        m.muted.insert(me, (by.to_string(), by_name.to_string()));
+        m.set_muted(&me, by, by_name);
     }
     eprintln!("[call] moderation: joined server-muted per room state (by {by:?})");
 }
@@ -5970,31 +6081,32 @@ fn handle_moderation_packet(who: &str, pkt: ModerationPacket, tx: &tokio::sync::
     );
     match pkt.action.as_str() {
         "mute" => {
-            {
+            let revs = {
                 let mut m = moderation().lock().unwrap();
-                m.muted.insert(pkt.target.clone(), (by.clone(), name.clone()));
+                m.set_muted(&pkt.target, &by, &name);
                 if for_me {
                     m.me_muted = true;
                 }
-            }
+                m.revs_now()
+            };
             if for_me {
                 // The server acted BEFORE this packet was broadcast (2xx first): honour it now
                 // even if the SFU's permission update is still in flight.
                 mute_local_mic_publication();
                 stop_disallowed_aux(true);
             }
-            let _ = tx.send(CallEvent::ServerMuteChanged { identity: pkt.target, muted: true, by, by_name: name });
+            let _ = tx.send(CallEvent::ServerMuteChanged { identity: pkt.target, muted: true, by, by_name: name, revs });
         }
         "unmute" => {
             {
                 let mut m = moderation().lock().unwrap();
-                m.muted.remove(&pkt.target);
+                m.clear_muted(&pkt.target);
                 if for_me {
                     m.me_muted = false;
                     m.sfu_muted = false;
                 }
             }
-            let _ = tx.send(CallEvent::ServerMuteChanged { identity: pkt.target, muted: false, by, by_name: name });
+            let _ = tx.send(CallEvent::ServerMuteChanged { identity: pkt.target, muted: false, by, by_name: name, revs: Vec::new() });
         }
         "disconnect" => {
             if for_me {
@@ -6026,7 +6138,10 @@ fn handle_my_permission_changed(
             m.sfu_muted = true;
             if !m.me_muted {
                 m.me_muted = true;
-                let e = m.muted.entry(me.to_string()).or_insert_with(|| (String::new(), String::new())).clone();
+                if !m.muted.contains_key(me) {
+                    m.set_muted(me, "", ""); // the moderator isn't known yet (their packet names them)
+                }
+                let e = m.muted.get(me).cloned().unwrap_or_default();
                 (true, e.0, e.1)
             } else {
                 (false, String::new(), String::new())
@@ -6035,7 +6150,7 @@ fn handle_my_permission_changed(
             m.sfu_muted = false;
             if m.me_muted {
                 m.me_muted = false;
-                let e = m.muted.remove(me).unwrap_or_default();
+                let e = m.clear_muted(me).unwrap_or_default();
                 (true, e.0, e.1)
             } else {
                 (false, String::new(), String::new())
@@ -6049,7 +6164,8 @@ fn handle_my_permission_changed(
         stop_disallowed_aux(false);
     }
     if flipped {
-        let _ = tx.send(CallEvent::ServerMuteChanged { identity: me.to_string(), muted: !allowed, by, by_name: name });
+        let revs = if allowed { Vec::new() } else { mute_revs_snapshot() };
+        let _ = tx.send(CallEvent::ServerMuteChanged { identity: me.to_string(), muted: !allowed, by, by_name: name, revs });
     }
 }
 
@@ -6075,10 +6191,12 @@ pub async fn publish_moderation_notice(target: &str, by_name: &str) {
 /// AFTER the server said 2xx (mute/unmute AND disconnect), so a refused request never
 /// paints a shield. The sender's own map is updated here (the SFU never echoes a data
 /// packet back to its sender), so the moderator's tiles show the shield too.
-pub async fn publish_moderation_packet(action: &str, target: &str, by_name: &str) {
+/// 12.1.17 Stage B: a `mute` returns (the revision it recorded, the revision of the record it replaced), read in one
+/// step (None for anything else / not in a call).
+pub async fn publish_moderation_packet(action: &str, target: &str, by_name: &str) -> Option<(u64, Option<u64>)> {
     let Some(lp) = aux_participant().lock().unwrap().clone() else {
         eprintln!("[call] moderation: not in a call — {action} {target} not announced");
-        return;
+        return None;
     };
     let by = local_identity_cell().lock().unwrap().clone();
     let json = moderation_packet_json(action, target, &by, by_name);
@@ -6088,24 +6206,32 @@ pub async fn publish_moderation_packet(action: &str, target: &str, by_name: &str
     }
     match action {
         "mute" => {
-            moderation().lock().unwrap().muted.insert(target.to_string(), (by.clone(), by_name.to_string()));
+            let (rev, replaced, revs) = {
+                let mut m = moderation().lock().unwrap();
+                let (rev, replaced) = m.set_muted(target, &by, by_name);
+                (rev, replaced, m.revs_now())
+            };
             emit_call_event(CallEvent::ServerMuteChanged {
                 identity: target.to_string(),
                 muted: true,
                 by,
                 by_name: by_name.to_string(),
+                revs,
             });
+            Some((rev, replaced))
         }
         "unmute" => {
-            moderation().lock().unwrap().muted.remove(target);
+            moderation().lock().unwrap().clear_muted(target);
             emit_call_event(CallEvent::ServerMuteChanged {
                 identity: target.to_string(),
                 muted: false,
                 by,
                 by_name: by_name.to_string(),
+                revs: Vec::new(),
             });
+            None
         }
-        _ => {}
+        _ => None,
     }
 }
 /// Fire-and-forget from any thread (Qt GUI thread included): `disconnect` goes to the
@@ -7118,6 +7244,15 @@ impl CallSession {
                                 Some(pkt) => handle_moderation_packet(&who, pkt, &tx),
                                 None => eprintln!("[call] moderation: unparseable packet from {who}: {text}"),
                             }
+                        } else if topic.as_deref() == Some(UNMUTE_ASK_TOPIC) {
+                            // 12.1.17: someone asks to be unmuted (the app shows it to moderators who outrank them).
+                            let who = participant.as_ref().map(|p| p.identity().0.clone()).unwrap_or_default();
+                            let text = String::from_utf8_lossy(&payload[..]);
+                            if !who.is_empty() && parse_unmute_ask(&text) {
+                                let _ = tx.send(CallEvent::UnmuteAsk { identity: who, revs: mute_revs_snapshot() });
+                            } else {
+                                eprintln!("[call] unmute ask: ignored a malformed packet from {who:?}");
+                            }
                         } else if topic.as_deref() == Some(crate::hear::RX_TOPIC) {
                             // 10.5: what this person receives from each of us ("Heard by 3 of 3").
                             let who = participant.as_ref().map(|p| p.identity().0.clone()).unwrap_or_default();
@@ -7343,12 +7478,13 @@ impl CallSession {
                         forget_game_chat_peer(&identity);
                         forget_corner_peer(&identity);
                         // RBAC: a server-muted peer who leaves takes their shield with them.
-                        if moderation().lock().unwrap().muted.remove(&identity).is_some() {
+                        if moderation().lock().unwrap().clear_muted(&identity).is_some() {
                             let _ = tx.send(CallEvent::ServerMuteChanged {
                                 identity: identity.clone(),
                                 muted: false,
                                 by: String::new(),
                                 by_name: String::new(),
+                                revs: Vec::new(),
                             });
                         }
                         share_watch_muted().lock().unwrap().remove(&identity);
@@ -14587,6 +14723,47 @@ mod tests {
         assert_eq!(server_muted_json(), "{}");
     }
 
+    /// 12.1.17 Stage B: every mute has a revision; a lift + a new mute (by anyone), or a mute by another moderator on
+    /// top, is a NEW revision (an old Undo / ask toast must not lift it); the same moderator's repeat keeps it.
+    #[test]
+    fn server_mute_revisions_follow_the_packets() {
+        let _g = test_lock();
+        forget_all_moderation();
+        *local_identity_cell().lock().unwrap() = "@me:s:DEV".to_string();
+        let (tx, _rx) = tokio::sync::mpsc::unbounded_channel::<CallEvent>();
+        let b = "@b:s:B";
+        let pkt = |action: &str| ModerationPacket { action: action.into(), target: b.into(), by: String::new(), name: "Mod".into() };
+        assert_eq!(server_mute_rev(b), None);
+        handle_moderation_packet("@a:s:A", pkt("mute"), &tx);
+        let r1 = server_mute_rev(b).expect("muted: a revision");
+        handle_moderation_packet("@a:s:A", pkt("mute"), &tx); // the same moderator again: the same mute
+        assert_eq!(server_mute_rev(b), Some(r1));
+        handle_moderation_packet("@c:s:C", pkt("unmute"), &tx);
+        assert_eq!(server_mute_rev(b), None);
+        handle_moderation_packet("@c:s:C", pkt("mute"), &tx); // the review's case: lifted, then muted again
+        let r2 = server_mute_rev(b).expect("muted again");
+        assert_ne!(r2, r1);
+        handle_moderation_packet("@a:s:A", pkt("mute"), &tx); // another moderator on top
+        let r3 = server_mute_rev(b).unwrap();
+        assert!(r3 != r2 && r3 != r1);
+        // round 2: a recording says which record it replaced, in the same step; the watermark only grows
+        let since = mute_seq_now();
+        assert!(since >= r3);
+        let (r4, replaced) = moderation().lock().unwrap().set_muted(b, "@late:s:L", "Late");
+        assert_eq!(replaced, Some(r3), "the record a late answer overwrites");
+        assert!(r4 > since && mute_seq_now() >= r4);
+        assert!(mute_revs_snapshot().contains(&(b.to_string(), r4)));
+        // a record without a revision (never made by set_muted) counts as not muted for a toast
+        moderation().lock().unwrap().muted.insert("@x:s:X".into(), ("@m:s:E".into(), "Mod".into()));
+        assert_eq!(server_mute_rev("@x:s:X"), None);
+        forget_all_moderation();
+        assert_eq!(server_mute_rev(b), None);
+        handle_moderation_packet("@a:s:A", pkt("mute"), &tx); // revisions are never reused, even after a reset
+        assert!(server_mute_rev(b).unwrap() > r3);
+        forget_all_moderation();
+        *local_identity_cell().lock().unwrap() = String::new();
+    }
+
     /// RBAC: the SFU taking MICROPHONE away flips me server-muted exactly once (moderator
     /// unknown until the packet names them), restoring it flips back exactly once, and a
     /// join-time STATE mute is not cleared by a permission that merely says "everything"
@@ -14614,7 +14791,7 @@ mod tests {
         assert!(!my_source_allowed(TrackSource::Unknown));
         assert!(my_source_allowed(TrackSource::ScreenshareAudio));
         match rx.try_recv() {
-            Ok(CallEvent::ServerMuteChanged { identity, muted, by, by_name }) => {
+            Ok(CallEvent::ServerMuteChanged { identity, muted, by, by_name, .. }) => {
                 assert_eq!(identity, me);
                 assert!(muted);
                 assert_eq!((by.as_str(), by_name.as_str()), ("", ""));

@@ -179,7 +179,7 @@ Item {
                 color: Th.widgetFg
                 linkColor: Th.widgetNoteLinkFg
                 font.family: Kirigami.Theme.defaultFont.family
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10
+                font.pointSize: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale
                 onLinkActivated: (link) => { if (!w.preview && !w.sample) LinkGate.open(link) }
                 onImplicitHeightChanged: paper.syncH()
                 Component.onCompleted: paper.syncH()
@@ -226,6 +226,7 @@ Item {
                     name: String(w.note.name || "")
                     imageSource: String(w.note.avatar || "")
                 }
+                PrestigeToken { mxid: w.sample ? "" : String(w.note.sender || ""); roomId: w.roomId; size: 12; gap: false; Layout.rightMargin: -2 }   // mini games v1: the author's token, 4 px before the name
                 WidgetText { Layout.fillWidth: true; role: "meta"; text: String(w.note.name || "") + " · " + w.agoText(w.note.ts || 0); color: Th.widgetMetaFg }
                 ThButton {
                     visible: !!w.note.canEdit
@@ -234,7 +235,7 @@ Item {
                     text: "Edit"
                     implicitHeight: 22
                     leftPadding: 8; rightPadding: 8
-                    font.pointSize: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * 0.85
+                    font.pointSize: ((Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * 0.85) * Th.textScale
                     enabled: !w.preview
                     onClicked: w.startEdit()
                 }

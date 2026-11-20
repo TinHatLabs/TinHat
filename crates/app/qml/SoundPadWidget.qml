@@ -183,7 +183,7 @@ Item {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: pb.d.emoji
-                    font.pixelSize: pb.compact ? 13 : 20
+                    font.pixelSize: pb.compact ? Th.px(13) : Th.px(20)
                     color: Th.soundboardCardFg
                 }
                 WidgetText {

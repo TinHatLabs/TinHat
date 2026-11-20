@@ -155,7 +155,7 @@ Item {
                     anchors.centerIn: parent
                     visible: poster.status !== Image.Ready
                     text: w.glyphOf(mr.m)
-                    font.pixelSize: 13
+                    font.pixelSize: Th.px(13)
                     color: Th.memoriesCardPosterFg
                 }
                 Rectangle {   // 1 px widget.cover.border inside

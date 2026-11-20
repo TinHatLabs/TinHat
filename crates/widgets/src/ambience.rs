@@ -614,6 +614,12 @@ pub fn image_shown(bg: &Background, room: &str, ev: Option<&ImageEvent>) -> bool
 
 /// Custom image limits: re-encoded as JPEG (no metadata can survive), ≤ 2560 px on the long side, ≤ 1.5 MB.
 pub const IMAGE_MAX_SIDE: f64 = 2560.0;
+/// What "Your own image…" offers (12.1.17): every picture format the image is re-encoded from, HEIC / HEIF too (an
+/// iPhone camera's format: 12.1.16's filter hid them without a word); a picked picture this device can't read gets the
+/// word customFormat. The file dialog's filter (BackgroundSheet.qml) and the web's accept list carry the same list.
+pub const IMAGE_PICK_EXTS: [&str; 8] = ["png", "jpg", "jpeg", "gif", "webp", "avif", "heic", "heif"];
+/// The web picker's accept list for those (kept here so the vectors pin both).
+pub const IMAGE_PICK_ACCEPT: &str = "image/png,image/jpeg,image/gif,image/webp,image/avif,image/heic,image/heif";
 pub const IMAGE_MAX_BYTES: u64 = 1_500_000;
 /// JPEG qualities tried in turn; after the last, the image is scaled by IMAGE_SHRINK and the ladder starts again.
 pub const IMAGE_QUALITIES: [f64; 3] = [0.85, 0.75, 0.65];
@@ -1107,7 +1113,8 @@ fn clamp(x: f64, a: f64, b: f64) -> f64 {
 // ---- the simulation ------------------------------------------------------------------------------------------------
 #[derive(Clone, Debug, PartialEq)]
 pub struct Collider {
-    /// stable id (the message's event id, "composer", …): pools / snow lines follow it while it moves
+    /// stable id ending in ":<kind>" (the row's key + SURFACE_KINDS, e.g. "$ev:b"): pools / snow lines follow it while
+    /// it moves; an id without a card kind is no surface (set_colliders drops it)
     pub id: String,
     pub x: f64,
     pub y: f64,
@@ -1116,6 +1123,19 @@ pub struct Collider {
     /// the top-left / top-right corner radii (a bubble's rounded top): pools and snow follow the curve there
     pub rl: Option<f64>,
     pub rr: Option<f64>,
+}
+
+/// What particles may settle on: the visible message cards only. A collider's id ends in ":<kind>" with kind b (a
+/// message bubble), n (a sender name), d (a day pill) or r (a message's reaction chips, their own rect). Never a
+/// container, a divider or a whole row: 12.1.17, the web's NEW line (a full-width 18 px box whose only ink is a 1 px
+/// rule) caught the phone's rain on an invisible line and kept it off every card below. Shared rule:
+/// testvectors/ambience/surfaces.json (the web's surfaceKind).
+pub const SURFACE_KINDS: [&str; 4] = ["b", "n", "d", "r"];
+
+/// The card kind an id ends in (after its last ":"), or None: not a surface.
+pub fn surface_kind(id: &str) -> Option<&'static str> {
+    let k = &id[id.rfind(':')? + 1..];
+    SURFACE_KINDS.iter().copied().find(|&s| s == k)
 }
 
 /// The y of a collider's top edge at x (its rounded corners curve down; square = c.y).
@@ -1235,12 +1255,12 @@ impl AmbienceSim {
         self.h = h;
     }
 
-    /// The colliders this frame, top to bottom as drawn. Ledges of colliders that left are dropped; a column count that
-    /// changed (a bubble resized) starts its ledge again.
+    /// The colliders this frame, top to bottom as drawn: the cards among them (surface_kind), nothing else. Ledges of
+    /// colliders that left are dropped; a column count that changed (a bubble resized) starts its ledge again.
     pub fn set_colliders(&mut self, cols: &[Collider]) {
-        self.cols = cols.to_vec();
+        self.cols = cols.iter().filter(|c| surface_kind(&c.id).is_some()).cloned().collect();
         let mut keep: HashSet<&str> = HashSet::new();
-        for c in cols {
+        for c in &self.cols {
             keep.insert(c.id.as_str());
             let n = mmax(1.0, (c.w / COL_W).floor()) as usize;
             let fresh = match self.ledges.get(&c.id) {
@@ -2321,6 +2341,14 @@ mod tests {
     }
 
     #[test]
+    fn image_pick() {
+        // what Your own image… offers (12.1.17: HEIC / HEIF too), = the web's IMAGE_PICK_EXTS / IMAGE_PICK_ACCEPT
+        let v = vectors();
+        assert_eq!(IMAGE_PICK_EXTS.to_vec(), strs(&v["image_pick"]["exts"]));
+        assert_eq!(IMAGE_PICK_ACCEPT, s(&v["image_pick"]["accept"]));
+    }
+
+    #[test]
     fn image_limits() {
         let v = vectors();
         let l = &v["image_limits"];
@@ -2530,9 +2558,9 @@ mod tests {
             if scroll && i as f64 >= steps as f64 / 2.0 {
                 let k = i as f64 - steps as f64 / 2.0;
                 let mut moved: Vec<Collider> =
-                    cols.iter().filter(|x| x.id != "$a").map(|x| Collider { y: x.y - k * 2.0, ..x.clone() }).collect();
+                    cols.iter().filter(|x| x.id != "$a:b").map(|x| Collider { y: x.y - k * 2.0, ..x.clone() }).collect();
                 moved.push(Collider {
-                    id: "$e".into(),
+                    id: "$e:b".into(),
                     x: 60.0,
                     y: 560.0 - k * 2.0,
                     w: 340.0,
@@ -2705,6 +2733,82 @@ mod tests {
         for l in sim.ledges.values() {
             for &h in &l.h {
                 assert!(h <= LEDGE_MAX + 1e-9);
+            }
+        }
+    }
+
+    // 12.1.17 (fix1217/settle): what the particles settle on. testvectors/ambience/surfaces.json is hand-written and
+    // shared (byte-identical in the web repo; its core.test.ts runs the same case names).
+    fn surfaces() -> Value {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../testvectors/ambience/surfaces.json");
+        tinhat_theme::json::parse_json(&std::fs::read_to_string(path).expect("surfaces")).expect("json")
+    }
+
+    #[test]
+    fn surface_kinds() {
+        // a collider id's kind; only the visible message cards are surfaces
+        let v = surfaces();
+        let mut kinds: Vec<&str> = SURFACE_KINDS.to_vec();
+        kinds.sort();
+        let mut want: Vec<&str> = v["kinds"].as_object().unwrap().keys().map(String::as_str).collect();
+        want.sort();
+        assert_eq!(kinds, want);
+        for c in v["ids"].as_array().unwrap() {
+            let id = s(&c[0]);
+            assert_eq!(surface_kind(id), c[1].as_str(), "{id:?}");
+        }
+    }
+
+    #[test]
+    fn surfaces_phone_new_line() {
+        // the phone's NEW line (any non-card) never catches a particle; the cards below it do
+        let v = surfaces();
+        let p = &v["phone"];
+        let cols: Vec<Collider> = p["colliders"].as_array().unwrap().iter().map(collider).collect();
+        let cards: HashSet<&str> = strs(&p["cards"]).into_iter().collect();
+        let below_ids = strs(&p["below_the_line"]);
+        for c in p["cases"].as_array().unwrap() {
+            let name = s(&c["name"]);
+            let mut sim = AmbienceSim::new(Effect::parse(s(&c["effect"])).unwrap(), c["seed"].as_u64().unwrap() as u32, f(&c["density"]));
+            sim.set_view(f(&p["view"]["w"]), f(&p["view"]["h"]));
+            sim.set_colliders(&cols);
+            let mut stray_on = String::new();
+            // the most water / snow the cards below the NEW line held at once (pools run off and drip, so not just the end)
+            let mut below = 0.0f64;
+            let mut bubbles = 0.0f64; // the bubbles alone (review: a name catching it must not hide bubbles that get nothing)
+            for _ in 0..c["steps"].as_u64().unwrap() {
+                sim.step();
+                for q in &sim.parts {
+                    if !q.on.is_empty() && !cards.contains(q.on.as_str()) && stray_on.is_empty() {
+                        stray_on = q.on.clone();
+                    }
+                }
+                let held: f64 = below_ids
+                    .iter()
+                    .map(|id| sim.ledges.get(*id).map(|l| l.h.iter().sum::<f64>() + l.end_l + l.end_r).unwrap_or(0.0))
+                    .sum();
+                below = below.max(held);
+                let held_b: f64 = below_ids
+                    .iter()
+                    .filter(|id| id.ends_with(":b"))
+                    .map(|id| sim.ledges.get(*id).map(|l| l.h.iter().sum::<f64>() + l.end_l + l.end_r).unwrap_or(0.0))
+                    .sum();
+                bubbles = bubbles.max(held_b);
+            }
+            // the simulation keeps the cards only, in the order given
+            let kept: Vec<&str> = sim.cols.iter().map(|x| x.id.as_str()).collect();
+            let want: Vec<&str> = cols.iter().map(|x| x.id.as_str()).filter(|id| cards.contains(id)).collect();
+            assert_eq!(kept, want, "{name}");
+            for id in sim.ledges.keys() {
+                assert!(cards.contains(id.as_str()), "{name}: a pool / snow line on {id}");
+            }
+            assert_eq!(stray_on, "", "{name}: a particle ran along {stray_on}");
+            // 12.1.16: rain 0 and snow 0 below the line (the line itself held 29.7 / 2.5); embers never rest on a top
+            if s(&c["effect"]) != "embers" {
+                assert!(below > 0.0, "{name}: the cards below the NEW line got nothing");
+            }
+            if s(&c["effect"]) == "rain" {
+                assert!(bubbles > 0.0, "{name}: the bubbles below the NEW line got no rain");
             }
         }
     }

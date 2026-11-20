@@ -1,0 +1,381 @@
+{
+  "_about": "Custom status text up to 80 characters (D07.6, 12.1.17). Byte-identical in the desktop app, Tin Hat Web and Tin Hat Server. `text` stays 1-40 characters so apps and servers from before 12.1.17 still show it; a longer status keeps its whole text (41-80 characters after trim) in `full` and cuts `text` at a whole character (grapheme) to at most 39 characters, drops trailing graphemes that are only spaces and adds U+2026 (just U+2026 when the first grapheme alone is longer). Trimming = JS \\s plus U+0085 = Rust char::is_whitespace plus U+FEFF, in both apps. shorten: what a status write stores (`full` null = no full key). read: what an app shows for a status (null = no status); `old` = the 12.1.15 apps' rule (text 1-40 after trim). server: the GET /api/presence row's `status` (null = none). The editor_cap_* rows (12.1.17 Stage B, the review's #5): the status editors cap a typed or pasted text at 80 code points by WHOLE graphemes (desktop cap_status_edit / web capStatusEdit, vectors status-edit.json), so what they save is at most 80 code points, ending on a whole grapheme; the server keeps such a `full` (it counts code points, 1-80, the same count) and never cuts it.",
+  "shorten": [
+    {
+      "name": "short_unchanged",
+      "in": "Back at 9",
+      "text": "Back at 9",
+      "full": null
+    },
+    {
+      "name": "exactly_40_unchanged",
+      "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "full": null
+    },
+    {
+      "name": "trimmed_first",
+      "in": "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  ",
+      "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "full": null
+    },
+    {
+      "name": "41_cut_to_39_plus_ellipsis",
+      "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+      "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "sweep_example",
+      "in": "  Back after dinner, then ranked with the whole crew ",
+      "text": "Back after dinner, then ranked with the…",
+      "full": "Back after dinner, then ranked with the whole crew"
+    },
+    {
+      "name": "space_before_cut_trimmed",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbb",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbb"
+    },
+    {
+      "name": "80_max",
+      "in": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "text": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy…",
+      "full": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    },
+    {
+      "name": "characters_not_bytes",
+      "in": "ééééééééééééééééééééééééééééééééééééééééé",
+      "text": "ééééééééééééééééééééééééééééééééééééééé…",
+      "full": "ééééééééééééééééééééééééééééééééééééééééé"
+    },
+    {
+      "name": "skin_tone_emoji_not_split",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👍🏽bbbbb",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👍🏽bbbbb"
+    },
+    {
+      "name": "zwj_family_not_split",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👨‍👩‍👧bbbbbbbbbb",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👨‍👩‍👧bbbbbbbbbb"
+    },
+    {
+      "name": "flag_not_split",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🇯🇵bbbbb",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🇯🇵bbbbb"
+    },
+    {
+      "name": "combining_mark_not_split",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaéxxxxx",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaéxxxxx"
+    },
+    {
+      "name": "nel_at_cut_trimmed",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbb",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbb"
+    },
+    {
+      "name": "bom_and_nel_edges_trimmed",
+      "in": "﻿xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+      "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "short_bom_and_nel_edges_trimmed",
+      "in": "GG﻿",
+      "text": "GG",
+      "full": null
+    },
+    {
+      "name": "oversized_first_grapheme_leaves_ellipsis",
+      "in": "á́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́",
+      "text": "…",
+      "full": "á́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́́"
+    },
+    {
+      "name": "prepend_space_grapheme_kept_whole",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa؀ bbbbb",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa؀ …",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa؀ bbbbb"
+    },
+    {
+      "name": "emoji_that_fits_kept",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👍🏽bbbbb",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👍🏽…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👍🏽bbbbb"
+    },
+    {
+      "name": "editor_cap_80_code_points_ending_in_a_2_code_point_emoji",
+      "in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👍🏽",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…",
+      "full": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa👍🏽"
+    },
+    {
+      "name": "editor_cap_80_code_points_ending_in_a_letter_with_its_mark",
+      "in": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאבּ",
+      "text": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאא…",
+      "full": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאבּ"
+    }
+  ],
+  "read": [
+    {
+      "name": "plain",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "GG"
+      },
+      "show": "GG",
+      "old": "GG"
+    },
+    {
+      "name": "long_from_a_new_app",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "show": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "old": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+    },
+    {
+      "name": "long_via_an_old_server_row",
+      "content": {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "emoji": "",
+        "color": "teal"
+      },
+      "show": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+      "old": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+    },
+    {
+      "name": "full_81_ignored",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "show": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+      "old": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+    },
+    {
+      "name": "full_blank_ignored",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "GG",
+        "full": "   "
+      },
+      "show": "GG",
+      "old": "GG"
+    },
+    {
+      "name": "full_not_text_ignored",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "GG",
+        "full": 42
+      },
+      "show": "GG",
+      "old": "GG"
+    },
+    {
+      "name": "full_trimmed",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "full": " zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz "
+      },
+      "show": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+      "old": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+    },
+    {
+      "name": "full_bom_trimmed",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "ok",
+        "full": "﻿xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "show": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "old": "ok"
+    },
+    {
+      "name": "full_nel_trimmed",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "ok",
+        "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "show": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "old": "ok"
+    },
+    {
+      "name": "text_required",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "",
+        "full": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+      },
+      "show": null,
+      "old": null
+    },
+    {
+      "name": "text_41_still_refused",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "show": null,
+      "old": null
+    },
+    {
+      "name": "expired",
+      "content": {
+        "emoji": "",
+        "color": "teal",
+        "until": 1000,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "show": null,
+      "old": null
+    }
+  ],
+  "server": [
+    {
+      "name": "short",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "  Grinding "
+      },
+      "row": {
+        "text": "Grinding",
+        "emoji": "",
+        "color": "teal"
+      }
+    },
+    {
+      "name": "long",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "full": " xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "row": {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "emoji": "",
+        "color": "teal",
+        "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    },
+    {
+      "name": "full_81_dropped",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "row": {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "emoji": "",
+        "color": "teal"
+      }
+    },
+    {
+      "name": "full_unsafe_dropped",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "GG",
+        "full": "GG ‮ reversed"
+      },
+      "row": {
+        "text": "GG",
+        "emoji": "",
+        "color": "teal"
+      }
+    },
+    {
+      "name": "full_blank_dropped",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "GG",
+        "full": " "
+      },
+      "row": {
+        "text": "GG",
+        "emoji": "",
+        "color": "teal"
+      }
+    },
+    {
+      "name": "full_not_text_dropped",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "GG",
+        "full": [
+          "x"
+        ]
+      },
+      "row": {
+        "text": "GG",
+        "emoji": "",
+        "color": "teal"
+      }
+    },
+    {
+      "name": "text_41_refused",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "row": null
+    },
+    {
+      "name": "text_missing_refused",
+      "status": {
+        "emoji": "",
+        "color": "teal",
+        "until": null,
+        "full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "row": null
+    }
+  ]
+}

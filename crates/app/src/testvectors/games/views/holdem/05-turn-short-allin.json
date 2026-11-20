@@ -1,0 +1,430 @@
+{
+ "v": 1,
+ "game": "holdem",
+ "step": "05-turn-short-allin",
+ "about": "Flop checked round. Turn: seat 1 bet 10, seat 4 called. Seat 6 has 14: call 10, or all-in to 14 (short of a full raise: offered as raise min = max = 14).",
+ "people": {
+  "seat1": "@ana:example.org",
+  "seat4": "@ben:example.org",
+  "seat6": "@dee:example.net",
+  "spectator": "@cy:example.org"
+ },
+ "views": {
+  "seat1": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 11,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 24,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 14,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 14,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "turn",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh"
+    ],
+    "pots": [
+     {
+      "amount": 18,
+      "eligible": [
+       1,
+       4,
+       6
+      ]
+     }
+    ],
+    "total": 38,
+    "to_act": {
+     "seat": 6,
+     "turn": 10,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 4,
+     "a": "call",
+     "to": 10
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 1,
+    "state": "active",
+    "cards": [
+     "As",
+     "Kd"
+    ],
+    "legal": null,
+    "screens": [
+     "desktop"
+    ],
+    "at_cap": false,
+    "cap": 150,
+    "holdings": 40,
+    "timeouts": 0
+   }
+  },
+  "seat4": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 11,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 24,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 14,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 14,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "turn",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh"
+    ],
+    "pots": [
+     {
+      "amount": 18,
+      "eligible": [
+       1,
+       4,
+       6
+      ]
+     }
+    ],
+    "total": 38,
+    "to_act": {
+     "seat": 6,
+     "turn": 10,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 4,
+     "a": "call",
+     "to": 10
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 4,
+    "state": "active",
+    "cards": [
+     "9h",
+     "9c"
+    ],
+    "legal": null,
+    "screens": [
+     "web"
+    ],
+    "at_cap": false,
+    "cap": 100,
+    "holdings": 30,
+    "timeouts": 0
+   }
+  },
+  "seat6": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 11,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 24,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 14,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 14,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "turn",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh"
+    ],
+    "pots": [
+     {
+      "amount": 18,
+      "eligible": [
+       1,
+       4,
+       6
+      ]
+     }
+    ],
+    "total": 38,
+    "to_act": {
+     "seat": 6,
+     "turn": 10,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 4,
+     "a": "call",
+     "to": 10
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 6,
+    "state": "active",
+    "cards": [
+     "Qs",
+     "Jc"
+    ],
+    "legal": {
+     "fold": true,
+     "check": false,
+     "call": 10,
+     "raise": {
+      "min": 14,
+      "max": 14
+     }
+    },
+    "screens": [
+     "desktop",
+     "pad"
+    ],
+    "at_cap": false,
+    "cap": 100,
+    "holdings": 20,
+    "timeouts": 0
+   }
+  },
+  "spectator": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 11,
+   "now": 1763600000000,
+   "status": "hand",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 24,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 14,
+     "bet": 10,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 14,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "turn",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh"
+    ],
+    "pots": [
+     {
+      "amount": 18,
+      "eligible": [
+       1,
+       4,
+       6
+      ]
+     }
+    ],
+    "total": 38,
+    "to_act": {
+     "seat": 6,
+     "turn": 10,
+     "deadline": 1763600030000
+    },
+    "last": {
+     "seat": 4,
+     "a": "call",
+     "to": 10
+    }
+   },
+   "result": null,
+   "closed": null,
+   "spectators": 1
+  }
+ },
+ "moves": {
+  "seat6": [
+   "fold",
+   "call",
+   "raise",
+   "allin",
+   "leave",
+   "away"
+  ],
+  "seat1": [
+   "leave",
+   "away",
+   "close"
+  ],
+  "seat4": [
+   "leave",
+   "away"
+  ],
+  "spectator": []
+ },
+ "next": {
+  "fold": "06-showdown",
+  "check": "06-showdown",
+  "call": "06-showdown",
+  "raise": "06-showdown",
+  "allin": "06-showdown"
+ }
+}

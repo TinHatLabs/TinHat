@@ -13,7 +13,7 @@ RowLayout {
     property var app
     property var pres: null            // {state, room?, dot, label, chip?, chipColor?} or null
     property string roomName: ""       // the call's room, when we are in it too (the server only says then)
-    property real pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))
+    property real pointSize: ((Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))) * Th.textScale   // A31.4: the person's text size
     property color textColor: Th.presenceLineFg
     readonly property bool hasChip: !!pres && !!pres.chip
     readonly property string stateWord: !pres ? "" : (pres.state === "away" ? "Away" : (pres.state === "call" ? "In a call" : "Online"))

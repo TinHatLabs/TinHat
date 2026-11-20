@@ -124,6 +124,8 @@ fn every_vector_file_belongs_to_a_family() {
             ["editor-tokens.json"] => "editor-tokens",
             ["editor", name] if name.ends_with(".json") => "editor",
             ["share", name] if name.ends_with(".json") => "share",
+            // P22 (tests/personal.rs): the personal text size + density
+            ["personal", name] if name.ends_with(".json") => "personal",
             _ => {
                 stray.push(s.clone());
                 "stray"
@@ -247,8 +249,8 @@ fn same_bytes(a: &Path, b: &Path) {
 
 /// The theme's vector families in the contract's testvectors/ (sync-vectors.sh THEME_VECTORS): the rest of that folder
 /// belongs to other crates (layout/, since the layout contract C0 of 2026-09-27).
-const THEME_VECTOR_FAMILIES: [&str; 7] =
-    ["engine", "import", "themes-sync", "engine-tokens.json", "editor", "share", "editor-tokens.json"];
+const THEME_VECTOR_FAMILIES: [&str; 8] =
+    ["engine", "import", "themes-sync", "engine-tokens.json", "editor", "share", "editor-tokens.json", "personal"];
 
 #[test]
 fn copies_equal_the_contract() {

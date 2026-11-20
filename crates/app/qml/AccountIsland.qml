@@ -93,6 +93,10 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
                     spacing: 1
+                    RowLayout {   // mini games v1: your own prestige token (your own server's rank: no room)
+                        Layout.fillWidth: true
+                        spacing: 0
+                    PrestigeToken { mxid: island.panelRef.app ? String(island.panelRef.app.mUserId || "") : ""; roomId: "" }
                     Controls.Label {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
@@ -100,6 +104,7 @@ Rectangle {
                         elide: Text.ElideRight
                         color: Th.accountNameFg
                         font.bold: true
+                    }
                     }
                     StatusChip {
                         visible: !!meBtn.mine && !!meBtn.mine.chip

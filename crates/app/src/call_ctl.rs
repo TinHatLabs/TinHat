@@ -95,6 +95,9 @@ pub mod qobject {
         #[qproperty(i32, moderation_rev)] // QML: moderationRev — bumps whenever the server-muted map changes (tiles carry serverMuted / serverMutedBy)
         #[qproperty(QString, last_error)] // QML: lastError — last failed moderation action, user-facing (the server's own message)
         #[qproperty(i32, error_rev)] // QML: errorRev — bumps on EVERY lastError set (same text twice still toasts)
+        // 12.1.17 (D04.6): ask to be unmuted + Undo (unmuteask.rs; web unmuteask.ts)
+        #[qproperty(QString, unmute_asks_json)] // QML: unmuteAsksJson — ["<identity>",…] people whose hand is up for ME (I may unmute them); "" = none
+        #[qproperty(i32, unmute_toast_rev)] // QML: unmuteToastRev — bumps when toasts whose button unmutes someone are queued (takeUnmuteToasts)
         #[qproperty(QString, hear_json)] // QML: hearJson — 10.5 "can they hear me?" state (streamer hear.rs; "{}" outside a call)
         #[qproperty(QString, same_room_json)] // QML: sameRoomJson — 11.3 same room {linked,holder,live,ask,pending,spk,groups,rawOk} ("{}" outside a call)
         #[qproperty(bool, same_room_auto)] // QML: sameRoomAuto — 11.3: link up automatically with remembered people (default on, persisted)
@@ -182,6 +185,11 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "labForceDrop"]
         fn lab_force_drop(self: &CallController) -> bool;
+        /// QML: callctl.labMicLateHold(ms) — R2's lab gate (TINHAT_LABDRIVE_MICHOLD; compiled only outside a release):
+        /// the next late mic task waits `ms` before it takes the call lock. false = refused (always in a release).
+        #[qinvokable]
+        #[cxx_name = "labMicLateHold"]
+        fn lab_mic_late_hold(self: &CallController, ms: i32) -> bool;
         /// D02.3: QML: callctl.carryTile(participant, kind, until, tilesJson, now) — the tile a held pin / full screen moves
         /// to after a blip ("" = none yet; tilecarry.rs, shared vectors)
         /// A13.0: QML: callctl.micMeterHint() — the line under a meter that shows no level (why the last start failed;
@@ -501,6 +509,24 @@ pub mod qobject {
         /// participant join and every 30 s while in a call).
         #[qinvokable]
         fn refresh_call_perms(self: Pin<&mut CallController>);
+        /// 12.1.17: I'm server-muted — ask the moderators to unmute me (a `tinhat.unmute_ask` packet, rate-limited:
+        /// unmuteask.rs ASK_COOLDOWN_MS). Returns "" when it went out (status "Asked to be unmuted"), else why not.
+        #[qinvokable]
+        fn ask_to_unmute(self: Pin<&mut CallController>) -> QString;
+        /// 12.1.17: the ask button's text right now ("Ask to be unmuted" / "Asked — ask again in N s").
+        #[qinvokable]
+        fn unmute_ask_label(self: &CallController) -> QString;
+        /// 12.1.17: ms left on the ask cooldown (0 = the button works).
+        #[qinvokable]
+        fn unmute_ask_cooldown(self: &CallController) -> i32;
+        /// 12.1.17: the queued toasts whose button unmutes someone (the mute's Undo, an ask's Unmute), oldest first:
+        /// `[{"text","action","target","room","ms"}]`; empties the queue. QML reads it when unmuteToastRev moves.
+        #[qinvokable]
+        fn take_unmute_toasts(self: Pin<&mut CallController>) -> QString;
+        /// 12.1.17: a toast's button: unmute `target` only in call `gen` (the toast's own) AND only while the mutes it
+        /// was made for are unchanged (`revs` = the toast's own `[[identity, revision], …]`; Stage B); else why not.
+        #[qinvokable]
+        fn unmute_from_toast(self: Pin<&mut CallController>, target: &QString, gen: &QString, revs: &QString) -> QString;
         /// 10.5: the pills' one-click fix for the SYSTEM sound settings — unmute (and raise from
         /// 0 %) the input (`output` false) or the output (`output` true). Linux (pactl); no-op elsewhere.
         #[qinvokable]
@@ -640,6 +666,8 @@ pub struct CallControllerRust {
     moderation_rev: i32,      // bumps when the server-muted map changes
     last_error: QString,      // last failed moderation action (user-facing)
     error_rev: i32,           // bumps on every last_error set
+    unmute_asks_json: QString, // 12.1.17: hands up for me (JSON list of identities; "" = none)
+    unmute_toast_rev: i32,    // 12.1.17: bumps when unmute toasts are queued
     hear_json: QString,       // 10.5 "can they hear me?" (streamer hear.rs)
 }
 
@@ -982,6 +1010,249 @@ fn server_mute_fields(identity: &str) -> (bool, String) {
     }
 }
 
+// ── 12.1.17 (D04.6): ask to be unmuted (unmuteask.rs; web moderation.ts) ────────────────────────────────
+// All of it belongs to ONE call: `gen` = that call's CHIME_GEN (set on connect; NO_CALL between calls). Every async step
+// carries the gen it started under and changes nothing unless it still matches, checked under the same lock.
+
+const NO_CALL: u64 = u64::MAX;
+
+struct UnmuteAsks {
+    gen: u64,
+    /// when I last asked (the cooldown)
+    last_ask_ms: Option<i64>,
+    /// asker identity -> when their hand went up (only asks I may answer)
+    hands: std::collections::HashMap<String, i64>,
+    /// asker identity -> when I last toasted their ask. Kept when they leave (a rejoin is no way around the toast
+    /// gap); pruned once older than the gap.
+    last_toast: std::collections::HashMap<String, i64>,
+    /// askers with an ask being decided (a flood never runs more than one lookup each at a time)
+    busy: std::collections::HashSet<String>,
+    /// Stage B (#3): asker identity -> when their ask came in before I knew they were muted (the call server mutes them
+    /// before the moderator's request returns and is announced); decided when their mute arrives, if still live
+    /// (unmuteask::held_ask_live). At most one per asker, 64 at once; dropped when they leave / the call ends.
+    held: std::collections::HashMap<String, i64>,
+    /// the one timer that takes the next hand down is armed
+    timer_armed: bool,
+    /// toasts whose button unmutes someone, waiting for QML (takeUnmuteToasts)
+    toasts: Vec<serde_json::Value>,
+}
+impl UnmuteAsks {
+    fn new(gen: u64) -> Self {
+        UnmuteAsks {
+            gen,
+            last_ask_ms: None,
+            hands: Default::default(),
+            last_toast: Default::default(),
+            busy: Default::default(),
+            held: Default::default(),
+            timer_armed: false,
+            toasts: Vec::new(),
+        }
+    }
+}
+fn unmute_asks() -> &'static std::sync::Mutex<UnmuteAsks> {
+    static U: OnceLock<std::sync::Mutex<UnmuteAsks>> = OnceLock::new();
+    U.get_or_init(|| std::sync::Mutex::new(UnmuteAsks::new(NO_CALL)))
+}
+fn wall_ms() -> i64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
+}
+/// The call the ask state belongs to (NO_CALL between calls).
+fn asks_gen() -> u64 {
+    unmute_asks().lock().unwrap().gen
+}
+/// Drop the hands that are down (unmuted, or older than HAND_MS), publish the rest (sorted JSON, "" = none), and keep
+/// ONE timer armed for the next hand to go down. Nothing when `gen` is no longer the call's.
+fn push_unmute_hands(qt: &cxx_qt::CxxQtThread<qobject::CallController>, gen: u64) {
+    let now = wall_ms();
+    let (json, next) = {
+        let mut u = unmute_asks().lock().unwrap();
+        if u.gen != gen {
+            return;
+        }
+        u.hands.retain(|id, at| crate::unmuteask::hand_shown(*at, now, tinhat_streamer::server_mute_info(id).is_some()));
+        let mut ids: Vec<&String> = u.hands.keys().collect();
+        ids.sort();
+        let json = if ids.is_empty() { String::new() } else { serde_json::to_string(&ids).unwrap_or_default() };
+        let next = if !u.timer_armed { u.hands.values().min().map(|at| at + crate::unmuteask::HAND_MS - now) } else { None };
+        if next.is_some() {
+            u.timer_armed = true;
+        }
+        (json, next)
+    };
+    let _ = qt.queue(move |mut o| {
+        if asks_gen() == gen && o.unmute_asks_json().to_string() != json {
+            o.as_mut().set_unmute_asks_json(QString::from(&json));
+        }
+    });
+    if let Some(ms) = next {
+        let qt2 = qt.clone();
+        crate::bridge::runtime().spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(ms.max(0) as u64 + 50)).await;
+            {
+                let mut u = unmute_asks().lock().unwrap();
+                if u.gen != gen {
+                    return; // that call is over: its timer ends here
+                }
+                u.timer_armed = false;
+            }
+            push_unmute_hands(&qt2, gen);
+        });
+    }
+}
+/// Queue a toast whose button unmutes `target` in call `gen` (the mute's Undo, an ask's Unmute) and tell QML. Over 32
+/// queued, the oldest ASK toast goes first: an Undo is never dropped for asks. `revs` (12.1.17 Stage B): the mute
+/// revisions it acts on, kept NOW (when it is made); the press acts only while they're unchanged.
+#[allow(clippy::too_many_arguments)]
+fn queue_unmute_toast(
+    qt: &cxx_qt::CxxQtThread<qobject::CallController>,
+    gen: u64,
+    undo: bool,
+    text: &str,
+    action: &str,
+    target: &str,
+    ms: i64,
+    revs: &[(String, u64)],
+) {
+    let revs = serde_json::to_string(revs).unwrap_or_else(|_| "[]".into());
+    {
+        let mut u = unmute_asks().lock().unwrap();
+        if u.gen != gen {
+            return;
+        }
+        u.toasts.push(serde_json::json!({ "text": text, "action": action, "target": target, "gen": gen.to_string(), "undo": undo, "ms": ms, "revs": revs }));
+        if u.toasts.len() > 32 {
+            let i = u.toasts.iter().position(|t| t["undo"] != serde_json::Value::Bool(true)).unwrap_or(0);
+            u.toasts.remove(i);
+        }
+    }
+    let _ = qt.queue(|mut o| {
+        let r = *o.unmute_toast_rev();
+        o.as_mut().set_unmute_toast_rev(r.wrapping_add(1));
+    });
+}
+/// Someone asked to be unmuted: show it only if I may answer (unmuteask::ask_verdict). Never unmutes anyone.
+async fn on_unmute_ask(qt: cxx_qt::CxxQtThread<qobject::CallController>, room_id: String, identity: String, gen: u64, kept: Vec<(String, u64)>) {
+    let me = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
+    let sender = mxid_of(&identity);
+    let mine = crate::roles::effective_perms(&room_id, &me).await;
+    let theirs = crate::roles::effective_perms(&room_id, &sender).await;
+    let known = !room_id.is_empty() && !me.is_empty() && !sender.is_empty();
+    let now = wall_ms();
+    // the verdict and the toast-gap reservation in ONE lock (two asks decided at once never both toast), and only
+    // while the call this ask came in is still the call
+    let verdict = {
+        let mut u = unmute_asks().lock().unwrap();
+        if u.gen != gen {
+            return; // the call ended while we looked (its busy mark went with it)
+        }
+        u.busy.remove(&identity);
+        u.last_toast.retain(|_, at| (0..crate::unmuteask::TOAST_GAP_MS).contains(&(now - *at)));
+        let input = crate::unmuteask::VerdictIn {
+            sender_is_me: sender == me,
+            sender_server_muted: tinhat_streamer::server_mute_info(&identity).is_some(),
+            i_moderate: mine.has("moderate_calls"),
+            my_rank: known.then_some(mine.rank),
+            sender_rank: known.then_some(theirs.rank),
+            last_toast_ms: u.last_toast.get(&identity).copied(),
+            now_ms: now,
+        };
+        let v = crate::unmuteask::ask_verdict(&input);
+        if v == "toast" || v == "hand" {
+            if !u.hands.contains_key(&identity) && u.hands.len() >= 64 {
+                "ignore:too-many-hands" // (a bound, not a rule: 64 hands up at once)
+            } else {
+                u.hands.insert(identity.clone(), now);
+                if v == "toast" {
+                    u.last_toast.insert(identity.clone(), now);
+                }
+                v
+            }
+        } else {
+            v
+        }
+    };
+    eprintln!("[moderation] {identity} asks to be unmuted -> {verdict}");
+    if verdict != "toast" && verdict != "hand" {
+        return;
+    }
+    push_unmute_hands(&qt, gen);
+    if verdict == "toast" {
+        let text = crate::unmuteask::words("askToast", &person_label(&identity));
+        let action = crate::unmuteask::words("askToastAction", "");
+        // Stage B: its Unmute acts only on the mute(s) the ask was made under (kept when it arrived)
+        queue_unmute_toast(&qt, gen, false, &text, &action, &identity, 8000, &kept);
+    }
+}
+/// Decide `identity`'s ask (one at a time per asker) in call `gen`. Its toast keeps `kept`: the revisions of the mute
+/// the ask was made under (as the streamer RECEIVED the ask, or for a held ask the revision its mute event recorded).
+fn decide_unmute_ask(qt: &cxx_qt::CxxQtThread<qobject::CallController>, room_id: &str, identity: String, gen: u64, kept: Vec<(String, u64)>) {
+    let go = {
+        let mut u = unmute_asks().lock().unwrap();
+        u.gen == gen && u.busy.insert(identity.clone())
+    };
+    if go {
+        crate::bridge::runtime().spawn(on_unmute_ask(qt.clone(), room_id.to_string(), identity, gen, kept));
+    }
+}
+/// Stage B (#3): an ask from someone I don't know to be muted yet: held for ASK_HOLD_MS (bounded), never shown by itself.
+fn hold_unmute_ask(identity: &str, gen: u64) {
+    let mut u = unmute_asks().lock().unwrap();
+    if u.gen == gen {
+        crate::unmuteask::hold_put(&mut u.held, identity, wall_ms(), 64);
+    }
+}
+/// Stage B (#3): `identity`'s mute is known now (`revs` = every revision as its mute event recorded it): a held ask of
+/// theirs that is still live is decided like a fresh one, its toast keeping those revisions (never later ones).
+fn release_held_unmute_ask(qt: &cxx_qt::CxxQtThread<qobject::CallController>, room_id: &str, identity: &str, gen: u64, revs: &[(String, u64)]) {
+    let live = {
+        let mut u = unmute_asks().lock().unwrap();
+        if u.gen != gen {
+            return;
+        }
+        crate::unmuteask::hold_take(&mut u.held, identity, wall_ms())
+    };
+    if live {
+        if let Some(kept) = ask_kept(identity, revs, &unmute_scope(identity)) {
+            decide_unmute_ask(qt, room_id, identity.to_string(), gen, kept);
+        }
+    }
+}
+/// My permissions or someone's rank moved: hands I may no longer answer go down at once.
+async fn recheck_unmute_hands(qt: cxx_qt::CxxQtThread<qobject::CallController>, room_id: String, can_moderate: bool, gen: u64) {
+    let ids: Vec<String> = {
+        let u = unmute_asks().lock().unwrap();
+        if u.gen != gen {
+            return;
+        }
+        u.hands.keys().cloned().collect()
+    };
+    if ids.is_empty() {
+        return;
+    }
+    let me = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
+    let mine = crate::roles::effective_perms(&room_id, &me).await.rank;
+    let mut drop = Vec::new();
+    for id in ids {
+        if !can_moderate || room_id.is_empty() || crate::roles::effective_perms(&room_id, &mxid_of(&id)).await.rank >= mine {
+            drop.push(id);
+        }
+    }
+    if drop.is_empty() {
+        return;
+    }
+    {
+        let mut u = unmute_asks().lock().unwrap();
+        if u.gen != gen {
+            return;
+        }
+        for id in &drop {
+            u.hands.remove(id);
+        }
+    }
+    push_unmute_hands(&qt, gen);
+}
+
 /// The async half of serverMute / serverUnmute / disconnectParticipant (and of the
 /// auto re-enforcement, `announce=false`). Order per §5.4:
 ///   1. `disconnect` only: a packet to the TARGET alone (they must learn who removed them
@@ -999,6 +1270,8 @@ async fn moderate_async(
     action: &'static str,
     target: String,
     announce: bool,
+    gen: u64,
+    guard: Option<String>,
 ) {
     let me_mxid = crate::session::client().and_then(|c| c.user_id().map(|u| u.to_string())).unwrap_or_default();
     let my_name = name_for_mxid(&me_mxid);
@@ -1010,15 +1283,35 @@ async fn moderate_async(
     if action == "disconnect" && !person {
         tinhat_streamer::publish_moderation_notice(&target, &my_name).await;
     }
+    // Stage B (round 2): a toast's unmute (`guard` = the revisions it kept) is checked AGAIN right before the request
+    // goes out (nothing awaited in between): the press's own check ran on the UI thread, before this task.
+    if let Some(kept) = guard.as_deref() {
+        let verdict = toast_verdict_now(gen != NO_CALL && asks_gen() == gen, kept, &unmute_scope(&target));
+        if verdict != "act" {
+            eprintln!("[moderation] toast unmute of {target} stopped before the send: {verdict}");
+            let text = crate::unmuteask::stale_text(verdict, &who);
+            let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&text)));
+            return;
+        }
+    }
+    let since = tinhat_streamer::mute_seq_now(); // (round 2) the newest revision as my request goes out
     match crate::moderation::call_action_scoped(&room_id, action, &target, person).await {
         Ok(v) => {
             let partial = person_partial_text(&v);
             let acted: Vec<String> = if person { person_ok_devices(&v) } else { vec![target.clone()] };
+            // Stage B: my mutes' revisions, each as the streamer recorded it (no wait in between): the Undo's own
+            let mut kept: Vec<(String, u64)> = Vec::new();
+            // (round 2) a late answer that overwrote someone's newer mute (the record it replaced is newer than `since`)
+            // offers no Undo (unmuteask::undo_offered)
+            let mut offered = true;
             for id in &acted {
                 if person && action == "disconnect" {
                     tinhat_streamer::publish_moderation_notice(id, &my_name).await;
                 }
-                tinhat_streamer::publish_moderation_packet(action, id, &my_name).await;
+                if let Some((rev, replaced)) = tinhat_streamer::publish_moderation_packet(action, id, &my_name).await {
+                    kept.push((id.clone(), rev));
+                    offered &= crate::unmuteask::undo_offered(replaced, since);
+                }
             }
             if action != "disconnect" && announce {
                 let target_mxid = mxid_of(&target);
@@ -1039,6 +1332,14 @@ async fn moderate_async(
                     Some(p) => {
                         let text = format!("{text} — {p}");
                         let _ = qt.queue(move |mut o| o.as_mut().report_error(&text));
+                    }
+                    None if action == "mute" && offered => {
+                        // 12.1.17: the moderator's mute toast carries an Undo (UNDO_MS) = unmute the same target,
+                        // in this call only (QML checks the room)
+                        let action_text = crate::unmuteask::words("muteToastAction", "");
+                        // Stage B: the Undo acts only on THESE mutes (a lift + a newer mute meanwhile is never undone)
+                        queue_unmute_toast(&qt, gen, true, &text, &action_text, &target, crate::unmuteask::UNDO_MS, &kept);
+                        let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&text)));
                     }
                     None => {
                         let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&text)));
@@ -1113,9 +1414,72 @@ static JOIN_BARRIER_MUTED: std::sync::atomic::AtomicBool = std::sync::atomic::At
 /// PAD-PHONE Step B: how many connections of this participant's PERSON are in the call (persontiles chime_person over
 /// the call's identities: their computer + their phone's Pad connections).
 fn person_devices(target: &str) -> usize {
-    let p = crate::persontiles::chime_person(target, &chime_attrs(target));
+    person_device_ids(target).len()
+}
+/// The identities of `target`'s person present in the call (`target`'s own devices, it included when present).
+fn person_device_ids(target: &str) -> Vec<String> {
     let present = person_chimes().lock().unwrap().1.clone();
-    present.iter().filter(|o| crate::persontiles::chime_person(o, &chime_attrs(o)) == p).count()
+    person_ids_in(target, &present, |o| crate::persontiles::chime_person(o, &chime_attrs(o)))
+}
+/// [`person_device_ids`] over a given call (`present`) and person rule (the tests' seam).
+fn person_ids_in(target: &str, present: &[String], person_of: impl Fn(&str) -> String) -> Vec<String> {
+    let p = person_of(target);
+    present.iter().filter(|o| person_of(o) == p).cloned().collect()
+}
+/// 12.1.17 Stage B: the current mute revisions of `ids` (the ones server-muted now) — what an Undo / ask toast keeps
+/// when it is made.
+fn mute_revs_of(ids: &[String]) -> Vec<(String, u64)> {
+    let mut out: Vec<(String, u64)> = Vec::new();
+    for id in ids {
+        if out.iter().any(|(x, _)| x == id) {
+            continue;
+        }
+        if let Some(r) = tinhat_streamer::server_mute_rev(id) {
+            out.push((id.clone(), r));
+        }
+    }
+    out
+}
+/// 12.1.17 Stage B: may a toast made for `revs` (its own `[[identity, revision], …]`) act now, in call `same_call`, when
+/// its press would unmute `scope`? (unmuteask::toast_may_act against the streamer's revisions now: one of `scope` the
+/// toast didn't keep that is muted now = a newer mute; a list that doesn't parse keeps nothing)
+fn toast_verdict_now(same_call: bool, revs: &str, scope: &[String]) -> &'static str {
+    toast_verdict_with(same_call, revs, scope, tinhat_streamer::server_mute_rev)
+}
+/// [`toast_verdict_now`] with the "revision now" lookup passed in (the tests' seam).
+fn toast_verdict_with(same_call: bool, revs: &str, scope: &[String], now_rev: impl Fn(&str) -> Option<u64>) -> &'static str {
+    let kept: Vec<(String, u64)> = serde_json::from_str(revs).unwrap_or_default();
+    let mut pairs: Vec<(Option<u64>, Option<u64>)> = kept.iter().map(|(id, at)| (Some(*at), now_rev(id))).collect();
+    for id in scope {
+        if !kept.iter().any(|(k, _)| k == id) {
+            pairs.push((None, now_rev(id)));
+        }
+    }
+    crate::unmuteask::toast_may_act(same_call, &pairs)
+}
+/// Who an unmute of `target` reaches NOW (moderate_async: a person with more than one connection = all of them).
+fn unmute_scope(target: &str) -> Vec<String> {
+    let present = person_chimes().lock().unwrap().1.clone();
+    unmute_scope_in(target, &present, |o| crate::persontiles::chime_person(o, &chime_attrs(o)))
+}
+/// [`unmute_scope`] over a given call and person rule (the tests' seam; the same rule as moderate_async's `person`).
+fn unmute_scope_in(target: &str, present: &[String], person_of: impl Fn(&str) -> String) -> Vec<String> {
+    let ids = person_ids_in(target, present, person_of);
+    if ids.len() > 1 {
+        ids
+    } else {
+        vec![target.to_string()]
+    }
+}
+/// The revisions an ask's toast keeps: those of `scope` in `snapshot` (the revisions as the ask was received).
+fn kept_in(snapshot: &[(String, u64)], scope: &[String]) -> Vec<(String, u64)> {
+    scope.iter().filter_map(|id| snapshot.iter().find(|(k, _)| k == id).cloned()).collect()
+}
+/// Round 3: an ask (or a held ask's releasing mute) with the revisions of ITS moment (`snapshot`, read by the streamer):
+/// Some(kept) = decide it now, keeping those of `scope`; None = the asker wasn't muted then (hold the ask / no release).
+/// Never the live map: an unmute or a newer mute the app hasn't consumed yet can't decide or re-bind it.
+fn ask_kept(identity: &str, snapshot: &[(String, u64)], scope: &[String]) -> Option<Vec<(String, u64)>> {
+    snapshot.iter().any(|(k, _)| k == identity).then(|| kept_in(snapshot, scope))
 }
 /// The identities a person-wide answer acted on (`devices[]` with `result: "ok"`).
 fn person_ok_devices(v: &serde_json::Value) -> Vec<String> {
@@ -2113,20 +2477,48 @@ pub async fn in_active_call() -> bool {
 /// read on the next mic publish.
 /// 4-9 (review): the mic writes' generation (apply_mic) and the newest write's value — a write that is no longer the
 /// newest skips, and a rebuild started before a newer write publishes that write's value, not its own stale one.
-static MIC_APPLY_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-static MIC_APPLIED_MUTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// R2 (review round): ONE atomic, the generation and that write's value packed (mic_mode::pack_mic), so a reader never
+/// sees a new generation with the previous value. Only the Qt thread writes it (apply_mic).
+static MIC_APPLY: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(crate::mic_mode::pack_mic(0, true));
+
+/// R2 (assembly-1216 re-review): the generation to capture with a mic state that a task publishes later.
+fn mic_gen() -> u64 {
+    crate::mic_mode::unpack_mic(MIC_APPLY.load(std::sync::atomic::Ordering::SeqCst)).0
+}
+
+/// R2: what a task that captured `captured` at generation `gen0` publishes, decided under the call lock: 4-9's rule (the
+/// newest mic write's value when one came after the capture) and, while a moderator's mute holds, muted (a rebuilt or
+/// re-published mic never slips out from under it). Every path that writes a captured mic state asks this: the
+/// moderator's-unmute restore, a mid-call AGC / noise / echo / device change, Reconnect mic, the join's mute.
+fn mic_muted_at_lock(captured: bool, gen0: u64) -> bool {
+    let (gen_now, newest) = crate::mic_mode::unpack_mic(MIC_APPLY.load(std::sync::atomic::Ordering::SeqCst));
+    crate::mic_mode::late_write_muted(captured, gen0, gen_now, newest, tinhat_streamer::call::i_am_server_muted())
+}
+
+/// R2's lab gate (compiled only outside a release: cfg tinhat_env_selftests, and only with TINHAT_LABDRIVE_MICHOLD set;
+/// scripts/release-binary-check.sh refuses a binary that names either): the next late mic task waits this long before it
+/// takes the call lock, so the gate can put a newer mic choice ahead of it (the order the re-review modelled).
+#[cfg(tinhat_env_selftests)]
+static LAB_MIC_LATE_HOLD_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+async fn lab_mic_late_hold() {
+    #[cfg(tinhat_env_selftests)]
+    {
+        let ms = LAB_MIC_LATE_HOLD_MS.swap(0, std::sync::atomic::Ordering::SeqCst);
+        if ms > 0 {
+            eprintln!("[call] tinhat-lab-mic-late-hold: the late mic task waits {ms} ms");
+            tokio::time::sleep(std::time::Duration::from_millis(ms)).await;
+        }
+    }
+}
 
 fn republish_live_mic(was_muted: bool) {
-    let gen0 = MIC_APPLY_GEN.load(std::sync::atomic::Ordering::SeqCst);
+    let gen0 = mic_gen();
     crate::bridge::runtime().spawn(async move {
+        lab_mic_late_hold().await;
         let cell = current_call();
         let mut guard = cell.lock().await;
-        let was_muted = crate::mic_mode::rebuild_muted(
-            was_muted,
-            gen0,
-            MIC_APPLY_GEN.load(std::sync::atomic::Ordering::SeqCst),
-            MIC_APPLIED_MUTED.load(std::sync::atomic::Ordering::SeqCst),
-        );
+        let was_muted = mic_muted_at_lock(was_muted, gen0);
         if let Some(call) = guard.as_mut() {
             if let Err(e) = call.republish_mic(was_muted).await {
                 eprintln!("[call] mic re-publish (AGC/NS change) failed: {e}");
@@ -3061,9 +3453,11 @@ impl qobject::CallController {
                         let start_muted = start_muted || barrier;
                         let want_muted = want_muted || held;
                         if want_muted != start_muted {
+                            let gen0 = mic_gen(); // R2
                             crate::bridge::runtime().spawn(async move {
                                 let cell = current_call();
                                 let guard = cell.lock().await;
+                                let want_muted = mic_muted_at_lock(want_muted, gen0);
                                 if let Some(call) = guard.as_ref() {
                                     call.set_mic_muted(want_muted);
                                 }
@@ -3193,6 +3587,7 @@ impl qobject::CallController {
                     let mut enforced: std::collections::HashSet<String> = std::collections::HashSet::new();
                     let my_identity = my_call_identity();
                     let chime_gen = CHIME_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+                    *unmute_asks().lock().unwrap() = UnmuteAsks::new(chime_gen); // 12.1.17: this call's ask state
                     {
                         let mut pc = person_chimes().lock().unwrap();
                         pc.0.clear();
@@ -3319,7 +3714,7 @@ impl qobject::CallController {
                                     crate::bridge::runtime().spawn(async move {
                                         if crate::moderation::read_muted_by(&rid, &mxid_of(&id)).await.is_some() {
                                             eprintln!("[moderation] re-enforcing server mute on {id} (room state says muted)");
-                                            moderate_async(qt3, rid, "mute", id, false).await;
+                                            moderate_async(qt3, rid, "mute", id, false, NO_CALL, None).await;
                                         }
                                     });
                                 }
@@ -3379,6 +3774,15 @@ impl qobject::CallController {
                                 participants.remove(&identity);
                                 muted.remove(&identity);
                                 enforced.remove(&identity);
+                                // 12.1.17: gone = no hand (their toast gap stays: a rejoin doesn't reset it)
+                                {
+                                    let mut u = unmute_asks().lock().unwrap();
+                                    if u.gen == chime_gen {
+                                        u.hands.remove(&identity);
+                                        u.held.remove(&identity); // (Stage B #3: and no held ask)
+                                    }
+                                }
+                                push_unmute_hands(&qt2, chime_gen);
                                 rotation_sfu_event(&room_id, &identity, true); // M2: gone from the call server
                                 let built = build_tiles(&tiles, &participants, &muted);
                                 let json = built.json.clone();
@@ -3449,13 +3853,17 @@ impl qobject::CallController {
                                     let _ = qt2.queue(move |mut o| o.as_mut().set_video_tiles(QString::from(&json)));
                                 }
                             }
-                            CallEvent::ServerMuteChanged { identity, muted: m, by, by_name } => {
+                            CallEvent::ServerMuteChanged { identity, muted: m, by, by_name, revs } => {
                                 // RBAC: the tile shields come from the streamer's map (already
                                 // updated) — re-render + bump the rev. For ME: lock/unlock the
                                 // mic button; on unlock, go live again unless the user had muted
                                 // themselves (Discord behaviour). The SFU dropped our mic track
                                 // with the mute, so "live again" means a (re)publish.
                                 let mine = identity == my_identity;
+                                push_unmute_hands(&qt2, chime_gen); // 12.1.17: an unmuted person's hand goes down
+                                if m {
+                                    release_held_unmute_ask(&qt2, &room_id, &identity, chime_gen, &revs); // Stage B (#3)
+                                }
                                 let label = moderator_label(&by, &by_name);
                                 let built = build_tiles(&tiles, &participants, &muted);
                                 let json = built.json.clone();
@@ -3483,9 +3891,12 @@ impl qobject::CallController {
                                         *o.ptt_speaking(),
                                         *o.mic_muted(),
                                     );
+                                    let gen0 = mic_gen(); // R2: a hold / unmute after this point decides, not `want`
                                     crate::bridge::runtime().spawn(async move {
+                                        lab_mic_late_hold().await;
                                         let cell = current_call();
                                         let mut guard = cell.lock().await;
+                                        let want = mic_muted_at_lock(want, gen0);
                                         let Some(call) = guard.as_mut() else { return };
                                         let r = if call.has_mic() {
                                             call.republish_mic(want).await
@@ -3498,6 +3909,21 @@ impl qobject::CallController {
                                         }
                                     });
                                 });
+                            }
+                            CallEvent::UnmuteAsk { identity, revs } => {
+                                // 12.1.17: a hand + toast for moderators who outrank them (never an unmute by itself).
+                                // Cheap drops first: an ask from someone not server-muted (as far as I know yet) is
+                                // held until their mute is announced (Stage B #3), and one ask per asker is decided at
+                                // a time.
+                                // round 3: by the revisions as the streamer RECEIVED the ask (never the live map)
+                                match ask_kept(&identity, &revs, &unmute_scope(&identity)) {
+                                    Some(kept) => decide_unmute_ask(&qt2, &room_id, identity, chime_gen, kept),
+                                    None => {
+                                        if identity != my_identity && participants.contains(&identity) {
+                                            hold_unmute_ask(&identity, chime_gen);
+                                        }
+                                    }
+                                }
                             }
                             CallEvent::RemovedByModerator { by, by_name } => {
                                 // RBAC: the terminal ConnectionState follows at once and reads
@@ -4574,12 +5000,13 @@ impl qobject::CallController {
     }
 
     pub fn reconnect_mic(mut self: Pin<&mut Self>) {
-        let was_muted = *self.mic_muted();
+        let (was_muted, mic_gen0) = (*self.mic_muted(), mic_gen()); // R2: the newest mic write wins (mic_muted_at_lock)
         self.as_mut().set_status(QString::from("Reconnecting your mic…"));
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let mut guard = cell.lock().await;
+            let was_muted = mic_muted_at_lock(was_muted, mic_gen0);
             let Some(call) = guard.as_mut() else { return };
             let r = match tokio::time::timeout(std::time::Duration::from_secs(8), async {
                 if call.has_mic() {
@@ -4647,10 +5074,13 @@ impl qobject::CallController {
     pub fn refresh_call_perms(self: Pin<&mut Self>) {
         let room_id = if *self.in_call() { self.room_id().to_string() } else { String::new() };
         let qt = self.qt_thread();
+        let gen = asks_gen();
         crate::bridge::runtime().spawn(async move {
             let (json, can) = compute_call_perms(&room_id).await;
             can_moderate_flag().store(can, std::sync::atomic::Ordering::Relaxed);
+            let qt2 = qt.clone();
             let _ = qt.queue(move |mut o| o.as_mut().apply_call_perms(&json, can));
+            recheck_unmute_hands(qt2, room_id, can, gen).await; // 12.1.17: hands I may no longer answer go down
         });
     }
 
@@ -4665,6 +5095,91 @@ impl qobject::CallController {
         }
     }
 
+    /// 12.1.17: a toast's button (Undo / Unmute): unmute `target`, but only in the call the toast came from.
+    /// Stage B: and only while the mutes it was made for (`revs`) are unchanged — an old toast never lifts a newer
+    /// mute (the review's #2). A stale press does nothing but say why (QML shows the returned text).
+    pub fn unmute_from_toast(self: Pin<&mut Self>, target: &QString, gen: &QString, revs: &QString) -> QString {
+        let target = target.to_string();
+        let live = *self.in_call() && asks_gen().to_string() == gen.to_string() && asks_gen() != NO_CALL;
+        let verdict = toast_verdict_now(live, &revs.to_string(), &unmute_scope(&target));
+        if verdict != "act" {
+            eprintln!("[moderation] toast press for {target} ignored: {verdict}");
+            return QString::from(&crate::unmuteask::stale_text(verdict, &person_label(&target)));
+        }
+        self.moderate_guarded("unmute", &target, Some(revs.to_string()))
+    }
+
+    /// 12.1.17: the queued toasts whose button unmutes someone, oldest first (JSON list); empties the queue.
+    pub fn take_unmute_toasts(self: Pin<&mut Self>) -> QString {
+        let v = std::mem::take(&mut unmute_asks().lock().unwrap().toasts);
+        QString::from(&serde_json::Value::Array(v).to_string())
+    }
+
+    pub fn ask_to_unmute(self: Pin<&mut Self>) -> QString {
+        if !*self.in_call() {
+            return QString::from("You're not in a call");
+        }
+        if !*self.server_muted() {
+            return QString::from("Your mic isn't muted by a moderator");
+        }
+        let now = wall_ms();
+        {
+            let mut u = unmute_asks().lock().unwrap();
+            let left = crate::unmuteask::cooldown_left(u.last_ask_ms, now);
+            if left > 0 {
+                return QString::from(&crate::unmuteask::ask_label(left));
+            }
+            u.last_ask_ms = Some(now);
+        }
+        let qt = self.qt_thread();
+        let gen = asks_gen();
+        crate::bridge::runtime().spawn(async move {
+            // (a call that ended before this ran sends nothing; only the ask that owns the cooldown reports or frees it)
+            let owns = || {
+                let u = unmute_asks().lock().unwrap();
+                u.gen == gen && u.last_ask_ms == Some(now)
+            };
+            if !owns() {
+                return;
+            }
+            match tinhat_streamer::publish_unmute_ask().await {
+                Ok(()) => {
+                    if owns() {
+                        let _ = qt.queue(move |mut o| {
+                            if asks_gen() == gen {
+                                o.as_mut().set_status(QString::from(&crate::unmuteask::words("askSent", "")));
+                            }
+                        });
+                    }
+                }
+                Err(e) => {
+                    {
+                        let mut u = unmute_asks().lock().unwrap();
+                        if u.gen != gen || u.last_ask_ms != Some(now) {
+                            return;
+                        }
+                        u.last_ask_ms = None; // nothing went out: the button works again
+                    }
+                    let text = format!("Couldn't ask to be unmuted: {e}");
+                    let _ = qt.queue(move |mut o| {
+                        if asks_gen() == gen {
+                            o.as_mut().report_error(&text);
+                        }
+                    });
+                }
+            }
+        });
+        QString::default()
+    }
+
+    pub fn unmute_ask_label(&self) -> QString {
+        QString::from(&crate::unmuteask::ask_label(self.unmute_ask_cooldown() as i64))
+    }
+
+    pub fn unmute_ask_cooldown(&self) -> i32 {
+        crate::unmuteask::cooldown_left(unmute_asks().lock().unwrap().last_ask_ms, wall_ms()) as i32
+    }
+
     /// `lastError` + `errorRev` (QML toasts on the rev, so the same text twice still shows).
     fn report_error(mut self: Pin<&mut Self>, text: &str) {
         self.as_mut().set_last_error(QString::from(text));
@@ -4675,6 +5190,8 @@ impl qobject::CallController {
     /// Call over (leave / terminal disconnect): the per-call moderation view goes back to
     /// "not in a call". `removedBy` deliberately survives until the next join (the banner).
     fn clear_moderation_view(mut self: Pin<&mut Self>) {
+        *unmute_asks().lock().unwrap() = UnmuteAsks::new(NO_CALL); // 12.1.17: hands, toasts and my cooldown are per call
+        self.as_mut().set_unmute_asks_json(QString::default());
         self.as_mut().set_server_muted(false);
         self.as_mut().set_server_muted_by(QString::default());
         self.as_mut().apply_call_perms("{}", false);
@@ -4683,6 +5200,12 @@ impl qobject::CallController {
     /// Shared front half of the three invokables: fast local checks (a human message back
     /// to QML), then the async packet → POST → state flow in `moderate_async`.
     fn moderate(self: Pin<&mut Self>, action: &'static str, target: &str) -> QString {
+        self.moderate_guarded(action, target, None)
+    }
+
+    /// [`Self::moderate`] for a toast's unmute: `guard` = the revisions the toast kept, checked again right before the
+    /// request goes out (moderate_async).
+    fn moderate_guarded(self: Pin<&mut Self>, action: &'static str, target: &str, guard: Option<String>) -> QString {
         if !*self.in_call() {
             return QString::from("You're not in a call");
         }
@@ -4724,7 +5247,8 @@ impl qobject::CallController {
         let room_id = self.room_id().to_string();
         let qt = self.qt_thread();
         eprintln!("[moderation] {action} {target} requested");
-        crate::bridge::runtime().spawn(async move { moderate_async(qt, room_id, action, target, true).await });
+        let gen = asks_gen(); // 12.1.17: the call this request belongs to (its Undo acts only there)
+        crate::bridge::runtime().spawn(async move { moderate_async(qt, room_id, action, target, true, gen, guard).await });
         QString::default()
     }
 
@@ -4794,10 +5318,11 @@ impl qobject::CallController {
         tinhat_streamer::set_mic_denoise(on);
         self.as_mut().set_mic_denoise(on);
         // Rebuild the mic ONLY on this explicit toggle (never silently elsewhere). Preserve mute.
-        let was_muted = *self.mic_muted();
+        let (was_muted, mic_gen0) = (*self.mic_muted(), mic_gen()); // R2: the newest mic write wins (mic_muted_at_lock)
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let mut guard = cell.lock().await;
+            let was_muted = mic_muted_at_lock(was_muted, mic_gen0);
             if let Some(call) = guard.as_mut() {
                 if let Err(e) = call.restart_mic() {
                     eprintln!("[call] mic denoise restart failed: {e}");
@@ -4813,10 +5338,11 @@ impl qobject::CallController {
     pub fn apply_mic_aec(mut self: Pin<&mut Self>, on: bool) {
         tinhat_streamer::set_aec_enabled(on);
         self.as_mut().set_mic_aec(on);
-        let was_muted = *self.mic_muted();
+        let (was_muted, mic_gen0) = (*self.mic_muted(), mic_gen()); // R2: the newest mic write wins (mic_muted_at_lock)
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let mut guard = cell.lock().await;
+            let was_muted = mic_muted_at_lock(was_muted, mic_gen0);
             if let Some(call) = guard.as_mut() {
                 if let Err(e) = call.apply_aec() {
                     eprintln!("[aec] live apply failed: {e}");
@@ -4838,10 +5364,11 @@ impl qobject::CallController {
             "[aec] speaker outputs for the echo reference -> {}",
             if list.is_empty() { "the output Tin Hat plays to".to_string() } else { list.join(", ") }
         );
-        let was_muted = *self.mic_muted();
+        let (was_muted, mic_gen0) = (*self.mic_muted(), mic_gen()); // R2: the newest mic write wins (mic_muted_at_lock)
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let mut guard = cell.lock().await;
+            let was_muted = mic_muted_at_lock(was_muted, mic_gen0);
             if let Some(call) = guard.as_mut() {
                 if tinhat_streamer::aec_enabled() {
                     if let Err(e) = call.apply_aec() {
@@ -4901,11 +5428,12 @@ impl qobject::CallController {
         // 0.8.29: if the rebuild fails on EVERY chain, the user's remedy for bad
         // audio must not leave them silent with a setting that cannot be applied — revert
         // the persisted mode and say so (before: one eprintln, mode stuck, mic dead).
-        let was_muted = *self.mic_muted();
+        let (was_muted, mic_gen0) = (*self.mic_muted(), mic_gen()); // R2: the newest mic write wins (mic_muted_at_lock)
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let mut guard = cell.lock().await;
+            let was_muted = mic_muted_at_lock(was_muted, mic_gen0);
             if let Some(call) = guard.as_mut() {
                 if let Err(e) = call.restart_mic() {
                     eprintln!(
@@ -5450,6 +5978,21 @@ impl qobject::CallController {
             false
         }
     }
+    pub fn lab_mic_late_hold(&self, ms: i32) -> bool {
+        #[cfg(tinhat_env_selftests)]
+        {
+            if std::env::var_os("TINHAT_LABDRIVE_MICHOLD").is_none() || ms <= 0 {
+                return false;
+            }
+            LAB_MIC_LATE_HOLD_MS.store(ms.min(10_000) as u64, std::sync::atomic::Ordering::SeqCst);
+            true
+        }
+        #[cfg(not(tinhat_env_selftests))]
+        {
+            let _ = ms;
+            false
+        }
+    }
     pub fn carry_tile(&self, participant: &QString, kind: &QString, until: f64, tiles: &QString, now: f64) -> QString {
         let arr: Vec<serde_json::Value> = serde_json::from_str(&tiles.to_string()).unwrap_or_default();
         let ms = |x: f64| if x.is_finite() && x > 0.0 { x as u64 } else { 0 };
@@ -5686,19 +6229,24 @@ impl qobject::CallController {
         tinhat_streamer::set_mic_tx_muted(muted);
         // 4-9 (review): the newest write wins. Each write is its own task, and two tasks can take the call lock out of
         // order: a hold's unmute landing after the mode change's mute reopened the mic while the UI said muted.
+        // R2: every mic choice is a new generation, a server-blocked unmute too: a rebuild or the moderator's-unmute
+        // restore captured before it then publishes this choice, not its own older one (it used to see no newer write
+        // and re-muted the publication under a live UI). The moderator's mute itself stays: no write reaches the SFU
+        // while it holds, and mic_muted_at_lock publishes muted until it is lifted.
+        let gen = mic_gen() + 1;
+        MIC_APPLY.store(crate::mic_mode::pack_mic(gen, muted), std::sync::atomic::Ordering::SeqCst);
         if !muted && *self.server_muted() {
-            return; // no write (and no new generation: a pending mute still applies)
+            return; // no write: the SFU side holds the mute (a pending mute write is superseded: it is the older choice)
         }
-        let gen = MIC_APPLY_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-        MIC_APPLIED_MUTED.store(muted, std::sync::atomic::Ordering::SeqCst);
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let guard = cell.lock().await;
-            if !crate::mic_mode::write_is_current(gen, MIC_APPLY_GEN.load(std::sync::atomic::Ordering::SeqCst)) {
+            if !crate::mic_mode::write_is_current(gen, mic_gen()) {
                 return; // a newer write has run, or will (it carries the person's latest choice)
             }
             if let Some(call) = guard.as_ref() {
-                call.set_mic_muted(muted);
+                // R2 (review round): a moderator's mute that landed after this write was queued holds (never hot)
+                call.set_mic_muted(muted || tinhat_streamer::call::i_am_server_muted());
             }
         });
     }
@@ -5801,10 +6349,11 @@ impl qobject::CallController {
         // must stay on the EC reference sink) — the module's sink_master is what follows
         // the new speaker. apply_aec reloads it against the new device and re-points the
         // sinks exactly once; it ends in restart_mic, so preserve mute like set_input does.
-        let was_muted = *self.mic_muted();
+        let (was_muted, mic_gen0) = (*self.mic_muted(), mic_gen()); // R2: the newest mic write wins (mic_muted_at_lock)
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let mut guard = cell.lock().await;
+            let was_muted = mic_muted_at_lock(was_muted, mic_gen0);
             if let Some(call) = guard.as_mut() {
                 if tinhat_streamer::aec_enabled() {
                     if let Err(e) = call.apply_aec() {
@@ -5857,11 +6406,12 @@ impl qobject::CallController {
         // re-bound to the new mic is the module's source_master, so route through apply_aec
         // (a bare restart_mic would rebuild against the ec_source still wired to the OLD
         // mic, making the device picker a silent no-op while AEC is on).
-        let was_muted = *self.mic_muted();
+        let (was_muted, mic_gen0) = (*self.mic_muted(), mic_gen()); // R2: the newest mic write wins (mic_muted_at_lock)
         let qt = self.qt_thread();
         crate::bridge::runtime().spawn(async move {
             let cell = current_call();
             let mut guard = cell.lock().await;
+            let was_muted = mic_muted_at_lock(was_muted, mic_gen0);
             if let Some(call) = guard.as_mut() {
                 let r = if tinhat_streamer::aec_enabled() {
                     call.apply_aec()
@@ -7709,5 +8259,179 @@ mod watch_publish_tests {
         assert!(super::watch_refuses());
         tinhat_streamer::set_capture_barred(false);
         assert!(!super::watch_refuses());
+    }
+}
+
+#[cfg(test)]
+mod unmute_toast_rev_tests {
+    //! 12.1.17 Stage B (the review's #2): an old Undo / ask toast must never lift a NEWER mute. Wiring test (the toast
+    //! paths are Qt-bound and need a live call); the rules themselves are unmuteask.rs's toast_* vector tests, the
+    //! revisions the streamer's server_mute_revisions_follow_the_packets. Mirrors the web's unmuterev.test.ts.
+    fn body_of(src: &str, sig: &str, n: usize) -> String {
+        let at = src.find(sig).unwrap_or_else(|| panic!("{sig} not found"));
+        src[at..].chars().take(n).collect()
+    }
+    /// call_ctl.rs without this test module (its own search strings must never count as code).
+    fn prod() -> &'static str {
+        let all = include_str!("call_ctl.rs");
+        &all[..all.find(concat!("mod unmute_toast", "_rev_tests {")).expect("the test module")]
+    }
+    #[test]
+    fn unmute_toasts_check_the_mute_revision() {
+        let ctl = prod();
+        // both toasts pass the revisions they KEEP (never read fresh at the press: they'd always match)
+        let calls: Vec<usize> = ctl.match_indices("queue_unmute_toast(&qt, gen, ").map(|(i, _)| i).collect();
+        assert_eq!(calls.len(), 2, "the Undo toast and the ask toast");
+        for at in calls {
+            let call: String = ctl[at..].chars().take(200).collect();
+            let call = &call[..call.find(';').unwrap()];
+            assert!(call.ends_with(", &kept)"), "{call}: passes the revisions it keeps");
+        }
+        // the Undo: each revision as the streamer recorded my mute (publish_moderation_packet returns it)
+        let m = body_of(ctl, "async fn moderate_async(", 4000);
+        assert!(m.contains("if let Some((rev, replaced)) = tinhat_streamer::publish_moderation_packet(action, id, &my_name).await {"));
+        assert!(m.contains("kept.push((id.clone(), rev));"));
+        let st = include_str!("../../streamer/src/call.rs");
+        let pm = body_of(st, "pub async fn publish_moderation_packet(", 2000);
+        assert!(pm.contains("let (rev, replaced) = m.set_muted(target, &by, by_name);") && pm.contains("(rev, replaced, m.revs_now())"));
+        assert!(pm.contains("Some((rev, replaced))"));
+        // round 2: a late answer that overwrote a newer mute offers no Undo
+        let w = m.find("let since = tinhat_streamer::mute_seq_now();").expect("the watermark");
+        assert!(w < m.find("call_action_scoped(&room_id, action, &target, person).await").unwrap(), "taken before the request");
+        assert!(m.contains("offered &= crate::unmuteask::undo_offered(replaced, since);"));
+        assert!(m.contains("None if action == \"mute\" && offered => {"));
+        // the ask: the revisions as the streamer RECEIVED it (a snapshot in the event), or a held ask's mute event's own
+        assert!(st.contains("let _ = tx.send(CallEvent::UnmuteAsk { identity: who, revs: mute_revs_snapshot() });"));
+        let ev = body_of(ctl, "CallEvent::UnmuteAsk { identity, revs } =>", 1200);
+        assert!(ev.contains("match ask_kept(&identity, &revs, &unmute_scope(&identity)) {"));
+        assert!(ev.contains("Some(kept) => decide_unmute_ask(&qt2, &room_id, identity, chime_gen, kept),"));
+        assert!(!ev.contains("server_mute_info("), "round 3: never the live map");
+        let d = body_of(ctl, "fn decide_unmute_ask(", 700);
+        assert!(!d.contains("mute_revs_of(") && d.contains("on_unmute_ask(qt.clone(), room_id.to_string(), identity, gen, kept)"), "no fresh read at decision time");
+        let r = body_of(ctl, "fn release_held_unmute_ask(", 900);
+        assert!(r.contains("if let Some(kept) = ask_kept(identity, revs, &unmute_scope(identity)) {"), "a held ask keeps its mute event's revisions");
+        assert!(!r.contains("mute_revs_of("), "round 3: never the live map");
+        let st_code = &st[..st.find("\nmod tests {").unwrap()];
+        let hp = body_of(st_code, "fn handle_moderation_packet(", 2400);
+        assert!(hp.contains("m.set_muted(&pkt.target, &by, &name);") && hp.contains("m.revs_now()"), "the event's revisions are read under the recording lock");
+        assert!(body_of(ctl, "fn queue_unmute_toast(", 1200).contains("\"revs\": revs"), "the toast carries them to QML");
+        // the press: the call AND the revisions (and who it would reach now), before anything is unmuted
+        let press = body_of(ctl, "pub fn unmute_from_toast(self: Pin<&mut Self>", 900);
+        let v = press.find("toast_verdict_now(live, &revs.to_string(), &unmute_scope(&target))").expect("the press checks the revisions");
+        let act = press.find("self.moderate_guarded(\"unmute\", &target, Some(revs.to_string()))").expect("the press unmutes, guarded");
+        assert!(v < act && press[v..act].contains("if verdict != \"act\""), "a stale press stops before the unmute");
+        // round 2: and again right before the request goes out, nothing awaited in between
+        let m = body_of(ctl, "async fn moderate_async(", 4000);
+        let g = m.find("if let Some(kept) = guard.as_deref() {").expect("the guard");
+        let send = m.find("call_action_scoped(&room_id, action, &target, person).await").unwrap();
+        assert!(g < send && !m[g..send].contains(".await"), "re-checked right before the send");
+        assert!(m[g..send].contains("toast_verdict_now(gen != NO_CALL && asks_gen() == gen, kept, &unmute_scope(&target))"));
+        assert!(body_of(ctl, "fn toast_verdict_now(", 300).contains("toast_verdict_with(same_call, revs, scope, tinhat_streamer::server_mute_rev)"));
+        // QML hands the toast's own revisions back
+        let qml = include_str!("../qml/AppCore.qml");
+        assert!(qml.contains("callctl.unmuteFromToast(target, gen, revs)"));
+        assert!(qml.contains("String(t.revs || \"[]\")"));
+        // the streamer changes its mute map only together with the revisions
+        let st = include_str!("../../streamer/src/call.rs");
+        let code = &st[..st.find("\nmod tests {").expect("the streamer's tests module")];
+        for (pat, want) in [(".muted.insert(", 1), (".muted.remove(", 1), (".muted.entry(", 0)] {
+            let n = code.matches(pat).count();
+            assert_eq!(n, want, "{pat}: the mute map changes only inside set_muted / clear_muted ({n} found)");
+        }
+        let helpers = body_of(code, "fn set_muted(&mut self", 1200);
+        assert!(helpers.find(".muted.insert(").is_some() && helpers.find(".muted.remove(").is_some());
+    }
+
+    /// The press itself: the revisions the toast kept against the ones now (a fresh lookup at the press would always
+    /// match, so the kept ones are the toast's own JSON).
+    #[test]
+    fn the_press_compares_the_kept_revisions_with_now() {
+        let v = |same: bool, kept: &str, scope: &[&str], now: &dyn Fn(&str) -> Option<u64>| {
+            let scope: Vec<String> = scope.iter().map(|x| x.to_string()).collect();
+            super::toast_verdict_with(same, kept, &scope, now)
+        };
+        let kept = r#"[["@b:s:B",5],["@b:s:P",6]]"#;
+        let person = ["@b:s:B", "@b:s:P"];
+        assert_eq!(v(true, kept, &person, &|id| if id == "@b:s:B" { Some(5) } else { None }), "act");
+        assert_eq!(v(true, kept, &person, &|id| if id == "@b:s:B" { Some(9) } else { Some(6) }), "stale:rev", "the review's case");
+        assert_eq!(v(true, kept, &person, &|_| None), "stale:not-muted");
+        assert_eq!(v(false, kept, &person, &|_| Some(5)), "stale:call");
+        assert_eq!(v(true, "not json", &["@b:s:B"], &|_| Some(5)), "stale:rev", "nothing kept + reaching a muted device");
+        assert_eq!(v(true, "[]", &[], &|_| Some(5)), "stale:not-muted");
+        // a device the toast never kept, muted now (joined or muted since), is never reached by an old press
+        let one = r#"[["@b:s:B",5]]"#;
+        assert_eq!(v(true, one, &["@b:s:B", "@b:s:NEW"], &|id| if id == "@b:s:B" { Some(5) } else { Some(12) }), "stale:rev");
+        assert_eq!(v(true, one, &["@b:s:B", "@b:s:NEW"], &|id| if id == "@b:s:B" { Some(5) } else { None }), "act");
+        // what queue_unmute_toast writes is what the press reads
+        let made = serde_json::to_string(&vec![("@b:s:B".to_string(), 5u64)]).unwrap();
+        assert_eq!(v(true, &made, &["@b:s:B"], &|_| Some(5)), "act");
+        assert_eq!(v(true, &made, &["@b:s:B"], &|_| Some(7)), "stale:rev");
+    }
+
+    /// Round 2: the press scope is the one the unmute reaches (moderate_async's person rule), and the ask keeps the
+    /// revisions of its snapshot.
+    #[test]
+    fn the_press_scope_and_the_ask_snapshot() {
+        let present: Vec<String> = ["@b:s:B", "@b:s:PAD", "@c:s:C"].iter().map(|x| x.to_string()).collect();
+        let person_of = |id: &str| id.rsplit_once(':').map(|(p, _)| p.to_string()).unwrap_or_default();
+        assert_eq!(super::unmute_scope_in("@b:s:B", &present, person_of), vec!["@b:s:B".to_string(), "@b:s:PAD".to_string()]);
+        assert_eq!(super::unmute_scope_in("@c:s:C", &present, person_of), vec!["@c:s:C".to_string()]);
+        assert_eq!(super::unmute_scope_in("@gone:s:G", &present, person_of), vec!["@gone:s:G".to_string()], "not present: itself");
+        // A muted B (kept 5); B's Pad muted by someone since (9): the person-wide press must not lift it
+        let scope = super::unmute_scope_in("@b:s:B", &present, person_of);
+        let now = |id: &str| match id { "@b:s:B" => Some(5), "@b:s:PAD" => Some(9), _ => None };
+        assert_eq!(super::toast_verdict_with(true, r#"[["@b:s:B",5]]"#, &scope, now), "stale:rev");
+        assert_eq!(super::toast_verdict_with(true, r#"[["@b:s:B",5]]"#, &["@b:s:B".to_string()], now), "act", "control: one device");
+        // the ask keeps the snapshot's revisions of its scope, nothing else
+        let snap = vec![("@b:s:B".to_string(), 3), ("@c:s:C".to_string(), 4)];
+        assert_eq!(super::kept_in(&snap, &scope), vec![("@b:s:B".to_string(), 3)]);
+    }
+
+    /// Round 3: an ask / a held ask's release goes by the revisions of ITS moment, never the live map. The two queued
+    /// orderings: (a) asked while muted at 5, an unmute + a newer mute (9) land before the app reads the ask: it is
+    /// decided with 5, so its press is stale against 9; (b) asked before the mute was recorded, the mute lands before
+    /// the app reads it: held (not decided with nothing), then released by the mute event's own revisions; a sibling
+    /// device muted after that event is never kept.
+    #[test]
+    fn asks_go_by_their_own_moment() {
+        let b = "@b:s:B".to_string();
+        let pad = "@b:s:PAD".to_string();
+        let scope = vec![b.clone(), pad.clone()];
+        // (a)
+        let at_receipt = vec![(b.clone(), 5)];
+        let kept = super::ask_kept(&b, &at_receipt, &scope).expect("muted as received: decided");
+        assert_eq!(kept, vec![(b.clone(), 5)]);
+        let made = serde_json::to_string(&kept).unwrap();
+        assert_eq!(super::toast_verdict_with(true, &made, &scope, |id| (id == b).then_some(9)), "stale:rev");
+        // (b)
+        assert_eq!(super::ask_kept(&b, &[], &scope), None, "not muted as received: held");
+        let mute_event = vec![(b.clone(), 5)];
+        let kept = super::ask_kept(&b, &mute_event, &scope).expect("released by its mute event");
+        let made = serde_json::to_string(&kept).unwrap();
+        // the Pad is muted by someone (6) after that event: never kept, so the person-wide press stops
+        let now = |id: &str| if id == b { Some(5) } else if id == pad { Some(6) } else { None };
+        assert_eq!(super::toast_verdict_with(true, &made, &scope, now), "stale:rev");
+        // control: nothing newer, the press acts
+        assert_eq!(super::toast_verdict_with(true, &made, &scope, |id| (id == b).then_some(5)), "act");
+    }
+
+    /// Stage B (#3): an ask that beats the mute's announcement is held (bounded), then decided when the mute arrives.
+    #[test]
+    fn an_ask_before_the_mute_announcement_is_held_then_decided() {
+        let ctl = prod();
+        let ev = body_of(ctl, "CallEvent::UnmuteAsk { identity, revs } =>", 1200);
+        let none = ev.find("None => {").expect("not muted as received: held");
+        let hold = ev.find("hold_unmute_ask(&identity, chime_gen)").expect("held, not dropped");
+        assert!(none < hold && ev[none..hold].contains("identity != my_identity && participants.contains(&identity)"));
+        assert!(ev.contains("decide_unmute_ask(&qt2, &room_id, identity, chime_gen, kept)"));
+        let h = body_of(ctl, "fn hold_unmute_ask(", 300);
+        assert!(h.contains("crate::unmuteask::hold_put(&mut u.held, identity, wall_ms(), 64)"), "bounded (unmuteask's held scenarios)");
+        let r = body_of(ctl, "fn release_held_unmute_ask(", 700);
+        assert!(r.contains("crate::unmuteask::hold_take(&mut u.held, identity, wall_ms())"));
+        assert!(r.contains("decide_unmute_ask(qt, room_id, identity.to_string(), gen, kept)"));
+        // released when a mute arrives (packets and my own mute both raise ServerMuteChanged), dropped on leave
+        let smc = body_of(ctl, "CallEvent::ServerMuteChanged { identity, muted: m, by, by_name, revs } =>", 1100);
+        assert!(smc.contains("if m {") && smc.contains("release_held_unmute_ask(&qt2, &room_id, &identity, chime_gen, &revs)"));
+        assert!(ctl.contains("u.held.remove(&identity); // (Stage B #3: and no held ask)"));
     }
 }

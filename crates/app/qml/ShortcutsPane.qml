@@ -308,7 +308,7 @@ ColumnLayout {
                     text: recorder.recKey.length > 0 ? recorder.recKey : "Press the keys…"
                     color: recorder.recKey.length === 0 ? Th.dialogHintFg : (recorder.errorText.length > 0 ? Th.dialogErrorFg : Th.dialogFg)
                     font.family: recorder.recKey.length > 0 ? "monospace" : Kirigami.Theme.defaultFont.family
-                    font.pointSize: recorder.recKey.length > 0 ? Kirigami.Theme.defaultFont.pointSize * 1.1 : Kirigami.Theme.defaultFont.pointSize
+                    font.pointSize: (recorder.recKey.length > 0 ? Kirigami.Theme.defaultFont.pointSize * 1.1 : Kirigami.Theme.defaultFont.pointSize) * Th.textScale
                     font.bold: recorder.recKey.length > 0
                 }
             }
@@ -319,7 +319,7 @@ ColumnLayout {
                 wrapMode: Text.Wrap
                 text: recorder.errorText
                 color: Th.dialogErrorFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -329,7 +329,7 @@ ColumnLayout {
                 text: recorder.recKey + " is on " + recorder.takes.map(function (x) { return pane.labelOf(x) }).join(", ")
                       + " now — it will run “" + (recorder.item ? recorder.item.label : "") + "” instead."
                 color: Th.stateWarning
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             Controls.Label {
                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -337,7 +337,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: "Tin Hat's key: " + (recorder.item ? (recorder.item.defaults || []).join(", ") : "")
                 color: Th.dialogHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
         }
     }

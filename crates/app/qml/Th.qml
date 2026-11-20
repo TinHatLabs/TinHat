@@ -2,7 +2,7 @@
 // OLED theme. DO NOT EDIT: every build rewrites this file when it is stale — commit the result with the change
 // that caused it (scripts/theme-lint.py fails on an uncommitted Th.qml).
 //
-// The ACTIVE theme: one `color` per role (52) and per element token (1667), named in lowerCamel
+// The ACTIVE theme: one `color` per role (52) and per element token (1671), named in lowerCamel
 // after the id — `composer.border.focus` → Th.composerBorderFocus. Paint with the token of the element (NAMING.md;
 // the site → token map is audit/merged/sitemap-desktop.jsonl); a role only where the sitemap says so (plumbing).
 // Defaults = the built-in OLED. AppCore.applyTheme() fills everything from ThemeController (the Rust engine,
@@ -25,7 +25,8 @@ QtObject {
     property int shapeMargin: 6
     property int shapeBorder: 1
     // the theme's look (ENGINE.md §10, THEMES-UI.md §13): fonts from the allowed lists ("" = the app's own; the chat
-    // font is type.chat, else type.ui), the text size in per cent, the island shadow (px, 0 = none) and the density.
+    // font is type.chat, else type.ui), the island shadow (px, 0 = none); the text size in per cent and the density
+    // are the person's own (P22), layered over every theme.
     // Main.qml puts fontUi + textSize on the window's font (every control inherits it); the house text components
     // scale their sizes by textScale; fontMono is the code font (type.code, else the platform's monospace)
     property string fontUi: ""
@@ -36,6 +37,20 @@ QtObject {
     property string fontMono: fontCode.length > 0 ? fontCode : "monospace"
     property int shapeShadow: 0
     property string shapeDensity: "normal"
+
+    // P22 (12.1.17): textSize and shapeDensity are the PERSON's (Settings → Appearance → Text size / Density,
+    // tinhat_theme::personal), never the theme's. row(base) = a list row of `base` px at 100 % / Cozy; gap(base) = the
+    // space between groups — the shared vectors testvectors/personal/metrics.json (scripts/personal-row-test.qml)
+    function row(base) {
+        var d = shapeDensity === "compact" ? -8 : shapeDensity === "touch" ? 8 : 0
+        var lo = shapeDensity === "compact" ? 24 : shapeDensity === "touch" ? 44 : 28
+        return Math.max(Math.floor((2 * base * textSize + 100) / 200) + d, lo)
+    }
+    function gap(base) {
+        return shapeDensity === "compact" ? Math.floor(base / 2) : shapeDensity === "touch" ? base * 2 : base
+    }
+    // A31.4 (12.1.17): a literal pixel size at the person's text size — exactly n at 100 % (pixel-identical default)
+    function px(n) { return textSize === 100 ? n : Math.round(n * textSize / 100) }
 
     // Fill every colour from ThemeController.resolve() ({ <property>: color }) + the theme's meta and shape
     // (ThemeController.shape, JSON) + its look (ThemeController.look, JSON). AppCore only.
@@ -131,7 +146,7 @@ QtObject {
     property color textPrimary: "#e0e0e0"                                   // text.primary
     property color textSecondary: "#aaaaaa"                                 // text.secondary
 
-    // ---- element tokens (1667): <id> = <default expression over roles>
+    // ---- element tokens (1671): <id> = <default expression over roles>
     property color accountAskBg: "#1a1a1a"                                  // account.ask.bg = surface.raised
     property color accountAskBorder: "#222222"                              // account.ask.border = border.subtle
     property color accountAskDot: "#3ba55c"                                 // account.ask.dot = presence.online
@@ -1084,6 +1099,10 @@ QtObject {
     property color presenceLineFg: "#aaaaaa"                                // presence.line.fg = text.secondary
     property color presenceOnlineDot: "#3ba55c"                             // presence.online.dot = presence.online
     property color presenceRing: "#0a0a0a"                                  // presence.ring = surface.island
+    property color prestigeAccentFg: "#3cbad0"                              // prestige.accent.fg = accent.bright
+    property color prestigeFilledFg: "#e0e0e0"                              // prestige.filled.fg = text.primary
+    property color prestigeOutlineFg: Qt.rgba(170/255, 170/255, 170/255, 0.7) // prestige.outline.fg = text.muted
+    property color prestigeShineHighlight: "#e0e0e0"                        // prestige.shine.highlight = text.primary
     property color profileBg: "#0a0a0a"                                     // profile.bg = surface.island
     property color profileBorder: "#222222"                                 // profile.border = border.subtle
     property color profileCardBg: "#0a0a0a"                                 // profile.card.bg = surface.island

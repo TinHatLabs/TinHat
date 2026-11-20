@@ -165,13 +165,15 @@ Item {
                         onPressedChanged: if (!sizeSlider.pressed) sizeSlider.commit()
                     }
                     Controls.Label {
+                        id: sizeValue
                         Layout.preferredWidth: sizeMetrics.width
                         horizontalAlignment: Text.AlignRight
                         textFormat: Text.PlainText
                         text: Math.round(sizeSlider.value) + "%"
                         color: Th.settingsRowLabelFg
                         font.features: ({ "tnum": 1 })
-                        TextMetrics { id: sizeMetrics; text: "200%" }
+                        // measured in the label's own font (the person's text size reaches it through the window)
+                        TextMetrics { id: sizeMetrics; text: "200%"; font: sizeValue.font }
                     }
                     ThButton {
                         app: pane.app
@@ -198,6 +200,48 @@ Item {
                     Accessible.name: "Change size instantly"
                     checked: pane.app.settings.uiScaleLiveOptIn()
                     onToggled: pane.app.setUiScaleLiveOptIn(checked)
+                }
+            }
+            // P22 (12.1.17): the text size and the density are the PERSON's, the same on every theme (they used to live
+            // in the theme: switching theme changed your size). Steps, words and keys: tinhat_theme::personal and the
+            // shared vectors testvectors/personal/ (the web's AppearancePane.tsx shows the same two rows)
+            SettingsRow {
+                app: pane.app
+                anchorId: "appearance.text-size"
+                label: "Text size"
+                description: "Makes the words bigger or smaller, the same on every theme. App size makes everything bigger."
+                trailing: ThComboBox {
+                    id: textSizeBox
+                    Layout.preferredWidth: 240
+                    Accessible.name: "Text size"
+                    readonly property var sizes: [90, 100, 110, 125, 150]
+                    model: sizes.map((n) => n + "%")
+                    currentIndex: Math.max(0, sizes.indexOf(pane.app.personalLook.size))
+                    onActivated: (i) => {
+                        pane.app.setPersonalLook(textSizeBox.sizes[i], "")
+                        currentIndex = Qt.binding(() => Math.max(0, textSizeBox.sizes.indexOf(pane.app.personalLook.size)))
+                    }
+                }
+            }
+            SettingsRow {
+                app: pane.app
+                anchorId: "appearance.density"
+                label: "Density"
+                // round 2: a layout that names its own density (the Handheld preset) is drawn with it; say so
+                readonly property var layoutLabel: ({ compact: "Compact", normal: "Cozy", touch: "Comfortable" })[pane.app.layoutDensity]
+                description: "How much room the room list and the chat leave between lines. Compact fits more; Comfortable is easier to tap."
+                    + (layoutLabel ? " Your current layout uses " + layoutLabel + "; your choice here applies on your other layouts." : "")
+                trailing: ThComboBox {
+                    id: densityBox
+                    Layout.preferredWidth: 240
+                    Accessible.name: "Density"
+                    readonly property var ids: ["compact", "normal", "touch"]
+                    model: ["Compact", "Cozy", "Comfortable"]
+                    currentIndex: Math.max(0, ids.indexOf(pane.app.personalLook.density))
+                    onActivated: (i) => {
+                        pane.app.setPersonalLook(0, densityBox.ids[i])
+                        currentIndex = Qt.binding(() => Math.max(0, densityBox.ids.indexOf(pane.app.personalLook.density)))
+                    }
                 }
             }
         }

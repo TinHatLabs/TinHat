@@ -63,7 +63,7 @@ T.Popup {
                 Layout.fillWidth: true
                 text: "Speaker outputs"
                 font.bold: true
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+                font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale
                 color: Th.callbarPopoverTitleFg
             }
         }
@@ -120,7 +120,7 @@ T.Popup {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             color: Th.callbarPopoverHintFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             text: app.mEcOutputs.length > 0
                 ? "Cancelling what plays on: " + app.ecOutputLabels() + ". Headphones? Untick them — there is nothing to cancel from headphones."
                 : "Using a mixer with several channels (Game, Chat, Virtual…)? Tick each one that reaches the speakers."

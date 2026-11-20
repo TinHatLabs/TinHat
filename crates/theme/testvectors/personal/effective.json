@@ -1,0 +1,195 @@
+{
+  "cases": [
+    {
+      "density": null,
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":\"Inter\"},\"shadow\":4,\"size\":100}",
+      "textSize": null,
+      "theme": {
+        "shape": {
+          "density": "touch",
+          "shadow": 4
+        },
+        "type": {
+          "size": 150,
+          "ui": "Inter"
+        }
+      }
+    },
+    {
+      "density": "compact",
+      "expect": "{\"density\":\"compact\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":\"Inter\"},\"shadow\":4,\"size\":125}",
+      "textSize": "125",
+      "theme": {
+        "shape": {
+          "density": "touch",
+          "shadow": 4
+        },
+        "type": {
+          "size": 150,
+          "ui": "Inter"
+        }
+      }
+    },
+    {
+      "density": "touch",
+      "expect": "{\"density\":\"touch\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":\"Inter\"},\"shadow\":4,\"size\":90}",
+      "textSize": "90",
+      "theme": {
+        "shape": {
+          "density": "touch",
+          "shadow": 4
+        },
+        "type": {
+          "size": 150,
+          "ui": "Inter"
+        }
+      }
+    },
+    {
+      "density": "normal",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":\"Inter\"},\"shadow\":4,\"size\":150}",
+      "textSize": "150",
+      "theme": {
+        "shape": {
+          "density": "touch",
+          "shadow": 4
+        },
+        "type": {
+          "size": 150,
+          "ui": "Inter"
+        }
+      }
+    },
+    {
+      "density": "bogus",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":\"Inter\"},\"shadow\":4,\"size\":100}",
+      "textSize": "130",
+      "theme": {
+        "shape": {
+          "density": "touch",
+          "shadow": 4
+        },
+        "type": {
+          "size": 150,
+          "ui": "Inter"
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":\"Lexend\",\"code\":\"Hack\",\"ui\":null},\"shadow\":0,\"size\":100}",
+      "textSize": null,
+      "theme": {
+        "type": {
+          "chat": "Lexend",
+          "code": "Hack"
+        }
+      }
+    },
+    {
+      "density": "compact",
+      "expect": "{\"density\":\"compact\",\"fonts\":{\"chat\":\"Lexend\",\"code\":\"Hack\",\"ui\":null},\"shadow\":0,\"size\":125}",
+      "textSize": "125",
+      "theme": {
+        "type": {
+          "chat": "Lexend",
+          "code": "Hack"
+        }
+      }
+    },
+    {
+      "density": "touch",
+      "expect": "{\"density\":\"touch\",\"fonts\":{\"chat\":\"Lexend\",\"code\":\"Hack\",\"ui\":null},\"shadow\":0,\"size\":90}",
+      "textSize": "90",
+      "theme": {
+        "type": {
+          "chat": "Lexend",
+          "code": "Hack"
+        }
+      }
+    },
+    {
+      "density": "normal",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":\"Lexend\",\"code\":\"Hack\",\"ui\":null},\"shadow\":0,\"size\":150}",
+      "textSize": "150",
+      "theme": {
+        "type": {
+          "chat": "Lexend",
+          "code": "Hack"
+        }
+      }
+    },
+    {
+      "density": "bogus",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":\"Lexend\",\"code\":\"Hack\",\"ui\":null},\"shadow\":0,\"size\":100}",
+      "textSize": "130",
+      "theme": {
+        "type": {
+          "chat": "Lexend",
+          "code": "Hack"
+        }
+      }
+    },
+    {
+      "density": null,
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":100}",
+      "textSize": null,
+      "theme": {}
+    },
+    {
+      "density": "compact",
+      "expect": "{\"density\":\"compact\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":125}",
+      "textSize": "125",
+      "theme": {}
+    },
+    {
+      "density": "touch",
+      "expect": "{\"density\":\"touch\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":90}",
+      "textSize": "90",
+      "theme": {}
+    },
+    {
+      "density": "normal",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":150}",
+      "textSize": "150",
+      "theme": {}
+    },
+    {
+      "density": "bogus",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":100}",
+      "textSize": "130",
+      "theme": {}
+    },
+    {
+      "density": null,
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":100}",
+      "textSize": null,
+      "theme": "x"
+    },
+    {
+      "density": "compact",
+      "expect": "{\"density\":\"compact\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":125}",
+      "textSize": "125",
+      "theme": "x"
+    },
+    {
+      "density": "touch",
+      "expect": "{\"density\":\"touch\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":90}",
+      "textSize": "90",
+      "theme": "x"
+    },
+    {
+      "density": "normal",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":150}",
+      "textSize": "150",
+      "theme": "x"
+    },
+    {
+      "density": "bogus",
+      "expect": "{\"density\":\"normal\",\"fonts\":{\"chat\":null,\"code\":null,\"ui\":null},\"shadow\":0,\"size\":100}",
+      "textSize": "130",
+      "theme": "x"
+    }
+  ],
+  "description": "effective_look(theme, personal) as look_json text: the theme's fonts and shadow, the PERSON's size and density (the theme's type.size / shape.density never count)"
+}

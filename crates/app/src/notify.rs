@@ -302,7 +302,20 @@ pub(crate) fn badge_highlight(encrypted: bool, notification_count: u64, highligh
 
 /// A room's unread counts for its badge: the server's, with [`badge_highlight`]'s highlight count.
 pub(crate) async fn badge_counts(room: &matrix_sdk::Room) -> matrix_sdk_base::sync::UnreadNotificationsCount {
-    let mut c = room.unread_notification_counts();
+    // 12.1.17: the quiet Memories photos the server counted come off (never below 0; what I read leaves the ledger)
+    let mut c = counts_without_quiet(room).await;
+    // the gates' hook (TINHAT_GUI_MEMHIDE): each room's badge count when it changes
+    #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a gate hook (12.1.18 assembly fence)
+    if std::env::var_os("TINHAT_GUI_MEMHIDE").is_some() {
+        static SEEN: OnceLock<Mutex<HashMap<String, u64>>> = OnceLock::new();
+        if let Ok(mut m) = SEEN.get_or_init(Default::default).lock() {
+            let rid = room.room_id().to_string();
+            if m.get(&rid) != Some(&c.notification_count) {
+                eprintln!("[memhide] badge room={rid} unread={}", c.notification_count);
+                m.insert(rid, c.notification_count);
+            }
+        }
+    }
     if c.notification_count > 0 && room.encryption_state().is_encrypted() {
         let here = unseen_mentions_here(room).await;
         c.highlight_count = badge_highlight(true, c.notification_count, c.highlight_count, here);
@@ -499,9 +512,218 @@ pub(crate) fn tally_actions<'a>(room_id: &str, events: impl IntoIterator<Item = 
     }
 }
 
-/// Called from the sync loop with every `sync_once` response, BEFORE [`scan_highlights`].
-pub fn record_sync(notifications: &std::collections::BTreeMap<matrix_sdk::ruma::OwnedRoomId, Vec<matrix_sdk::sync::Notification>>) {
+// ---- 12.1.17: quiet Memories photos -------------------------------------------------------------------------------
+// A photo posted by Memories' "Add photos" carries its marker inside the encryption (memphotos::memories_post): the SDK
+// decrypted it before the push rules ran, so this device sees it here. It notifies nothing, and the server's count of
+// it (the server can't read the marker) comes off the room's badge until the room is read. An image its sender's list
+// names (hidden from the chat) comes off too. The web does the same (memories/chatHide.ts countsWithoutQuiet). Known
+// limits: the server's push (phones, a closed browser) still announces it; the ledger is this run's (a restart
+// counts them again until the room is read: the safe side); an image that arrives already listed (a catch-up sync) still
+// notifies (only the marker silences at once); thread images are never taken off.
+
+/// One notifying main-timeline image the server may count: its event id, sender, whether it highlighted, whether it
+/// carries the marker (else it is quiet only while its sender's list names it), and the room's receipt generation when
+/// it arrived (review rounds 2-3: a receipt's send time is no ordering boundary; any receipt of mine in a later sync —
+/// or in the same one — retires it: a read may have covered it, so it counts again, the safe side).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct QuietEntry {
+    pub id: String,
+    pub sender: String,
+    pub highlight: bool,
+    pub marker: bool,
+    pub gen: u64,
+}
+
+/// room → how many syncs have carried a main-timeline read receipt of mine (any device) this run.
+fn receipt_gens() -> &'static Mutex<HashMap<String, u64>> {
+    static G: OnceLock<Mutex<HashMap<String, u64>>> = OnceLock::new();
+    G.get_or_init(Default::default)
+}
+
+fn receipt_gen(room_id: &str) -> u64 {
+    receipt_gens().lock().map(|g| g.get(room_id).copied().unwrap_or(0)).unwrap_or(0)
+}
+
+/// Called from the sync loop AFTER [`record_sync`] with the same response: a room whose batch carries a main read
+/// receipt of mine moves to the next generation (what was recorded so far, this batch included, retires).
+pub fn note_receipts(response: &matrix_sdk::sync::SyncResponse, me: &str) {
+    let Ok(mut g) = receipt_gens().lock() else { return };
+    for (rid, update) in &response.rooms.joined {
+        let mine = update.ephemeral.iter().any(|ev| {
+            ev.get_field::<String>("type").ok().flatten().as_deref() == Some("m.receipt")
+                && ev.get_field::<serde_json::Value>("content").ok().flatten().is_some_and(|c| crate::receipts::has_own_main_receipt(&c, me))
+        });
+        if mine {
+            *g.entry(rid.to_string()).or_insert(0) += 1;
+        }
+    }
+}
+
+/// At most this many entries per room (the newest kept).
+const QUIET_MAX: usize = 200;
+
+/// room → the notifying images since the room was last read (this run).
+fn quiet_counted() -> &'static Mutex<HashMap<String, Vec<QuietEntry>>> {
+    static Q: OnceLock<Mutex<HashMap<String, Vec<QuietEntry>>>> = OnceLock::new();
+    Q.get_or_init(Default::default)
+}
+
+/// A notification's event as a ledger entry when it is an image message that could be UNCOUNTED: a thread's image never
+/// is (shared vectors `counts`: read by that thread's receipt, which this ledger doesn't follow), so it isn't recorded.
+fn image_entry(n: &matrix_sdk::sync::Notification) -> Option<QuietEntry> {
+    let matrix_sdk_base::deserialized_responses::RawAnySyncOrStrippedTimelineEvent::Sync(raw) = &n.event else { return None };
+    let v = raw.deserialize_as::<serde_json::Value>().ok()?;
+    if v.pointer("/content/msgtype").and_then(|m| m.as_str()) != Some("m.image") {
+        return None;
+    }
+    // the shared rule's thread test (memphotos ChatMsg.in_thread = threads::thread_of)
+    if crate::memories_photos::chat_msg_of(&v).is_some_and(|m| m.in_thread) {
+        return None;
+    }
+    Some(QuietEntry {
+        id: v.get("event_id").and_then(|e| e.as_str())?.to_owned(),
+        sender: v.get("sender").and_then(|e| e.as_str()).unwrap_or("").to_owned(),
+        highlight: n.actions.iter().any(|a| a.is_highlight()),
+        marker: crate::memories_photos::post_event(&v),
+        gen: 0,
+    })
+}
+
+pub(crate) fn note_quiet(room_id: &str, mut e: QuietEntry) {
+    e.gen = receipt_gen(room_id);
+    if let Ok(mut q) = quiet_counted().lock() {
+        let l = q.entry(room_id.to_string()).or_default();
+        if !l.iter().any(|x| x.id == e.id) {
+            l.push(e);
+            if l.len() > QUIET_MAX {
+                let cut = l.len() - QUIET_MAX;
+                l.drain(..cut);
+            }
+        }
+    }
+}
+
+/// The ledger's part of a room's counts: (notifications, highlights) to take off, never more than `count` /
+/// `highlights`. An entry from an older receipt generation than `gen` leaves the ledger (a read may have covered it). A
+/// count of 0 forgets the room. `hidden(entry)` = the shared rule says it is uncounted now (a marked post, or listed).
+pub(crate) fn quiet_part(room_id: &str, count: u64, highlights: u64, gen: u64, hidden: impl Fn(&QuietEntry) -> bool) -> (u64, u64) {
+    let Ok(mut q) = quiet_counted().lock() else { return (0, 0) };
+    if count == 0 {
+        q.remove(room_id);
+        return (0, 0);
+    }
+    let Some(l) = q.get_mut(room_id) else { return (0, 0) };
+    l.retain(|e| e.gen == gen);
+    let quiet: Vec<&QuietEntry> = l.iter().filter(|e| hidden(e)).collect();
+    let n = (quiet.len() as u64).min(count);
+    let h = (quiet.iter().filter(|e| e.highlight).count() as u64).min(highlights);
+    (n, h)
+}
+
+/// The room's ledger is not empty (badge_counts reads the receipts and the lists only then).
+fn has_quiet(room_id: &str) -> bool {
+    quiet_counted().lock().map(|q| q.get(room_id).is_some_and(|l| !l.is_empty())).unwrap_or(false)
+}
+
+/// The room's counts, without its quiet photos (never below 0). The one await (the lists) comes first; the receipt
+/// generation, the counts and the ledger are then read together, with no await between them (review rounds 2-3).
+async fn counts_without_quiet(room: &matrix_sdk::Room) -> matrix_sdk_base::sync::UnreadNotificationsCount {
+    let rid = room.room_id().as_str();
+    if !has_quiet(rid) {
+        return room.unread_notification_counts();
+    }
+    let idx = crate::memories_photos::chat_index(room).await;
+    let gen = receipt_gen(rid);
+    let mut c = room.unread_notification_counts();
+    // the shared rule (vectors `counts`): uncounted = quiet and not in a thread (the ledger holds main-timeline images)
+    let (n, h) = quiet_part(rid, c.notification_count, c.highlight_count, gen, |e| {
+        let mut content = serde_json::json!({"msgtype": "m.image"});
+        if e.marker {
+            content[tinhat_widgets::memphotos::POST_KEY] = serde_json::json!({"v": 1});
+        }
+        let v = serde_json::json!({"event_id": e.id, "sender": e.sender, "type": "m.room.message", "content": content});
+        crate::memories_photos::counts_event(idx.as_ref(), &v).1
+    });
+    c.notification_count -= n;
+    c.highlight_count -= h;
+    c
+}
+
+/// Round 2 (review #4, shared vectors `counts`): the event ids of this sync's notifications the shared rule SILENCES —
+/// a marked post, or an image its sender's list names by now (a catch-up sync brings the photo and the list together;
+/// the SDK has stored the list before this runs). Read before [`record_sync`] (the lists are a store read).
+pub async fn silenced_notifications(
+    client: &matrix_sdk::Client,
+    notifications: &std::collections::BTreeMap<matrix_sdk::ruma::OwnedRoomId, Vec<matrix_sdk::sync::Notification>>,
+) -> std::collections::HashSet<String> {
+    let mut out = std::collections::HashSet::new();
     for (room_id, list) in notifications {
+        let events: Vec<serde_json::Value> = list
+            .iter()
+            .filter_map(|n| match &n.event {
+                matrix_sdk_base::deserialized_responses::RawAnySyncOrStrippedTimelineEvent::Sync(raw) => raw.deserialize_as::<serde_json::Value>().ok(),
+                _ => None,
+            })
+            .filter(|v| v.pointer("/content/msgtype").and_then(|m| m.as_str()) == Some("m.image"))
+            .collect();
+        if events.is_empty() {
+            continue;
+        }
+        let Some(room) = client.get_room(room_id) else { continue };
+        let idx = crate::memories_photos::chat_index(&room).await;
+        for v in &events {
+            if crate::memories_photos::counts_event(idx.as_ref(), v).0 {
+                if let Some(id) = v.get("event_id").and_then(|e| e.as_str()) {
+                    out.insert(id.to_owned());
+                }
+            }
+        }
+    }
+    out
+}
+
+/// 12.1.17 round 2 (review r2 #4): is a notified event silenced NOW (its sender listed it since it was tallied)? The
+/// lists only ever name images, so the event is checked as one (an image of its sender).
+async fn silenced_now(client: &Client, room_id: &str, n: &Notified) -> bool {
+    let (Ok(rid), Some(sender)) = (matrix_sdk::ruma::RoomId::parse(room_id), n.sender.as_deref()) else { return false };
+    let Some(room) = client.get_room(&rid) else { return false };
+    let idx = crate::memories_photos::chat_index(&room).await;
+    let v = serde_json::json!({"event_id": n.id, "sender": sender, "type": "m.room.message", "content": {"msgtype": "m.image"}});
+    crate::memories_photos::counts_event(idx.as_ref(), &v).0
+}
+
+/// The id of a notification's event ("" when it has none).
+fn notification_id(n: &matrix_sdk::sync::Notification) -> String {
+    match &n.event {
+        matrix_sdk_base::deserialized_responses::RawAnySyncOrStrippedTimelineEvent::Sync(raw) => raw.get_field::<String>("event_id").ok().flatten().unwrap_or_default(),
+        _ => String::new(),
+    }
+}
+
+/// Called from the sync loop with every `sync_once` response, BEFORE [`scan_highlights`]. `silenced` =
+/// [`silenced_notifications`] of the same response.
+pub fn record_sync(
+    notifications: &std::collections::BTreeMap<matrix_sdk::ruma::OwnedRoomId, Vec<matrix_sdk::sync::Notification>>,
+    silenced: &std::collections::HashSet<String>,
+) {
+    for (room_id, all) in notifications {
+        // 12.1.17: a SILENCED Memories photo (shared vectors `counts`: a marked post, or listed by its sender) is neither
+        // tallied nor what a notification is about; the badge ledger records every main-timeline image
+        let mut list: Vec<&matrix_sdk::sync::Notification> = Vec::with_capacity(all.len());
+        for n in all {
+            if let Some(e) = image_entry(n).filter(|_| n.actions.iter().any(|a| a.should_notify())) {
+                note_quiet(room_id.as_str(), e);
+            }
+            let id = notification_id(n);
+            if !id.is_empty() && silenced.contains(&id) {
+                #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a gate hook (12.1.18 assembly fence)
+                if std::env::var_os("TINHAT_GUI_MEMHIDE").is_some() {
+                    eprintln!("[memhide] notify silenced room={room_id} id={id}");
+                }
+                continue;
+            }
+            list.push(n);
+        }
         tally_actions(room_id.as_str(), list.iter().map(|n| n.actions.as_slice()));
         // docs/NOTIF-ACTIONS.md: the newest event that notified = what Mark as read targets (the SDK's latest event is
         // not known in an encrypted room; the event id is outside the encryption)
@@ -1480,8 +1702,38 @@ pub async fn scan_highlights(client: &Client) {
         }
         any
     };
+    // 12.1.17 round 2 (review r2 #4): a rise held back (the per-room window, the cap) may be about a photo its sender has
+    // listed since it was tallied: recheck before the sound. A rise of one that is now silenced fires nothing; a bigger
+    // burst still fires, without that photo as its preview.
+    let mut stale_preview: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let fires = {
+        let mut keep = Vec::new();
+        for (room_id, rise, is_dm) in fires {
+            let silenced = match about.get(&room_id).and_then(|(n, _)| n.as_ref()) {
+                Some(n) => silenced_now(client, &room_id, n).await,
+                None => false,
+            };
+            if silenced {
+                #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a gate hook (12.1.18 assembly fence)
+                if std::env::var_os("TINHAT_GUI_MEMHIDE").is_some() {
+                    eprintln!("[memhide] notify recheck silenced room={room_id} rise={rise}");
+                }
+                if rise <= 1 {
+                    continue;
+                }
+                stale_preview.insert(room_id.clone());
+            }
+            keep.push((room_id, rise, is_dm));
+        }
+        keep
+    };
     if fires.is_empty() {
         return;
+    }
+    #[cfg(tinhat_env_selftests)] // never in a release (build.rs): a gate hook (12.1.18 assembly fence)
+    if std::env::var_os("TINHAT_GUI_MEMHIDE").is_some() {
+        let ids: Vec<&str> = fires.iter().map(|(id, rise, _)| { let _ = rise; id.as_str() }).collect();
+        eprintln!("[memhide] notify fired rooms={}", ids.join(","));
     }
     // 10.0: the notification sound rides the same decision as the toast (per-room modes, mute,
     // debounce); it plays even when desktop toasts are switched off.
@@ -1521,6 +1773,7 @@ pub async fn scan_highlights(client: &Client) {
         // Messages-style: the preview (sender, text, the sender's picture) comes from the event that notified — the
         // one Mark as read targets; with none recorded, from the SDK's latest event when that is the same event
         let preview = match &notified {
+            Some(_) if stale_preview.contains(&room_id) => None,
             Some(n) => notified_preview(&room, n, !is_dm, &thread).await,
             None => {
                 let latest_id = latest_event_id(&room);
@@ -1730,6 +1983,12 @@ pub fn forget_session() {
     }
     if let Ok(mut l) = last_highlight().lock() {
         l.clear();
+    }
+    if let Ok(mut q) = quiet_counted().lock() {
+        q.clear(); // 12.1.17
+    }
+    if let Ok(mut g) = receipt_gens().lock() {
+        g.clear();
     }
     if let Ok(mut l) = last_notified().lock() {
         l.clear();
@@ -1946,7 +2205,8 @@ async fn sender_preview(room: &matrix_sdk::Room, body: &str, sender: Option<&str
 /// fix1216 1-10: a group toast's sender label, the web's `rawDisplayName || localpart`: the display name, or the id's
 /// localpart when the member isn't cached or its name is empty.
 pub(crate) fn sender_label(display: Option<&str>, user_id: &str) -> String {
-    match display.filter(|d| !d.is_empty()) {
+    // N3: a name equal to the sender's own id is no name (the web SDK reports an empty one that way; shared vectors)
+    match display.filter(|d| !d.is_empty() && *d != user_id) {
         Some(d) => d.to_owned(),
         None => user_id.strip_prefix('@').unwrap_or(user_id).split(':').next().unwrap_or("").to_owned(),
     }
@@ -2252,6 +2512,34 @@ mod tests {
     //! the 15 quiet overrides (quietrules.rs) + an All-messages room rule on a busy group room.
     use super::*;
 
+    // 12.1.17: the quiet ledger (review rounds 1-3): only marked or listed images count; a main read receipt of mine in a
+    // later sync (or the same one) retires what was recorded before it (a read may have covered it: never take off what
+    // might be read); never more than the counts; a count of 0 forgets the room
+    #[test]
+    fn quiet_ledger_takes_off_only_quiet_unread_photos_12_1_17() {
+        let r = "!quiet-ledger:x";
+        let e = |id: &str, marker: bool, highlight: bool| QuietEntry { id: id.into(), sender: "@a:x".into(), highlight, marker, gen: 99 };
+        note_quiet(r, e("$q1", true, false));
+        note_quiet(r, e("$q1", true, false)); // once
+        note_quiet(r, e("$img", false, false)); // an ordinary image: quiet only while its sender's list names it
+        note_quiet(r, e("$q2", true, true));
+        let g0 = receipt_gen(r);
+        assert_eq!(quiet_part(r, 5, 1, g0, |x| x.marker), (2, 1));
+        assert_eq!(quiet_part(r, 5, 1, g0, |x| x.marker || x.id == "$img"), (3, 1));
+        assert_eq!(quiet_part(r, 1, 0, g0, |x| x.marker), (1, 0)); // never more than the counts
+        // a read receipt of mine arrives (any device): everything recorded before it retires; a newer one counts
+        if let Ok(mut g) = receipt_gens().lock() {
+            *g.entry(r.to_string()).or_insert(0) += 1;
+        }
+        let g1 = receipt_gen(r);
+        assert_eq!(quiet_part(r, 3, 1, g1, |x| x.marker), (0, 0));
+        note_quiet(r, e("$q3", true, false));
+        assert_eq!(quiet_part(r, 2, 0, g1, |x| x.marker), (1, 0));
+        assert_eq!(quiet_part(r, 0, 0, g1, |x| x.marker), (0, 0)); // the server count is 0: forgotten
+        assert!(!has_quiet(r));
+    }
+
+
     /// security review 2026-10-26: a message body never reaches a markup-rendering notification server as markup
     #[test]
     fn notification_bodies_are_escaped_for_markup_servers() {
@@ -2330,9 +2618,32 @@ mod tests {
         };
         let mut map = std::collections::BTreeMap::new();
         map.insert(matrix_sdk::ruma::OwnedRoomId::try_from(room).unwrap(), vec![mk("$a", "first", true), mk("$b", "second", true), mk("$c", "quiet", false)]);
-        record_sync(&map);
+        record_sync(&map, &Default::default());
         let got = last_notified().lock().unwrap().get(room).cloned();
         assert_eq!(got, Some(Notified { id: "$b".into(), sender: Some("@sam:example.com".into()), body: Some("second".into()) }));
+    }
+
+    /// 12.1.17 round 2 (review #4): a photo the shared rule silences (here: listed by its sender, no marker — a catch-up
+    /// sync brought it with the list) is neither tallied nor the notification's preview; an ordinary message still is.
+    #[test]
+    fn record_sync_skips_what_the_shared_rule_silences_round_2() {
+        use matrix_sdk::ruma::serde::Raw;
+        use matrix_sdk_base::deserialized_responses::RawAnySyncOrStrippedTimelineEvent;
+        let room = "!wn-silenced:example.com";
+        let mk = |id: &str, msgtype: &str, body: &str| matrix_sdk::sync::Notification {
+            actions: vec![Action::Notify],
+            event: RawAnySyncOrStrippedTimelineEvent::Sync(
+                Raw::from_json(serde_json::value::to_raw_value(&serde_json::json!({ "type": "m.room.message", "sender": "@sam:example.com",
+                    "event_id": id, "origin_server_ts": 1u64, "content": { "msgtype": msgtype, "body": body } })).unwrap()),
+            ),
+        };
+        let mut map = std::collections::BTreeMap::new();
+        map.insert(matrix_sdk::ruma::OwnedRoomId::try_from(room).unwrap(), vec![mk("$t", "m.text", "hello"), mk("$p", "m.image", "photo.png")]);
+        let silenced: std::collections::HashSet<String> = ["$p".to_string()].into_iter().collect();
+        record_sync(&map, &silenced);
+        assert_eq!(tally_of(room).notify, 1, "only the text is tallied");
+        let got = last_notified().lock().unwrap().get(room).cloned();
+        assert_eq!(got.map(|n| n.id), Some("$t".to_string()), "the preview is the text, never the silenced photo");
     }
 
     /// Messages-style (sun-winnotify): the preview text on the shared vectors (byte copy of the web's

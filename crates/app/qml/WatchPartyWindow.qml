@@ -37,7 +37,7 @@ import QtMultimedia      // 11.4: the song card's 30 s preview (Apple's preview 
 // Pop-out OS window (was a modal Kirigami.OverlaySheet) so watching together no longer blocks
 // the rest of the app — mirrors the PiP / floating-chat pop-out windows. Declared once in
 // Main.qml; shown via show() and closed on app quit (Main.qml onClosing).
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: sheet
     required property var app
     // selfhost: YouTube search / browsing only where the server offers it (watch); pasted links always work, and the
@@ -899,7 +899,7 @@ Window {
                             // (was the OverlaySheet `header:`) title + live watcher count, now the first content row.
                             RowLayout {
                                 Layout.fillWidth: true
-                                Kirigami.Heading {
+                                ThHeading {
                                     text: "Media Party"
                                     color: Th.watchpartyFg
                                 }
@@ -912,7 +912,7 @@ Window {
                                           + (sheet.amAdvancer ? " · you sync" : "")
                                           + (sheet.hostId.length > 0 ? " · host: " + (sheet.amHost ? "you" : sheet.hostName) : "")   // 10.1 (TH-WP-05)
                                     color: Th.watchpartyMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     elide: Text.ElideRight
                                 }
                                 ThToolButton {   // 10.1 (TH-WP-05): take / release the remote
@@ -980,7 +980,7 @@ Window {
                                         textFormat: Text.PlainText
                                         text: artist.length > 0 && dur.length > 0 ? artist + " · " + dur : (artist.length > 0 ? artist : dur)
                                         color: Th.watchpartyMetaFg
-                                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                         elide: Text.ElideRight
                                     }
                                 }
@@ -988,13 +988,14 @@ Window {
                                     visible: !!(sheet.nowItem && sheet.nowItem.addedBy && String(sheet.nowItem.addedBy).length > 0)
                                     spacing: 4
                                     Avatar { app: sheet.app; size: 20; name: sheet.nowItem ? sheet.nameOf(String(sheet.nowItem.addedBy || "")) : ""; seed: sheet.nowItem ? String(sheet.nowItem.addedBy || "") : ""; imageSource: sheet.nowItem ? sheet.avatarOf(String(sheet.nowItem.addedBy || "")) : "" }
-                                    Controls.Label { visible: stageCol.width >= 560; textFormat: Text.PlainText; text: sheet.nowItem ? sheet.nameOf(String(sheet.nowItem.addedBy || "")) : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.maximumWidth: 120 }
+                                    PrestigeToken { visible: stageCol.width >= 560 && rank > 0; mxid: sheet.nowItem ? String(sheet.nowItem.addedBy || "") : ""; roomId: sheet.roomId; gap: false }   // mini games v1
+                                    Controls.Label { visible: stageCol.width >= 560; textFormat: Text.PlainText; text: sheet.nowItem ? sheet.nameOf(String(sheet.nowItem.addedBy || "")) : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; elide: Text.ElideRight; Layout.maximumWidth: 120 }
                                 }
                                 Rectangle {   // source badge
                                     visible: sheet.badgeOf(sheet.nowItem).length > 0 && stageCol.width >= 640
                                     implicitWidth: npBadge.implicitWidth + 12; implicitHeight: npBadge.implicitHeight + 2; radius: 8
                                     color: Th.watchpartyQueueRowBg; border.width: 1; border.color: Th.watchpartyQueueRowBorder
-                                    Controls.Label { id: npBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: sheet.badgeOf(sheet.nowItem); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { id: npBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: sheet.badgeOf(sheet.nowItem); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 }
                                 ThButton {
                                     app: sheet.app
@@ -1342,7 +1343,7 @@ Window {
                                     text: (sheet.timeRemaining && sheet.mpvDuration > 0 ? "−" + sheet.fmtTime(Math.max(0, sheet.mpvDuration - sheet.mpvPos)) : sheet.fmtTime(sheet.mpvPos))
                                           + (sheet.mpvDuration > 0 ? " / " + sheet.fmtTime(sheet.mpvDuration) : "")
                                     color: sheet.videoOnly ? Th.watchpartyClickToPlayFg : Th.watchpartyTimeFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     font.features: { "tnum": 1 }
                                     MouseArea {
                                         anchors.fill: parent
@@ -1414,7 +1415,7 @@ Window {
                                 Layout.fillWidth: true
                                 visible: sheet.inParty && sheet.viewers.length > 0
                                 spacing: Kirigami.Units.largeSpacing
-                                Controls.Label { text: "Watching"; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; height: 20; verticalAlignment: Text.AlignVCenter }
+                                Controls.Label { text: "Watching"; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; height: 20; verticalAlignment: Text.AlignVCenter }
                                 Repeater {
                                     model: sheet.viewers
                                     delegate: RowLayout {
@@ -1422,12 +1423,13 @@ Window {
                                         spacing: 4
                                         readonly property string uid: String(modelData.userId || "")
                                         Avatar { app: sheet.app; size: 20; name: sheet.nameOf(parent.uid); seed: parent.uid; imageSource: sheet.avatarOf(parent.uid) }
-                                        Controls.Label { textFormat: Text.PlainText; text: sheet.nameOf(parent.uid); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight; Layout.maximumWidth: 120 }
+                                        PrestigeToken { mxid: parent.uid; roomId: sheet.roomId; gap: false }   // mini games v1: the viewer's prestige token
+                                        Controls.Label { textFormat: Text.PlainText; text: sheet.nameOf(parent.uid); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; elide: Text.ElideRight; Layout.maximumWidth: 120 }
                                         Rectangle {
                                             visible: sheet.hostId.length > 0 && parent.uid === sheet.hostId
                                             implicitWidth: hostLbl.implicitWidth + 10; implicitHeight: 14; radius: 7
                                             color: Th.watchpartyQueueRowBgHover; border.width: 1; border.color: Th.watchpartyQueueRowBorderHover
-                                            Controls.Label { id: hostLbl; anchors.centerIn: parent; text: "host"; font.bold: true; font.pixelSize: 10; color: Th.watchpartyFg }
+                                            Controls.Label { id: hostLbl; anchors.centerIn: parent; text: "host"; font.bold: true; font.pixelSize: Th.px(10); color: Th.watchpartyFg }
                                         }
                                     }
                                 }
@@ -1446,7 +1448,7 @@ Window {
                                     visible: !sheet.inParty
                                     text: "Join to sync playback with the room."
                                     color: Th.watchpartyMetaFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 }
                             }
                         }
@@ -1633,13 +1635,13 @@ Window {
                                         visible: qRow.isNow
                                         implicitWidth: nowTag.implicitWidth + 12; implicitHeight: nowTag.implicitHeight + 4; radius: height / 2
                                         color: Th.watchpartyClickToPlayBg
-                                        Controls.Label { id: nowTag; anchors.centerIn: parent; text: "Now playing"; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize; color: Th.watchpartyClickToPlayFg }
+                                        Controls.Label { id: nowTag; anchors.centerIn: parent; text: "Now playing"; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; color: Th.watchpartyClickToPlayFg }
                                     }
                                     Rectangle {
                                         visible: qRow.upNext
                                         implicitWidth: nextTag.implicitWidth + 12; implicitHeight: nextTag.implicitHeight + 4; radius: height / 2
                                         color: Th.watchpartyQueueRowBgHover; border.width: 1; border.color: Th.watchpartyQueueRowBorderHover
-                                        Controls.Label { id: nextTag; anchors.centerIn: parent; text: "Up next"; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize; color: Th.watchpartyFg }
+                                        Controls.Label { id: nextTag; anchors.centerIn: parent; text: "Up next"; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; color: Th.watchpartyFg }
                                     }
                                     Image {   // 11.4: the item's art
                                         visible: source.toString().length > 0 && status === Image.Ready
@@ -1661,7 +1663,7 @@ Window {
                                         visible: sheet.badgeOf(qRow.modelData).length > 0 && queueView.width >= 480
                                         implicitWidth: qBadge.implicitWidth + 12; implicitHeight: qBadge.implicitHeight + 2; radius: 8
                                         color: Th.watchpartyQueueRowBg; border.width: 1; border.color: Th.watchpartyQueueRowBorder
-                                        Controls.Label { id: qBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: sheet.badgeOf(qRow.modelData); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                        Controls.Label { id: qBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: sheet.badgeOf(qRow.modelData); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                     }
                                     // 10.1 (TH-WP-12) / 11.3 QOL: who queued it — the avatar, the name in its tooltip
                                     Avatar {
@@ -1726,7 +1728,7 @@ Window {
                             visible: sheet.queue.length === 0
                             text: "Queue is empty — paste a link or search below and add something."
                             color: Th.watchpartyMetaFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             wrapMode: Text.WordWrap
                         }
 
@@ -1770,7 +1772,7 @@ Window {
                             textFormat: Text.PlainText
                             text: sheet.addNote
                             color: Th.watchpartyMetaFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             wrapMode: Text.WordWrap
                         }
                         // ---- 11.4 (DESIGN §2.5) a song that stays a card: art · title · artist · badge · Preview 30 s · Open in … ----
@@ -1797,15 +1799,15 @@ Window {
                                     Layout.fillWidth: true
                                     spacing: 0
                                     Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: String(parent.parent.parent.meta.title || parent.parent.parent.link.input || ""); color: Th.watchpartyFg; font.bold: true; elide: Text.ElideRight }
-                                    Controls.Label { Layout.fillWidth: true; visible: text.length > 0; textFormat: Text.PlainText; text: [String(parent.parent.parent.meta.artist || ""), String(parent.parent.parent.meta.album || "")].filter(function (x) { return x.length > 0 }).join(" · "); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
-                                    Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.songCard ? String(sheet.songCard.message || "") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; wrapMode: Text.WordWrap }
+                                    Controls.Label { Layout.fillWidth: true; visible: text.length > 0; textFormat: Text.PlainText; text: [String(parent.parent.parent.meta.artist || ""), String(parent.parent.parent.meta.album || "")].filter(function (x) { return x.length > 0 }).join(" · "); color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; elide: Text.ElideRight }
+                                    Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.songCard ? String(sheet.songCard.message || "") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; wrapMode: Text.WordWrap }
                                 }
                                 Rectangle {   // source badge
                                     readonly property string b: sheet.badgeOf({ source: { service: String(parent.parent.link.service || "") } })
                                     visible: b.length > 0
                                     implicitWidth: cBadge.implicitWidth + 12; implicitHeight: cBadge.implicitHeight + 2; radius: 8
                                     color: Th.watchpartyQueueRowBg; border.width: 1; border.color: Th.watchpartyQueueRowBorder
-                                    Controls.Label { id: cBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.b; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                    Controls.Label { id: cBadge; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.b; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                 }
                                 ThButton {
                                     app: sheet.app
@@ -1885,7 +1887,7 @@ Window {
                                         implicitWidth: chipLbl.implicitWidth + 20; implicitHeight: chipLbl.implicitHeight + 4; radius: 10
                                         color: (on || chipMa.containsMouse) ? Th.watchpartyQueueRowBgHover : Th.watchpartyQueueRowBg
                                         border.width: activeFocus ? 2 : 1; border.color: (on || activeFocus) ? Th.watchpartyQueueRowBorderHover : Th.watchpartyQueueRowBorder
-                                        Controls.Label { id: chipLbl; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.modelData.label; font.pointSize: Kirigami.Theme.smallFont.pointSize; color: parent.on ? Th.watchpartyFg : Th.watchpartyMetaFg }
+                                        Controls.Label { id: chipLbl; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.modelData.label; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; color: parent.on ? Th.watchpartyFg : Th.watchpartyMetaFg }
                                         MouseArea {
                                             id: chipMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                             onClicked: chipItem.pick()
@@ -1935,7 +1937,7 @@ Window {
                                 textFormat: Text.PlainText
                                 text: sheet.browseError
                                 color: Th.watchpartyMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 wrapMode: Text.WordWrap
                             }
                             ThBusyIndicator {   // 11.0 (GPU.md §2.5): still
@@ -1961,7 +1963,7 @@ Window {
                                 textFormat: Text.PlainText
                                 text: sheet.browseError.length > 0 ? sheet.browseError : "Paste a playlist or channel link in the box above, or open one from the search results."
                                 color: Th.watchpartyMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 wrapMode: Text.WordWrap
                             }
                             Rectangle {
@@ -1980,7 +1982,7 @@ Window {
                                         Layout.fillWidth: true
                                         spacing: 0
                                         Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.listing ? String(sheet.listing.title || "") : ""; color: Th.watchpartyResultRowFg; font.bold: true; elide: Text.ElideRight }
-                                        Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.listing ? [String(sheet.listing.channel || ""), sheet.listing.itemCount ? sheet.listing.itemCount + " videos" : ""].filter(function (x) { return x.length > 0 }).join(" · ") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
+                                        Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: sheet.listing ? [String(sheet.listing.channel || ""), sheet.listing.itemCount ? sheet.listing.itemCount + " videos" : ""].filter(function (x) { return x.length > 0 }).join(" · ") : ""; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; elide: Text.ElideRight }
                                     }
                                     ThButton { app: sheet.app; highlighted: true; text: "Add all"; enabled: sheet.inParty && !!(sheet.listing && sheet.listing.items && sheet.listing.items.length > 0); onClicked: sheet.addAll() }
                                     ThToolButton { app: sheet.app; iconName: "window-close-symbolic"; iconSize: 16; tip: "Close"; onClicked: sheet.listing = null }
@@ -1992,7 +1994,7 @@ Window {
                                 visible: sheet.browseTab === "history" && sheet.history.length === 0
                                 text: "Nothing played here yet — what the party plays shows up here (the last 50)."
                                 color: Th.watchpartyMetaFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 wrapMode: Text.WordWrap
                             }
                             // the rows: search / music / trending items, the listing's items, or the history
@@ -2039,7 +2041,7 @@ Window {
                                             Layout.fillWidth: true
                                             spacing: 0
                                             Controls.Label { Layout.fillWidth: true; textFormat: Text.PlainText; text: modelData.title || modelData.url || ""; color: Th.watchpartyResultRowFg; elide: Text.ElideRight; wrapMode: Text.WordWrap; maximumLineCount: 2 }
-                                            Controls.Label { Layout.fillWidth: true; visible: metaLine.length > 0; textFormat: Text.PlainText; text: metaLine; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; elide: Text.ElideRight }
+                                            Controls.Label { Layout.fillWidth: true; visible: metaLine.length > 0; textFormat: Text.PlainText; text: metaLine; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; elide: Text.ElideRight }
                                         }
                                         ThButton { app: sheet.app; visible: rowKind !== "video"; text: rowKind === "playlist" ? "Open playlist" : "Open channel"; onClicked: sheet.openListing(rowKind, String(modelData.id || ""), browseView.music) }
                                         // 11.3 QOL (§6): already queued → a check "In the queue" in place of Add (an Add flips it at once)
@@ -2047,7 +2049,7 @@ Window {
                                             visible: rowKind === "video" && rowQueued
                                             spacing: 4
                                             Kirigami.Icon { source: "checkmark-symbolic"; color: Th.watchpartyMetaFg; implicitWidth: 16; implicitHeight: 16 }
-                                            Controls.Label { text: "In the queue"; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                            Controls.Label { text: "In the queue"; color: Th.watchpartyMetaFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                         }
                                         ThToolButton { app: sheet.app; visible: rowKind === "video" && !rowQueued; iconName: "list-add"; tip: "Add to queue"; enabled: sheet.inParty; onClicked: { var it = itemJson(); sheet.enqueueItem(JSON.stringify(it)); sheet.markAdded(String(it.url || "")) } }
                                         ThToolButton {
@@ -2109,7 +2111,7 @@ Window {
                         spacing: Kirigami.Units.smallSpacing
                         RowLayout {
                             Layout.fillWidth: true
-                            Kirigami.Heading { level: 3; text: "Keys"; color: Th.watchpartyFg }
+                            ThHeading { level: 3; text: "Keys"; color: Th.watchpartyFg }
                             Item { Layout.fillWidth: true }
                             ThToolButton { app: sheet.app; iconName: "window-close-symbolic"; iconSize: 16; tip: "Close (Esc)"; onClicked: keysCard.visible = false }
                         }
@@ -2151,7 +2153,7 @@ Window {
                                                     color: sep ? "transparent" : Th.watchpartyQueueRowBgHover
                                                     border.width: sep ? 0 : 1
                                                     border.color: Th.watchpartyQueueRowBorder
-                                                    Controls.Label { id: kcap; anchors.centerIn: parent; textFormat: Text.PlainText; text: String(parent.modelData); color: Th.watchpartyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                                    Controls.Label { id: kcap; anchors.centerIn: parent; textFormat: Text.PlainText; text: String(parent.modelData); color: Th.watchpartyFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                                                 }
                                             }
                                         }
@@ -2165,7 +2167,7 @@ Window {
                             Layout.topMargin: 6
                             text: "Keys work whenever the search box isn't focused. In the box, Esc hides the suggestions, then clears it, then leaves it. The video: click = play / pause, double-click = fullscreen, wheel = volume."
                             color: Th.watchpartyMetaFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             wrapMode: Text.WordWrap
                         }
                     }

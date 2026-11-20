@@ -121,6 +121,10 @@ pub mod qobject {
         /// QML: tzChoiceText(tz) — "JST · Asia/Tokyo" for any zone (the Automatic entry names the device's).
         #[qinvokable]
         fn tz_choice_text(self: &PresenceController, tz: &QString) -> QString;
+        /// QML: capStatusEdit(text) — 12.1.17 Stage B (#5): the status editor's cap, whole graphemes within 80
+        /// (presence_model::cap_status_edit; the web's capStatusEdit).
+        #[qinvokable]
+        fn cap_status_edit(self: &PresenceController, text: &QString) -> QString;
     }
 
     impl cxx_qt::Threading for PresenceController {}
@@ -2017,6 +2021,10 @@ impl qobject::PresenceController {
             .map(|z| serde_json::json!({ "tz": z, "text": tinhat_widgets::clocks::zone_choice_text(z) }))
             .collect();
         QString::from(&Value::Array(v).to_string())
+    }
+
+    pub fn cap_status_edit(&self, text: &QString) -> QString {
+        QString::from(&crate::presence_model::cap_status_edit(&text.to_string()))
     }
 
     pub fn tz_choice_text(&self, tz: &QString) -> QString {

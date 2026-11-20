@@ -70,7 +70,7 @@ pub use call::{game_chat_json, game_chat_peer, local_game_chat, set_local_game_c
 pub use call::{corner_factor, corner_join, corner_json, corner_leave, corner_mine, corner_pull, corner_tick, take_corner_announcements, take_game_chat_announce_due, CORNER_OUTSIDE_GAIN};
 // RBAC (docs/RBAC.md §5.4): server-enforced call moderation — packets, my own server-mute
 // state, tile enrichment.
-pub use call::{i_am_server_muted, my_source_allowed, publish_moderation_notice, publish_moderation_packet, resolve_call_participant, send_moderation_packet, server_mute_info, server_muted_json, set_server_muted_from_state, MODERATION_TOPIC};
+pub use call::{i_am_server_muted, my_source_allowed, parse_unmute_ask, publish_moderation_notice, publish_moderation_packet, publish_unmute_ask, resolve_call_participant, send_moderation_packet, mute_revs_snapshot, mute_seq_now, next_mute_episode, server_mute_info, server_mute_rev, server_muted_json, set_server_muted_from_state, MODERATION_TOPIC, UNMUTE_ASK_PAYLOAD, UNMUTE_ASK_TOPIC};
 // 0.8.22: recording-only share + viewer tune-in.
 pub use call::{rec_only_flags_json, set_share_recording_only, set_tile_tuned_in, share_recording_only, tile_recording_state};
 // #4 AFK/BRB incoming-audio cut: mute ALL remote audio while away (reversible, won't stomp

@@ -48,6 +48,13 @@ Item {
                   + "<b>" + card.esc(card.spaceName.length > 0 ? card.spaceName : "a space") + "</b>"
             color: Th.roomsInviteCardFg
             wrapMode: Text.WordWrap
+            // mini games v1: the inviter's prestige token left of the centred line (first line); the label keeps its geometry
+            PrestigeToken {
+                mxid: card.inviter.length > 0 ? card.inviterMxid : ""
+                roomId: card.spaceId
+                x: Math.round((parent.width - parent.contentWidth) / 2) - width
+                y: Math.round((parent.lineCount > 0 ? parent.contentHeight / parent.lineCount : parent.height) / 2 - height / 2)
+            }
         }
         Controls.Label {
             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -57,7 +64,7 @@ Item {
                   + (card.memberCount > 0 && card.inviterMxid.length > 0 ? "  ·  " : "")
                   + card.inviterMxid
             color: Th.roomsInviteCardHintFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             elide: Text.ElideMiddle
             Layout.maximumWidth: parent.width
         }

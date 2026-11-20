@@ -1,0 +1,3932 @@
+{
+ "about": "Each must FAIL the schema (and an app's view parser). A valid fixture with one thing broken.",
+ "cases": [
+  {
+   "id": "holdem-three-hole-cards",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd",
+      "2c"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-bad-card",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "1s",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-seat-9",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 9,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-vseq-0",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 0,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-unknown-status",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "dealing",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-deadline-string",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": "1763600030000"
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-negative-stack",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": -1,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-missing-table",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-unsafe-integer",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 9007199254740992,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "holdem-fractional-chips",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 2.5,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "rig-unknown-phase",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "dance",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "mechanic",
+     "kept": true,
+     "card": {
+      "card": "cold-streak",
+      "bite": 2
+     },
+     "busted": false,
+     "patch": null,
+     "mutes_left": 2,
+     "armed": false,
+     "rake": 0,
+     "call_shares": 0,
+     "nudge_left": 0,
+     "whisper_used": false,
+     "peek": {
+      "placed": false,
+      "locks_after": 4
+     },
+     "market": null,
+     "market_done": true,
+     "screens": [
+      "web"
+     ],
+     "at_cap": false,
+     "holdings": 14
+    }
+   }
+  },
+  {
+   "id": "rig-four-reels",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish",
+        "hat"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "mechanic",
+     "kept": true,
+     "card": {
+      "card": "cold-streak",
+      "bite": 2
+     },
+     "busted": false,
+     "patch": null,
+     "mutes_left": 2,
+     "armed": false,
+     "rake": 0,
+     "call_shares": 0,
+     "nudge_left": 0,
+     "whisper_used": false,
+     "peek": {
+      "placed": false,
+      "locks_after": 4
+     },
+     "market": null,
+     "market_done": true,
+     "screens": [
+      "web"
+     ],
+     "at_cap": false,
+     "holdings": 14
+    }
+   }
+  },
+  {
+   "id": "rig-unknown-symbol",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "star",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "mechanic",
+     "kept": true,
+     "card": {
+      "card": "cold-streak",
+      "bite": 2
+     },
+     "busted": false,
+     "patch": null,
+     "mutes_left": 2,
+     "armed": false,
+     "rake": 0,
+     "call_shares": 0,
+     "nudge_left": 0,
+     "whisper_used": false,
+     "peek": {
+      "placed": false,
+      "locks_after": 4
+     },
+     "market": null,
+     "market_done": true,
+     "screens": [
+      "web"
+     ],
+     "at_cap": false,
+     "holdings": 14
+    }
+   }
+  },
+  {
+   "id": "rig-unknown-card",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "joker",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "mechanic",
+     "kept": true,
+     "card": {
+      "card": "cold-streak",
+      "bite": 2
+     },
+     "busted": false,
+     "patch": null,
+     "mutes_left": 2,
+     "armed": false,
+     "rake": 0,
+     "call_shares": 0,
+     "nudge_left": 0,
+     "whisper_used": false,
+     "peek": {
+      "placed": false,
+      "locks_after": 4
+     },
+     "market": null,
+     "market_done": true,
+     "screens": [
+      "web"
+     ],
+     "at_cap": false,
+     "holdings": 14
+    }
+   }
+  },
+  {
+   "id": "rig-unknown-role",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "dealer",
+     "kept": true,
+     "card": {
+      "card": "cold-streak",
+      "bite": 2
+     },
+     "busted": false,
+     "patch": null,
+     "mutes_left": 2,
+     "armed": false,
+     "rake": 0,
+     "call_shares": 0,
+     "nudge_left": 0,
+     "whisper_used": false,
+     "peek": {
+      "placed": false,
+      "locks_after": 4
+     },
+     "market": null,
+     "market_done": true,
+     "screens": [
+      "web"
+     ],
+     "at_cap": false,
+     "holdings": 14
+    }
+   }
+  },
+  {
+   "id": "rig-dial-4",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 4,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "mechanic",
+     "kept": true,
+     "card": {
+      "card": "cold-streak",
+      "bite": 2
+     },
+     "busted": false,
+     "patch": null,
+     "mutes_left": 2,
+     "armed": false,
+     "rake": 0,
+     "call_shares": 0,
+     "nudge_left": 0,
+     "whisper_used": false,
+     "peek": {
+      "placed": false,
+      "locks_after": 4
+     },
+     "market": null,
+     "market_done": true,
+     "screens": [
+      "web"
+     ],
+     "at_cap": false,
+     "holdings": 14
+    }
+   }
+  },
+  {
+   "id": "rig-whisper-61",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "spinner",
+     "whispers": [
+      {
+       "spin": 2,
+       "template": "bet-size"
+      },
+      {
+       "spin": 4,
+       "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ],
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "holdings": 17,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "rig-sharp-with-card",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "sharp",
+     "nudge_left": 1,
+     "whisper_used": true,
+     "peek": {
+      "placed": true,
+      "mechanic": "@dee:example.net",
+      "card": "moon-monday",
+      "locks_after": 4
+     },
+     "market": {
+      "side": "up",
+      "stake": 1
+     },
+     "market_done": true,
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "holdings": 38,
+     "card": {
+      "card": "skim",
+      "bite": 2
+     }
+    }
+   }
+  },
+  {
+   "id": "rig-board-owner-on-open-card",
+   "def": "rigView",
+   "value": {
+    "game": "rig",
+    "table": "tR7q2wE4rT6yU8iO",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 40,
+    "now": 1763600000000,
+    "status": "round",
+    "host": "@ana:example.org",
+    "opts": {
+     "preset": "full",
+     "bankroll": 6,
+     "patch": true
+    },
+    "players": [
+     {
+      "u": "@ana:example.org",
+      "order": 1,
+      "role": "sharp",
+      "connected": true,
+      "left": false,
+      "spun": true,
+      "skipped": false
+     },
+     {
+      "u": "@ben:example.org",
+      "order": 2,
+      "role": "spinner",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@cy:example.org",
+      "order": 3,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@dee:example.net",
+      "order": 4,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@eli:example.org",
+      "order": 5,
+      "role": "mechanic",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     },
+     {
+      "u": "@gus:example.org",
+      "order": 6,
+      "role": "railbird",
+      "connected": true,
+      "left": false,
+      "spun": false,
+      "skipped": false
+     }
+    ],
+    "round": {
+     "r": 2,
+     "spinner": "@ben:example.org",
+     "preset": "full",
+     "phase": "turn",
+     "spin": 5,
+     "spins": 10,
+     "deadline": 1763600020000,
+     "seed_commit": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+     "bankroll": {
+      "start": 6,
+      "now": 16
+     },
+     "net": 10,
+     "dial": 2,
+     "bet": null,
+     "calls_left": 1,
+     "call_used_this_spin": false,
+     "audit_used": false,
+     "walk_from": 6,
+     "peek_lock_after": 4,
+     "peeks_locked": true,
+     "features": {
+      "mutes": true,
+      "nudge": true,
+      "whisper": true,
+      "patch": true
+     },
+     "board": [
+      {
+       "card": "moon-monday",
+       "state": "open",
+       "owner": "@dee:example.net"
+      },
+      {
+       "card": "lizard-lane",
+       "state": "open"
+      },
+      {
+       "card": "hat-thief",
+       "state": "dead"
+      },
+      {
+       "card": "twos-company",
+       "state": "open"
+      },
+      {
+       "card": "big-bet-tax",
+       "state": "open"
+      },
+      {
+       "card": "penny-pincher",
+       "state": "open"
+      },
+      {
+       "card": "cold-streak",
+       "state": "open"
+      },
+      {
+       "card": "skim",
+       "state": "dead"
+      },
+      {
+       "card": "moon-tax",
+       "state": "open"
+      },
+      {
+       "card": "shy-hat",
+       "state": "open"
+      },
+      {
+       "card": "lizard-tax",
+       "state": "dead"
+      },
+      {
+       "card": "underdog",
+       "state": "open"
+      },
+      {
+       "card": "rebound",
+       "state": "busted",
+       "by": "@cy:example.org",
+       "spin": 3
+      },
+      {
+       "card": "hot-hat",
+       "state": "wrong"
+      },
+      {
+       "card": "slow-start",
+       "state": "open"
+      },
+      {
+       "card": "even-money",
+       "state": "open"
+      }
+     ],
+     "dead": [
+      "skim",
+      "hat-thief",
+      "lizard-tax"
+     ],
+     "mechanics": 3,
+     "refilled": [
+      {
+       "spin": 3
+      }
+     ],
+     "history": [
+      {
+       "spin": 1,
+       "bet": 1,
+       "reels": [
+        "eye",
+        "moon",
+        "dish"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": []
+      },
+      {
+       "spin": 2,
+       "bet": 2,
+       "reels": [
+        "dish",
+        "dish",
+        "eye"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "nudged"
+       ]
+      },
+      {
+       "spin": 3,
+       "bet": 2,
+       "reels": [
+        "hat",
+        "eye",
+        "hat"
+       ],
+       "payout": 8,
+       "result": "win",
+       "stamps": [
+        "called-right",
+        "refilled"
+       ]
+      },
+      {
+       "spin": 4,
+       "bet": 2,
+       "reels": [
+        "saucer",
+        "lizard",
+        "moon"
+       ],
+       "payout": 0,
+       "result": "loss",
+       "stamps": [
+        "called-wrong"
+       ]
+      }
+     ],
+     "reels": null,
+     "nudge": null,
+     "waiting_on": 0,
+     "paused": null
+    },
+    "end": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "role": "mechanic",
+     "kept": true,
+     "card": {
+      "card": "cold-streak",
+      "bite": 2
+     },
+     "busted": false,
+     "patch": null,
+     "mutes_left": 2,
+     "armed": false,
+     "rake": 0,
+     "call_shares": 0,
+     "nudge_left": 0,
+     "whisper_used": false,
+     "peek": {
+      "placed": false,
+      "locks_after": 4
+     },
+     "market": null,
+     "market_done": true,
+     "screens": [
+      "web"
+     ],
+     "at_cap": false,
+     "holdings": 14
+    }
+   }
+  },
+  {
+   "id": "holdem-no-space",
+   "def": "holdemView",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  },
+  {
+   "id": "rank-frame-no-space",
+   "def": "serverFrame",
+   "value": {
+    "t": "rank",
+    "u": "@dee:example.net",
+    "rank": 3
+   }
+  },
+  {
+   "id": "chat-card-no-space",
+   "def": "chatCard",
+   "value": {
+    "v": 1,
+    "kind": "invite",
+    "game": "holdem",
+    "server": "example.org",
+    "table": "tH3k9aB2cD4eF6gH"
+   }
+  },
+  {
+   "id": "frame-ack-unknown-code",
+   "def": "serverFrame",
+   "value": {
+    "t": "ack",
+    "op": "op-7f3a9c21b4d0e855",
+    "ok": false,
+    "code": "nope",
+    "dup": false
+   }
+  },
+  {
+   "id": "frame-act-short-op",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tH3k9aB2cD4eF6gH",
+    "op": "short",
+    "a": {
+     "do": "fold"
+    }
+   }
+  },
+  {
+   "id": "frame-sit-without-space",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tH3k9aB2cD4eF6gH",
+    "op": "op-a1b2c3d4e5f60718",
+    "a": {
+     "do": "sit",
+     "seat": 3
+    }
+   }
+  },
+  {
+   "id": "frame-fold-without-at",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tH3k9aB2cD4eF6gH",
+    "op": "op-a1b2c3d4e5f60718",
+    "a": {
+     "do": "fold"
+    }
+   }
+  },
+  {
+   "id": "frame-deal-with-at",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tH3k9aB2cD4eF6gH",
+    "op": "op-a1b2c3d4e5f60718",
+    "at": {
+     "hand": 1,
+     "turn": 1
+    },
+    "a": {
+     "do": "deal"
+    }
+   }
+  },
+  {
+   "id": "frame-rig-move-on-holdem-table",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tH3k9aB2cD4eF6gH",
+    "op": "op-a1b2c3d4e5f60718",
+    "at": {
+     "round": 1,
+     "spin": 1,
+     "phase": "turn"
+    },
+    "a": {
+     "do": "spin"
+    }
+   }
+  },
+  {
+   "id": "frame-whisper-text-and-template",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tR7q2wE4rT6yU8iO",
+    "op": "op-0c1d2e3f4051627d",
+    "at": {
+     "round": 2,
+     "spin": 5,
+     "phase": "turn"
+    },
+    "a": {
+     "do": "whisper",
+     "template": "bet-size",
+     "text": "x"
+    }
+   }
+  },
+  {
+   "id": "frame-market-pass-with-stake",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tR7q2wE4rT6yU8iO",
+    "op": "op-0c1d2e3f4051627a",
+    "at": {
+     "round": 1,
+     "spin": 0,
+     "phase": "setup"
+    },
+    "a": {
+     "do": "market",
+     "side": "pass",
+     "stake": 1
+    }
+   }
+  },
+  {
+   "id": "me-earned-25",
+   "def": "me",
+   "value": {
+    "v": 1,
+    "space": "!hangout:example.org",
+    "user": "@ana:example.org",
+    "balance": 38,
+    "holdings": 40,
+    "rank": 1,
+    "cap": 150,
+    "at_table": {
+     "table": "tH3k9aB2cD4eF6gH",
+     "game": "holdem",
+     "room": "!games:example.org"
+    },
+    "earned_today": 25,
+    "day_max": 8,
+    "accrual_s": 1260,
+    "chip_s": 3600,
+    "day": "2026-11-19",
+    "topup": {
+     "available": false,
+     "next_day": "2026-11-20"
+    }
+   }
+  },
+  {
+   "id": "frame-act-bad-step",
+   "def": "clientFrame",
+   "value": {
+    "t": "act",
+    "table": "tR7q2wE4rT6yU8iO",
+    "op": "op-0c1d2e3f4051627c",
+    "at": {
+     "round": 2,
+     "spin": 5,
+     "phase": "nudge"
+    },
+    "a": {
+     "do": "nudge",
+     "reel": 3,
+     "step": 2
+    }
+   }
+  }
+ ],
+ "tolerated": [
+  {
+   "id": "unknown-frame-type",
+   "def": "serverFrame",
+   "why": "a later server may add frame types: ignore it",
+   "value": {
+    "t": "hint",
+    "v": 1
+   }
+  },
+  {
+   "id": "unknown-view-field",
+   "def": "holdemView",
+   "why": "a later server may add fields: ignore them (the v1 server never sends one: its tests check the strict schema)",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    },
+    "theme": "felt"
+   }
+  },
+  {
+   "id": "unknown-seat-field",
+   "def": "holdemView",
+   "why": "as above, nested",
+   "value": {
+    "game": "holdem",
+    "table": "tH3k9aB2cD4eF6gH",
+    "room": "!games:example.org",
+    "space": "!hangout:example.org",
+    "owner": "example.org",
+    "vseq": 3,
+    "now": 1763600000000,
+    "status": "hand",
+    "host": "@ana:example.org",
+    "opts": {
+     "sb": 1,
+     "bb": 2,
+     "seats": 8,
+     "turn_s": 30
+    },
+    "seats": [
+     {
+      "seat": 1,
+      "u": "@ana:example.org",
+      "stack": 39,
+      "bet": 1,
+      "state": "active",
+      "cards": 2,
+      "connected": true,
+      "badge": "pit-boss"
+     },
+     {
+      "seat": 4,
+      "u": "@ben:example.org",
+      "stack": 28,
+      "bet": 2,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     },
+     {
+      "seat": 6,
+      "u": "@dee:example.net",
+      "stack": 14,
+      "bet": 6,
+      "state": "active",
+      "cards": 2,
+      "connected": true
+     }
+    ],
+    "hand": {
+     "n": 1,
+     "button": 6,
+     "sb": 1,
+     "bb": 4,
+     "street": "preflop",
+     "board": [],
+     "pots": [],
+     "total": 9,
+     "to_act": {
+      "seat": 1,
+      "turn": 2,
+      "deadline": 1763600030000
+     },
+     "last": {
+      "seat": 6,
+      "a": "raise",
+      "to": 6
+     }
+    },
+    "result": null,
+    "closed": null,
+    "spectators": 1,
+    "you": {
+     "seat": 1,
+     "state": "active",
+     "cards": [
+      "As",
+      "Kd"
+     ],
+     "legal": {
+      "fold": true,
+      "check": false,
+      "call": 5,
+      "raise": {
+       "min": 10,
+       "max": 40
+      }
+     },
+     "screens": [
+      "desktop"
+     ],
+     "at_cap": false,
+     "cap": 150,
+     "holdings": 40,
+     "timeouts": 0
+    }
+   }
+  }
+ ]
+}

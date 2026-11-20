@@ -36,7 +36,7 @@ Rectangle {
         anchors.centerIn: parent
         text: badge.name
         color: badge.tone
-        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         font.bold: true
         elide: Text.ElideRight
         width: Math.min(implicitWidth, 160)

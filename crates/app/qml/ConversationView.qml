@@ -162,7 +162,10 @@ Item {
     // view always; a floating bubble only while the primary view is not showing this room (hidden
     // behind a maximised call, on another room, or in an inactive window). One reader at a time,
     // never none: reading to the bottom of a bubble during a call used to leave the badge climbing.
-    readonly property bool reader: conv.primary || !(conv.app && conv.app.conversationView && conv.app.conversationView !== conv
+    // 12.1.17 round 2 (review #2, found by the lab): a thread's panel always reads ITS thread (a thread receipt never
+    // touches the main one); the one-reader rule is for the main timeline. Before, a thread opened next to the same room's
+    // main view never sent a receipt at all (docs/THREADS.md says it does when its end is on screen).
+    readonly property bool reader: conv.primary || conv.threadRoot.length > 0 || !(conv.app && conv.app.conversationView && conv.app.conversationView !== conv
                                                     && conv.app.conversationView.attending && conv.app.conversationView.room && conv.room
                                                     && conv.app.conversationView.room.roomId === conv.room.roomId)
     onAttendingChanged: {
@@ -170,6 +173,14 @@ Item {
         if (conv.attending && conv.reader && msgView && msgView.stickBottom && conv.room) conv.room.markRead()
     }
     onReaderChanged: if (conv.reader && conv.attending && msgView && msgView.stickBottom && conv.room) conv.room.markRead()
+    // 12.1.17 round 2 (review #3): a photo the chat hides (it is in Memories) adds no row, so the row-change path above
+    // never runs for it; when the view's hidden tail moves, it is read too (Rust readTail). Review r2 #2: only once the
+    // poll below has applied that same load's rows (and a scroll place is restored), and only at the view's end.
+    property bool _readTailPending: false
+    Connections {
+        target: conv.room
+        function onReadTailChanged() { if (conv.room && String(conv.room.readTail || "").length > 0) conv._readTailPending = true }
+    }
     Component.onCompleted: if (conv.room) conv.room.setAttending(conv.attending)
     // 9.3.2 gate hook: `--tinhat-scrolllog` logs one "[scroll]" line per wheel/page/bar gesture.
     readonly property bool _scrollLog: !!(app && app._hookArg && app._hookArg("--tinhat-scrolllog") !== null)
@@ -215,6 +226,13 @@ Item {
     }
     readonly property string waitingExplain: "They'll see your messages once they join."
     property var mMessages: []
+    // mini games v1: the sender (mxid) of a loaded message, "" when it isn't loaded (a reply quote's prestige token)
+    function senderOfEvent(id) {
+        var ms = conv.mMessages
+        if (!id || !ms) return ""
+        for (var i = ms.length - 1; i >= 0; i--) if (ms[i] && ms[i].id === id) return String(ms[i].sender || "")
+        return ""
+    }
     property string _soundTail: ""   // 10.0: newest row id seen — a new REMOTE tail plays the receive sound
     property double _soundTailTs: 0   // 10.3: … and only when it is NEWER (a deleted tail slides back, no chime)
     property string _messagesRaw: ""
@@ -395,6 +413,8 @@ Item {
     property string unreadMarker: ""
     property bool _markerFrozen: false
     property string unreadDividerId: ""
+    property real _dividerTs: 0   // 12.1.17 round 2: the NEW row's time (dividerAfterHide)
+    property real _frozenTailTs: 0   // 12.1.17 round 2: the freeze-time tail's time (dividerAfterHide's bound)
     property int _unreadHint: 0
     // 10.1 (TL-01): the newest row at freeze time. Nothing newer than it can ever become the NEW
     // line — the marker used to latch onto the first message that arrived while you were watching.
@@ -605,11 +625,32 @@ Item {
     function dayNeedsYear(ts, nowTs) {
         return new Date(ts).getFullYear() !== new Date(nowTs).getFullYear()
     }
+    // 12.1.17 round 2 (memories-hide-chat review #6 + its review): the row carrying NEW left the chat (its photo went into
+    // Memories): NEW moves to the first row strictly later than it (a row at the same time may be older: NEW never moves
+    // back) that is someone else's and no echo, never past the freeze-time tail (its row, else its time tailTs; 0 = no
+    // limit); none left = "" (NEW goes). A divider still among the rows (or none) stays.
+    function dividerAfterHide(rows, divider, dividerTs, me, tail, tailTs) {
+        if (!divider) return divider
+        for (var k = 0; k < rows.length; k++) if (rows[k].id === divider) return divider
+        var end = rows.length
+        if (tail) for (var t = rows.length - 1; t >= 0; t--) if (rows[t].id === tail) { end = t + 1; break }
+        for (var i = 0; i < end; i++) {
+            var r = rows[i]
+            if (r.id !== divider && Number(r.ts) > dividerTs && (tailTs <= 0 || Number(r.ts) <= tailTs) && r.sender !== me && r.echo !== true) return r.id
+        }
+        return ""
+    }
     // END catching-up pure
 
     // 9.3: where the NEW line goes — computed once the marker is frozen; stable afterwards.
     function _recomputeDivider() {
-        if (conv.unreadDividerId.length > 0 || conv._dividerSettled) return
+        // 12.1.17 round 2 (review #6): the row carrying NEW may have left the chat (its photo went into Memories)
+        if (conv.unreadDividerId.length > 0) {
+            var nx = conv.dividerAfterHide(conv.mMessages, conv.unreadDividerId, conv._dividerTs, conv.myId, conv._frozenTailId, conv._frozenTailTs)
+            if (nx !== conv.unreadDividerId) { conv.unreadDividerId = nx; if (nx.length === 0) conv._dividerSettled = true }
+            return
+        }
+        if (conv._dividerSettled) return
         var arr = conv.mMessages
         if (arr.length === 0) return
         // 10.1 (TL-01): only rows up to the freeze-time tail are candidates — and the unread count is measured from
@@ -633,7 +674,7 @@ Item {
         if (s0 === "more") { conv._newWaiting = true; return }   // A35.1
         if (s0 !== null) start = s0
         for (var j = start + 1; j < end; j++) {
-            if (arr[j].sender !== conv.myId && arr[j].echo !== true) { conv.unreadDividerId = arr[j].id; conv._newWaiting = false; return }
+            if (arr[j].sender !== conv.myId && arr[j].echo !== true) { conv.unreadDividerId = arr[j].id; conv._dividerTs = Number(arr[j].ts) || 0; conv._newWaiting = false; return }
         }
         conv._newWaiting = false
         // The frozen window has been scanned with no candidate: it stays that way for this open.
@@ -726,7 +767,7 @@ Item {
                     // 10.6 (REACH A5.6, audit 15b): only while the window is ACTIVE, as on web — in the
                     // background the notifier's own "notify" sound covers it (two chimes used to play).
                     if (conv._soundTail.length > 0 && tailId !== conv._soundTail && conv.reader && tailTs > conv._soundTailTs
-                        && tail.sender !== conv.myId && tail.echo !== true && msgView.olderAnchor < 0
+                        && tail.sender !== conv.myId && tail.echo !== true && tail.quiet !== true && msgView.olderAnchor < 0
                         && conv.Window.active
                         && conv.app && conv.app.playUiSound) conv.app.playUiSound("receive")
                     conv._soundTail = tailId; conv._soundTailTs = tailTs
@@ -741,6 +782,7 @@ Item {
                 conv._markerFrozen = true
                 conv.unreadMarker = conv.room.readMarkerId || ""
                 conv._frozenTailId = conv.mMessages.length > 0 ? String(conv.mMessages[conv.mMessages.length - 1].id) : ""
+                conv._frozenTailTs = conv.mMessages.length > 0 ? (Number(conv.mMessages[conv.mMessages.length - 1].ts) || 0) : 0
                 conv._recomputeDivider()
                 var mem = conv.memory[rid]
                 if (mem && mem.atBottom === false && mem.topId) Qt.callLater(function() { conv._restoreScroll(mem.topId) })
@@ -755,6 +797,11 @@ Item {
                 conv._huntAsked = false; conv._huntStep()
             }
             msgView._fillIfShort()   // 10.5.2
+            // 12.1.17 round 2: the hidden tail, read after this pass applied its rows (review r2 #2)
+            if (conv._readTailPending && conv._markerFrozen && !msgView.settling) {
+                conv._readTailPending = false
+                if (conv.reader && conv.attending && msgView.stickBottom) conv.room.markRead()
+            }
         }
     }
     // 10.5.2 (timeline): field evidence — a conversation that is still empty 6 s after it was opened
@@ -834,6 +881,14 @@ Item {
         if (!conv.mHasMore || !conv._newWaiting) conv._newSeen = true
         else conv._toast("The NEW line is further back — scroll up to find it", "short")
     }
+    // 12.1.17: a photo the chat hides lives in Memories: its viewer opens there (no hunt through older pages)
+    function _jumpToMemories(eventId) {
+        if (!(conv.room && conv.room.hiddenInChat && conv.room.hiddenInChat(String(conv.room.roomId || ""), eventId)
+              && conv.app && typeof conv.app.openMemoryPhoto === "function")) return false
+        conv._jumpHunt = ""; conv._jumpPages = 0
+        conv.app.openMemoryPhoto(String(conv.room.roomId || ""), eventId, conv._shownName)
+        return true
+    }
     function _jumpTo(eventId) {
         for (var i = 0; i < msgModel.count; i++) {
             if (msgModel.get(i).eventId === eventId) {
@@ -846,6 +901,7 @@ Item {
                 return
             }
         }
+        if (conv._jumpToMemories(eventId)) return   // 12.1.17: a photo the chat hides opens in Memories
         // threads (review #16): a message in a thread never shows in the main timeline — open its thread instead
         if (conv.threadRoot.length === 0 && conv.room && conv.room.threadOfEvent) {
             var t = String(conv.room.threadOfEvent(eventId) || "")
@@ -1607,7 +1663,7 @@ Item {
                     anchors.centerIn: parent
                     text: "This is the start of the conversation"
                     color: Th.timelineStartFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             // D09.3: "Waiting for Sam to join" under the last message of a DM the other person hasn't accepted yet
@@ -1620,7 +1676,7 @@ Item {
                     textFormat: Text.PlainText
                     text: conv.waitingFor
                     color: Th.timelineStartFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             // The history spinner floats over the viewport instead of inserting itself as a
@@ -1675,7 +1731,7 @@ Item {
                         text: "Jump to NEW"
                         color: Th.timelineJumpFgUnread
                         font.bold: true
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                 }
                 MouseArea {
@@ -1716,7 +1772,7 @@ Item {
                         text: conv.newBelow + (conv.newBelow === 1 ? " new message" : " new messages")
                         color: Th.timelineJumpFgUnread
                         font.bold: true
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                     ThIcon {   // 10.1 (TL-20): a pack glyph, not U+2913 (no glyph in the Windows UI font)
                         anchors.verticalCenter: parent.verticalCenter
@@ -1774,7 +1830,8 @@ Item {
                     id: col
                     width: parent.width
                     spacing: 2
-                    topPadding: msgDelegate.grouped ? 1 : Kirigami.Units.smallSpacing
+                    // P22: the space above a new sender's group follows the person's density (Compact ½, Comfortable ×2)
+                    topPadding: msgDelegate.grouped ? 1 : Th.gap(Kirigami.Units.smallSpacing)
 
                     // Date separator at day boundaries.
                     Item {
@@ -1786,7 +1843,7 @@ Item {
                             id: daypill
                             anchors.centerIn: parent
                             text: conv._dayLabel(msgDelegate.modelData.ts)
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             color: Th.timelineDayPillFg
                             leftPadding: 10; rightPadding: 10; topPadding: 2; bottomPadding: 2
                             background: Rectangle { color: Th.timelineDayPillBg; radius: height / 2 }
@@ -1814,7 +1871,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "NEW"
                             font.bold: true
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85 * Th.textScale
                             color: Th.timelineNewLineFg
                         }
                     }
@@ -1860,6 +1917,8 @@ Item {
                         calEvent: msgDelegate.modelData.calEvent !== undefined ? msgDelegate.modelData.calEvent : ""
                         themeShare: msgDelegate.modelData.themeShare !== undefined ? msgDelegate.modelData.themeShare : null
                         dice: msgDelegate.modelData.dice !== undefined ? msgDelegate.modelData.dice : null   // widgets W3
+                        gameCard: msgDelegate.modelData.game !== undefined ? msgDelegate.modelData.game : null   // mini games v1 (§6.6)
+                        gameRoomId: conv.room ? String(conv.room.roomId) : ""
                         poll: msgDelegate.modelData.poll !== undefined ? msgDelegate.modelData.poll : null   // widgets W3
                         onPollVote: (a) => conv.room.votePoll(msgDelegate.modelData.id, JSON.stringify(a))
                         onPollEnd: conv.room.endPoll(msgDelegate.modelData.id)
@@ -1869,6 +1928,8 @@ Item {
                         receipts: msgDelegate.modelData.receipts !== undefined ? msgDelegate.modelData.receipts : []
                         replyToId: msgDelegate.modelData.replyTo !== undefined ? msgDelegate.modelData.replyTo : ""
                         replyToSender: msgDelegate.modelData.replyToSender !== undefined ? msgDelegate.modelData.replyToSender : ""
+                        replyToSenderId: (msgDelegate.modelData.replyTo !== undefined && msgDelegate.modelData.replyToSender !== undefined) ? conv.senderOfEvent(msgDelegate.modelData.replyTo) : ""   // mini games v1
+                        roomId: conv.room ? String(conv.room.roomId || "") : ""   // mini games v1: the sender's prestige rank server
                         replyToBody: msgDelegate.modelData.replyToBody !== undefined ? msgDelegate.modelData.replyToBody : ""
                         edited: msgDelegate.modelData.edited === true
                         redacted: msgDelegate.modelData.redacted === true
@@ -1910,7 +1971,9 @@ Item {
             // Empty / loading states. The host's EmptyState (furry-aware) when there is a host.
             // 10.1 (TH-TL-07): pinned to the viewport like the jump chip — as a plain child of the
             // ListView it was reparented into the (0-high) content item and centred on its top edge.
+            RoomMissing { id: roomMissing }
             Loader {
+                id: emptyLoader
                 parent: msgView
                 anchors.centerIn: parent
                 width: parent.width - Kirigami.Units.gridUnit * 2
@@ -1923,13 +1986,25 @@ Item {
                     readonly property bool _loading: conv.mBusy || msgView.fillingEmpty
                     loading: _loading
                     // 10.1 (TL-06): a load that FAILED is not an empty room.
-                    iconName: conv.mStatus.length > 0 ? "network-disconnect-symbolic" : (conv.waitingFor.length > 0 ? "contact-new-symbolic" : "dialog-messages-symbolic")
-                    title: _loading ? "" : (conv.mStatus.length > 0 ? "Couldn't load this conversation" : (conv.waitingFor.length > 0 ? conv.waitingFor : "No messages"))
+                    // a link to a room this account isn't in (RoomMissing.qml; the web's roomMissing.ts says the same)
+                    readonly property bool _missing: roomMissing.isMissing(conv.mStatus)
+                    iconName: conv.mStatus.length > 0 && !_missing ? "network-disconnect-symbolic" : (conv.waitingFor.length > 0 ? "contact-new-symbolic" : "dialog-messages-symbolic")
+                    title: _loading ? "" : (_missing ? roomMissing.title : conv.mStatus.length > 0 ? "Couldn't load this conversation" : (conv.waitingFor.length > 0 ? conv.waitingFor : "No messages"))
                     explanation: _loading ? "" : (conv.mStatus.length > 0 ? conv.mStatus : (conv.waitingFor.length > 0 ? conv.waitingExplain : "Say something to get started."))
-                    // QOL A29.0 / A29.3: the loading state says what loads; a failed load is no dead end
+                    // QOL A29.0 / A29.3: the loading state says what loads; a failed load is no dead end (a missing room has
+                    // its own way back instead of Try again)
                     loadingLabel: "Loading messages…"
-                    actionText: !_loading && conv.mStatus.length > 0 ? "Try again" : ""
+                    actionText: !_loading && conv.mStatus.length > 0 && !_missing ? "Try again" : ""
                     onActionClicked: { conv.room.refresh() }
+                    action: _missing && conv.primary ? missingBack : null
+                }
+            }
+            Component {
+                id: missingBack
+                ThButton {
+                    app: conv.app
+                    text: roomMissing.button
+                    onClicked: { conv.app.settings.applyUiPref("last-room", ""); conv.app.roomShown = false }
                 }
             }
             Controls.Label {
@@ -2013,7 +2088,7 @@ Item {
                     }
                     color: Th.typingFg
                     font.italic: true
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.95
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.95 * Th.textScale
                 }
             }
         }
@@ -2063,7 +2138,7 @@ Item {
                             text: conv.editToId.length > 0 ? "Editing message" : ("Replying to " + (conv.replyToName.length > 0 ? conv.replyToName : "a message"))
                             color: Th.replyTitleFg
                             font.bold: true
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                         Controls.Label {
                             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -2072,7 +2147,7 @@ Item {
                             color: Th.replyBodyFg
                             elide: Text.ElideRight
                             maximumLineCount: 1
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                     }
                     Controls.ToolButton {
@@ -2124,8 +2199,8 @@ Item {
                             visible: !modelData.isImage
                             spacing: 6
                             Kirigami.Icon { source: "document-send-symbolic"; Layout.preferredWidth: 18; Layout.preferredHeight: 18 }
-                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.name; elide: Text.ElideMiddle; color: Th.composerStagedFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
-                            Controls.Label { textFormat: Text.PlainText; visible: text.length > 0; text: conv.fmtSize(modelData.size); color: Th.composerStagedFg; opacity: 0.7; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                            Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.name; elide: Text.ElideMiddle; color: Th.composerStagedFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
+                            Controls.Label { textFormat: Text.PlainText; visible: text.length > 0; text: conv.fmtSize(modelData.size); color: Th.composerStagedFg; opacity: 0.7; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                         }
                         Rectangle {
                             anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 3
@@ -2430,6 +2505,12 @@ Item {
                                         seed: modelData.mxid !== undefined ? modelData.mxid : (modelData.name !== undefined ? modelData.name : "")
                                         imageSource: modelData.avatar !== undefined ? modelData.avatar : ""
                                     }
+                                    PrestigeToken {   // mini games v1: 4 px before the name (the row's 6 less 2)
+                                        mxid: modelData.room === true || modelData.mxid === undefined ? "" : String(modelData.mxid)
+                                        roomId: conv.room ? String(conv.room.roomId || "") : ""
+                                        gap: false
+                                        Layout.rightMargin: -2
+                                    }
                                     Controls.Label {
                                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         Layout.fillWidth: true
@@ -2466,14 +2547,14 @@ Item {
                                 onClicked: composer._pickEmoji(modelData)
                                 contentItem: RowLayout {
                                     spacing: 8
-                                    Controls.Label { textFormat: Text.PlainText; text: modelData.e; font.pixelSize: 18 }
+                                    Controls.Label { textFormat: Text.PlainText; text: modelData.e; font.pixelSize: Th.px(18) }
                                     Controls.Label {
                                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                         Layout.fillWidth: true
                                         text: ":" + String(modelData.k).split(" ")[0] + ":"
                                         color: Th.composerAutocompleteHintFg
                                         elide: Text.ElideRight
-                                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     }
                                 }
                             }
@@ -2618,7 +2699,7 @@ Item {
                                 text: (conv.gif && conv.gif.loading) ? "Loading…"
                                     : (conv.gif && conv.gif.error.length > 0 ? conv.gif.error : "No GIFs")
                                 color: Th.gifStatusFg
-                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                             }
                             // QOL A08.5: a failed load is no dead end (the same search again)
                             ThButton {
@@ -2636,7 +2717,7 @@ Item {
                                 text: "Powered by GIPHY"
                                 color: Qt.alpha(Th.gifCreditFg, 1)   // the token's alpha is the item's opacity (§3.8)
                                 opacity: Th.gifCreditFg.a
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85 * Th.textScale
                             }
                         }
                     }
@@ -2698,7 +2779,10 @@ Item {
                                         anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                                         anchors.margins: 6
                                         spacing: 1
-                                        Controls.Label { textFormat: Text.PlainText; text: (modelData.senderName || "") + " · " + Qt.formatDateTime(new Date(modelData.ts || 0), "MMM d") + ", " + ((conv.app && conv.app.fmtClock) ? conv.app.fmtClock(modelData.ts || 0) : Qt.formatTime(new Date(modelData.ts || 0), Locale.ShortFormat)); color: Th.composerPinnedRowMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                                        RowLayout { spacing: 0   // mini games v1: the author's prestige token
+                                        PrestigeToken { mxid: String(modelData.sender || ""); roomId: conv.room ? String(conv.room.roomId || "") : "" }
+                                        Controls.Label { textFormat: Text.PlainText; text: (modelData.senderName || "") + " · " + Qt.formatDateTime(new Date(modelData.ts || 0), "MMM d") + ", " + ((conv.app && conv.app.fmtClock) ? conv.app.fmtClock(modelData.ts || 0) : Qt.formatTime(new Date(modelData.ts || 0), Locale.ShortFormat)); color: Th.composerPinnedRowMetaFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
+                                        }
                                         Controls.Label { textFormat: Text.PlainText; Layout.fillWidth: true; text: modelData.body || ""; color: Th.composerPinnedRowFg; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight }
                                     }
                                     MouseArea {

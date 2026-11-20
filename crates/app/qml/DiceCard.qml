@@ -20,6 +20,8 @@ Rectangle {
     property var r: null
     property string variant: "widget"          // "widget" | "chat"
     property string headWho: ""
+    property string headMxid: ""     // mini games v1: whose prestige token sits before headWho ("" = none)
+    property string headRoomId: ""
     property string headWhen: ""
     property bool headPrivate: false
     property bool headFailed: false
@@ -40,7 +42,7 @@ Rectangle {
     }
     readonly property color natFg: card.natural === "nat20" ? Th.widgetDiceNat20Fg : Th.widgetDiceNat1Fg
     readonly property color natBg: card.natural === "nat20" ? Th.widgetDiceNat20Bg : Th.widgetDiceNat1Bg
-    readonly property real body: Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10
+    readonly property real body: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale   // A31.4: the person's text size
     readonly property int faceSide: card.chat ? 18 : 20
     // the lines' width (from the card, never from the ColumnLayout itself: a child bound to its layout's width re-lays
     // it out recursively)
@@ -128,9 +130,16 @@ Rectangle {
                     name: "lock-symbolic"
                     color: Th.widgetMutedFg
                 }
+                PrestigeToken {   // mini games v1: the roller's prestige token (12 px in widgets)
+                    id: headTok
+                    mxid: card.headPrivate ? "" : card.headMxid
+                    roomId: card.headRoomId
+                    size: 12
+                    gap: false
+                }
                 WidgetText {
                     // no fillWidth (two fill items share the space and squeeze the name): its own width, elided to what's left
-                    Layout.maximumWidth: Math.max(0, card.mainW - whenText.implicitWidth - 4 - (card.headPrivate ? 16 : 0))
+                    Layout.maximumWidth: Math.max(0, card.mainW - whenText.implicitWidth - 4 - (card.headPrivate ? 16 : 0) - (headTok.visible ? headTok.size + 4 : 0))
                     role: card.headPrivate ? "text" : "strong"
                     text: card.headWho
                     color: card.headPrivate ? Th.widgetMutedFg : Th.widgetFg

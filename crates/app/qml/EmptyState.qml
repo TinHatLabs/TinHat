@@ -28,6 +28,8 @@ Item {
     property string explanation: ""
     // A01.0 (Sunday QoL): buttons under the words (the web's EmptyState children)
     default property alias actions: actionRow.data
+    // an optional button row under the copy (12.1.16: a link to a room you're not in → "Back to your rooms")
+    property Component action: null
 
     // QOL A29.0: a loading state says what loads (the mark's own "Still …" after 10 s without progress)
     property string loadingLabel: ""
@@ -94,7 +96,7 @@ Item {
         }
 
         // ---- Copy -------------------------------------------------------------
-        Kirigami.Heading {
+        ThHeading {
             textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
@@ -125,6 +127,12 @@ Item {
             visible: empty.actionText.length > 0 && !empty.loading
             text: empty.actionText
             onClicked: empty.actionClicked()
+        }
+        Loader {
+            Layout.alignment: Qt.AlignHCenter
+            active: empty.action !== null && !empty.loading
+            visible: active
+            sourceComponent: empty.action
         }
     }
 }

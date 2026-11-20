@@ -68,6 +68,7 @@ Item {
     readonly property ActionsController c_actionsCtl: actionsCtl   // 11.0 step 3 (buttons): the actions engine (ACTIONS.md)
     readonly property GameServersController c_gameServers: gameServersCtl   // 11.1: the Game servers widget (GAMESERVERS.md)
     readonly property PadController c_padCtl: padCtl   // Pad: the phone as a remote for my call (docs/PAD.md)
+    readonly property PlayController c_play: playCtl   // mini games v1: Hold'em + The Rig (GAMES-V1-SPEC.md)
     readonly property var c_tileModel: tileModel
 
     property string themeName: "oled"
@@ -85,6 +86,23 @@ Item {
         if (core.themeName !== themeCtl.themeId) core.themeName = themeCtl.themeId
     }
     // (ENGINE.md §10: a theme's fonts and text size come with Th.apply — Main.qml puts them on the window's font)
+    // P22 (12.1.17): Settings → Appearance → Text size / Density — the person's own, over every theme (and over a
+    // preview: the editor or a Try keeps showing them). Stores the prefs and puts the new size + density on Th at once.
+    function setPersonalLook(size, density) {
+        var p = JSON.parse(themeCtl.setPersonal(size, density))
+        Th.textSize = p.size; Th.shapeDensity = JSON.parse(themeCtl.look).density   // the layout's density wins (round 2)
+        Th.revision++
+        core.personalLook = p
+    }
+    // P22 round 2: the density of the layout form this device renders (Main.qml binds it from LayoutStore: the Handheld
+    // preset = "touch", else ""). While a layout names one it is drawn instead of the person's; Settings says so.
+    property string layoutDensity: ""
+    onLayoutDensityChanged: {
+        Th.shapeDensity = themeCtl.setLayoutDensity(core.layoutDensity)
+        Th.revision++
+    }
+    /// the person's {size, density} (Settings shows it)
+    property var personalLook: JSON.parse(themeCtl.personal())
     /// the colours Th shows now (the Pick tool puts them back after its probe pass)
     property var _thColours: ({})
 
@@ -686,7 +704,7 @@ Item {
         if (comp.status !== Component.Ready) { console.warn("[pip] component:", comp.errorString()); return }
         var w = comp.createObject(core.shell, { ctl: callctl, audioPrefs: audioPrefsCtl, tileId: tileId,
                                           participant: participant, name: name || "", isShare: isShare === true,
-                                          volMxid: core.tileMxid(participant) })
+                                          volMxid: core.tileMxid(participant), roomId: String(core.mCallRoomId || "") })
         if (!w) { console.warn("[pip] createObject failed"); return }
         _pips[tileId] = w
         core._pipsRev++
@@ -1129,6 +1147,15 @@ Item {
     InviteController { id: invitesCtl }           // 10.4: registration invite codes for server operators (docs/INVITES.md)
     GuestsController { id: guestsCtl }            // selfhost: the guest room — Settings → Guests, the bar, the notices (docs/GUESTS.md)
     PresenceController { id: presenceCtl }        // 10.6: opt-in Online / Away / In a call + the "at the computer" pings (docs/REACH.md)
+    PrestigeController { id: prestigeCtl }        // mini games v1: the prestige rank store → the Prestige singleton (GAMES-V1-SPEC §3)
+    Connections {
+        target: prestigeCtl
+        function onRevChanged() {
+            var empty = ({ own: "", rooms: ({}), servers: ({}) })
+            try { Prestige.view = prestigeCtl.viewJson.length > 0 ? JSON.parse(prestigeCtl.viewJson) : empty }
+            catch (e) { Prestige.view = empty }
+        }
+    }
     ThemeController { id: themeCtl }              // themes (C1): resolves a theme id through the engine for the Th singleton
     ThemeEditorController { id: editorCtl }       // 11.0 step 5: the theme editor, share cards (Try / Keep), the Pick tool
     AmbienceController { id: ambienceCtl }       // chat backgrounds + particle effects (docs/AMBIENCE.md)
@@ -1140,6 +1167,9 @@ Item {
     // Pad (docs/PAD.md, pad_ctl.rs): my other verified devices drive my call here (the receiver: PadHost.qml in the
     // shell runs their commands), and this device drives theirs (the Pad window). Mirrored below on `changed`.
     PadController { id: padCtl }
+    // mini games v1 (GAMES-V1-SPEC.md, play_ctl.rs): the call room's tables, the open table, my chips, the game cards
+    PlayController { id: playCtl }
+    Timer { interval: 400; running: core.fakeCall; onTriggered: playCtl.setCallRoom("!fakecall:lab.test") }
     property bool mPadOn: true                       // Settings → Calls → Pad
     property var mPadChips: []                       // [{device, name}] my devices with a live Pad session here
     // PAD-PHONE Step B: my phone holds this computer's mic (takeover.mic, or a Pad Mic connection of mine already
@@ -1288,9 +1318,9 @@ Item {
     // Leaving a call clears only the SESSION hide layer. The memory (hiddenKeys)
     // stays — 0.8.7's whole point — and the "N hidden ▾" chip + the hide
     // notification keep a remembered hide from ever being a silent surprise.
-    onMInCallChanged: if (!mInCall && core.mHiddenTiles.length > 0) core.mHiddenTiles = []
+    onMInCallChanged: { if (!mInCall && core.mHiddenTiles.length > 0) core.mHiddenTiles = []; playCtl.setCallRoom(mInCall ? mCallRoomId : "") }
     // 11.4 (Media Party): follow the call's room's party while in a call (the call bar's cue + strip); stop after.
-    onMCallRoomIdChanged: watchCtl.watchRoom(mInCall ? mCallRoomId : "")
+    onMCallRoomIdChanged: { watchCtl.watchRoom(mInCall ? mCallRoomId : ""); playCtl.setCallRoom(mInCall ? mCallRoomId : "") }
     // Screen-share quality lists — ON ROOT, not inside sqMenu: the Settings → Calls
     // pane's combos referenced sqMenu.* across the popup boundary and rendered BLANK
     // models there (a 0.3.3 screenshot); root-level data resolves everywhere.
@@ -1856,6 +1886,40 @@ Item {
     property string mRemovedBy: ""         // who disconnected me from the last call ("" = nobody)
     property int _moderationRev: -1
     property int _callErrorRev: 0
+    // 12.1.17 (D04.6): hands up for ME (["<identity>",…]: they asked to be unmuted and I may unmute them) + the toasts
+    // whose button unmutes someone (the mute's Undo, an ask's Unmute). Same rules as the web (unmuteask.rs/.ts).
+    property var mUnmuteAsks: []
+    property string _unmuteAsksRaw: ""
+    property int _unmuteToastRev: 0
+    property var _unmuteToastTexts: []   // mute toasts shown with their Undo: the status line doesn't toast them again
+    // The button acts only in the call it came from, and only on the mutes it was made for (12.1.17 Stage B: `revs`
+    // = its own [[identity, revision], …]); unmuteFromToast checks both and returns why not (a toast that outlives
+    // them does nothing but say so).
+    function _unmuteButton(target, gen, revs) {
+        return function () {
+            var r = String(callctl.unmuteFromToast(target, gen, revs))
+            if (r.length > 0) core.notify(r, "short")
+        }
+    }
+    function _unmuteToasts(raw) {
+        var list
+        try { list = JSON.parse(raw) } catch (e) { return }
+        for (var i = 0; i < (list || []).length; i++) {
+            var t = list[i]
+            var text = String(t.text || "")
+            if (t.undo === true) core._unmuteToastTexts = core._unmuteToastTexts.concat([text]).slice(-32)
+            core.notifyAction(text, Number(t.ms) || 5000, String(t.action || ""), core._unmuteButton(String(t.target || ""), String(t.gen || ""), String(t.revs || "[]")))
+        }
+    }
+    // A tile's hand: its participant or (a person tile) any of its devices asked.
+    function unmuteAskOn(t) {
+        var a = core.mUnmuteAsks || []
+        if (!t || a.length === 0 || t.screenshare === true) return false
+        if (a.indexOf(String(t.participant)) >= 0) return true
+        var m = t.members || []
+        for (var i = 0; i < m.length; i++) if (a.indexOf(String(m[i])) >= 0) return true
+        return false
+    }
     // {identity: "<moderator name>"} for every tile whose mic a moderator muted (self-view included).
     property var mServerMutedMap: ({})
     function _deriveServerMutedMap() {
@@ -2233,7 +2297,7 @@ Item {
             // 10.4: invite codes — probe once per sign-in (operator or not), forget on sign-out.
             // 11.1: the Game servers poller starts with the session (a widget acquired before the restore waits for it)
             if (login.loggedIn && !core._invitesProbed) { core._invitesProbed = true; invitesCtl.probe(); gameServersCtl.refresh() }
-            else if (!login.loggedIn && core._invitesProbed) { core._invitesProbed = false; invitesCtl.reset(); gameServersCtl.reset() }
+            else if (!login.loggedIn && core._invitesProbed) { core._invitesProbed = false; invitesCtl.reset(); gameServersCtl.reset(); playCtl.reset() }
             if (invitesCtl.rev !== mInviteRev) {
                 mInviteRev = invitesCtl.rev
                 mInviteOperator = invitesCtl.isOperator
@@ -2291,6 +2355,15 @@ Item {
             mMicMuted = callctl.micMuted
             mDeafened = callctl.deafened
             mHangingUp = callctl.hangingUp
+            // 12.1.17: before the status line, so its handler can skip the text this toast already shows
+            if (callctl.unmuteToastRev !== _unmuteToastRev) {
+                _unmuteToastRev = callctl.unmuteToastRev
+                core._unmuteToasts(String(callctl.takeUnmuteToasts()))
+            }
+            if (callctl.unmuteAsksJson !== _unmuteAsksRaw) {
+                _unmuteAsksRaw = callctl.unmuteAsksJson
+                try { mUnmuteAsks = _unmuteAsksRaw.length > 0 ? JSON.parse(_unmuteAsksRaw) : [] } catch (e) { mUnmuteAsks = [] }
+            }
             mCallStatus = callctl.status
             if (callctl.outputs !== _outputsRaw) {
                 _outputsRaw = callctl.outputs
@@ -2578,6 +2651,8 @@ Item {
         // 10.6 (REACH §2): the presence engine waits for a session on its own; it never runs in
         // the recorder (no QML there, and presence.rs refuses under TINHAT_VOD_SERVICE).
         presenceCtl.start()
+        Prestige.ctl = prestigeCtl   // mini games v1: names on screen ask for their prestige rank
+        prestigeCtl.start()
         presenceCtl.setWindowState(core.presenceWinVisible, core.presenceWinFocused)
         try { core.mStatusPresets = JSON.parse(presenceCtl.presetsJson) } catch (e) { core.mStatusPresets = [] }
         try { core.mStatusPalette = JSON.parse(presenceCtl.paletteJson) } catch (e) { core.mStatusPalette = [] }
@@ -2591,6 +2666,10 @@ Item {
         var startTheme = themeCtl.syncing ? themeCtl.effectiveTheme
             : ((login.autoTheme && login.autoTheme.length > 0) ? login.autoTheme
                : (login.savedTheme && login.savedTheme.length > 0 ? login.savedTheme : "oled"))
+        // P22 (12.1.17): once per device, the start theme's old text size / density become the person's own (so nobody's
+        // text jumps on the update); from then on themes never carry them (theme_ctl.rs migratePersonal)
+        themeCtl.migratePersonal(startTheme)
+        core.personalLook = JSON.parse(themeCtl.personal())
         if (core.themeName === startTheme) core.applyTheme(startTheme)   // the default already: no change signal
         else core.themeName = startTheme                                   // onThemeNameChanged applies it
         console.log("[theme] active=" + core.themeName + " (saved=" + login.savedTheme + " env=" + login.autoTheme + ")")
@@ -2746,6 +2825,8 @@ Item {
     // passes in three seconds
     onMCallStatusChanged: {
         if (mCallStatus.length === 0) return
+        var shown = core._unmuteToastTexts.indexOf(mCallStatus)   // 12.1.17: already shown with its button
+        if (shown >= 0) { core._unmuteToastTexts = core._unmuteToastTexts.filter(function (x, j) { return j !== shown }); return }
         if (mCallStatus.indexOf("Your share stopped") === 0)
             core.notifyAction(mCallStatus, 12000, "Share again", function () { if (core.shell && core.shell.openStreamPopover) core.shell.openStreamPopover() })
         else core.notify(mCallStatus, "short")

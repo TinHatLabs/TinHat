@@ -1,5 +1,5 @@
 {
- "_doc": "The message notification's preview text (Messages-style, sun-winnotify 2026-11-14): the body trimmed, every run of JavaScript \\s whitespace folded to one space, cut to `max` code points + an ellipsis when longer, then 'Name: ' in a group room (sender set) and nothing in a DM (sender null). `want` null = no preview (the generic wording). Byte copy in both repos: desktop crates/app/src/testvectors/toast-preview.json, web src/features/settings/testvectors/toast-preview.json. `notes` (fix1216 1-10): the whole toast line: the cut text with the thread wording, the sender's display name in a group room, or the id's localpart when the member isn't cached or has an empty name; nothing in a DM.",
+ "_doc": "The message notification's preview text (Messages-style, sun-winnotify 2026-11-14): the body trimmed, every run of JavaScript \\s whitespace folded to one space, cut to `max` code points + an ellipsis when longer, then 'Name: ' in a group room (sender set) and nothing in a DM (sender null). `want` null = no preview (the generic wording). Byte copy in both repos: desktop crates/app/src/testvectors/toast-preview.json, web src/features/settings/testvectors/toast-preview.json. `notes` (fix1216 1-10): the whole toast line: the cut text with the thread wording, the sender's display name in a group room, or the id's localpart when the member isn't cached or has an empty name; nothing in a DM. N3 (12.1.17): a display name equal to the sender's own id counts as no name (the web SDK reports an empty name as the id), so it is named by the localpart, as on the desktop.",
  "max": 160,
  "cases": [
   {
@@ -135,6 +135,33 @@
    "thread": true,
    "body": "hi",
    "want": "ana (in thread): hi"
+  },
+  {
+   "name": "group, the name is the sender's own id (the web SDK's empty name): the localpart (N3)",
+   "display": "@ana:example.org",
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": false,
+   "body": "hi",
+   "want": "ana: hi"
+  },
+  {
+   "name": "group thread, the name is the sender's own id: the localpart (N3)",
+   "display": "@ana:example.org",
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": true,
+   "body": "hi",
+   "want": "ana (in thread): hi"
+  },
+  {
+   "name": "group, a name that is SOMEONE ELSE's id stays as it is (N3 control)",
+   "display": "@bo:example.org",
+   "sender": "@ana:example.org",
+   "dm": false,
+   "thread": false,
+   "body": "hi",
+   "want": "@bo:example.org: hi"
   },
   {
    "name": "group thread, cached member",

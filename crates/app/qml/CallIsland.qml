@@ -121,7 +121,7 @@ ColumnLayout {
                     visible: island.app.callTiles.length > 0
                     text: "· " + island.app.callTiles.length + (island.app.callTiles.length === 1 ? " stream" : " streams")
                     color: Th.callStatusBarCountFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 // Pad (docs/PAD.md, security rule 8): a device of mine drives this call from its Pad — shown for as long
                 // as it lasts; × ends that Pad and refuses the device for the rest of this call (PadChip.qml = the web's
@@ -136,18 +136,26 @@ ColumnLayout {
                         onDisconnect: island.app.padCtl.refuseDevice(modelData.device)
                     }
                 }
+                // mini games v1 (GAMES-V1-SPEC.md §6.4): this call's tables as chips ("♠ Hold'em · 3 seated · Join") and
+                // the Games chip that opens the game panel (PlayCallChips.qml)
+                PlayCallChips {
+                    Layout.alignment: Qt.AlignVCenter
+                    app: island.app
+                    play: island.app.playCtl
+                    words: island.app.playWords
+                }
                 // PAD-PHONE Step B: my phone has the mic (its takeover mutes this computer with a reason of its own)
                 Controls.Label {
                     textFormat: Text.PlainText
                     visible: island.app.mInCall && island.app.mPadTakeHeld === true
                     text: "· Your phone has the mic"
                     color: Th.callStatusBarCountFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 Controls.ToolButton {
                     visible: island.app.mInCall && island.app.mPadTakeHeld === true
                     text: "Take the mic back"
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     Accessible.name: "Take the mic back from your phone"
                     onClicked: island.app.padTakeBackRequested()
                 }
@@ -366,7 +374,7 @@ ColumnLayout {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "no speaker device"
                             color: Th.hearNoOutputChipFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                     }
                 }
@@ -396,7 +404,7 @@ ColumnLayout {
                             anchors.verticalCenter: parent.verticalCenter
                             text: island.app.hiddenTileCount + " hidden ▾"
                             color: Th.callHiddenChipFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                     }
                     Controls.ToolTip.visible: showAllHover.hovered && !hiddenMenu.visible
@@ -432,7 +440,7 @@ ColumnLayout {
                         Controls.MenuItem {
                             enabled: false
                             text: "Remembered between calls"
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         }
                     }
                 }
@@ -440,7 +448,7 @@ ColumnLayout {
                     visible: island.app.mCallSharing || island.app.mSharing
                     text: island.app.mShareRecOnly ? "· sharing screen (recording only)" : "· sharing screen"
                     color: Th.callStatusBarShareFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.bold: true
                 }
                 // 🔴 REC — the Memories recorder is a participant in this call right now.
@@ -452,7 +460,7 @@ ColumnLayout {
                     visible: island.app.recActive
                     text: island.app.settings.recordOptout ? "· 🔴 REC (not recording you)" : "· 🔴 REC"
                     color: Th.callStatusBarRecFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     font.bold: true
                 }
                 Item { Layout.fillWidth: true }
@@ -605,10 +613,38 @@ ColumnLayout {
         // RBAC §7.4: a moderator muted my mic for everyone — say so where I am looking,
         // for as long as it lasts (the mic button is locked meanwhile).
         Kirigami.InlineMessage {
+            id: srvMutedCard
             Layout.fillWidth: true
             visible: island.app.mServerMuted && (island.app.mInCall || island.app.mConnecting)
             type: Kirigami.MessageType.Warning
             text: LinkGate.plain(island.app.serverMutedText() + ". Ask them to unmute you.")
+            // 12.1.17 (D04.6): the way to ask (rate-limited, unmuteask.rs). Moderators who outrank me get a hand on my
+            // tile + a toast with Unmute; the ask itself never unmutes anyone.
+            property int askLeft: 0
+            property string askText: "Ask to be unmuted"
+            function refreshAsk() {
+                askLeft = island.app.callctl.unmuteAskCooldown()
+                askText = String(island.app.callctl.unmuteAskLabel())
+            }
+            onVisibleChanged: if (visible) refreshAsk()
+            actions: [
+                Kirigami.Action {
+                    text: LinkGate.plain(srvMutedCard.askText)
+                    icon.name: "hand-symbolic"
+                    visible: island.app.mInCall
+                    enabled: srvMutedCard.askLeft <= 0
+                    onTriggered: {
+                        var r = String(island.app.callctl.askToUnmute())
+                        srvMutedCard.refreshAsk()
+                        if (r.length > 0) island.app.showPassiveNotification(LinkGate.plain(r), 3000)
+                    }
+                }
+            ]
+        }
+        Timer {   // the ask button's "ask again in N s" countdown
+            interval: 1000; repeat: true
+            running: srvMutedCard.visible && srvMutedCard.askLeft > 0
+            onTriggered: srvMutedCard.refreshAsk()
         }
         // Connection trouble banner: amber while auto-reconnecting, red + Rejoin
         // when the call dropped terminally (so a dead call never looks fine).
@@ -655,7 +691,7 @@ ColumnLayout {
                         visible: island.app.mCallFailed && island.app.mCallFailReason.length > 0
                         text: island.app.mCallFailReason.length > 0 ? island.app.mCallFailReason.charAt(0).toUpperCase() + island.app.mCallFailReason.slice(1) : ""
                         color: Th.callConnBannerReasonFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         wrapMode: Text.WordWrap
                         maximumLineCount: 2
                         elide: Text.ElideRight
@@ -1292,7 +1328,7 @@ ColumnLayout {
                             visible: tile.modelData.screenshare === true
                             spacing: 8
                             ThIcon { Layout.alignment: Qt.AlignHCenter; app: island.app; name: "monitor-symbolic"; width: 44; height: 44; color: Th.tileWaitingFg; isMask: true }
-                            Controls.Label { Layout.alignment: Qt.AlignHCenter; text: "Waiting for the first frame…"; color: Th.tileWaitingFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                            Controls.Label { Layout.alignment: Qt.AlignHCenter; text: "Waiting for the first frame…"; color: Th.tileWaitingFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                         }
                         Avatar {
                             app: island.app
@@ -1434,9 +1470,23 @@ ColumnLayout {
                                     anchors.centerIn: parent
                                     text: "Muted by " + micOffGlyph.srvBy
                                     color: Th.tileServerMutedFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     font.bold: true
                                 }
+                            }
+                            // 12.1.17 (D04.6): they asked to be unmuted and I may unmute them (unmuteask.rs verdict).
+                            ThIcon {
+                                id: askHandGlyph
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: !tile.isSelf && island.app.mUnmuteAsks.length > 0 && island.app.unmuteAskOn(tile.modelData)
+                                app: island.app
+                                name: "hand-symbolic"
+                                width: 16; height: 16
+                                color: Th.tileServerMutedBorder
+                                HoverHandler { id: askHandHover }
+                                Controls.ToolTip.text: ((tile.modelData.name && tile.modelData.name.length > 0) ? tile.modelData.name : island.app.localpart(tile.modelData.participant)) + " asks to be unmuted"
+                                Controls.ToolTip.visible: askHandGlyph.visible && askHandHover.hovered
+                                Controls.ToolTip.delay: 300
                             }
                             // Blue mic = in the game's voice chat.
                             Kirigami.Icon {
@@ -1548,7 +1598,7 @@ ColumnLayout {
                                             anchors.centerIn: parent
                                             text: "echo"
                                             color: Th.tileEchoFg
-                                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                             font.bold: true
                                         }
                                         HoverHandler { id: echoTileHover }
@@ -1560,6 +1610,19 @@ ColumnLayout {
                                                : "You hear yourself through " + hearGlyphs.who + "'s mic, about " + hearGlyphs.hp.echo.lag + " ms later — their app has been told how to fix it")
                                             : ""
                                     }
+                                }
+                            }
+                            // mini games v1: the person's prestige token, 4 px before the name (the row's 6: the box is 2 px
+                            // narrower than the glyph, which draws into the spacing); 0 wide and skipped at rank 0
+                            Item {
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: tileTok.rank > 0   // not tileTok.visible: under a hidden parent the child stays invisible
+                                width: tileTok.size - 2; height: tileTok.size
+                                PrestigeToken {
+                                    id: tileTok
+                                    mxid: island.app.tileMxid(tile.modelData.participant || "")
+                                    roomId: String(island.app.mCallRoomId || "")
+                                    gap: false
                                 }
                             }
                             Controls.Label {
@@ -1574,7 +1637,7 @@ ColumnLayout {
                                 }
                                 color: Th.tileNameFg
                                 font.bold: true
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 // 10.1 (TH-CALL-10): long names elide instead of running off the tile
                                 // and shoving the level bars away (room for the glyphs + the zoom pill).
                                 width: Math.min(implicitWidth, Math.max(40, tile.width - 8 - 60 - (waveRow.visible ? 43 + 6 : 0) - 70))
@@ -1809,7 +1872,7 @@ ColumnLayout {
                                     text: "−"
                                     color: zoomOutTap.pressed ? Th.tileZoomPillFgPressed : Th.tileZoomPillFg
                                     horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize + 2
+                                    font.pointSize: (Kirigami.Theme.smallFont.pointSize + 2) * Th.textScale
                                     opacity: tile.thZoom > tile.minZoom + 0.001 ? 1.0 : 0.35
                                     TapHandler { id: zoomOutTap; onTapped: tile.zoomBy(1 / 1.15) }
                                 }
@@ -1820,7 +1883,7 @@ ColumnLayout {
                                     text: (Math.round(tile.zoomPercent / 5) * 5) + "%"
                                     color: Th.tileZoomPillFg
                                     verticalAlignment: Text.AlignVCenter
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                     TapHandler { onDoubleTapped: tile.resetView() }
                                 }
                                 Controls.Label {
@@ -1828,7 +1891,7 @@ ColumnLayout {
                                     text: "+"
                                     color: zoomInTap.pressed ? Th.tileZoomPillFgPressed : Th.tileZoomPillFg
                                     horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize + 2
+                                    font.pointSize: (Kirigami.Theme.smallFont.pointSize + 2) * Th.textScale
                                     opacity: tile.thZoom < 5.999 ? 1.0 : 0.35
                                     TapHandler { id: zoomInTap; onTapped: tile.zoomBy(1.15) }
                                 }
@@ -2032,7 +2095,7 @@ ColumnLayout {
                                 visible: tile.width > 430   // 10.1 (TH-CALL-11): icon-only when the button row needs the space
                                 text: "not listening · click to listen"
                                 color: Th.tileNotListeningFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                         }
                         TapHandler { onTapped: island.app.setListening(tile.modelData.id, true) }
@@ -2239,7 +2302,7 @@ ColumnLayout {
                             Controls.MenuItem {
                                 enabled: false
                                 text: "Ctrl+scroll or the − / + pill zooms · drag pans · double-click resets"
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             }
                             Controls.MenuSeparator {}
                             Controls.MenuItem {
@@ -2268,12 +2331,12 @@ ColumnLayout {
                             id: tunedRow
                             anchors.centerIn: parent
                             spacing: 6
-                            Controls.Label { text: tile.width > 430 ? "● recording-only · tuned in" : "● tuned in"; color: Th.tileTunedInFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }   // 10.1 (TH-CALL-11)
+                            Controls.Label { text: tile.width > 430 ? "● recording-only · tuned in" : "● tuned in"; color: Th.tileTunedInFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }   // 10.1 (TH-CALL-11)
                             Controls.Label {
                                 id: tunedLeave
                                 // D05.7: a keyboard and screen-reader button too (Tab, Return / Enter / Space), like the web's
                                 function leave() { island.app.callctl.setTileTunedIn(tile.modelData.id, false) }
-                                text: "Leave"; color: Th.tileTunedInLeaveFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; font.underline: true
+                                text: "Leave"; color: Th.tileTunedInLeaveFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; font.underline: true
                                 font.bold: activeFocus
                                 activeFocusOnTab: true
                                 Keys.onReturnPressed: tunedLeave.leave()
@@ -2789,7 +2852,7 @@ ColumnLayout {
                                     visible: island.app.mPublishStats.length === 0
                                     text: "Nothing is being sent right now."
                                     color: Th.callbarPopoverHintFg
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 }
                                 Repeater {
                                     model: island.app.mPublishStats
@@ -2833,7 +2896,7 @@ ColumnLayout {
                                                     return enc
                                                 }
                                                 color: Th.healthCardDetailFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
@@ -2850,7 +2913,7 @@ ColumnLayout {
                                                 visible: modelData.kind === "screen" && modelData.w > 0
                                                 text: "Games often lower their frame rate when they're not the focused window."
                                                 color: Th.healthCardDetailFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                                 wrapMode: Text.WordWrap
                                                 Layout.fillWidth: true
                                             }
@@ -2865,14 +2928,14 @@ ColumnLayout {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 text: statsPopup.statusText(modelData)
                                                 color: statsPopup.statusColor(modelData)
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                             }
                                             Controls.Label {
                                                 textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                                                 visible: modelData.w > 0
                                                 text: "keyframes " + modelData.key + " · nack " + modelData.nack + " · pli " + modelData.pli
                                                 color: Th.healthCardDetailFg
-                                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                             }
                                         }
                                     }
@@ -3058,7 +3121,7 @@ ColumnLayout {
                                         text: "queued by " + island.app.localpart(String(mpCell.npItem.addedBy || ""))
                                         color: Th.callbarNowPlayingFg
                                         opacity: 0.75
-                                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                         elide: Text.ElideRight
                                         Layout.maximumWidth: 180
                                     }
@@ -3340,6 +3403,39 @@ ColumnLayout {
                     }
                 }
             }
+            // mini games v1 (parity with the web's call bar): THE Games button, its own small bar right of the call bar (the
+            // bar's buttons are the shared actions contract, which doesn't change today). Lit while a table of this call is
+            // open; opens the game panel. Shown only where the call room's space runs games.
+            Rectangle {
+                id: gamesBar
+                objectName: "callGamesButton"
+                visible: callControlBar.visible && !!island.app.playCtl && island.app.playCtl.available
+                opacity: callControlBar.opacity
+                // right of the call bar, which is centred in this same parent and scaled about its centre: its drawn right
+                // edge = parent.width / 2 + width * scale / 2. Never read the bar's x (its anchors pass then re-entered
+                // this binding: a binding loop at 150 % text)
+                x: Math.min(parent.width - width, parent.width / 2 + callControlBar.width * callControlBar.scale / 2 + Kirigami.Units.smallSpacing)
+                anchors.verticalCenter: parent.verticalCenter
+                width: gamesBtn.implicitWidth + 16
+                height: callControlBar.implicitHeight * callControlBar.scale
+                radius: height / 2
+                color: Th.callbarBg
+                border.width: 1
+                border.color: Th.callbarBorder
+                CallButton {
+                    id: gamesBtn
+                    anchors.centerIn: parent
+                    app: island.app
+                    // the pack's prestige glyph from Prestige.glyphs (byte for byte the pack's SVG), tinted like a call-bar
+                    // icon: drawn the same on the Flatpak, Windows and the .bin (which ships no icon pack; Breeze has no
+                    // prestige-symbolic, so a theme lookup drew a blank page there)
+                    glyphUrl: Prestige.tinted("prestige-symbolic", gamesBtn.iconColor)
+                    active: island.app.gamePanelOpen || (!!island.app.playCtl && island.app.playCtl.tableId !== "")
+                    tip: island.app.playWords && island.app.playWords.callbar ? String(island.app.playWords.callbar.games_tip) : ""
+                    Accessible.name: tip
+                    onClicked: island.app.gamePanelOpen = !island.app.gamePanelOpen
+                }
+            }
         }
     }
 
@@ -3400,4 +3496,18 @@ ColumnLayout {
             }
         }
     }
+    // mini games v1 (GAMES-V1-SPEC.md §6.4): the game panel docks OVER the call's tiles while a table is open (or the
+    // Games picker is up); the status strip (with the table chips) and the call bar stay. × goes back to the tiles.
+    GamePanel {
+        id: gamePanel
+        parent: videoGrid
+        anchors.fill: parent
+        z: 50
+        app: island.app
+        play: island.app.playCtl
+        words: island.app.playWords
+        myId: island.app.mUserId
+        sharing: island.coreRef.mCallSharing === true
+    }
+
 }

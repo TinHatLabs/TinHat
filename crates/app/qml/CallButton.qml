@@ -13,6 +13,9 @@ Item {
     id: cb
     property var app: null   // the Main.qml root
     property string iconName: ""
+    // A ready-tinted glyph image (e.g. Prestige.tinted(...), a data URL) drawn INSTEAD of the theme icon: for the app's own
+    // glyphs, which no icon theme has (the Linux .bin ships no icon pack; Breeze lacks them). "" = the theme icon.
+    property string glyphUrl: ""
     property string tip: ""
     property bool danger: false
     property bool active: false
@@ -142,7 +145,17 @@ Item {
         isMask: true
         hovered: cbMa.containsMouse && cb.live
         active: cb.active || cb.tinted
-        visible: !cb.busy
+        visible: !cb.busy && cb.glyphUrl === ""
+        scale: (cbMa.containsMouse && cb.live) ? 1.14 : 1.0
+        Behavior on scale { NumberAnimation { duration: Motion.dur; easing.type: Easing.OutBack } }
+    }
+    Image {   // glyphUrl: the app's own glyph, already tinted (no icon theme involved)
+        anchors.centerIn: parent
+        width: cb.glyphSize; height: cb.glyphSize
+        visible: !cb.busy && cb.glyphUrl !== ""
+        source: cb.glyphUrl
+        sourceSize: Qt.size(Math.ceil(cb.glyphSize * Screen.devicePixelRatio), Math.ceil(cb.glyphSize * Screen.devicePixelRatio))
+        smooth: true
         scale: (cbMa.containsMouse && cb.live) ? 1.14 : 1.0
         Behavior on scale { NumberAnimation { duration: Motion.dur; easing.type: Easing.OutBack } }
     }
@@ -164,7 +177,7 @@ Item {
         text: cb.badge
         anchors.right: parent.right; anchors.bottom: parent.bottom
         anchors.rightMargin: 4; anchors.bottomMargin: 3
-        font.pixelSize: 13
+        font.pixelSize: Th.px(13)
         color: Th.callbarButtonBadgeFg
         style: Text.Outline; styleColor: Th.callbarButtonBadgeShadow
     }

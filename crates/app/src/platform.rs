@@ -1621,8 +1621,48 @@ fn startup_update_step() {
     use crate::update_switch as us;
     let l = update_layout();
     if !is_bundle_install() {
-        cleanup_after_update();
+        // 12.1.17: a copy running from elsewhere never settles (or deletes) an installed app's unfinished switch
+        if us::switch_unsettled(&l) {
+            eprintln!("[update] the installed app has an unfinished update switch: left for it");
+        } else {
+            cleanup_after_update();
+        }
         return;
+    }
+    // 12.1.17: an in-place switch away from this version that was cut off half way: the previous files go back first
+    match us::recover_interrupted(&l) {
+        us::Recovery::Undone => eprintln!("[update] an update switch was cut off half way: this version's files are back"),
+        us::Recovery::UndoneRestartOld => {
+            // this process is the new program whose switch was being undone: the previous version is whole in
+            // current\ again, so start it and step aside (never run this program next to the previous one's files)
+            eprintln!("[update] an undone update finished putting the previous version back: starting it");
+            let args: Vec<String> = std::env::args().skip(1).collect();
+            // TINHAT_RELAUNCH: it waits for this instance's lock (up to 15 s) instead of giving up at once
+            let r = std::process::Command::new(l.current().join(us::EXE))
+                .args(&args)
+                .env("TINHAT_RELAUNCH", "update")
+                .env_remove(crate::relaunch::ACK_ENV)
+                .current_dir(&l.root)
+                .spawn();
+            if let Err(e) = &r {
+                eprintln!("[update] couldn't start the previous version ({e}); the next start runs it");
+            }
+            crate::boot::exit_early(if r.is_ok() { 0 } else { 1 });
+        }
+        us::Recovery::Nothing => {}
+        us::Recovery::Failed { why, stop } => {
+            eprintln!("[update] an update switch was cut off half way and not every file went back: {why}");
+            KEEP_BACKUP.store(true, std::sync::atomic::Ordering::SeqCst);
+            if stop {
+                // this may be the NEW program next to the previous version's files: never go on like that; the
+                // next start tries the undo again (third review)
+                write_update_note(
+                    &l,
+                    "Tin Hat couldn't finish putting the previous version back after an update. Start it again in a minute; if it still doesn't open, reinstall it from tinhat.dev.",
+                );
+                crate::boot::exit_early(1);
+            }
+        }
     }
     let running = env!("CARGO_PKG_VERSION");
     let v = match us::startup_plan(&l, running, crate::update::is_upgrade) {
@@ -1738,6 +1778,15 @@ pub(crate) fn stage_update_zip(
     if let Err(e) = staged {
         us::discard_staging(&l);
         return Err(e);
+    }
+    // 12.1.17: files byte-identical to the installed ones are not kept as fresh copies (Smart App Control judges
+    // every new file again); the switch keeps the installed ones (update_switch.rs, "unchanged files")
+    match us::plan_unchanged(&l) {
+        Ok(n) => eprintln!("[update] {n} files are unchanged: the installed copies stay in use"),
+        Err(e) => {
+            us::discard_staging(&l);
+            return Err(e);
+        }
     }
     let ver = us::bundle_version(&l.staged());
     match us::win::probe(&l, &ver) {

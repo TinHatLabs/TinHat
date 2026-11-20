@@ -175,6 +175,35 @@ fn solve_the_emergency_levels_of_a_short_wide_window() {
     }
 }
 
+#[test]
+fn solve_v1_3_the_room_list_keeps_280_or_40_percent_before_the_widgets_get_more_than_folded() {
+    // mirrors layout.test.ts "solve v1.3 …": the room list unmeasured, widgets natural 600 / folded 134 (§7.6 step 4a)
+    let k = o(r#"{"nav":{"h":228},"dms":{"h":8,"empty":true},"widgets":{"h":600,"minH":134},"account":{"h":46},"header":{"h":58},"composer":{"h":57}}"#);
+    let shape = o(r#"{"gap":6,"margin":6}"#);
+    let hs = |f: &J, w: i64, h: i64, view: &str| {
+        let out = run(f, w, h, Some(&shape), &k, view);
+        [rect(&out, "rooms")[3], rect(&out, "widgets")[3], rect(&out, "account")[3]]
+    };
+    let classic = classic_desktop();
+    let v = r#"{"roomOpen":true}"#;
+    assert_eq!(hs(&classic, 1560, 960, v), [290, 600, 46]);
+    assert_eq!(hs(&classic, 1100, 800, v), [280, 450, 46]);
+    assert_eq!(hs(&classic, 1280, 700, v), [270, 360, 46]);
+    assert_eq!(hs(&classic, 1280, 500, v), [190, 240, 46]);
+    let fold = r#"{"roomOpen":true,"sizes":{"roomscol":{"fixed":248}}}"#;
+    let fd = run(&classic, 852, 883, Some(&shape), &k, fold);
+    assert_eq!([rect(&fd, "rooms")[2], rect(&fd, "rooms")[3], rect(&fd, "widgets")[3], rect(&fd, "account")[3]], [248, 280, 533, 46]);
+    // a room list the user sized (fixed) has no keep: v1.2's numbers
+    let text = classic.canon().replacen(r#""i":"rooms","size":{"auto":true,"grow":1,"min":160}"#, r#""i":"rooms","size":{"fixed":160,"grow":1}"#, 1);
+    assert_ne!(text, classic.canon(), "the Classic room-list size was found");
+    assert_eq!(hs(&o(&text), 1100, 800, v), [160, 570, 46]);
+    // no grow: the keep takes the free length itself, the rest stays empty (as v1.2); a stored max clamps the keep
+    let sized = |size: &str| o(&classic.canon().replacen(r#""i":"rooms","size":{"auto":true,"grow":1,"min":160}"#, &format!(r#""i":"rooms","size":{size}"#), 1));
+    assert_eq!(hs(&sized(r#"{"auto":true,"min":160}"#), 1560, 960, v), [280, 600, 46]);
+    assert_eq!(hs(&sized(r#"{"auto":true,"grow":1,"max":200,"min":160}"#), 1100, 800, v), [200, 530, 46]);
+    assert_eq!(hs(&classic, 1100, 800, r#"{"roomOpen":true,"sizes":{"rooms":{"fixed":160,"grow":1}}}"#), [160, 570, 46]);
+}
+
 fn op(f: &J, text: &str) -> OpResult {
     apply_op(f, Some(&o(text)), None)
 }

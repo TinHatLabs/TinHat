@@ -177,7 +177,7 @@ Controls.Popup {
         Layout.topMargin: 4
         color: Th.callbarPopoverSectionFg
         font.bold: true
-        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
     }
     // A selectable pill (presets, audio choices).
     component Pill: Rectangle {
@@ -223,7 +223,7 @@ Controls.Popup {
             anchors.centerIn: parent
             spacing: 1
             Controls.Label { textFormat: Text.PlainText; text: pill.text; color: Th.callbarPillFg; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
-            Controls.Label { textFormat: Text.PlainText; visible: pill.sub.length > 0; text: pill.sub; color: Th.callbarPillSubFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; anchors.horizontalCenter: parent.horizontalCenter }
+            Controls.Label { textFormat: Text.PlainText; visible: pill.sub.length > 0; text: pill.sub; color: Th.callbarPillSubFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; anchors.horizontalCenter: parent.horizontalCenter }
         }
     }
 
@@ -243,7 +243,7 @@ Controls.Popup {
                 text: pop.live ? "Sharing your screen" : (app.mMusicPlaying ? "Sharing audio" : "Share your screen")
                 color: Th.callbarPopoverTitleFg
                 font.bold: true
-                font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+                font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale
             }
             Item { Layout.fillWidth: true }
             Rectangle {
@@ -259,7 +259,7 @@ Controls.Popup {
                     anchors.centerIn: parent
                     text: "● LIVE" + (app.mCallSharing ? " · screen" : "") + (app.mMusicPlaying ? " · audio" : "") + (app.mShareRecOnly ? " · recording only" : "")
                     color: Th.callbarLiveChipFg; font.bold: true
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             Controls.ToolButton {
@@ -325,7 +325,7 @@ Controls.Popup {
                         anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
                         text: "What you're sending · " + pop.qualitySummary + " · " + pop.audioSummary
                         color: Th.callbarPreviewCaptionFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         elide: Text.ElideRight
                         width: parent.width - 12
                     }
@@ -402,7 +402,7 @@ Controls.Popup {
                 Layout.fillWidth: true
                 text: pop.chosenHandle.length > 0 ? "Sharing: " + pop.sourceLabel(pop.chosenHandle) : "Pick a screen or window above."
                 color: pop.chosenHandle.length > 0 ? Th.callbarPopoverFg : Th.callbarPopoverHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 elide: Text.ElideRight
             }
 
@@ -414,7 +414,7 @@ Controls.Popup {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     text: pop.presetIndex < 0 ? "Custom: " + pop.qualitySummary : pop.qualitySummary
                     color: Th.callbarPopoverHintFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
             RowLayout {
@@ -525,7 +525,7 @@ Controls.Popup {
                 Layout.fillWidth: true
                 text: "No app is playing sound right now — start the game or player and this list fills in."
                 color: Th.callbarPopoverHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 wrapMode: Text.WordWrap
             }
             Flow {
@@ -564,7 +564,7 @@ Controls.Popup {
                         Layout.fillWidth: true
                         text: "Streams straight into Memories. Everyone else sees it hidden and muted unless they tune in."
                         color: Th.callbarPopoverHintFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         wrapMode: Text.WordWrap
                     }
                 }

@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Window
 import dev.tinhat.app
 
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: win
     required property var app
     // 12.1.8 (fix/windows-escape, docs/KEYS-IN-WINDOWS.md): this window's keys only while IT has the keyboard. A secondary

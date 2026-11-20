@@ -317,6 +317,19 @@ Window {
                         }
                     }
 
+                    // mini games v1: the talker's prestige token, 4 px before the name (the row's 6: the box is 2 px
+                    // narrower than the glyph, which draws into the spacing); skipped at rank 0 and in the preview
+                    Item {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: pillTok.rank > 0   // not pillTok.visible: under a hidden parent the child stays invisible
+                        width: pillTok.size + 4 - row.spacing; height: pillTok.size
+                        PrestigeToken {
+                            id: pillTok
+                            mxid: (pill.modelData.more || hud.previewing) ? "" : (pill.modelData.self ? String(hud.app.mUserId || "") : String(hud.app.tileMxid(pill.modelData.key || "") || ""))
+                            roomId: String(hud.app.mCallRoomId || "")
+                            gap: false
+                        }
+                    }
                     Text {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         anchors.verticalCenter: parent.verticalCenter

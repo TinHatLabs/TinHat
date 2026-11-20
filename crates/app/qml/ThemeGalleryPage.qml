@@ -159,7 +159,7 @@ FocusScope {
                         display: Controls.AbstractButton.TextBesideIcon
                         onClicked: page.back()
                     }
-                    Kirigami.Heading { level: 2; text: "Themes"; color: Th.settingsThemeNameFg }
+                    ThHeading { level: 2; text: "Themes"; color: Th.settingsThemeNameFg }
                     Item { Layout.fillWidth: true }
                     ThButton {
                         app: page.app

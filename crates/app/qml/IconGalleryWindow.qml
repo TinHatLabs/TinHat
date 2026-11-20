@@ -10,7 +10,7 @@ import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
 import dev.tinhat.app   // Th: the iconGallery.* tokens
 
-Window {
+ThWindow {   // P22: the person's text size reaches this window's controls (ThWindow.qml)
     id: gal
     required property var app
     signal reloadRequested()
@@ -105,7 +105,7 @@ Window {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.largeSpacing
-                    Kirigami.Heading { level: 2; text: "Icon gallery"; color: Th.iconGalleryFg }
+                    ThHeading { level: 2; text: "Icon gallery"; color: Th.iconGalleryFg }
                     Controls.Label {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
@@ -189,7 +189,7 @@ Window {
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData
                         color: Th.iconGalleryCellFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                         elide: Text.ElideMiddle
                     }
                     Controls.Label {
@@ -198,7 +198,7 @@ Window {
                         visible: gal.isAnimated(modelData)
                         text: gal.isAnimated(modelData) ? ("animated · " + (gal.pack.icons[modelData].trigger || "hover")) : ""
                         color: Th.iconGalleryCellAnimatedFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9 * Th.textScale
                     }
                 }
                 MouseArea {

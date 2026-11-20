@@ -290,6 +290,8 @@ Item {
             variant: "widget"
             r: w.shown.length > 0 ? w.shown[0].result : null
             headWho: w.shown.length > 0 ? w.whoOf(w.shown[0]) : ""
+            headMxid: w.shown.length > 0 && !w.sample ? String(w.shown[0].sender || "") : ""   // mini games v1
+            headRoomId: w.roomId
             headWhen: w.shown.length > 0 ? w.whenOf(w.shown[0]) : ""
             headPrivate: w.shown.length > 0 && w.shown[0]["private"] === true
             headFailed: w.shown.length > 0 && w.stateOf(w.shown[0]) === "failed"
@@ -390,6 +392,13 @@ Item {
                 app: w.app
                 name: "lock-symbolic"
                 color: Th.widgetMutedFg
+            }
+            PrestigeToken {   // mini games v1: 4 px before the name (the row's 6 less 2), 12 px in widgets
+                mxid: hr.e && !w.sample && hr.e["private"] !== true ? String(hr.e.sender || "") : ""
+                roomId: w.roomId
+                size: 12
+                gap: false
+                Layout.rightMargin: -2
             }
             WidgetText {
                 Layout.fillWidth: true

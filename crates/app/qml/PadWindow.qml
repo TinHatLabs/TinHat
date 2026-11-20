@@ -319,9 +319,9 @@ Controls.Popup {
                     Controls.Label {
                         text: "Pad"
                         color: Th.soundboardTitleFg; font.bold: true
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+                        font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale
                     }
-                    Controls.Label { text: "·"; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2 }
+                    Controls.Label { text: "·"; color: Th.soundboardSectionHintFg; font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale }
                     Controls.Label {
                         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                         Layout.fillWidth: true
@@ -329,7 +329,7 @@ Controls.Popup {
                         text: pad.roomName
                         color: roomHover.hovered ? Th.accentBright : Th.soundboardTitleFg
                         font.bold: true
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+                        font.pointSize: (Kirigami.Theme.defaultFont.pointSize + 2) * Th.textScale
                         elide: Text.ElideRight
                         HoverHandler { id: roomHover; cursorShape: Qt.PointingHandCursor }
                         TapHandler { onTapped: if (pad.roomId.length > 0 && !pad.isDemo) pad.app.openRoomId(pad.roomId) }
@@ -379,7 +379,7 @@ Controls.Popup {
                         visible: pad.link !== "open"
                         text: pad.link === "opening" ? "Connecting…" : pad.link === "unreachable" ? "Not reaching it" : "Not connected"
                         color: pad.link === "unreachable" ? Th.callConnBannerTitleFg : Th.soundboardSectionHintFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                 }
             }
@@ -472,7 +472,7 @@ Controls.Popup {
                 wrapMode: Text.WordWrap
                 text: "It may be asleep, offline, or not running Tin Hat any more."
                 color: Th.soundboardSectionHintFg
-                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
             }
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
@@ -516,7 +516,7 @@ Controls.Popup {
                     text: "On " + pad.deviceName
                     color: Th.soundboardSectionHintFg
                     font.bold: true
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 Rectangle {
                     Layout.fillWidth: true
@@ -590,7 +590,7 @@ Controls.Popup {
                     wrapMode: Text.WordWrap
                     text: pad.mic === "server" ? pad.why("server-muted", "mic") : pad.why("ptt", "mic")
                     color: Th.callStatusBarCountFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
 
                 // ---- Watch (only while someone shares, or while this computer watches) ----
@@ -613,6 +613,13 @@ Controls.Popup {
                         RowLayout {
                             spacing: 10
                             ThIcon { app: pad.app; name: "video-display-symbolic"; color: Th.padListBarFg; isMask: true; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            // mini games v1: the (first) sharer's prestige token, 4 px before the name the line starts with
+                            PrestigeToken {
+                                mxid: pad.sharers.length > 0 && !pad.isDemo ? String(pad.sharers[0]) : ""
+                                roomId: pad.roomId
+                                gap: false
+                                Layout.rightMargin: -6
+                            }
                             Controls.Label {
                                 textFormat: Text.PlainText
                                 Layout.fillWidth: true
@@ -634,7 +641,7 @@ Controls.Popup {
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                                 color: Th.soundboardSectionHintFg
-                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                                 text: pad.inOtherCall ? "Leave your call on this computer first." : "Joins on this computer to watch — muted, sound off. Everyone sees you joined."
                             }
                             ThButton {
@@ -667,7 +674,7 @@ Controls.Popup {
                         id: phoneRow
                         anchors.fill: parent; anchors.margins: 10
                         spacing: 14
-                        Controls.Label { textFormat: Text.PlainText; width: phoneRow.width; text: "This computer"; color: Th.soundboardSectionHintFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                        Controls.Label { textFormat: Text.PlainText; width: phoneRow.width; text: "This computer"; color: Th.soundboardSectionHintFg; font.bold: true; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                         ThSwitch {
                             text: "Hear here"
                             checked: !!pad.app.callctl && pad.app.callctl.deafened !== true
@@ -688,7 +695,7 @@ Controls.Popup {
                     Layout.leftMargin: 18
                     text: "Mute, deafen and Leave above are " + pad.deviceName + "'s."
                     color: Th.soundboardSectionHintFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
 
                 // ---- the soundboard ----
@@ -703,7 +710,7 @@ Controls.Popup {
                     linkColor: Th.soundboardSectionFg
                     onLinkActivated: webField.forceActiveFocus()
                     color: Th.soundboardEmptyFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 // the web search (this computer's own search; a result plays on {device}, ☆ adds it to my board)
                 Kirigami.SearchField {
@@ -726,7 +733,7 @@ Controls.Popup {
                     wrapMode: Text.WordWrap
                     text: pad.why("old-op", "") + " To play a result there now, ☆ it first."
                     color: Th.soundboardEmptyFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 Controls.Label {
                     textFormat: Text.PlainText
@@ -734,7 +741,7 @@ Controls.Popup {
                     Layout.leftMargin: 16
                     text: "No sounds found for “" + pad.webQuery.trim() + "”."
                     color: Th.soundboardEmptyFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 GridLayout {
                     id: webGrid
@@ -783,7 +790,7 @@ Controls.Popup {
                     textFormat: Text.PlainText
                     text: "web results by myinstants"
                     color: Th.soundboardFooterFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 SubHead { visible: pad.roomSounds.length > 0; title: "This room" }
                 SoundGrid { sounds: pad.roomSounds; visible: pad.roomSounds.length > 0 }
@@ -796,7 +803,7 @@ Controls.Popup {
                     text: pad.me && pad.me.gate && String(pad.me.gate.hint || "").length > 0 ? String(pad.me.gate.hint) : pad.why("off-role", "")
                     color: Th.soundboardStatusFgError
                     wrapMode: Text.WordWrap
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
 
                 // ---- Media Party (the call room's, on {device}) ----
@@ -832,7 +839,7 @@ Controls.Popup {
                         visible: !!pad.party && String(pad.party.url).length > 0
                         Layout.fillWidth: true
                         spacing: 8
-                        Controls.Label { textFormat: Text.PlainText; text: pad.fmt(pad.partyPos()); color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                        Controls.Label { textFormat: Text.PlainText; text: pad.fmt(pad.partyPos()); color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                         Rectangle {
                             Layout.fillWidth: true; implicitHeight: 4; radius: 2
                             color: Th.padMyRowBorder
@@ -842,7 +849,7 @@ Controls.Popup {
                                 color: Th.padPersonRingSpeaking
                             }
                         }
-                        Controls.Label { textFormat: Text.PlainText; text: pad.party && pad.party.dur > 0 ? pad.fmt(pad.party.dur) : "--:--"; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize }
+                        Controls.Label { textFormat: Text.PlainText; text: pad.party && pad.party.dur > 0 ? pad.fmt(pad.party.dur) : "--:--"; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale }
                     }
                     RowLayout {
                         Layout.alignment: Qt.AlignHCenter
@@ -867,7 +874,7 @@ Controls.Popup {
                         wrapMode: Text.WordWrap
                         text: pad.why("not-host", "") + " You can still add links."
                         color: Th.soundboardEmptyFg
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                     SubHead { visible: !!pad.party && pad.party.next.length > 0; title: "Up next"; Layout.leftMargin: 0 }
                     Repeater {
@@ -913,7 +920,7 @@ Controls.Popup {
                         textFormat: Text.PlainText
                         text: "Paste a YouTube, YouTube Music, Spotify or Apple Music link."
                         color: Th.soundboardStatusFgError
-                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                     }
                 }
 
@@ -928,7 +935,7 @@ Controls.Popup {
                     Layout.leftMargin: 16
                     text: "Nobody else is in the call yet."
                     color: Th.soundboardEmptyFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 GridLayout {
                     Layout.fillWidth: true
@@ -947,7 +954,7 @@ Controls.Popup {
                     Layout.leftMargin: 16
                     text: "+" + (pad.view ? pad.view.more : 0) + " more"
                     color: Th.soundboardSectionHintFg
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
                 Item { Layout.preferredHeight: 10 }
             }
@@ -963,7 +970,7 @@ Controls.Popup {
         Layout.topMargin: 4
         spacing: 8
         Controls.Label { textFormat: Text.PlainText; text: parent.title; color: Th.soundboardSectionFg; font.bold: true }
-        Controls.Label { textFormat: Text.PlainText; text: parent.hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize; Layout.fillWidth: true; elide: Text.ElideRight }
+        Controls.Label { textFormat: Text.PlainText; text: parent.hint; color: Th.soundboardSectionHintFg; font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale; Layout.fillWidth: true; elide: Text.ElideRight }
     }
     component SubHead: Controls.Label {
         textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
@@ -1031,7 +1038,7 @@ Controls.Popup {
             Layout.alignment: Qt.AlignHCenter
             text: act.caption
             color: Th.callStatusBarCountFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
     }
     component PersonRow: Rectangle {
@@ -1101,6 +1108,10 @@ Controls.Popup {
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 0
+                RowLayout {   // mini games v1: the person's prestige token (the call's room)
+                    Layout.fillWidth: true
+                    spacing: 0
+                PrestigeToken { mxid: pad.isDemo ? "" : String(pr.who.u || ""); roomId: pad.roomId }
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
@@ -1109,6 +1120,7 @@ Controls.Popup {
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
+                }
                 Controls.Label {
                     textFormat: Text.PlainText   // security review 2026-10-26 (M7): never markup
                     Layout.fillWidth: true
@@ -1116,10 +1128,10 @@ Controls.Popup {
                     text: pr.volLine
                     color: Th.callVolumeValueFg
                     elide: Text.ElideRight
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                 }
             }
-            Controls.Label { visible: pr.who.away === true; text: "💤"; font.pixelSize: 16 }
+            Controls.Label { visible: pr.who.away === true; text: "💤"; font.pixelSize: Th.px(16) }
             ThIcon {
                 visible: pr.who.micOff === true
                 Layout.preferredWidth: 18; Layout.preferredHeight: 18

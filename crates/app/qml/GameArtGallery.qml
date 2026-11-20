@@ -148,7 +148,7 @@ Controls.ApplicationWindow {
                             visible: !!row.m.day
                             text: row.m.day || ""
                             color: Th.timelineDayPillFg
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
                             leftPadding: 10; rightPadding: 10; topPadding: 2; bottomPadding: 2
                             background: Rectangle { color: Th.timelineDayPillBg; radius: height / 2 }
                         }
@@ -172,7 +172,7 @@ Controls.ApplicationWindow {
                                 visible: !row.mine && !row.grouped
                                 text: row.m.name
                                 font.bold: true
-                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize)
+                                font.pixelSize: Math.round(Kirigami.Theme.smallFont.pixelSize * Th.textScale)
                                 color: Qt.hsla((row.m.name.charCodeAt(0) * 37 % 360) / 360, 0.6, Th.variant === "light" ? 0.35 : 0.7, 1)
                             }
                             Kirigami.ShadowedRectangle {
@@ -200,7 +200,7 @@ Controls.ApplicationWindow {
                                     anchors.right: parent.right; anchors.rightMargin: 12
                                     y: txt.y + txt.height
                                     text: row.m.time
-                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85
+                                    font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.85 * Th.textScale
                                     color: row.mine ? Th.bubbleOwnMetaFg : Th.bubbleOtherMetaFg
                                 }
                             }

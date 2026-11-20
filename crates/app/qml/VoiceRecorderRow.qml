@@ -292,7 +292,7 @@ FocusScope {
         textFormat: Text.PlainText
         text: String(row.vs.error || row.vs.note || "")
         color: String(row.vs.error || "").length > 0 ? Th.statusErrorFg : Th.textMuted
-        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
     }
     }
 }

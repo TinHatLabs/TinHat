@@ -5,6 +5,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import org.kde.kirigami as Kirigami
+import dev.tinhat.app
 
 Rectangle {
     id: chip
@@ -12,7 +13,7 @@ Rectangle {
     property string text: ""
     property color chipColor: "#95A5A6"
     // smallFont can be unset (-1) without a KDE platform theme (the Xvfb rig) — then 85 % of the default
-    property real pointSize: (Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))
+    property real pointSize: ((Kirigami.Theme.smallFont.pointSize > 0 ? Kirigami.Theme.smallFont.pointSize : Math.max(7, Kirigami.Theme.defaultFont.pointSize * 0.85))) * Th.textScale   // A31.4: the person's text size
     property real maxWidth: 100000
     radius: height / 2
     color: Qt.rgba(chip.chipColor.r, chip.chipColor.g, chip.chipColor.b, 0.14)

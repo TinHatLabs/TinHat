@@ -1,0 +1,71 @@
+{
+ "about": "Chat cards are ordinary m.room.message events (msgtype m.text). Readers render from the room's own server's record (GET /tables/{id}/summary or /rounds/{r}); a card whose server differs from the room's server shows \"Couldn't load this game\". Show the first card per (table, kind, round); ignore repeats. Bodies NEVER carry amounts. {name} = the poster's display name.",
+ "content_key": "dev.tinhat.game",
+ "examples": [
+  {
+   "body": "{name} opened a Texas Hold'em table: join from the call.",
+   "dev.tinhat.game": {
+    "v": 1,
+    "kind": "invite",
+    "game": "holdem",
+    "server": "example.org",
+    "space": "!hangout:example.org",
+    "table": "tH3k9aB2cD4eF6gH"
+   }
+  },
+  {
+   "body": "{name} opened a table of The Rig: join from the call.",
+   "dev.tinhat.game": {
+    "v": 1,
+    "kind": "invite",
+    "game": "rig",
+    "server": "example.org",
+    "space": "!hangout:example.org",
+    "table": "tR7q2wE4rT6yU8iO"
+   }
+  },
+  {
+   "body": "Texas Hold'em results are in: open this in Tin Hat.",
+   "dev.tinhat.game": {
+    "v": 1,
+    "kind": "summary",
+    "game": "holdem",
+    "server": "example.org",
+    "space": "!hangout:example.org",
+    "table": "tH3k9aB2cD4eF6gH"
+   }
+  },
+  {
+   "body": "Game results are in: open this in Tin Hat.",
+   "dev.tinhat.game": {
+    "v": 1,
+    "kind": "result",
+    "game": "rig",
+    "server": "example.org",
+    "space": "!hangout:example.org",
+    "table": "tR7q2wE4rT6yU8iO",
+    "round": 2
+   }
+  },
+  {
+   "body": "Game results are in: open this in Tin Hat.",
+   "dev.tinhat.game": {
+    "v": 1,
+    "kind": "summary",
+    "game": "rig",
+    "server": "example.org",
+    "space": "!hangout:example.org",
+    "table": "tR7q2wE4rT6yU8iO"
+   }
+  }
+ ],
+ "hidden_rig_line": "A game is on in this call.",
+ "whisper_templates": {
+  "bet-size": "It's about bet size",
+  "not-moon": "It's not a Moon thing",
+  "last-spin": "It's about the last spin",
+  "reel-2": "Watch reel 2",
+  "bluffing": "{person} is bluffing",
+  "trust-nobody": "Trust nobody"
+ }
+}

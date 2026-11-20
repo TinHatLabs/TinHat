@@ -302,7 +302,7 @@ Item {
                             anchors.rightMargin: 10
                             verticalAlignment: Text.AlignVCenter
                             elide: Text.ElideRight
-                            font.pixelSize: 12
+                            font.pixelSize: Th.px(12)
                             font.weight: Font.DemiBold
                             color: tab.active ? Th.dockTabFgActive : Th.dockTabFg
                             text: host.tabLabel ? host.tabLabel(tab.modelData) : tab.modelData

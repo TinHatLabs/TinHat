@@ -79,6 +79,22 @@ mod tests {
     }
 
 
+    /// 12.1.17 room-link gate: its paddrive steps (open-room, open-thread, jump-event, room-state, find-text, find-link) sit inside the lab fence
+    /// (login.labDriveHooks(): cfg tinhat_env_selftests + TINHAT_LABDRIVE_PTT, both refused in a release), so a release
+    /// binary answers "refused" to them.
+    #[test]
+    fn the_roomlink_gate_steps_are_fenced() {
+        let main = include_str!("../qml/Main.qml");
+        let fence = main.find("else if ((s.do === \"row\" || s.do === \"find-action\"").expect("the lab fence");
+        let end = fence + main[fence..].find("&& !login.labDriveHooks()) { r = \"refused\" }").expect("its refusal");
+        for step in ["open-room", "open-thread", "jump-event", "room-state", "find-text", "find-link"] {
+            let q = format!("s.do === \"{step}\"");
+            assert!(main[fence..end].contains(&q), "{step} is inside the lab fence");
+            let first = main.find(&format!("else if ({q})")).unwrap_or_else(|| panic!("{step} is handled"));
+            assert!(first > end, "{step} is handled only after the fence");
+        }
+    }
+
     /// fix1216 round 2: the lab drive steps exist for the gate (pin, pin-state, force-drop, chimes) behind the lab fence,
     /// and the drop hook's env name is on the release-binary check's list (a lab binary is refused for it).
     #[test]

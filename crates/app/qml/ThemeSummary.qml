@@ -92,7 +92,7 @@ ColumnLayout {
         visible: sum.st && sum.st.pending === true
         color: Th.settingsThemeMetaFg
         font.italic: true
-        font.pointSize: Kirigami.Theme.smallFont.pointSize
+        font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         text: "Saved on this device — it syncs when you're back online."
     }
 }

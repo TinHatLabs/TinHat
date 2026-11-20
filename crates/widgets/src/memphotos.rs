@@ -485,6 +485,116 @@ pub fn without_hidden(current: &Value, event_id: &str) -> Edit {
     edit(current, |_, hidden| hidden.retain(|h| h != event_id))
 }
 
+// ---- the chat (12.1.17): a Memories photo leaves the chat ----------------------------------------------------------
+
+/// The content key of a photo posted by Memories' "Add photos": `{"dev.tinhat.memories": {"v": 1}}` (encrypted with the
+/// message where the room is). The sender's own word that it is for Memories: makes it quiet, never hides it.
+pub const POST_KEY: &str = "dev.tinhat.memories";
+
+// The words both apps show for this (byte-identical; the shared vectors' `words`).
+/// The "Add photos" button's tip.
+pub const ADD_TIP: &str = "Add photos or screenshots to this room's Memories. They stay out of the chat (older apps still show them there).";
+/// The toast after "Add to Memories" / "Add photos".
+pub const ADDED_TOAST: &str = "Added to Memories. It's out of the chat now.";
+/// The toast after "Remove from Memories" on my own photo.
+pub const REMOVED_TOAST: &str = "Removed from Memories. It's back in the chat.";
+/// The remove dialog's line.
+pub const REMOVE_TEXT: &str = "It goes back into the chat.";
+/// What a reply to a photo the chat hides quotes.
+pub const QUOTE: &str = "Photo in Memories";
+/// A moderator's Delete in the photo viewer (a photo in Memories isn't in the chat: its delete lives there too).
+pub const DELETE: &str = "Delete";
+pub const DELETE_TITLE: &str = "Delete this photo?";
+pub const DELETE_TEXT: &str = "It's deleted for everyone: from Memories and from the chat.";
+pub const DELETED_TOAST: &str = "Photo deleted.";
+
+/// A message as the chat rules see it: its id, sender, (decrypted) type, redacted flag, msgtype and the post marker.
+#[derive(Clone, Copy, Debug)]
+pub struct ChatMsg<'a> {
+    pub event_id: &'a str,
+    pub sender: &'a str,
+    pub kind: &'a str,
+    pub redacted: bool,
+    pub msgtype: &'a str,
+    pub marker: Option<&'a Value>,
+    /// round 2: in a thread (an m.thread / io.element.thread relation naming an event: threads::thread_of)
+    pub in_thread: bool,
+}
+
+impl<'a> ChatMsg<'a> {
+    /// `{event_id, sender, type, redacted, content}` (the vectors' shape); None when any field isn't there or isn't of
+    /// its kind (a missing redacted flag, content that isn't an object): such a message is never hidden.
+    pub fn from_json(v: &'a Value) -> Option<ChatMsg<'a>> {
+        let o = v.as_object()?;
+        let content = o.get("content")?.as_object()?;
+        Some(ChatMsg {
+            event_id: o.get("event_id")?.as_str()?,
+            sender: o.get("sender")?.as_str()?,
+            kind: o.get("type")?.as_str()?,
+            redacted: o.get("redacted")?.as_bool()?,
+            msgtype: content.get("msgtype").and_then(Value::as_str).unwrap_or(""),
+            marker: content.get(POST_KEY),
+            in_thread: !crate::threads::thread_of(o.get("content")?).is_empty(),
+        })
+    }
+
+    /// H2: a readable (decrypted) image message that isn't redacted, with a real event id and sender.
+    fn ok(&self) -> bool {
+        is_id(self.event_id) && self.kind == "m.room.message" && !self.redacted && self.sender.starts_with('@') && self.msgtype == "m.image"
+    }
+}
+
+/// What the chat hides in one room: (event id, sender) of every photo its sender's own valid list names and no
+/// moderator took down (R1–R4). Built once per change of the room's lists or power levels.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ChatIndex {
+    pairs: HashSet<(String, String)>,
+}
+
+impl ChatIndex {
+    pub fn is_empty(&self) -> bool {
+        self.pairs.is_empty()
+    }
+}
+
+/// H1–H4 as an index. `states` None = the room's lists aren't loaded: None, nothing is hidden (fail closed).
+pub fn chat_index(states: Option<&[Value]>, mods: &[String]) -> Option<ChatIndex> {
+    let c = candidates(states?, mods);
+    let pairs = c.photos.into_iter().filter(|p| !c.hidden.contains(&p.event_id)).map(|p| (p.event_id, p.owner)).collect();
+    Some(ChatIndex { pairs })
+}
+
+/// Is this message hidden from the chat? Only when its SENDER's own valid list names it (someone else's list never
+/// hides it) and no moderator took it down. Fail closed: anything unsure → shown (false).
+pub fn hidden_in_chat(index: Option<&ChatIndex>, m: Option<&ChatMsg>) -> bool {
+    let (Some(index), Some(m)) = (index, m) else { return false };
+    m.ok() && index.pairs.contains(&(m.event_id.to_string(), m.sender.to_string()))
+}
+
+/// The shared vectors' form: the room's lists (None = not loaded) + the moderators now + one message.
+pub fn chat_hidden(states: Option<&[Value]>, mods: &[String], m: Option<&ChatMsg>) -> bool {
+    hidden_in_chat(chat_index(states, mods).as_ref(), m)
+}
+
+/// M1: an image posted by Memories' "Add photos" (its own marker, v 1).
+pub fn memories_post(m: Option<&ChatMsg>) -> bool {
+    let Some(m) = m else { return false };
+    m.ok() && m.marker.and_then(Value::as_object).is_some_and(|o| is_one(o.get("v")))
+}
+
+/// Quiet = hidden from the chat or a Memories post: no notification or sound, not unread, not the room's preview.
+pub fn quiet_in_chat(index: Option<&ChatIndex>, m: Option<&ChatMsg>) -> bool {
+    hidden_in_chat(index, m) || memories_post(m)
+}
+
+/// Round 2 (shared vectors `counts`, = photos.ts chatCounts): (silenced, uncounted). silenced = quiet (no notification,
+/// no sound, never the preview); uncounted (off the badge) = quiet and NOT in a thread (a thread's message is read by
+/// that thread's receipt: never taken off, the safe side).
+pub fn chat_counts(index: Option<&ChatIndex>, m: Option<&ChatMsg>) -> (bool, bool) {
+    let q = quiet_in_chat(index, m);
+    (q, q && !m.is_some_and(|m| m.in_thread))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -633,5 +743,60 @@ mod tests {
             };
             same(&got.to_json(), &c["expect"], &name(c));
         }
+    }
+
+    fn chat_case(c: &Value) -> (Option<Vec<Value>>, Vec<String>) {
+        let states = c["states"].as_array().cloned();
+        let mods = c["mods"].as_array().unwrap().iter().map(|m| m.as_str().unwrap().to_string()).collect();
+        (states, mods)
+    }
+
+    #[test]
+    fn chat_hides_only_what_its_own_senders_valid_list_names_fail_closed() {
+        let v = vectors();
+        assert!(cases(&v, "chat_hidden").len() >= 20);
+        for c in cases(&v, "chat_hidden") {
+            let (states, mods) = chat_case(c);
+            let m = ChatMsg::from_json(&c["msg"]);
+            assert_eq!(chat_hidden(states.as_deref(), &mods, m.as_ref()), c["expect"].as_bool().unwrap(), "{}", name(c));
+        }
+    }
+
+    #[test]
+    fn quiet_a_memories_post_or_a_hidden_photo() {
+        let v = vectors();
+        assert!(cases(&v, "quiet").len() >= 8);
+        for c in cases(&v, "quiet") {
+            let (states, mods) = chat_case(c);
+            let idx = chat_index(states.as_deref(), &mods);
+            let m = ChatMsg::from_json(&c["msg"]);
+            let got = json!({"hidden": hidden_in_chat(idx.as_ref(), m.as_ref()), "post": memories_post(m.as_ref()), "quiet": quiet_in_chat(idx.as_ref(), m.as_ref())});
+            same(&got, &c["expect"], &name(c));
+        }
+    }
+
+    #[test]
+    fn counts_silenced_quiet_uncounted_not_in_a_thread_round_2() {
+        let v = vectors();
+        assert!(cases(&v, "counts").len() >= 12);
+        for c in cases(&v, "counts") {
+            let (states, mods) = chat_case(c);
+            let idx = chat_index(states.as_deref(), &mods);
+            let m = ChatMsg::from_json(&c["msg"]);
+            let (silenced, uncounted) = chat_counts(idx.as_ref(), m.as_ref());
+            same(&json!({"silenced": silenced, "uncounted": uncounted}), &c["expect"], &name(c));
+        }
+    }
+
+    #[test]
+    fn chat_words_and_post_key_are_shared() {
+        let v = vectors();
+        assert_eq!(v["constants"]["post_key"], POST_KEY);
+        same(
+            &v["words"],
+            &json!({"add_tip": ADD_TIP, "added_toast": ADDED_TOAST, "removed_toast": REMOVED_TOAST, "remove_text": REMOVE_TEXT, "quote": QUOTE,
+                "delete": DELETE, "delete_title": DELETE_TITLE, "delete_text": DELETE_TEXT, "deleted_toast": DELETED_TOAST}),
+            "words",
+        );
     }
 }

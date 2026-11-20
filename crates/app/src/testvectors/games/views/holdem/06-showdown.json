@@ -1,0 +1,727 @@
+{
+ "v": 1,
+ "game": "holdem",
+ "step": "06-showdown",
+ "about": "Seat 6 went all-in (14), both called; river checked. Showdown: every hand still in is shown; seat 6's straight takes the 60 pot. The next hand starts at result.next_at.",
+ "people": {
+  "seat1": "@ana:example.org",
+  "seat4": "@ben:example.org",
+  "seat6": "@dee:example.net",
+  "spectator": "@cy:example.org"
+ },
+ "views": {
+  "seat1": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 17,
+   "now": 1763600000000,
+   "status": "pause",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 20,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "As",
+      "Kd"
+     ]
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "9h",
+      "9c"
+     ]
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 60,
+     "bet": 0,
+     "state": "allin",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "Qs",
+      "Jc"
+     ]
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "showdown",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [],
+    "total": 0,
+    "to_act": null,
+    "last": {
+     "seat": 4,
+     "a": "check"
+    }
+   },
+   "result": {
+    "n": 1,
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [
+     {
+      "amount": 60,
+      "eligible": [
+       1,
+       4,
+       6
+      ],
+      "winners": [
+       6
+      ],
+      "paid": {
+       "6": 60
+      }
+     }
+    ],
+    "returned": {},
+    "shown": {
+     "1": [
+      "As",
+      "Kd"
+     ],
+     "4": [
+      "9h",
+      "9c"
+     ],
+     "6": [
+      "Qs",
+      "Jc"
+     ]
+    },
+    "best": {
+     "1": {
+      "category": "pair",
+      "five": [
+       "Kd",
+       "Kh",
+       "As",
+       "Ts",
+       "9d"
+      ]
+     },
+     "4": {
+      "category": "trips",
+      "five": [
+       "9h",
+       "9c",
+       "9d",
+       "Kh",
+       "Ts"
+      ]
+     },
+     "6": {
+      "category": "straight",
+      "five": [
+       "Kh",
+       "Qs",
+       "Jc",
+       "Ts",
+       "9d"
+      ]
+     }
+    },
+    "net": {
+     "@ana:example.org": -20,
+     "@ben:example.org": -20,
+     "@dee:example.net": 40
+    },
+    "voided": false,
+    "next_at": 1763600005000
+   },
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 1,
+    "state": "active",
+    "cards": [
+     "As",
+     "Kd"
+    ],
+    "legal": null,
+    "screens": [
+     "desktop"
+    ],
+    "at_cap": false,
+    "cap": 150,
+    "holdings": 20,
+    "timeouts": 0
+   }
+  },
+  "seat4": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 17,
+   "now": 1763600000000,
+   "status": "pause",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 20,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "As",
+      "Kd"
+     ]
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "9h",
+      "9c"
+     ]
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 60,
+     "bet": 0,
+     "state": "allin",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "Qs",
+      "Jc"
+     ]
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "showdown",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [],
+    "total": 0,
+    "to_act": null,
+    "last": {
+     "seat": 4,
+     "a": "check"
+    }
+   },
+   "result": {
+    "n": 1,
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [
+     {
+      "amount": 60,
+      "eligible": [
+       1,
+       4,
+       6
+      ],
+      "winners": [
+       6
+      ],
+      "paid": {
+       "6": 60
+      }
+     }
+    ],
+    "returned": {},
+    "shown": {
+     "1": [
+      "As",
+      "Kd"
+     ],
+     "4": [
+      "9h",
+      "9c"
+     ],
+     "6": [
+      "Qs",
+      "Jc"
+     ]
+    },
+    "best": {
+     "1": {
+      "category": "pair",
+      "five": [
+       "Kd",
+       "Kh",
+       "As",
+       "Ts",
+       "9d"
+      ]
+     },
+     "4": {
+      "category": "trips",
+      "five": [
+       "9h",
+       "9c",
+       "9d",
+       "Kh",
+       "Ts"
+      ]
+     },
+     "6": {
+      "category": "straight",
+      "five": [
+       "Kh",
+       "Qs",
+       "Jc",
+       "Ts",
+       "9d"
+      ]
+     }
+    },
+    "net": {
+     "@ana:example.org": -20,
+     "@ben:example.org": -20,
+     "@dee:example.net": 40
+    },
+    "voided": false,
+    "next_at": 1763600005000
+   },
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 4,
+    "state": "active",
+    "cards": [
+     "9h",
+     "9c"
+    ],
+    "legal": null,
+    "screens": [
+     "web"
+    ],
+    "at_cap": false,
+    "cap": 100,
+    "holdings": 10,
+    "timeouts": 0
+   }
+  },
+  "seat6": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 17,
+   "now": 1763600000000,
+   "status": "pause",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 20,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "As",
+      "Kd"
+     ]
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "9h",
+      "9c"
+     ]
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 60,
+     "bet": 0,
+     "state": "allin",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "Qs",
+      "Jc"
+     ]
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "showdown",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [],
+    "total": 0,
+    "to_act": null,
+    "last": {
+     "seat": 4,
+     "a": "check"
+    }
+   },
+   "result": {
+    "n": 1,
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [
+     {
+      "amount": 60,
+      "eligible": [
+       1,
+       4,
+       6
+      ],
+      "winners": [
+       6
+      ],
+      "paid": {
+       "6": 60
+      }
+     }
+    ],
+    "returned": {},
+    "shown": {
+     "1": [
+      "As",
+      "Kd"
+     ],
+     "4": [
+      "9h",
+      "9c"
+     ],
+     "6": [
+      "Qs",
+      "Jc"
+     ]
+    },
+    "best": {
+     "1": {
+      "category": "pair",
+      "five": [
+       "Kd",
+       "Kh",
+       "As",
+       "Ts",
+       "9d"
+      ]
+     },
+     "4": {
+      "category": "trips",
+      "five": [
+       "9h",
+       "9c",
+       "9d",
+       "Kh",
+       "Ts"
+      ]
+     },
+     "6": {
+      "category": "straight",
+      "five": [
+       "Kh",
+       "Qs",
+       "Jc",
+       "Ts",
+       "9d"
+      ]
+     }
+    },
+    "net": {
+     "@ana:example.org": -20,
+     "@ben:example.org": -20,
+     "@dee:example.net": 40
+    },
+    "voided": false,
+    "next_at": 1763600005000
+   },
+   "closed": null,
+   "spectators": 1,
+   "you": {
+    "seat": 6,
+    "state": "allin",
+    "cards": [
+     "Qs",
+     "Jc"
+    ],
+    "legal": null,
+    "screens": [
+     "desktop",
+     "pad"
+    ],
+    "at_cap": false,
+    "cap": 100,
+    "holdings": 60,
+    "timeouts": 0
+   }
+  },
+  "spectator": {
+   "game": "holdem",
+   "table": "tH3k9aB2cD4eF6gH",
+   "room": "!games:example.org",
+   "space": "!hangout:example.org",
+   "owner": "example.org",
+   "vseq": 17,
+   "now": 1763600000000,
+   "status": "pause",
+   "host": "@ana:example.org",
+   "opts": {
+    "sb": 1,
+    "bb": 2,
+    "seats": 8,
+    "turn_s": 30
+   },
+   "seats": [
+    {
+     "seat": 1,
+     "u": "@ana:example.org",
+     "stack": 20,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "As",
+      "Kd"
+     ]
+    },
+    {
+     "seat": 4,
+     "u": "@ben:example.org",
+     "stack": 10,
+     "bet": 0,
+     "state": "active",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "9h",
+      "9c"
+     ]
+    },
+    {
+     "seat": 6,
+     "u": "@dee:example.net",
+     "stack": 60,
+     "bet": 0,
+     "state": "allin",
+     "cards": 2,
+     "connected": true,
+     "shown": [
+      "Qs",
+      "Jc"
+     ]
+    }
+   ],
+   "hand": {
+    "n": 1,
+    "button": 6,
+    "sb": 1,
+    "bb": 4,
+    "street": "showdown",
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [],
+    "total": 0,
+    "to_act": null,
+    "last": {
+     "seat": 4,
+     "a": "check"
+    }
+   },
+   "result": {
+    "n": 1,
+    "board": [
+     "2c",
+     "9d",
+     "Ts",
+     "Kh",
+     "5s"
+    ],
+    "pots": [
+     {
+      "amount": 60,
+      "eligible": [
+       1,
+       4,
+       6
+      ],
+      "winners": [
+       6
+      ],
+      "paid": {
+       "6": 60
+      }
+     }
+    ],
+    "returned": {},
+    "shown": {
+     "1": [
+      "As",
+      "Kd"
+     ],
+     "4": [
+      "9h",
+      "9c"
+     ],
+     "6": [
+      "Qs",
+      "Jc"
+     ]
+    },
+    "best": {
+     "1": {
+      "category": "pair",
+      "five": [
+       "Kd",
+       "Kh",
+       "As",
+       "Ts",
+       "9d"
+      ]
+     },
+     "4": {
+      "category": "trips",
+      "five": [
+       "9h",
+       "9c",
+       "9d",
+       "Kh",
+       "Ts"
+      ]
+     },
+     "6": {
+      "category": "straight",
+      "five": [
+       "Kh",
+       "Qs",
+       "Jc",
+       "Ts",
+       "9d"
+      ]
+     }
+    },
+    "net": {
+     "@ana:example.org": -20,
+     "@ben:example.org": -20,
+     "@dee:example.net": 40
+    },
+    "voided": false,
+    "next_at": 1763600005000
+   },
+   "closed": null,
+   "spectators": 1
+  }
+ },
+ "moves": {
+  "seat1": [
+   "leave",
+   "away",
+   "kick",
+   "close"
+  ],
+  "seat4": [
+   "leave",
+   "away"
+  ],
+  "seat6": [
+   "leave",
+   "away"
+  ],
+  "spectator": [
+   "sit"
+  ]
+ },
+ "next": {}
+}

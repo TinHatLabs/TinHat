@@ -50,7 +50,7 @@ Item {
             Layout.alignment: Qt.AlignVCenter
             text: "No buttons yet"
             color: Th.labelHintFg
-            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            font.pointSize: Kirigami.Theme.smallFont.pointSize * Th.textScale
         }
         ThButton {
             Layout.alignment: Qt.AlignVCenter

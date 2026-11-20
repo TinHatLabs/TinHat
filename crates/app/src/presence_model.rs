@@ -52,8 +52,12 @@ pub const PRESETS: [(&str, &str, &str, &str); 8] = [
     ("tilted", "😤", "Tilted", "pink"),
 ];
 
-/// A4.1: a status text is 1–40 characters after trimming.
-pub const STATUS_TEXT_MAX: usize = 40;
+/// D07.6 (12.1.17): a status is 1–80 characters after trimming.
+pub const STATUS_TEXT_MAX: usize = 80;
+/// What apps and servers from before 12.1.17 accept in `text`. A longer status keeps its whole text in `full` and
+/// `text` carries the first ≤ 39 characters (whole graphemes) + "…", so older apps still show it, cut short
+/// (shared vectors: testvectors/presence-status.json, byte copy of the web's and the server's).
+pub const STATUS_TEXT_SHORT_MAX: usize = 40;
 /// A4.6: picking a preset clears it after 4 hours unless told otherwise.
 pub const PRESET_CLEAR_AFTER_MS: u64 = 4 * 60 * 60 * 1000;
 
@@ -175,18 +179,77 @@ pub fn status_color(key: &str) -> &'static str {
     PALETTE.iter().find(|(k, _)| *k == key).map(|(_, h)| *h).unwrap_or("#95A5A6")
 }
 
-/// The status if it can be shown at `now_ms` (text 1–40 after trim, not expired), else None.
+/// D07.6: the status trim of both apps — one explicit set, so the apps write and read alike: Rust's
+/// `char::is_whitespace` (which has U+0085) + U+FEFF = JS `\s` (which has U+FEFF) + U+0085.
+fn status_space(c: char) -> bool {
+    c.is_whitespace() || c == '\u{FEFF}'
+}
+
+pub fn trim_status(s: &str) -> &str {
+    s.trim_matches(status_space)
+}
+
+/// D07.6: what a status write stores — `text` (≤ 40, shown by every app) and, for a status over 40 characters,
+/// `full` (the whole text). `t` is trimmed first; a first grapheme too long to fit leaves `text` = "…".
+pub fn shorten_status(t: &str) -> (String, Option<String>) {
+    use unicode_segmentation::UnicodeSegmentation;
+    let text = trim_status(t);
+    if text.chars().count() <= STATUS_TEXT_SHORT_MAX {
+        return (text.to_string(), None);
+    }
+    let max = STATUS_TEXT_SHORT_MAX - 1;
+    let (mut cut, mut n) = (Vec::new(), 0usize);
+    for g in text.graphemes(true) {
+        let k = g.chars().count();
+        if n + k > max {
+            break;
+        }
+        cut.push(g);
+        n += k;
+    }
+    // trailing graphemes that are only spaces go, whole graphemes again (U+0600 + space is ONE grapheme, kept)
+    while cut.last().is_some_and(|g| g.chars().all(status_space)) {
+        cut.pop();
+    }
+    (format!("{}…", cut.concat()), Some(text.to_string()))
+}
+
+/// 12.1.17 Stage B (the review's #5): the status editor's cap. A text of at most [`STATUS_TEXT_MAX`] characters (code
+/// points) stays exactly as typed; a longer one becomes its longest prefix of WHOLE graphemes within the cap (a pasted
+/// emoji sequence or a letter with its mark is never split). Nothing is trimmed (the save trims). Shared vectors
+/// testvectors/status-edit.json (= the web's status.ts capStatusEdit).
+pub fn cap_status_edit(t: &str) -> String {
+    use unicode_segmentation::UnicodeSegmentation;
+    if t.chars().count() <= STATUS_TEXT_MAX {
+        return t.to_string();
+    }
+    let (mut out, mut n) = (String::new(), 0usize);
+    for g in t.graphemes(true) {
+        let k = g.chars().count();
+        if n + k > STATUS_TEXT_MAX {
+            break;
+        }
+        out.push_str(g);
+        n += k;
+    }
+    out
+}
+
+/// The status if it can be shown at `now_ms` (text 1–40 after trim, not expired), else None. Its text is the
+/// content's `full` (1–80 after trim) when it has one, else `text` (D07.6).
 pub fn live_status(v: Option<&Value>, now_ms: u64) -> Option<CustomStatus> {
     let o = v?.as_object()?;
-    let text = o.get("text").and_then(Value::as_str).unwrap_or("").trim().to_string();
-    let n = text.chars().count();
-    if n == 0 || n > STATUS_TEXT_MAX {
+    let short = trim_status(o.get("text").and_then(Value::as_str).unwrap_or(""));
+    let n = short.chars().count();
+    if n == 0 || n > STATUS_TEXT_SHORT_MAX {
         return None;
     }
     let until = o.get("until").and_then(Value::as_u64);
     if matches!(until, Some(u) if u <= now_ms) {
         return None;
     }
+    let full = trim_status(o.get("full").and_then(Value::as_str).unwrap_or(""));
+    let text = if !full.is_empty() && full.chars().count() <= STATUS_TEXT_MAX { full } else { short }.to_string();
     Some(CustomStatus {
         id: o.get("id").and_then(Value::as_str).unwrap_or("").to_string(),
         text,
@@ -202,9 +265,14 @@ pub fn status_expired(v: Option<&Value>, now_ms: u64) -> bool {
     matches!(o.get("until").and_then(Value::as_u64), Some(u) if u <= now_ms)
 }
 
-/// The account data a pick writes (A4.1).
+/// The account data a pick writes (A4.1). A status over 40 characters adds `full` (D07.6).
 pub fn status_content(id: &str, text: &str, emoji: &str, color: &str, until: Option<u64>) -> Value {
-    json!({ "id": id, "text": text.trim(), "emoji": emoji.trim(), "color": color, "until": until, "v": 1 })
+    let (text, full) = shorten_status(text);
+    let mut v = json!({ "id": id, "text": text, "emoji": emoji.trim(), "color": color, "until": until, "v": 1 });
+    if let Some(full) = full {
+        v["full"] = Value::String(full);
+    }
+    v
 }
 
 pub fn state_word(state: &str) -> &'static str {
@@ -624,7 +692,8 @@ mod tests {
 
     #[test]
     fn status_validation_and_rows() {
-        // words without a status; 1–40 characters after trimming; the palette and presets are A4's
+        // words without a status; `text` 1–40 characters after trimming (a longer status rides in `full`,
+        // status_80_vectors); the palette and presets are A4's
         assert_eq!(status_view("call", Some(&json!({})), NOW).label, "In a call");
         assert_eq!(status_view("away", None, NOW).label, "Away");
         assert!(live_status(Some(&json!({"text": "   "})), NOW).is_none());
@@ -647,5 +716,72 @@ mod tests {
         assert_eq!(v["@a:example.com"]["chipColor"], "#1ABC9C");
         assert_eq!(v["@b:example.com"]["label"], "Online");
         assert_eq!(status_content("custom", " GG ", "", "lime", None), json!({"id": "custom", "text": "GG", "emoji": "", "color": "lime", "until": null, "v": 1}));
+    }
+
+    /// D07.6 (the web's status.test.ts "status_80 …"): the shared vectors testvectors/presence-status.json (byte copy
+    /// of the web's and the server's) — what a write stores, what an app shows (and what a 12.1.15 app shows: never
+    /// nothing), a GET row's long status through parse_users → users_json.
+    #[test]
+    fn status_80_vectors() {
+        let v: Value = serde_json::from_str(include_str!("testvectors/presence-status.json")).expect("vectors");
+        assert_eq!(STATUS_TEXT_MAX, 80);
+        for c in v["shorten"].as_array().unwrap() {
+            let name = c["name"].as_str().unwrap();
+            let got = status_content("custom", c["in"].as_str().unwrap(), "", "teal", None);
+            let mut want = json!({"id": "custom", "text": c["text"], "emoji": "", "color": "teal", "until": null, "v": 1});
+            if !c["full"].is_null() {
+                want["full"] = c["full"].clone();
+            }
+            assert_eq!(got, want, "shorten {name}");
+            assert_eq!(live_status(Some(&got), NOW).map(|s| s.text).as_deref(), c["full"].as_str().or(c["text"].as_str()), "shorten {name}: reads back whole");
+        }
+        // the 12.1.15 rule, frozen: text 1–40 after trim (the lane's old-client proof runs the real 12.1.15 code)
+        let old = |o: &Value| -> Option<String> {
+            let x = o.get("text").and_then(Value::as_str).unwrap_or("").trim();
+            let live = o.get("until").and_then(Value::as_u64).map_or(true, |u| u > NOW);
+            (!x.is_empty() && x.chars().count() <= 40 && live).then(|| x.to_string())
+        };
+        for c in v["read"].as_array().unwrap() {
+            let name = c["name"].as_str().unwrap();
+            let got = live_status(Some(&c["content"]), NOW).map(|s| s.text);
+            assert_eq!(got.as_deref(), c["show"].as_str(), "read {name}");
+            assert_eq!(old(&c["content"]).as_deref(), c["old"].as_str(), "read {name} (12.1.15)");
+        }
+        let long = "Back after dinner, then ranked with the whole crew";
+        let content = status_content("custom", long, "🍕", "grey", None);
+        let body = json!({"users": {
+            "@a:example.com": {"state": "online", "status": {"text": content["text"], "emoji": "🍕", "color": "grey", "full": content["full"]}},
+            "@b:example.com": {"state": "away", "status": {"text": content["text"], "emoji": "🍕", "color": "grey"}}
+        }});
+        let m: Value = serde_json::from_str(&users_json(&parse_users(&body), NOW)).unwrap();
+        assert_eq!(m["@a:example.com"]["label"], format!("🍕 {long}"));
+        assert_eq!(m["@a:example.com"]["chip"], format!("🍕 {long}"));
+        assert_eq!(m["@b:example.com"]["label"], "🍕 Back after dinner, then ranked with the… · Away");
+    }
+
+    /// 12.1.17 Stage B (#5; the web's statusedit.test.ts): the editor's cap never splits a grapheme.
+    #[test]
+    fn status_edit_cap_vectors() {
+        let v: Value = serde_json::from_str(include_str!("testvectors/status-edit.json")).expect("vectors");
+        assert_eq!(v["max"].as_u64().unwrap() as usize, STATUS_TEXT_MAX);
+        let cases = v["cases"].as_array().unwrap();
+        assert!(cases.len() >= 8);
+        for c in cases {
+            assert_eq!(cap_status_edit(c["in"].as_str().unwrap()), c["out"].as_str().unwrap(), "{}", c["name"]);
+        }
+        // the editor caps through the controller (not a code-point slice)
+        let qml = include_str!("../qml/ThRoomList.qml");
+        assert!(qml.contains("ctl.capStatusEdit(text)"));
+        assert!(!qml.contains("a.slice(0, 80)"));
+        assert!(include_str!("presence.rs").contains("fn cap_status_edit(self: &PresenceController, text: &QString) -> QString;"));
+    }
+
+    #[test]
+    fn status_edit_vectors_match_the_webs_copy_when_present() {
+        let mine = include_bytes!("testvectors/status-edit.json");
+        let dir = std::env::var("TINHAT_WEB_DIR").unwrap_or_else(|_| format!("{}/tinhat-web", std::env::var("HOME").unwrap_or_default()));
+        if let Ok(b) = std::fs::read(format!("{dir}/src/features/presence/testvectors/status-edit.json")) {
+            assert_eq!(&b[..], &mine[..], "{dir}: the web's status-edit.json");
+        }
     }
 }
