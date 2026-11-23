@@ -16,6 +16,12 @@ and announced in the PM relay; nothing here is renamed or removed in v1.
 | `cards.json` | the chat cards: event content + the exact plain-text bodies (never any amounts), the hidden-Rig line, the Whisper templates |
 | `malformed.json` | `cases`: views/frames an app's parser must REJECT (a known field broken); `tolerated`: what an app must ACCEPT and ignore (an unknown field or frame type) though the server never sends it |
 
+**v1.1 (round 2, games-s2, 2026-11-20; additive):** `holdemSeat.rank` and `rigPlayer.rank` = that person's prestige
+rank in the table's space (0 = no token; the same number `GET /ranks` gives). Absent = unknown: fall back to the ranks
+API. Draw the prestige token from it at the seat plates / player rows (B3).
+**v1.1 (B2):** a Pad socket counts in `you.screens` (as `"pad"` and its kind) only while it has sent a frame within
+25 s (its 20 s `ping`), so a locked or backgrounded phone stops hiding the cards on the desktop within ~30 s.
+
 ## Rules for the apps
 - **The schema is the producer contract** (strict: exactly what a v1 server sends; the server's tests and the mock
   check every frame against it). **Apps parse tolerantly:** ignore unknown fields and unknown frame types, reject a

@@ -96,13 +96,34 @@
     "cap": 100,
     "at_table": null,
     "earned_today": 0,
-    "day_max": 8,
+    "day_max": 16,
     "accrual_s": 0,
-    "chip_s": 3600,
+    "chip_s": 900,
+    "chip_minutes": 15,
     "day": "2026-11-19",
     "topup": {
      "available": false,
      "next_day": "2026-11-20"
+    },
+    "notices": {
+     "items": [
+      {
+       "id": 812,
+       "at": 1763599940000,
+       "action": "grant",
+       "amount": 5,
+       "reason": "birthday"
+      }
+     ],
+     "more": 0
+    },
+    "side": {
+     "on": true,
+     "eligible": false,
+     "reason": "not-broke",
+     "left_today": 10,
+     "day_max": 10,
+     "broke_max": 4
     }
    }
   },
@@ -135,13 +156,34 @@
      "room": "!games:example.org"
     },
     "earned_today": 3,
-    "day_max": 8,
-    "accrual_s": 1260,
-    "chip_s": 3600,
+    "day_max": 16,
+    "accrual_s": 420,
+    "chip_s": 900,
+    "chip_minutes": 15,
     "day": "2026-11-19",
     "topup": {
      "available": false,
      "next_day": "2026-11-20"
+    },
+    "notices": {
+     "items": [
+      {
+       "id": 812,
+       "at": 1763599940000,
+       "action": "grant",
+       "amount": 5,
+       "reason": "birthday"
+      }
+     ],
+     "more": 0
+    },
+    "side": {
+     "on": true,
+     "eligible": false,
+     "reason": "not-broke",
+     "left_today": 10,
+     "day_max": 10,
+     "broke_max": 4
     }
    }
   },
@@ -314,7 +356,9 @@
       "bet": 1,
       "state": "active",
       "cards": 2,
-      "connected": true
+      "connected": true,
+      "rank": 1,
+      "away": null
      },
      {
       "seat": 4,
@@ -323,7 +367,9 @@
       "bet": 2,
       "state": "active",
       "cards": 2,
-      "connected": true
+      "connected": true,
+      "rank": 0,
+      "away": null
      },
      {
       "seat": 6,
@@ -332,7 +378,9 @@
       "bet": 0,
       "state": "active",
       "cards": 2,
-      "connected": true
+      "connected": true,
+      "rank": 0,
+      "away": null
      }
     ],
     "hand": {
@@ -381,7 +429,8 @@
      "at_cap": false,
      "cap": 100,
      "holdings": 20,
-     "timeouts": 0
+     "timeouts": 0,
+     "away": null
     }
    }
   },
@@ -839,6 +888,350 @@
     },
     "leaderboard": [],
     "pit_boss": null
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/admin/spaces/{space}",
+   "def": "adminSpace",
+   "status": 200,
+   "about": "the admin screen's data (403 not-admin | not-member | wrong-server). Someone with open money: balance null, open true.",
+   "req": null,
+   "res": {
+    "v": 1,
+    "space": "!hangout:example.org",
+    "you": {
+     "admin": true,
+     "why": "space-admin"
+    },
+    "economy": {
+     "chip_minutes": {
+      "value": 15,
+      "source": "default"
+     },
+     "day_max": {
+      "value": 16,
+      "source": "default"
+     },
+     "start": {
+      "value": 10,
+      "source": "default"
+     },
+     "topup_to": {
+      "value": 5,
+      "source": "default"
+     },
+     "cap_base": {
+      "value": 100,
+      "source": "default"
+     },
+     "cap_per_rank": {
+      "value": 50,
+      "source": "default"
+     },
+     "side_day_max": {
+      "value": 10,
+      "source": "default"
+     },
+     "side_on": {
+      "value": true,
+      "source": "space"
+     }
+    },
+    "wallets": [
+     {
+      "u": "@ana:example.org",
+      "balance": 38,
+      "rank": 1,
+      "cap": 150,
+      "open": false
+     },
+     {
+      "u": "@ben:example.org",
+      "balance": null,
+      "rank": 0,
+      "cap": 100,
+      "open": true
+     }
+    ]
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/admin/spaces/{space}/wallets",
+   "def_req": "adminWalletsRequest",
+   "def": "adminWallets",
+   "status": 200,
+   "about": "grant | remove | set | reset | rank; who = a list (all-or-nothing) or \"everyone\" (skips listed). A resend of the same op: the first answer, dup true; the op with another request: 409 op-reused.",
+   "req": {
+    "op": "op-r2admin00000001",
+    "action": "grant",
+    "who": [
+     "@ana:example.org",
+     "@ben:example.org"
+    ],
+    "amount": 5,
+    "reason": "birthday"
+   },
+   "res": {
+    "done": [
+     {
+      "u": "@ana:example.org",
+      "before": {
+       "balance": 38,
+       "rank": 1
+      },
+      "after": {
+       "balance": 43,
+       "rank": 1
+      }
+     },
+     {
+      "u": "@ben:example.org",
+      "before": {
+       "granted": 5
+      },
+      "after": {
+       "granted": 5
+      }
+     }
+    ],
+    "skipped": [],
+    "log": 812,
+    "dup": false
+   },
+   "errors": [
+    {
+     "status": 409,
+     "body": {
+      "code": "at-table",
+      "error": "at-table",
+      "who": [
+       "@ben:example.org"
+      ]
+     }
+    },
+    {
+     "status": 404,
+     "body": {
+      "code": "no-wallet",
+      "error": "no-wallet",
+      "who": [
+       "@cy:example.org"
+      ]
+     }
+    },
+    {
+     "status": 400,
+     "body": {
+      "code": "bad-reason",
+      "error": "bad-reason"
+     }
+    }
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/spaces/{space}/economy",
+   "def_req": "adminEconomyRequest",
+   "def": "adminEconomy",
+   "status": 200,
+   "about": "set and/or reset keys (bounds in rules.mjs ECONOMY_BOUNDS); nothing retroactive",
+   "req": {
+    "op": "op-r2admin00000002",
+    "set": {
+     "chip_minutes": 10,
+     "day_max": 20
+    },
+    "reset": [
+     "start"
+    ],
+    "reason": "game night"
+   },
+   "res": {
+    "economy": {
+     "chip_minutes": {
+      "value": 10,
+      "source": "space"
+     },
+     "day_max": {
+      "value": 20,
+      "source": "space"
+     },
+     "start": {
+      "value": 10,
+      "source": "default"
+     },
+     "topup_to": {
+      "value": 5,
+      "source": "default"
+     },
+     "cap_base": {
+      "value": 100,
+      "source": "default"
+     },
+     "cap_per_rank": {
+      "value": 50,
+      "source": "default"
+     },
+     "side_day_max": {
+      "value": 10,
+      "source": "default"
+     },
+     "side_on": {
+      "value": true,
+      "source": "default"
+     }
+    },
+    "log": 813,
+    "dup": false
+   },
+   "errors": [
+    {
+     "status": 400,
+     "body": {
+      "code": "bad-value",
+      "error": "bad-value",
+      "key": "day_max",
+      "min": 1,
+      "max": 200
+     }
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/spaces/{space}/log?before=<id>&limit=50",
+   "def": "adminLog",
+   "status": 200,
+   "about": "newest first; who = \"someone\" once that wallet was deleted",
+   "req": null,
+   "res": {
+    "v": 1,
+    "space": "!hangout:example.org",
+    "entries": [
+     {
+      "id": 813,
+      "at": 1763600000000,
+      "by": "@ana:example.org",
+      "by_role": "space-admin",
+      "action": "economy",
+      "who": "economy",
+      "amount": null,
+      "before": {},
+      "after": {
+       "chip_minutes": 10,
+       "day_max": 20
+      },
+      "reason": "game night",
+      "count": 0
+     },
+     {
+      "id": 812,
+      "at": 1763599940000,
+      "by": "@ana:example.org",
+      "by_role": "space-admin",
+      "action": "grant",
+      "who": "@ben:example.org",
+      "amount": 5,
+      "before": {
+       "granted": 5
+      },
+      "after": {
+       "granted": 5
+      },
+      "reason": "birthday",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/me/notices/seen",
+   "def_req": "noticesSeenRequest",
+   "def": "noticesSeen",
+   "status": 200,
+   "about": "acknowledge /me.notices up to that id (this wallet only)",
+   "req": {
+    "space": "!hangout:example.org",
+    "upto": 812
+   },
+   "res": {
+    "v": 1,
+    "seen": 1
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/side/tune",
+   "def_req": "sideStartRequest",
+   "def": "sideRun",
+   "status": 201,
+   "about": "start a run (409 not-broke | open-money | day-max, 403 side-off | not-member | wrong-server, 404 no-wallet); a new run cancels your old one",
+   "req": {
+    "space": "!hangout:example.org"
+   },
+   "res": {
+    "run": "sRq7Wb2kLmN4pX8zT1",
+    "lo": 1,
+    "hi": 100,
+    "tries_left": 7,
+    "expires": 1763600090000,
+    "pay": [
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     1
+    ],
+    "left_today": 10
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/side/tune/{run}",
+   "def_req": "sideTuneRequest",
+   "def": "sideTune",
+   "status": 200,
+   "about": "one try (400 bad outside lo..hi, costs nothing; 404 no-run; 409 stale; 429 rate: 1 try / 300 ms). secret only when found, lost or cancelled.",
+   "req": {
+    "op": "op-r2side000000001",
+    "guess": 50
+   },
+   "res": {
+    "result": "higher",
+    "lo": 51,
+    "hi": 100,
+    "tries_left": 6,
+    "paid": 0,
+    "dup": false
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/side/tune/{run}",
+   "def_req": "sideTuneRequest",
+   "def": "sideTune",
+   "status": 200,
+   "req": {
+    "op": "op-r2side000000002",
+    "guess": 62
+   },
+   "res": {
+    "result": "found",
+    "lo": 51,
+    "hi": 74,
+    "tries_left": 4,
+    "paid": 3,
+    "secret": 62,
+    "wallet": {
+     "balance": 3,
+     "holdings": 3
+    },
+    "dup": false
    }
   }
  ]

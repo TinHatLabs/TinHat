@@ -1,0 +1,698 @@
+{
+ "v": 1,
+ "about": "F6 odds (GAMES-V1.1-ADDENDUM \u00a73). Inputs = ONLY what the player can see: own hole cards, the board, the number of live opponents (n, 1-7). Cards rank+suit (23456789TJQKA, cdhs); deck order index = suit*13 + rank (suits c,d,h,s; ranks 2..A). The hole and board are put in deck order first. Unseen deck D = the 52 minus hole minus board, in deck order. k = 5 - |board| cards still to come. E = C(|D|,k) * prod_{i<n} C(|D|-k-2i, 2). E <= exact_max: EXACT, every runout (k-combination of D) x every ordered tuple of opponent hands (2-combinations of what is left, opponent by opponent). Else MONTE CARLO with exactly `samples` samples: seed = FNV-1a 32 of the ASCII 'odds-v1|<hole,comma-joined>|<board,comma-joined>|<n>'; generator mulberry32 (u32 arithmetic, below). Each sample: a fresh copy of D; partial Fisher-Yates for i in 0..k+2n-1: j = i + below(|D|-i), swap d[i], d[j]; runout = d[0..k), opponent t = d[k+2t], d[k+2t+1]. below(r): lim = 2^32 - (2^32 mod r); repeat x = next() until x < lim; return x mod r. A sample: hero's best five of seven vs every opponent's (the hand-ranking vectors' key order): win = hero strictly above the best opponent; tie = equal to the best opponent; else lose. Shown: win% = label(win, samples), tie% = label(tie, samples). label: 0 -> '0%', all -> '100%', 0 < x < 0.5% -> '<1%', 99.5% <= x < 100% -> '>99%', else whole percent, half up (integers: (num*200 + den) div (2*den)). OUTS (flop and turn only, else null): every unseen card c in deck order with cat(best(hole+board+c)) > cat(best(hole+board)) AND > cat(board+c alone) (board+c with fewer than 5 cards: multiplicity categories only: quads 7, trips 3, two-pair 2, pair 1, else 0); counted under the category reached. Win/tie are outcome FREQUENCIES (how often you win outright / tie for best), not pot equity. Compute E saturating (stop once it exceeds exact_max). Apps must reproduce win, tie and samples EXACTLY (integers) and the labels. below_check: below(r) driven by an injected generator that returns `feed` in order; expect the result and how many values it consumed. made_hand: the category of the best hand in 2, 5, 6 or 7 cards (2 cards: pair or high-card). Speed: use a direct 7-card evaluator off the UI thread; the vectors check integers, never time.",
+ "exact_max": 50000,
+ "samples": 10000,
+ "mulberry32": "state a (u32). next(): a = a + 0x6D2B79F5; t = a; t = (t ^ (t >>> 15)) * (t | 1); t = t ^ (t + ((t ^ (t >>> 7)) * (t | 61))); return t ^ (t >>> 14). Every + and * wraps mod 2^32, >>> is a logical shift (JS: Math.imul and >>> 0). FNV-1a 32: h = 0x811C9DC5; per byte: h ^= b; h *= 0x01000193 (mod 2^32).",
+ "rng_check": {
+  "seed_string": "odds-v1|As,Kd||1",
+  "seed": 22833815,
+  "first_8_u32": [
+   3102309211,
+   1342832107,
+   2892084393,
+   3719924694,
+   2052065456,
+   981503854,
+   2866953035,
+   2993945847
+  ],
+  "fnv1a32": {
+   "": 2166136261,
+   "a": 3826002220,
+   "odds-v1": 3276119579
+  }
+ },
+ "below_check": [
+  {
+   "r": 52,
+   "feed": [
+    4294967295,
+    0
+   ],
+   "expect": {
+    "value": 0,
+    "consumed": 2
+   },
+   "why": "2^32 mod 52 = 48, so lim = 4294967248: 4294967295 is rejected, then 0 -> 0 (two values consumed); plain modulo would answer 4294967295 % 52 = 47"
+  },
+  {
+   "r": 52,
+   "feed": [
+    4294967247,
+    9
+   ],
+   "expect": {
+    "value": 51,
+    "consumed": 1
+   },
+   "why": "4294967247 < lim: accepted at once, 4294967247 % 52 = 51 (one value)"
+  },
+  {
+   "r": 45,
+   "feed": [
+    4294967295,
+    4294967290,
+    91
+   ],
+   "expect": {
+    "value": 1,
+    "consumed": 3
+   },
+   "why": "2^32 mod 45 = 31, lim = 4294967265: two rejections, then 91 % 45 = 1 (three values)"
+  },
+  {
+   "r": 1,
+   "feed": [
+    123
+   ],
+   "expect": {
+    "value": 0,
+    "consumed": 1
+   },
+   "why": "below(1) = 0 after one draw (2^32 mod 1 = 0, nothing rejected)"
+  }
+ ],
+ "made_hand": [
+  {
+   "cards": [
+    "As",
+    "Ad"
+   ],
+   "expect": "pair"
+  },
+  {
+   "cards": [
+    "Kd",
+    "7c"
+   ],
+   "expect": "high-card"
+  },
+  {
+   "cards": [
+    "9h",
+    "9c",
+    "9d",
+    "Ks",
+    "2c"
+   ],
+   "expect": "trips"
+  },
+  {
+   "cards": [
+    "Ah",
+    "5h",
+    "Kh",
+    "9h",
+    "2c",
+    "7d"
+   ],
+   "expect": "high-card"
+  },
+  {
+   "cards": [
+    "2c",
+    "3d",
+    "4h",
+    "5s",
+    "6c",
+    "Ad"
+   ],
+   "expect": "straight"
+  },
+  {
+   "cards": [
+    "Qs",
+    "Qd",
+    "8c",
+    "4h",
+    "2s",
+    "8d",
+    "8s"
+   ],
+   "expect": "full-house"
+  },
+  {
+   "cards": [
+    "Jh",
+    "Th",
+    "9h",
+    "8h",
+    "7h",
+    "2c",
+    "2d"
+   ],
+   "expect": "straight-flush"
+  },
+  {
+   "cards": [
+    "Ac",
+    "Kd",
+    "7s",
+    "7h",
+    "2c"
+   ],
+   "expect": "pair"
+  }
+ ],
+ "labels": [
+  {
+   "num": 0,
+   "den": 10000,
+   "expect": "0%"
+  },
+  {
+   "num": 10000,
+   "den": 10000,
+   "expect": "100%"
+  },
+  {
+   "num": 49,
+   "den": 10000,
+   "expect": "<1%"
+  },
+  {
+   "num": 50,
+   "den": 10000,
+   "expect": "1%"
+  },
+  {
+   "num": 149,
+   "den": 10000,
+   "expect": "1%"
+  },
+  {
+   "num": 150,
+   "den": 10000,
+   "expect": "2%"
+  },
+  {
+   "num": 8512,
+   "den": 10000,
+   "expect": "85%"
+  },
+  {
+   "num": 9949,
+   "den": 10000,
+   "expect": "99%"
+  },
+  {
+   "num": 9950,
+   "den": 10000,
+   "expect": ">99%"
+  },
+  {
+   "num": 9999,
+   "den": 10000,
+   "expect": ">99%"
+  },
+  {
+   "num": 1,
+   "den": 3,
+   "expect": "33%"
+  },
+  {
+   "num": 2,
+   "den": 3,
+   "expect": "67%"
+  },
+  {
+   "num": 495,
+   "den": 990,
+   "expect": "50%"
+  },
+  {
+   "num": 1,
+   "den": 990,
+   "expect": "<1%"
+  },
+  {
+   "num": 989,
+   "den": 990,
+   "expect": ">99%"
+  }
+ ],
+ "cases": [
+  {
+   "id": "river-nuts-flush",
+   "hole": [
+    "Ah",
+    "Kh"
+   ],
+   "board": [
+    "2h",
+    "7h",
+    "9h",
+    "Jc",
+    "3d"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "exact",
+    "samples": 990,
+    "win": 990,
+    "tie": 0,
+    "win_label": "100%",
+    "tie_label": "0%",
+    "outs": null
+   },
+   "why": "the nut flush on the river: only a straight flush could beat it (none possible here) -> win 100% exactly"
+  },
+  {
+   "id": "river-board-plays",
+   "hole": [
+    "2c",
+    "3d"
+   ],
+   "board": [
+    "As",
+    "Ks",
+    "Qs",
+    "Js",
+    "Ts"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "exact",
+    "samples": 990,
+    "win": 0,
+    "tie": 990,
+    "win_label": "0%",
+    "tie_label": "100%",
+    "outs": null
+   },
+   "why": "a royal flush on the board: everyone ties -> tie 100%"
+  },
+  {
+   "id": "river-second-pair",
+   "hole": [
+    "Kd",
+    "9c"
+   ],
+   "board": [
+    "Ks",
+    "Ah",
+    "7d",
+    "4c",
+    "2s"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "exact",
+    "samples": 990,
+    "win": 760,
+    "tie": 6,
+    "win_label": "77%",
+    "tie_label": "1%",
+    "outs": null
+   },
+   "why": "second pair (kings under the board ace) on the river vs 1: exact over 990 opponent hands"
+  },
+  {
+   "id": "river-two-opps",
+   "hole": [
+    "Kd",
+    "9c"
+   ],
+   "board": [
+    "Ks",
+    "Ah",
+    "7d",
+    "4c",
+    "2s"
+   ],
+   "opponents": 2,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 5895,
+    "tie": 90,
+    "win_label": "59%",
+    "tie_label": "1%",
+    "outs": null,
+    "seed": 3825531360
+   },
+   "why": "same spot vs 2 opponents: too many combos -> seeded Monte Carlo"
+  },
+  {
+   "id": "turn-flush-draw",
+   "hole": [
+    "Ah",
+    "5h"
+   ],
+   "board": [
+    "Kh",
+    "9h",
+    "2c",
+    "7d"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "exact",
+    "samples": 45540,
+    "win": 23377,
+    "tie": 1299,
+    "win_label": "51%",
+    "tie_label": "3%",
+    "outs": {
+     "total": 15,
+     "by": {
+      "flush": 9,
+      "pair": 6
+     }
+    }
+   },
+   "why": "nut flush draw on the turn vs 1: exact (46 rivers x 990 opponent hands = 45 540); outs: 9 hearts to a flush, 6 to a pair (3 aces, 3 fives)"
+  },
+  {
+   "id": "turn-open-ender",
+   "hole": [
+    "9s",
+    "8s"
+   ],
+   "board": [
+    "Tc",
+    "7d",
+    "2h",
+    "Kc"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "exact",
+    "samples": 45540,
+    "win": 16273,
+    "tie": 667,
+    "win_label": "36%",
+    "tie_label": "1%",
+    "outs": {
+     "total": 14,
+     "by": {
+      "straight": 8,
+      "pair": 6
+     }
+    }
+   },
+   "why": "open-ended straight draw: 8 outs to a straight, 6 to a pair (9s and 8s)"
+  },
+  {
+   "id": "turn-made-set",
+   "hole": [
+    "7c",
+    "7d"
+   ],
+   "board": [
+    "7s",
+    "Kh",
+    "2d",
+    "9c"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "exact",
+    "samples": 45540,
+    "win": 44367,
+    "tie": 0,
+    "win_label": "97%",
+    "tie_label": "0%",
+    "outs": {
+     "total": 10,
+     "by": {
+      "quads": 1,
+      "full-house": 9
+     }
+    }
+   },
+   "why": "a set on the turn: outs to full house (K,2,9 x3 = 9) and quads (1)"
+  },
+  {
+   "id": "flop-overpair",
+   "hole": [
+    "Qs",
+    "Qd"
+   ],
+   "board": [
+    "8c",
+    "4h",
+    "2s"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 8157,
+    "tie": 9,
+    "win_label": "82%",
+    "tie_label": "<1%",
+    "outs": {
+     "total": 11,
+     "by": {
+      "trips": 2,
+      "two-pair": 9
+     }
+    },
+    "seed": 396252921
+   },
+   "why": "overpair on a dry flop vs 1: Monte Carlo (1081 x 990 > exact_max). Outs by the rule: 2 to trips, 9 to two pair (a card pairing the board lifts the category above the board alone)"
+  },
+  {
+   "id": "flop-overpair-3",
+   "hole": [
+    "Qs",
+    "Qd"
+   ],
+   "board": [
+    "8c",
+    "4h",
+    "2s"
+   ],
+   "opponents": 3,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 5453,
+    "tie": 12,
+    "win_label": "55%",
+    "tie_label": "<1%",
+    "outs": {
+     "total": 11,
+     "by": {
+      "trips": 2,
+      "two-pair": 9
+     }
+    },
+    "seed": 362697683
+   },
+   "why": "same vs 3 opponents: equity drops"
+  },
+  {
+   "id": "flop-combo-draw",
+   "hole": [
+    "Jh",
+    "Th"
+   ],
+   "board": [
+    "9h",
+    "8c",
+    "2h"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 7070,
+    "tie": 98,
+    "win_label": "71%",
+    "tie_label": "1%",
+    "outs": {
+     "total": 21,
+     "by": {
+      "flush": 9,
+      "straight": 6,
+      "pair": 6
+     }
+    },
+    "seed": 1655140002
+   },
+   "why": "flush + open-ended straight draw: 21 by the rule (9 hearts to a flush, 6 more to a straight, 6 to a pair)"
+  },
+  {
+   "id": "flop-paired-board",
+   "hole": [
+    "Ac",
+    "Kd"
+   ],
+   "board": [
+    "7s",
+    "7h",
+    "2c"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 6054,
+    "tie": 342,
+    "win_label": "61%",
+    "tie_label": "3%",
+    "outs": {
+     "total": 6,
+     "by": {
+      "two-pair": 6
+     }
+    },
+    "seed": 3546316111
+   },
+   "why": "a paired board: a K or A gives two pair using a hole card -> outs; the board pair alone doesn't count as your pair"
+  },
+  {
+   "id": "preflop-aces-1",
+   "hole": [
+    "As",
+    "Ad"
+   ],
+   "board": [],
+   "opponents": 1,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 8493,
+    "tie": 57,
+    "win_label": "85%",
+    "tie_label": "1%",
+    "outs": null,
+    "seed": 1913444511
+   },
+   "why": "pocket aces heads-up: about 85% (Monte Carlo, 10 000 samples)"
+  },
+  {
+   "id": "preflop-aces-7",
+   "hole": [
+    "As",
+    "Ad"
+   ],
+   "board": [],
+   "opponents": 7,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 3814,
+    "tie": 60,
+    "win_label": "38%",
+    "tie_label": "1%",
+    "outs": null,
+    "seed": 1879889273
+   },
+   "why": "pocket aces vs 7: about a third"
+  },
+  {
+   "id": "preflop-72o-1",
+   "hole": [
+    "7c",
+    "2d"
+   ],
+   "board": [],
+   "opponents": 1,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 3081,
+    "tie": 519,
+    "win_label": "31%",
+    "tie_label": "5%",
+    "outs": null,
+    "seed": 2297510234
+   },
+   "why": "7-2 offsuit, a weak hand, heads-up: about a third (a high tie rate: both often play the board)"
+  },
+  {
+   "id": "preflop-order",
+   "hole": [
+    "Kd",
+    "As"
+   ],
+   "board": [],
+   "opponents": 1,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 6389,
+    "tie": 159,
+    "win_label": "64%",
+    "tie_label": "2%",
+    "outs": null,
+    "seed": 2805577021
+   },
+   "why": "same as As Kd: the hole cards are put in deck order before seeding, so A-K in any order gives one answer"
+  },
+  {
+   "id": "preflop-ak",
+   "hole": [
+    "As",
+    "Kd"
+   ],
+   "board": [],
+   "opponents": 1,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 6389,
+    "tie": 159,
+    "win_label": "64%",
+    "tie_label": "2%",
+    "outs": null,
+    "seed": 2805577021
+   },
+   "why": "A-K offsuit heads-up"
+  },
+  {
+   "id": "preflop-suited-con-4",
+   "hole": [
+    "9h",
+    "8h"
+   ],
+   "board": [],
+   "opponents": 4,
+   "expect": {
+    "method": "mc",
+    "samples": 10000,
+    "win": 2246,
+    "tie": 283,
+    "win_label": "22%",
+    "tie_label": "3%",
+    "outs": null,
+    "seed": 2217495298
+   },
+   "why": "suited connector vs 4"
+  },
+  {
+   "id": "board-order",
+   "hole": [
+    "Ah",
+    "5h"
+   ],
+   "board": [
+    "7d",
+    "2c",
+    "9h",
+    "Kh"
+   ],
+   "opponents": 1,
+   "expect": {
+    "method": "exact",
+    "samples": 45540,
+    "win": 23377,
+    "tie": 1299,
+    "win_label": "51%",
+    "tie_label": "3%",
+    "outs": {
+     "total": 15,
+     "by": {
+      "flush": 9,
+      "pair": 6
+     }
+    }
+   },
+   "why": "the same turn as turn-flush-draw with the board in another order: identical answer (the board is put in deck order)"
+  }
+ ]
+}

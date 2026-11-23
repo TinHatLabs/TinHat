@@ -150,15 +150,18 @@ pub async fn sign_in(client: &matrix_sdk::Client, base: &str) -> Result<Session,
     })
 }
 
-/// One HTTP call with the play session: `method` GET / POST / DELETE, `path` from `/` (already percent-encoded).
+/// One HTTP call with the play session: `method` GET / POST / PUT / DELETE, `path` from `/` (already percent-encoded).
+/// Any other method is refused (round 2: it used to fall back to GET, which turned the admin economy PUT into a GET).
 pub async fn call(base: &str, session: &str, method: &str, path: &str, body: Option<&Value>) -> Result<Value, ApiError> {
     let http = http()?;
     note_request(method, path);
     let url = format!("{base}{path}");
     let req = match method {
+        "GET" => http.get(&url),
         "POST" => http.post(&url),
+        "PUT" => http.put(&url),
         "DELETE" => http.delete(&url),
-        _ => http.get(&url),
+        _ => return Err(ApiError { status: 0, code: "bad".into() }),
     };
     let mut req = req.header("Authorization", format!("Play {session}"));
     if let Some(b) = body {

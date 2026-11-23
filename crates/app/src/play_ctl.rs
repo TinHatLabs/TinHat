@@ -71,6 +71,12 @@ pub mod qobject {
         #[qproperty(i32, notice_rev)]
         #[qproperty(i32, cards_rev)] //          bumps when a chat card's record arrived (QML re-reads cardView)
         #[qproperty(QString, settings_json)] //  Settings → Games: {spaces: [{space, name, owner, wallet}], current: {…}|null}
+        #[qproperty(QString, odds_json)] //      round 2 F6: the last odds answer {tag, win_label, tie_label, outs, …} ("" = none)
+        #[qproperty(QString, flags_json)] //     the call space owner's play flags {play, rig_phone_apps, admin, side}
+        #[qproperty(QString, api_json)] //       round 2: the last playApi answer {id, ok, status, code, body}
+        #[qproperty(i32, api_rev)] //            bumps with every playApi answer
+        #[qproperty(QString, react_json)] //     round 2 F7: the last reaction at the open table {u, seat, r, to, at}
+        #[qproperty(i32, react_rev)] //          bumps with every reaction
         type PlayController = super::PlayControllerRust;
 
         /// QML: setCallRoom(roomId) — the room of my current call ("" = not in a call).
@@ -128,6 +134,54 @@ pub mod qobject {
         /// QML: raisePreset(viewJson, f) — the raise bar's quick amount (f = 0.5 | 1 | -1 = all-in); -1 = none (ui.json).
         #[qinvokable]
         fn raise_preset(self: &PlayController, view_json: &QString, f: f64) -> i32;
+        /// QML: cardsFace(hasCards, sharing, here, screensJson) → none | up | down | peek (round 2 B1/B2,
+        /// games_rules::cards_face; the desktop is never a Pad).
+        #[qinvokable]
+        fn cards_face(self: &PlayController, has_cards: bool, sharing: bool, here: bool, screens_json: &QString) -> QString;
+        /// QML: showHereNext(here, prevScreensJson, screensJson, tableClosed) — does Show here still hold.
+        #[qinvokable]
+        fn show_here_next(self: &PlayController, here: bool, prev_json: &QString, screens_json: &QString, closed: bool) -> bool;
+        /// QML: madeHand(cardsJson) → my made hand's category id from my hole cards + the board ("" = none).
+        #[qinvokable]
+        fn made_hand(self: &PlayController, cards_json: &QString) -> QString;
+        /// QML: oddsTag(viewJson) → the freshness tag of the odds for this view ("" = no odds inputs).
+        #[qinvokable]
+        fn odds_tag(self: &PlayController, view_json: &QString) -> QString;
+        /// QML: oddsShown(viewJson, setting, face) — games_rules::odds_visible for my seat in this view (`face` = the
+        /// cards' face on this screen, "peeking" while I hold to peek).
+        #[qinvokable]
+        fn odds_shown(self: &PlayController, view_json: &QString, setting: bool, face: &QString) -> bool;
+        /// QML: playApi(id, method, path, bodyJson) — round 2's HTTP screens (F8 admin, F9 Tune In) on the call space
+        /// owner's play API with my play session; only the allow-listed routes (play_wire::r2_route_ok). The answer lands
+        /// in apiJson {id, ok, status, code, body} (+ apiRev). Returns false when refused here.
+        #[qinvokable]
+        fn play_api(self: Pin<&mut PlayController>, id: &QString, method: &QString, path: &QString, body_json: &QString) -> bool;
+        /// QML: react(r, to) — round 2 F7: a table reaction ("tip", "toss" + to = a seat number or "pot", …). The tray's
+        /// mirror of the server's bucket refuses a burst here → "cooldown"; else the op id ("" = not sent).
+        #[qinvokable]
+        fn react(self: Pin<&mut PlayController>, r: &QString, to: &QString) -> QString;
+        /// QML: reactReady() — would the bucket take one now (greys the tray)
+        #[qinvokable]
+        fn react_ready(self: &PlayController) -> bool;
+        /// QML: turnNotice(summary, body, roomId) — round 2 §8.3: the OS "your turn" notification (opt-in; QML decides
+        /// when). Never cards, odds or amounts. A click routes "game-turn:<room>" back (Main.qml onToastAction). A new
+        /// one replaces the last.
+        #[qinvokable]
+        fn turn_notice(self: Pin<&mut PlayController>, summary: &QString, body: &QString, room: &QString);
+        /// QML: turnNoticeClear() — withdraw it (I acted / the turn passed).
+        #[qinvokable]
+        fn turn_notice_clear(self: Pin<&mut PlayController>);
+        /// QML: playApiAt(id, spaceId, method, path, bodyJson) — playApi for a SPACE outside the call (F8's Space settings
+        /// → Games tab): the space's owner = its create event's sender's server; only when that server's well-known has
+        /// `play_admin` (else the answer is {ok: false, code: "off"}). Same routes, same answer property.
+        #[qinvokable]
+        fn play_api_at(self: Pin<&mut PlayController>, id: &QString, space: &QString, method: &QString, path: &QString, body_json: &QString) -> bool;
+        /// QML: newOpId() — a contract op id (play_wire::new_op_id: 22 url-safe chars) for round 2's HTTP writes.
+        #[qinvokable]
+        fn new_op_id(self: &PlayController) -> QString;
+        /// QML: requestOdds(viewJson) — compute my odds off the UI thread; oddsJson gets {tag, …} (cached per tag).
+        #[qinvokable]
+        fn request_odds(self: Pin<&mut PlayController>, view_json: &QString);
         /// QML: seatSlot(seat, mySeat, seats) — where a Hold'em seat is drawn (ui.json `seat_slot`).
         #[qinvokable]
         fn seat_slot(self: &PlayController, seat: i32, my_seat: i32, seats: i32) -> i32;
@@ -170,6 +224,12 @@ pub struct PlayControllerRust {
     notice_rev: i32,
     cards_rev: i32,
     settings_json: QString,
+    odds_json: QString,
+    flags_json: QString,
+    api_json: QString,
+    api_rev: i32,
+    react_json: QString,
+    react_rev: i32,
 }
 
 // ── gate hooks (not in release builds) ──────────────────────────────────────────────────────────────────────────
@@ -219,7 +279,10 @@ fn discovered_from(well_known: &Value, server: &str) -> Discovered {
     let f = t.and_then(|t| t.get("features"));
     let play = f.and_then(|f| f.get("play")) == Some(&Value::Bool(true));
     let rig = f.and_then(|f| f.get("play_rig_phone_apps")) == Some(&Value::Bool(true));
-    let flags = json!({"play": play, "phone_app": false, "rig_phone_apps": rig});
+    // round 2 (addendum §7.3): the admin money screen + the Tune In side game, each only when its flag is literally true
+    let admin = f.and_then(|f| f.get("play_admin")) == Some(&Value::Bool(true));
+    let side = f.and_then(|f| f.get("play_side")) == Some(&Value::Bool(true));
+    let flags = json!({"play": play, "phone_app": false, "rig_phone_apps": rig, "admin": admin, "side": side});
     let api = t.and_then(|t| t.get("api")).and_then(Value::as_str).map(|s| s.trim().trim_end_matches('/').to_string()).unwrap_or_default();
     // the announced api must sit on that server's own host (as for my own server's: server_offer::api_allowed)
     let api = if !api.is_empty() && crate::server_offer::api_allowed(&api, &format!("https://{server}"), server) {
@@ -252,7 +315,8 @@ fn server_name_ok(s: &str) -> bool {
 
 async fn discover(server: &str) -> Discovered {
     if let Some(b) = pinned_base() {
-        return Discovered { base: b, flags: json!({"play": true, "phone_app": false, "rig_phone_apps": false}), reachable: true };
+        // the pinned lab / mock base (dev builds only: pinned_base is None in a release build) has every round-2 piece
+        return Discovered { base: b, flags: json!({"play": true, "phone_app": false, "rig_phone_apps": false, "admin": true, "side": true}), reachable: true };
     }
     if !server_name_ok(server) {
         return Discovered { base: String::new(), flags: json!({}), reachable: false };
@@ -358,6 +422,26 @@ async fn listing_spaces(client: &matrix_sdk::Client, room_id: &str) -> Vec<(Stri
     out
 }
 
+/// Round 2 F8: the server that keeps a space (= its owner, v1 §1.1): the space room's create event's sender's server;
+/// None for a room that isn't a joined space.
+async fn space_owner(space: &str) -> Option<String> {
+    if pinned_base().is_some() {
+        return space.split_once(':').map(|(_, s)| s.to_string());
+    }
+    let client = crate::session::client()?;
+    let rid = matrix_sdk::ruma::RoomId::parse(space).ok()?;
+    let room = client.get_room(&rid)?;
+    if room.state() != matrix_sdk::RoomState::Joined {
+        return None;
+    }
+    let create = crate::foreign_room::create_event(&room).await?;
+    if create.get("content").and_then(|c| c.get("type")).and_then(Value::as_str) != Some("m.space") {
+        return None;
+    }
+    let sender = create.get("sender").and_then(Value::as_str)?;
+    crate::play_rules::server_of_user_id(sender).map(str::to_string)
+}
+
 async fn resolve_space(room_id: &str) -> SpaceInfo {
     if let Some((at, s)) = engine().lock().unwrap().spaces.get(room_id).cloned() {
         if at.elapsed() < SPACE_TTL {
@@ -432,6 +516,56 @@ struct Engine {
     cards: HashMap<String, Value>,
     /// owner base → the spaces I opened there (Settings)
     known: HashMap<String, Vec<(String, String, String)>>,
+}
+
+/// Round 2 F7: the tray's mirror of the server's per-person reaction bucket (REACT_BURST 3, one per REACT_REFILL_MS 4 s).
+pub const REACT_BURST: u32 = 3;
+pub const REACT_REFILL_MS: u32 = 4_000;
+fn react_bucket() -> &'static Mutex<crate::games_rules::ReactBucket> {
+    static B: OnceLock<Mutex<crate::games_rules::ReactBucket>> = OnceLock::new();
+    B.get_or_init(|| Mutex::new(crate::games_rules::ReactBucket::new(REACT_BURST, REACT_REFILL_MS)))
+}
+
+/// Round 2 §8.3: bumps on every notice and every clear (a post that finishes after a clear is closed at once).
+static TURN_NOTICE_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Round 2 §8.3: the "your turn" notification on screen (withdrawn when the turn passes).
+fn turn_notice_id() -> &'static Mutex<Option<u32>> {
+    static N: OnceLock<Mutex<Option<u32>>> = OnceLock::new();
+    N.get_or_init(|| Mutex::new(None))
+}
+
+/// Round 2 F6: the tag of the newest odds request (only its answer is published).
+fn odds_latest() -> &'static Mutex<String> {
+    static L: OnceLock<Mutex<String>> = OnceLock::new();
+    L.get_or_init(|| Mutex::new(String::new()))
+}
+
+/// Round 2 F6: the odds answers per tag (the same input never computes twice).
+fn odds_cache() -> &'static Mutex<HashMap<String, String>> {
+    static C: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+    C.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// The odds' freshness tag: table | hand n | the canonical input (my cards, the board, n). Only the odds' inputs
+/// (games_rules::odds_inputs) go in; an answer is drawn only while its tag is the view's.
+pub fn odds_tag_of(view: &Value) -> Option<String> {
+    let (hole, board, n) = crate::games_rules::odds_inputs(view)?;
+    let h: Vec<&str> = hole.iter().map(String::as_str).collect();
+    let b: Vec<&str> = board.iter().map(String::as_str).collect();
+    let (hc, bc, n) = crate::play_odds::canonical(&h, &b, n)?;
+    let table = view.get("table").and_then(Value::as_str).unwrap_or("");
+    let hand = view.get("hand").and_then(|x| x.get("n")).and_then(Value::as_u64).unwrap_or(0);
+    Some(format!("{table}|{hand}|{}", crate::play_odds::seed_string(&hc, &bc, n)))
+}
+
+/// games_rules::odds_visible for my own seat of `view`.
+pub fn odds_shown_in(view: &Value, setting: bool, face: &str) -> bool {
+    let Some((_, _, n)) = crate::games_rules::odds_inputs(view) else { return false };
+    let my_seat = view["you"]["seat"].as_i64();
+    let my_state = view["seats"].as_array().and_then(|a| a.iter().find(|s| s["seat"].as_i64() == my_seat && my_seat.is_some())).and_then(|s| s["state"].as_str()).unwrap_or("");
+    let street = view["hand"]["street"].as_str().unwrap_or("");
+    let result = view.get("result").cloned().unwrap_or(Value::Null);
+    crate::games_rules::odds_visible(&Value::Bool(setting), my_state, street, &result, face, n)
 }
 
 fn engine() -> &'static Mutex<Engine> {
@@ -709,6 +843,22 @@ fn on_frame(base: &str, f: Value) {
                 }
             };
             if accept {
+                // round 2 B3 (contract v1.1b): each seat / Rig player carries its `rank` in the table's bound space: the
+                // seat tokens take it as a rank push for that space (absent = the ranks API as before)
+                if let Some(space) = view.get("space").and_then(Value::as_str).filter(|s| s.starts_with('!')) {
+                    let people = view.get("seats").or_else(|| view.get("players")).and_then(Value::as_array).cloned().unwrap_or_default();
+                    let owners = owners_of(&engine().lock().unwrap(), base);
+                    for p in people {
+                        if let (Some(u), Some(r)) = (p.get("u").and_then(Value::as_str), p.get("rank").and_then(Value::as_u64)) {
+                            let push = json!({"t": "rank", "space": space, "u": u, "rank": r});
+                            if play_wire::server_frame_ok(&push) {
+                                for o in &owners {
+                                    crate::prestige::apply_push(o, &push);
+                                }
+                            }
+                        }
+                    }
+                }
                 let text = view.to_string();
                 let t = table.clone();
                 ui(move |mut o| {
@@ -785,6 +935,21 @@ fn on_frame(base: &str, f: Value) {
             say(sentence_for(&code));
         }
         "post" => post_card(&f),
+        "react" => {
+            // round 2 F7: a reaction at the table I have open (memory only: never stored, never in the view)
+            let table = f.get("table").and_then(Value::as_str).unwrap_or("").to_string();
+            if engine().lock().unwrap().open_table.as_deref() != Some(table.as_str()) {
+                return;
+            }
+            let r = json!({"u": f.get("u"), "seat": f.get("seat"), "r": f.get("r"), "to": f.get("to"), "at": f.get("at")}).to_string();
+            ui(move |mut o| {
+                if o.table_id().to_string() == table {
+                    o.as_mut().set_react_json(QString::from(&r));
+                    let n = *o.react_rev();
+                    o.as_mut().set_react_rev(n.wrapping_add(1));
+                }
+            });
+        }
         "rank" => {
             // the prestige store: a rank frame of this owner's socket can only change that owner's spaces
             let owners = owners_of(&engine().lock().unwrap(), base);
@@ -853,6 +1018,10 @@ async fn connect_call(room: String, gen: u64) {
         }
         e.call_base = d.base.clone();
         e.call_flags = d.flags.clone();
+    }
+    {
+        let fj = d.flags.to_string();
+        ui(move |mut o| o.as_mut().set_flags_json(QString::from(&fj)));
     }
     if d.base.is_empty() {
         let why = if d.reachable { "owner-unsupported" } else { "owner-unavailable" };
@@ -1290,6 +1459,220 @@ impl qobject::PlayController {
         play_wire::raise_preset_view(&v, &f).map(|n| n.min(i32::MAX as u64) as i32).unwrap_or(-1)
     }
 
+    pub fn cards_face(&self, has_cards: bool, sharing: bool, here: bool, screens_json: &QString) -> QString {
+        let sc: Vec<String> = serde_json::from_str(&screens_json.to_string()).unwrap_or_default();
+        let sc: Vec<&str> = sc.iter().map(String::as_str).collect();
+        QString::from(crate::games_rules::cards_face(has_cards, sharing, false, here, &sc))
+    }
+
+    pub fn show_here_next(&self, here: bool, prev_json: &QString, screens_json: &QString, closed: bool) -> bool {
+        let p: Vec<String> = serde_json::from_str(&prev_json.to_string()).unwrap_or_default();
+        let s: Vec<String> = serde_json::from_str(&screens_json.to_string()).unwrap_or_default();
+        let p: Vec<&str> = p.iter().map(String::as_str).collect();
+        let s: Vec<&str> = s.iter().map(String::as_str).collect();
+        crate::games_rules::show_here_next(here, &p, &s, closed)
+    }
+
+    pub fn made_hand(&self, cards_json: &QString) -> QString {
+        let c: Vec<String> = serde_json::from_str(&cards_json.to_string()).unwrap_or_default();
+        let cards: Vec<crate::play_odds::Card> = c.iter().filter_map(|x| crate::play_odds::card(x)).collect();
+        if cards.len() != c.len() || cards.len() < 2 || cards.len() > 7 {
+            return QString::default();
+        }
+        QString::from(crate::play_hand::CATEGORIES[crate::play_odds::category_of(crate::play_odds::score(&cards))])
+    }
+
+    pub fn odds_tag(&self, view_json: &QString) -> QString {
+        let v: Value = serde_json::from_str(&view_json.to_string()).unwrap_or(Value::Null);
+        QString::from(odds_tag_of(&v).unwrap_or_default().as_str())
+    }
+
+    pub fn play_api(mut self: Pin<&mut Self>, id: &QString, method: &QString, path: &QString, body_json: &QString) -> bool {
+        self.as_mut().bind();
+        let (id, method, path) = (id.to_string(), method.to_string(), path.to_string());
+        if !play_wire::r2_route_ok(&method, &path) || id.len() > 64 {
+            return false;
+        }
+        let body: Option<Value> = if body_json.to_string().trim().is_empty() { None } else { serde_json::from_str(&body_json.to_string()).ok() };
+        if method != "GET" && body.is_none() {
+            return false;
+        }
+        let (base, _, _) = call_target();
+        if base.is_empty() {
+            return false;
+        }
+        let gen = engine().lock().unwrap().call_gen;
+        let acct = crate::session::generation();
+        rt().spawn(async move {
+            if crate::session::generation() != acct {
+                return; // another account signed in meanwhile: never act with its session
+            }
+            let ans = match session_for(&base).await {
+                Err(e) => json!({"id": id, "ok": false, "status": e.status, "code": e.code}),
+                // the account changed while the session was fetched: that session is the NEW account's, never use it
+                Ok(_) if crate::session::generation() != acct => return,
+                Ok(s) => match play_net::call(&base, &s.token, &method, &path, body.as_ref()).await {
+                    Ok(v) => json!({"id": id, "ok": true, "status": 200, "body": v}),
+                    Err(e) => json!({"id": id, "ok": false, "status": e.status, "code": e.code}),
+                },
+            };
+            if engine().lock().unwrap().call_gen != gen || crate::session::generation() != acct {
+                return; // an answer of an earlier call or account
+            }
+            let a = ans.to_string();
+            ui(move |mut o| {
+                if crate::session::generation() != acct {
+                    return;
+                }
+                o.as_mut().set_api_json(QString::from(&a));
+                let r = *o.api_rev();
+                o.as_mut().set_api_rev(r.wrapping_add(1));
+            });
+        });
+        true
+    }
+
+    pub fn react(self: Pin<&mut Self>, r: &QString, to: &QString) -> QString {
+        let (r, to) = (r.to_string(), to.to_string());
+        if !crate::games_rules::REACTIONS.contains(&r.as_str()) {
+            return QString::default();
+        }
+        let Ok(view) = serde_json::from_str::<Value>(&self.view_json().to_string()) else { return QString::default() };
+        if !react_bucket().lock().unwrap().try_send(play_net::now_ms() as f64) {
+            return QString::from("cooldown");
+        }
+        let mut a = json!({"do": "react", "r": r});
+        if r == "toss" {
+            a["to"] = match to.parse::<u64>() { Ok(n) if (1..=8).contains(&n) => json!(n), _ => json!("pot") };
+        }
+        let op = play_wire::new_op_id();
+        let Some(frame) = play_wire::act_frame(&view, &op, &a) else { return QString::default() };
+        if !send(frame) {
+            return QString::default();
+        }
+        QString::from(&op)
+    }
+
+    pub fn turn_notice(self: Pin<&mut Self>, summary: &QString, body: &QString, room: &QString) {
+        let (summary, body, room) = (summary.to_string(), body.to_string(), room.to_string());
+        if summary.is_empty() || summary.len() > 200 || body.len() > 200 || (!room.is_empty() && !room.starts_with('!')) {
+            return;
+        }
+        let gen = TURN_NOTICE_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+        rt().spawn(async move {
+            let old = turn_notice_id().lock().unwrap().take();
+            if let Some(old) = old {
+                crate::notify::close_notification(old).await;
+            }
+            let id = crate::notify::notify_action_id(&summary, &body, None, &format!("game-turn:{room}")).await;
+            let Some(id) = id else { return };
+            // a clear (or a newer notice) came while this one was being posted: it's stale, take it down at once
+            let stale = TURN_NOTICE_GEN.load(std::sync::atomic::Ordering::SeqCst) != gen;
+            if stale {
+                crate::notify::close_notification(id).await;
+                return;
+            }
+            let replaced = turn_notice_id().lock().unwrap().replace(id);
+            if let Some(r) = replaced {
+                crate::notify::close_notification(r).await;
+            }
+        });
+    }
+
+    pub fn turn_notice_clear(self: Pin<&mut Self>) {
+        TURN_NOTICE_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let Some(old) = turn_notice_id().lock().unwrap().take() else { return };
+        rt().spawn(async move { crate::notify::close_notification(old).await });
+    }
+
+    pub fn react_ready(&self) -> bool {
+        react_bucket().lock().unwrap().peek(play_net::now_ms() as f64)
+    }
+
+    pub fn play_api_at(mut self: Pin<&mut Self>, id: &QString, space: &QString, method: &QString, path: &QString, body_json: &QString) -> bool {
+        self.as_mut().bind();
+        let (id, space, method, path) = (id.to_string(), space.to_string(), method.to_string(), path.to_string());
+        if !play_wire::r2_route_ok(&method, &path) || id.len() > 64 || !space.starts_with('!') || space.len() > 255 {
+            return false;
+        }
+        let body: Option<Value> = if body_json.to_string().trim().is_empty() { None } else { serde_json::from_str(&body_json.to_string()).ok() };
+        if method != "GET" && body.is_none() {
+            return false;
+        }
+        let acct = crate::session::generation();
+        rt().spawn(async move {
+            let answer = move |a: Value| {
+                let a = a.to_string();
+                ui(move |mut o| {
+                    if crate::session::generation() != acct {
+                        return; // an answer of an earlier account
+                    }
+                    o.as_mut().set_api_json(QString::from(&a));
+                    let r = *o.api_rev();
+                    o.as_mut().set_api_rev(r.wrapping_add(1));
+                });
+            };
+            let Some(owner) = space_owner(&space).await else {
+                answer(json!({"id": id, "ok": false, "status": 0, "code": "no-space"}));
+                return;
+            };
+            let d = discover(&owner).await;
+            if crate::session::generation() != acct {
+                return; // another account signed in while we looked: never use its session for this request
+            }
+            if d.base.is_empty() || d.flags.get("admin") != Some(&Value::Bool(true)) {
+                answer(json!({"id": id, "ok": false, "status": 0, "code": "off"}));
+                return;
+            }
+            let ans = match session_for(&d.base).await {
+                Err(e) => json!({"id": id, "ok": false, "status": e.status, "code": e.code}),
+                Ok(_) if crate::session::generation() != acct => return,
+                Ok(s) => match play_net::call(&d.base, &s.token, &method, &path, body.as_ref()).await {
+                    Ok(v) => json!({"id": id, "ok": true, "status": 200, "body": v}),
+                    Err(e) => json!({"id": id, "ok": false, "status": e.status, "code": e.code}),
+                },
+            };
+            answer(ans);
+        });
+        true
+    }
+
+    pub fn new_op_id(&self) -> QString {
+        QString::from(&play_wire::new_op_id())
+    }
+
+    pub fn odds_shown(&self, view_json: &QString, setting: bool, face: &QString) -> bool {
+        let v: Value = serde_json::from_str(&view_json.to_string()).unwrap_or(Value::Null);
+        odds_shown_in(&v, setting, &face.to_string())
+    }
+
+    pub fn request_odds(self: Pin<&mut Self>, view_json: &QString) {
+        let v: Value = serde_json::from_str(&view_json.to_string()).unwrap_or(Value::Null);
+        let (Some(tag), Some((hole, board, n))) = (odds_tag_of(&v), crate::games_rules::odds_inputs(&v)) else { return };
+        *odds_latest().lock().unwrap() = tag.clone();
+        if let Some(hit) = odds_cache().lock().unwrap().get(&tag).cloned() {
+            self.set_odds_json(QString::from(&hit));
+            return;
+        }
+        rt().spawn_blocking(move || {
+            let h: Vec<&str> = hole.iter().map(String::as_str).collect();
+            let b: Vec<&str> = board.iter().map(String::as_str).collect();
+            let out = crate::play_odds::odds_json(&tag, &h, &b, n).to_string();
+            {
+                let mut c = odds_cache().lock().unwrap();
+                if c.len() > 64 {
+                    c.clear();
+                }
+                c.insert(tag.clone(), out.clone());
+            }
+            // an older job finishing after a newer request never replaces the newer answer (it stays in the cache)
+            let current = *odds_latest().lock().unwrap() == tag;
+            if current {
+                ui(move |o| o.set_odds_json(QString::from(&out)));
+            }
+        });
+    }
+
     pub fn seat_slot(&self, seat: i32, my_seat: i32, seats: i32) -> i32 {
         play_wire::seat_slot(seat.max(0) as u32, my_seat.max(0) as u32, seats.clamp(1, 8) as u32) as i32
     }
@@ -1525,6 +1908,17 @@ mod tests {
     use super::*;
 
     #[test]
+    fn settings_how_earning_names_no_hourly_rate() {
+        // N1: Settings → Games → "How chips work" shows words().settings.how_earning (SettingsWindow.qml). The earning
+        // rate is a space setting (15 min a chip by default), so the line must not promise "1 chip for each hour".
+        let shown = words()["settings"]["how_earning"].as_str().unwrap_or("").to_lowercase();
+        assert!(shown.len() > 40, "the line is there");
+        for bad in ["each hour", "per hour", "an hour", "hourly"] {
+            assert!(!shown.contains(bad), "how_earning still names an hourly rate ({bad:?}): {shown}");
+        }
+    }
+
+    #[test]
     fn words_parse_and_cover_every_code() {
         let w: Value = serde_json::from_str(WORDS).unwrap();
         // every code of the contract (§6.3 + rev 2's) has a sentence
@@ -1573,7 +1967,10 @@ mod tests {
         let wk = |f: Value| json!({"dev.tinhat.server": {"api": "https://lab.test/api", "features": f}});
         let d = discovered_from(&wk(json!({"play": true})), "lab.test");
         assert_eq!(d.base, "https://lab.test/api/play/v1");
-        assert_eq!(d.flags, json!({"play": true, "phone_app": false, "rig_phone_apps": false}));
+        assert_eq!(d.flags, json!({"play": true, "phone_app": false, "rig_phone_apps": false, "admin": false, "side": false}));
+        // round 2: the admin + side flags, literal true only
+        let d2 = discovered_from(&wk(json!({"play": true, "play_admin": true, "play_side": "true"})), "lab.test");
+        assert_eq!((d2.flags["admin"].clone(), d2.flags["side"].clone()), (json!(true), json!(false)));
         for v in [json!("true"), json!(1), json!(null)] {
             assert!(discovered_from(&wk(json!({"play": v})), "lab.test").base.is_empty(), "play {v}");
         }
@@ -1832,5 +2229,56 @@ mod tests {
             assert!(call_room_checks_without_in_call(&[l(fine)]).is_empty(), "{fine}");
         }
         assert!(call_room_checks_without_in_call(&[("src/x.rs:1".into(), "a.mCallRoomId === r".into())]).is_empty());
+    }
+
+    /// B3 (round 2): a person's NAME at a table (a seat plate, my own name, the Rig's players / leaderboard / Spinner)
+    /// carries their prestige token, as every other name does (spec §3.1 "everywhere"). Scan: every `text:` that is
+    /// just a `nameOf(x)` must have a `PrestigeToken` naming the same person within the 10 lines before it.
+    fn names_without_token(qml: &str) -> Vec<String> {
+        let lines: Vec<&str> = qml.lines().collect();
+        let mut bad = vec![];
+        for (i, l) in lines.iter().enumerate() {
+            let t = l.trim();
+            let Some(v) = t.strip_prefix("text:") else { continue };
+            let v = v.split("//").next().unwrap_or("").trim();
+            let Some(at) = v.find("nameOf(") else { continue };
+            if v.contains("fill(") || v.contains("say(") || v.contains('+') { continue } // a sentence that mentions someone, not a name label
+            let arg = &v[at + 7..v[at..].find(')').map(|e| at + e).unwrap_or(v.len())];
+            let who = arg.trim().trim_start_matches("ht.").trim_start_matches("rig.");
+            // a `PrestigeToken {` within the 10 lines before, whose `mxid:` (on its line or the lines after it) names `who`
+            let win = &lines[i.saturating_sub(10)..i];
+            let ok = win.iter().position(|b| b.contains("PrestigeToken")).is_some_and(|p| win[p..].iter().any(|b| b.contains("mxid:") && b.contains(who)));
+            if !ok { bad.push(format!("{}: {}", i + 1, t)); }
+        }
+        bad
+    }
+
+    #[test]
+    fn table_names_carry_the_prestige_token() {
+        for (f, qml, min) in [("HoldemTable.qml", include_str!("../qml/HoldemTable.qml"), 2), ("RigTable.qml", include_str!("../qml/RigTable.qml"), 4)] {
+            let sites = qml.lines().filter(|l| l.trim().starts_with("text:") && l.contains("nameOf(") && !l.contains("fill(") && !l.contains("say(") && !l.contains('+')).count();
+            assert!(sites >= min, "{f}: the scan found only {sites} name labels");
+            let bad = names_without_token(qml);
+            assert!(bad.is_empty(), "{f}: a name without its prestige token: {bad:#?}");
+        }
+        // the scan can fail: a name label with no token is caught, one with the token passes
+        assert_eq!(names_without_token("Item {\n    Label {\n        text: ht.nameOf(seatItem.s.u)\n    }\n}").len(), 1);
+        assert!(names_without_token("Row {\n    PrestigeToken { mxid: seatItem.s.u; roomId: ht.roomId }\n    Label {\n        text: ht.nameOf(seatItem.s.u)\n    }\n}").is_empty());
+        // a token for SOMEONE ELSE doesn't count
+        assert_eq!(names_without_token("Row {\n    PrestigeToken { mxid: ht.myId }\n    Label {\n        text: ht.nameOf(seatItem.s.u)\n    }\n}").len(), 1);
+    }
+
+    /// Round 2 (lab7 find): every op id QML sends in an HTTP write comes from new_op_id and passes the contract's check;
+    /// the QML's own ids (an earlier 14-char base36) are gone from the round-2 screens.
+    #[test]
+    fn r2_op_ids_come_from_rust() {
+        for _ in 0..50 {
+            assert!(play_wire::op_id_ok(&play_wire::new_op_id()));
+        }
+        assert!(!play_wire::op_id_ok("ad1x2y3z4w5v6u"), "a 14-char id is refused (what the server refused)");
+        for (f, q) in [("AdminChips.qml", include_str!("../qml/AdminChips.qml")), ("TuneIn.qml", include_str!("../qml/TuneIn.qml"))] {
+            assert!(q.contains("newOpId()"), "{f} must take its op ids from PlayController.newOpId");
+            assert!(!q.contains("Date.now().toString(36) + Math.floor"), "{f} still makes its own op ids");
+        }
     }
 }

@@ -25,6 +25,8 @@ Item {
     property var view: null
     property var words: ({})
     property string myId: ""
+    // the prestige context of every name here (PrestigeToken roomId): the table's bound space (view.space)
+    property string roomId: ""
     property bool sharing: false
     property real clockOffset: 0
     property bool focusedWindow: true
@@ -127,16 +129,209 @@ Item {
     }
     property int raiseTo: 0
     readonly property string turnKey: ht.hand && ht.hand.to_act ? ht.hand.n + ":" + ht.hand.to_act.turn : ""
-    onTurnKeyChanged: ht.raiseTo = ht.legal && ht.legal.raise ? ht.legal.raise.min : 0
     onLegalChanged: if (ht.legal && ht.legal.raise && (ht.raiseTo < ht.legal.raise.min || ht.raiseTo > ht.legal.raise.max)) ht.raiseTo = ht.legal.raise.min
 
-    // my cards: face down while my Pad has the table or I share my screen; hold to peek (a privacy change ends a peek)
-    readonly property bool padHas: !!ht.you && !!ht.you.screens && ht.you.screens.indexOf("pad") >= 0
-    readonly property bool hideMine: ht.sharing || ht.padHas
+    // my cards (round 2 B1/B2, GAMES-V1.1-ADDENDUM §1.4; the shared rule games_rules::cards_face):
+    //   up · peek (a Pad has the table: face down, hold to peek, "Your cards are on your phone · Show here")
+    //   · down (I share my screen: face down, NO peek, and nothing derived from my cards shows) · none
+    // The rule re-runs at once on every input (the share stopping included): it's a binding, never latched.
+    readonly property var screens: ht.you && ht.you.screens ? ht.you.screens : []
+    readonly property bool hasCards: !!ht.you && !!ht.you.cards && ht.you.cards.length > 0
+    readonly property bool padHas: ht.screens.indexOf("pad") >= 0
+    // Show here: holds until a Pad attaches AGAIN (screens goes no-pad → pad) or the table closes (show_here_next)
+    // kept on the app (Main.gameShowHere) so the compact table on the Call stage follows it too; a table change resets it
+    readonly property bool showHere: !!ht.app && ht.app.gameShowHere === true
+    function setShowHere(on) { if (ht.app) ht.app.gameShowHere = on }
+    property var prevScreens: []
+    onScreensChanged: {
+        if (ht.play && ht.showHere) ht.setShowHere(ht.play.showHereNext(ht.showHere, JSON.stringify(ht.prevScreens), JSON.stringify(ht.screens), false))
+        ht.prevScreens = ht.screens
+    }
+    readonly property string face: ht.play ? String(ht.play.cardsFace(ht.hasCards, ht.sharing, ht.showHere, JSON.stringify(ht.screens))) : "up"
+    readonly property bool hideMine: ht.face === "down" || ht.face === "peek"
     property bool peeking: false
-    onHideMineChanged: ht.peeking = false
+    onFaceChanged: ht.peeking = false
+    // what I see of my own cards on this screen right now: "up" / "peeking" show them; everything derived from my cards
+    // (the made hand, the F5 highlight, the odds) follows this
+    readonly property string seen: ht.face === "up" ? "up" : (ht.face === "peek" && ht.peeking ? "peeking" : ht.face)
+    readonly property bool mineVisible: ht.seen === "up" || ht.seen === "peeking"
 
     function act(o) { if (ht.play) ht.play.act(JSON.stringify(o)) }
+
+    // B4 (addendum §1.1): a seated player who is in the call: their seat avatar IS their call presence (the call's
+    // speaking ring, 2 px, and the muted-mic glyph at the bottom LEFT; the dealer button owns the bottom right)
+    function callTileOf(u) {
+        var ts = ht.app && ht.app.callTiles ? ht.app.callTiles : []
+        for (var i = 0; i < ts.length; ++i) {
+            var t = ts[i]
+            if (t.kind === "screenshare" || t.screenshare === true) continue
+            if ((t.id === "vid_selfview" && u === ht.myId) || String(t.participant || "") === u) return t
+        }
+        return null
+    }
+
+    // B10 (addendum §8): away seats. The server decides (one timeout → away; dealt out with no blinds; stand up after
+    // AWAY_STAND_HANDS dealt-out hands or AWAY_STAND_MS, chips kept); the app only draws it: `seat.away` / `you.away`
+    // = {reason, since, stand_at, hands_left} on 0.3.21 (12.2.0 servers: state "away" only).
+    readonly property bool amAway: !!ht.mine && ht.mine.state === "away"
+    readonly property var myAway: ht.you && ht.you.away ? ht.you.away : (ht.mine && ht.mine.away ? ht.mine.away : null)
+    readonly property string standLine: {
+        var a = ht.myAway
+        if (!ht.amAway || !a || typeof a.hands_left !== "number") return ""
+        var why = a.reason ? ht.r2say("away_reason_" + a.reason) : ""
+        if (why.indexOf("away_reason_") === 0) why = ""
+        var stand = a.hands_left === 1 ? ht.r2say("away_stand_one") : ht.r2say("away_stand_hands", { n: a.hands_left })
+        return why !== "" ? why + " · " + stand : stand
+    }
+    function awayTag(st) {
+        var base = ht.w.seat_states ? String(ht.w.seat_states.away || "") : ""
+        return st.away && typeof st.away.hands_left === "number" ? ht.r2say("away_pill_hands", { n: st.away.hands_left }) : base
+    }
+    // standing up (the server freed my away seat): one toast with the chips that went back to my wallet
+    signal toast(string text)
+    // F7 (addendum §4): table reactions, no money. The tray sends play.react (the bucket's mirror greys it); arrivals
+    // (play.reactJson) are drawn at the sender's seat plate for 1.2 s (a still badge for 2 s when the window isn't
+    // focused or motion is reduced), announced politely (coalesced to one per 3 s), and dropped when muted (all, or that
+    // person; local only, the sender isn't told).
+    readonly property var reactIds: ["tip", "knock", "clap", "toss", "sweat", "foil"]
+    readonly property var reactGlyph: ({ knock: "✊", clap: "👏", toss: "●", sweat: "💧", foil: "✦", tip: "" })
+    property bool reactReady: true
+    Timer { interval: 500; repeat: true; running: !!ht.play && ht.visible; onTriggered: ht.reactReady = ht.play.reactReady() }
+    function sendReact(r, to) {
+        if (!ht.play) return
+        var op = String(ht.play.react(r, to === undefined ? "pot" : String(to)))
+        ht.reactReady = ht.play.reactReady()
+    }
+    readonly property var settingsCtl: ht.app && ht.app.settings ? ht.app.settings : null
+    property bool muteAll: !!ht.settingsCtl && String(ht.settingsCtl.uiPref("games-react-mute")) === "1"
+    property var mutedUsers: { try { return JSON.parse(ht.settingsCtl ? String(ht.settingsCtl.uiBlob("games-react-muted") || "[]") : "[]") } catch (e) { return [] } }
+    function setMuteAll(on) { ht.muteAll = on; if (ht.settingsCtl) ht.settingsCtl.applyUiPref("games-react-mute", on ? "1" : "0") }
+    function toggleMuteUser(u) {
+        var m = ht.mutedUsers.slice(), i = m.indexOf(u)
+        if (i >= 0) m.splice(i, 1); else m.push(u)
+        ht.mutedUsers = m
+        if (ht.settingsCtl) ht.settingsCtl.applyUiBlob("games-react-muted", JSON.stringify(m))
+    }
+    property var bursts: []          // [{key, u, seat, r, to, still}]
+    property int _burstN: 0
+    property var _sayQueue: []
+    Timer { id: sayTimer; interval: 3000; onTriggered: ht.flushSay() }
+    function flushSay() {
+        if (ht._sayQueue.length === 0) return
+        var t = ht._sayQueue.length === 1 ? ht._sayQueue[0] : ht.r2say("react_n", { n: ht._sayQueue.length })
+        ht._sayQueue = []
+        if (ht.app && ht.app.gameAnnounce) ht.app.gameAnnounce(t)
+    }
+    function reactWords(x) {
+        var who = ht.nameOf(x.u)
+        var target = x.to === "pot" || x.to === undefined || x.to === null ? ht.r2say("react_pot") : ht.nameOf(ht.seatAt(Number(x.to)) ? ht.seatAt(Number(x.to)).u : "")
+        var line = ht.w.react && ht.w.react[x.r] ? ht.fill(ht.w.react[x.r], { person: target }) : x.r
+        return who + " " + line
+    }
+    Connections {
+        target: ht.play
+        ignoreUnknownSignals: true
+        function onReactRevChanged() {
+            var x; try { x = JSON.parse(ht.play.reactJson) } catch (e) { return }
+            if (!x || ht.muteAll || ht.mutedUsers.indexOf(String(x.u)) >= 0) return
+            var still = !Motion.focused || !Motion.animate || Motion.reducedMotion || !ht.focusedWindow
+            ht._burstN += 1
+            var b = ht.bursts.slice(); b.push({ key: ht._burstN, u: String(x.u), seat: x.seat, r: String(x.r), to: x.to, still: still })
+            if (b.length > 12) b.shift()
+            ht.bursts = b
+            var q = ht._sayQueue.slice(); q.push(ht.reactWords(x)); ht._sayQueue = q
+            if (!sayTimer.running) { ht.flushSay(); sayTimer.start() }
+        }
+    }
+    function dropBurst(key) { ht.bursts = ht.bursts.filter(function (b) { return b.key !== key }) }
+
+    // §8.3 "your turn" notices (opt-in: TURN_NOTIFY_DEFAULT false until answered, the line under the action bar the first
+    // time I sit; Settings → Games / the ⋯ change it). Sent when my turn begins and the table isn't on screen and focused
+    // (window unfocused, the stage on Call, another room); a second at TURN_NOTIFY_LAST_S left; withdrawn when the turn
+    // passes. Never cards, odds or amounts. The OS's own Do Not Disturb applies (it's the OS notification path).
+    readonly property int turnNotifyLastS: 10
+    property int turnPrefRev: 0
+    readonly property string turnPref: ht.turnPrefRev >= 0 && ht.settingsCtl ? String(ht.settingsCtl.uiPref("games-turn-notify")) : ""
+    function setTurnPref(on) { if (ht.settingsCtl) ht.settingsCtl.applyUiPref("games-turn-notify", on ? "1" : "0"); ht.turnPrefRev += 1 }
+    readonly property bool tableOnScreen: ht.focusedWindow && Motion.focused && !!ht.app && ht.app.gameStage === "table" && ht.visible
+    property string _noticedTurn: ""
+    property bool _lastNoticed: false
+    readonly property string gameTitle: String(ht.words.games ? ht.words.games.holdem : "")
+    function turnNotify(last) {
+        if (!ht.play || ht.turnPref !== "1") return
+        var room = ht.view && ht.view.room ? String(ht.view.room) : ""
+        var roomName = ht.app && ht.app.mRoomName ? String(ht.app.mRoomName) : ""
+        ht.play.turnNotice(ht.r2say("turn_title"), (last ? ht.r2say("turn_last", { s: ht.turnNotifyLastS }) + " · " : "") + ht.r2say("turn_body", { game: ht.gameTitle, room: roomName }), room)
+    }
+    onMyTurnChanged: {
+        if (!ht.myTurn) { ht._noticedTurn = ""; ht._lastNoticed = false; if (ht.play) ht.play.turnNoticeClear(); return }
+        if (ht.turnKey !== ht._noticedTurn) { ht._noticedTurn = ht.turnKey; ht._lastNoticed = false; if (!ht.tableOnScreen) ht.turnNotify(false) }
+    }
+    onTurnKeyChanged: {
+        ht.raiseTo = ht.legal && ht.legal.raise ? ht.legal.raise.min : 0
+        if (ht.myTurn && ht.turnKey !== ht._noticedTurn) { ht._noticedTurn = ht.turnKey; ht._lastNoticed = false; if (!ht.tableOnScreen) ht.turnNotify(false) }
+    }
+    onSecsLeftChanged: {
+        if (ht.myTurn && !ht._lastNoticed && ht.secsLeft > 0 && ht.secsLeft <= ht.turnNotifyLastS && !ht.tableOnScreen) { ht._lastNoticed = true; ht.turnNotify(true) }
+    }
+    onTableOnScreenChanged: if (ht.tableOnScreen && ht.play) ht.play.turnNoticeClear()
+
+    // F9: busted at the table ("Out of chips · Tune In"), offered only when the panel says the rule can hold
+    property bool tuneOffered: false
+    signal tuneRequested()
+    property var lastMine: null
+    onMineChanged: {
+        if (!ht.mine && ht.lastMine && ht.lastMine.state === "away" && ht.view && ht.view.status !== "closed")
+            ht.toast(ht.r2say("stood_up", { n: ht.lastMine.stack || 0 }))
+        ht.lastMine = ht.mine ? JSON.parse(JSON.stringify(ht.mine)) : null
+    }
+
+    // F5: the hand-rankings popover; my current made hand (my cards + the board, the app's own evaluator) lights its row
+    // while I can see my cards here
+    function toggleRankings(btn, above) {
+        if (rankPop.opened) { var same = rankPop.opener === btn; rankPop.close(); if (same) return }
+        rankPop.opener = btn
+        rankPop.above = above
+        rankPop.open()
+    }
+    readonly property var r2: ht.w && ht.w.r2 ? ht.w.r2 : ({})
+    function r2say(key, map) { return ht.fill(ht.r2[key] !== undefined ? ht.r2[key] : key, map || ({})) }
+    readonly property var board: ht.hand && ht.hand.board ? ht.hand.board : []
+    readonly property string myMade: {
+        if (!ht.play || !ht.hasCards || !ht.mineVisible || !ht.mine || ht.mine.state === "folded") return ""
+        return String(ht.play.madeHand(JSON.stringify(ht.you.cards.concat(ht.board))))
+    }
+
+    // F6: my odds (only my cards, the board and the live-opponent count go in: PlayController.requestOdds reads them
+    // from the view with games_rules::odds_inputs). Drawn only while the answer's tag is this view's.
+    property int oddsOnRev: 0
+    readonly property bool oddsOn: ht.oddsOnRev >= 0 && (!ht.app || !ht.app.settings || String(ht.app.settings.uiPref("games-odds")) !== "0")
+    readonly property string oddsTag: ht.play && ht.view ? String(ht.play.oddsTag(JSON.stringify(ht.view))) : ""
+    readonly property bool oddsShown: ht.play && ht.view && ht.oddsTag !== "" ? ht.play.oddsShown(JSON.stringify(ht.view), ht.oddsOn, ht.seen) : false
+    onOddsTagChanged: if (ht.oddsShown && ht.play) ht.play.requestOdds(JSON.stringify(ht.view))
+    onOddsShownChanged: if (ht.oddsShown && ht.play) ht.play.requestOdds(JSON.stringify(ht.view))
+    readonly property var odds: {
+        if (!ht.oddsShown || !ht.play || !ht.play.oddsJson) return null
+        var o = JSON.parse(ht.play.oddsJson)
+        return o && o.tag === ht.oddsTag && !o.none ? o : null
+    }
+    readonly property string oddsLine: {
+        var parts = []
+        if (ht.myMade !== "" && ht.w.categories) parts.push(String(ht.w.categories[ht.myMade] || ""))
+        if (ht.odds) {
+            parts.push(ht.r2say("odds_win", { p: ht.odds.win_label }))
+            if (ht.odds.tie_label !== "0%") parts.push(ht.r2say("odds_tie", { p: ht.odds.tie_label }))
+            if (ht.odds.outs && ht.odds.outs.total > 0)
+                parts.push(ht.odds.outs.total === 1 ? ht.r2say("odds_improve_one") : ht.r2say("odds_improve", { n: ht.odds.outs.total }))
+        }
+        return parts.join(" · ")
+    }
+    readonly property string outsTip: {
+        if (!ht.odds || !ht.odds.outs || !ht.odds.outs.by) return ""
+        var out = []
+        for (var k in ht.odds.outs.by) out.push(String(ht.w.categories ? ht.w.categories[k] || k : k) + " " + ht.odds.outs.by[k])
+        return out.join(" · ") + "\n" + ht.r2say("odds_info")
+    }
 
     // the body size; every piece = fBody × the web's ratio to its 13 px body (Holdem.module.css, bits.module.css)
     readonly property real fBody: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale
@@ -191,6 +386,39 @@ Item {
         font.weight: Font.DemiBold
     }
 
+    // F5: the rankings popover (360 px, anchored to the Hands button that opened it; Esc / a click outside closes it;
+    // not modal: the table keeps running and the turn timer stays visible)
+    Controls.Popup {
+        id: rankPop
+        objectName: "handRankingsPopup"
+        property Item opener: null
+        property bool above: true
+        parent: rankPop.opener || ht
+        width: 360
+        height: Math.min(600, Math.max(260, (ht.height || 600) - 40))
+        x: rankPop.opener ? rankPop.opener.width - width : 0
+        y: rankPop.opener ? (rankPop.above ? -height - 6 : rankPop.opener.height + 6) : 0
+        padding: 0
+        modal: false
+        focus: true
+        closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutsideParent
+        background: Item {}
+        contentItem: HandRankings {
+            play: ht.play
+            art: ht.art
+            w: ht.w
+            mine: ht.myMade
+            fBody: ht.fBody
+            // players only (design2 14:53): Show my odds + the "your turn" notices sit at the sheet's bottom
+            toggles: !!ht.mine
+            oddsOn: ht.oddsOn
+            turnOn: ht.turnPref === "1"
+            onOddsToggled: function (on) { if (ht.settingsCtl) ht.settingsCtl.applyUiPref("games-odds", on ? "1" : "0"); ht.oddsOnRev += 1 }
+            onTurnToggled: function (on) { ht.setTurnPref(on) }
+            onCloseRequested: rankPop.close()
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -218,6 +446,92 @@ Item {
                 font.pointSize: ht.fBody * 0.92
             }
             Item { Layout.fillWidth: true }
+            Row {   // F7: the reactions tray (seated players + watchers in the call)
+                objectName: "reactTray"
+                spacing: 2
+                Repeater {
+                    model: ht.reactIds
+                    Rectangle {
+                        id: rb
+                        required property var modelData
+                        objectName: "react-" + rb.modelData
+                        width: 30; height: 30; radius: 8
+                        color: rbHover.hovered && ht.reactReady ? Th.surfaceHover : "transparent"
+                        opacity: ht.reactReady ? 1 : 0.4
+                        Image {
+                            visible: rb.modelData === "tip"
+                            anchors.centerIn: parent
+                            width: 18; height: 18
+                            sourceSize: Qt.size(18, 18)
+                            source: rb.modelData === "tip" ? Prestige.tinted("prestige-symbolic", Th.textPrimary) : ""
+                        }
+                        Rectangle {   // toss: the art's coin
+                            visible: rb.modelData === "toss"
+                            anchors.centerIn: parent
+                            width: 14; height: 14; radius: 7
+                            color: ht.art.chip || Th.accentBase
+                            border.width: 3; border.color: ht.art.chipEdge || Th.accentBright
+                        }
+                        Controls.Label {
+                            visible: rb.modelData !== "tip" && rb.modelData !== "toss"
+                            anchors.centerIn: parent
+                            text: ht.reactGlyph[rb.modelData] || ""
+                            textFormat: Text.PlainText
+                            color: Th.textPrimary
+                            font.pointSize: ht.fBody * 1.04
+                        }
+                        HoverHandler { id: rbHover; cursorShape: ht.reactReady ? Qt.PointingHandCursor : Qt.ArrowCursor }
+                        TapHandler { enabled: ht.reactReady; onTapped: ht.sendReact(rb.modelData, "pot") }
+                        // F-D1 (12.2.1): a Tab stop as on the web (Reactions.tsx buttons): Space / Enter react (not on
+                        // auto-repeat; the cooldown still applies, the Tab stop stays put through it); the keyboard
+                        // focus draws the web's ring (2 px accent, :focus-visible); a click never focuses it
+                        activeFocusOnTab: true
+                        Keys.onSpacePressed: (event) => { if (!event.isAutoRepeat && ht.reactReady) ht.sendReact(rb.modelData, "pot") }
+                        Keys.onReturnPressed: (event) => { if (!event.isAutoRepeat && ht.reactReady) ht.sendReact(rb.modelData, "pot") }
+                        Keys.onEnterPressed: (event) => { if (!event.isAutoRepeat && ht.reactReady) ht.sendReact(rb.modelData, "pot") }
+                        Rectangle { anchors.fill: parent; anchors.margins: -2; radius: 10; color: "transparent"; border.width: 2; border.color: Th.accentBright; visible: rb.activeFocus }
+                        Controls.ToolTip.visible: rbHover.hovered
+                        Controls.ToolTip.delay: 400
+                        Controls.ToolTip.text: ht.r2say("react_tip_" + rb.modelData)
+                        Accessible.role: Accessible.Button
+                        Accessible.name: ht.r2say("react_tip_" + rb.modelData)
+                        Accessible.onPressAction: if (ht.reactReady) ht.sendReact(rb.modelData, "pot")
+                    }
+                }
+                Rectangle {   // the tray's last item: Mute reactions (all, this table and later ones; local only)
+                    id: rmBtn
+                    objectName: "reactMuteAll"
+                    // F-D1: a Tab stop (the web's Mute reactions check box): Space / Enter toggle it, the focus ring as above
+                    activeFocusOnTab: true
+                    Keys.onSpacePressed: (event) => { if (!event.isAutoRepeat) ht.setMuteAll(!ht.muteAll) }
+                    Keys.onReturnPressed: (event) => { if (!event.isAutoRepeat) ht.setMuteAll(!ht.muteAll) }
+                    Keys.onEnterPressed: (event) => { if (!event.isAutoRepeat) ht.setMuteAll(!ht.muteAll) }
+                    Rectangle { anchors.fill: parent; anchors.margins: -2; radius: 10; color: "transparent"; border.width: 2; border.color: Th.accentBright; visible: rmBtn.activeFocus }
+                    width: 30; height: 30; radius: 8
+                    color: rmHover.hovered ? Th.surfaceHover : (ht.muteAll ? Th.surfaceSelected : "transparent")
+                    Controls.Label { anchors.centerIn: parent; text: ht.muteAll ? "⊘" : "◌"; color: ht.muteAll ? Th.accentBright : Th.textSecondary; font.pointSize: ht.fBody * 1.04 }
+                    HoverHandler { id: rmHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler { onTapped: ht.setMuteAll(!ht.muteAll) }
+                    Controls.ToolTip.visible: rmHover.hovered
+                    Controls.ToolTip.delay: 400
+                    Controls.ToolTip.text: ht.muteAll ? ht.r2say("react_unmute_all") : ht.r2say("react_mute_all")
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.checked: ht.muteAll
+                    Accessible.name: ht.r2say("react_mute_all")
+                    Accessible.onPressAction: ht.setMuteAll(!ht.muteAll)
+                }
+            }
+            ThButton {   // F5 for spectators (seated players have it at the end of the my area)
+                id: hdBarBtn
+                objectName: "holdemHandsBar"
+                app: ht.app
+                visible: !ht.mine
+                flat: !(rankPop.opened && rankPop.opener === hdBarBtn)
+                highlighted: rankPop.opened && rankPop.opener === hdBarBtn
+                text: "ⓘ  " + ht.r2say("hands_button")
+                Accessible.name: ht.r2say("hands_title")
+                onClicked: ht.toggleRankings(hdBarBtn, false)
+            }
             ThButton {
                 app: ht.app
                 highlighted: true
@@ -228,13 +542,6 @@ Item {
                 text: ht.say("deal")
                 Accessible.name: text
                 onClicked: ht.act({ do: "deal" })
-            }
-            ThButton {
-                app: ht.app
-                visible: !!ht.mine && ht.mine.state === "away"
-                text: ht.say("back")
-                Accessible.name: text
-                onClicked: ht.act({ do: "away", on: false })
             }
             ThButton {
                 app: ht.app
@@ -430,6 +737,76 @@ Item {
                     }
                 }
 
+                // F7: reactions at the sender's plate (a watcher's at the felt's top), a toss's coin flies to its target
+                Repeater {
+                    model: ht.bursts
+                    delegate: Item {
+                        id: bu
+                        required property var modelData
+                        readonly property point from: bu.modelData.seat ? ht.seatPos(bu.modelData.seat) : Qt.point(50, 4)
+                        readonly property point dest: bu.modelData.r !== "toss" ? bu.from
+                            : (bu.modelData.to && bu.modelData.to !== "pot" ? ht.seatPos(Number(bu.modelData.to)) : Qt.point(50, 50))
+                        z: 6
+                        width: 64; height: 64
+                        x: feltWrap.width * bu.from.x / 100 - 32
+                        y: feltWrap.height * bu.from.y / 100 - 70
+                        opacity: 1
+                        objectName: "reactBurst"
+                        Rectangle {   // the badge (glyph on a soft disc), anchored to the plate
+                            id: badge
+                            anchors.centerIn: parent
+                            width: 40; height: 40; radius: 20
+                            color: ht.art.shade || Th.surfaceOverlay
+                            border.width: bu.modelData.r === "foil" ? 2 : 0
+                            border.color: ht.art.machineTrim || Th.accentBright
+                            scale: bu.modelData.still ? 1 : 0.4
+                            Image {
+                                visible: bu.modelData.r === "tip"
+                                anchors.centerIn: parent; width: 24; height: 24; sourceSize: Qt.size(24, 24)
+                                source: bu.modelData.r === "tip" ? Prestige.tinted("prestige-symbolic", Th.textPrimary) : ""
+                            }
+                            Rectangle {
+                                visible: bu.modelData.r === "toss"
+                                anchors.centerIn: parent; width: 16; height: 16; radius: 8
+                                color: ht.art.chip || Th.accentBase; border.width: 3; border.color: ht.art.chipEdge || Th.accentBright
+                            }
+                            Controls.Label {
+                                visible: bu.modelData.r !== "tip" && bu.modelData.r !== "toss"
+                                anchors.centerIn: parent
+                                text: ht.reactGlyph[bu.modelData.r] || ""
+                                textFormat: Text.PlainText
+                                color: Th.textPrimary
+                                font.pointSize: ht.fBody * 1.3
+                            }
+                        }
+                        Rectangle {   // a toss: the coin's flight (cosmetic: moves no chips)
+                            id: coin
+                            visible: bu.modelData.r === "toss" && !bu.modelData.still
+                            width: 14; height: 14; radius: 7
+                            color: ht.art.chip || Th.accentBase; border.width: 3; border.color: ht.art.chipEdge || Th.accentBright
+                            x: 25; y: 25
+                        }
+                        SequentialAnimation {
+                            running: !bu.modelData.still
+                            ParallelAnimation {
+                                NumberAnimation { target: badge; property: "scale"; from: 0.4; to: 1.0; duration: 220; easing.type: Easing.OutBack }
+                                NumberAnimation {
+                                    target: coin; property: "x"; from: 25; duration: 900; easing.type: Easing.InOutQuad
+                                    to: 25 + feltWrap.width * (bu.dest.x - bu.from.x) / 100
+                                }
+                                NumberAnimation {
+                                    target: coin; property: "y"; from: 25; duration: 900; easing.type: Easing.InOutQuad
+                                    to: 25 + feltWrap.height * (bu.dest.y - bu.from.y) / 100 + 70
+                                }
+                            }
+                            PauseAnimation { duration: 500 }
+                            NumberAnimation { target: bu; property: "opacity"; to: 0; duration: 380 }
+                            ScriptAction { script: ht.dropBurst(bu.modelData.key) }
+                        }
+                        Timer { running: bu.modelData.still; interval: 2000; onTriggered: ht.dropBurst(bu.modelData.key) }
+                    }
+                }
+
                 // bets, in front of the seats (the web: p + (50 − p) × 0.42 / 0.5)
                 Repeater {
                     model: ht.seats
@@ -475,7 +852,7 @@ Item {
                         x: feltWrap.width * seatItem.p.x / 100 - width / 2
                         y: feltWrap.height * seatItem.p.y / 100 - height / 2
                         z: 2
-                        opacity: seatItem.s && seatItem.s.state === "folded" ? 0.55 : 1
+                        opacity: seatItem.s && seatItem.s.state === "folded" ? 0.55 : (seatItem.s && seatItem.s.state === "away" ? 0.6 : 1)
 
                         // an empty chair (the web's .empty / .emptyQuiet): a dashed "Sit here" pill while I watch, else a
                         // faint dashed ring
@@ -542,6 +919,40 @@ Item {
                                 name: seatItem.s ? ht.nameOf(seatItem.s.u) : ""
                                 seed: seatItem.s ? String(seatItem.s.u) : ""
                             }
+                            Item {   // B4: the call presence of this seat's person
+                                id: pres
+                                anchors.fill: parent
+                                readonly property var tile: seatItem.s ? ht.callTileOf(String(seatItem.s.u)) : null
+                                readonly property bool self: !!pres.tile && pres.tile.id === "vid_selfview"
+                                readonly property bool muted: !!pres.tile && (pres.self ? (!!ht.app && (ht.app.mMicMuted || ht.app.mServerMuted)) : pres.tile.muted === true)
+                                readonly property bool speaking: !!pres.tile && !pres.muted && Motion.focused
+                                    && ht.app.tileAudioLevel(pres.tile.members || pres.tile.participant, pres.self, false) > 0.02
+                                Rectangle {
+                                    objectName: "seatSpeaking"
+                                    anchors.centerIn: parent
+                                    width: 48; height: 48; radius: 24
+                                    color: "transparent"
+                                    border.width: 2
+                                    border.color: Th.tileRingSpeaking
+                                    visible: pres.speaking && !seatItem.turn
+                                }
+                                Rectangle {   // muted: a 16 px disc with the mic-off glyph, bottom left
+                                    objectName: "seatMuted"
+                                    visible: pres.muted
+                                    width: 16; height: 16; radius: 8
+                                    x: -4; y: parent.height + 2 - height
+                                    color: Th.surfaceOverlay
+                                    border.width: 1; border.color: Th.borderSubtle
+                                    Kirigami.Icon {   // the call tiles' mic-off glyph (the same source and token)
+                                        anchors.centerIn: parent
+                                        width: 11; height: 11
+                                        source: "microphone-sensitivity-muted-symbolic"
+                                        color: Th.tileMicOffIcon
+                                    }
+                                    Accessible.role: Accessible.StaticText
+                                    Accessible.name: "muted"
+                                }
+                            }
                             TurnRing {
                                 visible: seatItem.turn
                                 anchors.centerIn: parent
@@ -583,6 +994,26 @@ Item {
                         Rectangle {   // the name plate (the web's .seatText): below the avatar, or beside it at the ends
                             id: plate
                             visible: !!seatItem.s
+                            // F7: right-click (or long-press) = Toss a coin to them · Mute their reactions
+                            TapHandler {
+                                acceptedButtons: Qt.RightButton
+                                onTapped: if (seatItem.s && seatItem.s.u !== ht.myId) plateMenu.popup()
+                            }
+                            TapHandler { onLongPressed: if (seatItem.s && seatItem.s.u !== ht.myId) plateMenu.popup() }
+                            Controls.Menu {
+                                id: plateMenu
+                                Controls.MenuItem {
+                                    text: LinkGate.plain(ht.r2say("react_toss_to", { person: seatItem.s ? ht.nameOf(seatItem.s.u) : "" }))
+                                    enabled: ht.reactReady
+                                    onTriggered: ht.sendReact("toss", seatItem.seatNo)
+                                }
+                                Controls.MenuItem {
+                                    text: LinkGate.plain(seatItem.s && ht.mutedUsers.indexOf(String(seatItem.s.u)) >= 0
+                                          ? ht.r2say("react_unmute_user", { person: ht.nameOf(seatItem.s.u) })
+                                          : ht.r2say("react_mute_user", { person: seatItem.s ? ht.nameOf(seatItem.s.u) : "" }))
+                                    onTriggered: if (seatItem.s) ht.toggleMuteUser(String(seatItem.s.u))
+                                }
+                            }
                             width: seatItem.side !== "" ? Math.max(84, Math.min(112, plateCol.implicitWidth + 16)) : Math.min(112, plateCol.implicitWidth + 16)
                             height: plateCol.implicitHeight + 7
                             x: seatItem.side === "l" ? seatItem.width / 2 - 30 - width : (seatItem.side === "r" ? seatItem.width / 2 + 30 : (seatItem.width - width) / 2)
@@ -596,15 +1027,23 @@ Item {
                                 x: seatItem.side === "l" ? plate.width - 8 - width : (seatItem.side === "r" ? 8 : (plate.width - width) / 2)
                                 y: 3
                                 spacing: 2
-                                Controls.Label {
+                                Row {   // B3: the prestige token 4 px before the name (12 px: a plate is widget-sized text)
                                     x: seatItem.side === "l" ? plateCol.width - width : (seatItem.side === "r" ? 0 : (plateCol.width - width) / 2)
-                                    width: Math.min(96, implicitWidth)
-                                    text: seatItem.s ? ht.nameOf(seatItem.s.u) : ""
-                                    textFormat: Text.PlainText
-                                    elide: Text.ElideRight
-                                    color: Th.textPrimary
-                                    font.weight: Font.DemiBold
-                                    font.pointSize: ht.fBody * 0.92
+                                    PrestigeToken {
+                                        id: plateTok
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        mxid: seatItem.s ? String(seatItem.s.u) : ""; roomId: ht.roomId; size: 12
+                                    }
+                                    Controls.Label {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: Math.min(96 - plateTok.implicitWidth, implicitWidth)
+                                        text: seatItem.s ? ht.nameOf(seatItem.s.u) : ""
+                                        textFormat: Text.PlainText
+                                        elide: Text.ElideRight
+                                        color: Th.textPrimary
+                                        font.weight: Font.DemiBold
+                                        font.pointSize: ht.fBody * 0.92
+                                    }
                                 }
                                 Row {
                                     x: seatItem.side === "l" ? plateCol.width - width : (seatItem.side === "r" ? 0 : (plateCol.width - width) / 2)
@@ -617,6 +1056,7 @@ Item {
                                             if (seatItem.wonN > 0) return ht.say("won_tag", { n: seatItem.wonN })
                                             if (seatItem.turn) return ht.secsLeft + "s"
                                             if (st.connected === false) return ht.say("offline")
+                                            if (st.state === "away") return ht.awayTag(st)
                                             var sw = ht.w.seat_states ? ht.w.seat_states[st.state] : ""
                                             if (sw) return sw
                                             if (ht.hand && ht.hand.last && ht.hand.last.seat === seatItem.seatNo) return ht.actionWord(ht.hand.last.a, ht.hand.last.to)
@@ -680,9 +1120,20 @@ Item {
                             art: ht.art
                             play: ht.play
                             size: "lg"
-                            card: ht.hideMine && !ht.peeking ? "" : String(modelData)
+                            card: ht.mineVisible ? String(modelData) : ""
                             dim: !!ht.mine && ht.mine.state === "folded"
                         }
+                    }
+                    ThButton {   // F9: out of chips → Tune In
+                        objectName: "holdemTuneIn"
+                        app: ht.app
+                        visible: !!ht.mine && ht.mine.state === "out" && ht.tuneOffered
+                        anchors.verticalCenter: parent.verticalCenter
+                        highlighted: true
+                        implicitHeight: 30
+                        text: ht.r2say("tune_title")
+                        Accessible.name: text
+                        onClicked: ht.tuneRequested()
                     }
                     Controls.Label {
                         visible: !ht.you || !ht.you.cards || ht.you.cards.length === 0
@@ -693,33 +1144,87 @@ Item {
                         font.pointSize: ht.fBody   // the web's .noCards (the body size)
                     }
                 }
-                MouseArea {   // hold to peek (press = faces, release = backs)
+                MouseArea {   // hold to peek (press = faces, release = backs): only for a Pad's `peek`, never while sharing
+                    objectName: "holdemPeek"
                     anchors.fill: parent
-                    enabled: ht.hideMine
+                    enabled: ht.face === "peek"
                     onPressed: ht.peeking = true
                     onReleased: ht.peeking = false
                     onCanceled: ht.peeking = false
                     Accessible.role: Accessible.Button
-                    Accessible.name: ht.sharing ? ht.say("peek_share") : ht.say("peek_pad")
+                    Accessible.name: ht.say("peek_pad")
                 }
             }
             ColumnLayout {
                 spacing: 2
-                Controls.Label {
-                    visible: ht.hideMine && !!ht.you && !!ht.you.cards && ht.you.cards.length > 0
-                    text: ht.sharing ? ht.say("peek_share") : ht.say("peek_pad")
-                    textFormat: Text.PlainText
-                    color: Th.textMuted
-                    font.pointSize: ht.fBody * 0.81
-                }
-                Controls.Label {
-                    text: ht.mine ? ht.nameOf(ht.mine.u) : ""
-                    textFormat: Text.PlainText
-                    color: Th.textPrimary
-                    font.weight: Font.DemiBold
-                    font.pointSize: ht.fBody
+                RowLayout {   // B3: my name with my prestige token (14 px beside the body-size name)
+                    spacing: 0
+                    PrestigeToken { mxid: ht.mine ? String(ht.mine.u) : ""; roomId: ht.roomId }
+                    Controls.Label {
+                        text: ht.mine ? ht.nameOf(ht.mine.u) : ""
+                        textFormat: Text.PlainText
+                        color: Th.textPrimary
+                        font.weight: Font.DemiBold
+                        font.pointSize: ht.fBody
+                    }
                 }
                 Chips { n: ht.mine ? ht.mine.stack : 0; big: true }
+                RowLayout {   // B2: why my cards are face down here (+ Show here for a Pad)
+                    objectName: "holdemHiddenLine"
+                    visible: ht.hideMine
+                    spacing: 8
+                    Controls.Label {
+                        text: ht.face === "down" ? ht.r2say("hidden_sharing") : ht.r2say("cards_on_phone")
+                        textFormat: Text.PlainText
+                        color: Th.textMuted
+                        font.pointSize: ht.fBody * 0.85
+                    }
+                    Controls.Label {   // Show here: a link-style accent button (web2's look), only for a Pad's `peek`
+                        objectName: "holdemShowHere"
+                        visible: ht.face === "peek"
+                        text: ht.r2say("show_here")
+                        textFormat: Text.PlainText
+                        color: shHover.hovered ? Th.accentBright : Th.accentBase
+                        font.weight: Font.DemiBold
+                        font.underline: shHover.hovered
+                        font.pointSize: ht.fBody * 0.85
+                        HoverHandler { id: shHover; cursorShape: Qt.PointingHandCursor }
+                        TapHandler { onTapped: ht.setShowHere(true) }
+                        Accessible.role: Accessible.Button
+                        Accessible.name: text
+                        Accessible.onPressAction: ht.setShowHere(true)
+                    }
+                }
+                RowLayout {   // F5/F6: my made hand · Win n% · Tie n% · n cards improve you ⓘ
+                    objectName: "holdemOddsLine"
+                    visible: ht.oddsLine !== ""
+                    spacing: 4
+                    Controls.Label {
+                        text: ht.oddsLine
+                        textFormat: Text.PlainText
+                        color: Th.textSecondary
+                        font.pointSize: ht.fBody * 0.85
+                    }
+                    Item {   // ⓘ: the improving cards by category + "Improving isn't always winning"
+                        visible: ht.outsTip !== ""
+                        implicitWidth: infoGlyph.implicitWidth + 4
+                        implicitHeight: infoGlyph.implicitHeight
+                        Controls.Label {
+                            id: infoGlyph
+                            anchors.centerIn: parent
+                            text: "ⓘ"
+                            textFormat: Text.PlainText
+                            color: infoHover.hovered ? Th.textPrimary : Th.textMuted
+                            font.pointSize: ht.fBody * 0.92
+                        }
+                        HoverHandler { id: infoHover }
+                        Controls.ToolTip.visible: infoHover.hovered
+                        Controls.ToolTip.delay: 300
+                        Controls.ToolTip.text: ht.outsTip
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: ht.outsTip
+                    }
+                }
                 Controls.Label {
                     visible: !!ht.you && ht.you.at_cap === true
                     text: ht.words.wallet ? String(ht.words.wallet.at_cap_table) : ""
@@ -728,16 +1233,64 @@ Item {
                     font.pointSize: ht.fBody * 0.85
                 }
                 Controls.Label {
-                    visible: !!ht.you && (ht.you.timeouts || 0) > 0 && !!ht.mine && ht.mine.state !== "away"
+                    visible: !!ht.you && (ht.you.timeouts || 0) > 0 && !!ht.mine && ht.mine.state !== "away" && ht.you.away === undefined
                     text: ht.say("timeout_note")
                     textFormat: Text.PlainText
                     color: Th.textMuted
                     font.pointSize: ht.fBody * 0.85
                 }
             }
+            ThButton {   // F5: Hands (the rankings popover above the button)
+                id: hdBtn
+                objectName: "holdemHands"
+                app: ht.app
+                Layout.alignment: Qt.AlignVCenter
+                radius: height / 2
+                flat: !(rankPop.opened && rankPop.opener === hdBtn)
+                highlighted: rankPop.opened && rankPop.opener === hdBtn
+                text: "ⓘ  " + ht.r2say("hands_button")
+                Accessible.name: ht.r2say("hands_title")
+                onClicked: ht.toggleRankings(hdBtn, true)
+            }
             Item { Layout.fillWidth: true }
+            ColumnLayout {   // B10 (addendum §8.2): away = a big I'm back in place of the action bar + when I'll stand up
+                objectName: "holdemAwayBlock"
+                visible: ht.amAway
+                spacing: 4
+                ThButton {
+                    objectName: "holdemImBack"
+                    app: ht.app
+                    highlighted: true
+                    Layout.alignment: Qt.AlignRight
+                    implicitHeight: 40
+                    leftPadding: 22
+                    rightPadding: 22
+                    font.weight: Font.DemiBold
+                    text: ht.say("back")
+                    Accessible.name: text
+                    onClicked: ht.act({ do: "away", on: false })
+                }
+                Controls.Label {
+                    visible: text !== ""
+                    Layout.alignment: Qt.AlignRight
+                    text: ht.standLine
+                    textFormat: Text.PlainText
+                    color: Th.textMuted
+                    font.pointSize: ht.fBody * 0.85
+                }
+            }
             ColumnLayout {   // the actions
+                visible: !ht.amAway
                 spacing: 6
+                RowLayout {   // §8.3: the one-time ask (until answered)
+                    objectName: "turnNotifyAsk"
+                    visible: !!ht.mine && ht.turnPref === ""
+                    Layout.alignment: Qt.AlignRight
+                    spacing: 6
+                    Controls.Label { text: ht.r2say("turn_ask"); textFormat: Text.PlainText; color: Th.textSecondary; font.pointSize: ht.fBody * 0.81 }
+                    ThButton { objectName: "turnNotifyYes"; app: ht.app; implicitHeight: 24; leftPadding: 8; rightPadding: 8; font.pointSize: ht.fBody * 0.81; text: ht.r2say("turn_yes"); onClicked: ht.setTurnPref(true) }
+                    ThButton { app: ht.app; flat: true; implicitHeight: 24; leftPadding: 8; rightPadding: 8; font.pointSize: ht.fBody * 0.81; text: ht.r2say("turn_no"); onClicked: ht.setTurnPref(false) }
+                }
                 Controls.Label {
                     visible: !ht.myTurn
                     Layout.alignment: Qt.AlignRight

@@ -36,7 +36,17 @@
   "taken": 409,
   "rules": 409,
   "greyed": 409,
-  "host-only": 403
+  "host-only": 403,
+  "cooldown": 429,
+  "op-reused": 409,
+  "bad-reason": 400,
+  "bad-value": 400,
+  "at-table": 409,
+  "not-admin": 403,
+  "not-broke": 409,
+  "day-max": 409,
+  "side-off": 403,
+  "no-run": 404
  },
  "x-moves": {
   "holdem": [
@@ -50,7 +60,8 @@
    "allin",
    "away",
    "kick",
-   "close"
+   "close",
+   "react"
   ],
   "rig": [
    "join",
@@ -69,7 +80,9 @@
    "whisper",
    "peek",
    "kick",
-   "close"
+   "close",
+   "react",
+   "away"
   ],
   "table_level": [
    "sit",
@@ -79,7 +92,8 @@
    "kick",
    "close",
    "join",
-   "start"
+   "start",
+   "react"
   ],
   "shapes": {
    "holdem": [
@@ -157,6 +171,16 @@
      "close",
      [],
      [],
+     false
+    ],
+    [
+     "react",
+     [
+      "r"
+     ],
+     [
+      "to"
+     ],
      false
     ]
    ],
@@ -309,6 +333,24 @@
      [],
      [],
      false
+    ],
+    [
+     "react",
+     [
+      "r"
+     ],
+     [
+      "to"
+     ],
+     false
+    ],
+    [
+     "away",
+     [
+      "on"
+     ],
+     [],
+     false
     ]
    ]
   }
@@ -385,7 +427,17 @@
     "taken",
     "rules",
     "greyed",
-    "host-only"
+    "host-only",
+    "cooldown",
+    "op-reused",
+    "bad-reason",
+    "bad-value",
+    "at-table",
+    "not-admin",
+    "not-broke",
+    "day-max",
+    "side-off",
+    "no-run"
    ]
   },
   "clientKind": {
@@ -541,6 +593,21 @@
      },
      "minItems": 2,
      "maxItems": 2
+    },
+    "rank": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "away": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/awayInfo"
+      }
+     ]
     }
    },
    "required": [
@@ -551,6 +618,40 @@
     "state",
     "cards",
     "connected"
+   ],
+   "additionalProperties": false
+  },
+  "awayInfo": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "enum": [
+      "timeout",
+      "gone",
+      "asked"
+     ]
+    },
+    "since": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "stand_at": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "hands_left": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 50
+    }
+   },
+   "required": [
+    "reason",
+    "since",
+    "stand_at",
+    "hands_left"
    ],
    "additionalProperties": false
   },
@@ -983,7 +1084,7 @@
     },
     "cap": {
      "type": "integer",
-     "minimum": 100,
+     "minimum": 20,
      "maximum": 9007199254740991
     },
     "holdings": {
@@ -998,6 +1099,16 @@
     },
     "can_deal": {
      "type": "boolean"
+    },
+    "away": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/awayInfo"
+      }
+     ]
     }
    },
    "required": [
@@ -1175,6 +1286,21 @@
     },
     "skipped": {
      "type": "boolean"
+    },
+    "rank": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "away": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/awayInfo"
+      }
+     ]
     }
    },
    "required": [
@@ -2095,6 +2221,16 @@
        "type": "integer",
        "minimum": 0,
        "maximum": 9007199254740991
+      },
+      "away": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "$ref": "#/$defs/awayInfo"
+        }
+       ]
       }
      },
      "required": [
@@ -2130,6 +2266,16 @@
        "type": "integer",
        "minimum": 0,
        "maximum": 9007199254740991
+      },
+      "away": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "$ref": "#/$defs/awayInfo"
+        }
+       ]
       },
       "timeouts": {
        "type": "integer",
@@ -2263,6 +2409,16 @@
        "type": "integer",
        "minimum": 0,
        "maximum": 9007199254740991
+      },
+      "away": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "$ref": "#/$defs/awayInfo"
+        }
+       ]
       }
      },
      "required": [
@@ -2322,6 +2478,16 @@
        "type": "integer",
        "minimum": 0,
        "maximum": 9007199254740991
+      },
+      "away": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "$ref": "#/$defs/awayInfo"
+        }
+       ]
       }
      },
      "required": [
@@ -2364,6 +2530,16 @@
        "type": "integer",
        "minimum": 0,
        "maximum": 9007199254740991
+      },
+      "away": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "$ref": "#/$defs/awayInfo"
+        }
+       ]
       }
      },
      "required": [
@@ -3212,6 +3388,63 @@
        },
        "required": [
         "do"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tH[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "react"
+        },
+        "r": {
+         "enum": [
+          "tip",
+          "knock",
+          "clap",
+          "toss",
+          "sweat",
+          "foil"
+         ]
+        },
+        "to": {
+         "anyOf": [
+          {
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 8
+          },
+          {
+           "const": "pot"
+          }
+         ]
+        }
+       },
+       "required": [
+        "do",
+        "r"
        ],
        "additionalProperties": false
       }
@@ -4433,6 +4666,101 @@
       "a"
      ],
      "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "react"
+        },
+        "r": {
+         "enum": [
+          "tip",
+          "knock",
+          "clap",
+          "toss",
+          "sweat",
+          "foil"
+         ]
+        },
+        "to": {
+         "anyOf": [
+          {
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 8
+          },
+          {
+           "const": "pot"
+          }
+         ]
+        }
+       },
+       "required": [
+        "do",
+        "r"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "t": {
+       "const": "act"
+      },
+      "table": {
+       "type": "string",
+       "pattern": "^tR[A-Za-z0-9]{14}$"
+      },
+      "op": {
+       "$ref": "#/$defs/op"
+      },
+      "a": {
+       "type": "object",
+       "properties": {
+        "do": {
+         "const": "away"
+        },
+        "on": {
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "do",
+        "on"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "t",
+      "table",
+      "op",
+      "a"
+     ],
+     "additionalProperties": false
     }
    ]
   },
@@ -4486,6 +4814,15 @@
      "items": {
       "$ref": "#/$defs/room"
      }
+    },
+    "features": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "maxLength": 32
+     },
+     "minItems": 0,
+     "maxItems": 16
     }
    },
    "required": [
@@ -4495,6 +4832,68 @@
     "now",
     "rig_hidden",
     "wallets"
+   ],
+   "additionalProperties": false
+  },
+  "s_react": {
+   "type": "object",
+   "properties": {
+    "t": {
+     "const": "react"
+    },
+    "table": {
+     "$ref": "#/$defs/table"
+    },
+    "u": {
+     "$ref": "#/$defs/mxid"
+    },
+    "seat": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 8
+      }
+     ]
+    },
+    "r": {
+     "enum": [
+      "tip",
+      "knock",
+      "clap",
+      "toss",
+      "sweat",
+      "foil"
+     ]
+    },
+    "to": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 8
+      },
+      {
+       "const": "pot"
+      }
+     ]
+    },
+    "at": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "t",
+    "table",
+    "u",
+    "seat",
+    "r",
+    "at"
    ],
    "additionalProperties": false
   },
@@ -4607,6 +5006,11 @@
     },
     "dup": {
      "type": "boolean"
+    },
+    "retry_ms": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 60000
     }
    },
    "required": [
@@ -4644,13 +5048,13 @@
     },
     "cap": {
      "type": "integer",
-     "minimum": 100,
+     "minimum": 20,
      "maximum": 9007199254740991
     },
     "earned_today": {
      "type": "integer",
      "minimum": 0,
-     "maximum": 24
+     "maximum": 200
     }
    },
    "required": [
@@ -4844,6 +5248,9 @@
     },
     {
      "$ref": "#/$defs/s_error"
+    },
+    {
+     "$ref": "#/$defs/s_react"
     }
    ]
   },
@@ -4862,6 +5269,28 @@
     },
     "server": {
      "$ref": "#/$defs/server"
+    },
+    "who": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/mxid"
+     },
+     "minItems": 1,
+     "maxItems": 100
+    },
+    "key": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "min": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "max": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
     }
    },
    "required": [
@@ -5096,7 +5525,7 @@
     },
     "cap": {
      "type": "integer",
-     "minimum": 100,
+     "minimum": 20,
      "maximum": 9007199254740991
     },
     "at_table": {
@@ -5132,12 +5561,12 @@
     "earned_today": {
      "type": "integer",
      "minimum": 0,
-     "maximum": 24
+     "maximum": 200
     },
     "day_max": {
      "type": "integer",
      "minimum": 1,
-     "maximum": 24
+     "maximum": 200
     },
     "accrual_s": {
      "type": "integer",
@@ -5148,6 +5577,11 @@
      "type": "integer",
      "minimum": 1,
      "maximum": 9007199254740991
+    },
+    "chip_minutes": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 60
     },
     "day": {
      "$ref": "#/$defs/day"
@@ -5165,6 +5599,125 @@
      "required": [
       "available",
       "next_day"
+     ],
+     "additionalProperties": false
+    },
+    "notices": {
+     "type": "object",
+     "properties": {
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+         },
+         "at": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+         },
+         "action": {
+          "enum": [
+           "grant",
+           "remove",
+           "set",
+           "reset",
+           "rank"
+          ]
+         },
+         "amount": {
+          "anyOf": [
+           {
+            "type": "null"
+           },
+           {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+           }
+          ]
+         },
+         "reason": {
+          "anyOf": [
+           {
+            "type": "null"
+           },
+           {
+            "type": "string",
+            "maxLength": 140
+           }
+          ]
+         }
+        },
+        "required": [
+         "id",
+         "at",
+         "action",
+         "amount",
+         "reason"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 0,
+       "maxItems": 10
+      },
+      "more": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "items",
+      "more"
+     ],
+     "additionalProperties": false
+    },
+    "side": {
+     "type": "object",
+     "properties": {
+      "on": {
+       "type": "boolean"
+      },
+      "eligible": {
+       "type": "boolean"
+      },
+      "reason": {
+       "enum": [
+        null,
+        "not-broke",
+        "open-money",
+        "day-max",
+        "off"
+       ]
+      },
+      "left_today": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 100
+      },
+      "day_max": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 100
+      },
+      "broke_max": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 100
+      }
+     },
+     "required": [
+      "on",
+      "eligible",
+      "reason",
+      "left_today",
+      "day_max",
+      "broke_max"
      ],
      "additionalProperties": false
     }
@@ -5234,7 +5787,11 @@
          "rig-escrow",
          "rig-settle",
          "void",
-         "lab-grant"
+         "lab-grant",
+         "admin",
+         "side",
+         "oneoff",
+         "other"
         ]
        },
        "ref": {
@@ -5305,6 +5862,685 @@
     "v",
     "space",
     "ranks"
+   ],
+   "additionalProperties": false
+  },
+  "econValue": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "boolean"
+      }
+     ]
+    },
+    "source": {
+     "enum": [
+      "default",
+      "server",
+      "space"
+     ]
+    }
+   },
+   "required": [
+    "value",
+    "source"
+   ],
+   "additionalProperties": false
+  },
+  "economy": {
+   "type": "object",
+   "properties": {
+    "chip_minutes": {
+     "$ref": "#/$defs/econValue"
+    },
+    "day_max": {
+     "$ref": "#/$defs/econValue"
+    },
+    "start": {
+     "$ref": "#/$defs/econValue"
+    },
+    "topup_to": {
+     "$ref": "#/$defs/econValue"
+    },
+    "cap_base": {
+     "$ref": "#/$defs/econValue"
+    },
+    "cap_per_rank": {
+     "$ref": "#/$defs/econValue"
+    },
+    "side_day_max": {
+     "$ref": "#/$defs/econValue"
+    },
+    "side_on": {
+     "$ref": "#/$defs/econValue"
+    }
+   },
+   "required": [
+    "chip_minutes",
+    "day_max",
+    "start",
+    "topup_to",
+    "cap_base",
+    "cap_per_rank",
+    "side_day_max",
+    "side_on"
+   ],
+   "additionalProperties": false
+  },
+  "adminSpace": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "you": {
+     "type": "object",
+     "properties": {
+      "admin": {
+       "const": true
+      },
+      "why": {
+       "enum": [
+        "space-admin",
+        "server-owner"
+       ]
+      }
+     },
+     "required": [
+      "admin",
+      "why"
+     ],
+     "additionalProperties": false
+    },
+    "economy": {
+     "$ref": "#/$defs/economy"
+    },
+    "wallets": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "u": {
+        "$ref": "#/$defs/mxid"
+       },
+       "balance": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+         }
+        ]
+       },
+       "rank": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "cap": {
+        "type": "integer",
+        "minimum": 20,
+        "maximum": 9007199254740991
+       },
+       "open": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "u",
+       "balance",
+       "rank",
+       "cap",
+       "open"
+      ],
+      "additionalProperties": false
+     }
+    }
+   },
+   "required": [
+    "v",
+    "space",
+    "you",
+    "economy",
+    "wallets"
+   ],
+   "additionalProperties": false
+  },
+  "adminWalletsRequest": {
+   "type": "object",
+   "properties": {
+    "op": {
+     "$ref": "#/$defs/op"
+    },
+    "action": {
+     "enum": [
+      "grant",
+      "remove",
+      "set",
+      "reset",
+      "rank"
+     ]
+    },
+    "who": {
+     "anyOf": [
+      {
+       "const": "everyone"
+      },
+      {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/mxid"
+       },
+       "minItems": 1,
+       "maxItems": 100
+      }
+     ]
+    },
+    "amount": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 100000
+    },
+    "reason": {
+     "type": "string",
+     "maxLength": 140
+    }
+   },
+   "required": [
+    "op",
+    "action",
+    "who"
+   ],
+   "additionalProperties": false
+  },
+  "adminBalance": {
+   "anyOf": [
+    {
+     "type": "object",
+     "properties": {
+      "balance": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "rank": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "balance",
+      "rank"
+     ],
+     "additionalProperties": false
+    },
+    {
+     "type": "object",
+     "properties": {
+      "granted": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "granted"
+     ],
+     "additionalProperties": false
+    }
+   ]
+  },
+  "adminWallets": {
+   "type": "object",
+   "properties": {
+    "done": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "u": {
+        "$ref": "#/$defs/mxid"
+       },
+       "before": {
+        "$ref": "#/$defs/adminBalance"
+       },
+       "after": {
+        "$ref": "#/$defs/adminBalance"
+       }
+      },
+      "required": [
+       "u",
+       "before",
+       "after"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "skipped": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "u": {
+        "$ref": "#/$defs/mxid"
+       },
+       "code": {
+        "enum": [
+         "at-table",
+         "frozen"
+        ]
+       }
+      },
+      "required": [
+       "u",
+       "code"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "log": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "dup": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "done",
+    "skipped",
+    "log",
+    "dup"
+   ],
+   "additionalProperties": false
+  },
+  "adminEconomyRequest": {
+   "type": "object",
+   "properties": {
+    "op": {
+     "$ref": "#/$defs/op"
+    },
+    "set": {
+     "type": "object"
+    },
+    "reset": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "chip_minutes",
+       "day_max",
+       "start",
+       "topup_to",
+       "cap_base",
+       "cap_per_rank",
+       "side_day_max",
+       "side_on"
+      ]
+     }
+    },
+    "reason": {
+     "type": "string",
+     "maxLength": 140
+    }
+   },
+   "required": [
+    "op"
+   ],
+   "additionalProperties": false
+  },
+  "adminEconomy": {
+   "type": "object",
+   "properties": {
+    "economy": {
+     "$ref": "#/$defs/economy"
+    },
+    "log": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "dup": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "economy",
+    "log",
+    "dup"
+   ],
+   "additionalProperties": false
+  },
+  "adminLog": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "entries": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+       },
+       "at": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "by": {
+        "$ref": "#/$defs/mxid"
+       },
+       "by_role": {
+        "enum": [
+         "space-admin",
+         "server-owner"
+        ]
+       },
+       "action": {
+        "enum": [
+         "grant",
+         "remove",
+         "set",
+         "reset",
+         "rank",
+         "economy"
+        ]
+       },
+       "who": {
+        "anyOf": [
+         {
+          "$ref": "#/$defs/mxid"
+         },
+         {
+          "enum": [
+           "everyone",
+           "economy",
+           "someone"
+          ]
+         }
+        ]
+       },
+       "amount": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+         }
+        ]
+       },
+       "before": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "object"
+         }
+        ]
+       },
+       "after": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "object"
+         }
+        ]
+       },
+       "reason": {
+        "anyOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "string",
+          "maxLength": 140
+         }
+        ]
+       },
+       "count": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       }
+      },
+      "required": [
+       "id",
+       "at",
+       "by",
+       "by_role",
+       "action",
+       "who",
+       "amount",
+       "before",
+       "after",
+       "reason",
+       "count"
+      ],
+      "additionalProperties": false
+     }
+    }
+   },
+   "required": [
+    "v",
+    "space",
+    "entries"
+   ],
+   "additionalProperties": false
+  },
+  "noticesSeenRequest": {
+   "type": "object",
+   "properties": {
+    "space": {
+     "$ref": "#/$defs/room"
+    },
+    "upto": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "space",
+    "upto"
+   ],
+   "additionalProperties": false
+  },
+  "noticesSeen": {
+   "type": "object",
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "seen": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "v",
+    "seen"
+   ],
+   "additionalProperties": false
+  },
+  "sideStartRequest": {
+   "type": "object",
+   "properties": {
+    "space": {
+     "$ref": "#/$defs/room"
+    }
+   },
+   "required": [
+    "space"
+   ],
+   "additionalProperties": false
+  },
+  "sideRun": {
+   "type": "object",
+   "properties": {
+    "run": {
+     "type": "string",
+     "pattern": "^sR[A-Za-z0-9]{16}$"
+    },
+    "lo": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100
+    },
+    "hi": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100
+    },
+    "tries_left": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7
+    },
+    "expires": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "pay": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+     },
+     "minItems": 7,
+     "maxItems": 7
+    },
+    "left_today": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 100
+    }
+   },
+   "required": [
+    "run",
+    "lo",
+    "hi",
+    "tries_left",
+    "expires",
+    "pay",
+    "left_today"
+   ],
+   "additionalProperties": false
+  },
+  "sideTuneRequest": {
+   "type": "object",
+   "properties": {
+    "op": {
+     "$ref": "#/$defs/op"
+    },
+    "guess": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100
+    }
+   },
+   "required": [
+    "op",
+    "guess"
+   ],
+   "additionalProperties": false
+  },
+  "sideTune": {
+   "type": "object",
+   "properties": {
+    "result": {
+     "enum": [
+      "higher",
+      "lower",
+      "found",
+      "lost",
+      "cancelled"
+     ]
+    },
+    "lo": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 101
+    },
+    "hi": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 100
+    },
+    "tries_left": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7
+    },
+    "paid": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3
+    },
+    "secret": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100
+    },
+    "wallet": {
+     "type": "object",
+     "properties": {
+      "balance": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "holdings": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "balance",
+      "holdings"
+     ],
+     "additionalProperties": false
+    },
+    "dup": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "result",
+    "lo",
+    "hi",
+    "tries_left",
+    "paid",
+    "dup"
    ],
    "additionalProperties": false
   },

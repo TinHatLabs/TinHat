@@ -21,7 +21,12 @@ Rectangle {
     property var words: ({})
     property string myId: ""
     property bool sharing: false
-    readonly property bool shown: !!gp.app && !!gp.play && gp.play.state !== "" && (gp.app.gamePanelOpen || gp.play.tableId !== "")
+    // B3 (addendum §1.1): the prestige context of every name at a table = the table's bound SPACE (view.space), never the
+    // room's current game space (a room moved to another space mid-hand keeps the old space's ranks beside its chips)
+    readonly property string tableRoom: gp.view && gp.view.space ? String(gp.view.space) : ""
+    // B4: a table shows while the call's stage is the table (the Table | Call pill / G); the Games list whenever it's asked for
+    readonly property bool shown: !!gp.app && !!gp.play && gp.play.state !== ""
+        && (gp.app.gamePanelOpen || (gp.play.tableId !== "" && gp.app.gameStage === "table"))
     // rev 2: the call room's game space ({space, name, owner, why, link}); why "" = found
     readonly property var sp: {
         if (!gp.play || !gp.play.spaceJson) return null
@@ -59,6 +64,54 @@ Rectangle {
             if (v.seats[i].seat === v.you.seat) return v.seats[i].stack
         return null
     }
+    // round 2: the words of round 2 (words.json table.r2)
+    readonly property var r2: gp.words && gp.words.table && gp.words.table.r2 ? gp.words.table.r2 : ({})
+    function r2say(k, map) { return gp.fill(gp.r2[k] !== undefined ? gp.r2[k] : k, map || ({})) }
+    readonly property var flags: { try { return gp.play && gp.play.flagsJson ? JSON.parse(gp.play.flagsJson) : ({}) } catch (e) { return ({}) } }
+    // §6.3: 0.3.21's /me names the space's rate (chip_minutes); 12.2.0's words say 1 an hour
+    readonly property string earnRate: gp.wallet && typeof gp.wallet.chip_minutes === "number"
+        ? gp.r2say("per_minutes", { n: gp.wallet.chip_minutes }) : gp.lw("per_hour")
+    // F9 (addendum §6.2/§6.4): offered only when the server's rule can hold (side flag, holdings ≤ SIDE_BROKE_MAX); the
+    // server still decides (409 not-broke / open-money / day-max)
+    readonly property int sideBrokeMax: 4
+    // contract v1.1c: /me.side = {on, eligible, reason, left_today, day_max, broke_max}: the server's word when present
+    readonly property var side: gp.wallet && gp.wallet.side ? gp.wallet.side : null
+    readonly property bool tuneOffered: gp.flags.side === true && !!gp.wallet
+        && (gp.side ? gp.side.on === true && gp.side.eligible === true
+                    : (gp.wallet.holdings !== undefined ? gp.wallet.holdings : gp.wallet.balance) <= gp.sideBrokeMax)
+    property bool tuneOpen: false
+
+    // F8 (addendum §5): am I an admin of this space (asked once per panel open, only when the owner's server has the
+    // admin screen); the notices of admin changes to MY chips (from /me)
+    property bool amAdmin: false
+    property bool adminOpen: false
+    property string _probeId: ""
+    readonly property string spaceOfCall: gp.sp ? String(gp.sp.space || "") : ""
+    function probeAdmin() {
+        gp.amAdmin = false
+        if (!gp.play || gp.flags.admin !== true || gp.spaceOfCall === "") return
+        gp._probeId = "adminprobe-" + Date.now().toString(36)
+        gp.play.playApi(gp._probeId, "GET", "/admin/spaces/" + encodeURIComponent(gp.spaceOfCall), "")
+    }
+    onSpaceOfCallChanged: if (gp.shown) gp.probeAdmin()
+    // contract v1.1c: /me.notices = {items: [{id, at, action, amount, reason}], more}
+    readonly property var notices: !gp.wallet || !gp.wallet.notices ? []
+        : (Array.isArray(gp.wallet.notices) ? gp.wallet.notices : (gp.wallet.notices.items || []))
+    function seenNotices() {
+        var upto = 0
+        for (var i = 0; i < gp.notices.length; ++i) upto = Math.max(upto, gp.notices[i].id || 0)
+        if (gp.play && upto > 0) gp.play.playApi("noticesseen-" + Date.now().toString(36), "POST", "/me/notices/seen", JSON.stringify({ upto: upto }))
+        if (gp.play) gp.play.refreshWallet()
+    }
+    Connections {
+        target: gp.play
+        ignoreUnknownSignals: true
+        function onApiRevChanged() {
+            var a; try { a = JSON.parse(gp.play.apiJson) } catch (e) { return }
+            if (a && a.id === gp._probeId) gp.amAdmin = a.ok === true && !!a.body && !!a.body.you && a.body.you.admin === true
+            if (a && String(a.id).indexOf("noticesseen-") === 0 && gp.play) gp.play.refreshWallet()
+        }
+    }
     function fill(s, map) {
         s = String(s === undefined ? "" : s)
         for (var k in map) s = s.split("{" + k + "}").join(String(map[k]))
@@ -66,7 +119,8 @@ Rectangle {
     }
     // the body size; every piece = body × the web's ratio to its 13 px body (GamePanel / Games.module.css)
     readonly property real body: (Kirigami.Theme.defaultFont.pointSize > 0 ? Kirigami.Theme.defaultFont.pointSize : 10) * Th.textScale
-    readonly property bool focusedWindow: !gp.app || !gp.app.core || gp.app.core.winState === undefined || gp.app.core.winState === "focused"
+    // the main window's focus (Main.winState; round 2: was read from an `app.core` Main doesn't expose, so it was always true)
+    readonly property bool focusedWindow: !gp.app || gp.app.winState === undefined || gp.app.winState === "focused"
 
     // opening the panel (or a table) is an opt-in touch (§2.2) and the top-up check (§2.4): read /me
     // and a table needs room: the call fills the app while the panel is up ("fill the app", the same as the ⛶ button), and
@@ -75,6 +129,7 @@ Rectangle {
     onShownChanged: {
         if (gp.shown) {
             if (gp.play) gp.play.refreshWallet()
+            gp.probeAdmin()
             if (gp.app && !gp.app.callMaximized) { gp._filledByUs = true; gp.app.callMaximized = true }
         } else if (gp._filledByUs) {
             gp._filledByUs = false
@@ -100,6 +155,10 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
+            StagePill {   // B4: Table | Call at the START of the table head (web2's place; G flips it too)
+                Layout.alignment: Qt.AlignVCenter
+                app: gp.app
+            }
             ThToolButton {
                 app: gp.app
                 visible: !!gp.play && gp.play.tableId !== ""
@@ -195,6 +254,16 @@ Rectangle {
                     }
                 }
             }
+            ThButton {   // F8: Manage chips… (only for the people the space owner's server calls admins)
+                objectName: "manageChips"
+                app: gp.app
+                visible: gp.amAdmin
+                flat: true
+                implicitHeight: 30
+                text: gp.r2say("admin_open")
+                Accessible.name: text
+                onClicked: gp.adminOpen = true
+            }
             ThToolButton {
                 app: gp.app
                 iconName: "window-close-symbolic"
@@ -205,6 +274,55 @@ Rectangle {
             }
         }
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Th.borderSubtle }
+
+        // F8 (addendum §5.3): an admin changed my chips: one line each, until I close it (POST /me/notices/seen)
+        Repeater {
+            model: gp.notices
+            Rectangle {
+                id: nt
+                required property var modelData
+                objectName: "chipNotice"
+                Layout.fillWidth: true
+                radius: 8
+                color: Th.surfaceOverlay
+                border.width: 1; border.color: Th.borderSubtle
+                implicitHeight: ntRow.implicitHeight + 10
+                RowLayout {
+                    id: ntRow
+                    anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: 10; anchors.rightMargin: 6
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        textFormat: Text.PlainText
+                        color: Th.textPrimary
+                        font.pointSize: gp.body * 0.92
+                        text: gp.r2say("notice_" + String(nt.modelData.action || "grant"), { n: nt.modelData.amount !== undefined && nt.modelData.amount !== null ? nt.modelData.amount : "" })
+                              + (nt.modelData.reason ? " (" + nt.modelData.reason + ")" : "")
+                    }
+                    ThToolButton {
+                        app: gp.app
+                        iconName: "window-close-symbolic"
+                        iconSize: 12
+                        tip: gp.r2say("hands_close")
+                        Accessible.name: tip
+                        onClicked: gp.seenNotices()
+                    }
+                }
+            }
+        }
+
+        // ── B4: the call's watchers (people in the call not seated at this table), above the felt ──
+        GameCallStrip {
+            Layout.fillWidth: true
+            visible: !!gp.view && gp.play.tableId !== "" && gp.view.status !== "closed" && people.length > 0
+            app: gp.app
+            view: gp.view
+            myId: gp.myId
+            spaceId: gp.tableRoom
+            words: gp.words
+            fBody: gp.body
+        }
 
         // ── body ──
         Item {
@@ -377,7 +495,7 @@ Rectangle {
                             }
                             Controls.Label {
                                 visible: !!gp.wallet
-                                text: gp.wallet ? gp.lw("cap") + " " + gp.wallet.cap + "      " + gp.lw("earned_today") + " " + (gp.wallet.earned_today || 0) + " " + gp.lw("of", { n: gp.wallet.day_max || 8 }) + "      " + gp.lw("per_hour") : ""
+                                text: gp.wallet ? gp.lw("cap") + " " + gp.wallet.cap + "      " + gp.lw("earned_today") + " " + (gp.wallet.earned_today || 0) + " " + gp.lw("of", { n: gp.wallet.day_max || 8 }) + "      " + gp.earnRate : ""
                                 textFormat: Text.PlainText
                                 color: Th.textMuted
                                 font.pointSize: gp.body * 0.92
@@ -388,6 +506,26 @@ Rectangle {
                                 textFormat: Text.PlainText
                                 color: gp.art.chip || Th.accentBright
                                 font.pointSize: gp.body * 0.92
+                            }
+                            RowLayout {   // F9: out of chips? Tune In (only when the server's rule can hold: no nags)
+                                objectName: "tuneOffer"
+                                visible: gp.tuneOffered
+                                spacing: 8
+                                Controls.Label {
+                                    text: gp.r2say("tune_offer", { n: gp.side && typeof gp.side.left_today === "number" ? gp.side.left_today : 10 })
+                                    textFormat: Text.PlainText
+                                    color: Th.textSecondary
+                                    font.pointSize: gp.body * 0.92
+                                }
+                                ThButton {
+                                    objectName: "tuneOfferButton"
+                                    app: gp.app
+                                    highlighted: true
+                                    implicitHeight: 28
+                                    text: gp.r2say("tune_title")
+                                    Accessible.name: text
+                                    onClicked: gp.tuneOpen = true
+                                }
                             }
                             Controls.Label {
                                 visible: !!gp.wallet && !!gp.wallet.topup && gp.wallet.topup.available === true
@@ -601,6 +739,10 @@ Rectangle {
                 visible: active
                 sourceComponent: HoldemTable {
                     app: gp.app
+                    onToast: function (text) { toast.text = text; toastTimer.restart() }
+                    tuneOffered: gp.tuneOffered
+                    onTuneRequested: gp.tuneOpen = true
+                    roomId: gp.tableRoom
                     play: gp.play
                     view: gp.view
                     words: gp.words
@@ -616,6 +758,7 @@ Rectangle {
                 visible: active
                 sourceComponent: RigTable {
                     app: gp.app
+                    roomId: gp.tableRoom
                     play: gp.play
                     view: gp.view
                     words: gp.words
@@ -672,6 +815,47 @@ Rectangle {
                 }
             }
 
+            // F9: the Tune In card over the panel (Back = close; the table keeps running behind it)
+            Rectangle {
+                visible: gp.tuneOpen
+                anchors.fill: parent
+                z: 40
+                color: Th.scrim
+                MouseArea { anchors.fill: parent; onClicked: gp.tuneOpen = false }
+                Loader {
+                    anchors.centerIn: parent
+                    active: gp.tuneOpen
+                    sourceComponent: TuneIn {
+                        width: Math.min(440, gp.width - 40)
+                        app: gp.app
+                        play: gp.play
+                        spaceId: gp.sp ? String(gp.sp.space || "") : ""
+                        focusedWindow: gp.focusedWindow
+                        onDone: gp.tuneOpen = false
+                    }
+                }
+            }
+            // F8: the admin money screen over the panel
+            Rectangle {
+                visible: gp.adminOpen
+                anchors.fill: parent
+                z: 41
+                color: Th.scrim
+                MouseArea { anchors.fill: parent; onClicked: gp.adminOpen = false }
+                Loader {
+                    anchors.centerIn: parent
+                    active: gp.adminOpen
+                    sourceComponent: AdminChips {
+                        width: Math.min(720, gp.width - 40)
+                        height: Math.min(720, gp.height - 40)
+                        app: gp.app
+                        play: gp.play
+                        spaceId: gp.spaceOfCall
+                        spaceName: gp.sp ? String(gp.sp.name || gp.sp.space || "") : ""
+                        onDone: gp.adminOpen = false
+                    }
+                }
+            }
             // the toast: refused moves, restarts
             Rectangle {
                 id: toast

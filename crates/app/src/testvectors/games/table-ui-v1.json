@@ -1,0 +1,615 @@
+{
+ "v": 1,
+ "about": "Tin Hat games v1.1 table rules (GAMES-V1.1-ADDENDUM \u00a71.4, \u00a73.2, \u00a74.2), byte-identical in the desktop and the web. cards_face(in) -> none|up|down|peek: no cards -> none; sharing -> down; on_pad -> up; here (Show here) -> up; screens has 'pad' -> peek; else up. show_here_next(in) -> bool: false on a table close; false when 'pad' is in screens but not in prev_screens (a Pad attached AGAIN); else unchanged. live_opponents(in) = seats whose state is active, allin or leaving, other than `you`. odds_visible(in): setting === true AND you_state in {active, allin} AND street in {preflop, flop, turn, river} AND result null AND face in {up, peeking} AND opponents >= 1. reactions: the tray list in order and the per-person token bucket (starts full at burst; +1 per refill_ms, fractional, capped at burst; a send costs 1; false = refused 'cooldown'). The server is the word; the apps mirror it to grey the tray.",
+ "cards_face": {
+  "cases": [
+   {
+    "id": "alone",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": false,
+     "here": false,
+     "screens": [
+      "desktop"
+     ]
+    },
+    "expect": "up",
+    "why": "nothing else open: face up"
+   },
+   {
+    "id": "no-cards",
+    "in": {
+     "has_cards": false,
+     "sharing": false,
+     "on_pad": false,
+     "here": false,
+     "screens": [
+      "desktop",
+      "pad"
+     ]
+    },
+    "expect": "none",
+    "why": "nothing to draw"
+   },
+   {
+    "id": "pad-attached",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": false,
+     "here": false,
+     "screens": [
+      "desktop",
+      "pad"
+     ]
+    },
+    "expect": "peek",
+    "why": "the B2 case: a Pad has the table, face down with hold-to-peek + Show here"
+   },
+   {
+    "id": "pad-attached-web",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": false,
+     "here": false,
+     "screens": [
+      "web",
+      "pad"
+     ]
+    },
+    "expect": "peek",
+    "why": "same rule for the web"
+   },
+   {
+    "id": "show-here",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": false,
+     "here": true,
+     "screens": [
+      "desktop",
+      "pad"
+     ]
+    },
+    "expect": "up",
+    "why": "the person tapped Show here: face up on this screen while the Pad is still attached"
+   },
+   {
+    "id": "sharing-alone",
+    "in": {
+     "has_cards": true,
+     "sharing": true,
+     "on_pad": false,
+     "here": false,
+     "screens": [
+      "desktop"
+     ]
+    },
+    "expect": "down",
+    "why": "sharing always hides"
+   },
+   {
+    "id": "sharing-beats-show-here",
+    "in": {
+     "has_cards": true,
+     "sharing": true,
+     "on_pad": false,
+     "here": true,
+     "screens": [
+      "desktop",
+      "pad"
+     ]
+    },
+    "expect": "down",
+    "why": "sharing hides even after Show here"
+   },
+   {
+    "id": "on-the-pad-itself",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": true,
+     "here": false,
+     "screens": [
+      "pad",
+      "desktop"
+     ]
+    },
+    "expect": "up",
+    "why": "the Pad is where the cards go"
+   },
+   {
+    "id": "pad-sharing",
+    "in": {
+     "has_cards": true,
+     "sharing": true,
+     "on_pad": true,
+     "here": false,
+     "screens": [
+      "pad"
+     ]
+    },
+    "expect": "down",
+    "why": "a Pad that shares its screen hides too"
+   },
+   {
+    "id": "two-computers",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": false,
+     "here": false,
+     "screens": [
+      "desktop",
+      "web"
+     ]
+    },
+    "expect": "up",
+    "why": "two computers, no Pad: both up"
+   },
+   {
+    "id": "stale-here-no-pad",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": false,
+     "here": true,
+     "screens": [
+      "desktop"
+     ]
+    },
+    "expect": "up",
+    "why": "here with no Pad: up either way"
+   },
+   {
+    "id": "unknown-screen-kind",
+    "in": {
+     "has_cards": true,
+     "sharing": false,
+     "on_pad": false,
+     "here": false,
+     "screens": [
+      "desktop",
+      "tv"
+     ]
+    },
+    "expect": "up",
+    "why": "an unknown kind never hides"
+   }
+  ]
+ },
+ "show_here_next": {
+  "cases": [
+   {
+    "id": "pad-stays",
+    "in": {
+     "here": true,
+     "prev_screens": [
+      "desktop",
+      "pad"
+     ],
+     "screens": [
+      "desktop",
+      "pad"
+     ]
+    },
+    "expect": true,
+    "why": "the same Pad still attached: Show here holds"
+   },
+   {
+    "id": "pad-leaves",
+    "in": {
+     "here": true,
+     "prev_screens": [
+      "desktop",
+      "pad"
+     ],
+     "screens": [
+      "desktop"
+     ]
+    },
+    "expect": true,
+    "why": "the Pad drops out: holds (it no longer matters, and it isn't reset by a leave)"
+   },
+   {
+    "id": "pad-comes-back",
+    "in": {
+     "here": true,
+     "prev_screens": [
+      "desktop"
+     ],
+     "screens": [
+      "desktop",
+      "pad"
+     ]
+    },
+    "expect": false,
+    "why": "no Pad -> a Pad attaches AGAIN: reset, cards go to the phone"
+   },
+   {
+    "id": "table-closed",
+    "in": {
+     "here": true,
+     "prev_screens": [
+      "desktop",
+      "pad"
+     ],
+     "screens": [
+      "desktop",
+      "pad"
+     ],
+     "table_closed": true
+    },
+    "expect": false,
+    "why": "a table close resets it"
+   },
+   {
+    "id": "not-set",
+    "in": {
+     "here": false,
+     "prev_screens": [
+      "desktop"
+     ],
+     "screens": [
+      "desktop",
+      "pad"
+     ]
+    },
+    "expect": false,
+    "why": "never set: stays false"
+   }
+  ]
+ },
+ "live_opponents": {
+  "cases": [
+   {
+    "id": "leaving-allin-only",
+    "in": {
+     "you": 2,
+     "seats": [
+      {
+       "seat": 2,
+       "state": "active"
+      },
+      {
+       "seat": 5,
+       "state": "leaving"
+      },
+      {
+       "seat": 6,
+       "state": "folded"
+      }
+     ]
+    },
+    "why": "the only opponent is leaving (all-in or not yet at their turn): still 1, odds stay",
+    "expect": 1
+   },
+   {
+    "id": "mixed",
+    "in": {
+     "you": 1,
+     "seats": [
+      {
+       "seat": 1,
+       "state": "active"
+      },
+      {
+       "seat": 3,
+       "state": "folded"
+      },
+      {
+       "seat": 4,
+       "state": "allin"
+      },
+      {
+       "seat": 5,
+       "state": "away"
+      },
+      {
+       "seat": 6,
+       "state": "out"
+      },
+      {
+       "seat": 7,
+       "state": "leaving"
+      },
+      {
+       "seat": 8,
+       "state": "active"
+      }
+     ]
+    },
+    "why": "active, allin and leaving count (a leaving player is in the hand until their in-turn fold; all-in plays out); folded, away, out don't; never yourself",
+    "expect": 3
+   },
+   {
+    "id": "heads-up-left",
+    "in": {
+     "you": 4,
+     "seats": [
+      {
+       "seat": 1,
+       "state": "folded"
+      },
+      {
+       "seat": 4,
+       "state": "active"
+      }
+     ]
+    },
+    "why": "everyone else folded: 0 (odds hidden)",
+    "expect": 0
+   },
+   {
+    "id": "spectator",
+    "in": {
+     "you": null,
+     "seats": [
+      {
+       "seat": 1,
+       "state": "active"
+      },
+      {
+       "seat": 3,
+       "state": "folded"
+      },
+      {
+       "seat": 4,
+       "state": "allin"
+      },
+      {
+       "seat": 5,
+       "state": "away"
+      },
+      {
+       "seat": 6,
+       "state": "out"
+      },
+      {
+       "seat": 7,
+       "state": "leaving"
+      },
+      {
+       "seat": 8,
+       "state": "active"
+      }
+     ]
+    },
+    "why": "no seat: counts every live seat (the apps show no odds anyway)",
+    "expect": 4
+   }
+  ]
+ },
+ "odds_visible": {
+  "cases": [
+   {
+    "id": "flop",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "flop",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": true,
+    "why": "the normal case"
+   },
+   {
+    "id": "preflop",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "preflop",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": true,
+    "why": "preflop too"
+   },
+   {
+    "id": "allin",
+    "in": {
+     "setting": true,
+     "you_state": "allin",
+     "street": "flop",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": true,
+    "why": "all-in players still see theirs"
+   },
+   {
+    "id": "folded",
+    "in": {
+     "setting": true,
+     "you_state": "folded",
+     "street": "flop",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "folded: hidden"
+   },
+   {
+    "id": "away",
+    "in": {
+     "setting": true,
+     "you_state": "away",
+     "street": "flop",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "away: hidden"
+   },
+   {
+    "id": "showdown",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "showdown",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "showdown: hidden"
+   },
+   {
+    "id": "result",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "river",
+     "result": {
+      "winners": [
+       1
+      ]
+     },
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "hand done: hidden"
+   },
+   {
+    "id": "sharing",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "flop",
+     "result": null,
+     "face": "down",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "cards face down (sharing): hidden"
+   },
+   {
+    "id": "peek-not-held",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "flop",
+     "result": null,
+     "face": "peek",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "face down for the Pad, not peeking: hidden"
+   },
+   {
+    "id": "peeking",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "flop",
+     "result": null,
+     "face": "peeking",
+     "opponents": 2
+    },
+    "expect": true,
+    "why": "while holding to peek: shown"
+   },
+   {
+    "id": "no-opponents",
+    "in": {
+     "setting": true,
+     "you_state": "active",
+     "street": "flop",
+     "result": null,
+     "face": "up",
+     "opponents": 0
+    },
+    "expect": false,
+    "why": "everyone else folded: hidden"
+   },
+   {
+    "id": "setting-off",
+    "in": {
+     "setting": false,
+     "you_state": "active",
+     "street": "flop",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "Show my odds off"
+   },
+   {
+    "id": "setting-not-bool",
+    "in": {
+     "setting": "true",
+     "you_state": "active",
+     "street": "flop",
+     "result": null,
+     "face": "up",
+     "opponents": 2
+    },
+    "expect": false,
+    "why": "only literal true counts"
+   }
+  ]
+ },
+ "reactions": {
+  "ids": [
+   "tip",
+   "knock",
+   "clap",
+   "toss",
+   "sweat",
+   "foil"
+  ],
+  "targeted": [
+   "toss"
+  ],
+  "burst": 3,
+  "refill_ms": 4000,
+  "table_per_min": 40,
+  "bucket_cases": [
+   {
+    "id": "burst-then-refill",
+    "at_ms": [
+     0,
+     100,
+     200,
+     300,
+     4300,
+     4400,
+     8400,
+     12400,
+     12500,
+     30000,
+     30001,
+     30002,
+     30003
+    ],
+    "expect": [
+     true,
+     true,
+     true,
+     false,
+     true,
+     false,
+     true,
+     true,
+     false,
+     true,
+     true,
+     true,
+     false
+    ],
+    "why": "3 at once pass, the 4th is refused; one token every 4 s; a long gap refills to 3, never more"
+   }
+  ]
+ }
+}

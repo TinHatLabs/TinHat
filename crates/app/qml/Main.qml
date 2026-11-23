@@ -342,6 +342,30 @@ Kirigami.ApplicationWindow {
     readonly property var playCtl: core.c_play
     readonly property var playWords: { try { return JSON.parse(core.c_play.words()) } catch (e) { return ({}) } }
     property bool gamePanelOpen: false
+    // games round 2, B4 (GAMES-V1.1-ADDENDUM §1.1): while a table is open in my call the call's stage IS the table
+    // ("table"), or the normal tiles with the compact table in the corner ("call"); the Table | Call pill and G switch.
+    // Per call session, not saved: STAGE_DEFAULT "table" when a table opens, "call" when it closes.
+    readonly property string stageDefault: "table"
+    property string gameStage: "call"
+    // B2: "Show here" on this computer for the open table (show_here_next: until a Pad attaches again or the table closes)
+    property bool gameShowHere: false
+    Connections {
+        target: root.playCtl
+        ignoreUnknownSignals: true
+        function onTableIdChanged() {
+            root.gameStage = root.playCtl && root.playCtl.tableId !== "" ? root.stageDefault : "call"
+            root.gameShowHere = false
+        }
+    }
+    function setGameStage(s) {
+        if (s !== "table" && s !== "call") return
+        root.gamePanelOpen = false   // the Games picker never covers the stage the person just chose
+        root.gameStage = s
+    }
+    function toggleGameStage() {
+        if (!root.playCtl || root.playCtl.tableId === "") return
+        root.setGameStage(root.gameStage === "table" ? "call" : "table")
+    }
     readonly property var playArt: { try { return JSON.parse(core.c_play.art()) } catch (e) { return ({}) } }   // ui.json art (both apps)
     function openGames(tableId) {
         root.gamePanelOpen = true
@@ -1104,6 +1128,8 @@ Kirigami.ApplicationWindow {
         Accessible.role: Accessible.StaticText
         function say(t, urgent) { Accessible.announce(t, urgent ? Accessible.Assertive : Accessible.Polite) }
     }
+    // games round 2 (F7): table reactions are announced politely through the same voice (HoldemTable coalesces them)
+    function gameAnnounce(t) { srVoice.say(String(t), false) }
     IncomingCallToast {
         id: incomingToast
         app: root
@@ -1134,6 +1160,14 @@ Kirigami.ApplicationWindow {
         function onVerifyNotice(text) { core.notify(text, 15000) }
         function onToastAction(action) {
             if (action === "sound:notify") { root.playUiSound("notify"); return }
+            // games round 2 §8.3: a "your turn" notice clicked: the window up, that room's call stage on the table
+            if (action.indexOf("game-turn:") === 0) {
+                root.raise(); root.requestActivate()
+                var gr = action.substring(10)
+                if (gr.length > 0 && !(root.mInCall && root.mCallRoomId === gr)) root.openRoomId(gr)
+                if (root.playCtl && root.playCtl.tableId !== "") root.setGameStage("table")
+                return
+            }
             // 10.6 (REACH A5.6): a new DM / DM invite / mention flashes the taskbar button while the
             // window is not active (desktop notifications on — Rust decides).
             if (action === "alert") { if (!root.active) root.alert(0); return }

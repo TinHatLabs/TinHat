@@ -65,7 +65,28 @@ Window {
     property string _pillsRaw: ""
     property var _lastSpoke: ({})   // pill key -> Date.now() of last above-floor sample
 
-    visible: pills.length > 0
+    // games round 2 (§8.4): a read-only "♠ Your turn · 22 s" pill while it's my turn at a Hold'em table of this call (the
+    // overlay is click-through: no buttons). Words: no cards, odds or amounts. Ticks at 1 Hz only during my turn.
+    readonly property var turnViewObj: {
+        var pc = app.playCtl
+        if (!pc || pc.tableId === "" || pc.viewJson === "") return null
+        try { var v = JSON.parse(pc.viewJson); return v && v.game === "holdem" ? v : null } catch (e) { return null }
+    }
+    readonly property bool myTurn: !!turnViewObj && !!turnViewObj.you && !!turnViewObj.you.legal && !!turnViewObj.hand
+        && !!turnViewObj.hand.to_act && turnViewObj.hand.to_act.seat === turnViewObj.you.seat
+    property real _turnNow: Date.now()
+    property real _turnOffset: 0
+    onTurnViewObjChanged: if (turnViewObj && turnViewObj.now) _turnOffset = turnViewObj.now - Date.now()
+    Timer { interval: 1000; repeat: true; running: hud.myTurn; triggeredOnStart: true; onTriggered: hud._turnNow = Date.now() + hud._turnOffset }
+    readonly property string turnText: {
+        if (!myTurn) return ""
+        var d = turnViewObj.hand.to_act.deadline || 0
+        var secs = d > 0 ? Math.max(0, Math.ceil((d - _turnNow) / 1000)) : 0
+        var w = app.playWords && app.playWords.table && app.playWords.table.r2 ? app.playWords.table.r2 : ({})
+        return "♠ " + String(w.your_turn || "Your turn") + (d > 0 ? " · " + secs + " s" : "")
+    }
+
+    visible: (pills.length > 0 || turnText !== "")
              && (previewing
                  || (hudEnabled && app.mInCall && !(hideWhenSharing && app.mCallSharing)))
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
@@ -267,6 +288,25 @@ Window {
         width: implicitWidth
         spacing: Kirigami.Units.smallSpacing
 
+        Rectangle {   // games round 2: my turn at the table (read-only)
+            objectName: "overlayTurnPill"
+            visible: hud.turnText !== ""
+            x: (hud.corner === "tr" || hud.corner === "br") ? pillCol.width - width : 0
+            implicitWidth: turnLbl.implicitWidth + Kirigami.Units.largeSpacing * 2
+            implicitHeight: Kirigami.Units.gridUnit * 1.9
+            radius: height / 2
+            color: Th.overlayPillBgSpeaking
+            border.width: 1
+            border.color: Th.overlayPillBorderSpeaking
+            Controls.Label {
+                id: turnLbl
+                anchors.centerIn: parent
+                text: hud.turnText
+                textFormat: Text.PlainText
+                color: Th.textPrimary
+                font.weight: Font.DemiBold
+            }
+        }
         Repeater {
             model: hud.pills
             delegate: Rectangle {

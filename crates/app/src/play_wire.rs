@@ -91,11 +91,13 @@ pub fn frame_ok(text: &str) -> Option<Value> {
 }
 
 /// Every code the contract knows (schema.json `x-codes`, §6.3 + rev 2).
-pub const CODES: [&str; 34] = [
+pub const CODES: [&str; 44] = [
     "session", "guest", "not-member", "not-in-call", "remote-refused", "rig-hidden", "no-space", "wrong-server",
     "space-changed", "unavailable", "no-table", "no-wallet", "seated-elsewhere", "table-full", "one-per-room", "seated",
     "open-money", "rate", "off", "db", "stale", "not-your-turn", "phase", "bad", "bad-action", "bad-amount", "no-chips",
     "limit", "locked", "window", "taken", "rules", "greyed", "host-only",
+    // round 2 (contract v1.1b, GAMES-V1.1-ADDENDUM §4.2 / §5 / §6)
+    "cooldown", "op-reused", "bad-reason", "bad-value", "at-table", "not-admin", "not-broke", "day-max", "side-off", "no-run",
 ];
 
 /// A known server frame type with a wrong field is refused (dropped whole); unknown types and extra fields are
@@ -110,6 +112,14 @@ pub fn server_frame_ok(f: &Value) -> bool {
         Some("rank") => f.get("space").and_then(Value::as_str).is_some_and(|s| s.starts_with('!')) && mxid_ok(f.get("u")) && uint(f.get("rank")).is_some(),
         Some("wallet") => f.get("space").and_then(Value::as_str).is_some_and(|s| s.starts_with('!')),
         Some("view") => f.get("view").is_some_and(|v| check_view(v).is_ok()),
+        // round 2 F7: {t:"react", table, u, seat: n|null, r, to: n|"pot"|absent, at}
+        Some("react") => {
+            f.get("table").and_then(Value::as_str).is_some_and(table_id_ok)
+                && mxid_ok(f.get("u"))
+                && f.get("r").and_then(Value::as_str).is_some_and(|r| crate::games_rules::REACTIONS.contains(&r))
+                && f.get("seat").is_none_or(|s| s.is_null() || uint(Some(s)).is_some())
+                && f.get("to").is_none_or(|t| t.is_null() || t == "pot" || uint(Some(t)).is_some())
+        }
         Some("error") | Some("bye") => f.get("code").is_none_or(Value::is_string),
         Some(_) => true,
         None => false,
@@ -204,6 +214,46 @@ fn mxid_ok(v: Option<&Value>) -> bool {
 }
 
 /// A table id: 1–64 of `[A-Za-z0-9_-]`.
+/// Round 2 (GAMES-V1.1-ADDENDUM §5.3, §6.4): the ONLY routes QML may call through PlayController.playApi:
+/// Tune In (`POST /side/tune`, `POST /side/tune/{run}`), the admin screen (`GET /admin/spaces/{space}`,
+/// `POST …/wallets`, `PUT …/economy`, `GET …/log[?before=n&limit=n]`), `POST /me/notices/seen`. `{space}` = one
+/// percent-encoded room id segment; nothing else (no `..`, no other query, no other method).
+pub fn r2_route_ok(method: &str, path: &str) -> bool {
+    // one room-id segment as encodeURIComponent writes it ('!' stays, ':' → %3A); never a dot segment in any spelling
+    // (%2e%2e, .%2e, %2e. normalise to ".." in URL parsing), never an encoded / or \
+    fn seg_ok(s: &str, max: usize) -> bool {
+        let l = s.to_ascii_lowercase();
+        !s.is_empty() && s.len() <= max
+            && s.bytes().all(|c| c.is_ascii_alphanumeric() || matches!(c, b'%' | b'.' | b'_' | b'-' | b'!'))
+            && !l.contains("%2e") && !l.contains("%2f") && !l.contains("%5c") && !l.contains("%00")
+            && s != "." && !s.contains("..")
+    }
+    let (p, q) = match path.split_once('?') { Some((p, q)) => (p, Some(q)), None => (path, None) };
+    let parts: Vec<&str> = p.split('/').collect();
+    if parts.first() != Some(&"") {
+        return false;
+    }
+    let q_ok = |allowed: &[&str]| -> bool {
+        match q {
+            None => true,
+            Some(q) => q.split('&').all(|kv| match kv.split_once('=') {
+                Some((k, v)) => allowed.contains(&k) && !v.is_empty() && v.len() <= 20 && v.bytes().all(|c| c.is_ascii_digit()),
+                None => false,
+            }),
+        }
+    };
+    match (method, &parts[1..]) {
+        ("POST", ["side", "tune"]) => q.is_none(),
+        ("POST", ["side", "tune", run]) => q.is_none() && run.len() <= 40 && run.starts_with("sR") && run[2..].bytes().all(|c| c.is_ascii_alphanumeric()),
+        ("GET", ["admin", "spaces", sp]) => q.is_none() && seg_ok(sp, 300),
+        ("POST", ["admin", "spaces", sp, "wallets"]) => q.is_none() && seg_ok(sp, 300),
+        ("PUT", ["admin", "spaces", sp, "economy"]) => q.is_none() && seg_ok(sp, 300),
+        ("GET", ["admin", "spaces", sp, "log"]) => seg_ok(sp, 300) && q_ok(&["before", "limit"]),
+        ("POST", ["me", "notices", "seen"]) => q.is_none(),
+        _ => false,
+    }
+}
+
 pub fn table_id_ok(s: &str) -> bool {
     (1..=64).contains(&s.len()) && s.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
 }
@@ -442,8 +492,9 @@ pub fn check_view(v: &Value) -> Result<(String, String, u64), String> {
 /// Table-level moves carry no `at` (§6.3).
 pub fn table_level(game: &str, action: &str) -> bool {
     match game {
-        "holdem" => matches!(action, "sit" | "leave" | "deal" | "away" | "kick" | "close"),
-        _ => matches!(action, "join" | "leave" | "start" | "kick" | "close"),
+        "holdem" => matches!(action, "sit" | "leave" | "deal" | "away" | "kick" | "close" | "react"),
+        // The Rig's away / I'm back (contract v1.1e) is table-level too
+        _ => matches!(action, "join" | "leave" | "start" | "kick" | "close" | "react" | "away"),
     }
 }
 
@@ -1005,4 +1056,53 @@ mod tests {
         }
     }
 
+
+    #[test]
+    fn r2_routes_are_allow_listed() {
+        for (m, p) in [
+            ("POST", "/side/tune"), ("POST", "/side/tune/sRab12CD34"), ("GET", "/admin/spaces/%21S%3Alab.test"),
+            ("POST", "/admin/spaces/%21S%3Alab.test/wallets"), ("PUT", "/admin/spaces/%21S%3Alab.test/economy"),
+            ("GET", "/admin/spaces/%21S%3Alab.test/log"), ("GET", "/admin/spaces/%21S%3Alab.test/log?before=812&limit=50"),
+            // what QML's encodeURIComponent("!S:lab.test") really produces
+            ("GET", "/admin/spaces/!S%3Alab.test"), ("PUT", "/admin/spaces/!S%3Alab.test/economy"),
+            ("POST", "/me/notices/seen"),
+        ] {
+            assert!(r2_route_ok(m, p), "{m} {p}");
+        }
+        for (m, p) in [
+            ("GET", "/side/tune"), ("DELETE", "/admin/spaces/%21S%3Alab.test"), ("POST", "/tables"), ("GET", "/me"),
+            ("GET", "/admin/spaces/%21S%3Alab.test/../../me"), ("GET", "/admin/spaces/a%2Fb"), ("GET", "/admin/spaces/"),
+            ("GET", "/admin/spaces/%21S/log?limit=50&x=1"), ("GET", "/admin/spaces/%21S/log?limit=-1"),
+            ("POST", "/side/tune/../x"), ("POST", "/side/tune/xx12"), ("POST", "side/tune"), ("POST", "/side/tune?x=1"),
+            ("GET", "https://evil.test/admin/spaces/x"),
+            // encoded dot segments (URL parsing turns them into ".."), a lone dot, an encoded NUL
+            ("POST", "/admin/spaces/%2e%2e/wallets"), ("POST", "/admin/spaces/.%2e/wallets"), ("POST", "/admin/spaces/%2E./wallets"),
+            ("GET", "/admin/spaces/."), ("GET", "/admin/spaces/%2e"), ("GET", "/admin/spaces/a%00b"),
+        ] {
+            assert!(!r2_route_ok(m, p), "{m} {p} must be refused");
+        }
+    }
+
+    #[test]
+    fn r2_react_frames() {
+        let ok = json!({"t": "react", "table": "tH3k9aaaaaaaaaaaaaa", "u": "@ana:x.test", "seat": 1, "r": "toss", "to": 4, "at": 1});
+        assert!(server_frame_ok(&ok));
+        for bad in [json!({"r": "slap"}), json!({"to": "everyone"}), json!({"u": "ana"}), json!({"seat": -1}), json!({"table": "t h"})] {
+            let mut f = ok.clone();
+            for (k, v) in bad.as_object().unwrap() {
+                f[k] = v.clone();
+            }
+            assert!(!server_frame_ok(&f), "{f}");
+        }
+        let mut w = ok.clone();
+        w["seat"] = Value::Null;
+        w["to"] = json!("pot");
+        assert!(server_frame_ok(&w), "a watcher's reaction to the pot");
+        // a reaction is table-level: no `at`, in both games
+        let view = json!({"game": "holdem", "table": "tH3k9aaaaaaaaaaaaaa", "hand": {"n": 3, "to_act": {"seat": 1, "turn": 2}}});
+        let f = act_frame(&view, "op1", &json!({"do": "react", "r": "clap"})).unwrap();
+        assert!(f.get("at").is_none());
+        assert!(table_level("rig", "react"));
+        assert!(CODES.contains(&"cooldown"));
+    }
 }

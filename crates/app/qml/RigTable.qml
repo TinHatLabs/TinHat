@@ -37,6 +37,7 @@ Item {
     property var view: null         // the parsed view (null while loading)
     property var words: ({})        // parsed words.json
     property string myId: ""        // my Matrix id
+    property string roomId: ""      // the table's bound space: the prestige context of every name here (B3)
     property bool hideSecret: false // I share my screen: the House secret panel collapses
     property real clockOffset: 0    // server now − local now (ms)
     property bool focusedWindow: true  // false: no motion (the reels show the result at once)
@@ -122,6 +123,8 @@ Item {
     readonly property color trimC: rig.art.machineTrim || Th.accentBright
     readonly property var rd: rig.view && rig.view.round ? rig.view.round : null
     readonly property var you: rig.view && rig.view.you ? rig.view.you : null
+    // round 2's words (words.json table.r2)
+    function r2w(k) { var t = rig.words && rig.words.table && rig.words.table.r2 ? rig.words.table.r2 : ({}); return t[k] !== undefined ? String(t[k]) : k }
     readonly property var me: rig.you ? rig.you : ({})
     readonly property string tableStatus: rig.view && rig.view.status ? String(rig.view.status) : ""
     readonly property string myRole: rig.you && rig.you.role ? String(rig.you.role) : ""
@@ -982,6 +985,50 @@ Item {
             onConfirmed: rig.act({ do: "close" })
         }
 
+        // B10 on The Rig (addendum §8.1, contract v1.1d+): my away bar = why · when I stand up (rounds) · my skipped spin,
+        // and I'm back (the web's rig-away-me). The server decides; the app only draws it.
+        Rectangle {
+            objectName: "rigAwayMe"
+            Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            Layout.topMargin: 6
+            // `you` exists only for a joined player (contract); a spectator has none
+            visible: !!rig.you && !!rig.you.away && rig.tableStatus !== "end" && rig.tableStatus !== "closed"
+            radius: 8
+            color: Th.surfaceOverlay
+            border.width: 1
+            border.color: Th.borderSubtle
+            implicitHeight: awayRow.implicitHeight + 12
+            RowLayout {
+                id: awayRow
+                anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: 10; anchors.rightMargin: 8
+                Txt {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    px: 12
+                    color: Th.textSecondary
+                    text: {
+                        var a = rig.you && rig.you.away ? rig.you.away : null
+                        if (!a) return ""
+                        var why = rig.r2w(a.reason === "timeout" ? "away_reason_timeout" : (a.reason === "gone" ? "away_reason_gone" : "away_reason_asked"))
+                        var stand = a.hands_left <= 1 ? rig.r2w("away_stand_one_round") : rig.fill(rig.r2w("away_stand_rounds"), { n: a.hands_left })
+                        var mine = rig.players.filter(function (p) { return p.u === rig.myId || (rig.you.order !== undefined && p.order === rig.you.order) })[0]
+                        return why + " · " + stand + (mine && mine.skipped ? " · " + rig.r2w("away_rig_skipped") : "")
+                    }
+                }
+                ThButton {
+                    objectName: "rigImBack"
+                    app: rig.app
+                    highlighted: true
+                    text: rig.r2w("away_back")
+                    Accessible.name: text
+                    onClicked: rig.act({ do: "away", on: false })
+                }
+            }
+        }
+
         Txt {
             Layout.fillWidth: true
             Layout.leftMargin: 12
@@ -1080,13 +1127,21 @@ Item {
                                         who: lp.modelData.u
                                         size: 40
                                     }
-                                    Txt {
-                                        width: parent.width
-                                        text: rig.nameOf(lp.modelData.u)
-                                        px: 12
-                                        font.bold: lp.modelData.u === rig.myId
-                                        elide: Text.ElideRight
-                                        horizontalAlignment: Text.AlignHCenter
+                                    Row {   // B3: the token 4 px before the name, the pair centred
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        PrestigeToken {
+                                            id: lpTok
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            mxid: String(lp.modelData.u || ""); roomId: rig.roomId; size: 12
+                                        }
+                                        Txt {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: Math.min(implicitWidth, lpCol.width - lpTok.implicitWidth)
+                                            text: rig.nameOf(lp.modelData.u)
+                                            px: 12
+                                            font.bold: lp.modelData.u === rig.myId
+                                            elide: Text.ElideRight
+                                        }
                                     }
                                 }
                                 Rectangle {   // the host's kick
@@ -1211,6 +1266,7 @@ Item {
                                         spacing: 10
                                         Txt { Layout.preferredWidth: 18; text: String(lead.index + 1); font.bold: true; color: Th.textMuted }
                                         Face { who: lead.modelData.u; size: 28 }
+                                        PrestigeToken { mxid: String(lead.modelData.u || ""); roomId: rig.roomId; gap: false; Layout.rightMargin: -6 }
                                         Txt {
                                             Layout.fillWidth: true
                                             text: rig.nameOf(lead.modelData.u)
@@ -1331,6 +1387,7 @@ Item {
                                     RowLayout {
                                         spacing: 6
                                         Face { who: rig.rd ? String(rig.rd.spinner || "") : ""; size: 22 }
+                                        PrestigeToken { mxid: rig.rd ? String(rig.rd.spinner || "") : ""; roomId: rig.roomId; gap: false; Layout.rightMargin: -2 }
                                         Txt {
                                             Layout.maximumWidth: 140
                                             text: rig.rd ? rig.nameOf(rig.rd.spinner) : ""
@@ -1381,6 +1438,7 @@ Item {
                                                 // the House's Nudge (Full; the 4-second window). Hidden while I share my screen.
                                                 nudgeable: !!rig.feats.nudge && rig.phase === "nudge" && !!rig.rd && !!rig.rd.nudge && !!rig.rd.nudge.open
                                                            && !rig.isSpinner && rig.isHouse && Number(rig.me.nudge_left || 0) > 0 && !rig.hideSecret
+                                                           && !(rig.you && rig.you.away)   // B10: an away Railbird only watches
                                             }
                                         }
                                     }
@@ -1971,8 +2029,9 @@ Item {
                                     Layout.fillWidth: true
                                     Layout.minimumHeight: 28
                                     spacing: 8
-                                    opacity: person.modelData.connected === false ? 0.5 : 1
+                                    opacity: person.modelData.connected === false ? 0.5 : (person.modelData.away ? 0.6 : 1)
                                     Face { who: person.modelData.u; size: 24 }
+                                    PrestigeToken { mxid: String(person.modelData.u || ""); roomId: rig.roomId; gap: false; Layout.rightMargin: -4 }
                                     Txt {
                                         Layout.fillWidth: true
                                         text: rig.nameOf(person.modelData.u)
@@ -1980,6 +2039,21 @@ Item {
                                         elide: Text.ElideRight
                                     }
                                     RolePill { visible: !!person.modelData.role; roleId: String(person.modelData.role || "") }
+                                    Rectangle {   // B10: "away · n" (rounds until they stand up)
+                                        objectName: "rigAwayPill"
+                                        visible: !!person.modelData.away
+                                        radius: height / 2
+                                        color: Th.surfaceSunken
+                                        implicitWidth: awayPillT.implicitWidth + 12
+                                        implicitHeight: awayPillT.implicitHeight + 4
+                                        Txt {
+                                            id: awayPillT
+                                            anchors.centerIn: parent
+                                            px: 11
+                                            color: Th.textSecondary
+                                            text: person.modelData.away ? rig.fill(rig.r2w("away_pill_hands"), { n: person.modelData.away.hands_left }) : ""
+                                        }
+                                    }
                                     Txt {
                                         visible: person.hasNet
                                         text: rig.signed(person.net)
@@ -1991,10 +2065,18 @@ Item {
                             }
                         }
 
+                        // B10: an away Railbird can only watch (no Nudge, Whisper, Peek or Market) (the web's rig-railbird-away)
+                        Panel {
+                            objectName: "rigRailbirdAway"
+                            visible: rig.isHouse && rig.phase !== "reveal" && !!rig.you && !!rig.you.away
+                            Layout.fillWidth: true
+                            Txt { Layout.fillWidth: true; wrapMode: Text.Wrap; px: 12; color: Th.textMuted; text: rig.r2w("away_rig_watch") }
+                        }
+
                         // ── the House secret panel ──
                         Panel {
                             id: secret
-                            visible: rig.isHouse && rig.phase !== "reveal"
+                            visible: rig.isHouse && rig.phase !== "reveal" && !(rig.you && rig.you.away)
                             Layout.fillWidth: true
                             border.color: Th.accentDim
                             readonly property var peek: rig.me.peek ? rig.me.peek : null

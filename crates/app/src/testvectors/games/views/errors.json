@@ -136,6 +136,46 @@
   "host-only": {
    "http": 403,
    "when": "only the table's host can do that"
+  },
+  "cooldown": {
+   "http": 429,
+   "when": "a reaction too soon (your bucket, or the table's minute is full): the ack carries retry_ms; the socket stays open"
+  },
+  "op-reused": {
+   "http": 409,
+   "when": "an admin write's op was already used for a different request"
+  },
+  "bad-reason": {
+   "http": 400,
+   "when": "an admin why-text that is empty, too long, has control characters or a link, or looks like a Matrix id"
+  },
+  "bad-value": {
+   "http": 400,
+   "when": "an economy value outside its bounds (the answer names the key, min and max)"
+  },
+  "at-table": {
+   "http": 409,
+   "when": "the person has open money (at a table, in a round): only a grant is allowed"
+  },
+  "not-admin": {
+   "http": 403,
+   "when": "you aren't an admin of that space (power level 100 in the space) nor the server owner"
+  },
+  "not-broke": {
+   "http": 409,
+   "when": "Tune In is only for people at or below the broke line (4 chips)"
+  },
+  "day-max": {
+   "http": 409,
+   "when": "today's Tune In chips are used up"
+  },
+  "side-off": {
+   "http": 403,
+   "when": "Tune In is switched off for this space (or this server)"
+  },
+  "no-run": {
+   "http": 404,
+   "when": "no such Tune In run for you (expired, finished, or the server restarted)"
   }
  }
 }

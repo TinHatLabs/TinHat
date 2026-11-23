@@ -28,6 +28,9 @@ pub mod memories_photos; // Memories photos: the dev.tinhat.memories lists, fetc
 pub mod gameservers_ctl; // 11.1: GameServersController — the Game servers widget's data (docs/GAMESERVERS.md)
 pub mod play_wire; // mini games v1 (GAMES-V1-SPEC.md): the play client's pure rules — views, vseq, op ids, gameVisible (shared vectors testvectors/games)
 pub mod play_net; // mini games v1: OpenID → play session, the play API over HTTP, the play WebSocket
+pub mod play_odds; // games round 2, F6: your odds (exact / seeded Monte Carlo; shared vector odds-v1.json)
+pub mod games_rules; // games round 2: the table's pure UI rules (cards face, Show here, live opponents, odds visible, reactions; table-ui-v1.json)
+pub mod play_hand; // games round 2: the client's Hold'em hand evaluator (F5 rankings, F6 odds; shared vector holdem-hand-ranking.json)
 pub mod play_ctl; // mini games v1: PlayController — tables, the open table's view, chips, cards, Settings → Games
 pub mod justme_ctl; // widgets W2: JustMeController — "Is it just me?" (WIDGETS.md §20)
 pub mod memories_ctl; // widgets W2: MemoriesController — the Memories widget's data (WIDGETS.md §21)

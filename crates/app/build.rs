@@ -368,6 +368,12 @@ fn main() {
                 "qml/PlayCallChips.qml", // mini games v1 (GAMES-V1-SPEC.md)
                 "qml/PlayingCard.qml", // mini games v1 (GAMES-V1-SPEC.md)
                 "qml/HoldemTable.qml", // mini games v1 (GAMES-V1-SPEC.md)
+                "qml/HandRankings.qml", // games round 2 (F5): the hand-rankings sheet
+                "qml/GameCallStrip.qml", // games round 2 (B4): the call's watchers above the table
+                "qml/StagePill.qml", // games round 2 (B4): the Table | Call switch
+                "qml/CompactTable.qml", // games round 2 (B4/B10): the compact table (Call stage, PiP)
+                "qml/TuneIn.qml", // games round 2 (F9): the Tune In side game
+                "qml/AdminChips.qml", // games round 2 (F8): the admin money screen
                 "qml/RigTable.qml", // mini games v1 (GAMES-V1-SPEC.md)
                 "qml/RigSymbol.qml", // mini games v1: The Rig's reel symbols (the web's SVG paths)
                 "qml/GameChatCard.qml", // mini games v1 (GAMES-V1-SPEC.md)

@@ -87,7 +87,30 @@ ThWindow {   // P22: the person's text size reaches this window's controls (ThWi
         { k: "members",  t: "Members",  i: "system-users-symbolic",      d: "Everyone in the space — roles, invites and bans" },
         { k: "roles",    t: "Roles",    i: "security-medium-symbolic",   d: "Named groups with permissions, applied to every room" },
         { k: "rooms",    t: "Rooms",    i: "view-list-details-symbolic", d: "The rooms in this space and whether their permissions match" }
-    ]
+    ].concat(win.gamesAdmin ? [{ k: "games", t: win.gw("admin_tab", "Games"), i: "applications-games-symbolic", d: win.gw("admin_tab_hint", "Play chips in this space: rates, people and the log") }] : [])
+    // games round 2 (F8, addendum §5.5): the Games tab, only for the people this space's owner server calls admins
+    // (asked once per space: GET /admin/spaces/{space} → you.admin; only where that server has play_admin)
+    property bool gamesAdmin: false
+    property string _gamesProbe: ""
+    function gw(k, fb) { var w = win.app && win.app.playWords && win.app.playWords.table && win.app.playWords.table.r2 ? win.app.playWords.table.r2 : ({}); return w[k] !== undefined ? String(w[k]) : fb }
+    property int _gamesProbeN: 0
+    function probeGames() {
+        win.gamesAdmin = false
+        win._gamesProbe = ""   // an answer still on its way for the previous space is ignored
+        var pc = win.app ? win.app.playCtl : null
+        if (!pc || !win.spaceId || win.spaceId.length === 0) return
+        win._gamesProbeN += 1
+        win._gamesProbe = "ssgames-" + win._gamesProbeN + "-" + Date.now().toString(36)
+        pc.playApiAt(win._gamesProbe, win.spaceId, "GET", "/admin/spaces/" + encodeURIComponent(win.spaceId), "")
+    }
+    Connections {
+        target: win.app ? win.app.playCtl : null
+        ignoreUnknownSignals: true
+        function onApiRevChanged() {
+            var a; try { a = JSON.parse(win.app.playCtl.apiJson) } catch (e) { return }
+            if (a && a.id === win._gamesProbe) win.gamesAdmin = a.ok === true && !!a.body && !!a.body.you && a.body.you.admin === true
+        }
+    }
     property int tab: 0
     function tabIndexOf(name) {
         for (var i = 0; i < tabs.length; i++) if (tabs[i].k === name) return i
@@ -102,8 +125,10 @@ ThWindow {   // P22: the person's text size reaches this window's controls (ThWi
         win._syncOverview()
         if (win.rolesActive && win.editRoleId.length === 0 && !win.editIsNew) win._selectFirstRole()
     }
-    onVisibleChanged: if (!visible) win.closeRequested()
+    onVisibleChanged: { if (!visible) win.closeRequested(); else win.probeGames() }
     onSpaceIdChanged: {
+        if (win.tab >= 4) win.tab = 0   // the Games tab belongs to the old space
+        win.probeGames()
         // A different space: no draft survives (name/topic/role edits belong to the old one).
         win.editIsNew = false; win.editRoleId = ""; win.roleDirtyGuard = false
         win.memberQuery = ""; memberSearch.text = ""; win.memberFilter = "all"
@@ -1674,6 +1699,18 @@ ThWindow {   // P22: the person's text size reaches this window's controls (ThWi
                         iconName: "view-list-details-symbolic"
                         title: win.busy ? "Loading rooms…" : "No rooms in this space yet"
                         explanation: win.busy ? "" : "Rooms you create inside the space, or add to it, show up here."
+                    }
+                }
+                // ================================ Games (round 2, F8) =======================
+                Loader {
+                    active: win.gamesAdmin && win.tab < win.tabs.length && win.tabs[win.tab].k === "games"
+                    sourceComponent: AdminChips {
+                        app: win.app
+                        play: win.app ? win.app.playCtl : null
+                        spaceId: win.spaceId
+                        spaceName: win.spaceName
+                        atSpace: true
+                        embedded: true
                     }
                 }
             }

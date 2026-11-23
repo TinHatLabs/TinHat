@@ -11,13 +11,13 @@ Rectangle {
     property string card: ""
     property bool ghost: false
     property bool dim: false
-    property string size: "md"        // sm 26×36 · md 40×56 · lg 56×78 · xl 92×128 (× the text size, as the web)
+    property string size: "md"        // xs 17×23 (round 2: the compact table) · sm 26×36 · md 40×56 · lg 56×78 · xl 92×128 (× the text size, as the web)
     property var art: ({})            // ui.json art (QML colours), from the table
     // compatibility with older callers
     property bool slot: false
     readonly property bool isGhost: pc.ghost || pc.slot
     readonly property real k: Th.textScale > 0 ? Th.textScale : 1
-    readonly property var dims: ({ sm: [26, 36, 4, 11, 8, 13], md: [40, 56, 6, 15, 11, 22], lg: [56, 78, 8, 20, 14, 32], xl: [92, 128, 10, 32, 22, 56] })
+    readonly property var dims: ({ xs: [17, 23, 3, 9, 7, 0], sm: [26, 36, 4, 11, 8, 13], md: [40, 56, 6, 15, 11, 22], lg: [56, 78, 8, 20, 14, 32], xl: [92, 128, 10, 32, 22, 56] })
     readonly property var d: pc.dims[pc.size] || pc.dims.md
     implicitWidth: Math.round(pc.d[0] * pc.k)
     implicitHeight: Math.round(pc.d[1] * pc.k)
@@ -73,8 +73,8 @@ Rectangle {
     // the face: corner rank + small suit, the big pip
     Column {
         visible: !!pc.face
-        x: pc.size === "xl" ? 8 : (pc.size === "sm" ? 3 : 5)
-        y: pc.size === "xl" ? 8 : (pc.size === "sm" ? 3 : 4)
+        x: pc.size === "xl" ? 8 : (pc.size === "sm" ? 3 : (pc.size === "xs" ? 2 : 5))
+        y: pc.size === "xl" ? 8 : (pc.size === "sm" ? 3 : (pc.size === "xs" ? 1 : 4))
         spacing: -2
         Controls.Label {
             text: pc.face ? pc.face.rank : ""
@@ -91,7 +91,7 @@ Rectangle {
         }
     }
     Controls.Label {
-        visible: !!pc.face
+        visible: !!pc.face && pc.d[5] > 0   // xs: rank + suit only
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.rightMargin: pc.size === "xl" ? 10 : (pc.size === "sm" ? 3 : 7)

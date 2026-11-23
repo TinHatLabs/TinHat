@@ -144,6 +144,7 @@ ColumnLayout {
                     play: island.app.playCtl
                     words: island.app.playWords
                 }
+
                 // PAD-PHONE Step B: my phone has the mic (its takeover mutes this computer with a reason of its own)
                 Controls.Label {
                     textFormat: Text.PlainText
@@ -3508,6 +3509,27 @@ ColumnLayout {
         words: island.app.playWords
         myId: island.app.mUserId
         sharing: island.coreRef.mCallSharing === true
+    }
+    // games round 2, B4/B10: on the Call stage the compact table sits bottom-right over the tiles, so the turn is never
+    // lost (a click on it = back to Table)
+    CompactTable {
+        parent: videoGrid
+        z: 49
+        visible: !!island.app.playCtl && island.app.playCtl.tableId !== "" && island.app.gameStage === "call" && !gamePanel.shown
+                 && island.app.playCtl.viewJson !== ""
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 10
+        app: island.app
+        play: island.app.playCtl
+        myId: island.app.mUserId
+        sharing: island.coreRef.mCallSharing === true
+    }
+    // G while the call island has focus: Table ⇄ Call (never while typing: a text field takes the key first)
+    Keys.onPressed: function (e) {
+        if (e.key === Qt.Key_G && e.modifiers === Qt.NoModifier && !!island.app.playCtl && island.app.playCtl.tableId !== "") {
+            island.app.toggleGameStage(); e.accepted = true
+        }
     }
 
 }

@@ -277,6 +277,35 @@
    "a": {
     "do": "walk"
    }
+  },
+  "act_react_tip": {
+   "t": "act",
+   "table": "tH3k9aB2cD4eF6gH",
+   "op": "op-r2react000000001",
+   "a": {
+    "do": "react",
+    "r": "tip"
+   }
+  },
+  "act_react_toss": {
+   "t": "act",
+   "table": "tH3k9aB2cD4eF6gH",
+   "op": "op-r2react000000002",
+   "a": {
+    "do": "react",
+    "r": "toss",
+    "to": 4
+   }
+  },
+  "act_react_rig": {
+   "t": "act",
+   "table": "tR7q2wE4rT6yU8iO",
+   "op": "op-r2react000000003",
+   "a": {
+    "do": "react",
+    "r": "toss",
+    "to": "pot"
+   }
   }
  },
  "server": {
@@ -288,6 +317,11 @@
    "rig_hidden": false,
    "wallets": [
     "!hangout:example.org"
+   ],
+   "features": [
+    "fresh-screens",
+    "react",
+    "away2"
    ]
   },
   "room": {
@@ -360,7 +394,9 @@
       "bet": 1,
       "state": "active",
       "cards": 2,
-      "connected": true
+      "connected": true,
+      "rank": 1,
+      "away": null
      },
      {
       "seat": 4,
@@ -369,7 +405,9 @@
       "bet": 2,
       "state": "active",
       "cards": 2,
-      "connected": true
+      "connected": true,
+      "rank": 0,
+      "away": null
      },
      {
       "seat": 6,
@@ -378,7 +416,9 @@
       "bet": 0,
       "state": "active",
       "cards": 2,
-      "connected": true
+      "connected": true,
+      "rank": 0,
+      "away": null
      }
     ],
     "hand": {
@@ -427,7 +467,8 @@
      "at_cap": false,
      "cap": 100,
      "holdings": 20,
-     "timeouts": 0
+     "timeouts": 0,
+     "away": null
     }
    }
   },
@@ -509,6 +550,31 @@
   "bye": {
    "t": "bye",
    "code": "replaced"
+  },
+  "react": {
+   "t": "react",
+   "table": "tH3k9aB2cD4eF6gH",
+   "u": "@ana:example.org",
+   "seat": 1,
+   "r": "toss",
+   "to": 4,
+   "at": 1763600000000
+  },
+  "react_watcher": {
+   "t": "react",
+   "table": "tH3k9aB2cD4eF6gH",
+   "u": "@cy:example.org",
+   "seat": null,
+   "r": "clap",
+   "at": 1763600000000
+  },
+  "ack_cooldown": {
+   "t": "ack",
+   "op": "op-r2react000000001",
+   "ok": false,
+   "code": "cooldown",
+   "dup": false,
+   "retry_ms": 2600
   }
  }
 }

@@ -1,0 +1,832 @@
+{
+ "v": 1,
+ "about": "Texas Hold'em: best five of seven. Cards are rank + suit (ranks 23456789TJQKA, suits cdhs). key = [category, ...tie-break ranks] compared left to right (2..14; ace = 14 except in a wheel, where the straight's key is 5). Categories: 0 high-card, 1 pair, 2 two-pair, 3 trips, 4 straight, 5 flush, 6 full-house, 7 quads, 8 straight-flush. ranking = groups of seats, strongest first; seats in one group tie.",
+ "seven": [
+  {
+   "id": "royal",
+   "cards": [
+    "As",
+    "Ks",
+    "Qs",
+    "Js",
+    "Ts",
+    "2d",
+    "3c"
+   ],
+   "expect": {
+    "category": "straight-flush",
+    "key": [
+     8,
+     14
+    ]
+   },
+   "why": "a royal flush is just an ace-high straight flush"
+  },
+  {
+   "id": "steel-wheel",
+   "cards": [
+    "5h",
+    "4h",
+    "3h",
+    "2h",
+    "Ah",
+    "Kd",
+    "Kc"
+   ],
+   "expect": {
+    "category": "straight-flush",
+    "key": [
+     8,
+     5
+    ]
+   },
+   "why": "A-2-3-4-5 suited = straight flush, FIVE high (ace low)"
+  },
+  {
+   "id": "sf-over-higher-straight",
+   "cards": [
+    "9c",
+    "8c",
+    "7c",
+    "6c",
+    "5c",
+    "Td",
+    "Jh"
+   ],
+   "expect": {
+    "category": "straight-flush",
+    "key": [
+     8,
+     9
+    ]
+   },
+   "why": "a 9-high straight flush beats the J-high plain straight in the same 7"
+  },
+  {
+   "id": "wheel",
+   "cards": [
+    "As",
+    "2d",
+    "3h",
+    "4c",
+    "5s",
+    "Kd",
+    "Qd"
+   ],
+   "expect": {
+    "category": "straight",
+    "key": [
+     4,
+     5
+    ]
+   },
+   "why": "wheel is 5-high, not ace-high"
+  },
+  {
+   "id": "six-high-over-wheel",
+   "cards": [
+    "As",
+    "2d",
+    "3h",
+    "4c",
+    "5s",
+    "6d",
+    "Kd"
+   ],
+   "expect": {
+    "category": "straight",
+    "key": [
+     4,
+     6
+    ]
+   },
+   "why": "6-5-4-3-2 beats the wheel inside the same seven"
+  },
+  {
+   "id": "no-wrap",
+   "cards": [
+    "Qs",
+    "Kd",
+    "Ah",
+    "2c",
+    "3s",
+    "8d",
+    "9h"
+   ],
+   "expect": {
+    "category": "high-card",
+    "key": [
+     0,
+     14,
+     13,
+     12,
+     9,
+     8
+    ]
+   },
+   "why": "Q-K-A-2-3 is NOT a straight"
+  },
+  {
+   "id": "broadway",
+   "cards": [
+    "Ah",
+    "Kd",
+    "Qc",
+    "Js",
+    "Th",
+    "2c",
+    "2d"
+   ],
+   "expect": {
+    "category": "straight",
+    "key": [
+     4,
+     14
+    ]
+   },
+   "why": "straight beats the pair of 2s"
+  },
+  {
+   "id": "six-card-straight",
+   "cards": [
+    "4c",
+    "5d",
+    "6h",
+    "7s",
+    "8c",
+    "9d",
+    "Kh"
+   ],
+   "expect": {
+    "category": "straight",
+    "key": [
+     4,
+     9
+    ]
+   },
+   "why": "take the highest five of six in a row"
+  },
+  {
+   "id": "flush-top5",
+   "cards": [
+    "Ah",
+    "Jh",
+    "9h",
+    "6h",
+    "4h",
+    "3h",
+    "2c"
+   ],
+   "expect": {
+    "category": "flush",
+    "key": [
+     5,
+     14,
+     11,
+     9,
+     6,
+     4
+    ]
+   },
+   "why": "six hearts: keep the top five"
+  },
+  {
+   "id": "flush-over-straight",
+   "cards": [
+    "Th",
+    "9h",
+    "8h",
+    "2h",
+    "7d",
+    "6c",
+    "3h"
+   ],
+   "expect": {
+    "category": "flush",
+    "key": [
+     5,
+     10,
+     9,
+     8,
+     3,
+     2
+    ]
+   },
+   "why": "flush beats the straight 6-T"
+  },
+  {
+   "id": "full-from-two-trips",
+   "cards": [
+    "Kh",
+    "Kd",
+    "Kc",
+    "7s",
+    "7h",
+    "7d",
+    "2c"
+   ],
+   "expect": {
+    "category": "full-house",
+    "key": [
+     6,
+     13,
+     7
+    ]
+   },
+   "why": "two trips: higher trips + the other as the pair"
+  },
+  {
+   "id": "full-best-pair",
+   "cards": [
+    "9h",
+    "9d",
+    "9c",
+    "Qs",
+    "Qh",
+    "4d",
+    "4c"
+   ],
+   "expect": {
+    "category": "full-house",
+    "key": [
+     6,
+     9,
+     12
+    ]
+   },
+   "why": "trips + two pairs: use the higher pair"
+  },
+  {
+   "id": "quads-kicker",
+   "cards": [
+    "8h",
+    "8d",
+    "8c",
+    "8s",
+    "Ah",
+    "2d",
+    "3c"
+   ],
+   "expect": {
+    "category": "quads",
+    "key": [
+     7,
+     8,
+     14
+    ]
+   },
+   "why": "quads take the best kicker"
+  },
+  {
+   "id": "quads-over-full",
+   "cards": [
+    "6h",
+    "6d",
+    "6c",
+    "6s",
+    "Kh",
+    "Kd",
+    "2c"
+   ],
+   "expect": {
+    "category": "quads",
+    "key": [
+     7,
+     6,
+     13
+    ]
+   },
+   "why": "quads beat the full house in the same seven; kicker K"
+  },
+  {
+   "id": "three-pairs",
+   "cards": [
+    "Kh",
+    "Kd",
+    "9c",
+    "9s",
+    "5h",
+    "5d",
+    "Qc"
+   ],
+   "expect": {
+    "category": "two-pair",
+    "key": [
+     2,
+     13,
+     9,
+     12
+    ]
+   },
+   "why": "three pairs: top two pairs, kicker Q beats the third pair 5"
+  },
+  {
+   "id": "three-pairs-kicker-from-pair",
+   "cards": [
+    "Kh",
+    "Kd",
+    "9c",
+    "9s",
+    "5h",
+    "5d",
+    "2c"
+   ],
+   "expect": {
+    "category": "two-pair",
+    "key": [
+     2,
+     13,
+     9,
+     5
+    ]
+   },
+   "why": "kicker is the 5 from the third pair, not the 2"
+  },
+  {
+   "id": "trips-kickers",
+   "cards": [
+    "7h",
+    "7d",
+    "7c",
+    "As",
+    "9h",
+    "4d",
+    "2c"
+   ],
+   "expect": {
+    "category": "trips",
+    "key": [
+     3,
+     7,
+     14,
+     9
+    ]
+   },
+   "why": "trips + two best kickers"
+  },
+  {
+   "id": "pair-kickers",
+   "cards": [
+    "Jh",
+    "Jd",
+    "Ac",
+    "9s",
+    "7h",
+    "4d",
+    "2c"
+   ],
+   "expect": {
+    "category": "pair",
+    "key": [
+     1,
+     11,
+     14,
+     9,
+     7
+    ]
+   },
+   "why": "pair + three kickers"
+  },
+  {
+   "id": "high-card",
+   "cards": [
+    "Ah",
+    "Qd",
+    "9c",
+    "7s",
+    "5h",
+    "3d",
+    "2c"
+   ],
+   "expect": {
+    "category": "high-card",
+    "key": [
+     0,
+     14,
+     12,
+     9,
+     7,
+     5
+    ]
+   },
+   "why": "five best high cards"
+  }
+ ],
+ "showdown": [
+  {
+   "id": "board-plays-split",
+   "board": [
+    "As",
+    "Ks",
+    "Qs",
+    "Js",
+    "Ts"
+   ],
+   "hole": {
+    "1": [
+     "2c",
+     "3d"
+    ],
+    "2": [
+     "4h",
+     "5h"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "1",
+      "2"
+     ]
+    ],
+    "keys": {
+     "1": [
+      8,
+      14
+     ],
+     "2": [
+      8,
+      14
+     ]
+    }
+   },
+   "why": "royal on board: everyone ties"
+  },
+  {
+   "id": "kicker-decides",
+   "board": [
+    "Ah",
+    "Kd",
+    "7c",
+    "4s",
+    "2h"
+   ],
+   "hole": {
+    "1": [
+     "Ac",
+     "Qd"
+    ],
+    "2": [
+     "As",
+     "Jh"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "1"
+     ],
+     [
+      "2"
+     ]
+    ],
+    "keys": {
+     "1": [
+      1,
+      14,
+      13,
+      12,
+      7
+     ],
+     "2": [
+      1,
+      14,
+      13,
+      11,
+      7
+     ]
+    }
+   },
+   "why": "same pair of aces, Q kicker beats J"
+  },
+  {
+   "id": "kicker-counterfeit-tie",
+   "board": [
+    "Ah",
+    "Kd",
+    "Qc",
+    "Js",
+    "9h"
+   ],
+   "hole": {
+    "1": [
+     "Ac",
+     "3d"
+    ],
+    "2": [
+     "As",
+     "4h"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "1",
+      "2"
+     ]
+    ],
+    "keys": {
+     "1": [
+      1,
+      14,
+      13,
+      12,
+      11
+     ],
+     "2": [
+      1,
+      14,
+      13,
+      12,
+      11
+     ]
+    }
+   },
+   "why": "kickers 3 and 4 don't play: tie"
+  },
+  {
+   "id": "counterfeited-two-pair",
+   "board": [
+    "Kh",
+    "Kd",
+    "8c",
+    "8s",
+    "2h"
+   ],
+   "hole": {
+    "1": [
+     "Qc",
+     "Qd"
+    ],
+    "2": [
+     "Ac",
+     "3d"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "1"
+     ],
+     [
+      "2"
+     ]
+    ],
+    "keys": {
+     "1": [
+      2,
+      13,
+      12,
+      8
+     ],
+     "2": [
+      2,
+      13,
+      8,
+      14
+     ]
+    }
+   },
+   "why": "QQ: KK-QQ-8 beats KK-88-A"
+  },
+  {
+   "id": "two-pair-kicker",
+   "board": [
+    "Kh",
+    "Kd",
+    "8c",
+    "8s",
+    "2h"
+   ],
+   "hole": {
+    "1": [
+     "Ac",
+     "3d"
+    ],
+    "2": [
+     "Qc",
+     "4d"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "1"
+     ],
+     [
+      "2"
+     ]
+    ],
+    "keys": {
+     "1": [
+      2,
+      13,
+      8,
+      14
+     ],
+     "2": [
+      2,
+      13,
+      8,
+      12
+     ]
+    }
+   },
+   "why": "KK88 + A beats KK88 + Q"
+  },
+  {
+   "id": "wheel-loses-to-six",
+   "board": [
+    "3h",
+    "4d",
+    "5c",
+    "Ks",
+    "Qh"
+   ],
+   "hole": {
+    "1": [
+     "Ac",
+     "2d"
+    ],
+    "2": [
+     "6c",
+     "2h"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "2"
+     ],
+     [
+      "1"
+     ]
+    ],
+    "keys": {
+     "1": [
+      4,
+      5
+     ],
+     "2": [
+      4,
+      6
+     ]
+    }
+   },
+   "why": "6-high straight beats the wheel"
+  },
+  {
+   "id": "flush-kicker-5th-card",
+   "board": [
+    "Ah",
+    "Th",
+    "7h",
+    "4h",
+    "9c"
+   ],
+   "hole": {
+    "1": [
+     "3h",
+     "Kd"
+    ],
+    "2": [
+     "2h",
+     "Qd"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "1"
+     ],
+     [
+      "2"
+     ]
+    ],
+    "keys": {
+     "1": [
+      5,
+      14,
+      10,
+      7,
+      4,
+      3
+     ],
+     "2": [
+      5,
+      14,
+      10,
+      7,
+      4,
+      2
+     ]
+    }
+   },
+   "why": "flushes compared on all five: 3 beats 2"
+  },
+  {
+   "id": "full-house-trips-first",
+   "board": [
+    "Jh",
+    "Jd",
+    "4c",
+    "4s",
+    "2h"
+   ],
+   "hole": {
+    "1": [
+     "Jc",
+     "2c"
+    ],
+    "2": [
+     "4h",
+     "4d"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "2"
+     ],
+     [
+      "1"
+     ]
+    ],
+    "keys": {
+     "1": [
+      6,
+      11,
+      4
+     ],
+     "2": [
+      7,
+      4,
+      11
+     ]
+    }
+   },
+   "why": "4444 quads beat JJJ44"
+  },
+  {
+   "id": "three-way-split-two",
+   "board": [
+    "2h",
+    "7d",
+    "9c",
+    "Js",
+    "Kh"
+   ],
+   "hole": {
+    "1": [
+     "Ac",
+     "Qd"
+    ],
+    "2": [
+     "As",
+     "Qh"
+    ],
+    "3": [
+     "Kc",
+     "3d"
+    ]
+   },
+   "expect": {
+    "ranking": [
+     [
+      "3"
+     ],
+     [
+      "1",
+      "2"
+     ]
+    ],
+    "keys": {
+     "1": [
+      0,
+      14,
+      13,
+      12,
+      11,
+      9
+     ],
+     "2": [
+      0,
+      14,
+      13,
+      12,
+      11,
+      9
+     ],
+     "3": [
+      1,
+      13,
+      11,
+      9,
+      7
+     ]
+    }
+   },
+   "why": "pair of kings wins; the two AQ tie below it"
+  }
+ ]
+}
