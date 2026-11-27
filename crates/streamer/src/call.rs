@@ -1977,6 +1977,48 @@ fn set_sink_target(el: &gst::Element, target: &str) {
 
 /// A flag that flips when the first buffer reaches `appsink` (install BEFORE the pipeline plays). Any sink element
 /// will do (the size-learning run ends in a fakesink).
+/// The zero-copy candidate's label in the share capture cascade (call.rs start_share_capture).
+const ZERO_COPY_LABEL: &str = "GPU (GL) scale, zero-copy DMA-BUF";
+
+/// 12.2.2: the order the share capture candidates are tried in. `last` = the index that won last time (usize::MAX =
+/// none). Last time's winner first (a re-share skips the losers' waits), except that a wanted zero-copy candidate
+/// (always index 0) is always tried first: it fails fast when the compositor hands over no DMA-BUF.
+pub(crate) fn capture_candidate_order(n: usize, last: usize, zero_copy_first: bool) -> Vec<usize> {
+    let mut order: Vec<usize> = Vec::with_capacity(n);
+    if zero_copy_first && n > 0 {
+        order.push(0);
+    }
+    if last < n && !order.contains(&last) {
+        order.push(last);
+    }
+    let rest: Vec<usize> = (0..n).filter(|i| !order.contains(i)).collect();
+    order.extend(rest);
+    order
+}
+
+/// What the last share start ran on, for the UI: (the capture path, why zero-copy did not run when it was wanted).
+static SHARE_CAPTURE_NOTE: std::sync::Mutex<Option<(String, Option<String>)>> = std::sync::Mutex::new(None);
+
+fn note_share_capture(path: &str, zero_copy_failed: Option<&str>) {
+    #[cfg(not(windows))]
+    crate::capture::set_share_phase("a running share");
+    match zero_copy_failed {
+        Some(why) => eprintln!("[call] share capture summary: zero-copy (DMA-BUF) capture was wanted but did not start ({why}); running on the {path} path (the compositor copies every frame to shared memory: more work next to a game)"),
+        None => eprintln!("[call] share capture summary: running on the {path} path"),
+    }
+    *SHARE_CAPTURE_NOTE.lock().unwrap_or_else(|e| e.into_inner()) = Some((path.to_string(), zero_copy_failed.map(str::to_string)));
+}
+
+/// 12.2.2: the words the share's status line adds when the zero-copy capture was wanted but this share runs without it
+/// (None = nothing to say). Desktop only: a browser share has no capture path to choose (web docs/WEB-EXCEPTIONS.md).
+pub fn share_capture_fallback_note() -> Option<&'static str> {
+    let g = SHARE_CAPTURE_NOTE.lock().unwrap_or_else(|e| e.into_inner());
+    g.as_ref().and_then(|(_, failed)| failed.as_ref()).map(|_| SHARE_CAPTURE_FALLBACK_TEXT)
+}
+
+/// The fallback sentence (see [`share_capture_fallback_note`]).
+pub const SHARE_CAPTURE_FALLBACK_TEXT: &str = "zero-copy capture did not start, so this share uses the standard capture (more work next to a game)";
+
 pub(crate) fn first_frame_flag(appsink: &impl IsA<gst::Element>) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
     let flowing = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     if let Some(pad) = appsink.static_pad("sink") {
@@ -7884,6 +7926,8 @@ impl CallSession {
         // same game, source caps and call (the 12.1.2 RC1 field diagnosis, F2). The two differed only in the mid-stream
         // output re-pin, so a fresh start now never keeps a renegotiated CUDA chain. The learning run still proves the
         // compositor's frames import into CUDA (else: CPU path, as before).
+        #[cfg(not(windows))]
+        crate::capture::set_share_phase("the GPU size-learning run");
         if want_gpu_learn {
             match Self::learn_share_size_gpu(screencast, box_w, box_h, fps, lease) {
                 Ok((rw, rh)) => {
@@ -7895,17 +7939,40 @@ impl CallSession {
             }
         }
 
+        // 12.2.2: why a wanted zero-copy capture is not what this share runs on (the status line and log summary say so)
+        let mut zero_copy_failed: Option<String> = None;
         if want_gpu {
             type Builder = fn(&ScreenCast, u32, u32, u32) -> Result<gst::Pipeline>;
             let mut candidates: Vec<(&'static str, Builder)> = Vec::new();
-            // 12.1.9 (SHARE-GAME-LAG): zero-copy first when opted in; no DMA-BUF from the compositor = no first frame =
-            // the CUDA candidate below, as before.
+            // 12.1.9 (SHARE-GAME-LAG): zero-copy first when on; no DMA-BUF from the compositor = no first frame =
+            // the CUDA candidate below, as before. 12.2.2: on by default on KDE Plasma + NVIDIA (capture.rs
+            // share_dmabuf_policy), and ALWAYS tried first when on (below): one failed start (a game relaunch did it in
+            // the field) no longer moves every later share of the run onto the shared-memory path without a word.
             #[cfg(not(windows))]
-            if crate::capture::share_dmabuf_on() && crate::lk_publish::gl_dmabuf_available() {
-                candidates.push(("GPU (GL) scale, zero-copy DMA-BUF", |sc, w, h, f| {
-                    crate::lk_publish::build_capture_pipeline_gl_dmabuf(sc, w, h, f)
-                }));
-            }
+            let zero_copy_wanted = {
+                let (on, why) = crate::capture::share_dmabuf_policy();
+                let gl = on && crate::lk_publish::gl_dmabuf_available();
+                if on && !gl {
+                    zero_copy_failed = Some("the GStreamer GL elements it needs are missing".to_string());
+                }
+                eprintln!(
+                    "[call] screen-share: zero-copy (DMA-BUF) capture {} ({why}{})",
+                    if gl { "first" } else { "off" },
+                    if on && !gl { "; no GStreamer GL elements" } else { "" }
+                );
+                if gl && crate::capture::share_rate_headroom() > 1 {
+                    eprintln!(
+                        "[call] screen-share: zero-copy asks the compositor for {}x the share rate (TINHAT_SHARE_RATE_HEADROOM), dropped back to {fps} fps",
+                        crate::capture::share_rate_headroom()
+                    );
+                }
+                if gl {
+                    candidates.push((ZERO_COPY_LABEL, |sc, w, h, f| crate::lk_publish::build_capture_pipeline_gl_dmabuf(sc, w, h, f)));
+                }
+                gl
+            };
+            #[cfg(windows)]
+            let zero_copy_wanted = false;
             if crate::lk_publish::cuda_scale_available() {
                 #[cfg(windows)]
                 candidates.push(("GPU (CUDA) scale, source-paced", |sc, w, h, f| {
@@ -7937,16 +8004,12 @@ impl CallSession {
             static LAST_GOOD: std::sync::atomic::AtomicUsize =
                 std::sync::atomic::AtomicUsize::new(usize::MAX);
             let last = LAST_GOOD.load(std::sync::atomic::Ordering::Relaxed);
-            let order: Vec<usize> = if last < candidates.len() {
-                std::iter::once(last)
-                    .chain((0..candidates.len()).filter(|&i| i != last))
-                    .collect()
-            } else {
-                (0..candidates.len()).collect()
-            };
+            let order = capture_candidate_order(candidates.len(), last, zero_copy_wanted);
 
             for idx in order {
                 let (label, build) = candidates[idx];
+                #[cfg(not(windows))]
+                crate::capture::set_share_phase(label);
                 match build(screencast, tw, th, fps) {
                     Ok(pipeline) => {
                         let wired = pipeline
@@ -7974,24 +8037,53 @@ impl CallSession {
                                         LAST_GOOD
                                             .store(idx, std::sync::atomic::Ordering::Relaxed);
                                         eprintln!("[call] screen-share capture: {label} path");
+                                        note_share_capture(label, zero_copy_failed.as_deref());
                                         return Ok(pipeline);
                                     }
-                                    Err(why) => eprintln!(
-                                        "[call] {label} capture: {why} — trying next"
-                                    ),
+                                    Err(why) => {
+                                        eprintln!("[call] {label} capture: {why} — trying next");
+                                        if label == ZERO_COPY_LABEL {
+                                            zero_copy_failed = Some(why);
+                                        }
+                                    }
                                 }
                             } else {
-                                eprintln!("[call] {label} capture failed to start — trying next");
+                                // 12.2.2: say why (the field log only had "failed to start")
+                                let why = pipeline
+                                    .bus()
+                                    .and_then(|b| b.pop_filtered(&[gst::MessageType::Error]))
+                                    .and_then(|m| match m.view() {
+                                        gst::MessageView::Error(e) => Some(format!("{} ({:?})", e.error(), e.debug())),
+                                        _ => None,
+                                    })
+                                    .unwrap_or_else(|| "did not reach PLAYING (no error posted)".to_string());
+                                eprintln!("[call] {label} capture failed to start: {why} — trying next");
+                                if label == ZERO_COPY_LABEL {
+                                    zero_copy_failed = Some(format!("failed to start: {why}"));
+                                }
                             }
                         }
                         set_state_bounded(pipeline.upcast_ref(), gst::State::Null, 1500, "screen capture");
                     }
-                    Err(e) => eprintln!("[call] {label} capture unavailable ({e})"),
+                    Err(e) => {
+                        eprintln!("[call] {label} capture unavailable ({e})");
+                        if label == ZERO_COPY_LABEL {
+                            zero_copy_failed = Some(format!("unavailable: {e}"));
+                        }
+                    }
                 }
             }
             eprintln!("[call] no GPU capture candidate negotiated — falling back to CPU");
+        } else {
+            // no GPU capture this time (no CUDA elements, TINHAT_CAPTURE_CPU, or a failed size-learning run): zero-copy was never tried
+            #[cfg(not(windows))]
+            if crate::capture::share_dmabuf_policy().0 {
+                zero_copy_failed = Some("the GPU capture path is off or did not start (see the lines above)".to_string());
+            }
         }
 
+        #[cfg(not(windows))]
+        crate::capture::set_share_phase("the CPU capture start");
         // CPU path: convert + lanczos scale on the CPU (threaded since 10.8).
         // 12.1.12, Linux: PRE-SIZED like the GPU paths, never the first-frame pipeline as the share. Its mid-stream
         // re-pin makes pipewiresrc reconnect its stream and then hold every compositor buffer until the next frame,
@@ -8052,6 +8144,7 @@ impl CallSession {
             eprintln!("[call] screen-share: CPU capture pre-sized {w}x{h} (nothing re-pinned mid-stream)");
         }
         eprintln!("[call] screen-share capture: CPU scale path");
+        note_share_capture("CPU scale", zero_copy_failed.as_deref());
         Ok(pipeline)
     }
 
@@ -8208,11 +8301,14 @@ impl CallSession {
         // Resolved against the available backends (NVENC -> VAAPI -> VP9 ladder).
         let (codec, backend, codec_label) = Self::resolve_share_encoder(q.encoder);
         let backends: Vec<_> = VideoEncoderBackend::list_available().into_iter().collect();
+        // 12.2.2: the GPU encoder effort the NVENC share encoder will read (lk_publish ShareEffort)
+        let effort = crate::lk_publish::sync_share_effort();
         eprintln!(
-            "[call] screen-share source {:?} -> publishing {tw}x{th}@{fps} ~{}kbps as {codec_label}; encoder backends={:?}",
+            "[call] screen-share source {:?} -> publishing {tw}x{th}@{fps} ~{}kbps as {codec_label}; encoder backends={:?}; GPU encoder effort {}",
             screencast.size(),
             bitrate_bps / 1000,
-            backends
+            backends,
+            effort.tag()
         );
         let source = NativeVideoSource::new(VideoResolution { width: tw, height: th }, true);
         let track = LocalVideoTrack::create_video_track("screen", RtcVideoSource::Native(source.clone()));
@@ -8472,9 +8568,11 @@ impl CallSession {
         let q = crate::lk_publish::share_quality();
         let (tw, th, fps, bitrate_bps) = crate::lk_publish::publish_target(screencast.size(), q);
         let (codec, backend, codec_label) = Self::resolve_share_encoder(q.encoder);
+        let effort = crate::lk_publish::sync_share_effort();
         eprintln!(
-            "[call] re-publishing screen-share at NEW quality {tw}x{th}@{fps} ~{}kbps as {codec_label}",
-            bitrate_bps / 1000
+            "[call] re-publishing screen-share at NEW quality {tw}x{th}@{fps} ~{}kbps as {codec_label}; GPU encoder effort {}",
+            bitrate_bps / 1000,
+            effort.tag()
         );
 
         let source = NativeVideoSource::new(VideoResolution { width: tw, height: th }, true);
@@ -8622,12 +8720,16 @@ impl CallSession {
         // H.264 (NVENC, else VAAPI); fall back to software VP9 (always present) so
         // AMD / no-hardware friends still publish a visible camera.
         let backends: Vec<_> = VideoEncoderBackend::list_available().into_iter().collect();
-        let (codec, backend) = if backends.iter().any(|b| matches!(b, VideoEncoderBackend::Nvenc)) {
-            (VideoCodec::H264, VideoEncoderBackend::Nvenc)
-        } else if backends.iter().any(|b| matches!(b, VideoEncoderBackend::Vaapi)) {
-            (VideoCodec::H264, VideoEncoderBackend::Vaapi)
-        } else {
-            (VideoCodec::VP9, VideoEncoderBackend::Software)
+        // 12.2.2: the camera encoder choice (camera.rs camera_encoder: the CPU by default on a Linux desktop with NVIDIA)
+        let (cam_enc, cam_enc_why) = camera::camera_encoder(
+            backends.iter().any(|b| matches!(b, VideoEncoderBackend::Nvenc)),
+            backends.iter().any(|b| matches!(b, VideoEncoderBackend::Vaapi)),
+        );
+        eprintln!("[call] camera encoder: {cam_enc_why}");
+        let (codec, backend) = match cam_enc {
+            camera::CameraEncoder::Nvenc => (VideoCodec::H264, VideoEncoderBackend::Nvenc),
+            camera::CameraEncoder::Vaapi => (VideoCodec::H264, VideoEncoderBackend::Vaapi),
+            camera::CameraEncoder::SoftwareVp9 => (VideoCodec::VP9, VideoEncoderBackend::Software),
         };
         // SIMULCAST (adaptive layers): NVENC-only for now — the SimulcastEncoderAdapter
         // instantiates one encoder PER RUNG, and 3 software encoders on a weak machine is

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "i420_buffer_cuda.h"
+#include "cuda_context.h"
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
 #include "api/video/video_codec_constants.h"
@@ -49,6 +50,8 @@ NvidiaH265EncoderImpl::NvidiaH265EncoderImpl(
 
 NvidiaH265EncoderImpl::~NvidiaH265EncoderImpl() {
   Release();
+  // PATCH (Tin Hat 12.2.2): the factory took a context reference for this encoder (cuda_context.h Acquire)
+  livekit_ffi::CudaContext::GetInstance()->ReleaseRef();
 }
 
 void NvidiaH265EncoderImpl::ReportInit() {

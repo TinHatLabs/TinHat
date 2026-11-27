@@ -8,7 +8,8 @@
 //! Steps run in ONE room session with an unpublish in between, like a quality change.
 //!
 //! Env: LIVEKIT_URL, PUB_TOKEN, SUB_TOKEN; PROBE_SEQ (default `vp9:software,h264:nvenc`);
-//! PROBE_W/PROBE_H (default 1920x800); PROBE_FPS feed rate (default 30); PROBE_KBPS (default 8000); PROBE_SECS per step (default 8).
+//! PROBE_W/PROBE_H (default 1920x800); PROBE_FPS feed rate (default 30); PROBE_KBPS (default 8000); PROBE_SECS per step (default 8);
+//! PROBE_EFFORT=light|quality (12.2.2: the GPU share encoder effort, not saved).
 use anyhow::{Context, Result};
 use livekit::options::{TrackPublishOptions, VideoCodec, VideoEncoderBackend, VideoEncoding};
 use livekit::prelude::*;
@@ -99,6 +100,11 @@ async fn run() -> Result<()> {
     let secs: u64 = std::env::var("PROBE_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(8);
     let kbps: u64 = std::env::var("PROBE_KBPS").ok().and_then(|v| v.parse().ok()).unwrap_or(8000);
     let fps: u32 = std::env::var("PROBE_FPS").ok().and_then(|v| v.parse().ok()).unwrap_or(30);
+    // 12.2.2: PROBE_EFFORT=light|quality = the GPU share encoder effort for this run (not saved)
+    if let Some(e) = std::env::var("PROBE_EFFORT").ok().and_then(|v| tinhat_streamer::lk_publish::ShareEffort::from_tag(&v)) {
+        tinhat_streamer::lk_publish::use_share_effort_unsaved(e);
+        eprintln!("[codecprobe] GPU share encoder effort for this run: {}", e.tag());
+    }
 
     println!("[probe] encoder backends available: {:?}", VideoEncoderBackend::list_available().into_iter().collect::<Vec<_>>());
     let caps = PeerConnectionFactory::default().get_rtp_sender_capabilities(MediaType::Video);

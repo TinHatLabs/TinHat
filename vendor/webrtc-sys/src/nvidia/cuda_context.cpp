@@ -9,6 +9,8 @@
 #include <dlfcn.h>
 #endif
 
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 
 #if defined(WIN32)
@@ -28,9 +30,12 @@ namespace livekit_ffi {
     return ret;                                             \
   }
 
-#define CUCTX_CUDA_CALL_ERROR(call) \
-  do {                              \
-    __CUCTX_CUDA_CALL(call, err__); \
+// PATCH (Tin Hat 12.2.2): every caller is a bool function, so a failed CUDA call returns false. Until 12.2.2 this
+// macro returned the CUresult itself (`return err__`), which a bool function turns into true: a failed cuCtxCreate or
+// cuDeviceGet made Initialize() report success with no context, and IsAvailable() report a device that isn't there.
+#define CUCTX_CUDA_CALL_OR_FALSE(call) \
+  do {                                 \
+    __CUCTX_CUDA_CALL(call, false);    \
   } while (0)
 
 static void* s_module_ptr = nullptr;
@@ -65,7 +70,7 @@ static bool check_cuda_device() {
   int device_count = 0;
   int driver_version = 0;
 
-  CUCTX_CUDA_CALL_ERROR(cuDriverGetVersion(&driver_version));
+  CUCTX_CUDA_CALL_OR_FALSE(cuDriverGetVersion(&driver_version));
   if (kRequiredDriverVersion > driver_version) {
     RTC_LOG(LS_ERROR)
         << "CUDA driver version is not higher than the required version. "
@@ -118,7 +123,7 @@ bool CudaContext::Initialize() {
 
   int driverVersion = 0;
 
-  CUCTX_CUDA_CALL_ERROR(cuDriverGetVersion(&driverVersion));
+  CUCTX_CUDA_CALL_OR_FALSE(cuDriverGetVersion(&driverVersion));
   if (kRequiredDriverVersion > driverVersion) {
     RTC_LOG(LS_ERROR)
         << "CUDA driver version is not higher than the required version. "
@@ -143,17 +148,17 @@ bool CudaContext::Initialize() {
     return false;
   }
 
-  CUCTX_CUDA_CALL_ERROR(cuDeviceGet(&cu_device, 0));
+  CUCTX_CUDA_CALL_OR_FALSE(cuDeviceGet(&cu_device, 0));
 
   char device_name[80];
-  CUCTX_CUDA_CALL_ERROR(
+  CUCTX_CUDA_CALL_OR_FALSE(
       cuDeviceGetName(device_name, sizeof(device_name), cu_device));
   RTC_LOG(LS_INFO) << "CUDA device name: " << device_name;
 
 #if CUDA_VERSION >= 13000
-  CUCTX_CUDA_CALL_ERROR(cuCtxCreate(&context, nullptr, 0, cu_device));
+  CUCTX_CUDA_CALL_OR_FALSE(cuCtxCreate(&context, nullptr, 0, cu_device));
 #else
-  CUCTX_CUDA_CALL_ERROR(cuCtxCreate(&context, 0, cu_device));
+  CUCTX_CUDA_CALL_OR_FALSE(cuCtxCreate(&context, 0, cu_device));
 #endif
   if (context == nullptr) {
     RTC_LOG(LS_ERROR) << "Failed to create CUDA context.";
@@ -164,6 +169,41 @@ bool CudaContext::Initialize() {
   cu_context_ = context;
 
   return true;
+}
+
+CUcontext CudaContext::Acquire() {
+  std::lock_guard<std::mutex> lock(mu_);
+  if (!cu_context_) {
+    // PATCH (Tin Hat 12.2.2): no context = no reference. A reference counted here without a context would never be
+    // dropped (the factory makes no encoder for a nullptr), so a later context would live until the app exits.
+    if (!Initialize() || !cu_context_) {
+      return nullptr;
+    }
+    fprintf(stderr, "[cuda-ctx] created (first NVENC encoder)\n");
+  }
+  ++refs_;
+  return cu_context_;
+}
+
+void CudaContext::ReleaseRef() {
+  std::lock_guard<std::mutex> lock(mu_);
+  if (refs_ > 0) {
+    --refs_;
+  }
+  if (refs_ == 0 && cu_context_) {
+    const char* keep = getenv("TINHAT_CUDA_KEEP");
+    if (keep && keep[0] == '1') {
+      return;
+    }
+    cuCtxDestroy(cu_context_);
+    cu_context_ = nullptr;
+    fprintf(stderr, "[cuda-ctx] destroyed (no NVENC encoder left)\n");
+  }
+}
+
+int CudaContext::refs() {
+  std::lock_guard<std::mutex> lock(mu_);
+  return refs_;
 }
 
 CUcontext CudaContext::GetContext() const {

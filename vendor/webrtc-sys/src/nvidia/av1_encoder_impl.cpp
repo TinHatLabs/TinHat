@@ -4,6 +4,7 @@
 #include <string>
 
 #include "i420_buffer_cuda.h"
+#include "cuda_context.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_error_codes.h"
@@ -11,6 +12,9 @@
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+
+// 12.2.2: the share encoder effort knob (src/tinhat_knobs.cpp)
+extern "C" int tinhat_share_encoder_effort();
 
 namespace webrtc {
 
@@ -30,6 +34,8 @@ NvidiaAv1EncoderImpl::NvidiaAv1EncoderImpl(const webrtc::Environment& env,
 
 NvidiaAv1EncoderImpl::~NvidiaAv1EncoderImpl() {
   Release();
+  // PATCH (Tin Hat 12.2.2): the factory took a context reference for this encoder (cuda_context.h Acquire)
+  livekit_ffi::CudaContext::GetInstance()->ReleaseRef();
 }
 
 int32_t NvidiaAv1EncoderImpl::InitEncode(const VideoCodec* inst,
@@ -145,23 +151,41 @@ int32_t NvidiaAv1EncoderImpl::InitEncode(const VideoCodec* inst,
 
   // Same motion-quality config the H.264 path earned through field reports
   // (P5 + LOW_LATENCY + two-pass + AQ), same graceful fallback to P4/ULL.
+  // 12.2.2 (share encoder effort): a SCREEN SHARE with the user's "light" choice takes P1 + LOW_LATENCY, one pass, no
+  // AQ instead. Measured next to a GPU-bound load (RTX PRO 6000, 2560x1072@60): -3.5 % for the quality config,
+  // -2.0 % for this one; it gives up some picture quality at the same bitrate.
+  const bool light = codec_.mode == VideoCodecMode::kScreensharing &&
+                     tinhat_share_encoder_effort() == 1;
   try {
     encoder_->CreateDefaultEncoderParams(&nv_initialize_params_, encodeGuid,
-                                         NV_ENC_PRESET_P5_GUID,
+                                         light ? NV_ENC_PRESET_P1_GUID
+                                               : NV_ENC_PRESET_P5_GUID,
                                          NV_ENC_TUNING_INFO_LOW_LATENCY);
     apply_baseline();
-    nv_encode_config_.rcParams.multiPass = NV_ENC_TWO_PASS_QUARTER_RESOLUTION;
-    nv_encode_config_.rcParams.enableAQ = 1;
-    nv_encode_config_.rcParams.aqStrength = 0;
-    if (encoder_->GetCapabilityValue(encodeGuid,
-                                     NV_ENC_CAPS_SUPPORT_TEMPORAL_AQ)) {
-      nv_encode_config_.rcParams.enableTemporalAQ = 1;
+    if (light) {
+      nv_encode_config_.rcParams.multiPass = NV_ENC_MULTI_PASS_DISABLED;
+      nv_encode_config_.rcParams.enableAQ = 0;
+      nv_encode_config_.rcParams.enableTemporalAQ = 0;
+    } else {
+      nv_encode_config_.rcParams.multiPass = NV_ENC_TWO_PASS_QUARTER_RESOLUTION;
+      nv_encode_config_.rcParams.enableAQ = 1;
+      nv_encode_config_.rcParams.aqStrength = 0;
+      if (encoder_->GetCapabilityValue(encodeGuid,
+                                       NV_ENC_CAPS_SUPPORT_TEMPORAL_AQ)) {
+        nv_encode_config_.rcParams.enableTemporalAQ = 1;
+      }
     }
     encoder_->CreateEncoder(&nv_initialize_params_);
-    fprintf(stderr,
-            "[nvenc-av1] init %ux%u@%.0f: P5/LL two-pass spatialAQ%s\n",
-            codec_.width, codec_.height, configuration_.max_frame_rate,
-            nv_encode_config_.rcParams.enableTemporalAQ ? "+temporalAQ" : "");
+    if (light) {
+      fprintf(stderr,
+              "[nvenc-av1] init %ux%u@%.0f: P1/LL single pass, no AQ (share encoder effort: light)\n",
+              codec_.width, codec_.height, configuration_.max_frame_rate);
+    } else {
+      fprintf(stderr,
+              "[nvenc-av1] init %ux%u@%.0f: P5/LL two-pass spatialAQ%s\n",
+              codec_.width, codec_.height, configuration_.max_frame_rate,
+              nv_encode_config_.rcParams.enableTemporalAQ ? "+temporalAQ" : "");
+    }
   } catch (const NVENCException& e) {
     fprintf(stderr,
             "[nvenc-av1] quality config rejected (%s) — retrying baseline P4/ULL\n",

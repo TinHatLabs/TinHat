@@ -526,3 +526,155 @@ pub fn cam_gltest_stop() {
         let _ = p.set_state(gst::State::Null);
     }
 }
+
+
+// ── Camera encoder choice (12.2.2) ───────────────────────────────────────────
+// Until 12.2.1 the camera took NVENC whenever the machine had it. On a desktop NVIDIA card that costs a GPU-bound game
+// about 1.6 % (a camera-like H.264 NVENC 1080p30 next to a GPU-bound benchmark, RTX PRO 6000, 2026-11-25) and, worse
+// for the always-on camera, it creates a CUDA context, which holds the card in P1 (lower memory clock) for as long as
+// it exists. A software VP9 camera has neither. So "Automatic" = the CPU (software VP9) on a LINUX DESKTOP with NVENC;
+// NVENC stays the choice everywhere else:
+//   - laptops (a battery is present): the CPU and GPU share one power/heat budget, and a software encode heats the CPU
+//     a game also needs; not measured, so the measured-safe NVENC stays;
+//   - iGPU-only machines (VAAPI) and AMD: unchanged (no CUDA there, nothing measured);
+//   - Windows: unchanged for now (no NVIDIA Windows machine in the lab to measure it on).
+// The setting (Settings -> Calls -> Camera encoder) and TINHAT_CAMERA_ENCODER=gpu|cpu override it.
+
+/// The camera encoder choice.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CameraEncoderMode {
+    Auto,
+    Gpu,
+    Cpu,
+}
+
+impl CameraEncoderMode {
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::Auto => "auto",
+            Self::Gpu => "gpu",
+            Self::Cpu => "cpu",
+        }
+    }
+    pub fn from_tag(t: &str) -> Option<Self> {
+        match t.trim() {
+            "auto" => Some(Self::Auto),
+            "gpu" => Some(Self::Gpu),
+            "cpu" => Some(Self::Cpu),
+            _ => None,
+        }
+    }
+}
+
+fn camera_encoder_path() -> std::path::PathBuf {
+    let base = std::env::var_os("XDG_CONFIG_HOME")
+        .map(std::path::PathBuf::from)
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| std::path::PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".config"));
+    base.join("tinhat/camera-encoder")
+}
+
+/// The saved camera encoder choice (Auto when none).
+pub fn camera_encoder_mode() -> CameraEncoderMode {
+    std::fs::read_to_string(camera_encoder_path()).ok().and_then(|t| CameraEncoderMode::from_tag(&t)).unwrap_or(CameraEncoderMode::Auto)
+}
+
+/// Save the camera encoder choice (a live camera is re-published by the caller).
+pub fn set_camera_encoder_mode(m: CameraEncoderMode) {
+    let p = camera_encoder_path();
+    if let Some(d) = p.parent() {
+        let _ = std::fs::create_dir_all(d);
+    }
+    let _ = std::fs::write(&p, m.tag());
+}
+
+/// Does this machine run on a battery (a laptop or handheld)? Linux: a power supply of type Battery that powers the
+/// system, not a device (a wireless mouse, keyboard or headset registers one with `scope` = Device).
+fn has_battery() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        let Ok(dir) = std::fs::read_dir("/sys/class/power_supply") else { return false };
+        return dir.flatten().any(|e| {
+            let read = |f: &str| std::fs::read_to_string(e.path().join(f)).map(|t| t.trim().to_string()).ok();
+            system_battery(read("type").as_deref(), read("scope").as_deref())
+        });
+    }
+    #[allow(unreachable_code)]
+    false
+}
+
+/// One power supply's `type` and `scope` (sysfs): a battery that powers this machine?
+fn system_battery(kind: Option<&str>, scope: Option<&str>) -> bool {
+    kind == Some("Battery") && scope != Some("Device")
+}
+
+/// What the camera encodes with.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CameraEncoder {
+    Nvenc,
+    Vaapi,
+    SoftwareVp9,
+}
+
+/// The camera's encoder and why, for the machine's backends ([`camera_encoder_for`] with this machine's facts).
+pub fn camera_encoder(nvenc: bool, vaapi: bool) -> (CameraEncoder, &'static str) {
+    let switch = std::env::var("TINHAT_CAMERA_ENCODER").ok().and_then(|v| CameraEncoderMode::from_tag(&v));
+    camera_encoder_for(switch.unwrap_or_else(camera_encoder_mode), nvenc, vaapi, cfg!(target_os = "linux"), has_battery())
+}
+
+/// [`camera_encoder`] for given facts.
+pub fn camera_encoder_for(mode: CameraEncoderMode, nvenc: bool, vaapi: bool, linux: bool, battery: bool) -> (CameraEncoder, &'static str) {
+    let gpu = || {
+        if nvenc {
+            (CameraEncoder::Nvenc, "GPU (NVENC)")
+        } else if vaapi {
+            (CameraEncoder::Vaapi, "GPU (VAAPI)")
+        } else {
+            (CameraEncoder::SoftwareVp9, "the CPU: no GPU encoder on this machine")
+        }
+    };
+    match mode {
+        CameraEncoderMode::Cpu => (CameraEncoder::SoftwareVp9, "the CPU, as chosen"),
+        CameraEncoderMode::Gpu => gpu(),
+        CameraEncoderMode::Auto if nvenc && linux && !battery => {
+            (CameraEncoder::SoftwareVp9, "automatic: the CPU on a desktop with an NVIDIA GPU (keeps the card out of P1 and its encoder free for games)")
+        }
+        CameraEncoderMode::Auto => gpu(),
+    }
+}
+
+#[cfg(test)]
+mod camera_encoder_tests {
+    use super::{camera_encoder_for as f, CameraEncoder as E, CameraEncoderMode as M};
+
+    #[test]
+    fn automatic_puts_a_linux_desktop_nvidia_camera_on_the_cpu() {
+        assert_eq!(f(M::Auto, true, false, true, false).0, E::SoftwareVp9, "Linux desktop + NVIDIA");
+        assert_eq!(f(M::Auto, true, true, true, false).0, E::SoftwareVp9, "Linux desktop + NVIDIA + an iGPU");
+        assert_eq!(f(M::Auto, true, false, true, true).0, E::Nvenc, "a laptop keeps NVENC");
+        assert_eq!(f(M::Auto, true, false, false, false).0, E::Nvenc, "Windows unchanged");
+        assert_eq!(f(M::Auto, false, true, true, false).0, E::Vaapi, "iGPU / AMD unchanged");
+        assert_eq!(f(M::Auto, false, false, true, false).0, E::SoftwareVp9, "no GPU encoder");
+    }
+
+    #[test]
+    fn a_peripheral_battery_is_not_a_laptop() {
+        use super::system_battery as b;
+        assert!(b(Some("Battery"), None), "a laptop battery (no scope file)");
+        assert!(b(Some("Battery"), Some("System")));
+        assert!(!b(Some("Battery"), Some("Device")), "a wireless mouse or headset");
+        assert!(!b(Some("Mains"), None), "the charger");
+        assert!(!b(None, None));
+    }
+
+    #[test]
+    fn the_choice_overrides_automatic() {
+        assert_eq!(f(M::Gpu, true, false, true, false).0, E::Nvenc, "GPU chosen on a desktop");
+        assert_eq!(f(M::Gpu, false, true, true, false).0, E::Vaapi);
+        assert_eq!(f(M::Gpu, false, false, true, false).0, E::SoftwareVp9, "GPU chosen, none there");
+        assert_eq!(f(M::Cpu, true, true, false, true).0, E::SoftwareVp9, "CPU chosen anywhere");
+        for m in [M::Auto, M::Gpu, M::Cpu] {
+            assert_eq!(M::from_tag(m.tag()), Some(m));
+        }
+    }
+}

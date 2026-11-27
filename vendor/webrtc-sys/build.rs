@@ -95,6 +95,7 @@ fn main() {
         "src/apm.cpp",
         "src/audio_mixer.cpp",
         "src/packet_trailer.cpp",
+        "src/tinhat_knobs.cpp",
     ]);
 
     if is_desktop {

@@ -3972,6 +3972,21 @@ Kirigami.ApplicationWindow {
                     onTriggered: callctl.applyShareEncoder(modelData.code)
                 }
             }
+            Controls.MenuSeparator {}
+            // 12.2.2: how hard the GPU encoder works (NVENC; VP9 on the CPU ignores it)
+            MenuSectionLabel { app: root; text: "GPU encoder effort" }
+            Repeater {
+                model: [
+                    { label: "Quality · two passes (default)", tag: "quality" },
+                    { label: "Light on games · one pass",      tag: "light" }
+                ]
+                delegate: CheckMenuItem {
+                    required property var modelData
+                    text: modelData.label
+                    isChecked: () => callctl.shareEffort === modelData.tag
+                    onTriggered: callctl.applyShareEffort(modelData.tag)
+                }
+            }
             Controls.MenuItem {
                 // 12.1.11 (flatpak-nvidia): the GPU choice above can't reach NVENC in this Flatpak; the why + fix
                 // are in Settings -> Calls (callctl.gpuSetupHint)

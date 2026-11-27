@@ -46,6 +46,8 @@ pub mod qobject {
         #[qproperty(QString, cameras)] //  QML: cameras — JSON [{node,label}] cams
         #[qproperty(QString, camera_name)] // QML: cameraName — selected camera device.path
         #[qproperty(QString, share_quality)] // QML: shareQuality — "maxW maxH fps kbps"
+        #[qproperty(QString, share_effort)] // QML: shareEffort — GPU share encoder effort: "quality" | "light" (12.2.2)
+        #[qproperty(QString, cam_encoder)] // QML: camEncoder — camera encoder choice "auto" | "gpu" | "cpu" (12.2.2)
         #[qproperty(QString, cam_quality)] // QML: camQuality — "W H FPS KBPS SIM01"
         #[qproperty(QString, recv_quality)] // QML: recvQuality — auto|high|medium|low
         #[qproperty(bool, music_playing)] // QML: musicPlaying — #7 music 2nd-track live
@@ -280,6 +282,10 @@ pub mod qobject {
         /// 1 = software VP9). Takes effect on the next share.
         #[qinvokable]
         fn apply_share_encoder(self: Pin<&mut CallController>, encoder: i32);
+        /// QML: callctl.applyShareEffort(tag) — GPU share encoder effort "quality" | "light" (12.2.2); a live share is
+        /// re-published so its encoder takes it.
+        #[qinvokable]
+        fn apply_share_effort(self: Pin<&mut CallController>, tag: &QString);
         /// QML: callctl.runConnectionTest() — 20s max-throughput probe (Settings → Calls).
         /// (The missing #[qinvokable] here shipped 0.3.3/0.3.4 with a dead button —
         /// "is not a function" TypeError, caught by a shipped log.)
@@ -292,6 +298,16 @@ pub mod qobject {
         /// the Flatpak (GL.nvidia extension for the running driver missing, or no /dev/nvidia-uvm); "" = nothing to say.
         #[qinvokable]
         fn gpu_setup_hint(self: &CallController) -> QString;
+        /// QML: callctl.shareCaptureMode() — Settings → Calls → Screen capture (Linux): "auto" | "zerocopy" | "compatible".
+        #[qinvokable]
+        fn share_capture_mode(self: &CallController) -> QString;
+        /// QML: callctl.applyShareCaptureMode(tag) — save the screen-capture choice; a live share restarts on it.
+        #[qinvokable]
+        fn apply_share_capture_mode(self: Pin<&mut CallController>, tag: &QString);
+        /// QML: callctl.applyCamEncoder(tag) — camera encoder "auto" | "gpu" | "cpu" (12.2.2); a live camera is
+        /// re-published on it.
+        #[qinvokable]
+        fn apply_cam_encoder(self: Pin<&mut CallController>, tag: &QString);
         /// Set + persist the CAMERA publish quality (resolution / fps / bitrate kbps).
         /// A live camera is re-published so it applies mid-call (encoding is locked at
         /// publish time — a capture-only restart can't change it).
@@ -619,6 +635,8 @@ pub struct CallControllerRust {
     cameras: QString,
     camera_name: QString,
     share_quality: QString,
+    share_effort: QString, // 12.2.2: GPU share encoder effort mirror ("quality" / "light")
+    cam_encoder: QString,  // 12.2.2: camera encoder choice mirror ("auto" / "gpu" / "cpu")
     cam_quality: QString,  // "W H FPS KBPS SIM01" camera publish quality mirror
     recv_quality: QString, // "auto"|"high"|"medium"|"low" incoming-video cap mirror
     music_playing: bool,
@@ -2737,6 +2755,19 @@ fn auto_rejoins() -> &'static std::sync::atomic::AtomicU32 {
 /// ticket. The streamer's capture bar follows the episode when its join starts (cleared only by a normal join / Talk).
 use crate::watch_session::{ledger as watch_ledger, Decision as WatchDecision, Phase as WatchPhase};
 
+/// 12.2.2: the status line of a share that started: "Sharing screen", plus the fallback note when the zero-copy capture
+/// was wanted but did not start (call.rs share_capture_fallback_note).
+fn sharing_status_line() -> String {
+    sharing_status_for(tinhat_streamer::call::share_capture_fallback_note())
+}
+
+fn sharing_status_for(note: Option<&str>) -> String {
+    match note {
+        Some(n) => format!("Sharing screen ({n})"),
+        None => "Sharing screen".to_string(),
+    }
+}
+
 /// A share that ended on its own is never a frozen picture: it stops, and the call status says so in these words
 /// (testvectors/share-stopped, the same in Tin Hat Web). AppCore.qml shows a status that starts with the prefix as a
 /// notice with a "Share again" button.
@@ -4593,7 +4624,8 @@ impl qobject::CallController {
             let Some(call) = guard.as_mut() else { return };
             match call.restart_screenshare().await {
                 Ok(()) => {
-                    let _ = qt.queue(|mut o| o.as_mut().set_status(QString::from("Sharing screen")));
+                    let status = sharing_status_line();
+                    let _ = qt.queue(move |mut o| o.as_mut().set_status(QString::from(&status)));
                 }
                 Err(e) => {
                     eprintln!("[call] share quality re-apply failed: {e}");
@@ -4610,10 +4642,46 @@ impl qobject::CallController {
     pub fn gpu_setup_hint(&self) -> QString {
         QString::from(&crate::platform::flatpak_nvidia_settings_hint_at_start())
     }
+
+    /// 12.2.2: Settings → Calls → Screen capture (capture.rs share_dmabuf_policy). Windows has one capture: "auto".
+    pub fn share_capture_mode(&self) -> QString {
+        #[cfg(target_os = "linux")]
+        return QString::from(tinhat_streamer::capture::share_capture_mode().tag());
+        #[cfg(not(target_os = "linux"))]
+        QString::from("auto")
+    }
+
+    pub fn apply_share_capture_mode(mut self: Pin<&mut Self>, tag: &QString) {
+        #[cfg(target_os = "linux")]
+        {
+            let Some(m) = tinhat_streamer::capture::ShareCaptureMode::from_tag(&tag.to_string()) else { return };
+            if m == tinhat_streamer::capture::share_capture_mode() {
+                return;
+            }
+            tinhat_streamer::capture::set_share_capture_mode(m);
+            eprintln!("[call] screen capture choice: {}", m.tag());
+            self.as_mut().restart_share_if_live();
+        }
+        #[cfg(not(target_os = "linux"))]
+        let _ = (&mut self, tag);
+    }
     /// Load the persisted screen-share quality into the `shareQuality` qproperty.
     pub fn refresh_share_quality(mut self: Pin<&mut Self>) {
         let label = tinhat_streamer::share_quality_label();
         self.as_mut().set_share_quality(QString::from(&label));
+        self.as_mut().set_share_effort(QString::from(tinhat_streamer::lk_publish::share_effort().tag()));
+    }
+
+    /// 12.2.2: the GPU share encoder effort (lk_publish ShareEffort).
+    pub fn apply_share_effort(mut self: Pin<&mut Self>, tag: &QString) {
+        let Some(e) = tinhat_streamer::lk_publish::ShareEffort::from_tag(&tag.to_string()) else { return };
+        let changed = e != tinhat_streamer::lk_publish::share_effort();
+        tinhat_streamer::lk_publish::set_share_effort(e);
+        self.as_mut().set_share_effort(QString::from(e.tag()));
+        if changed {
+            eprintln!("[call] GPU share encoder effort: {}", e.tag());
+            self.as_mut().restart_share_if_live();
+        }
     }
 
     /// Set + persist the CAMERA quality; mirror it back to `camQuality`. A live camera is
@@ -4644,6 +4712,19 @@ impl qobject::CallController {
     pub fn refresh_cam_quality(mut self: Pin<&mut Self>) {
         let label = tinhat_streamer::camera::cam_quality_label();
         self.as_mut().set_cam_quality(QString::from(&label));
+        self.as_mut().set_cam_encoder(QString::from(tinhat_streamer::camera::camera_encoder_mode().tag()));
+    }
+
+    /// 12.2.2: the camera encoder choice (camera.rs camera_encoder).
+    pub fn apply_cam_encoder(mut self: Pin<&mut Self>, tag: &QString) {
+        let Some(m) = tinhat_streamer::camera::CameraEncoderMode::from_tag(&tag.to_string()) else { return };
+        let changed = m != tinhat_streamer::camera::camera_encoder_mode();
+        tinhat_streamer::camera::set_camera_encoder_mode(m);
+        self.as_mut().set_cam_encoder(QString::from(m.tag()));
+        if changed {
+            eprintln!("[call] camera encoder choice: {}", m.tag());
+            self.as_mut().republish_camera_if_live();
+        }
     }
 
     /// If the camera is LIVE, unpublish + re-publish it under the CURRENT (just-persisted)
@@ -5660,9 +5741,10 @@ impl qobject::CallController {
                     .map_err(|e| tinhat_streamer::call_health::share_error_text(&e))?;
                 // 12.1.15: "sharing" is queued with the call still locked. A share that stops on its own is reported
                 // by a task that needs this lock, so its "stopped" always reaches the UI after this, never before.
-                let _ = qt_live.queue(|mut o| {
+                let status = sharing_status_line();
+                let _ = qt_live.queue(move |mut o| {
                     o.as_mut().set_sharing(true);
-                    o.as_mut().set_status(QString::from("Sharing screen"));
+                    o.as_mut().set_status(QString::from(&status));
                 });
                 Ok::<(), String>(())
             }
@@ -8433,5 +8515,19 @@ mod unmute_toast_rev_tests {
         let smc = body_of(ctl, "CallEvent::ServerMuteChanged { identity, muted: m, by, by_name, revs } =>", 1100);
         assert!(smc.contains("if m {") && smc.contains("release_held_unmute_ask(&qt2, &room_id, &identity, chime_gen, &revs)"));
         assert!(ctl.contains("u.held.remove(&identity); // (Stage B #3: and no held ask)"));
+    }
+}
+
+/// 12.2.2 (share-dmabuf): a share that wanted the zero-copy capture and runs without it says so on its status line.
+#[cfg(test)]
+mod share_capture_status_tests {
+    #[test]
+    fn a_share_without_its_zero_copy_capture_says_so() {
+        assert_eq!(super::sharing_status_for(None), "Sharing screen");
+        let s = super::sharing_status_for(Some(tinhat_streamer::call::SHARE_CAPTURE_FALLBACK_TEXT));
+        assert!(s.starts_with("Sharing screen (") && s.contains("zero-copy capture did not start"), "{s}");
+        // AppCore.qml shows a status starting with "Your share stopped" as a notice with a Share again button: this
+        // is a running share, so it must never look like one
+        assert!(!s.starts_with("Your share stopped"));
     }
 }

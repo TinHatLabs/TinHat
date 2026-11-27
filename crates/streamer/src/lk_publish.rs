@@ -222,6 +222,99 @@ pub fn set_share_encoder(code: i32) {
     *quality_cell().lock().unwrap() = q;
     save_share_quality(&q);
 }
+// ── Share encoder effort (12.2.2) ────────────────────────────────────────────
+// The GPU (NVENC) share encoders run a quality config (P5, two passes, spatial + temporal AQ) that costs a GPU-bound
+// game more than a light one (P1, one pass, no AQ): -3.5 % vs -2.0 % next to a GPU-bound benchmark (RTX PRO 6000,
+// AV1 2560x1072@60, 2026-11-25). The light one gives up some picture quality at the same bitrate, so it is the user's
+// choice (Settings -> Calls -> GPU encoder effort, and the share quality menu), never a silent change. Quality stays
+// the default. Screen shares only: the encoders apply it to kScreensharing streams (vendor/webrtc-sys
+// src/tinhat_knobs.cpp), a camera never gets it. VP9 (software) ignores it.
+
+extern "C" {
+    // vendor/webrtc-sys/src/tinhat_knobs.cpp (always compiled into webrtc-sys)
+    fn tinhat_set_share_encoder_effort(effort: i32);
+    fn tinhat_share_encoder_effort() -> i32;
+}
+
+/// The share encoder effort choice.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShareEffort {
+    /// P5, LOW_LATENCY, two-pass quarter resolution, spatial + temporal AQ (12.2.1's only config).
+    Quality,
+    /// P1, LOW_LATENCY, one pass, no AQ.
+    Light,
+}
+
+impl ShareEffort {
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::Quality => "quality",
+            Self::Light => "light",
+        }
+    }
+    pub fn from_tag(t: &str) -> Option<Self> {
+        match t.trim() {
+            "quality" => Some(Self::Quality),
+            "light" => Some(Self::Light),
+            _ => None,
+        }
+    }
+    /// The knob's value in tinhat_knobs.cpp.
+    fn knob(self) -> i32 {
+        match self {
+            Self::Quality => 0,
+            Self::Light => 1,
+        }
+    }
+}
+
+fn share_effort_path() -> std::path::PathBuf {
+    share_quality_path().with_file_name("share-encoder-effort")
+}
+
+fn effort_cell() -> &'static std::sync::Mutex<ShareEffort> {
+    static E: std::sync::OnceLock<std::sync::Mutex<ShareEffort>> = std::sync::OnceLock::new();
+    E.get_or_init(|| {
+        let e = std::fs::read_to_string(share_effort_path()).ok().and_then(|t| ShareEffort::from_tag(&t)).unwrap_or(ShareEffort::Quality);
+        std::sync::Mutex::new(e)
+    })
+}
+
+/// The saved share encoder effort (Quality when nothing is saved).
+pub fn share_effort() -> ShareEffort {
+    *effort_cell().lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Save the share encoder effort and hand it to the encoders; a live share picks it up when it is re-published.
+pub fn set_share_effort(e: ShareEffort) {
+    *effort_cell().lock().unwrap_or_else(|e| e.into_inner()) = e;
+    let p = share_effort_path();
+    if let Some(dir) = p.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    let _ = std::fs::write(&p, e.tag());
+    sync_share_effort();
+}
+
+/// The effort for this process only, not saved (the codecprobe rig tool: PROBE_EFFORT=light|quality).
+pub fn use_share_effort_unsaved(e: ShareEffort) {
+    *effort_cell().lock().unwrap_or_else(|e| e.into_inner()) = e;
+    sync_share_effort();
+}
+
+/// Hand the saved effort to the encoders (called before every share publish, so the encoder created for it reads the
+/// saved choice); what the encoders will read.
+pub fn sync_share_effort() -> ShareEffort {
+    let e = share_effort();
+    // SAFETY: two plain C functions on a std::atomic<int>
+    unsafe { tinhat_set_share_encoder_effort(e.knob()) };
+    if unsafe { tinhat_share_encoder_effort() } == ShareEffort::Light.knob() {
+        ShareEffort::Light
+    } else {
+        ShareEffort::Quality
+    }
+}
+
 /// Compact "max_w max_h fps kbps encoder-tag" label for the QML mirror.
 pub fn share_quality_label() -> String {
     let q = share_quality();
@@ -3356,14 +3449,40 @@ mod share_capture_tests {
     /// What it measured over `secs` after a 2 s warm-up.
     #[cfg(not(windows))]
     fn buffer_gate_run(head: &str, secs: f64, repin: bool) -> GateRun {
+        buffer_gate_run_on(head, secs, repin, false)
+    }
+
+    /// [`buffer_gate_run`] on the CPU chain (`zero_copy` false) or on the app's zero-copy line ([`gl_dmabuf_desc`] behind
+    /// [`crate::capture::source_head_dmabuf`], the DMA-BUF-only head): the same start, the same measurements.
+    #[cfg(not(windows))]
+    fn buffer_gate_run_on(head: &str, secs: f64, repin: bool, zero_copy: bool) -> GateRun {
+        if zero_copy {
+            let fps = buffer_gate_fps();
+            let ask = fps.saturating_mul(crate::capture::share_rate_headroom());
+            return buffer_gate_measure(&gl_dmabuf_desc(&crate::capture::source_head_dmabuf(head, ask, true), 1280, 720, fps), secs, false);
+        }
         let head = crate::capture::source_head_with_cap(head, 60, true);
         let desc = if repin {
             cpu_capture_desc(&head, "", 60, cpu_capture_threads())
         } else {
             cpu_presized_desc(&head, "", 1280, 720, 60, cpu_capture_threads())
         };
-        let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
-        install_first_frame_repin(&pipeline, 1280, 720, None, Default::default(), "gate"); // no-op on the pre-sized chain
+        buffer_gate_measure(&desc, secs, repin)
+    }
+
+    /// The zero-copy gate's share rate: TINHAT_BUFLOCK_FPS (default 60).
+    #[cfg(not(windows))]
+    fn buffer_gate_fps() -> u32 {
+        std::env::var("TINHAT_BUFLOCK_FPS").ok().and_then(|v| v.parse().ok()).filter(|f| *f > 0).unwrap_or(60)
+    }
+
+    /// One measured capture run of `desc` (see [`buffer_gate_run`]).
+    #[cfg(not(windows))]
+    fn buffer_gate_measure(desc: &str, secs: f64, repin: bool) -> GateRun {
+        let pipeline = gst::parse::launch(desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+        if repin {
+            install_first_frame_repin(&pipeline, 1280, 720, None, Default::default(), "gate");
+        }
         let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
         let holds = watch_source_holds(&pipeline);
         let reconfigures = watch_source_reconfigures(&pipeline);
@@ -3385,6 +3504,19 @@ mod share_capture_tests {
         let reconfigures = reconfigures.load(std::sync::atomic::Ordering::SeqCst);
         let _ = pipeline.set_state(gst::State::Null);
         GateRun { fps, hold_ms, reconfigures }
+    }
+
+    /// A stand-in for the app's size-learning run (call.rs learn_share_size_gpu: the CUDA learner negotiates shared
+    /// memory): `head` into a system-memory sink up to the first frame (4 s at most), then stopped.
+    #[cfg(not(windows))]
+    fn buffer_gate_learn_run(head: &str) {
+        let desc = format!("{} ! capsfilter caps=video/x-raw ! appsink name=sink max-buffers=1 drop=true sync=false", crate::capture::source_head_with_cap(head, 60, true));
+        let pipeline = gst::parse::launch(&desc).unwrap().downcast::<gst::Pipeline>().unwrap();
+        let sink = pipeline.by_name("sink").unwrap().downcast::<gstreamer_app::AppSink>().unwrap();
+        let lease = crate::capture_lease::take(crate::capture_lease::Kind::Screen, None).expect("a screen lease");
+        let got = crate::call::leased_play(&lease, &pipeline, 8000, "buffer gate learn") && sink.try_pull_sample(gst::ClockTime::from_seconds(4)).is_some();
+        eprintln!("[buffer-lock] learning run: {}", if got { "first frame" } else { "no frame" });
+        let _ = pipeline.set_state(gst::State::Null);
     }
 
     /// The lab producer of the gates below (kwin68like-src): started with `args`, its PipeWire node id, and its
@@ -3510,12 +3642,22 @@ mod share_capture_tests {
         };
         let starts: u32 = std::env::var("TINHAT_BUFLOCK_STARTS").ok().and_then(|v| v.parse().ok()).unwrap_or(12);
         let min_fps: f64 = std::env::var("TINHAT_BUFLOCK_MIN_FPS").ok().and_then(|v| v.parse().ok()).unwrap_or(50.0);
+        // 12.2.2: TINHAT_BUFLOCK_PATH=dmabuf runs the app's zero-copy line instead of the CPU one, and
+        // TINHAT_BUFLOCK_LEARN=1 starts each run the way the app's share start does when the portal gives no size: a
+        // shared-memory learning run on the same node up to its first frame, stopped, then the capture
+        let zero_copy = std::env::var("TINHAT_BUFLOCK_PATH").is_ok_and(|v| v == "dmabuf");
+        let learn_first = std::env::var("TINHAT_BUFLOCK_LEARN").is_ok_and(|v| v == "1");
+        eprintln!("[buffer-lock] chain: {}{}", if zero_copy { "zero-copy (DMA-BUF)" } else { "CPU" }, if learn_first { ", each start after a shared-memory learning run" } else { "" });
         let (mut rates, mut holds, mut renegotiated) = (Vec::new(), Vec::new(), 0u32);
         for i in 0..starts {
-            let r = buffer_gate_run(&buffer_gate_head(node, plant_keepalive), 7.0, plant_repin);
+            if learn_first {
+                buffer_gate_learn_run(&buffer_gate_head(node, plant_keepalive));
+            }
+            let r = buffer_gate_run_on(&buffer_gate_head(node, plant_keepalive), 7.0, plant_repin, zero_copy);
             eprintln!(
-                "[buffer-lock] start {i}{planted}: {:.1} fps (cap 60), compositor buffers held {:.1} ms (median), source renegotiated {}x",
-                r.fps, r.hold_ms, r.reconfigures
+                "[buffer-lock] start {i}{planted}: {:.1} fps (cap {}), compositor buffers held {:.1} ms (median), source renegotiated {}x",
+                r.fps,
+                if zero_copy { buffer_gate_fps() } else { 60 }, r.hold_ms, r.reconfigures
             );
             rates.push(r.fps);
             holds.push(r.hold_ms);
@@ -4896,5 +5038,22 @@ mod vp9_kf_iv_tests {
             "upstream's data IV rule must be removed, not kept");
         assert!(body.contains("tinhat::ProcessIvAllocator().Next()"), "data packets must use the allocator");
         assert!(p.contains("DataPacketCryptor::Encrypt() IV allocator exhausted"), "an exhausted allocator must fail the packet");
+    }
+}
+
+/// 12.2.2: the share encoder effort choice reaches the encoders' knob, both ways.
+#[cfg(test)]
+mod share_effort_tests {
+    use super::{ShareEffort, sync_share_effort, effort_cell};
+
+    #[test]
+    fn the_effort_choice_reaches_the_encoder_knob() {
+        for e in [ShareEffort::Light, ShareEffort::Quality] {
+            *effort_cell().lock().unwrap() = e;
+            assert_eq!(sync_share_effort(), e, "the knob the NVENC share encoders read");
+            assert_eq!(ShareEffort::from_tag(e.tag()), Some(e));
+        }
+        assert_eq!(ShareEffort::from_tag("light\n"), Some(ShareEffort::Light));
+        assert_eq!(ShareEffort::from_tag("p1"), None);
     }
 }

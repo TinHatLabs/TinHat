@@ -49,9 +49,10 @@ impl ScreenCast {
         source_head_paced(&self.src_fragment(), fps)
     }
 
-    /// The zero-copy (DMA-BUF only) head for this cast, see [`source_head_dmabuf`].
+    /// The zero-copy (DMA-BUF only) head for this cast, see [`source_head_dmabuf`]. 12.2.2: the compositor is asked
+    /// for [`share_rate_headroom`] times the share's rate (the chain drops back to `fps`).
     pub(crate) fn src_fragment_dmabuf(&self, fps: u32) -> String {
-        source_head_dmabuf(&self.src_fragment(), fps, source_rate_cap_on())
+        source_head_dmabuf(&self.src_fragment(), fps.saturating_mul(share_rate_headroom()), source_rate_cap_on())
     }
 
     /// Raw fd for `pipewiresrc fd=`. The fd stays owned by `self`.
@@ -189,6 +190,8 @@ pub(crate) fn buffer_request_refused(why: &str) -> bool {
 /// `PersistMode::DoNot` means the picker shows every time (swap to
 /// `PersistMode::Application` + a saved restore token later to skip it).
 pub async fn pick_screencast() -> Result<ScreenCast> {
+    install_gst_critical_tagger();
+    set_share_phase("the portal picker");
     let proxy = Screencast::new().await?;
     let session = proxy.create_session(Default::default()).await?;
 
@@ -258,6 +261,7 @@ pub async fn pick_screencast() -> Result<ScreenCast> {
 /// first BUFFER (they are final by then), for up to 4 s, and says why it failed — the caps it saw, or that no frame came.
 /// The capture no longer depends on it (the GPU path learns the size from its first frame, call.rs start_share_capture).
 fn probe_stream_size(fd: i32, node_id: u32) -> Option<(u32, u32)> {
+    set_share_phase("the stream size probe");
     use gst::prelude::*;
     use gstreamer as gst;
     let desc = format!("{} ! fakesink name=fs sync=false", source_head(Some(fd), node_id, 0));
@@ -318,15 +322,202 @@ fn probe_stream_size(fd: i32, node_id: u32) -> Option<(u32, u32)> {
     }
 }
 
+/// 12.2.2: TINHAT_SHARE_RATE_HEADROOM=N (1 to 4, default 1) asks the compositor for N times the share's frame rate on
+/// the zero-copy head; the chain's `videorate drop-only` keeps `fps` and holds no buffer. KWin 6.8 records on a fixed
+/// grid at the negotiated rate and loses a tick whenever its main thread is late for it (screencaststream.cpp
+/// VsyncSource; on NVIDIA every record ends in glFinish()): with 2 ticks per share frame a lost tick costs no frame.
+/// Off by default: it doubles KWin's records (a GPU blit each on the zero-copy path).
+pub(crate) fn share_rate_headroom() -> u32 {
+    headroom_for(std::env::var("TINHAT_SHARE_RATE_HEADROOM").ok().as_deref())
+}
+
+/// [`share_rate_headroom`] for the switch's text.
+pub(crate) fn headroom_for(v: Option<&str>) -> u32 {
+    v.and_then(|t| t.trim().parse::<u32>().ok()).filter(|n| (1..=4).contains(n)).unwrap_or(1)
+}
+
+/// 12.2.2: which step of a share start runs now (the portal, the size probe, the size-learning run, a capture
+/// candidate's start), for [`install_gst_critical_tagger`]. A field log had 6 x `GStreamer-CRITICAL
+/// gst_mini_object_unref: assertion 'mini_object != NULL'` at a share start with nothing to say which step made them;
+/// the lab (KWin 6.8.2, gstpipewire 1.6.11 and 1.4.9) does not reproduce them.
+static SHARE_PHASE: std::sync::Mutex<&'static str> = std::sync::Mutex::new("no share starting");
+
+pub(crate) fn set_share_phase(phase: &'static str) {
+    *SHARE_PHASE.lock().unwrap_or_else(|e| e.into_inner()) = phase;
+}
+
+/// Once per run: GStreamer's CRITICAL and WARNING messages (GLib log domain "GStreamer") go to the log as
+/// `[gst-critical] <message> (share step: <phase>)` instead of the bare GLib line.
+pub(crate) fn install_gst_critical_tagger() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        use gstreamer::glib;
+        glib::log_set_handler(
+            Some("GStreamer"),
+            glib::LogLevels::LEVEL_CRITICAL | glib::LogLevels::LEVEL_WARNING,
+            false,
+            false,
+            |_domain, level, msg| {
+                let phase = *SHARE_PHASE.lock().unwrap_or_else(|e| e.into_inner());
+                let what = if matches!(level, glib::LogLevel::Critical) { "critical" } else { "warning" };
+                eprintln!("[gst-{what}] {msg} (share step: {phase})");
+            },
+        );
+    });
+}
+
 /// Whether share capture heads carry the frame-rate cap: on unless TINHAT_SHARE_NO_RATE_CAP is set (to anything).
 pub(crate) fn source_rate_cap_on() -> bool {
     std::env::var_os("TINHAT_SHARE_NO_RATE_CAP").is_none()
 }
 
-/// 12.1.9 (SHARE-GAME-LAG): the zero-copy capture is opt-in for the A/B while it is proven on real desktops:
-/// TINHAT_SHARE_DMABUF=1 turns it on.
-pub(crate) fn share_dmabuf_on() -> bool {
-    std::env::var("TINHAT_SHARE_DMABUF").map(|v| v == "1").unwrap_or(false)
+/// The user's screen-capture choice (Settings -> Calls -> Screen capture, Linux): automatic, zero-copy first, or the
+/// compatible (shared memory) capture only.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShareCaptureMode {
+    Auto,
+    ZeroCopy,
+    Compatible,
+}
+
+impl ShareCaptureMode {
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::Auto => "auto",
+            Self::ZeroCopy => "zerocopy",
+            Self::Compatible => "compatible",
+        }
+    }
+    pub fn from_tag(t: &str) -> Option<Self> {
+        match t.trim() {
+            "auto" => Some(Self::Auto),
+            "zerocopy" => Some(Self::ZeroCopy),
+            "compatible" => Some(Self::Compatible),
+            _ => None,
+        }
+    }
+}
+
+fn share_capture_mode_path() -> std::path::PathBuf {
+    let base = std::env::var_os("XDG_CONFIG_HOME")
+        .map(std::path::PathBuf::from)
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| std::path::PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".config"));
+    base.join("tinhat/share-capture")
+}
+
+/// The saved screen-capture choice (Auto when none is saved or the file holds something else).
+pub fn share_capture_mode() -> ShareCaptureMode {
+    std::fs::read_to_string(share_capture_mode_path()).ok().and_then(|t| ShareCaptureMode::from_tag(&t)).unwrap_or(ShareCaptureMode::Auto)
+}
+
+/// Save the screen-capture choice; the next share start uses it.
+pub fn set_share_capture_mode(m: ShareCaptureMode) {
+    let p = share_capture_mode_path();
+    if let Some(d) = p.parent() {
+        let _ = std::fs::create_dir_all(d);
+    }
+    let _ = std::fs::write(&p, m.tag());
+}
+
+/// The kernel drivers of the DRM cards that drive a CONNECTED display (`/sys/class/drm/card*-<connector>/status` =
+/// connected, the card's `device/driver`), e.g. ["nvidia"] on an NVIDIA desktop (also when the CPU's own graphics is
+/// enabled but has no screen), ["i915"] or ["i915", "nvidia"] on a hybrid laptop (its panel is on the iGPU). KWin
+/// composites on the GPU that drives the screens, so that is the GPU the screencast's DMA-BUFs come from. A card whose
+/// driver can't be read counts as "unknown". Readable inside the Flatpak too.
+fn display_card_drivers() -> Vec<String> {
+    let Ok(dir) = std::fs::read_dir("/sys/class/drm") else { return Vec::new() };
+    let mut v: Vec<String> = dir
+        .flatten()
+        .filter_map(|e| {
+            let name = e.file_name().to_string_lossy().into_owned();
+            // connectors are cardN-<connector>; the card itself is cardN
+            let (card, connector) = name.strip_prefix("card")?.split_once('-')?;
+            // a writeback connector writes to memory, never to a screen
+            if connector.starts_with("Writeback") {
+                return None;
+            }
+            match std::fs::read_to_string(e.path().join("status")) {
+                Ok(t) if t.trim() == "connected" => Some(Some(format!("card{card}"))),
+                Ok(_) => None,
+                // a status that can't be read: not known to be off, so not known to be NVIDIA
+                Err(_) => Some(None),
+            }
+        })
+        .map(|card| {
+            card.and_then(|card| std::fs::read_link(format!("/sys/class/drm/{card}/device/driver")).ok())
+                .and_then(|l| l.file_name().map(|n| n.to_string_lossy().into_owned()))
+                .unwrap_or_else(|| "unknown".to_string())
+        })
+        .collect();
+    v.sort();
+    v.dedup();
+    v
+}
+
+/// 12.2.2: whether a share tries the zero-copy (DMA-BUF) capture first, and why (for the log). Order:
+///   1. TINHAT_SHARE_DMABUF=1 / =0 (the 12.1.9 switch, now both ways);
+///   2. the saved choice ([`share_capture_mode`]): zero-copy or compatible;
+///   3. automatic: ON on KDE Plasma (KWin) when every connected display is on an NVIDIA card. Measured there (RTX PRO 6000, KWin 6.8,
+///      2026-11-25, 60 fps share in a game): KWin 30 % -> 13 % of a core, the game at its frame cap 19 % -> 61 % of
+///      seconds, our capture chain 4.1 -> 1.8 ms per frame. Elsewhere (hybrid laptops, AMD, Intel, GNOME, wlroots) it
+///      stays off: not measured, and the shared-memory path is what they have always run.
+/// A zero-copy start that fails falls back to the CUDA / CPU capture on its own (call.rs start_share_capture), and the
+/// share says so.
+pub(crate) fn share_dmabuf_policy() -> (bool, &'static str) {
+    // KWIN_DRM_DEVICES picks KWin's GPUs (and the first one renders), whatever drives the screens: not the measured case
+    if std::env::var_os("KWIN_DRM_DEVICES").is_some_and(|v| !v.is_empty())
+        && std::env::var("TINHAT_SHARE_DMABUF").is_err()
+        && share_capture_mode() == ShareCaptureMode::Auto
+    {
+        return (false, "automatic: KWIN_DRM_DEVICES is set (KWin's rendering GPU is chosen by hand)");
+    }
+    dmabuf_policy_for(
+        std::env::var("TINHAT_SHARE_DMABUF").ok().as_deref(),
+        share_capture_mode(),
+        std::env::var("XDG_CURRENT_DESKTOP").ok().as_deref(),
+        &display_card_drivers(),
+    )
+}
+
+/// 12.2.2, step 2 of 2 (gated on its own, ON since this commit): Automatic turns zero-copy on for KDE Plasma when every screen is on an NVIDIA
+/// card. Until that step ships, Automatic = the standard capture, and zero-copy is the user's choice (Settings -> Calls
+/// -> Screen capture, or TINHAT_SHARE_DMABUF=1); the log still says whether this desktop would qualify.
+pub(crate) const AUTO_ZERO_COPY_ON_NVIDIA_KDE: bool = true;
+
+/// [`share_dmabuf_policy`] for given inputs.
+pub(crate) fn dmabuf_policy_for(
+    switch: Option<&str>,
+    mode: ShareCaptureMode,
+    xdg_current_desktop: Option<&str>,
+    display_drivers: &[String],
+) -> (bool, &'static str) {
+    match switch.map(str::trim) {
+        Some("1") => return (true, "TINHAT_SHARE_DMABUF=1"),
+        Some("0") => return (false, "TINHAT_SHARE_DMABUF=0"),
+        _ => {}
+    }
+    match mode {
+        ShareCaptureMode::ZeroCopy => return (true, "the saved choice (zero-copy)"),
+        ShareCaptureMode::Compatible => return (false, "the saved choice (compatible capture)"),
+        ShareCaptureMode::Auto => {}
+    }
+    let kde = xdg_current_desktop.is_some_and(|d| d.split(':').any(|p| p.trim().eq_ignore_ascii_case("KDE")));
+    if !kde {
+        return (false, "automatic: not KDE Plasma");
+    }
+    if display_drivers.is_empty() {
+        return (false, "automatic: no connected display found");
+    }
+    if display_drivers.iter().all(|d| d == "nvidia") {
+        if AUTO_ZERO_COPY_ON_NVIDIA_KDE {
+            (true, "automatic: KDE Plasma, every screen on an NVIDIA GPU")
+        } else {
+            (false, "automatic: the standard capture in this build (zero-copy is opt-in; this desktop qualifies: KDE Plasma, every screen on an NVIDIA GPU)")
+        }
+    } else {
+        (false, "automatic: not every screen is on an NVIDIA GPU")
+    }
 }
 
 /// The zero-copy head: like [`source_head_with_cap`], but it accepts ONLY the compositor's DMA-BUF (`memory:DMABuf`),
@@ -360,4 +551,57 @@ pub(crate) fn source_head_with_cap(head: &str, fps: u32, cap: bool) -> String {
         return head.to_string();
     }
     format!("{head} ! capsfilter name=ratecap caps=\"video/x-raw(ANY),max-framerate=(fraction){fps}/1; video/x-raw(ANY)\"")
+}
+
+/// 12.2.2 (share-dmabuf): who gets the zero-copy capture first, and in what order the capture candidates run.
+#[cfg(test)]
+mod share_dmabuf_policy_tests {
+    use super::{dmabuf_policy_for, ShareCaptureMode as M};
+
+    fn on(switch: Option<&str>, mode: M, desk: Option<&str>, drivers: &[&str]) -> bool {
+        let d: Vec<String> = drivers.iter().map(|s| s.to_string()).collect();
+        dmabuf_policy_for(switch, mode, desk, &d).0
+    }
+
+    #[test]
+    fn zero_copy_is_the_default_on_kde_with_only_nvidia() {
+        use super::AUTO_ZERO_COPY_ON_NVIDIA_KDE as DEFAULT_ON;
+        assert_eq!(on(None, M::Auto, Some("KDE"), &["nvidia"]), DEFAULT_ON, "the measured desktop: KWin + NVIDIA");
+        assert_eq!(on(None, M::Auto, Some("ubuntu:KDE"), &["nvidia", "nvidia"]), DEFAULT_ON, "two NVIDIA cards with screens");
+        assert!(!on(None, M::Auto, Some("KDE"), &["i915", "nvidia"]), "screens on both GPUs");
+        assert!(!on(None, M::Auto, Some("KDE"), &["i915"]), "a hybrid laptop: its panel is on the iGPU");
+        assert!(!on(None, M::Auto, Some("KDE"), &["amdgpu"]), "AMD: not measured");
+        assert!(!on(None, M::Auto, Some("GNOME"), &["nvidia"]), "mutter: not measured");
+        assert!(!on(None, M::Auto, None, &["nvidia"]), "no desktop name");
+        assert!(!on(None, M::Auto, Some("KDE"), &[]), "no connected display found");
+        assert!(!on(None, M::Auto, Some("KDE"), &["nvidia", "unknown"]), "a screen whose card's driver can't be read");
+    }
+
+    #[test]
+    fn the_switch_and_the_saved_choice_override_the_default() {
+        assert!(on(Some("1"), M::Compatible, Some("GNOME"), &["i915"]), "TINHAT_SHARE_DMABUF=1 wins over everything");
+        assert!(!on(Some("0"), M::ZeroCopy, Some("KDE"), &["nvidia"]), "TINHAT_SHARE_DMABUF=0 wins over everything");
+        assert!(on(None, M::ZeroCopy, Some("GNOME"), &["i915"]), "the saved zero-copy choice");
+        assert!(!on(None, M::Compatible, Some("KDE"), &["nvidia"]), "the saved compatible choice");
+        assert_eq!(on(Some("yes"), M::Auto, Some("KDE"), &["nvidia"]), super::AUTO_ZERO_COPY_ON_NVIDIA_KDE, "an unknown switch value is ignored");
+        for m in [M::Auto, M::ZeroCopy, M::Compatible] {
+            assert_eq!(M::from_tag(m.tag()), Some(m));
+        }
+        assert_eq!(M::from_tag("zerocopy\n"), Some(M::ZeroCopy), "a saved file with a newline");
+        assert_eq!(M::from_tag("dmabuf"), None);
+    }
+
+    /// The 12.2.1 order put last time's winner first, so one failed zero-copy start (a game relaunch in the field)
+    /// sent every later share of the run to the shared-memory capture, silently.
+    #[test]
+    fn a_wanted_zero_copy_capture_is_always_tried_first() {
+        use crate::call::capture_candidate_order as order;
+        assert_eq!(order(3, usize::MAX, true), [0, 1, 2]);
+        assert_eq!(order(3, 1, true), [0, 1, 2], "the CUDA path won last time: zero-copy is still tried first");
+        assert_eq!(order(3, 2, true), [0, 2, 1]);
+        assert_eq!(order(3, 0, true), [0, 1, 2]);
+        assert_eq!(order(3, 2, false), [2, 0, 1], "without zero-copy: last time's winner first, as before");
+        assert_eq!(order(2, usize::MAX, false), [0, 1]);
+        assert_eq!(order(0, usize::MAX, true), Vec::<usize>::new());
+    }
 }

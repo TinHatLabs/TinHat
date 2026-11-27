@@ -2107,6 +2107,25 @@ ThWindow {   // P22: the person's text size reaches this window's controls (ThWi
                             }
                         }
                         SettingsRow {
+                            // 12.2.2 (camera encoder): Automatic = the CPU on a Linux desktop with an NVIDIA GPU, the GPU elsewhere
+                            app: win.app
+                            anchorId: "calls.camera-encoder"
+                            label: "Camera encoder"
+                            description: "On Linux, Automatic encodes your camera on the CPU on a desktop computer with an NVIDIA graphics card, so games keep the whole card; laptops and Windows use the GPU. Adaptive layers need the GPU encoder on NVIDIA (NVENC); the CPU sends one layer."
+                            trailing: ThComboBox {
+                                Layout.preferredWidth: 240
+                                textRole: "label"
+                                Accessible.name: "Camera encoder"
+                                model: [
+                                    { label: "Automatic", tag: "auto" },
+                                    { label: "GPU",       tag: "gpu" },
+                                    { label: "CPU",       tag: "cpu" }
+                                ]
+                                currentIndex: Math.max(0, ["auto", "gpu", "cpu"].indexOf(win.app.callctl.camEncoder))
+                                onActivated: (i) => win.app.callctl.applyCamEncoder(model[i].tag)
+                            }
+                        }
+                        SettingsRow {
                             app: win.app
                             anchorId: "calls.adaptive-layers"
                             label: "Adaptive layers"
@@ -2178,6 +2197,46 @@ ThWindow {   // P22: the person's text size reaches this window's controls (ThWi
                                 ]
                                 currentIndex: win.app._sqEnc() === "vp9" ? 1 : 0
                                 onActivated: (i) => win.app.callctl.applyShareEncoder(model[i].code)
+                            }
+                        }
+                        SettingsRow {
+                            // 12.2.2 (share-dmabuf): Linux only. Automatic = zero-copy (DMA-BUF) first on KDE Plasma with an
+                            // NVIDIA GPU, the standard capture elsewhere; a zero-copy start that fails falls back by itself.
+                            visible: Qt.platform.os === "linux"
+                            height: visible ? implicitHeight : 0
+                            app: win.app
+                            anchorId: "calls.share-capture"
+                            label: "Screen capture"
+                            description: "Zero-copy hands the picture over on the GPU, so the desktop does less work next to a game (KDE Plasma, measured with NVIDIA). If it cannot start, the share uses the standard capture and says so. Automatic uses it on KDE Plasma when every screen is connected to an NVIDIA graphics card."
+                            trailing: ThComboBox {
+                                Layout.preferredWidth: 240
+                                textRole: "label"
+                                Accessible.name: "Screen capture"
+                                model: [
+                                    { label: "Automatic",  tag: "auto" },
+                                    { label: "Zero-copy",  tag: "zerocopy" },
+                                    { label: "Compatible", tag: "compatible" }
+                                ]
+                                currentIndex: Math.max(0, ["auto", "zerocopy", "compatible"].indexOf(win.app.callctl.shareCaptureMode()))
+                                onActivated: (i) => win.app.callctl.applyShareCaptureMode(model[i].tag)
+                            }
+                        }
+                        SettingsRow {
+                            // 12.2.2 (share encoder effort): NVENC share encoders only (lk_publish ShareEffort)
+                            app: win.app
+                            anchorId: "calls.share-effort"
+                            label: "GPU encoder effort"
+                            description: "Light takes less of the graphics card from a game (about 1.5 points of frame rate next to a GPU-bound game) and gives up some picture quality at the same bandwidth. Screen shares on the GPU encoder only."
+                            trailing: ThComboBox {
+                                Layout.preferredWidth: 240
+                                textRole: "label"
+                                Accessible.name: "GPU encoder effort"
+                                model: [
+                                    { label: "Quality (default)", tag: "quality" },
+                                    { label: "Light on games",    tag: "light" }
+                                ]
+                                currentIndex: win.app.callctl.shareEffort === "light" ? 1 : 0
+                                onActivated: (i) => win.app.callctl.applyShareEffort(model[i].tag)
                             }
                         }
                         SettingsRow {

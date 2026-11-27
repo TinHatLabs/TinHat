@@ -143,7 +143,9 @@ NvidiaVideoDecoderFactory::NvidiaVideoDecoderFactory()
   }
 
   cu_context_ = livekit_ffi::CudaContext::GetInstance();
-  if (cu_context_->Initialize()) {
+  // PATCH (Tin Hat 12.2.2): a reference that is never dropped (NVDEC is opt-in, LK_NVDEC=1; its decoders use the
+  // context for the life of the factory)
+  if (cu_context_->Acquire()) {
     supported_formats_ = SupportedNvDecoderCodecs(cu_context_->GetContext());
   } else {
     RTC_LOG(LS_ERROR) << "Failed to initialize CUDA context.";
